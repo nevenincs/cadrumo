@@ -1,4 +1,11 @@
-"""``aeat docs`` sub-app — Docs v1 helpers via the discovery client."""
+"""``aeat docs`` sub-app — Google Docs v1 helpers via the discovery client.
+
+Each command builds an authenticated Docs service lazily so importing
+this module does not pay the discovery round-trip cost. Body
+manipulation requests delegate to
+:mod:`aeat.entrypoints.cli._docs_helpers` so the request shape is unit
+testable without touching the Google API.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +20,7 @@ from ._docs_helpers import (
     extract_plaintext,
     find_end_index,
 )
+from ._i18n import t, tr
 
 app = typer.Typer(name="docs", no_args_is_help=True, help="Google Docs helpers.")
 
@@ -54,7 +62,17 @@ def append(
 ) -> None:
     """Append text to the end of a document."""
     if not text:
-        typer.secho("text must not be empty", fg=typer.colors.RED)
+        typer.secho(
+            tr(
+                t(
+                    "el texto no puede estar vacío",
+                    "text must not be empty",
+                    "el text no pot ser buit",
+                    "a szöveg nem lehet üres",
+                )
+            ),
+            fg=typer.colors.RED,
+        )
         raise typer.Exit(code=1)
     service = _docs()
     document = service.documents().get(documentId=doc_id).execute()
@@ -63,7 +81,16 @@ def append(
         documentId=doc_id,
         body={"requests": build_append_request(text, end_index)},
     ).execute()
-    typer.echo(f"appended {len(text)} characters at index {end_index}")
+    typer.echo(
+        tr(
+            t(
+                f"añadidos {len(text)} caracteres en el índice {end_index}",
+                f"appended {len(text)} characters at index {end_index}",
+                f"afegits {len(text)} caràcters a l'índex {end_index}",
+                f"hozzáfűzve {len(text)} karakter a(z) {end_index} pozícióban",
+            )
+        )
+    )
 
 
 @app.command(name="replace", help="Find and replace text inside a document.")
@@ -84,7 +111,16 @@ def replace(
     )
     replies = response.get("replies", [])
     occurrences = sum(reply.get("replaceAllText", {}).get("occurrencesChanged", 0) for reply in replies)
-    typer.echo(f"replaced {occurrences} occurrence(s)")
+    typer.echo(
+        tr(
+            t(
+                f"reemplazadas {occurrences} ocurrencia(s)",
+                f"replaced {occurrences} occurrence(s)",
+                f"reemplaçades {occurrences} ocurrència(es)",
+                f"lecserélve {occurrences} előfordulás",
+            )
+        )
+    )
 
 
 __all__ = [

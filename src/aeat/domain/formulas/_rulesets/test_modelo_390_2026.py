@@ -1,13 +1,16 @@
 """Unit tests for the Modelo 390 2026 IVA annual-resumen ruleset.
 
-The 2026 ruleset is a structural clone of the 2024 / 2025 rulesets
+The 2026 ruleset is a structural clone of the 2024 and 2025 rulesets
 because the BOE-grounded algebraic chain is unchanged: LIVA arts.
 90 / 91 / 92 / 102 / 107 / 164 and RIVA art. 71.7 were not amended
 for 2026, and the 2026 small-enterprise franquicia regime
 (Directiva (UE) 2020/285) is an opt-in regime outside the régimen-
-general scope of this ruleset. Expected values below are derived
-from those articles and the AEAT Modelo 390 Instrucciones, not from
-the ruleset's parameter table.
+general scope of this ruleset. Expected values in this module are
+derived from those articles and the AEAT Modelo 390 Instrucciones,
+never from the ruleset's parameter table.
+
+Exercises :data:`aeat.domain.formulas._rulesets.MODELO_390_2026` against
+:class:`aeat.domain.formulas._engine.Engine`.
 """
 
 from __future__ import annotations
@@ -24,7 +27,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Externally anchored 2026 fixture for régimen general."""
+    """Return the externally anchored 2026 régimen-general fixture.
+
+    Returns:
+        A casilla-id keyed mapping suitable for
+        :meth:`aeat.domain.formulas._engine.Engine.audit_against`.
+    """
     return {
         "01": Decimal("12500.00"),
         "04": Decimal("2625.00"),
@@ -45,6 +53,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo390Ruleset2026:
+    """Behavioural tests for the 2026 Modelo 390 ruleset variant."""
+
     def test_ruleset_id_and_effective_range(self) -> None:
         assert MODELO_390_2026.ruleset_id == "modelo_390.2026"
         assert MODELO_390_2026.effective_from == date(2026, 1, 1)

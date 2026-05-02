@@ -1,4 +1,9 @@
-"""Unit tests for the read-only :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
+"""Unit tests for the read-only :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`.
+
+Exercises preflight-only behaviour, transport-refusal guards, and the
+historical-records loader. The engine never opens a write transport;
+these tests pin that contract structurally.
+"""
 
 from __future__ import annotations
 
@@ -8,14 +13,9 @@ from pathlib import Path
 
 import pytest
 
+from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings
-from . import (
-    AuthProviderDescription,
-    AuthProviderKind,
-    DraftStatus,
-    FilingDraftLike,
-    FilingFinding,
-    LiveSubmitForbiddenError,
+from .....domain.submission import (
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
@@ -23,12 +23,19 @@ from . import (
     SubmittedFiling,
     make_submission_id,
 )
+from . import (
+    DraftStatus,
+    FilingDraftLike,
+    FilingFinding,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
 
 @dataclass
 class _Draft(FilingDraftLike):
+    """Minimal :class:`FilingDraftLike` test double for engine inputs."""
+
     draft_id: str = "draft-ut"
     modelo: str = "130"
     period: str = "2026Q1"
@@ -39,14 +46,20 @@ class _Draft(FilingDraftLike):
 
 
 class _OpenDeadlines:
+    """Deadline checker test double that always reports the filing window as open."""
+
     def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+        """Return ``True`` for every (modelo, period, today) tuple."""
         return True
 
 
 class _OkAuthProvider:
+    """Auth provider test double that reports a healthy CERTIFICATE provider."""
+
     kind = AuthProviderKind.CERTIFICATE
 
     def describe(self) -> AuthProviderDescription:
+        """Return a synthetic :class:`AuthProviderDescription` for the test."""
         return AuthProviderDescription(
             kind=self.kind,
             label="Test certificate",
@@ -60,6 +73,7 @@ class _OkAuthProvider:
 
 
 def _build_engine(tmp_path: Path) -> SubmissionEngine:
+    """Construct a :class:`SubmissionEngine` rooted at ``tmp_path``."""
     return SubmissionEngine(
         auth_provider=_OkAuthProvider(),
         deadline_checker=_OpenDeadlines(),
@@ -71,6 +85,7 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
 
 
 def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> SubmittedFiling:
+    """Build a synthetic :class:`SubmittedFiling` for historical-records tests."""
     now = datetime.now(UTC)
     return SubmittedFiling(
         submission_id=submission_id,
@@ -92,29 +107,29 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Sub
 
 
 class TestPreflightOnly:
+    """The engine still runs preflight checks without any transport wired in."""
+
     def test_preflight_still_runs_without_transport(self, tmp_path: Path) -> None:
+        """Assert preflight executes against a read-only engine."""
         _build_engine(tmp_path).preflight(_Draft(), today=date(2026, 4, 10))
 
 
 class TestTransportRefusal:
+    """The engine never exposes a submit method or accepts a browser session."""
+
     def test_transport_methods_are_not_exposed(self, tmp_path: Path) -> None:
+        """Assert ``submit_draft`` / ``submit_amendment`` are absent and no submissions dir is created."""
         engine = _build_engine(tmp_path)
         assert not hasattr(engine, "submit_draft")
         assert not hasattr(engine, "submit_amendment")
         assert not (tmp_path / "submissions").exists()
 
-    def test_legacy_transport_keywords_refuse(self, tmp_path: Path) -> None:
-        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
-            SubmissionEngine(
-                auth_provider=_OkAuthProvider(),
-                deadline_checker=_OpenDeadlines(),
-                settings=Settings(aeat_submissions_dir=tmp_path / "submissions"),
-                browser_session_factory=object,
-            )
-
 
 class TestHistoricalRecords:
+    """Historical-records loader behaviour for previously-persisted filings."""
+
     def test_load_submission_roundtrip_for_existing_local_record(self, tmp_path: Path) -> None:
+        """Assert ``load_submission`` round-trips a previously persisted JSON record."""
         engine = _build_engine(tmp_path)
         filing = _historical_filing(submission_id=make_submission_id("draft-1", 1))
         target = tmp_path / "submissions" / f"{filing.submission_id}.json"
@@ -123,11 +138,13 @@ class TestHistoricalRecords:
         assert engine.load_submission(filing.submission_id) == filing
 
     def test_load_submission_rejects_traversal_id(self, tmp_path: Path) -> None:
+        """Assert ``load_submission`` rejects a path-traversal submission id."""
         engine = _build_engine(tmp_path)
         with pytest.raises(SubmissionError, match="simple filename token"):
             engine.load_submission("../escape")
 
     def test_list_filters_by_modelo(self, tmp_path: Path) -> None:
+        """Assert ``list_submissions(modelo=...)`` filters by modelo and returns the empty tuple on a miss."""
         engine = _build_engine(tmp_path)
         first = _historical_filing(submission_id="sub-1", modelo="130")
         second = _historical_filing(submission_id="sub-2", modelo="303")

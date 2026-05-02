@@ -20,23 +20,6 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from aeat.application.workflow import FinancialThenJsonInputsProvider, JsonFileInputsProvider
-from aeat.entrypoints.cli import SCHEMA_REGISTRY
-from aeat.entrypoints.cli import app as root_app
-from aeat.domain.deadlines import AutonomoProfile, IVARegime
-from aeat.domain.formulas import Engine, FiscalPeriod, Quarter, get_registry
-from aeat.domain.modelos import ModeloCode
-from aeat.adapters.inbound.financial._raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from aeat.domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
-from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
-from aeat.domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    set_classification,
-)
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
 from aeat.application.aggregation import (
     AggregationCasillaMappingError,
     AggregationError,
@@ -48,6 +31,25 @@ from aeat.application.aggregation import (
     aggregate_catalogue,
 )
 from aeat.application.aggregation._provider import FinancialFilingInputsProvider
+from aeat.application.workflow import FinancialThenJsonInputsProvider, JsonFileInputsProvider
+from aeat.domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from aeat.domain.deadlines import AutonomoProfile, IVARegime
+from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
+from aeat.domain.formulas import Engine, FiscalPeriod, Quarter, get_registry
+from aeat.domain.modelos import ModeloCode
+from aeat.domain.transactions import (
+    BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+    set_classification,
+)
+from aeat.domain.transactions._repository import TransactionCatalogueRepository
+from aeat.entrypoints.cli import app as root_app
+from aeat.entrypoints.cli._schemas import SCHEMA_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -203,8 +205,8 @@ def test_aggregation_reuses_deadline_period_kind() -> None:
     assert PeriodKind.QUARTERLY.value == "quarterly"
 
 
-def test_period_mapping_accepts_legacy_uppercase_kind() -> None:
-    period = Period.model_validate({"raw": "2025Q1", "year": 2025, "quarter": "Q1", "kind": "QUARTERLY"})
+def test_period_mapping_accepts_canonical_kind() -> None:
+    period = Period.model_validate({"raw": "2025Q1", "year": 2025, "quarter": "Q1", "kind": "quarterly"})
     assert period.kind is PeriodKind.QUARTERLY
 
 

@@ -1,8 +1,8 @@
 """Notifications-parser tests against real AEAT HTML captures (identity-redacted).
 
 Fixtures under ``tests/fixtures/aeat-sede/notifications-*.html`` are
-live captures (2026-04-24) with NIF and name scrubbed. Locks the
-parser to the actual column shape AEAT serves.
+live captures with NIF and name scrubbed. Pins the parser to the
+actual column shape AEAT serves.
 """
 
 from __future__ import annotations
@@ -25,15 +25,17 @@ _QUERY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresados
 
 
 class TestParseNotificationsSummary:
-    """Verify the unread-summary endpoint parser."""
+    """Verify :func:`parse_notifications_summary` against the unread-summary endpoint."""
 
     def test_extracts_two_rows(self) -> None:
+        """Assert the captured fixture yields exactly two rows."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
         snap = parse_notifications_summary(html, source_url=_SUMMARY_URL)
-        # Captured day: Kent had 1 unread notification + 1 unread comunicacion.
+        # Captured day: 1 unread notification + 1 unread comunicacion.
         assert len(snap.rows) == 2
 
     def test_first_row_is_pending_notification(self) -> None:
+        """Assert the first parsed row is the pending notification with the captured id."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
         snap = parse_notifications_summary(html, source_url=_SUMMARY_URL)
         first = snap.rows[0]
@@ -43,6 +45,7 @@ class TestParseNotificationsSummary:
         assert first.mode == "read"
 
     def test_second_row_is_communication(self) -> None:
+        """Assert the second parsed row is the comunicacion with the captured id."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
         snap = parse_notifications_summary(html, source_url=_SUMMARY_URL)
         second = snap.rows[1]
@@ -51,6 +54,7 @@ class TestParseNotificationsSummary:
         assert second.fecha_emision.isoformat() == "2025-11-24"
 
     def test_snapshot_carries_source_url(self) -> None:
+        """Assert the snapshot records the originating ``source_url`` and ``mode='read'``."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
         snap = parse_notifications_summary(html, source_url=_SUMMARY_URL)
         assert _SUMMARY_URL in str(snap.source_url)
@@ -58,12 +62,13 @@ class TestParseNotificationsSummary:
 
 
 class TestParseNotificationsQuery:
-    """Verify the full SvInteresadosQuery results-table parser."""
+    """Verify :func:`parse_notifications_query` against the full ``SvInteresadosQuery`` results."""
 
     def test_extracts_pending_row(self) -> None:
+        """Assert at least one ``pendiente`` row is present and exposes its emission date."""
         html = (_FIXTURE_ROOT / "notifications-query-results.html").read_text(encoding="utf-8")
         snap = parse_notifications_query(html, source_url=_QUERY_URL)
-        # Kent's snapshot has one pending row (the notification awaiting comparecencia).
+        # The captured snapshot has one pending row (the notification awaiting comparecencia).
         assert len(snap.rows) >= 1
         row = snap.rows[0]
         assert row.certificado_id == "2699101808461"
@@ -71,6 +76,7 @@ class TestParseNotificationsQuery:
         assert row.fecha_emision.isoformat() == "2026-04-20"
 
     def test_pending_row_has_no_leida_flag(self) -> None:
+        """Assert ``pendiente`` rows leave ``leida`` as ``None`` in the query view."""
         html = (_FIXTURE_ROOT / "notifications-query-results.html").read_text(encoding="utf-8")
         snap = parse_notifications_query(html, source_url=_QUERY_URL)
         # Pending rows in the query view leave Leida blank.

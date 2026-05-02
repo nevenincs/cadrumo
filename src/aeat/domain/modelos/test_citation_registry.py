@@ -1,4 +1,12 @@
-"""Unit tests for the citation blocklist (EPIC #305)."""
+"""Unit tests for the legal-citation blocklist.
+
+Exercises :func:`aeat.domain.modelos._citation_registry.find_known_bad`
+and the model-level validator on
+:class:`aeat.domain.modelos._citations.LegalCitation` that refuses any
+construction whose ``(source, article, quoted_text_es)`` triple
+matches a known prior miscite. Includes accent-folding, precision,
+and validator-integration coverage.
+"""
 
 from __future__ import annotations
 
@@ -262,7 +270,7 @@ class TestLegalCitationModelValidator:
         assert citation.article == "62"
 
     def test_blocklist_embeds_audit_wave_in_error(self) -> None:
-        """Error message names the audit wave for debugging."""
+        """Error message names the audit batch for debugging."""
         with pytest.raises(ValidationError) as exc_info:
             LegalCitation(
                 source=LegalCitationSource.REGLAMENTO,

@@ -34,6 +34,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
@@ -43,7 +44,6 @@ from .envelope._envelope import (
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
@@ -189,7 +189,7 @@ def _atomic_write(target: Path, *, payload: str) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     # Capture tmp_path BEFORE the ``with`` so cleanup works when context
     # entry raises (rare but possible on some filesystems / antivirus
-    # shims). NamedTemporaryFile raising means no file was created.
+    # hooks). NamedTemporaryFile raising means no file was created.
     handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
         mode="w",
         encoding="utf-8",
@@ -338,15 +338,15 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     return (
         RotationPlanEntry(
             store_dir=Path(settings.aeat_financial_txs_dir),
-            hkdf_context=b"aeat.domain.financial.transactions.catalogue.v1",
+            hkdf_context=b"aeat.domain.transactions.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.aeat_invoices_dir),
-            hkdf_context=b"aeat.domain.financial.invoices.catalogue.v1",
+            hkdf_context=b"aeat.domain.invoices.catalogue.v1",
         ),
         RotationPlanEntry(
             store_dir=Path(settings.aeat_attachments_dir) / "manifests",
-            hkdf_context=b"aeat.domain.financial.attachments.manifest.v1",
+            hkdf_context=b"aeat.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
             # Single-file envelope: ``aeat_usage_ratios_path`` defaults
@@ -355,7 +355,7 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             # filename rather than relying on the directory walk's
             # default suffix match (which would miss this file).
             store_dir=Path(settings.aeat_usage_ratios_path).parent,
-            hkdf_context=b"aeat.domain.financial.usage_ratios.profile.v1",
+            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
             target_filename=Path(settings.aeat_usage_ratios_path).name,
         ),
         RotationPlanEntry(

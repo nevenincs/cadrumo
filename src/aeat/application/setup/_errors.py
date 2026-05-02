@@ -1,7 +1,8 @@
-"""Domain errors for the first-run setup wizard (#61).
+"""Domain errors raised by the first-run setup wizard.
 
-Every setup-wizard error inherits from :class:`aeat.core.errors.AeatError`
-so callers can catch the package-wide base class.
+Every setup-wizard error inherits from
+:class:`aeat.core.errors.AeatError` so callers can catch the
+package-wide base class to handle every aeat domain error uniformly.
 """
 
 from __future__ import annotations

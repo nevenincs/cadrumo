@@ -1,4 +1,11 @@
-"""Unit tests for the Modelo 180 2025 ruleset."""
+"""Unit tests for the Modelo 180 2025 ruleset.
+
+Exercises the formula-engine derivations and the
+externally-anchored worked example for
+:data:`aeat.domain.formulas._rulesets.MODELO_180_2025`. Also covers the
+quarterly-to-annual cumulation helpers in
+:mod:`aeat.domain.formulas._rulesets._modelo_180_cumulation`.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo180Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 180 ruleset."""
+
     def test_consistent_annual_is_clean(self) -> None:
         # 02 = 60_000, 03 = 19% = 11_400, 04 ingresos especie = 0.
         provided = {
@@ -65,7 +74,7 @@ class TestModelo180Ruleset:
         assert report.is_clean()
 
     def test_zero_base_yields_zero_retencion(self) -> None:
-        """Boundary: 0€ base ⇒ 0€ retención."""
+        """Boundary: 0 € base ⇒ 0 € retención."""
         provided = {
             "01": Decimal("0"),
             "02": Decimal("0.00"),
@@ -76,19 +85,20 @@ class TestModelo180Ruleset:
         assert report.is_clean()
 
     def test_external_worked_example_rirpf_100_1(self) -> None:
-        """External-anchored worked example for RIRPF art. 100.1.
+        """Externally-anchored worked example for RIRPF art. 100.1.
 
         Modelo 180 is the annual rollup of Modelo 115 quarterly filings;
-        RIRPF art. 100.1 fixes the 19% rate on arrendamientos urbanos.
-        Fixture values derived from that rate, NOT from the ruleset's
-        `irpf.arrendamientos_rate` parameter. BOE-A-2007-6820
-        consolidated retrieval 2026-04-22.
+        RIRPF art. 100.1 fixes the 19 % rate on arrendamientos urbanos.
+        Fixture values are derived from that rate, NOT from the ruleset's
+        ``irpf.arrendamientos_rate`` parameter. Citation:
+        BOE-A-2007-6820.
 
-        Scenario: Kent's 2025 annual summary with 3 landlords, total
-        base 90 000:
+        Scenario: a 2025 annual summary with 3 landlords, total
+        base 90 000 €:
+
         - 01 perceptores = 3.
         - 02 base = 90 000.
-        - 03 retención = 90 000 x 19% = 17 100 per RIRPF 100.1.
+        - 03 retención = 90 000 x 19 % = 17 100 per RIRPF 100.1.
         """
         provided = {
             "01": Decimal("3"),

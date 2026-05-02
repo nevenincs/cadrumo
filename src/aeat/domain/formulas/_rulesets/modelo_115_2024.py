@@ -1,14 +1,15 @@
 """Modelo 115 ruleset covering the full 2024 fiscal year.
 
-Structurally identical to :mod:`modelo_115_2025` — art. 100.1 RIRPF
-has fixed the 19% retention on arrendamientos urbanos since 2016 and
-did not change for 2024. This ruleset exists so Kent can self-audit
-a 2024 Q1-Q4 complementaria filing without resolving against a 2025
-ruleset (which would pass the audit but leak through the wrong
-effective-range citation).
+Structurally identical to
+:mod:`aeat.domain.formulas._rulesets.modelo_115_2025`: RIRPF
+art. 100.1 has fixed the 19 % retention on arrendamientos urbanos since
+2016 and did not change for 2024. This ruleset exists so the operator
+can self-audit a 2024 Q1-Q4 complementaria filing without resolving
+against a 2025 ruleset (which would pass the audit but leak through
+the wrong effective-range citation).
 
 Shares the casillas + formulas + citations with the 2025 variant,
-tagged with the 2024 effective range and `irpf.arrendamientos_rate`
+tagged with the 2024 effective range and ``irpf.arrendamientos_rate``
 parameter value.
 """
 
@@ -56,3 +57,11 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS_2025,
 )
+"""Modelo 115 ruleset for ejercicio 2024.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` re-using the casillas,
+formulas and citations from
+:mod:`aeat.domain.formulas._rulesets.modelo_115_2025` with a 2024
+``ParameterTable`` and ``effective_from`` / ``effective_to`` window.
+Re-exported as :data:`aeat.domain.formulas._rulesets.MODELO_115_2024`.
+"""

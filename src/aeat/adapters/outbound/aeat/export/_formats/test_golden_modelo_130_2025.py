@@ -1,14 +1,14 @@
 """Golden-fixture byte-exactness tests for Modelo 130 2025.
 
-Mirrors :mod:`test_golden_modelo_130` ( / 2024) for the 2025
-ejercicio. :mod:`modelo_130_2025` re-exports the 2024 record spec
-verbatim (Orden EHA/672/2007 still governs Modelo 130), so the
-only per-ejercicio byte difference must be the 4-byte EJERCICIO
-stamp at offset 71 (0-indexed [70:74]).
+Mirrors :mod:`.test_golden_modelo_130` (the 2024 suite) for the 2025
+ejercicio. :mod:`.modelo_130_2025` re-exports the 2024 record spec
+verbatim (Orden EHA/672/2007 still governs Modelo 130), so the only
+per-ejercicio byte difference must be the 4-byte ``EJERCICIO`` stamp
+at offset 71 (0-indexed ``[70:74]``).
 
-Pinning a separate SHA256 for 2025 catches any accidental
-divergence between the two clones. The "delta only in EJERCICIO
-bytes" invariant adds structural proof that the clone is pure.
+Pinning a separate SHA256 for 2025 catches any accidental divergence
+between the two clones. The "delta only in EJERCICIO bytes" invariant
+adds structural proof that the clone is pure.
 """
 
 from __future__ import annotations
@@ -72,11 +72,11 @@ class TestModelo1302025GoldenKentQ1:
 
 
 class TestModelo1302024vs2025StructuralParity:
-    """2024 and 2025 clones differ only at the
-    4-byte EJERCICIO field when the same casilla values are filed.
+    """2024 and 2025 clones differ only at the 4-byte ``EJERCICIO`` field
+    when the same casilla values are filed.
 
-    Since "2024" → "2025" mutates only the final digit (ASCII 52 → 53),
-    exactly one byte must differ — position 73.
+    Since ``"2024"`` -> ``"2025"`` mutates only the final digit
+    (ASCII 52 -> 53), exactly one byte must differ — position 73.
     """
 
     def test_clone_payloads_differ_only_at_ejercicio_last_digit(self) -> None:

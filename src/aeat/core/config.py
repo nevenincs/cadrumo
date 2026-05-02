@@ -13,7 +13,6 @@ from __future__ import annotations
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -69,21 +68,29 @@ class LLMProviderSetting(StrEnum):
 
 
 class GoogleAuthPathSetting(StrEnum):
+    """Settings-shape mirror of :class:`aeat.adapters.outbound.google.GoogleAuthPath`."""
+
     DESKTOP_OAUTH_LOCAL_DEV = "desktop-oauth-local-dev"
     SERVICE_ACCOUNT_AUTOMATION = "service-account-automation"
 
 
 class CertificateBackendSetting(StrEnum):
+    """Settings-shape selector for the AEAT certificate-handshake backend."""
+
     PLAYWRIGHT_CONTEXT = "playwright_context"
     HTTPX_FALLBACK = "httpx_fallback"
 
 
 class AuthProviderKindSetting(StrEnum):
+    """Settings-shape selector for the active AEAT authentication provider."""
+
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
 
 
 class JustificanteParserBackendSetting(StrEnum):
+    """Settings-shape selector for the justificante PDF parsing backend."""
+
     PDFPLUMBER = "pdfplumber"
     PYMUPDF = "pymupdf"
 

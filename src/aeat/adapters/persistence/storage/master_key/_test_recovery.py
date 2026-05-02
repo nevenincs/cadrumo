@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ..errors import DecryptionError
 from ._recovery import (
     RecoveryKey,
     decode_mnemonic,
@@ -17,7 +18,6 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from ..errors import DecryptionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

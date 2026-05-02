@@ -3,12 +3,12 @@
 Ejercicio 2024 is the first year on which Real Decreto-Ley 4/2024
 (BOE-A-2024-13066, vigent 1/1/2024) applies. RD-Ley 4/2024 set the
 LIRPF art. 20 reducción thresholds at 14.852 / 17.673,52 / 19.747,50 €
-with maximum reducción 7.302 €. Those values are the BOE-anchored
+with a maximum reducción of 7.302 €. Those values are the BOE-anchored
 baseline for 2024 and remain unchanged for 2025 and 2026.
 
-Anexo B1 casillas + citations are imported from the 2025 reference
-module to avoid drift; only ``FORMULAS`` (year-scoped formula IDs) and
-the effective-date constants are year-specific.
+Anexo B1 casillas and citations are re-exported from
+:mod:`.anexo_b1_2025` to avoid drift; only ``FORMULAS`` (year-scoped
+formula IDs) and the effective-date constants are year-specific.
 """
 
 from __future__ import annotations

@@ -1,8 +1,8 @@
 """Concrete observability errors layered over :class:`AeatObservabilityError`.
 
-The base class :class:`AeatObservabilityError` lives in
-:mod:`aeat.core.errors` so other subpackages can catch it without importing
-observability internals (see ADR D8). This module re-exports it and
+The base class :class:`aeat.core.errors.AeatObservabilityError` lives in
+:mod:`aeat.core.errors` so other subpackages can catch it without
+importing observability internals. This module re-exports the base and
 declares the leaf error types raised inside the observability layer.
 """
 
@@ -12,13 +12,23 @@ from ..errors import AeatObservabilityError
 
 
 class RunContextMissingError(AeatObservabilityError):
-    """Raised when an observability call is made outside an active run context."""
+    """Raised when :func:`record_event` runs outside an active :func:`run_context`.
+
+    Caused by calling the recorder from a thread that did not propagate
+    the contextvar bound by :func:`aeat.core.observability.run_context`,
+    or by calling it from CLI bootstrap code that runs before the run
+    context enters.
+    """
 
     pass
 
 
 class RunTraceValidationError(AeatObservabilityError):
-    """Raised when persisted JSONL or trace.json fails strict validation."""
+    """Raised when persisted ``trace.json`` or ``events.jsonl`` fails strict validation.
+
+    Surfaces both shape-level rejections (bad ``run_id``, malformed
+    JSON line) and pydantic strict-mode validation failures.
+    """
 
     pass
 
@@ -27,8 +37,15 @@ class AeatCorpusDriftError(AeatObservabilityError):
     """Raised when replay detects that ``corpus_sha256`` has drifted.
 
     Carries both the recorded and observed hashes plus the entrypoint
-    so the caller can render an actionable diff. Replay is the only
-    call site that raises this.
+    so the caller can render an actionable diff.
+    :func:`aeat.core.observability.replay_run` is the only call site
+    that raises this.
+
+    Attributes:
+        run_id: Identifier of the recorded run being replayed.
+        recorded: ``corpus_sha256`` captured at the original run.
+        observed: ``corpus_sha256`` computed against the current tree.
+        entrypoint: CLI entrypoint string of the recorded run.
     """
 
     def __init__(
@@ -39,7 +56,7 @@ class AeatCorpusDriftError(AeatObservabilityError):
         observed: str,
         entrypoint: str,
     ) -> None:
-        """Construct a corpus-drift error.
+        """Build the drift error and its diagnostic message.
 
         Args:
             run_id: Identifier of the recorded run being replayed.

@@ -1,4 +1,11 @@
-"""Cross-check that every shipped ruleset binds to the authoritative registry."""
+"""Cross-check that every shipped ruleset binds to the authoritative registry.
+
+Asserts that every entry returned by
+:func:`aeat.domain.formulas._registry.get_registry` references a
+:class:`aeat.domain.modelos._codes.ModeloCode` known to
+:data:`aeat.domain.modelos.MODELO_REGISTRY` and avoids the
+casillas-local enum variant.
+"""
 
 from __future__ import annotations
 

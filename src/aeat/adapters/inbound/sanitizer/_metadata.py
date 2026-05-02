@@ -45,7 +45,7 @@ def scrub_docinfo(pdf: Pdf) -> ScrubbedSurface:
         return ScrubbedSurface(surface="docinfo_other", count=0)
     count = len(list(info.keys()))
     # `del pdf.docinfo` is the documented pattern but pikepdf's
-    # type stub omits the deleter; reach into the trailer
+    # typing metadata omits the deleter; reach into the trailer
     # directly so the static checker stays happy.
     del pdf.trailer["/Info"]
     return ScrubbedSurface(surface="docinfo_other", count=count)

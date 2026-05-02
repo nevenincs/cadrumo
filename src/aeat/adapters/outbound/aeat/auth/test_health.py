@@ -1,4 +1,4 @@
-"""Unit tests for the certificate pre-expiry health evaluator (#94).
+"""Unit tests for the certificate pre-expiry health evaluator.
 
 Every test generates a real self-signed PKCS#12 bundle at runtime via
 :mod:`cryptography` — no mocks, no fakes, no checked-in fixtures. The

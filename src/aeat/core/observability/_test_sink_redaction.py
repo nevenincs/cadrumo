@@ -1,14 +1,17 @@
-"""tests: run-trace JSONL redaction discipline.
+"""End-to-end redaction tests for :class:`aeat.core.observability._sink.JsonlRunSink`.
 
-The :class:`JsonlRunSink` writes :class:`RunEvent` records that may
-carry casilla form-fill values, AEAT navigation URLs, and free-form
-error messages. the emit path through
-:func:`aeat.adapters.persistence.storage.redact_structured` against the DIAGNOSTIC-class
-default rule set so the JSONL never carries a plaintext NIF / token /
-URL path even if a caller forgets to scrub upstream.
+The sink writes :class:`aeat.core.observability.RunEvent` records that
+may carry casilla form-fill values, AEAT navigation URLs, and free-form
+error messages. The emit path runs every record through
+:func:`aeat.adapters.persistence.storage.redact_structured` against the
+DIAGNOSTIC-class default rule set so the JSONL never carries a
+plaintext NIF / token / URL path even if a caller forgets to scrub
+upstream.
 
-These tests confirm that property end-to-end against real on-disk
-JSONL files.
+These tests verify the property end-to-end against real on-disk JSONL
+files for each sensitive shape: NIF in :class:`FormFillPayload.value`,
+session-bearing AEAT URL in :class:`NavigationPayload.url`, and bearer
+token in :class:`ErrorPayload.message`.
 """
 
 from __future__ import annotations
@@ -40,8 +43,13 @@ _AEAT_URL = "https://www.agenciatributaria.gob.es" + _URL_PATH_CANARY
 
 
 def _emit(sink: JsonlRunSink, event: RunEvent) -> None:
-    """Push ``event`` through the sink via the standard logging filter
-    contract (``run_event`` extra on the record)."""
+    """Push ``event`` through the sink via the standard logging contract.
+
+    Builds a minimal :class:`logging.LogRecord`, attaches the event as
+    the ``run_event`` extra (matching the recorder's wire shape), and
+    invokes :meth:`JsonlRunSink.emit` directly. Closes the sink so the
+    on-disk file is fsync'd before the assertions read it.
+    """
     record = logging.LogRecord(
         name="aeat.test",
         level=logging.INFO,

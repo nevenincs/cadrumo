@@ -1,8 +1,9 @@
-"""Domain errors for the ``aeat.domain.manuals`` subpackage.
+"""Domain errors for the :mod:`aeat.domain.manuals` subpackage.
 
-All exceptions raised by loading, verifying, fetching, or extracting
-from the AEAT *Manual práctico* corpus inherit from :class:`ManualError`
-which in turn inherits from :class:`aeat.core.errors.AeatError`.
+Every exception raised by loading, verifying, fetching, or extracting
+from the AEAT *Manual práctico* corpus inherits from
+:class:`ManualError`, which in turn inherits from
+:class:`aeat.core.errors.AeatError`.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from ...core.errors import AeatError
 
 
 class ManualError(AeatError):
-    """Base error for every ``aeat.domain.manuals`` failure mode."""
+    """Base error for every :mod:`aeat.domain.manuals` failure mode."""
 
 
 class ManualNotFoundError(ManualError):
@@ -25,18 +26,20 @@ class ManualParseError(ManualError):
 class ManualReviewRequiredError(ManualError):
     """Raised when a persisted record lacks reviewer metadata.
 
-    The verify CLI rejects any ``Manual`` / ``Section`` / ``Rule``
-    record missing ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
+    The verify CLI rejects any :class:`~aeat.domain.manuals.Manual`,
+    :class:`~aeat.domain.manuals.Section`, or
+    :class:`~aeat.domain.manuals.Rule` record missing
+    ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
     ``AEAT_MANUALS_REVIEW_REQUIRED`` setting is enabled.
     """
 
 
 class RuleExtractionError(ManualError):
-    """Raised by the LLM-dependent CLI phases until ``#21`` lands.
+    """Raised by LLM-dependent CLI subcommands that have no backing implementation.
 
     The ``structure``, ``extract-rules``, and ``translate`` subcommands
-    are defined in v1 to lock the public CLI shape but raise this
-    exception until the ``aeat.adapters.outbound.llm`` subpackage is available.
+    define their public CLI shape but raise this exception until the
+    :mod:`aeat.adapters.outbound.llm` subpackage is available.
     """
 
 

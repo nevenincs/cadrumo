@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.adapters.inbound.financial import CsvProvider, OfxProvider
 from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -18,12 +19,12 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from aeat.entrypoints.cli import app as root_app
-from aeat.adapters.inbound.financial import CsvProvider, OfxProvider, RawProvenance, SourceFormat
-from aeat.adapters.inbound.financial.providers import RawTransaction
 from aeat.domain.transactions import (
     BusinessClassification,
     LLMClassificationResponse,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
@@ -32,6 +33,7 @@ from aeat.domain.transactions import (
     unregister_classifier,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
+from aeat.entrypoints.cli import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -213,39 +215,6 @@ def test_financial_txs_list_every_pipeline_state_is_independently_filterable(tmp
         for other_state, other_id in expected_by_state.items():
             if other_state is not state:
                 assert other_id not in result.output
-
-
-def test_financial_txs_list_deprecated_unclassified_flag_aliases_processed_unclassified(tmp_path: Path) -> None:
-    """The hidden `--unclassified` flag must still resolve to `--state PROCESSED_UNCLASSIFIED`."""
-    catalogue = _write_four_state_catalogue(tmp_path)
-    expected = next(
-        transaction.transaction_id
-        for transaction in catalogue.values()
-        if transaction.business_classification is BusinessClassification.PROCESSED_UNCLASSIFIED
-    )
-
-    result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--unclassified"],
-        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
-    )
-
-    assert result.exit_code == 0, result.output
-    assert expected in result.output
-
-
-def test_financial_txs_list_rejects_combination_of_state_and_unclassified(tmp_path: Path) -> None:
-    """Passing both `--state` and `--unclassified` must exit with a clear error."""
-    _write_four_state_catalogue(tmp_path)
-
-    result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--state", "BUSINESS", "--unclassified"],
-        env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
-    )
-
-    assert result.exit_code == 2
-    assert "mutually exclusive" in result.output
 
 
 def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> None:
@@ -921,7 +890,7 @@ class _ScriptedLLMClassifier:
     """Real LLMClassifier implementation that returns a scripted response.
 
     Used to exercise the classify-llm CLI end-to-end without shelling
-    out to a real LLM. Not a mock: it's a plain dataclass with the
+    out to a real LLM. It is a plain dataclass with the
     two attributes the protocol requires.
     """
 

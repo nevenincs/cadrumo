@@ -1,4 +1,8 @@
-"""Portal: Calendario del contribuyente."""
+"""Catalogue entry for the AEAT *Calendario del contribuyente* reference page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.CALENDAR_REFERENCE`.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +25,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Calendario oficial del contribuyente con los plazos de presentación por modelo.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the taxpayer calendar reference page."""

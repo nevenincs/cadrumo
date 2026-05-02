@@ -1,10 +1,13 @@
 """Governed-persistence repository for the invoice catalogue.
 
-Wraps the substrate's :class:`Envelope[InvoiceCatalogue]` contract
-behind a small, typed surface. Every read consults the envelope file
-first; every write goes through ``save_encrypted_envelope`` at the
-FINANCIAL sensitivity classification with an exclusive file lock for
-the duration so concurrent writers serialise rather than race.
+Wraps the storage substrate's :class:`Envelope[InvoiceCatalogue]`
+contract behind a small typed surface
+(:class:`InvoiceCatalogueRepository`). Every read consults the envelope
+file first; every write goes through
+:func:`aeat.adapters.persistence.storage.save_encrypted_envelope` at the
+:attr:`aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
+classification with an exclusive file lock held for the duration so
+concurrent writers serialise rather than race.
 
 The repository is the only sanctioned read/write path for the invoice
 catalogue. There is no plaintext fallback: every CLI command and
@@ -12,9 +15,10 @@ downstream consumer routes through this surface so the on-disk record
 is always the encrypted envelope.
 
 Storage imports are deferred behind the methods that consult them so
-the financial subpackage does not pull ``aeat.adapters.persistence.storage`` (with its
-Alembic plugin discovery) into every CLI command's import chain; this
-preserves the json-pipe-safety contract.
+the financial subpackage does not pull
+:mod:`aeat.adapters.persistence.storage` (with its Alembic plugin
+discovery) into every CLI command's import chain; this preserves the
+json-pipe-safety contract.
 """
 
 from __future__ import annotations
@@ -59,11 +63,17 @@ class InvoiceCatalogueRepository:
     def load(self) -> InvoiceCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
+        Returns:
+            The deserialised :class:`InvoiceCatalogue`, or a fresh empty
+            instance when the envelope file is not present on disk.
+
         Raises:
-            ClassificationError: If the on-disk envelope's class is not
-                FINANCIAL.
-            EnvelopeVersionError: If the envelope schema version is
-                higher than the consumer supports.
+            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
+                If the on-disk envelope's classification is not
+                :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`.
+            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
+                If the envelope schema version is higher than the
+                consumer supports.
         """
         from ...adapters.persistence.storage import (
             Envelope,
@@ -88,9 +98,14 @@ class InvoiceCatalogueRepository:
     def save(self, catalogue: InvoiceCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
 
-        The on-disk envelope is AES-256-GCM ciphertext at FINANCIAL
-        class via the substrate's ``save_encrypted_envelope`` helper —
-        no plaintext invoice row lands on disk.
+        The on-disk envelope is AES-256-GCM ciphertext at the
+        :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
+        classification via the substrate's
+        :func:`~aeat.adapters.persistence.storage.save_encrypted_envelope`
+        helper — no plaintext invoice row lands on disk.
+
+        Args:
+            catalogue: The :class:`InvoiceCatalogue` to persist.
         """
         from ...adapters.persistence.storage import (
             Envelope,

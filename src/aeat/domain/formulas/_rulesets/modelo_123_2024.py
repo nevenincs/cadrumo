@@ -1,9 +1,10 @@
 """Modelo 123 ruleset covering the full 2024 fiscal year.
 
-Structural clone of :mod:`modelo_123_2025`. 123 is a pure aggregation
-ruleset — no parameter table, so the 2024 variant only narrows the
-effective range. Kent uses this for 2024-period complementaria
-filings of capital-mobiliario retenciones.
+Structural clone of
+:mod:`aeat.domain.formulas._rulesets.modelo_123_2025`. Modelo 123 is a
+pure aggregation ruleset — no parameter table — so the 2024 variant
+only narrows the effective range. The operator uses this for
+2024-period complementaria filings of capital-mobiliario retenciones.
 """
 
 from __future__ import annotations
@@ -39,3 +40,12 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS_2025,
 )
+"""Modelo 123 ruleset for ejercicio 2024.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` re-using the casillas,
+formulas and citations from
+:mod:`aeat.domain.formulas._rulesets.modelo_123_2025` with an empty
+``ParameterTable`` and the 2024 ``effective_from`` / ``effective_to``
+window. Re-exported as
+:data:`aeat.domain.formulas._rulesets.MODELO_123_2024`.
+"""

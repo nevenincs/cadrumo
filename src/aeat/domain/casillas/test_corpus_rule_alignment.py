@@ -341,9 +341,7 @@ def test_corpus_label_es_is_uniform_per_casilla() -> None:
         for rec in catalogue.records:
             seen[(modelo, rec.casilla_id)].add(rec.label["es"])
     failures = [
-        f"{modelo} cas {cid}: label drift {sorted(labels)}"
-        for (modelo, cid), labels in seen.items()
-        if len(labels) > 1
+        f"{modelo} cas {cid}: label drift {sorted(labels)}" for (modelo, cid), labels in seen.items() if len(labels) > 1
     ]
     if failures:
         pytest.fail("Corpus label.es drift:\n" + "\n".join(f" - {f}" for f in failures))
@@ -491,9 +489,7 @@ def test_corpus_casilla_id_set_matches_engine_ruleset() -> None:
         corpus_ids = {r.casilla_id for r in catalogue.records}
         missing = engine_ids - corpus_ids
         if missing:
-            failures.append(
-                f"{modelo} {period}: engine ruleset declares casillas not in corpus: {sorted(missing)}"
-            )
+            failures.append(f"{modelo} {period}: engine ruleset declares casillas not in corpus: {sorted(missing)}")
     if failures:
         pytest.fail("Corpus is missing casillas that the engine declares:\n" + "\n".join(f" - {f}" for f in failures))
 
@@ -536,9 +532,7 @@ def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
         if extra:
             failures.append(f"{modelo}: corpus IDs not declared by extractor: {sorted(extra)}")
     if failures:
-        pytest.fail(
-            "Corpus drifted from extractor canonical IDs:\n" + "\n".join(f" - {f}" for f in failures)
-        )
+        pytest.fail("Corpus drifted from extractor canonical IDs:\n" + "\n".join(f" - {f}" for f in failures))
 
 
 def test_corpus_references_rules_have_no_duplicates() -> None:
@@ -549,7 +543,9 @@ def test_corpus_references_rules_have_no_duplicates() -> None:
         catalogue = load_casillas(modelo, period)
         for rec in catalogue.records:
             if len(rec.references_rules) != len(set(rec.references_rules)):
-                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_rules {list(rec.references_rules)}")
+                failures.append(
+                    f"{modelo} {period} cas {rec.casilla_id}: duplicate references_rules {list(rec.references_rules)}"
+                )
     if failures:
         pytest.fail("Corpus has duplicate references_rules:\n" + "\n".join(f" - {f}" for f in failures))
 
@@ -562,7 +558,9 @@ def test_corpus_references_casillas_have_no_duplicates() -> None:
         catalogue = load_casillas(modelo, period)
         for rec in catalogue.records:
             if len(rec.references_casillas) != len(set(rec.references_casillas)):
-                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_casillas {list(rec.references_casillas)}")
+                failures.append(
+                    f"{modelo} {period} cas {rec.casilla_id}: duplicate references_casillas {list(rec.references_casillas)}"
+                )
     if failures:
         pytest.fail("Corpus has duplicate references_casillas:\n" + "\n".join(f" - {f}" for f in failures))
 
@@ -603,7 +601,9 @@ def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
                     f"(engine caps_into={sorted(upstream_set)})"
                 )
     if failures:
-        pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
+        pytest.fail(
+            "Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures)
+        )
 
 
 def test_corpus_within_year_periods_share_structural_shape() -> None:
@@ -664,7 +664,9 @@ def test_corpus_label_and_help_carry_every_supported_language() -> None:
                 container = getattr(rec, field)
                 missing = expected - set(container.keys())
                 if missing:
-                    failures.append(f"{modelo} {period} cas {rec.casilla_id} {field}: missing languages {sorted(missing)}")
+                    failures.append(
+                        f"{modelo} {period} cas {rec.casilla_id} {field}: missing languages {sorted(missing)}"
+                    )
                     break  # one report per record is enough
     if failures:
         pytest.fail("Corpus label / help missing supported languages:\n" + "\n".join(f" - {f}" for f in failures))
@@ -701,7 +703,9 @@ def test_corpus_help_and_label_carry_no_dev_process_leakage() -> None:
                             f"{modelo} {period} cas {rec.casilla_id} {field}.{lang}: dev-process leakage in {value[:80]!r}"
                         )
     if failures:
-        pytest.fail("Corpus leaks dev-process tokens into user-facing strings:\n" + "\n".join(f" - {f}" for f in failures))
+        pytest.fail(
+            "Corpus leaks dev-process tokens into user-facing strings:\n" + "\n".join(f" - {f}" for f in failures)
+        )
 
 
 def test_corpus_source_manual_url_matches_hydrate_resolver() -> None:
@@ -726,8 +730,7 @@ def test_corpus_source_manual_url_matches_hydrate_resolver() -> None:
             actual = str(rec.source_manual_url) if rec.source_manual_url is not None else ""
             if actual.rstrip("/") != expected.rstrip("/"):
                 failures.append(
-                    f"{modelo} {period} cas {rec.casilla_id}: source_manual_url={actual!r} "
-                    f"!= resolver {expected!r}"
+                    f"{modelo} {period} cas {rec.casilla_id}: source_manual_url={actual!r} != resolver {expected!r}"
                 )
                 break  # one mismatch per file is enough
     if failures:
@@ -763,8 +766,6 @@ def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
         corpus_folded = _ascii_fold(rec.label["es"]).replace(" de ", " ")
         extractor_folded = _ascii_fold(expected_label).replace(" de ", " ")
         if corpus_folded != extractor_folded:
-            failures.append(
-                f"M840 cas {cid}: corpus label.es {rec.label['es']!r} != extractor {expected_label!r}"
-            )
+            failures.append(f"M840 cas {cid}: corpus label.es {rec.label['es']!r} != extractor {expected_label!r}")
     if failures:
         pytest.fail("M840 corpus drifted from extractor text_labels:\n" + "\n".join(f" - {f}" for f in failures))

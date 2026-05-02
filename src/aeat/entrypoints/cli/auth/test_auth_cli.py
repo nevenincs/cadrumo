@@ -1,17 +1,17 @@
-"""Unit tests for the ``aeat auth`` CLI (#285)."""
+"""Unit tests for the ``aeat auth`` CLI."""
 
 from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import pytest
 from pydantic_settings import SettingsConfigDict
 from typer.testing import CliRunner
 
-from ....adapters.outbound.aeat.auth import AuthProviderKind
+from ....application.auth import AuthProviderKind
 from ....core.config import Settings
 from .. import app
 from . import _registry, _session
@@ -62,6 +62,9 @@ def isolated_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
+    # Re-apply English output after the wholesale delenv above so the
+    # autouse conftest fixture's intent survives this isolation step.
+    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
 
     class _IsolatedSettings(Settings):
         model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
@@ -82,7 +85,7 @@ def _seed_persisted_session(
     identity_nif: str = "12345678Z",
     provider_kind: AuthProviderKind | None = AuthProviderKind.CERTIFICATE,
 ) -> Path:
-    """Write a fake storage-state + metadata pair matching the authenticator layout."""
+    """Write a concrete storage-state + metadata pair matching the authenticator layout."""
     storage = tmp_path / "default-storage.json"
     storage.write_text(json.dumps({"cookies": [], "origins": []}), encoding="utf-8")
 
@@ -196,26 +199,25 @@ class TestRegistry:
         del isolated_token_dir
         settings = _isolated_settings()
         with pytest.raises(_registry.UnknownProviderError):
-            _registry.build_provider(AuthProviderKind.CLAVE_PERMANENTE, settings)
+            _registry.build_provider(cast(AuthProviderKind, "clave_permanente"), settings)
 
     def test_describe_rejects_unsupported_kinds(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         settings = _isolated_settings()
         with pytest.raises(_registry.UnknownProviderError):
-            _registry.describe(AuthProviderKind.CLAVE_PIN, settings)
+            _registry.describe(cast(AuthProviderKind, "clave_pin"), settings)
 
 
 # ── login ─────────────────────────────────────────────────────────────────────
 
 
 class TestLogin:
-    """`aeat auth login` error paths are Kent-readable and exit with code 2."""
+    """`aeat auth login` error paths are operator-readable and exit with code 2."""
 
     def test_login_unsupported_provider_exits_2(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         result = _runner.invoke(app, ["auth", "login", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
-        assert "unsupported provider" in result.output
         assert "certificate" in result.output
         assert "clave_movil" in result.output
 
@@ -255,7 +257,7 @@ class TestLogin:
 
 
 class TestStatus:
-    """`aeat auth status` maps persisted state into Kent-readable lines."""
+    """`aeat auth status` maps persisted state into operator-readable lines."""
 
     def test_no_session_prints_friendly_hint(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -314,7 +316,8 @@ class TestStatus:
         )
         result = _runner.invoke(app, ["auth", "status", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
-        assert "unsupported provider" in result.output
+        assert "certificate" in result.output
+        assert "clave_movil" in result.output
 
 
 # ── logout ────────────────────────────────────────────────────────────────────
@@ -386,7 +389,8 @@ class TestLogout:
 
         result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
-        assert "unsupported provider" in result.output
+        assert "certificate" in result.output
+        assert "clave_movil" in result.output
         assert paths.storage_state.exists()
         assert paths.metadata.exists()
 

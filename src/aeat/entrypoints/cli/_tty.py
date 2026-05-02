@@ -1,4 +1,13 @@
-"""TTY and colour/progress helpers for the root CLI contract."""
+"""TTY, colour, and progress helpers for the root CLI contract.
+
+Centralises the rules every CLI command uses to decide whether to
+emit ANSI colour, render a rich progress widget, or refuse a request
+that requires interactive stdin. Resolution merges three signals — the
+active CLI flag context (via :func:`aeat.entrypoints.cli._context`),
+explicit per-call overrides, and the operator's environment
+(``NO_COLOR``, ``AEAT_FORCE_COLOR``) — so call sites never need to
+re-implement the precedence rules.
+"""
 
 from __future__ import annotations
 
@@ -12,21 +21,31 @@ _TRUTHY_ENV_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
 class NonTtyRefusedError(AeatError):
-    """Raised when a command requires interactive stdin but stdin is piped."""
+    """Raised when a command requires interactive stdin but stdin is piped.
+
+    Carries the operator-facing recovery hint on :attr:`suggestion` so
+    the renderer can append it to the standard refusal message.
+
+    Attributes:
+        suggestion: Copy-paste-ready recovery hint shown to the user.
+    """
 
     def __init__(self, suggestion: str) -> None:
-        """Initialise the refusal with a copy-paste-ready suggestion."""
+        """Initialise the refusal with a copy-paste-ready suggestion.
+
+        Args:
+            suggestion: Recovery hint to attach to the refusal message.
+        """
 
         message = "Interactive stdin is unavailable on a non-TTY input stream."
         if suggestion.strip():
             message = f"{message} {suggestion.strip()}"
         super().__init__(message)
         self.suggestion: str = suggestion
-        # TODO(#399, after #398): assign the registered REFUSED code here.
 
 
 def _isatty(stream: object) -> bool:
-    """Return ``True`` when ``stream`` exposes a truthy ``isatty()``."""
+    """Return :data:`True` when ``stream`` exposes a truthy ``isatty()``."""
 
     isatty = getattr(stream, "isatty", None)
     if not callable(isatty):
@@ -38,7 +57,7 @@ def _isatty(stream: object) -> bool:
 
 
 def _env_truthy(name: str) -> bool:
-    """Return ``True`` when an environment variable is set truthy."""
+    """Return :data:`True` when an environment variable is set to a truthy value."""
 
     value = os.getenv(name, "")
     return value.strip().lower() in _TRUTHY_ENV_VALUES
@@ -65,10 +84,19 @@ def is_stdin_tty() -> bool:
 def should_use_color(*, no_color: bool | None = None) -> bool:
     """Resolve whether ANSI colour should be enabled for this invocation.
 
+    Precedence: explicit ``--no-color`` (via either the active CLI flag
+    context or the ``no_color`` argument) and the standard ``NO_COLOR``
+    environment variable both disable colour. ``AEAT_FORCE_COLOR``
+    forces colour on even outside a TTY. Otherwise colour is enabled
+    only when stdout is interactive.
+
     Args:
-        no_color: CLI-level ``--no-color`` override from a future root
-            callback. keeps the parameter optional so commands
-            can adopt the helper before the global flag lands.
+        no_color: Optional per-call override mirroring the
+            ``--no-color`` CLI flag. Kept optional so commands can
+            adopt the helper before any global flag is wired.
+
+    Returns:
+        :data:`True` when colour output is appropriate.
     """
 
     resolved_no_color = current_cli_flag("no_color") or bool(no_color)
@@ -85,11 +113,21 @@ def should_show_rich_progress(
     json_mode: bool | None = None,
     no_progress: bool | None = None,
 ) -> bool:
-    """Return whether interactive rich progress can render safely.
+    """Return whether an interactive rich progress widget can render safely.
 
-    When this returns ``False`` and the caller is neither ``quiet`` nor
-    in ``json_mode``, the caller should fall back to line-based stderr
-    progress instead of a live spinner/progress bar.
+    When this returns :data:`False` and the caller is neither ``quiet``
+    nor in ``json_mode``, the caller should fall back to line-based
+    stderr progress instead of a live spinner or progress bar.
+
+    Args:
+        quiet: Optional per-call override mirroring ``--quiet``.
+        json_mode: Optional per-call override mirroring ``--json``.
+        no_progress: Optional per-call override mirroring
+            ``--no-progress``.
+
+    Returns:
+        :data:`True` when both stdout and stderr are interactive and no
+        suppressing flag is active.
     """
 
     resolved_quiet = current_cli_flag("quiet") or bool(quiet)
@@ -107,7 +145,7 @@ def refuse_if_stdin_non_tty(suggestion: str) -> None:
         suggestion: Copy-paste-ready recovery hint shown to the user.
 
     Raises:
-        NonTtyRefusedError: If stdin is not a TTY.
+        NonTtyRefusedError: When stdin is not a TTY.
     """
 
     if not is_stdin_tty():

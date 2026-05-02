@@ -1,4 +1,9 @@
-"""``aeat deadlines next`` - show the next non-overdue obligation."""
+"""``aeat deadlines next`` — show the next non-overdue obligation.
+
+Queries :func:`aeat.domain.deadlines.next_deadline` for the soonest
+upcoming :class:`aeat.domain.deadlines.FilingObligation` and prints its
+modelo, period, due date, status, and applies-because rationale.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +14,7 @@ import typer
 from rich.console import Console
 
 from ....domain.deadlines import next_deadline
+from .._i18n import t, tr
 from ._helpers import build_engine, load_profile, resolve_profile_path
 
 _CONSOLE = Console()
@@ -33,10 +39,19 @@ def next_obligation(
     schedule = engine.compute(loaded_profile, year)
     obligation = next_deadline(schedule)
     if obligation is None:
-        _CONSOLE.print(f"[yellow]no upcoming obligations for {year}: every entry is overdue[/yellow]")
+        msg = tr(
+            t(
+                f"no hay obligaciones próximas para {year}: todas las entradas están vencidas",
+                f"no upcoming obligations for {year}: every entry is overdue",
+                f"no hi ha obligacions properes per a {year}: totes les entrades han vençut",
+                f"nincs közelgő kötelezettség {year} évre: minden bejegyzés lejárt",
+            )
+        )
+        _CONSOLE.print(f"[yellow]{msg}[/yellow]")
         raise typer.Exit(code=0)
+    closes_label = tr(t("cierra", "closes", "tanca", "lezárul"))
     _CONSOLE.print(
         f"[bold cyan]{obligation.modelo}[/bold cyan] {obligation.period} - "
-        f"closes {obligation.closes_on.isoformat()} ({obligation.status.value})"
+        f"{closes_label} {obligation.closes_on.isoformat()} ({obligation.status.value})"
     )
     _CONSOLE.print(f"[dim]{obligation.applies_because}[/dim]")

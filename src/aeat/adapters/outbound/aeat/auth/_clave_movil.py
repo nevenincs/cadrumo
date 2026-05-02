@@ -1,20 +1,19 @@
-"""Cl@ve Móvil auth provider for AEAT Sede Electrónica (#285 / #284).
+"""Cl@ve Móvil auth provider for AEAT Sede Electrónica.
 
 Implements the :class:`AuthProvider` protocol for the human-in-the-loop
-Cl@ve Móvil flow. Captured live against the real portal on 2026-04-21;
-see ``.vault/reference/2026-04-21-clave-portal-reference.md`` for the
-URL template, form selectors, and polling endpoints that this module
-depends on.
+Cl@ve Móvil flow against the live portal. Captures the URL template,
+form selectors, and polling endpoints needed to drive the AEAT QR page
+to a successful login handshake.
 
 Design summary:
 
-* Cl@ve Móvil ALWAYS requires Kent to approve a push on his phone,
-  even in the non-QR fallback. We do not fake or retry the approval
-  step — the provider just sits on the AEAT QR page and waits for the
-  page's own JavaScript to complete the polling handshake.
-* The provider opens a headed Playwright window on fresh login so Kent
-  can scan the QR visually. Resume-from-storage-state runs headlessly
-  because no human interaction is required.
+* Cl@ve Móvil ALWAYS requires the operator to approve a push on their
+  phone, even in the non-QR fallback. The provider does not simulate
+  or retry the approval step — it sits on the AEAT QR page and waits
+  for the page's own JavaScript to complete the polling handshake.
+* The provider opens a headed Playwright window on fresh login so the
+  operator can scan the QR visually. Resume-from-storage-state runs
+  headlessly because no human interaction is required.
 * The persisted session uses :class:`aeat.adapters.outbound.aeat.auth._authenticator.AeatAuthenticator`'s
   existing sidecar layout, but with cert-specific fields left as
   placeholders and a ``provider_kind`` marker for the session detail.
@@ -81,7 +80,7 @@ class ClaveMovilConfigurationError(AeatError):
 
 
 class ClaveMovilApprovalTimeoutError(AeatError):
-    """Raised when Kent does not approve the Cl@ve push within the time window."""
+    """Raised when the operator does not approve the Cl@ve push within the time window."""
 
 
 class _ClaveMovilSidecar(BaseModel):
@@ -144,7 +143,7 @@ def _render_progress_banner(
     used_non_qr_fallback: bool,
     stream: Any = sys.stderr,
 ) -> None:
-    """Print a Kent-readable instruction block while the provider waits for approval."""
+    """Print an operator-readable instruction block while the provider waits for approval."""
     lines = [
         "",
         "─────────────────────────────────────────────────────────────",
@@ -189,8 +188,8 @@ class ClaveMovilAuthProvider:
 
     Constructed by :func:`aeat.adapters.outbound.aeat.auth.select_provider` when
     ``kind == AuthProviderKind.CLAVE_MOVIL``. A fresh login opens a
-    headed Playwright window so Kent can scan the QR; resume runs
-    headlessly because the stored cookies are sufficient.
+    headed Playwright window so the operator can scan the QR; resume
+    runs headlessly because the stored cookies are sufficient.
     """
 
     kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
@@ -423,7 +422,7 @@ class ClaveMovilAuthProvider:
         )
 
     def describe(self) -> AuthProviderDescription:
-        """Return a Kent-readable description of the Cl@ve Móvil provider state."""
+        """Return an operator-readable description of the Cl@ve Móvil provider state."""
         dni_nie = (self._settings.aeat_clave_movil_dni_nie or "").strip()
         if not dni_nie:
             return AuthProviderDescription(
@@ -553,12 +552,10 @@ class ClaveMovilAuthProvider:
             with contextlib.suppress(FileNotFoundError):
                 tmp_path.unlink()
             raise
-        # Issue #469 M-2: harden ACLs on every platform via the
-        # shared helper. Previously this branch only chmod'd 0o600
-        # on POSIX and silently fell through on Windows, leaving
-        # the storage-state JSON (containing localStorage + cookies
-        # of the AEAT browser session — bearer-equivalent material)
-        # readable by anything inheriting the parent dir's ACL.
+        # Harden ACLs on every platform via the shared helper. The
+        # storage-state JSON contains localStorage + cookies of the
+        # AEAT browser session (bearer-equivalent material) and must
+        # not inherit the parent directory's ACL on Windows.
         from .....core.file_permissions import restrict_file_permissions
 
         restrict_file_permissions(path)
@@ -929,7 +926,7 @@ class ClaveMovilAuthProvider:
         ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` — the representation
         dispatcher. That page requires a remote form submission to choose
         an acting capacity, so the provider refuses it instead of
-        auto-submitting on Kent's behalf.
+        auto-submitting on the operator's behalf.
         """
         from urllib.parse import urlsplit
 

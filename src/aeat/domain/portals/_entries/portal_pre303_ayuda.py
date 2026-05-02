@@ -1,4 +1,10 @@
-"""Portal: Pre303 — ayuda prefilled IVA."""
+"""Registry entry for the Pre303 pre-filled VAT helper service.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Servicio de ayuda Pre303: prefilled de casillas del Modelo 303 a partir de libros registro y SII.",
 )
+"""Portal entry for the Pre303 pre-filled VAT helper (Modelo 303 borrador)."""

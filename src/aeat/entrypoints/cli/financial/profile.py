@@ -1,4 +1,12 @@
-"""`aeat financial profile` command group for Kent's usage ratios (#259)."""
+"""Implement the ``aeat financial profile`` Typer group for usage ratios.
+
+Surfaces :mod:`aeat.domain.usage_ratios` operations as CLI verbs so the
+operator can list, set, and unset per-:class:`aeat.domain.categories.SpendingCategory`
+usage ratios. Family-alias expansion via
+:data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`
+lets one command set ratios for an entire group of related categories
+in a single keystroke.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +26,7 @@ from ....domain.usage_ratios import (
     load_usage_ratios,
     save_usage_ratios,
 )
+from .._i18n import t, tr
 from ._profile_aliases import FAMILY_ALIASES
 
 _MISSING = "(none)"
@@ -28,23 +37,38 @@ _UNSET_RATIO_KEY_HELP = f"Category id or family alias ({_ALIAS_LIST})."
 app = typer.Typer(
     name="profile",
     no_args_is_help=True,
-    help="Kent's financial profile: per-category usage ratios (#259).",
+    help="Financial profile: per-category usage ratios.",
 )
 
 ratios_app = typer.Typer(
     name="ratios",
     no_args_is_help=True,
-    help="List Kent's persisted usage ratios.",
+    help="List the persisted usage ratios.",
 )
 app.add_typer(ratios_app, name="ratios")
 
 
-@ratios_app.command(name="list", help="List Kent's configured ratios alongside statutory defaults.")
+@ratios_app.command(name="list", help="List configured ratios alongside statutory defaults.")
 def list_cmd() -> None:
-    """Print every persisted ratio next to the statutory default."""
+    """Print every persisted ratio next to its statutory default.
+
+    Loads the profile via :func:`aeat.domain.usage_ratios.load_usage_ratios`
+    and renders one tab-separated row per category showing the current
+    user-set ratio and the statutory default carried by
+    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025`.
+    """
     profile = _load_profile()
     if not profile.ratios:
-        typer.echo("No usage ratios configured.")
+        typer.echo(
+            tr(
+                t(
+                    "No hay ratios de uso configurados.",
+                    "No usage ratios configured.",
+                    "No hi ha ràtios d'ús configurades.",
+                    "Nincs beállítva használati arány.",
+                )
+            )
+        )
         return
     typer.echo("category\tkind\tuser_ratio\tstatutory_default")
     for category in sorted(profile.ratios, key=lambda c: c.value):
@@ -63,12 +87,27 @@ def list_cmd() -> None:
         )
 
 
-@app.command(name="set-ratio", help="Set Kent's usage ratio for one category or family alias.")
+@app.command(name="set-ratio", help="Set the usage ratio for one category or family alias.")
 def set_ratio_cmd(
     key: str = typer.Argument(..., help=_SET_RATIO_KEY_HELP),
     value: str = typer.Argument(..., help="Ratio in [0, 1] as a decimal, e.g. 0.21."),
 ) -> None:
-    """Persist one or more usage ratios for the resolved key."""
+    """Persist one or more usage ratios for the resolved key.
+
+    Args:
+        key: Either a single
+            :class:`aeat.domain.categories.SpendingCategory` value or a
+            family alias from
+            :data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`.
+        value: Decimal ratio in the inclusive ``[0, 1]`` range.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when ``key`` cannot be
+            resolved, when ``value`` is not a valid finite decimal in
+            range, or when the
+            :class:`aeat.domain.usage_ratios.UsageRatioProfile` rejects
+            an individual category assignment.
+    """
     categories = _resolve_key(key)
     ratio = _parse_ratio(value)
     profile = _load_profile()
@@ -81,14 +120,33 @@ def set_ratio_cmd(
             raise typer.Exit(code=2) from exc
     _save_profile(updated)
     for category in categories:
-        typer.echo(f"set {category.value} = {_format_decimal(ratio)}")
+        typer.echo(
+            tr(
+                t(
+                    f"establecido {category.value} = {_format_decimal(ratio)}",
+                    f"set {category.value} = {_format_decimal(ratio)}",
+                    f"establert {category.value} = {_format_decimal(ratio)}",
+                    f"beallitva {category.value} = {_format_decimal(ratio)}",
+                )
+            )
+        )
 
 
-@app.command(name="unset-ratio", help="Remove Kent's usage ratio for one category or family alias.")
+@app.command(name="unset-ratio", help="Remove the usage ratio for one category or family alias.")
 def unset_ratio_cmd(
     key: str = typer.Argument(..., help=_UNSET_RATIO_KEY_HELP),
 ) -> None:
-    """Remove persisted ratios for the resolved key."""
+    """Remove persisted ratios for the resolved key.
+
+    Args:
+        key: Either a single
+            :class:`aeat.domain.categories.SpendingCategory` value or a
+            family alias.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when ``key`` cannot be
+            resolved or when persistence fails.
+    """
     categories = _resolve_key(key)
     profile = _load_profile()
     updated = profile
@@ -98,19 +156,50 @@ def unset_ratio_cmd(
             updated = updated.without_ratio(category)
             removed.append(category)
     if not removed:
-        typer.echo(f"no user ratio set for {key}")
+        typer.echo(
+            tr(
+                t(
+                    f"no hay ratio configurado para {key}",
+                    f"no user ratio set for {key}",
+                    f"no hi ha cap ràtio configurada per a {key}",
+                    f"nincs beallitott arany ehhez: {key}",
+                )
+            )
+        )
         return
     _save_profile(updated)
     for category in removed:
-        typer.echo(f"unset {category.value}")
+        typer.echo(
+            tr(
+                t(
+                    f"eliminado {category.value}",
+                    f"unset {category.value}",
+                    f"eliminat {category.value}",
+                    f"torolve {category.value}",
+                )
+            )
+        )
 
 
 def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
     """Expand a family alias or validate a single category id.
 
-    Trailing / leading whitespace is tolerated — Kent's typo of
+    Trailing / leading whitespace is tolerated so a copy-paste of
     ``"home_office_area "`` resolves cleanly. An empty string after
     stripping falls through to the unknown-key error path.
+
+    Args:
+        raw: Operator-supplied key — alias name or category id.
+
+    Returns:
+        Tuple of resolved
+        :class:`aeat.domain.categories.SpendingCategory` members.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when the key is unknown
+            or when a single-category resolution targets a category
+            that is not in
+            :data:`aeat.domain.usage_ratios.ELIGIBLE_USAGE_RATIO_CATEGORIES`.
     """
     stripped = raw.strip()
     alias_members = FAMILY_ALIASES.get(stripped)
@@ -123,7 +212,14 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
         typer.echo(
-            f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}",
+            tr(
+                t(
+                    f"{category.value!r} no acepta ratio de uso\n{_format_eligible_list()}",
+                    f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}",
+                    f"{category.value!r} no accepta una ràtio d'ús\n{_format_eligible_list()}",
+                    f"{category.value!r} nem fogad el hasznalati aranyt\n{_format_eligible_list()}",
+                )
+            ),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -131,13 +227,18 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
 
 
 def _format_unknown_key_hint(raw: str) -> str:
-    """Build an actionable error for an unrecognised key.
+    """Build an actionable error message for an unrecognised key.
 
-    Surfaces:
-      * the offending input (as typed, so trailing whitespace shows),
-      * close-match suggestions drawn from aliases + eligible category ids,
-      * the full alias list and the 12 eligible category ids, wrapped to
-        fit an 80-column terminal.
+    The hint surfaces the offending input as typed (so trailing
+    whitespace shows), close-match suggestions drawn from aliases and
+    eligible category ids, the full alias list, and the eligible
+    category ids — all wrapped to fit an 80-column terminal.
+
+    Args:
+        raw: The unrecognised input as typed by the operator.
+
+    Returns:
+        A multi-line, human-readable hint suitable for stderr emission.
     """
     aliases = sorted(FAMILY_ALIASES)
     eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
@@ -152,7 +253,7 @@ def _format_unknown_key_hint(raw: str) -> str:
 
 
 def _format_eligible_list() -> str:
-    """Render the twelve eligible categories, indented and wrapped to 78 cols."""
+    """Render the eligible categories indented and wrapped to 78 columns."""
     eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
     return _indented_wrap("eligible categories:", eligible)
 
@@ -160,12 +261,20 @@ def _format_eligible_list() -> str:
 def _indented_wrap(header: str, items: list[str]) -> str:
     """Indent a header + comma-separated list and wrap to 78 columns.
 
-    ``break_long_words=False`` means an individual item longer than ~65
-    characters (78 minus the subsequent-indent) would overflow on its own
-    line. The current catalogue's longest identifier is
-    ``suministros_home_office_internet`` at 32 chars — comfortably within
-    budget. Revisit this helper if a future ``SpendingCategory`` id
-    approaches 65 characters.
+    ``break_long_words=False`` means an individual item longer than
+    roughly 65 characters (78 minus the subsequent-indent) would
+    overflow on its own line. The current catalogue's longest
+    identifier is ``suministros_home_office_internet`` at 32 chars —
+    comfortably within budget. Revisit this helper if a future
+    :class:`aeat.domain.categories.SpendingCategory` id approaches 65
+    characters.
+
+    Args:
+        header: Section header rendered before the comma-joined items.
+        items: List of items to wrap; an empty list emits ``(none)``.
+
+    Returns:
+        Wrapped, two-space-indented text suitable for direct echoing.
     """
     if not items:
         return f"  {header} (none)"
@@ -182,22 +291,65 @@ def _indented_wrap(header: str, items: list[str]) -> str:
 
 
 def _parse_ratio(raw: str) -> Decimal:
-    """Parse a user-typed ratio, rejecting non-finite and out-of-range values."""
+    """Parse a user-typed ratio, rejecting non-finite and out-of-range values.
+
+    Args:
+        raw: Operator-supplied decimal text.
+
+    Returns:
+        The parsed :class:`decimal.Decimal` ratio.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when the input is not a
+            valid decimal, is non-finite (``NaN`` / ``Infinity``), or
+            falls outside the inclusive ``[0, 1]`` range.
+    """
     try:
         ratio = Decimal(raw)
     except InvalidOperation as exc:
-        typer.echo(f"invalid ratio: {raw!r}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"ratio no válido: {raw!r}",
+                    f"invalid ratio: {raw!r}",
+                    f"ràtio no vàlida: {raw!r}",
+                    f"ervenytelen arany: {raw!r}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2) from exc
     if not ratio.is_finite():
-        typer.echo(f"ratio must be finite (got {ratio})", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"el ratio debe ser finito (recibido {ratio})",
+                    f"ratio must be finite (got {ratio})",
+                    f"la ràtio ha de ser finita (rebuda {ratio})",
+                    f"az aranynak vegesnek kell lennie (kapott: {ratio})",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     if not (Decimal("0") <= ratio <= Decimal("1")):
-        typer.echo(f"ratio must be in [0, 1] (got {ratio})", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"el ratio debe estar en [0, 1] (recibido {ratio})",
+                    f"ratio must be in [0, 1] (got {ratio})",
+                    f"la ràtio ha d'estar dins [0, 1] (rebuda {ratio})",
+                    f"az aranynak [0, 1] tartomanyban kell lennie (kapott: {ratio})",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     return ratio
 
 
 def _load_profile() -> UsageRatioProfile:
+    """Load the persisted profile, exiting cleanly on a load failure."""
     try:
         return load_usage_ratios(_usage_ratios_path())
     except UsageRatioError as exc:
@@ -206,6 +358,7 @@ def _load_profile() -> UsageRatioProfile:
 
 
 def _save_profile(profile: UsageRatioProfile) -> None:
+    """Persist ``profile`` to disk, exiting cleanly on a save failure."""
     try:
         save_usage_ratios(profile, _usage_ratios_path())
     except UsageRatioError as exc:
@@ -214,10 +367,12 @@ def _save_profile(profile: UsageRatioProfile) -> None:
 
 
 def _usage_ratios_path() -> Path:
+    """Return the resolved path to the persisted usage-ratios JSON file."""
     return load_settings().aeat_usage_ratios_path.resolve()
 
 
 def _format_decimal(value: Decimal) -> str:
+    """Render a :class:`decimal.Decimal` ratio as ``"0"`` or its normalised text form."""
     if value.is_zero():
         return "0"
     return format(value.normalize(), "f")

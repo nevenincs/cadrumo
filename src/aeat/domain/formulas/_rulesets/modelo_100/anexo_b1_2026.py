@@ -1,17 +1,16 @@
 """Modelo 100 Anexo B1 — rendimientos del trabajo (ejercicio 2026).
 
 Ejercicio 2026 inherits the LIRPF art. 17-20 numerical surface from
-2025 — no posterior law has modified arts. 17-20 between Real Decreto-
-Ley 4/2024 (vigent 1/1/2024) and 2026-02-28 (BOE consolidated-text
-consult date for this authoring). The 2026 Orden HAC del Modelo 100
-has not yet been published at retrieval 2026-04-27 (precedent: feb-mar
-2027); this Anexo B1 module ships with 2025 values as the conservative
-baseline. Any 2026-specific delta lands as a follow-up issue when the
-2026 Orden HAC publishes.
+2025 — no posterior law has modified arts. 17-20 between Real
+Decreto-Ley 4/2024 (vigent 1/1/2024) and the BOE consolidated-text
+consult of 2026-02-28. The 2026 Orden HAC del Modelo 100 has not yet
+been published at the time of authoring (precedent: feb-mar 2027), so
+this module ships with 2025 values as the conservative baseline. Any
+2026-specific delta is added when the 2026 Orden HAC publishes.
 
-Anexo B1 casillas + citations are imported from the 2025 reference
-module; only ``FORMULAS`` (year-scoped formula IDs) and the effective-
-date constants are year-specific.
+Anexo B1 casillas and citations are re-exported from
+:mod:`.anexo_b1_2025`; only ``FORMULAS`` (year-scoped formula IDs) and
+the effective-date constants are year-specific.
 """
 
 from __future__ import annotations

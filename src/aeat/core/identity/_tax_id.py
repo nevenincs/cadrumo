@@ -1,12 +1,17 @@
-"""Spanish tax-identifier validation (NIF / NIE / CIF).
+"""Spanish tax-identifier validation (NIF / NIE / CIF) returning canonical strings.
 
 The Agencia Tributaria's identifier algorithm is shared infrastructure
 across multiple subpackages — invoice counterparty checks, encrypted
-master-key NIF canaries, sanitiser fixture validation, and CLI
-preflight gates. Co-locating the algorithm under :mod:`aeat.core.identity`
-gives every caller a public, non-private import path so the layered
-restructure is not blocked by subpackage-private bypass imports into
-:mod:`aeat.domain.invoices._validators`.
+master-key NIF canaries, sanitiser fixture validation, and CLI preflight
+gates. Co-locating the algorithm in :mod:`aeat.core.identity` gives
+every caller a public, layer-respecting import path.
+
+This module differs from :mod:`aeat.core.identity._documents` only in
+its return shape: :func:`validate_spanish_tax_id` yields the normalised
+identifier string, while
+:func:`aeat.core.identity._documents.validate_identity` returns the
+matching :class:`aeat.core.identity._documents.IdentityDocument` enum
+member.
 """
 
 from __future__ import annotations
@@ -61,6 +66,7 @@ def validate_spanish_tax_id(value: str) -> str:
 
 
 def _validate_nif(value: str) -> str:
+    """Validate a normalised NIF, returning the input or raising :exc:`ValueError`."""
     digits = value[:8]
     control = value[8]
     if not digits.isdigit() or not control.isalpha():
@@ -72,6 +78,7 @@ def _validate_nif(value: str) -> str:
 
 
 def _validate_nie(value: str) -> str:
+    """Validate a normalised NIE, returning the input or raising :exc:`ValueError`."""
     leader = value[0]
     body = value[1:8]
     control = value[8]
@@ -85,6 +92,7 @@ def _validate_nie(value: str) -> str:
 
 
 def _validate_cif(value: str) -> str:
+    """Validate a normalised CIF, returning the input or raising :exc:`ValueError`."""
     leader = value[0]
     digits = value[1:8]
     control = value[8]

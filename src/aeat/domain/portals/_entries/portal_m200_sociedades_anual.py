@@ -1,4 +1,10 @@
-"""Portal: Modelo 200 — IS autoliquidación anual."""
+"""Registry entry for Modelo 200 — annual corporate-income-tax self-assessment.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Autoliquidación anual del Impuesto sobre Sociedades.",
 )
+"""Portal entry for Modelo 200 (annual corporate-income-tax self-assessment)."""

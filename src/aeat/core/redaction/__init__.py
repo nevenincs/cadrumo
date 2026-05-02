@@ -1,27 +1,41 @@
-"""Redaction-rule registry and the ``redact`` helper.
+"""Redaction-rule registry and the :func:`redact` helper family.
 
-The rule shape is defined in :mod:`aeat.core.classification` (so the
-classification policy table can reference rule names without a circular
-import). This module ships:
+The :class:`~aeat.core.classification.RedactionRule` shape lives in
+:mod:`aeat.core.classification` so the classification policy table can
+reference rule names without a circular import. This module ships:
 
-- a small in-memory registry of default :class:`RedactionRule`
-  instances keyed by name (NIF / URL / OAuth bearer token / generic
-  ellipsis);
-- the :func:`redact` helper that applies a tuple of rules to a value
-  in declared order;
-- the :func:`default_rules_for` convenience that resolves the rule
-  references stored in :class:`ClassificationPolicy.redaction_rules`
-  to the actual :class:`RedactionRule` instances.
+* a small in-memory registry of default
+  :class:`~aeat.core.classification.RedactionRule` instances keyed by
+  name (NIF, URL, OAuth bearer token, opaque bearer token);
+* :func:`redact`, the flat-string helper that applies a tuple of
+  rules in declared order;
+* :func:`redact_structured`, the recursive variant that walks dict /
+  list / tuple containers and redacts every string leaf in place;
+* :func:`redact_for_log`, the convenience wrapper for log lines and
+  exception messages;
+* :func:`default_rules_for` and :func:`default_rules_for_class`, the
+  resolvers that turn rule names stored on a
+  :class:`~aeat.core.classification.ClassificationPolicy` into the
+  underlying :class:`~aeat.core.classification.RedactionRule`
+  instances.
 
-Strategies:
+The redaction strategies, defined in
+:class:`~aeat.core.classification.RedactionStrategy`, are:
 
-- ``SHA256_PREFIX`` — replace the matched span with the first 8 hex
-  characters of its SHA-256 digest, prefixed with ``sha256:``.
-- ``HOST_ONLY`` — for URL-shaped values, retain only the URL host
-  component; everything else (path, query, fragment) is dropped.
-- ``FINGERPRINT`` — bearer- / token-shaped value rewrites to
-  ``token:sha256:<8hex>``.
-- ``ELLIPSIS`` — replace the matched span with three ASCII full stops.
+``SHA256_PREFIX``
+    Replace the matched span with ``sha256:<first-8-hex>`` of its
+    SHA-256 digest. Used for stable identifiers (NIF / NIE / CIF).
+
+``HOST_ONLY``
+    For URL-shaped values, retain only ``<scheme>://<host>``;
+    everything else (path, query, fragment) is dropped.
+
+``FINGERPRINT``
+    Bearer- / token-shaped values rewrite to
+    ``token:sha256:<first-8-hex>``.
+
+``ELLIPSIS``
+    Replace the matched span with three ASCII full stops.
 """
 
 from __future__ import annotations
@@ -128,28 +142,49 @@ _DEFAULT_RULES: Mapping[str, RedactionRule] = MappingProxyType(
 
 
 def default_rules() -> Mapping[str, RedactionRule]:
-    """Return the immutable default-rule registry keyed by rule name."""
+    """Return the immutable default-rule registry keyed by rule name.
+
+    Returns:
+        A read-only :class:`~collections.abc.Mapping` from rule name
+        to :class:`~aeat.core.classification.RedactionRule`.
+    """
     return _DEFAULT_RULES
 
 
 def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]:
-    """Resolve the rule references in ``policy.redaction_rules`` to instances.
+    """Resolve the rule references on a policy to concrete rule instances.
 
     Args:
-        policy: A classification policy whose ``redaction_rules`` field
-            carries rule names.
+        policy: A
+            :class:`~aeat.core.classification.ClassificationPolicy`
+            whose ``redaction_rules`` field carries rule names.
 
     Returns:
-        A tuple of :class:`RedactionRule` instances in the order they
-        were declared on the policy. Names that are not in the default
-        registry are silently skipped — this is deliberate so per-domain
-        policies can reference custom rules registered later.
+        A tuple of :class:`~aeat.core.classification.RedactionRule`
+        instances in the order they were declared on the policy.
+        Names that are not in the default registry are silently
+        skipped: this is deliberate so per-domain policies can
+        reference custom rules registered by other modules.
     """
     return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules if name in _DEFAULT_RULES)
 
 
 def default_rules_for_class(sensitivity: SensitivityClass) -> tuple[RedactionRule, ...]:
-    """Resolve the default rule set for ``sensitivity`` via the policy table."""
+    """Resolve the default rule set for a sensitivity class.
+
+    Convenience wrapper that goes through
+    :func:`~aeat.core.classification.default_policy_for` and then
+    :func:`default_rules_for` so callers do not need to know about
+    the policy table.
+
+    Args:
+        sensitivity: The
+            :class:`~aeat.core.classification.SensitivityClass` whose
+            default rules should apply.
+
+    Returns:
+        Ordered tuple of rules for that class.
+    """
     return default_rules_for(default_policy_for(sensitivity))
 
 
@@ -167,15 +202,20 @@ def _apply_one(rule: RedactionRule, value: str) -> str:
 
 
 def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
-    """Apply ``rules`` to ``value`` in declared order.
+    """Apply ``rules`` to a flat string in declared order.
 
     Args:
         value: The candidate string. Non-string inputs raise
-            :class:`TypeError`; consumers stringify upstream.
-        rules: Ordered tuple of rules.
+            :exc:`TypeError`; consumers must stringify upstream.
+        rules: Ordered tuple of rules. Each rule's pattern is
+            compiled with :data:`re.MULTILINE` and its strategy is
+            applied to every match.
 
     Returns:
         The redacted string.
+
+    Raises:
+        TypeError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
         raise TypeError(f"redact() expects str; got {type(value).__name__}")
@@ -186,23 +226,24 @@ def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
 
 
 def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
-    """Apply ``rules`` to every string leaf inside ``value``, recursively.
+    """Recursively apply ``rules`` to every string leaf inside a structure.
 
     Walks dicts, lists, and tuples; redacts every string at the
     leaves. Non-string non-container values pass through unchanged.
-    The container shape is preserved (dict stays dict; list stays
-    list; tuple stays tuple). The resulting object is a fresh copy at
-    every container level — the input is never mutated.
+    The container shape is preserved (dict stays dict, list stays
+    list, tuple stays tuple). The resulting object is a fresh copy
+    at every container level — the input is never mutated.
 
-    This is the load-bearing primitive for the audit-sink relocation:
+    This is the load-bearing primitive for nested audit payloads:
     submission audit events and run-trace records are nested dicts,
-    and a flat ``redact()`` call would not reach the NIF nested under
-    e.g. ``event["payload"]["taxpayer"]["nif"]``.
+    and a flat :func:`redact` call would not reach the NIF nested
+    under e.g. ``event["payload"]["taxpayer"]["nif"]``.
 
     Args:
-        value: Any JSON-shaped value (str, int, float, bool, None,
-            dict, list, tuple, or a typed model that is dumped via
-            ``model_dump()`` upstream).
+        value: Any JSON-shaped value: :class:`str`, :class:`int`,
+            :class:`float`, :class:`bool`, ``None``, :class:`dict`,
+            :class:`list`, :class:`tuple`, or a typed model that has
+            been dumped via ``model_dump()`` upstream.
         rules: Ordered tuple of rules.
 
     Returns:
@@ -223,25 +264,35 @@ def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> obj
 
 
 def redact_for_log(text: str) -> str:
-    """Redact ``text`` against the AUDIT-class rule set for log/error use.
+    """Redact a string against the AUDIT-class rule set for log/error use.
 
-    Convenience wrapper for the call sites that construct
-    exception messages or log lines containing operator-controlled
-    PII (NIF / NIE / CIF, OAuth tokens, session URLs). Issue #469
-    M-3: raised exceptions previously interpolated raw NIF into
-    ``exc.args[0]``; the ``SecretScrubbingFilter`` covers the
-    ``logging`` path but not ``str(exc)`` flowing through typer's
-    default error renderer / JSON envelope / observability sinks
-    that capture exception text without going through the filter.
-    Redact at the construction site so the secret is never in the
-    exception's message field to begin with.
+    Convenience wrapper for call sites that construct exception
+    messages or log lines containing operator-controlled PII
+    (NIF / NIE / CIF, OAuth tokens, session URLs). Raised exceptions
+    interpolate user-controlled identifiers into ``exc.args[0]``;
+    the standard logging filter covers the :mod:`logging` path but
+    not ``str(exc)`` flowing through Typer's default error renderer,
+    JSON envelopes, or observability sinks that capture exception
+    text without going through the filter. Redact at the construction
+    site so the secret is never in the exception's message field to
+    begin with.
 
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
-    fingerprints. The IDENTITY class is for ciphertext-at-rest, not
-    log-shaped strings; the DIAGNOSTIC class has the same rules but
-    is named for observability sinks specifically. AUDIT is the
-    log/error path's canonical class.
+    fingerprints. The
+    :attr:`~aeat.core.classification.SensitivityClass.IDENTITY`
+    class is for ciphertext-at-rest, not log-shaped strings; the
+    :attr:`~aeat.core.classification.SensitivityClass.DIAGNOSTIC`
+    class has the same rules but is named for observability sinks
+    specifically.
+    :attr:`~aeat.core.classification.SensitivityClass.AUDIT` is the
+    canonical class for the log/error path.
+
+    Args:
+        text: The log-shaped string to redact.
+
+    Returns:
+        The redacted string.
     """
     return redact(text, rules=default_rules_for_class(SensitivityClass.AUDIT))
 

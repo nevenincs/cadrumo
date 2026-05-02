@@ -21,7 +21,18 @@ from .._schema import TemplateRevision
 
 
 class Modelo037V2025Extractor(GenericDeclaracionExtractor):
-    """Named-field extractor for Modelo 037."""
+    """Named-field extractor for Modelo 037 (Declaración censal simplificada).
+
+    Reuses the named-field map from :class:`Modelo036V2025Extractor`
+    because Modelo 037 is a strict subset of the 036 registro.
+
+    Attributes:
+        template_revision: Pinned to ``("037", 2025, "2025.01")``.
+        casilla_ids: Empty — Modelo 037 has no numbered casillas.
+        named_field_patterns: Label regex map keyed by canonical field
+            name (``causa_presentacion``, ``regimen_iva``,
+            ``regimen_irpf``, ``epigrafe_iae``, ``fecha_efectos``).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="037",

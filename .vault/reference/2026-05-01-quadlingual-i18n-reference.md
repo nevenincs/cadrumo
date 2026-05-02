@@ -30,11 +30,50 @@ are not yet in this glossary.
   royalties) for cross-border concepts; AEAT's own English-language
   Sede copy for Spain-specific concepts; OECD glossary as a tertiary
   fallback.
-- **`ca`** is sourced from DOGC publications, the Agència Tributària
-  de Catalunya site, and Catalan-language AEAT forms where they
-  exist. Per the ADR's acronym-retention decision, Spanish acronyms
-  (`IVA`, `IRPF`, `IRNR`, `ITP`, etc.) appear unchanged because
-  the Generalitat itself uses them on Catalan-language tax forms.
+- **`ca`** is sourced from native Catalan tax-content publishers —
+  Catalan and Spanish are not the same language and a `ca` slot
+  must never be a copy of the `es` slot. The authoritative chain
+  for sourcing Catalan tax terminology is:
+
+  1. **AEAT Sede Electrónica** in Catalan mode. The Sede serves a
+     Catalan-language interface when the operator picks Català from
+     the language switcher in the top bar; every form, tooltip, and
+     procedural text the operator actually sees there is the most
+     authoritative `ca` source for AEAT-domain terms.
+  2. **AEAT Manual Pràctic** Catalan editions. AEAT publishes the
+     IRPF, IVA, and Sociedades manuals práctics in Catalan as
+     downloadable PDFs from the *Manuals, vídeos i fullets* section
+     of the Sede; quote `ca` slots from the Catalan PDF, not from a
+     translation of the `es` PDF.
+  3. **Agència Tributària de Catalunya (ATC)** —
+     `atc.gencat.cat`. ATC publishes Catalan-language guidance for
+     the autonomous tributes it administers (ITP, AJD, ISD, taxes
+     on gambling, the property-transfer surcharge, etc.) plus
+     procedural language that aligns with the Generalitat's
+     terminology register.
+  4. **DOGC** (Diari Oficial de la Generalitat de Catalunya).
+     Definitive for any Catalan-tax-law text quoted in a `ca` slot;
+     source URLs use `dogc.gencat.cat`.
+  5. **Generalitat de Catalunya — Departament d'Economia i Hisenda**
+     —`hisenda.gencat.cat`. Cross-references AEAT terminology in
+     the Catalan-language fiscal portal and is the source for
+     terms specific to the autonomous tax administration.
+  6. **TERMCAT** — the official Catalan terminology centre — for
+     general legal/financial vocabulary that the AEAT and ATC
+     sources do not cover. URL: `termcat.cat`. TERMCAT publishes
+     Catalan-Spanish-English-French legal-tax glossaries.
+
+  Per the ADR's acronym-retention decision, Spanish tax acronyms
+  (`IVA`, `IRPF`, `IRNR`, `ITP`, etc.) appear unchanged in `ca`
+  slots because the Generalitat itself uses them on Catalan-
+  language tax forms; the long-form expansions are translated
+  (e.g. `Impost sobre el Valor Afegit` for `IVA`).
+
+  When an entry cannot be grounded in one of the six sources
+  above, the `ca` slot is marked `_ca_provenance:
+  "needs-native-review"` rather than seeded with the Spanish text.
+  Catalan-as-Spanish placeholder slots are a defect, not a
+  fallback.
 - **`hu`** uses NAV (Nemzeti Adó- és Vámhivatal) vocabulary for
   analogous Hungarian concepts; the Spanish acronym is retained in
   parentheses on first use to preserve the link to the source

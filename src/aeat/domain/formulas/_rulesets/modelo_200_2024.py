@@ -1,15 +1,15 @@
 """Modelo 200 ruleset covering ejercicio 2024 (filed in 2025).
 
 Modelo 200 is the annual IS / IRNR-EP self-assessment for sociedades.
-MVP targets the page-14 liquidación block — the chain of algebraic
-relationships that every filing must satisfy regardless of régimen
-fiscal (socimis, cooperatives, etc. add lateral casillas but the core
-liquidación is invariant).
+The ruleset targets the page-14 liquidación block — the chain of
+algebraic relationships that every filing must satisfy regardless of
+régimen fiscal (socimis, cooperatives, etc. add lateral casillas but
+the core liquidación is invariant).
 
 Formula coverage (page 14):
 
 - casilla 00562 = 00552 x (00558 / 100) (cuota íntegra = base imponible
-  x tipo de gravamen; AEAT prints 00558 as whole-percent value).
+  x tipo de gravamen; AEAT prints 00558 as a whole-percent value).
 - casilla 00611 = 00592 - 00599 - 00601 - 00603 - 00605 (cuota
   diferencial = cuota líquida menos retenciones y pagos fraccionados
   del ejercicio).
@@ -19,8 +19,13 @@ Formula coverage (page 14):
 
 Legal base: Ley 27/2014 (LIS), Reglamento IS (RD 634/2015), Orden
 HAC/657/2025 (BOE-A-2025-12818, ejercicio 2024). Casillas between
-00582 and 00592 (deducciones, bonificaciones) land in sub-EPIC
-#305-Modelo-200-full.
+00582 and 00592 (deducciones, bonificaciones) lie outside this base
+liquidación surface.
+
+The module also exposes :func:`_make_casillas` and :func:`_make_formulas`
+so the 2025 and 2026 sibling rulesets can rebind the casilla and formula
+tuples to year-scoped citations and identifiers without duplicating the
+schema.
 """
 
 from __future__ import annotations
@@ -51,6 +56,7 @@ _EFFECTIVE_TO = date(2024, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a :class:`aeat.core.i18n.Translatable` mapping for the three locales."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -84,6 +90,7 @@ _CITATIONS = (
 
 
 def _input(cid: str, label: Translatable) -> tuple[CasillaDefinition]:
+    """Build a 1-tuple holding a user-input :class:`CasillaDefinition`."""
     return (casilla(casilla_id=cid, label=label, computed=False),)
 
 
@@ -92,10 +99,16 @@ def _computed(
     label: Translatable,
     legal_basis: tuple[LegalCitation, ...],
 ) -> tuple[CasillaDefinition]:
+    """Build a 1-tuple holding a computed :class:`CasillaDefinition` with ``legal_basis``."""
     return (casilla(casilla_id=cid, label=label, computed=True, legal_basis=legal_basis),)
 
 
 def _make_casillas(legal_basis: tuple[LegalCitation, ...]) -> tuple[CasillaDefinition, ...]:
+    """Build the page-14 casilla tuple, attaching ``legal_basis`` to every computed casilla.
+
+    Reused by the 2025 and 2026 sibling rulesets so each year can pin its
+    own citation tuple without duplicating the casilla schema.
+    """
     return (
         *_input("00547", _label("Compensacion BINs", "BIN compensation", "Veszteség-beszámítás")),
         *_input("00550", _label("Base imponible antes reserva", "BI pre-reserve", "Adóalap rezerv előtt")),
@@ -138,6 +151,17 @@ _CASILLAS = _make_casillas(_CITATIONS)
 
 
 def _make_formulas(year: int) -> tuple[FormulaDefinition, ...]:
+    """Build the page-14 formula tuple with year-stamped formula identifiers.
+
+    Args:
+        year: Fiscal year stamped into each formula identifier (e.g. 2024,
+            2025, 2026) so audit-ledger provenance is unambiguous.
+
+    Returns:
+        Tuple containing the three computed liquidación formulas: cuota
+        íntegra (00562), cuota diferencial (00611), and líquido a ingresar
+        o devolver (00621).
+    """
     return (
         formula(
             casilla_id="00562",

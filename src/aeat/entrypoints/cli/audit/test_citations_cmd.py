@@ -1,12 +1,15 @@
-"""Tests for ``aeat audit rulesets citations`` (#339).
+"""Tests for ``aeat audit rulesets citations``.
 
-Three paths exercised via :class:`typer.testing.CliRunner` against
-``audit_app`` directly — the command is not yet registered on the root
-``aeat`` Typer. All tests use real
-:class:`Ruleset` / :class:`CasillaDefinition` / :class:`LegalCitation`
-instances; the gap-path fixture uses pydantic's documented
-``model_construct`` escape hatch to assemble a "missing-citation"
-casilla without bypassing every other validator on the model.
+Exercises every code path of the citations subcommand via
+:class:`typer.testing.CliRunner` against ``audit_app`` directly — the
+command is not yet registered on the root ``aeat`` Typer. All tests
+use real
+:class:`aeat.domain.formulas._ruleset.Ruleset`,
+:class:`aeat.domain.formulas._casilla.CasillaDefinition`, and
+:class:`aeat.domain.formulas._legal_citation.LegalCitation` instances;
+the gap-path fixtures use pydantic's documented ``model_construct``
+escape hatch to assemble a "missing-citation" casilla without
+bypassing every other validator on the model.
 """
 
 from __future__ import annotations
@@ -57,9 +60,9 @@ def test_citations_cmd_renders_spanish_diacritics() -> None:
     a UTF-8-backed buffer and confirming the framing characters
     survive.
 
-    regression #389 surfaced a Windows cp1252 crash on
-    non-ASCII output. The :func:`_reconfigure_utf8` helper invoked at
-    command entry guards against that path.
+    A previous regression surfaced a Windows cp1252 crash on non-ASCII
+    output. The ``_reconfigure_utf8`` helper invoked at command entry
+    guards against that path.
     """
     runner = _runner()
     result = runner.invoke(audit_app, ["rulesets", "citations"])
@@ -75,7 +78,7 @@ def test_validate_citation_coverage_detects_simulated_gap() -> None:
     """The helper returns a non-100% report when a casilla is missing.
 
     This is the only documented way to construct a casilla with empty
-    ``legal_basis`` and ``computed=True`` after #339: pydantic's
+    ``legal_basis`` and ``computed=True``: pydantic's
     ``model_construct`` skips the validator stack. We use it here to
     prove the audit reporter's gap path independently of the
     validator's protection. A real ruleset can never reach this state
@@ -181,8 +184,7 @@ def test_aggregate_mixed_modelos_yields_none_modelo() -> None:
     """A mixed-modelo aggregate sets ``modelo`` to ``None``.
 
     Picking an arbitrary "representative" modelo from a mixed bag
-    would mislead any downstream consumer that filters by modelo
-    (Gemini #433 medium finding).
+    would mislead any downstream consumer that filters by modelo.
     """
     reports = (
         validate_citation_coverage(MODELO_130_2025),

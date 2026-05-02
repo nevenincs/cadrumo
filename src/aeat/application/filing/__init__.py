@@ -6,8 +6,8 @@ records — the project's single answer to *"what does the system
 actually produce?"*.
 
 Public API discipline: callers from outside this subpackage MUST
-import only from :mod:`aeat.filing`. The concrete builders under
-:mod:`aeat.application.filing._builders` are private; consumers select a
+import only from :mod:`aeat.application.filing`. The concrete builders under
+:mod:`aeat.domain.filing._builders` are private; consumers select a
 builder via :func:`build_draft` instead.
 
 Example:
@@ -69,6 +69,8 @@ from ...domain.filing import (
     DeadlineChecker,
     DeadlineStatus,
     FilingAmendment,
+    FilingAmendmentError,
+    FilingAmendmentValidationError,
     FilingApprovalBasis,
     FilingBuilder,
     FilingBuilderError,
@@ -97,7 +99,6 @@ from ...domain.filing import (
     get_builder,
     make_amendment_id,
 )
-from ...domain.filing import FilingAmendmentError, FilingAmendmentValidationError
 from ._complementaria import build_complementaria, list_amendments, load_amendment
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
@@ -112,9 +113,6 @@ from ._review import (
 )
 from .runtime import (
     FilingOperatorProfile,
-    RuntimeCasillaCollection,
-    RuntimeCasillaSchema,
-    RuntimeCasillaSchemaProvider,
     build_runtime_schema_provider,
     filing_profile_from_autonomo,
     load_default_filing_profile,
@@ -170,7 +168,7 @@ def build_draft(
         inputs: Mapping of casilla ID → raw input value.
         schema_provider: Resolves the casilla collection for
             ``modelo``.
-        deadline_checker: Optional deadline check Protocol stub
+        deadline_checker: Optional deadline check Protocol implementation
             forwarded to the validator.
         fail_on_warning: When ``True``, the call raises
             :class:`FilingValidationError` if any finding is at
@@ -223,7 +221,7 @@ def validate_draft(
         draft: The draft to re-validate.
         schema_provider: Resolves the casilla collection for the
             draft's modelo.
-        deadline_checker: Optional deadline check Protocol stub.
+        deadline_checker: Optional deadline check Protocol implementation.
 
     Returns:
         A new :class:`FilingDraft` with refreshed findings, status
@@ -328,9 +326,6 @@ __all__ = [
     "Modelo390Builder",
     "ModeloCode",
     "ModeloIdentity",
-    "RuntimeCasillaCollection",
-    "RuntimeCasillaSchema",
-    "RuntimeCasillaSchemaProvider",
     "apply_validation",
     "approval_stale_reasons",
     "approve_draft",

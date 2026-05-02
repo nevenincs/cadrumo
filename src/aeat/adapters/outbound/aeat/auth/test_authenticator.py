@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
+from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from . import (
     AEAT_SESSION_IDLE_TTL,
     CERTIFICATE_CONTEXT_MARKER,
@@ -31,20 +32,16 @@ from . import (
     AeatLoginAssertionError,
     AeatSession,
     AeatSessionExpiredError,
-    AuthProvider,
-    AuthProviderDescription,
-    AuthProviderKind,
     BrowserContextLike,
     BrowserSessionLike,
     CertificateBackend,
     CertificateLoginAssertionDetail,
     CertificateNifParseError,
     CertificateSessionDetail,
-    ClavePermanenteLoginAssertionDetail,
-    ClavePermanenteSessionDetail,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
     HandshakeResult,
     LoadedCertificate,
-    _write_oauth_token_cache,
     extract_nif_from_subject,
     load_certificate,
     select_provider,
@@ -225,10 +222,10 @@ def test_aeat_login_assertion_is_valid_composite() -> None:
     assert assertion.model_config["frozen"] is True
 
 
-# ── AeatAuthenticator — fake browser session factory ────────────────────────
+# ── AeatAuthenticator — concrete browser session factory ────────────────────
 
 
-class _FakeBrowserContext:
+class _RecordingBrowserContext:
     """Stand-in Playwright context that honours the marker contract."""
 
     def __init__(
@@ -244,11 +241,11 @@ class _FakeBrowserContext:
             self._storage_state: dict[str, object] = {"cookies": [], "origins": []}
         else:
             self._storage_state = storage_state
-        self._pages: list[_FakePage] = []
+        self._pages: list[_RecordingPage] = []
         self.closed = False
 
-    async def new_page(self) -> _FakePage:
-        page = _FakePage(recognised=self._recognised)
+    async def new_page(self) -> _RecordingPage:
+        page = _RecordingPage(recognised=self._recognised)
         self._pages.append(page)
         return page
 
@@ -259,23 +256,23 @@ class _FakeBrowserContext:
         return self._storage_state
 
 
-class _FakePage:
+class _RecordingPage:
     def __init__(self, recognised: bool) -> None:
         self._recognised = recognised
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> _FakeResponse:
-        return _FakeResponse(200 if self._recognised else 401)
+    async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
+        return _RecordingResponse(200 if self._recognised else 401)
 
     async def close(self) -> None:
         return None
 
 
-class _FakeResponse:
+class _RecordingResponse:
     def __init__(self, status: int) -> None:
         self.status = status
 
 
-class _FakeBrowserSession:
+class _RecordingBrowserSession:
     def __init__(
         self,
         cert_ok: bool = True,
@@ -287,7 +284,7 @@ class _FakeBrowserSession:
             self._storage_state: dict[str, object] = {"cookies": [], "origins": []}
         else:
             self._storage_state = storage_state
-        self.created: list[_FakeBrowserContext] = []
+        self.created: list[_RecordingBrowserContext] = []
         self.storage_state_paths: list[Path | None] = []
 
     async def create_context(
@@ -295,11 +292,11 @@ class _FakeBrowserSession:
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-    ) -> _FakeBrowserContext:
+    ) -> _RecordingBrowserContext:
         assert provisioner is not None
         cert = self._resolve_cert(provisioner)
         self.storage_state_paths.append(storage_state_path)
-        ctx = _FakeBrowserContext(
+        ctx = _RecordingBrowserContext(
             cert,
             recognised=self._cert_ok,
             storage_state=self._storage_state,
@@ -314,7 +311,7 @@ class _FakeBrowserSession:
         return cert
 
 
-def _fake_handshake() -> HandshakeResult:
+def _successful_handshake() -> HandshakeResult:
     return HandshakeResult(
         success=True,
         status_code=200,
@@ -328,7 +325,7 @@ def _fake_handshake() -> HandshakeResult:
 class _HandshakeVerifier:
     def __init__(self, result: HandshakeResult | None = None) -> None:
         self.calls = 0
-        self.result = result or _fake_handshake()
+        self.result = result or _successful_handshake()
 
     def __call__(self, _cert: LoadedCertificate, _target: str) -> HandshakeResult:
         self.calls += 1
@@ -353,7 +350,7 @@ def _certificate_session(
         provider_detail=CertificateSessionDetail(
             certificate_thumbprint=thumbprint,
             certificate_subject=subject,
-            handshake=_fake_handshake(),
+            handshake=_successful_handshake(),
         ),
     )
 
@@ -405,7 +402,7 @@ async def _seed_persisted_session(
 
     seed_auth = AeatAuthenticator(settings)
     cert = seed_auth.load_certificate()
-    context = _FakeBrowserContext(
+    context = _RecordingBrowserContext(
         cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "resume-ok"}],
@@ -437,7 +434,7 @@ async def test_capture_storage_state_writes_storage_and_metadata(
     storage_state_path = tmp_path / "captured-storage.json"
     auth = AeatAuthenticator(settings)
     cert = auth.load_certificate()
-    context = _FakeBrowserContext(
+    context = _RecordingBrowserContext(
         cert,
         storage_state={
             "cookies": [{"name": "AEATSESSID", "value": "ok"}],
@@ -473,7 +470,7 @@ async def test_resume_from_storage_state_reuses_persisted_session_without_handsh
     settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, monkeypatch)
 
     verifier = _HandshakeVerifier()
-    browser_session = _FakeBrowserSession(cert_ok=True)
+    browser_session = _RecordingBrowserSession(cert_ok=True)
     auth = AeatAuthenticator(settings, handshake_verifier=verifier)
 
     resumed = await auth.resume_from_storage_state(
@@ -592,7 +589,7 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
     mutator(storage_state_path, cert)
 
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
-    browser_session = _FakeBrowserSession(cert_ok=True)
+    browser_session = _RecordingBrowserSession(cert_ok=True)
 
     with pytest.raises(AeatLoginAssertionError):
         await auth.resume_from_storage_state(
@@ -612,7 +609,7 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
     settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, monkeypatch)
 
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
-    browser_session = _FakeBrowserSession(cert_ok=False)
+    browser_session = _RecordingBrowserSession(cert_ok=False)
 
     with pytest.raises(AeatLoginAssertionError):
         await auth.resume_from_storage_state(
@@ -645,14 +642,14 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
                 "authenticated_at": datetime.now(UTC).isoformat(),
                 "idle_deadline": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
                 "storage_state_sha256": "0" * 64,
-                "handshake": _fake_handshake().model_dump(mode="json"),
+                "handshake": _successful_handshake().model_dump(mode="json"),
             }
         ),
         encoding="utf-8",
     )
 
     verifier = _HandshakeVerifier()
-    browser_session = _FakeBrowserSession(cert_ok=True)
+    browser_session = _RecordingBrowserSession(cert_ok=True)
     auth = AeatAuthenticator(settings, handshake_verifier=verifier)
 
     session = await auth.authenticate(browser_session=cast(BrowserSessionLike, browser_session))
@@ -687,17 +684,6 @@ def test_restrict_file_permissions_best_effort(tmp_path: Path) -> None:
         return
 
     assert path.exists()
-
-
-def test_oauth_token_cache_writer_restricts_file(tmp_path: Path) -> None:
-    token_path = tmp_path / ".tokens" / "google_oauth_token.json"
-
-    _write_oauth_token_cache(token_path, '{"refresh_token":"secret"}')
-
-    assert token_path.read_text(encoding="utf-8") == '{"refresh_token":"secret"}'
-    if os.name == "posix":
-        assert (token_path.stat().st_mode & 0o777) == 0o600
-        assert (token_path.parent.stat().st_mode & 0o777) == 0o700
 
 
 @pytest.mark.asyncio
@@ -893,7 +879,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
     settings = _settings_for(bundle_path, monkeypatch)
     verifier = _HandshakeVerifier()
     async with AeatAuthenticator(settings, handshake_verifier=verifier) as auth:
-        # Fake a session to pass to reauthenticate. The call will fail
+        # Build a session to pass to reauthenticate. The call will fail
         # at the network-free browser-session resolution step, so we
         # assert that reauthenticate completes without deadlocking
         # regardless of the authenticate outcome.
@@ -931,7 +917,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
     settings = _settings_for(bundle_path, monkeypatch)
     authenticator = AeatAuthenticator(settings)
 
-    # Install a fake context so the lock-protected snapshot would
+    # Install a recording context so the lock-protected snapshot would
     # otherwise succeed — we want the latch to be the cause of the
     # refusal.
     cert = authenticator.load_certificate()
@@ -939,8 +925,8 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
 
     from . import BrowserContextLike
 
-    fake_ctx = _FakeBrowserContext(cert, recognised=True)
-    authenticator._context = cast(BrowserContextLike, fake_ctx)
+    context = _RecordingBrowserContext(cert, recognised=True)
+    authenticator._context = cast(BrowserContextLike, context)
     authenticator._closing = True
 
     now = datetime.now(UTC)
@@ -964,7 +950,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
 async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """True interleaved race: start verify_login + close concurrently.
 
-    Uses an ``asyncio.Event`` inside the fake page's ``goto`` to
+    Uses an ``asyncio.Event`` inside the recording page's ``goto`` to
     deterministically suspend mid-navigation, letting ``close()``
     progress to its drain-wait. close()'s wait should block until
     goto is allowed to complete; after that, the teardown runs
@@ -1045,7 +1031,7 @@ async def test_close_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPat
 
 def test_auth_provider_protocol_conformance() -> None:
     class _NullAuthProvider:
-        kind = AuthProviderKind.CLAVE_PERMANENTE
+        kind = AuthProviderKind.CLAVE_MOVIL
 
         async def authenticate(
             self,
@@ -1060,7 +1046,7 @@ def test_auth_provider_protocol_conformance() -> None:
                 idle_deadline=now + AEAT_SESSION_IDLE_TTL,
                 storage_state_path=None,
                 identity_nif="X1234567L",
-                provider_detail=ClavePermanenteSessionDetail(),
+                provider_detail=ClaveMovilSessionDetail(dni_nie="X1234567L"),
             )
 
         async def verify(
@@ -1077,7 +1063,7 @@ def test_auth_provider_protocol_conformance() -> None:
                 status_code=200,
                 elapsed_ms=1,
                 attempted_at=datetime.now(UTC),
-                assertion_detail=ClavePermanenteLoginAssertionDetail(),
+                assertion_detail=ClaveMovilLoginAssertionDetail(session_cookie_present=True),
             )
 
         def describe(self) -> AuthProviderDescription:
@@ -1101,11 +1087,3 @@ def test_select_provider_returns_certificate_provider(tmp_path: Path, monkeypatc
 
     assert isinstance(provider, AeatAuthenticator)
     assert isinstance(provider, AuthProvider)
-
-
-def test_select_provider_rejects_unimplemented_kind(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
-
-    with pytest.raises(NotImplementedError, match="clave_permanente"):
-        select_provider(AuthProviderKind.CLAVE_PERMANENTE, settings=settings)

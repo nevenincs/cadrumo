@@ -3,15 +3,15 @@
 Modelo 131 is the quarterly IRPF pago fraccionado for autónomos under
 the módulos régimen (estimación objetiva). It mirrors Modelo 130 for
 the direct-estimation cousin, but the algebraic chain is different
-because modules compute the quarterly instalment from fixed-coefficient
+because módulos computes the quarterly instalment from fixed-coefficient
 indicators (volumen ventas / volumen ingresos agrícolas) rather than
 from a rendimiento neto.
 
 Formula coverage:
 
-- casilla 04 = 2% x casilla 03 (2% sobre volumen ventas en módulos sin
+- casilla 04 = 2 % x casilla 03 (2 % sobre volumen ventas en módulos sin
   datos-base — RIRPF art. 110.1.b, Orden EHA/672/2007 instrucciones).
-- casilla 06 = 2% x casilla 05 (2% sobre volumen ingresos agrícolas,
+- casilla 06 = 2 % x casilla 05 (2 % sobre volumen ingresos agrícolas,
   ganaderas, forestales, pesqueras — RIRPF art. 110.1.c).
 - casilla 07 = casilla 02 + casilla 04 + casilla 06 (total previo a
   minoraciones).
@@ -52,6 +52,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a :class:`aeat.core.i18n.Translatable` mapping for the three locales."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -77,10 +78,12 @@ _CITATIONS = (
 
 
 def _input_casilla(cid: str, label: Translatable) -> tuple:
+    """Build a 1-tuple holding a user-input :class:`CasillaDefinition`."""
     return (casilla(casilla_id=cid, label=label, computed=False),)
 
 
 def _computed_casilla(cid: str, label: Translatable) -> tuple:
+    """Build a 1-tuple holding a computed :class:`CasillaDefinition` carrying :data:`_CITATIONS`."""
     return (casilla(casilla_id=cid, label=label, computed=True, legal_basis=_CITATIONS),)
 
 

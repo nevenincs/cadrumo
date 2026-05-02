@@ -1,4 +1,9 @@
-"""Modelo 100 Anexo E — ganancias y pérdidas patrimoniales (2024)."""
+"""Modelo 100 Anexo E — ganancias y pérdidas patrimoniales (ejercicio 2024).
+
+Re-exports ``CASILLAS`` and ``CITATIONS`` from :mod:`.anexo_e_2025`;
+only ``FORMULAS`` (year-scoped formula IDs) and the effective-date
+constants are year-specific.
+"""
 
 from __future__ import annotations
 

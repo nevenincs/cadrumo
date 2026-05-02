@@ -14,10 +14,10 @@ from dataclasses import dataclass
 import pytest
 from playwright.async_api import async_playwright
 
-from aeat.core.config import load_settings
-from aeat.entrypoints.cli._live import requires_live_enabled
 from aeat.adapters.outbound.aeat.browser.profile import Profile
 from aeat.adapters.outbound.aeat.browser.session import BrowserSession
+from aeat.core.config import load_settings
+from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

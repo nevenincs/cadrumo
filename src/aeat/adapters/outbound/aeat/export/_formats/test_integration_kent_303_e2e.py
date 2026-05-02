@@ -1,23 +1,23 @@
-"""End-to-end integration for Modelo 303 2024.
+"""End-to-end integration coverage for Modelo 303 2024.
 
-Kent's IVA Q1 2024 scenario through both Track A (envelope
-serialiser) and Track B (formula ruleset) in a single pytest.
+Exercises an IVA Q1 2024 scenario through both the envelope
+serialiser and the formula ruleset in a single pytest run. A
+régimen-general base imponible (casilla 07 = 20 000 EUR at 21 %)
+is fed into the Modelo 303 2024 ruleset; the engine derives all
+12 downstream casillas (rates, cuotas, totals); the result is
+serialised to the 7994-byte fichero-BOE envelope and pinned to a
+golden SHA256 with a byte-exact round-trip back through
+:func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise_envelope`.
 
-Feeds his régimen-general base imponible (casilla 07 = 20 000 € at
-21 %) into the Modelo 303 2024 ruleset, lets the engine derive all
-12 downstream casillas (rates, cuotas, totals), and proves that
-serialising the result to the 7994-byte fichero-BOE envelope yields
-the SHA256 + round-trips back byte-exactly.
-
-Ruleset + schema share a known mapping gap: casillas 45, 64, 67,
+Ruleset and schema share a known mapping gap: casillas 45, 64, 67,
 71 are declared in the ruleset but have no fields in the 303 DR
-fixture (the extraction missed the cuota-devengada-
-total / diferencia / a-ingresar rollup block — see
-``_EXPECTED_GAPS["303.2024"]`` in test_ruleset_schema_coverage.py
-and the matching note in tests/fixtures/dr_specs/dr303e24.json
-source.notes). The test filters comparisons to casillas that
-live in both layers so the gap is documented without masking a
-real regression.
+fixture (the extraction missed the cuota-devengada-total /
+diferencia / a-ingresar rollup block, captured by
+``_EXPECTED_GAPS["303.2024"]`` in ``test_ruleset_schema_coverage.py``
+and the matching note in ``tests/fixtures/dr_specs/dr303e24.json``
+``source.notes``). Comparisons are filtered to casillas that live
+in both layers so the gap is documented without masking a real
+regression.
 """
 
 from __future__ import annotations
@@ -44,12 +44,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 def _schema_casilla_ids() -> frozenset[str]:
-    """Enumerate CURRENCY casilla_ids carried by the 303 envelope schema.
+    """Enumerate CURRENCY ``casilla_id`` values carried by the 303 envelope schema.
 
-    RESERVED rate-literal fields (e.g., casilla 02 = 4.00 %, 05 = 10.00 %,
-    08 = 21.00 %) have casilla_ids but never enter merged_casilla_values
-    on deserialisation — only CURRENCY fields do — so we exclude them
-    from the round-trip comparison.
+    RESERVED rate-literal fields (e.g. casilla 02 = 4.00 %, 05 = 10.00 %,
+    08 = 21.00 %) carry ``casilla_id`` values but never enter
+    ``merged_casilla_values`` on deserialisation — only
+    :attr:`aeat.adapters.outbound.aeat.export._formats._record_spec.FieldKind.CURRENCY`
+    fields do — so they are excluded from the round-trip comparison.
+
+    Returns:
+        Immutable set of casilla identifiers that participate in the
+        envelope's CURRENCY round-trip.
     """
     out: set[str] = set()
     for seg in ENVELOPE:
@@ -60,7 +65,12 @@ def _schema_casilla_ids() -> frozenset[str]:
 
 
 class TestKentE2EModelo303Q12024:
-    """Kent's Q1 2024 IVA: 20 000 € servicios al 21 %, sin deducciones."""
+    """Q1 2024 IVA scenario: 20 000 EUR servicios al 21 %, sin deducciones.
+
+    Pins the engine + envelope serialiser to a known SHA256 and exercises
+    the round-trip through
+    :func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise_envelope`.
+    """
 
     _INPUTS: ClassVar[dict[str, Decimal]] = {
         "07": Decimal("20000.00"),  # base imponible al 21 %
@@ -69,6 +79,7 @@ class TestKentE2EModelo303Q12024:
     _HEADERS: ClassVar[dict[str, str]] = dict(kent_303_headers("2024"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
+        """Run the Modelo 303 2024 ruleset over the scenario inputs."""
         ledger = Engine().derive(ruleset=RULESET_303_2024, inputs=self._INPUTS)
         out: dict[str, Decimal] = {**self._INPUTS}
         for entry in ledger.entries:
@@ -76,7 +87,7 @@ class TestKentE2EModelo303Q12024:
         return out
 
     def test_ruleset_derives_21_percent_cuota(self) -> None:
-        """Casilla 09 must be exactly 21 % of casilla 07 (cuota devengada)."""
+        """Assert casilla 09 equals exactly 21 % of casilla 07 (cuota devengada)."""
         casillas = self._derive_casillas()
         assert casillas["07"] == Decimal("20000.00")
         assert casillas["09"] == Decimal("4200.00"), "casilla 09 = 07 * 21 %"
@@ -86,9 +97,13 @@ class TestKentE2EModelo303Q12024:
         assert casillas["64"] == Decimal("4200.00")
 
     def test_ruleset_to_envelope_hits_golden_sha(self) -> None:
-        """Ruleset + envelope serialiser must produce a fixed SHA256 for
-        this scenario. Pinning this byte output makes any future ruleset
-        or schema drift surface immediately, and names both tracks."""
+        """Assert ruleset + envelope serialiser produce a fixed SHA256 for this scenario.
+
+        Pinning this byte output surfaces ruleset or schema drift
+        immediately and names both layers (formula engine vs.
+        serialiser) in the failure message so the regression can be
+        attributed without bisecting.
+        """
         casillas = self._derive_casillas()
         payload = serialise_envelope(
             casilla_values=casillas,
@@ -104,21 +119,20 @@ class TestKentE2EModelo303Q12024:
             f"  expected SHA256: {expected}\n"
             f"  actual   SHA256: {actual}\n"
             "Either:\n"
-            "  - the Modelo 303 2024 ruleset changed a formula (Track B), OR\n"
-            "  - the schema/serialiser shifted a byte (Track A), OR\n"
+            "  - the Modelo 303 2024 ruleset changed a formula, OR\n"
+            "  - the schema/serialiser shifted a byte, OR\n"
             "  - casillas 45 / 64 / 67 / 71 gained schema fields,\n"
             " closing the /113 gap (update _EXPECTED_GAPS too).\n"
             "Pick one, update the `expected` literal, and explain in the commit."
         )
 
     def test_round_trip_preserves_schema_backed_casillas(self) -> None:
-        """Every ruleset-derived casilla that the envelope schema also
-        carries must round-trip byte-exactly through deserialise_envelope.
+        """Assert ruleset-derived casillas backed by the envelope schema round-trip byte-exactly.
 
         Casillas 45, 64, 67, 71 are declared in the ruleset but have no
-        schema field (see _EXPECTED_GAPS and fixture
-        source.notes), so they are excluded from the comparison via
-        :func:`_schema_casilla_ids`.
+        corresponding envelope field (see ``_EXPECTED_GAPS`` and the
+        fixture's ``source.notes``), so they are excluded from the
+        comparison via :func:`_schema_casilla_ids`.
         """
         casillas = self._derive_casillas()
         payload = serialise_envelope(
@@ -139,9 +153,11 @@ class TestKentE2EModelo303Q12024:
 
 
 class TestKentE2EModelo303Q12025:
-    """2025 ejercicio end-to-end. Orden HAC/819/2024 governs
-    both 2024 and 2025 Modelo 303 filings, so the 2025 ruleset + schema
-    clones must compute + serialise identically modulo the EJERCICIO stamps.
+    """2025 ejercicio end-to-end coverage for Modelo 303.
+
+    Orden HAC/819/2024 governs both 2024 and 2025 Modelo 303 filings,
+    so the 2025 ruleset + schema clones must compute and serialise
+    identically modulo the ``EJERCICIO`` stamp.
     """
 
     _INPUTS: ClassVar[dict[str, Decimal]] = {
@@ -151,6 +167,7 @@ class TestKentE2EModelo303Q12025:
     _HEADERS: ClassVar[dict[str, str]] = dict(kent_303_headers("2025"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
+        """Run the Modelo 303 2025 ruleset over the scenario inputs."""
         ledger = Engine().derive(ruleset=RULESET_303_2025, inputs=self._INPUTS)
         out: dict[str, Decimal] = {**self._INPUTS}
         for entry in ledger.entries:
@@ -158,8 +175,12 @@ class TestKentE2EModelo303Q12025:
         return out
 
     def test_2025_ruleset_matches_2024_arithmetic(self) -> None:
-        """Same-inputs clone invariant: 2024 and 2025 rulesets must derive
-        identical casilla values until AEAT publishes a 303-specific update."""
+        """Assert the 2024 and 2025 rulesets derive identical casilla values for identical inputs.
+
+        This clone invariant must hold until AEAT publishes a
+        303-specific update; the moment it does, this test should be
+        rewritten to capture the new arithmetic deliberately.
+        """
         ledger_24 = Engine().derive(ruleset=RULESET_303_2024, inputs=self._INPUTS)
         ledger_25 = Engine().derive(ruleset=RULESET_303_2025, inputs=self._INPUTS)
         derived_24 = {e.casilla_id: e.value for e in ledger_24.entries}
@@ -167,6 +188,7 @@ class TestKentE2EModelo303Q12025:
         assert derived_24 == derived_25, "2024 vs 2025 ruleset divergence — clone contract broken."
 
     def test_2025_envelope_hits_golden_sha(self) -> None:
+        """Pin the 2025 envelope serialisation of the scenario to a fixed SHA256."""
         casillas = self._derive_casillas()
         payload = serialise_envelope(
             casilla_values=casillas,

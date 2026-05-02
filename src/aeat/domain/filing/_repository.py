@@ -1,21 +1,22 @@
 """Governed-persistence repository for filing drafts.
 
-Wraps the substrate's :class:`Envelope[FilingDraft]` contract behind a
-small typed surface that the filing CLI and any future consumer can
-call. Each draft is persisted as its own envelope file
-(``<draft_id>.envelope.json``) under :attr:`aeat.core.config.AeatSettings.aeat_drafts_dir`,
-so per-draft locking does not contend across the whole drafts directory.
+Wraps the substrate's :class:`aeat.adapters.persistence.storage.Envelope`
+contract behind a small typed surface that the filing CLI and any future
+consumer can call. Each draft is persisted as its own envelope file
+(``<draft_id>.envelope.json``) under
+:attr:`aeat.core.config.AeatSettings.aeat_drafts_dir`, so per-draft locking
+does not contend across the whole drafts directory.
 
-The repository is the only sanctioned read/write path for filing
-drafts. There is no plaintext fallback: every reader and writer
-routes through this surface so the on-disk record is always the
-encrypted envelope.
+The repository is the only sanctioned read/write path for filing drafts.
+There is no plaintext fallback: every reader and writer routes through
+this surface so the on-disk record is always the encrypted envelope.
 
-Sensitivity classification: drafts carry per-line casilla arithmetic
-that drives the exact tax due. Per the policy table,
-that is :class:`SensitivityClass.FINANCIAL`; the gate at
-:func:`load_encrypted_envelope` rejects payloads whose recorded class
-drifted.
+**Sensitivity classification.** Drafts carry per-line casilla arithmetic
+that drives the exact tax due. Per the policy table that is
+:attr:`aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`; the
+gate at
+:func:`aeat.adapters.persistence.storage.load_encrypted_envelope` rejects
+payloads whose recorded class drifted.
 """
 
 from __future__ import annotations
@@ -202,7 +203,7 @@ class FilingDraftRepository:
                 yield payload
 
 
-# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.
+# TODO: remove after 2026-10-27 retention window.
 def migrate_legacy_drafts_to_repository(
     legacy_dir: Path,
     *,

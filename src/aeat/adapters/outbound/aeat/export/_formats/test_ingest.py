@@ -1,4 +1,11 @@
-"""Tests for the DR spec ingestion library (EPIC #305)."""
+"""Tests for the DR spec ingestion library.
+
+Drives
+:func:`aeat.adapters.outbound.aeat.export._formats._ingest.ingest_dr_spec_document`
+and :func:`...ingest_dr_spec_path` against the ``mini_303.json``
+preview fixture plus a handful of malformed inline documents to
+assert the validation contract.
+"""
 
 from __future__ import annotations
 
@@ -70,6 +77,8 @@ class TestIngestMini303:
 
 
 class TestIngestValidation:
+    """Reject paths that violate the JSON contract or the spec invariants."""
+
     def test_unknown_encoding_rejected(self) -> None:
         bad = {
             "source": {},

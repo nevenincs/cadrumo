@@ -1,4 +1,8 @@
-"""Unit tests for the `aeat financial` CLI."""
+"""Unit tests for :mod:`aeat.entrypoints.cli.financial`.
+
+Exercises the ``aeat financial ingest`` command across the
+JSON-stream, persistence, and validation paths.
+"""
 
 from __future__ import annotations
 
@@ -16,8 +20,18 @@ _RUNNER = CliRunner()
 _FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 
 
+@pytest.fixture(autouse=True)
+def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin CLI output to English so assertions stay readable.
+
+    The production default is ``es``; this fixture only affects test
+    output, not runtime behaviour.
+    """
+    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
+
+
 def test_financial_ingest_json_stream() -> None:
-    """`aeat financial ingest --output-json` should emit JSON lines."""
+    """``aeat financial ingest --output-json`` emits one JSON line per record."""
     result = _RUNNER.invoke(
         root_app,
         [
@@ -36,7 +50,7 @@ def test_financial_ingest_json_stream() -> None:
 
 
 def test_financial_ingest_json_stream_for_n26_pdf() -> None:
-    """`aeat financial ingest --output-json` should auto-detect N26 PDFs."""
+    """``aeat financial ingest --output-json`` auto-detects N26 PDF statements."""
     result = _RUNNER.invoke(
         root_app,
         [
@@ -55,7 +69,7 @@ def test_financial_ingest_json_stream_for_n26_pdf() -> None:
 
 
 def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
-    """The CLI should abort before ingest when validation fails."""
+    """The CLI aborts before ingest when source validation fails."""
     source = tmp_path / "invalid.csv"
     source.write_text("foo,bar\n1,2\n", encoding="utf-8")
     result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
@@ -64,7 +78,7 @@ def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
 
 
 def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
-    """The CLI should convert ingest-time provider failures into a clean exit."""
+    """The CLI converts ingest-time provider failures into a clean exit code."""
     source = tmp_path / "malformed.csv"
     source.write_text(
         "Fecha operación,Importe,Concepto\nNOT-A-DATE,-12.34,Subscription\n",
@@ -75,11 +89,8 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
     assert "ingest error" in result.output.lower()
 
 
-# ── #216 Kent-moment integration tests ───────────────────────────────
-
-
 def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
-    """The Kent moment: aeat financial ingest --persist persists to the catalogue."""
+    """``aeat financial ingest --persist`` writes to the encrypted catalogue and is idempotent."""
 
     from ....adapters.persistence.storage import (
         EncryptedBlobStore,
@@ -150,7 +161,7 @@ def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
 
 
 def test_financial_ingest_no_persist_preserves_pipe_workflow(tmp_path: Path) -> None:
-    """``--no-persist`` keeps the legacy stdout-only behaviour intact."""
+    """``--no-persist`` keeps the legacy stdout-only pipe behaviour intact."""
     result = _RUNNER.invoke(
         root_app,
         [

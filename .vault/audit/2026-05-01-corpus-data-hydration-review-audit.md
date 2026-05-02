@@ -20,4 +20,3 @@ Fixed: All rule references in `modelo_111` JSON files now use the correct year p
 
 I18N-001 | RESOLVED | Missing Catalan (ca) Translations
 Fixed: All hydrated records now contain the mandatory `ca` key in `label` and `help` fields, satisfying the project's quad-lingual i18n contract.
-

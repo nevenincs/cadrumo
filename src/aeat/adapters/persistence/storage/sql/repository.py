@@ -1,8 +1,12 @@
 """Typed repositories for the public storage records.
 
 Each repository exposes a small, explicit CRUD surface against its pydantic
-record type. The repositories translate between the public records and the
-internal :mod:`aeat.adapters.persistence.storage._orm` mapper classes on every boundary crossing.
+record type from :mod:`aeat.adapters.persistence.storage.sql.records`. The
+repositories translate between the public records and the internal
+SQLAlchemy mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`
+on every boundary crossing, raising
+:exc:`aeat.adapters.persistence.storage.errors.RepositoryError` on integrity
+violations or missing-row lookups.
 """
 
 from __future__ import annotations
@@ -14,22 +18,23 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .....core.logging import get_logger
-from . import _orm
 from ..errors import RepositoryError
+from . import _orm
 from .records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 
 _log = get_logger(__name__)
 
 
 def _flush_or_wrap(session: Session, kind: str) -> None:
-    """Flush ``session`` and wrap ``IntegrityError`` as :class:`RepositoryError`.
+    """Flush ``session`` and wrap ``IntegrityError`` as :exc:`RepositoryError`.
 
     Args:
-        session: The active SQLAlchemy session to flush.
+        session: The active :class:`~sqlalchemy.orm.Session` to flush.
         kind: Short label describing the record type for the error message.
 
     Raises:
-        RepositoryError: If the flush raises :class:`IntegrityError`.
+        :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`: If
+            the flush raises :class:`sqlalchemy.exc.IntegrityError`.
     """
     try:
         session.flush()
@@ -54,26 +59,43 @@ class Repository[RecordT](ABC):
 
     @abstractmethod
     def list_all(self) -> list[RecordT]:
-        """Return every row as a pydantic record."""
+        """Return every row as a pydantic record, ordered by primary key."""
 
     @abstractmethod
     def get(self, record_id: int) -> RecordT:
         """Return a single row by primary key.
 
+        Args:
+            record_id: Primary-key value to fetch.
+
         Raises:
-            RepositoryError: If no row with ``record_id`` exists.
+            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
+                If no row with ``record_id`` exists.
         """
 
     @abstractmethod
     def upsert(self, record: RecordT) -> RecordT:
-        """Insert or update ``record`` and return the persisted value."""
+        """Insert or update ``record`` and return the persisted value.
+
+        Args:
+            record: Pydantic record to persist. ``id`` selects update mode;
+                otherwise a natural-key lookup decides between insert and
+                update.
+
+        Returns:
+            The persisted record reflecting the on-disk state.
+        """
 
     @abstractmethod
     def delete(self, record_id: int) -> None:
         """Delete the row with ``record_id``.
 
+        Args:
+            record_id: Primary-key value to delete.
+
         Raises:
-            RepositoryError: If no row with ``record_id`` exists.
+            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
+                If no row with ``record_id`` exists.
         """
 
 
@@ -81,16 +103,23 @@ class ModeloRepository(Repository[ModeloRecord]):
     """Repository for :class:`ModeloRecord`."""
 
     def list_all(self) -> list[ModeloRecord]:
+        """Return every record in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.ModeloRow).order_by(_orm.ModeloRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> ModeloRecord:
+        """Return the record with surrogate id ``record_id``.
+
+        Raises:
+            RepositoryError: When no row matches.
+        """
         row = self._session.get(_orm.ModeloRow, record_id)
         if row is None:
             raise RepositoryError(f"modelo id={record_id} not found")
         return self._to_record(row)
 
     def upsert(self, record: ModeloRecord) -> ModeloRecord:
+        """Insert or update ``record`` and return the persisted entity."""
         row: _orm.ModeloRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.ModeloRow, record.id)
@@ -110,6 +139,7 @@ class ModeloRepository(Repository[ModeloRecord]):
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.ModeloRow, record_id)
         if row is None:
             raise RepositoryError(f"modelo id={record_id} not found")
@@ -125,16 +155,23 @@ class PortalRepository(Repository[PortalRecord]):
     """Repository for :class:`PortalRecord`."""
 
     def list_all(self) -> list[PortalRecord]:
+        """Return every record in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.PortalRow).order_by(_orm.PortalRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> PortalRecord:
+        """Return the record with surrogate id ``record_id``.
+
+        Raises:
+            RepositoryError: When no row matches.
+        """
         row = self._session.get(_orm.PortalRow, record_id)
         if row is None:
             raise RepositoryError(f"portal id={record_id} not found")
         return self._to_record(row)
 
     def upsert(self, record: PortalRecord) -> PortalRecord:
+        """Insert or update ``record`` and return the persisted entity."""
         row: _orm.PortalRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.PortalRow, record.id)
@@ -163,6 +200,7 @@ class PortalRepository(Repository[PortalRecord]):
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.PortalRow, record_id)
         if row is None:
             raise RepositoryError(f"portal id={record_id} not found")
@@ -191,16 +229,23 @@ class CorpusArtifactRepository(Repository[CorpusArtifactRecord]):
     """Repository for :class:`CorpusArtifactRecord`."""
 
     def list_all(self) -> list[CorpusArtifactRecord]:
+        """Return every record in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.CorpusArtifactRow).order_by(_orm.CorpusArtifactRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> CorpusArtifactRecord:
+        """Return the record with surrogate id ``record_id``.
+
+        Raises:
+            RepositoryError: When no row matches.
+        """
         row = self._session.get(_orm.CorpusArtifactRow, record_id)
         if row is None:
             raise RepositoryError(f"corpus_artifact id={record_id} not found")
         return self._to_record(row)
 
     def upsert(self, record: CorpusArtifactRecord) -> CorpusArtifactRecord:
+        """Insert or update ``record`` and return the persisted entity."""
         row: _orm.CorpusArtifactRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.CorpusArtifactRow, record.id)
@@ -235,6 +280,7 @@ class CorpusArtifactRepository(Repository[CorpusArtifactRecord]):
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
+        """Delete the record with surrogate id ``record_id``."""
         row = self._session.get(_orm.CorpusArtifactRow, record_id)
         if row is None:
             raise RepositoryError(f"corpus_artifact id={record_id} not found")

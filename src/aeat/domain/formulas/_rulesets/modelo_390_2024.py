@@ -8,7 +8,7 @@ result split, the regularización por bienes de inversión adjustment,
 and the cuota anual a ingresar / a devolver.
 
 The full BOE template runs to roughly 680 fields. The scoped surface
-encoded here covers the kent-relevant régimen-general result chain:
+encoded here covers the régimen-general result chain:
 
 - Apartado 1 datos estadísticos: casillas ``01`` (régimen general 1T
   base), ``04`` (régimen general 1T cuota). Held as user-supplied
@@ -33,15 +33,13 @@ casillas (``95``, ``96``, ``100``, ``101``, ``108``, ``109``, ``662``)
 remain user-supplied; only the algebraic relationships among them are
 encoded as formulas. Cumulation correctness is asserted at the test
 level, not in the formula DSL. This mirrors the Modelo 180 annual
-IRPF retention summary pattern. See
-``.vault/adr/2026-04-27-modelo-390-calc-verify-adr.md`` for the full
-discussion of the alternatives considered.
+IRPF retention summary pattern.
 
 The 2024 module owns the shared casilla and citation tuples; the
 2025 and 2026 siblings re-import them and declare year-scoped
-``ParameterTable`` entries plus year-stamped formula identifiers.
+:class:`ParameterTable` entries plus year-stamped formula identifiers.
 
-Out of scope (tracked under the IVA complexity sub-EPIC ``#345``):
+Out of scope (tracked outside this base ruleset):
 
 - Per-rate-bucket detail of Apartado 3 (4 / 10 / 21 percent bases and
   cuotas decomposition).
@@ -50,7 +48,7 @@ Out of scope (tracked under the IVA complexity sub-EPIC ``#345``):
   arts. 107-110); ``662`` stays a single user-supplied annual figure.
 - 2026 small-enterprise franquicia regime (Directiva (UE) 2020/285)
   and 2026 onwards Spanish transposition.
-- Foral regimes (País Vasco / Navarra) under EPIC ``#424``.
+- Foral regimes (País Vasco / Navarra).
 - Canarias IGIC and Ceuta / Melilla IPSI regional deviations.
 
 Legal base. LIVA arts. 90 and 91 fix the 21 / 10 / 4 percent rate
@@ -87,6 +85,7 @@ _EFFECTIVE_TO = date(2024, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a :class:`aeat.core.i18n.Translatable` mapping for the three locales."""
     return {"es": es, "en": en, "hu": hu}
 
 

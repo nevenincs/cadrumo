@@ -1,8 +1,12 @@
-"""Colocated unit tests for site-health models and parsers (#95).
+"""Colocated unit tests for site-health models and parsers.
 
-The module is marked ``unit`` / ``domain_aeat_remote`` and drives the parser suite
-from real HTML strings loaded off disk under
-``tests/fixtures/site_health/``. No mocks, patches, fakes, or stubs.
+Drives :func:`aeat.adapters.outbound.aeat.browser.evaluate_response` and the
+underlying :mod:`._site_health_parsers` against real HTML strings loaded off disk
+under ``tests/fixtures/site_health/``. No test doubles — the parsers are exercised
+end-to-end so a fixture-side regression surfaces here first.
+
+The module is marked ``unit`` / ``domain_outbound`` so it stays inside the
+fast-path test selection.
 """
 
 from __future__ import annotations
@@ -36,7 +40,12 @@ _RATE_LIMIT_DEFAULT = 300
 
 
 def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str], str]:
-    """Return ``(http_status, headers, body)`` for a fixture file."""
+    """Return ``(http_status, headers, body)`` for a fixture file.
+
+    A sibling ``<name>.headers.json`` file (when present) supplies the HTTP
+    status code and response headers; otherwise ``default_status`` is used and
+    headers default to the empty mapping.
+    """
     headers_path = path.with_suffix(".headers.json")
     if headers_path.exists():
         payload = json.loads(headers_path.read_text(encoding="utf-8"))
@@ -62,7 +71,12 @@ _OK_FILES = _fixture_files("ok")
 
 
 class TestFixtureCorpusShape:
-    """Guardrails: ensure the fixture corpus meets the plan minimums."""
+    """Guardrails ensuring the on-disk fixture corpus meets the minimum shape.
+
+    Each classifier needs at least five positive examples plus five negatives
+    so a regression cannot pass by overfitting to a single representative HTML
+    page.
+    """
 
     def test_mantenimiento_has_five_positives(self) -> None:
         assert len(_MANTENIMIENTO_FILES) >= 5
@@ -165,7 +179,12 @@ def test_ok_fixtures_do_not_classify(path: Path) -> None:
 
 
 class TestMantenimientoTitleOnlyGuard:
-    """ADR Decision 2.1: title-only hits must never classify."""
+    """Title-only marker hits must never classify as mantenimiento.
+
+    A page whose ``<title>`` mentions an outage marker but whose body is
+    unrelated should fall through to the OK classifier — title text alone is
+    not strong enough evidence to declare AEAT down.
+    """
 
     def test_title_only_is_not_classified_as_mantenimiento(self) -> None:
         # Title carries the "interrupcion" marker, body carries none.
@@ -222,6 +241,8 @@ class TestMantenimientoTitleOnlyGuard:
 
 
 class TestRateLimitRetryAfter:
+    """``Retry-After`` parsing rules for rate-limit responses."""
+
     def test_default_used_when_header_missing(self) -> None:
         path = _FIXTURES_ROOT / "rate_limited" / "429_no_header.html"
         http_status, headers, body = _load_case(path, default_status=429)
@@ -325,6 +346,9 @@ def _evidence(**overrides: object) -> SiteHealthEvidence:
 
 
 class TestSiteHealthModels:
+    """Pydantic-shape guarantees for :class:`SiteHealthEvidence` and
+    :class:`SiteHealthStatus`."""
+
     def test_evidence_accepts_valid_kwargs(self) -> None:
         ev = _evidence()
         assert ev.http_status == 200

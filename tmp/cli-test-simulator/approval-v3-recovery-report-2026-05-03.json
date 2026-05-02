@@ -1,0 +1,194 @@
+{
+  "artifact": "aeat-cli-approval-session-v3-recovery-report",
+  "generatedAt": "2026-05-02T22:14:01.700854+00:00",
+  "candidateCount": 15,
+  "summaries": [
+    {
+      "idx": 0,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 45,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3905
+    },
+    {
+      "idx": 1,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 4075,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3920
+    },
+    {
+      "idx": 2,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 8120,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3927
+    },
+    {
+      "idx": 3,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 12172,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3926
+    },
+    {
+      "idx": 4,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 16223,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 5363
+    },
+    {
+      "idx": 5,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 21643,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3392
+    },
+    {
+      "idx": 6,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 25160,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 4052
+    },
+    {
+      "idx": 7,
+      "key": "aeat-cli-approval-session-v3",
+      "file": "054681.log",
+      "offset": 35243,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 0,
+      "notes": 0,
+      "generatedAt": "",
+      "bytes": 3890
+    },
+    {
+      "idx": 8,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 45,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 10,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 3905
+    },
+    {
+      "idx": 9,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 4075,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 10,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 3920
+    },
+    {
+      "idx": 10,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 8120,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 10,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 3927
+    },
+    {
+      "idx": 11,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 12172,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 10,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 3926
+    },
+    {
+      "idx": 12,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 21643,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 9,
+      "notes": 9,
+      "generatedAt": "",
+      "bytes": 3392
+    },
+    {
+      "idx": 13,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 25160,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 11,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 4052
+    },
+    {
+      "idx": 14,
+      "key": "aeat-cli-approval-session-v3-drafts",
+      "file": "054681.log",
+      "offset": 35243,
+      "mtime": "2026-05-02T22:12:40.555031+00:00",
+      "count": 10,
+      "notes": 10,
+      "generatedAt": "",
+      "bytes": 3890
+    }
+  ],
+  "selectedSaved": {
+    "idx": 7,
+    "key": "aeat-cli-approval-session-v3",
+    "file": "054681.log",
+    "offset": 35243,
+    "mtime": "2026-05-02T22:12:40.555031+00:00",
+    "count": 0,
+    "notes": 0,
+    "generatedAt": "",
+    "bytes": 3890
+  },
+  "selectedDrafts": {
+    "idx": 13,
+    "key": "aeat-cli-approval-session-v3-drafts",
+    "file": "054681.log",
+    "offset": 25160,
+    "mtime": "2026-05-02T22:12:40.555031+00:00",
+    "count": 11,
+    "notes": 10,
+    "generatedAt": "",
+    "bytes": 4052
+  }
+}

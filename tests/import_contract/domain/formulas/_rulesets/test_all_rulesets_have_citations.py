@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.entrypoints.cli.audit import validate_citation_coverage
 from aeat.domain.formulas._ruleset import Ruleset
 from aeat.domain.formulas._rulesets import ALL_RULESETS
+from aeat.entrypoints.cli.audit import validate_citation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

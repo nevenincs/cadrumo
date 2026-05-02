@@ -8,12 +8,14 @@ cross-cutting :class:`FilingValidator`, the FilingDraft <->
 Justificante reconciliation engine, and the governed-persistence
 repositories (FINANCIAL drafts and AUDIT amendments).
 
-The orchestration entry points (``build_draft``, ``validate_draft``,
-``approve_draft``, ``build_complementaria``,
-``import_filing_from_justificante``) live at
-:mod:`aeat.application.filing` per the audit-5 carve-out: domain
-records are stable boundary-crossing types; the use cases that
-compose them belong on the connector layer.
+The orchestration entry points (:func:`aeat.application.filing.build_draft`,
+:func:`aeat.application.filing.validate_draft`,
+:func:`aeat.application.filing.approve_draft`,
+:func:`aeat.application.filing.build_complementaria`,
+:func:`aeat.application.filing.import_filing_from_justificante`)
+live at :mod:`aeat.application.filing`: domain records are stable
+boundary-crossing types; the use cases that compose them belong on
+the connector layer.
 """
 
 from __future__ import annotations
@@ -36,9 +38,7 @@ from ._builders import (
     get_builder,
 )
 from ._complementaria_repository import (
-    AmendmentMigrationSummary,
     FilingAmendmentRepository,
-    migrate_legacy_amendments_to_repository,
 )
 from ._errors import (
     FilingAmendmentError,
@@ -60,9 +60,7 @@ from ._protocols import (
     ModeloIdentity,
 )
 from ._repository import (
-    DraftMigrationSummary,
     FilingDraftRepository,
-    migrate_legacy_drafts_to_repository,
 )
 from ._schema import (
     APPROVAL_BASIS_VERSION,
@@ -88,7 +86,6 @@ __all__ = [
     "QUARTERLY_303_INPUT_KEY",
     "SCHEMA_VERSION_DEFAULT",
     "AmendmentKind",
-    "AmendmentMigrationSummary",
     "CasillaChange",
     "CasillaCollection",
     "CasillaDelta",
@@ -97,7 +94,6 @@ __all__ = [
     "CasillaSchemaProvider",
     "DeadlineChecker",
     "DeadlineStatus",
-    "DraftMigrationSummary",
     "FilingAmendment",
     "FilingAmendmentError",
     "FilingAmendmentRepository",
@@ -130,6 +126,4 @@ __all__ = [
     "derive_validation_status",
     "get_builder",
     "make_amendment_id",
-    "migrate_legacy_amendments_to_repository",
-    "migrate_legacy_drafts_to_repository",
 ]

@@ -1,4 +1,9 @@
-"""Unit tests for the Modelo 180 2026 ruleset."""
+"""Unit tests for the Modelo 180 2026 ruleset.
+
+Pins :data:`aeat.domain.formulas._rulesets.MODELO_180_2026` against the
+RIRPF art. 100.1 19 % retención rate, asserts no-drift against the 2025
+ruleset, and exercises parametrised cent-exact derivations of casilla 03.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +29,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo180Ruleset2026:
+    """Formula-engine assertions for the 2026 Modelo 180 ruleset."""
+
     def test_consistent_annual_is_clean(self) -> None:
         report = Engine().audit_against(ruleset=MODELO_180_2026, provided=_provided(), tolerance=Decimal("0.01"))
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]

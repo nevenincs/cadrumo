@@ -47,6 +47,8 @@ def _valid_payload(ref_id: str = "ley-35-2006") -> dict[str, object]:
 
 
 class TestLoadCatalogue:
+    """End-to-end coverage for :func:`aeat.domain.normatives.load_catalogue`."""
+
     def test_happy_path(self, tmp_path: Path) -> None:
         (tmp_path / "ley-35-2006.json").write_text(json.dumps(_valid_payload()), encoding="utf-8")
         catalogue = load_catalogue(settings=_settings_with_root(tmp_path))

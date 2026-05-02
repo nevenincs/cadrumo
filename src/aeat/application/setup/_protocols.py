@@ -1,11 +1,11 @@
-"""Protocol stubs for wizard-facing dependencies.
+"""Protocol contracts for wizard-facing dependencies.
 
 The :class:`Prompter` Protocol decouples the wizard's state machine
 from Typer's ``typer.prompt`` / ``typer.confirm`` so tests can drive
 the wizard with a real in-process prompter (no mocks, no patches).
 
 The :class:`FirstRunRunner` Protocol lets the wizard hand off to a
-read-only workflow check (issue #59) without hard-importing
+read-only workflow check without hard-importing
 ``aeat.application.workflow``. When no runner is supplied the ``FIRST_RUN`` step
 is skipped cleanly.
 """
@@ -56,7 +56,7 @@ class Prompter(Protocol):
 
 @runtime_checkable
 class FirstRunRunner(Protocol):
-    """Protocol for the optional first-run read-only workflow check (#59).
+    """Protocol for the optional first-run read-only workflow check.
 
     The wizard calls :meth:`run_read_only` at the ``FIRST_RUN`` step when a
     runner is supplied. The runner must not mutate any AEAT-side state.

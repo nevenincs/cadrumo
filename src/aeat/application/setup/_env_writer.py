@@ -22,10 +22,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
+from ...adapters.persistence.profile import save_tax_residence
 from ...core.env_io import write_env_vars
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile
-from ...domain.profile import KentTaxResidence, save_tax_residence
+from ...domain.profile import KentTaxResidence
 from ._models import SetupAnswers
 
 log = get_logger(__name__)

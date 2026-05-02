@@ -1,4 +1,10 @@
-"""Portal: Modelo 232 — operaciones vinculadas."""
+"""Registry entry for Modelo 232 — related-party transactions return.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Declaración informativa de operaciones vinculadas y con paraísos fiscales.",
 )
+"""Portal entry for Modelo 232 (related-party and tax-haven transactions)."""

@@ -9,11 +9,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.inbound.financial import RawProvenance, SourceFormat
-from aeat.adapters.inbound.financial.providers import RawTransaction
 from aeat.domain.transactions import (
     BusinessClassification,
     ClassificationHistoryEntry,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionDirection,
 )
@@ -136,7 +137,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
 
 
 def test_business_classification_rejects_legacy_unclassified_literal() -> None:
-    """`BusinessClassification("UNCLASSIFIED")` must raise; the value only survives on load."""
+    """`BusinessClassification("UNCLASSIFIED")` must raise."""
     with pytest.raises(ValueError):
         BusinessClassification("UNCLASSIFIED")
 

@@ -1,11 +1,11 @@
-"""Tests for multi-segment envelope serialise/deserialise.
+"""Tests for multi-segment envelope serialise / deserialise.
 
-The envelope pattern is what EPIC #201 needs for Modelo 303+ which
-uses XML-tagged pages rather than a single flat record. These tests
-use synthetic segment specs modelled on the Modelo 303 envelope shape
-(DP30300 header + DP30301 page 1) but with drastically reduced field
-counts to exercise the architecture without tying the tests to
-Modelo 303's BOE offsets.
+The envelope pattern is required for Modelo 303 (and later IVA
+modelos) which use XML-tagged pages rather than a single flat record.
+These tests exercise synthetic segment specs modelled on the Modelo
+303 envelope shape (DP30300 header + DP30301 page 1) but with
+drastically reduced field counts so the architecture is validated
+without coupling the tests to Modelo 303's BOE offsets.
 """
 
 from __future__ import annotations
@@ -27,12 +27,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
-    """Two-segment envelope mimicking Modelo 303 DP30300 + DP30301 shape.
+    """Build a two-segment envelope mimicking the Modelo 303 DP30300 + DP30301 shape.
 
-    Segment 1 (DP30300-MINI, 17 bytes): envelope opener "<T30300>" +
-    4-byte ejercicio + 5-byte close tag.
-    Segment 2 (DP30301-MINI, 43 bytes): page opener "<T30301000>" +
-    9-byte NIF + 17-byte casilla 01 + page closer "</T30301000>".
+    Segment 1 (``DP30300_MINI``, 17 bytes): envelope opener
+    ``"<T30300>"`` + 4-byte ejercicio + 5-byte close tag. Segment 2
+    (``DP30301_MINI``, 43 bytes): page opener ``"<T30301000>"`` +
+    9-byte NIF + 17-byte casilla 01 + page closer ``"</T30301000>"``.
     """
     seg_header = SegmentSpec(
         segment_id="DP30300_MINI",
@@ -98,6 +98,8 @@ def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
 
 
 class TestEnvelopeValidation:
+    """Invariant checks performed by :func:`validate_segment_specs`."""
+
     def test_empty_envelope_rejected(self) -> None:
         with pytest.raises(ValueError, match="must not be empty"):
             validate_segment_specs(())
@@ -142,6 +144,8 @@ class TestEnvelopeValidation:
 
 
 class TestEnvelopeSerialise:
+    """Round-trip and pre-flight behaviour of the envelope serialiser pair."""
+
     def test_round_trip_preserves_casilla_value(self) -> None:
         segments = _build_envelope_mini()
         validate_segment_specs(segments)

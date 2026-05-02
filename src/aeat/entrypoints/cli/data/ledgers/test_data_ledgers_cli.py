@@ -1,4 +1,10 @@
-"""CLI tests for the clean data-ledgers command surface."""
+"""CLI tests for the ``aeat data ledgers`` command surface.
+
+Exercises the assets, inventory, and Anexo D sub-apps end-to-end via
+:class:`typer.testing.CliRunner` against the root ``aeat`` Typer app,
+using an in-memory ephemeral master key so persistence round-trips run
+against a real on-disk encrypted store inside ``tmp_path``.
+"""
 
 from __future__ import annotations
 

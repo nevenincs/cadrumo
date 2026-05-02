@@ -1,4 +1,11 @@
-"""AEAT-aligned spending-category taxonomy."""
+"""AEAT-aligned spending-category taxonomy.
+
+Defines the closed enum :class:`SpendingCategory` of deductible
+autónomo expense classes, the coarse :class:`SpendingCategoryFamily`
+groups, and the static :data:`CATEGORY_FAMILY_MEMBERS` membership
+table. The taxonomy is the stable identifier surface every other
+package binds to; renaming a member is a breaking change.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +13,12 @@ from enum import StrEnum
 
 
 class SpendingCategory(StrEnum):
-    """Stable spending-category identifiers for deductible autónomo expenses."""
+    """Stable identifiers for deductible autónomo spending categories.
+
+    Members map one-to-one to the deductible expense classes
+    recognised by AEAT. Each value is the stable kebab-style
+    Spanish identifier used in the on-disk corpus and in CLI flags.
+    """
 
     CUOTAS_COLEGIALES = "cuotas_colegiales"
     CUOTAS_AUTONOMOS_SS = "cuotas_autonomos_ss"
@@ -49,7 +61,13 @@ class SpendingCategory(StrEnum):
 
 
 class SpendingCategoryFamily(StrEnum):
-    """Coarse families used by CLI listings and downstream classifiers."""
+    """Coarse families used by CLI listings and downstream classifiers.
+
+    Each :class:`SpendingCategory` belongs to exactly one family —
+    the membership table is :data:`CATEGORY_FAMILY_MEMBERS` and the
+    invariant is enforced by
+    :func:`aeat.domain.categories.test_spending_category.test_every_category_belongs_to_exactly_one_family`.
+    """
 
     SOCIAL_SECURITY = "social_security"
     PREMISES = "premises"
@@ -130,10 +148,28 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
     ),
     SpendingCategoryFamily.TAXES: (SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES,),
 }
+"""Static membership table from :class:`SpendingCategoryFamily` to its members.
+
+Every :class:`SpendingCategory` appears in exactly one entry. The
+table is the source of truth for :func:`family_for` and
+:func:`categories_for_family`.
+"""
 
 
 def family_for(category: SpendingCategory) -> SpendingCategoryFamily:
-    """Return the coarse family for a spending category."""
+    """Return the coarse family that a spending category belongs to.
+
+    Args:
+        category: A :class:`SpendingCategory` member.
+
+    Returns:
+        The unique :class:`SpendingCategoryFamily` containing
+        ``category``.
+
+    Raises:
+        KeyError: If ``category`` is not registered in
+            :data:`CATEGORY_FAMILY_MEMBERS`.
+    """
 
     for family, members in CATEGORY_FAMILY_MEMBERS.items():
         if category in members:
@@ -142,6 +178,13 @@ def family_for(category: SpendingCategory) -> SpendingCategoryFamily:
 
 
 def categories_for_family(family: SpendingCategoryFamily) -> tuple[SpendingCategory, ...]:
-    """Return the categories belonging to a given family."""
+    """Return the categories belonging to a coarse family.
+
+    Args:
+        family: A :class:`SpendingCategoryFamily` member.
+
+    Returns:
+        Tuple of :class:`SpendingCategory` members in the family.
+    """
 
     return CATEGORY_FAMILY_MEMBERS[family]

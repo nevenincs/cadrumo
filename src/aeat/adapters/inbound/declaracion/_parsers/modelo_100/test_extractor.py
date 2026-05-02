@@ -1,13 +1,14 @@
-"""Round-trip tests for the Modelo 100 (IRPF annual) extractor (#239).
+"""Round-trip tests for the Modelo 100 (IRPF annual) extractor.
 
 Parametrised over the three live AEAT-issued justificantes captured
 under ``scratch/recon-corpus/``. Each case exercises the real PDF
-bytes end-to-end via :func:`aeat.adapters.inbound.declaracion.parse_declaracion`, with
-no synthetic regeneration — these are the canonical ground truth for
+bytes end-to-end via
+:func:`aeat.adapters.inbound.declaracion.parse_declaracion`, with no
+synthetic regeneration — these are the canonical ground truth for
 Modelo 100 layout parity.
 
-The test set skips cleanly when the scratch captures are absent (CI
-contributors without the private corpus still run green).
+The test set skips cleanly when the scratch captures are absent so CI
+contributors without the private corpus still run green.
 """
 
 from __future__ import annotations
@@ -17,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from ... import parse_declaracion
 from ....pdf._shared import ExtractedCasilla
+from ... import parse_declaracion
 from ..._schema import DeclaracionFiling, TemplateRevision
 
 pytestmark = [

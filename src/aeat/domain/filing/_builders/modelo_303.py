@@ -2,13 +2,13 @@
 
 Modelo 303 is the quarterly IVA form filed by Spanish autónomos
 and businesses in the general IVA regime. This builder covers v1
-scope per :mod:`aeat.application.filing._builders._modelo_303_schema`:
+scope per :mod:`aeat.domain.filing._builders._modelo_303_schema`:
 operaciones interiores régimen general (casillas 01-09), IVA
 deducible (28-45), and resultado de la liquidación (64-71).
 
 The formula set is hand-curated against the *Manual práctico IVA
-2025* (AEAT) and will be re-sourced from the casilla DB (#23)
-once that subpackage lands on ``main``.
+2025* (AEAT) and will be re-sourced from the canonical casilla
+corpus once that surface is wired in.
 """
 
 from __future__ import annotations

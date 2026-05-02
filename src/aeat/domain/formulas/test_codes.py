@@ -1,4 +1,9 @@
-"""Tests for the :mod:`aeat.domain.formulas._codes` enums."""
+"""Tests for the :mod:`aeat.domain.formulas._codes` enums.
+
+Covers :class:`aeat.domain.formulas._codes.FormulaOp` cardinality and
+value invariants and :class:`aeat.domain.formulas._codes.Quarter`
+calendar coverage.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @pytest.mark.unit
 def test_formula_op_has_13_members() -> None:
-    """The operator set is locked to 13 members; expansion requires an ADR."""
+    """The operator set is locked to 13 members; expansion is a deliberate change."""
     assert len(FormulaOp) == 13
 
 

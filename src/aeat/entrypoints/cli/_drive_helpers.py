@@ -1,8 +1,12 @@
-"""Pure helpers for the Drive CLI sub-app.
+"""Pure helpers for the Google Drive CLI sub-app.
 
 Anything in this module must be unit-testable without touching the
 Google Drive API. Helpers that need a live service belong in
 :mod:`aeat.entrypoints.cli.drive` directly.
+
+The helpers here cover query-string escaping, MIME-type guessing,
+Application Default Credentials (ADC) discovery and identity parsing,
+and user-facing share-instruction text used by the Drive ingest flow.
 """
 
 from __future__ import annotations
@@ -49,6 +53,9 @@ def adc_default_path() -> Path:
     Mirrors gcloud's resolution rule: ``GOOGLE_APPLICATION_CREDENTIALS`` env
     override (caller's responsibility), else ``%APPDATA%/gcloud/...`` on
     Windows, else ``$HOME/.config/gcloud/...`` everywhere else.
+
+    Returns:
+        Filesystem path to the default ADC file location.
     """
     import os
     import sys
@@ -61,20 +68,27 @@ def adc_default_path() -> Path:
 
 
 def parse_adc_identity(adc_path: Path) -> dict[str, str | None]:
-    """Inspect an ADC JSON file and return a small identity dict.
-
-    Returns a dict with keys:
-
-    - ``type``: ``authorized_user`` | ``impersonated_service_account`` |
-      ``service_account`` | ``unknown`` | ``missing``.
-    - ``email``: For ``service_account`` and
-      ``impersonated_service_account``, the SA email parsed from
-      ``client_email`` or the impersonation URL. Otherwise ``None``.
-    - ``impersonates``: Same SA email when ``type`` is
-      ``impersonated_service_account``, else ``None``.
+    """Inspect an ADC JSON file and return a small identity dictionary.
 
     Pure: no API calls, no I/O beyond reading ``adc_path``. Returns
     ``{"type": "missing"}`` when the file does not exist; never raises.
+
+    Args:
+        adc_path: Filesystem path to an Application Default Credentials
+            JSON file (typically the result of :func:`adc_default_path`).
+
+    Returns:
+        A dictionary with three keys:
+
+        - ``type``: One of ``authorized_user``,
+          ``impersonated_service_account``, ``service_account``,
+          ``unknown``, or ``missing``.
+        - ``email``: For ``service_account`` and
+          ``impersonated_service_account``, the service-account email
+          parsed from ``client_email`` or the impersonation URL.
+          Otherwise :data:`None`.
+        - ``impersonates``: Same service-account email when ``type`` is
+          ``impersonated_service_account``, else :data:`None`.
     """
     import json
     import re
@@ -111,8 +125,18 @@ def format_share_instructions(*, file_name: str, identity_email: str | None) -> 
 
     The message names the exact Drive filename, the exact identity that
     needs view access, the precise permission level, and a stable URL
-    where the share can be performed. When ``identity_email`` is None
-    (user-mode auth), the share step is unnecessary and we say so.
+    where the share can be performed. When ``identity_email`` is
+    :data:`None` (user-mode auth), the share step is unnecessary and
+    that fact is stated explicitly.
+
+    Args:
+        file_name: Exact Drive file name the operator must locate.
+        identity_email: Service-account email that must be granted
+            viewer access, or :data:`None` when the active credentials
+            are a personal user account.
+
+    Returns:
+        Multi-line, copy-paste-ready instruction text.
     """
     if identity_email is None:
         return (
@@ -136,9 +160,9 @@ def format_share_instructions(*, file_name: str, identity_email: str | None) -> 
 def build_name_query(name: str) -> str:
     """Compose a Drive ``q=`` filter for an exact-name lookup.
 
-    Returns a query that matches non-trashed files whose ``name``
-    field equals ``name`` exactly. Used by ``aeat drive fetch``
-    (#227 follow-up) to locate a single file by a stable filename.
+    Returns a query that matches non-trashed files whose ``name`` field
+    equals ``name`` exactly. Used by ``aeat drive fetch`` to locate a
+    single file by a stable filename.
 
     Args:
         name: Exact Drive file name to look up.

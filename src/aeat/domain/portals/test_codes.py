@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_portal_has_exactly_42_members() -> None:
-    """Membership is fixed at 42 (ADR §2)."""
+    """Membership is fixed at exactly 42 portals."""
     assert len(list(Portal)) == 42
 
 

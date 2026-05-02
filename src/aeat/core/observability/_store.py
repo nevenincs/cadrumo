@@ -1,16 +1,19 @@
 """Filesystem persistence for run traces and JSONL event logs.
 
-One subdirectory per ``run_id`` under :attr:`Settings.aeat_runs_dir`,
-containing ``trace.json`` and ``events.jsonl``. Both files round-trip
-through the strict pydantic models in :mod:`aeat.core.observability._models`.
+One subdirectory per ``run_id`` under
+:attr:`aeat.core.config.Settings.aeat_runs_dir`, containing
+``trace.json`` and ``events.jsonl``. Both files round-trip through the
+strict pydantic models in :mod:`aeat.core.observability._models`.
 
 Run traces are DIAGNOSTIC class. The substrate's redaction rule set
 (``default_rules_for_class(SensitivityClass.DIAGNOSTIC)``) walks every
-string leaf — NIF SHA-256-prefixed, URL host-only, bearer-shaped tokens
-fingerprinted, opaque bearers fingerprinted — before serialisation. The
-storage import is deferred so the observability package does not pull
-``aeat.adapters.persistence.storage`` (with its Alembic plugin discovery) into every CLI
-command's import chain; this preserves the json-pipe-safety contract.
+string leaf — NIFs SHA-256-prefixed, URLs reduced to host-only,
+bearer-shaped tokens fingerprinted, opaque bearers fingerprinted —
+before serialisation. The redaction substrate is imported lazily so
+the observability package does not pull
+:mod:`aeat.adapters.persistence.storage` (with its Alembic plugin
+discovery) into every CLI command's import chain; this preserves the
+json-pipe-safety contract.
 """
 
 from __future__ import annotations
@@ -37,7 +40,11 @@ _DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
 
 
 def _diagnostic_rules() -> tuple[RedactionRule, ...]:
-    """Return the DIAGNOSTIC-class default rule set, resolved on first call."""
+    """Return the DIAGNOSTIC-class default rule set, resolved on first call.
+
+    Cached at module scope after first resolution so repeated emits do
+    not re-import the redaction substrate.
+    """
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:
         from ..classification import SensitivityClass
@@ -61,9 +68,21 @@ _RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{16}$")
 def _validate_run_id(run_id: str) -> str:
     """Return ``run_id`` if it matches the canonical shape, else raise.
 
+    The canonical shape is 16 lowercase hex characters — the form
+    minted by
+    :func:`aeat.core.observability._context._mint_run_id`. Validating
+    every id reaching this layer prevents path-traversal escapes
+    through ``runs_dir / run_id``.
+
+    Args:
+        run_id: Candidate run identifier.
+
+    Returns:
+        The same ``run_id`` when it matches the canonical shape.
+
     Raises:
-        RunTraceValidationError: If ``run_id`` is not a 16-char lowercase
-            hex string — the shape minted by ``_mint_run_id``.
+        RunTraceValidationError: When ``run_id`` is not a 16-character
+            lowercase hex string.
     """
     if not _RUN_ID_PATTERN.fullmatch(run_id):
         raise RunTraceValidationError(
@@ -73,10 +92,15 @@ def _validate_run_id(run_id: str) -> str:
 
 
 def runs_dir(settings: Settings | None = None) -> Path:
-    """Return the configured runs directory, creating it if absent.
+    """Return the configured runs directory, creating it when absent.
 
     Args:
-        settings: Optional :class:`Settings` override (used by tests).
+        settings: Optional :class:`aeat.core.config.Settings` override
+            (used by tests). When ``None``, the active settings are
+            loaded via :func:`aeat.core.config.load_settings`.
+
+    Returns:
+        Absolute path to the per-process runs root.
     """
     cfg = settings or load_settings()
     target = cfg.aeat_runs_dir
@@ -85,11 +109,15 @@ def runs_dir(settings: Settings | None = None) -> Path:
 
 
 def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
-    """Return the per-run directory, creating it if absent.
+    """Return the per-run directory, creating it when absent.
 
     Rejects ``run_id`` values that do not match the canonical minted
     shape so ``runs_dir / run_id`` cannot traverse out of the
     configured runs directory.
+
+    Raises:
+        RunTraceValidationError: When ``run_id`` is not 16 lowercase
+            hex characters.
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id
@@ -100,11 +128,18 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
 def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``.
 
-    Every string leaf passes through the substrate's
-    :func:`redact_structured` helper at DIAGNOSTIC class before
-    serialisation so the on-disk record never carries a plaintext NIF,
-    bearer token, or sensitive URL path even if a caller fed one into
-    ``arguments`` or ``metadata``.
+    Every string leaf passes through
+    :func:`aeat.adapters.persistence.storage.redact_structured` at
+    DIAGNOSTIC class before serialisation so the on-disk record never
+    carries a plaintext NIF, bearer token, or sensitive URL path even
+    if a caller fed one into ``arguments``.
+
+    Args:
+        trace: The :class:`RunTrace` to persist.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        Absolute path of the written ``trace.json`` file.
     """
     from ..redaction import redact_structured
 
@@ -118,8 +153,20 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
     """Load and strictly validate a persisted :class:`RunTrace`.
 
     Read-only lookups do not create the per-run directory — a missing
-    ``trace.json`` raises :class:`RunTraceValidationError` without
+    ``trace.json`` raises :exc:`RunTraceValidationError` without
     polluting the runs directory with an empty entry.
+
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        The validated :class:`RunTrace`.
+
+    Raises:
+        RunTraceValidationError: When ``run_id`` has an invalid shape,
+            when the file is missing, or when its contents fail strict
+            validation.
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id / _TRACE_FILENAME
@@ -143,11 +190,20 @@ def save_events_append(
     """Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
-    platform — mirroring :class:`JsonlRunSink` — so events.jsonl is
-    byte-stable across Windows and POSIX writers. Every string leaf in
-    the event is redacted at DIAGNOSTIC class before serialisation so
-    the on-disk record stays free of plaintext NIFs / tokens / sensitive
-    URLs.
+    platform — mirroring
+    :class:`aeat.core.observability._sink.JsonlRunSink` — so
+    ``events.jsonl`` is byte-stable across Windows and POSIX writers.
+    Every string leaf in the event is redacted at DIAGNOSTIC class
+    before serialisation so the on-disk record stays free of plaintext
+    NIFs / tokens / sensitive URLs.
+
+    Args:
+        run_id: Owning run identifier.
+        event: The :class:`RunEvent` to append.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        Absolute path of the appended ``events.jsonl`` file.
     """
     from ..redaction import redact_structured
 
@@ -165,19 +221,26 @@ def iter_events(
     *,
     settings: Settings | None = None,
 ) -> Iterator[RunEvent]:
-    """Yield one :class:`RunEvent` per line from the per-run events.jsonl.
+    """Yield one :class:`RunEvent` per line from the per-run ``events.jsonl``.
 
     Streams records so callers processing a long-running run's event
-    log can avoid holding the entire file in memory. The ``run_id``
-    is validated *eagerly* (before the generator starts) so a bad id
+    log can avoid holding the entire file in memory. The ``run_id`` is
+    validated *eagerly* — before the generator starts — so a bad id
     surfaces at the call site instead of on first iteration.
 
-    Read-only — does not create a run directory when absent. A
-    missing file yields no records.
+    Read-only: does not create a run directory when absent. A missing
+    file yields no records.
+
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Yields:
+        Each :class:`RunEvent` recorded for the run, in append order.
 
     Raises:
-        RunTraceValidationError: If the ``run_id`` shape is invalid
-            (raised at call time), or if any JSONL line fails strict
+        RunTraceValidationError: When the ``run_id`` shape is invalid
+            (raised at call time), or when any JSONL line fails strict
             validation (raised during iteration).
     """
     _validate_run_id(run_id)
@@ -206,16 +269,23 @@ def load_events(
     *,
     settings: Settings | None = None,
 ) -> tuple[RunEvent, ...]:
-    """Load and strictly validate every JSONL event for a run, materialised.
+    """Load and strictly validate every JSONL event for a run.
 
     Thin wrapper over :func:`iter_events` that drains the iterator
     into a tuple. Prefer :func:`iter_events` for long-running traces
     where the whole log may exceed available memory.
 
-    Read-only — does not create a run directory when absent.
+    Read-only: does not create a run directory when absent.
+
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        Tuple of every recorded :class:`RunEvent` in append order.
 
     Raises:
-        RunTraceValidationError: If the ``run_id`` shape is invalid or
+        RunTraceValidationError: When the ``run_id`` shape is invalid or
             any JSONL line fails strict validation.
     """
     return tuple(iter_events(run_id, settings=settings))
@@ -226,10 +296,16 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
 
     Directories without a valid ``trace.json`` — or whose name does not
     match the canonical ``run_id`` shape — are skipped silently. This
-    lets crashed runs (no on-exit finalizer call) coexist with healthy
+    lets crashed runs (no on-exit finaliser call) coexist with healthy
     ones rather than poisoning ``aeat run list``, and blocks any
     non-run artefacts that may have been dropped into the runs
     directory by hand.
+
+    Args:
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Yields:
+        ``(run_id, trace)`` pairs in newest-first order.
     """
     base = runs_dir(settings)
     pairs: list[tuple[str, RunTrace]] = []

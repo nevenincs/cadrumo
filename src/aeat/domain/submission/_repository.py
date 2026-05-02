@@ -9,8 +9,8 @@ exclusive_file_lock so concurrent writers serialise per-record but never
 across the whole directory.
 
 Sensitivity classification: a submission record captures the exact bytes
-Kent uploaded plus AEAT's response. That is auditable evidence with
-identity-bearing context — :class:`SensitivityClass.AUDIT` per the
+the operator uploaded plus AEAT's response. That is auditable evidence
+with identity-bearing context — :class:`SensitivityClass.AUDIT` per the
 default policy table.
 
 The repository does NOT replace the existing
@@ -19,10 +19,10 @@ migration helper :func:`migrate_legacy_submissions_to_repository` reads
 every legacy ``<submission_id>.json`` and persists each through the
 repository's envelope contract.
 
-Layered-import note: this module is the domain-side carve-out
-exception listed in ``.importlinter`` — ``aeat.domain.submission._repository``
-imports ``aeat.adapters.persistence.storage.*`` because every
-domain-owned governance repository wraps the same substrate.
+Layered-import note: this module is a domain-side persistence carve-out:
+``aeat.domain.submission._repository`` imports
+``aeat.adapters.persistence.storage.*`` because every domain-owned
+governance repository wraps the same substrate.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ from ._models import SubmittedFiling
 # participate in key derivation for every persisted envelope. Changing
 # this string would render previously-encrypted submission envelopes
 # unreadable. The legacy ``aeat.adapters.outbound.aeat.export``
-# qualifier is preserved verbatim across the audit-16 move.
+# qualifier is preserved verbatim for backwards compatibility.
 _HKDF_CONTEXT_SUBMISSION = b"aeat.adapters.outbound.aeat.export.filing.v1"
 
 _log = get_logger(__name__)
@@ -201,7 +201,6 @@ class SubmissionRepository:
                 yield payload
 
 
-# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.
 def migrate_legacy_submissions_to_repository(
     legacy_dir: Path,
     *,

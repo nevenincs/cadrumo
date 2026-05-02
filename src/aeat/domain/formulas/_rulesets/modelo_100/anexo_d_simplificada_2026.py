@@ -1,4 +1,11 @@
-"""Modelo 100 Anexo D — E.D. simplificada (2026). RIRPF art. 30 stable."""
+"""Modelo 100 Anexo D — estimación directa simplificada (ejercicio 2026).
+
+Re-exports ``CASILLAS`` and ``CITATIONS`` from
+:mod:`.anexo_d_simplificada_2025`; RIRPF art. 30 (5 % gastos de
+difícil justificación capped at 2.000 €) is stable across 2024, 2025
+and 2026, so only ``FORMULAS`` (year-scoped formula IDs) and the
+effective-date constants are year-specific.
+"""
 
 from __future__ import annotations
 

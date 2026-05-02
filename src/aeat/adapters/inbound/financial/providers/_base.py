@@ -1,4 +1,13 @@
-"""Shared provider contracts and ingest helpers."""
+"""Shared provider contracts and ingest helpers.
+
+Defines the :class:`FinancialProvider` ABC together with the validation
+record :class:`ProviderValidation`, the provider error hierarchy
+(:class:`FinancialProviderError`, :class:`InvalidFinancialSourceError`,
+:class:`UnsupportedFinancialSourceError`), and the parsing /
+provenance helpers concrete providers reuse to emit
+:class:`aeat.domain.transactions.RawTransaction`
+records with consistent provenance.
+"""
 
 from __future__ import annotations
 
@@ -17,14 +26,18 @@ from pydantic import BaseModel, ConfigDict
 from .....core.config import load_settings
 from .....core.errors import AeatError
 from .....core.logging import get_logger
-from .._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class FinancialProviderError(AeatError):
-    """Base error raised by financial-ingest providers."""
+    """Base error raised by financial-ingest providers.
+
+    Subclasses :class:`aeat.core.errors.AeatError` so the application
+    layer can catch every provider failure with one ``except`` clause.
+    """
 
 
 class UnsupportedFinancialSourceError(FinancialProviderError):
@@ -36,7 +49,17 @@ class InvalidFinancialSourceError(FinancialProviderError):
 
 
 class ProviderValidation(BaseModel):
-    """Typed validation result returned before ingest."""
+    """Typed validation result returned before ingest.
+
+    Attributes:
+        is_valid: Whether the source document can be ingested.
+        warnings: Human-readable warning strings; non-empty even when
+            ``is_valid`` is True (e.g., a missing currency column).
+        detected_encoding: Provider-specific encoding marker, when
+            applicable (CSV byte decoding, OFX parser tag, etc.).
+        detected_dialect: Compact provider-specific dialect / layout
+            description used in operator diagnostics.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -47,23 +70,73 @@ class ProviderValidation(BaseModel):
 
 
 class FinancialProvider(ABC):
-    """Abstract base class for file-backed raw transaction providers."""
+    """Abstract base class for file-backed raw transaction providers.
+
+    Concrete subclasses must declare :attr:`name`,
+    :attr:`supported_extensions`, and :attr:`source_format` and
+    implement :meth:`ingest` plus :meth:`validate_source`. The shared
+    :meth:`_build_provenance` helper centralises
+    :class:`aeat.domain.transactions.RawProvenance`
+    construction so every emitted
+    :class:`aeat.domain.transactions.RawTransaction`
+    carries consistent provenance metadata.
+
+    Attributes:
+        name: Stable provider identifier embedded in synthetic
+            transaction ids and provenance records.
+        supported_extensions: Lowercase file extensions
+            (including the leading dot) the provider accepts.
+        source_format: Source-format enum used for provenance.
+    """
 
     name: ClassVar[str]
     supported_extensions: ClassVar[frozenset[str]]
     source_format: ClassVar[SourceFormat]
 
     def can_handle(self, path: Path) -> bool:
-        """Return whether the provider is a plausible match for ``path``."""
+        """Return whether the provider is a plausible match for ``path``.
+
+        Args:
+            path: Candidate source document.
+
+        Returns:
+            True if ``path`` exists and its extension is in
+            :attr:`supported_extensions`. Content sniffing is left to
+            :meth:`validate_source` and :func:`detect_provider`.
+        """
         return path.is_file() and path.suffix.lower() in self.supported_extensions
 
     @abstractmethod
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield raw transactions from ``path``."""
+        """Yield raw transactions from ``path``.
+
+        Implementations must produce one
+        :class:`aeat.domain.transactions.RawTransaction`
+        per source row, with provenance built via
+        :meth:`_build_provenance`.
+
+        Args:
+            path: Source document to ingest.
+
+        Yields:
+            One raw transaction per source row.
+
+        Raises:
+            :exc:`InvalidFinancialSourceError`: When the document
+                cannot be parsed or a row is malformed.
+        """
 
     @abstractmethod
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate ``path`` before ingesting it."""
+        """Validate ``path`` before ingesting it.
+
+        Args:
+            path: Candidate source document.
+
+        Returns:
+            A :class:`ProviderValidation` describing whether the
+            document is ingestable and surfacing any warnings.
+        """
 
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read the raw source bytes once for validation and provenance."""
@@ -84,7 +157,19 @@ class FinancialProvider(ABC):
         source_sha256: str,
         source_row_index: int,
     ) -> RawProvenance:
-        """Create the common provenance record for one source row."""
+        """Create the common provenance record for one source row.
+
+        Args:
+            path: Source document path; resolved to its absolute form
+                before storage.
+            source_sha256: Lowercase SHA-256 of the source bytes.
+            source_row_index: 1-based row index within the source.
+
+        Returns:
+            A :class:`RawProvenance` record stamped with the current
+            UTC ingestion timestamp and the provider's
+            :attr:`name` / :attr:`source_format`.
+        """
         return RawProvenance(
             source_path=path.resolve(),
             source_sha256=source_sha256,
@@ -166,7 +251,29 @@ def parse_amount_value(
     *,
     decimal_separator: Literal[",", "."] | None = None,
 ) -> Decimal:
-    """Parse bank-export numeric text into ``Decimal`` without float coercion."""
+    """Parse bank-export numeric text into ``Decimal`` without float coercion.
+
+    Float coercion is forbidden because bank exports carry exact
+    cents; intermediate floats would silently round (e.g.,
+    ``1234.56`` → ``1234.5599999...``). The parser preserves the
+    sign convention of the source — bracketed ``(123.45)`` and
+    trailing-minus ``123.45-`` both decode to a negative
+    :class:`decimal.Decimal`.
+
+    Args:
+        value: Raw cell value; accepted as :class:`Decimal`,
+            :class:`int`, :class:`float` (re-parsed via :func:`str`),
+            or text.
+        decimal_separator: Optional explicit decimal separator. When
+            omitted, the parser infers it from the rightmost
+            occurrence of ``,`` or ``.`` in the text.
+
+    Returns:
+        A :class:`Decimal` preserving the printed precision and sign.
+
+    Raises:
+        ValueError: When the value is empty or cannot be parsed.
+    """
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int):

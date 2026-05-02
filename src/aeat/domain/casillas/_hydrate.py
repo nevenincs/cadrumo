@@ -99,12 +99,18 @@ def _format_decimal(value: Decimal) -> str:
 # per the ADR's acronym-retention decision because the Generalitat
 # itself uses them on Catalan-language tax forms.
 _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
-    ("Marque esta casilla para comunicar el inicio de la actividad económica.",
-     "Marqueu aquesta casella per comunicar l'inici de l'activitat econòmica."),
-    ("Marque esta casilla para comunicar el cese de la actividad económica.",
-     "Marqueu aquesta casella per comunicar el cessament de l'activitat econòmica."),
-    ("Marque para modificar los datos relativos al régimen de IVA.",
-     "Marqueu per modificar les dades relatives al règim d'IVA."),
+    (
+        "Marque esta casilla para comunicar el inicio de la actividad económica.",
+        "Marqueu aquesta casella per comunicar l'inici de l'activitat econòmica.",
+    ),
+    (
+        "Marque esta casilla para comunicar el cese de la actividad económica.",
+        "Marqueu aquesta casella per comunicar el cessament de l'activitat econòmica.",
+    ),
+    (
+        "Marque para modificar los datos relativos al régimen de IVA.",
+        "Marqueu per modificar les dades relatives al règim d'IVA.",
+    ),
     ("Adquisiciones intracomunitarias", "Adquisicions intracomunitàries"),
     ("Entregas intracomunitarias", "Lliuraments intracomunitaris"),
     ("Operaciones interiores corrientes", "Operacions interiors corrents"),
@@ -160,13 +166,13 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Ingresos a cuenta", "Ingressos a compte"),
     ("Pago fraccionado", "Pagament fraccionat"),
     ("Pagos fraccionados", "Pagaments fraccionats"),
-    ("Solicitud de alta en el censo de empresarios",
-     "Sol·licitud d'alta al cens d'empresaris"),
-    ("Modificación de datos relativos al IVA",
-     "Modificació de dades relatives a l'IVA"),
+    ("Solicitud de alta en el censo de empresarios", "Sol·licitud d'alta al cens d'empresaris"),
+    ("Modificación de datos relativos al IVA", "Modificació de dades relatives a l'IVA"),
     ("Baja en el censo de empresarios", "Baixa al cens d'empresaris"),
-    ("Código de epígrafe del Impuesto sobre Actividades Económicas",
-     "Codi d'epígraf de l'Impost sobre Activitats Econòmiques"),
+    (
+        "Código de epígrafe del Impuesto sobre Actividades Económicas",
+        "Codi d'epígraf de l'Impost sobre Activitats Econòmiques",
+    ),
     ("Epígrafe IAE", "Epígraf IAE"),
     ("declaración censal", "declaració censal"),
     ("Declaración censal", "Declaració censal"),
@@ -206,21 +212,18 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Provisiones y deterioros", "Provisions i deterioraments"),
     ("Total gastos computables", "Total despeses computables"),
     ("Total ingresos computables", "Total ingressos computables"),
-    ("Gasto deducible cotización Seguridad Social",
-     "Despesa deduïble cotització Seguretat Social"),
+    ("Gasto deducible cotización Seguridad Social", "Despesa deduïble cotització Seguretat Social"),
     ("Otros gastos deducibles del trabajo", "Altres despeses deduïbles del treball"),
     ("Gasto adicional movilidad geográfica", "Despesa addicional mobilitat geogràfica"),
     ("Saldo neto patrimonial total", "Saldo net patrimonial total"),
     ("Mínimo personal y familiar total", "Mínim personal i familiar total"),
     ("Total deducciones autonómicas", "Total deduccions autonòmiques"),
-    ("Total deducciones (estatales + autonómicas)",
-     "Total deduccions (estatals + autonòmiques)"),
+    ("Total deducciones (estatales + autonómicas)", "Total deduccions (estatals + autonòmiques)"),
     ("deducciones autonómicas", "deduccions autonòmiques"),
     ("Deducciones autonómicas", "Deduccions autonòmiques"),
     ("deducciones estatales", "deduccions estatals"),
     ("Deducciones estatales", "Deduccions estatals"),
-    ("Total deducciones autonómicas (suma per-CCAA)",
-     "Total deduccions autonòmiques (suma per CCAA)"),
+    ("Total deducciones autonómicas (suma per-CCAA)", "Total deduccions autonòmiques (suma per CCAA)"),
     # CCAA names
     ("Andalucía", "Andalusia"),
     ("Aragón", "Aragó"),
@@ -406,27 +409,23 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("N.º de arrendadores", "Nre. d'arrendadors"),
     ("número de arrendadores", "nombre d'arrendadors"),
     # Modelo 130/131 fractional payment
-    ("A deducir: exclusivamente en declaración complementaria",
-     "A deduir: exclusivament en declaració complementària"),
+    ("A deducir: exclusivamente en declaración complementaria", "A deduir: exclusivament en declaració complementària"),
     ("Resultado a ingresar", "Resultat a ingressar"),
     ("Resultado a devolver", "Resultat a retornar"),
-    ("Resultado declaracion anterior (complementaria)",
-     "Resultat declaració anterior (complementària)"),
-    ("Resultado declaración anterior (complementaria)",
-     "Resultat declaració anterior (complementària)"),
-    ("Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
-     "Resultat a ingressar d'autoliquidacions anteriors (complementària)"),
-    ("Resultados negativos autoliquidaciones anteriores",
-     "Resultats negatius autoliquidacions anteriors"),
+    ("Resultado declaracion anterior (complementaria)", "Resultat declaració anterior (complementària)"),
+    ("Resultado declaración anterior (complementaria)", "Resultat declaració anterior (complementària)"),
+    (
+        "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "Resultat a ingressar d'autoliquidacions anteriors (complementària)",
+    ),
+    ("Resultados negativos autoliquidaciones anteriores", "Resultats negatius autoliquidacions anteriors"),
     ("A deducir autoliquidaciones anteriores", "A deduir autoliquidacions anteriors"),
     ("Suma rendimientos netos modulos", "Suma rendiments nets mòduls"),
     ("Suma rendimientos netos módulos", "Suma rendiments nets mòduls"),
     ("Pago fraccionado del trimestre", "Pagament fraccionat del trimestre"),
     ("Volumen ventas sin datos-base", "Volum vendes sense dades-base"),
-    ("Volumen ingresos agricolas/ganaderas/forestales",
-     "Volum ingressos agrícoles/ramaderes/forestals"),
-    ("Volumen ingresos agrícolas/ganaderas/forestales",
-     "Volum ingressos agrícoles/ramaderes/forestals"),
+    ("Volumen ingresos agricolas/ganaderas/forestales", "Volum ingressos agrícoles/ramaderes/forestals"),
+    ("Volumen ingresos agrícolas/ganaderas/forestales", "Volum ingressos agrícoles/ramaderes/forestals"),
     ("Minoracion rendimientos ano anterior", "Minoració rendiments any anterior"),
     ("Minoración rendimientos año anterior", "Minoració rendiments any anterior"),
     ("Deduccion vivienda habitual", "Deducció habitatge habitual"),
@@ -583,8 +582,7 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Tipo 21 %", "Tipus 21 %"),
     ("Cuota devengada al", "Quota meritada al"),
     ("Base — operaciones interiores corrientes", "Base — operacions interiors corrents"),
-    ("Cuota deducible — operaciones interiores corrientes",
-     "Quota deduïble — operacions interiors corrents"),
+    ("Cuota deducible — operaciones interiores corrientes", "Quota deduïble — operacions interiors corrents"),
     ("Regularización bienes de inversión", "Regularització béns d'inversió"),
     ("regularización", "regularització"),
     ("Regularización", "Regularització"),
@@ -629,10 +627,8 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Base legal", "Base legal"),
     ("Ley, art.", "Llei, art."),
     # IVA additional batch
-    ("Base — adquisiciones intracomunitarias corrientes",
-     "Base — adquisicions intracomunitàries corrents"),
-    ("Base — adquisiciones intracomunitarias de inversión",
-     "Base — adquisicions intracomunitàries d'inversió"),
+    ("Base — adquisiciones intracomunitarias corrientes", "Base — adquisicions intracomunitàries corrents"),
+    ("Base — adquisiciones intracomunitarias de inversión", "Base — adquisicions intracomunitàries d'inversió"),
     ("Compensaciones régimen especial A.G.P.", "Compensacions règim especial A.G.P."),
     ("compensaciones", "compensacions"),
     ("Compensaciones", "Compensacions"),
@@ -660,8 +656,10 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Intracomunitarios", "Intracomunitaris"),
     ("intracomunitario", "intracomunitari"),
     ("Intracomunitario", "Intracomunitari"),
-    ("Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
-     "Suma de les quotes d'IVA meritades als Estats membres de consum"),
+    (
+        "Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
+        "Suma de les quotes d'IVA meritades als Estats membres de consum",
+    ),
     ("Estados miembros de consumo", "Estats membres de consum"),
     ("estados miembros", "estats membres"),
     ("Estados miembros", "Estats membres"),
@@ -674,27 +672,22 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Fecha de efectos", "Data d'efectes"),
     ("fecha de efectos", "data d'efectes"),
     # IRPF — Modelo 100 sub-labels
-    ("Reducción art. 18 — rendimientos irregulares",
-     "Reducció art. 18 — rendiments irregulars"),
-    ("Reducción art. 20 rendimientos del trabajo",
-     "Reducció art. 20 rendiments del treball"),
-    ("Reducción art. 26.2 — irregularidad capital mobiliario",
-     "Reducció art. 26.2 — irregularitat capital mobiliari"),
-    ("Reducción art. 23.2 — tramos 50/60/70/90 %",
-     "Reducció art. 23.2 — trams 50/60/70/90 %"),
-    ("Reducción LIRPF art. 32 — E.D. simplificada",
-     "Reducció LIRPF art. 32 — E.D. simplificada"),
+    ("Reducción art. 18 — rendimientos irregulares", "Reducció art. 18 — rendiments irregulars"),
+    ("Reducción art. 20 rendimientos del trabajo", "Reducció art. 20 rendiments del treball"),
+    ("Reducción art. 26.2 — irregularidad capital mobiliario", "Reducció art. 26.2 — irregularitat capital mobiliari"),
+    ("Reducción art. 23.2 — tramos 50/60/70/90 %", "Reducció art. 23.2 — trams 50/60/70/90 %"),
+    ("Reducción LIRPF art. 32 — E.D. simplificada", "Reducció LIRPF art. 32 — E.D. simplificada"),
     ("Reducción LIRPF art. 32", "Reducció LIRPF art. 32"),
     ("rendimientos irregulares", "rendiments irregulars"),
     ("Rendimientos irregulares", "Rendiments irregulars"),
-    ("Otros rendimientos del capital mobiliario",
-     "Altres rendiments del capital mobiliari"),
+    ("Otros rendimientos del capital mobiliario", "Altres rendiments del capital mobiliari"),
     ("Ganancias patrimoniales brutas", "Guanys patrimonials bruts"),
     ("Pérdidas patrimoniales brutas", "Pèrdues patrimonials brutes"),
-    ("Reducción por aportaciones a sistemas de previsión social",
-     "Reducció per aportacions a sistemes de previsió social"),
-    ("Reducción por tributación conjunta",
-     "Reducció per tributació conjunta"),
+    (
+        "Reducción por aportaciones a sistemas de previsión social",
+        "Reducció per aportacions a sistemes de previsió social",
+    ),
+    ("Reducción por tributación conjunta", "Reducció per tributació conjunta"),
     ("Mínimo del contribuyente", "Mínim del contribuent"),
     ("Mínimo por descendientes", "Mínim per descendents"),
     ("Mínimo por ascendientes", "Mínim per ascendents"),
@@ -765,13 +758,16 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Incremento por pérdida beneficios fiscales", "Increment per pèrdua beneficis fiscals"),
     ("incremento", "increment"),
     ("Incremento", "Increment"),
-    ("Total de registros de operaciones con personas o entidades vinculadas declarados",
-     "Total de registres d'operacions amb persones o entitats vinculades declarats"),
-    ("operaciones con personas o entidades vinculadas",
-     "operacions amb persones o entitats vinculades"),
+    (
+        "Total de registros de operaciones con personas o entidades vinculadas declarados",
+        "Total de registres d'operacions amb persones o entitats vinculades declarats",
+    ),
+    ("operaciones con personas o entidades vinculadas", "operacions amb persones o entitats vinculades"),
     ("personas o entidades vinculadas", "persones o entitats vinculades"),
-    ("Total de registros de operaciones con activos intangibles",
-     "Total de registres d'operacions amb actius intangibles"),
+    (
+        "Total de registros de operaciones con activos intangibles",
+        "Total de registres d'operacions amb actius intangibles",
+    ),
     ("operaciones con activos intangibles", "operacions amb actius intangibles"),
     ("activos intangibles", "actius intangibles"),
     ("Activos intangibles", "Actius intangibles"),
@@ -812,8 +808,10 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Persona", "Persona"),
     ("acogido al", "acollit al"),
     ("se han acogido", "s'han acollit"),
-    ("Suma agregada anual de las operaciones con terceros declaradas en el modelo 347.",
-     "Suma agregada anual de les operacions amb tercers declarades al model 347."),
+    (
+        "Suma agregada anual de las operaciones con terceros declaradas en el modelo 347.",
+        "Suma agregada anual de les operacions amb tercers declarades al model 347.",
+    ),
     ("operaciones con terceros", "operacions amb tercers"),
     ("Operaciones con terceros", "Operacions amb tercers"),
     ("terceros", "tercers"),
@@ -836,8 +834,7 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("N.º total registros — cobros en metálico", "Nre. total registres — cobraments en metàl·lic"),
     ("cobros en metálico", "cobraments en metàl·lic"),
     ("Cobros en metálico", "Cobraments en metàl·lic"),
-    ("Suma anual de los cobros en metálico superiores a",
-     "Suma anual dels cobraments en metàl·lic superiors a"),
+    ("Suma anual de los cobros en metálico superiores a", "Suma anual dels cobraments en metàl·lic superiors a"),
     ("cobros", "cobraments"),
     ("Cobros", "Cobraments"),
     ("cobro", "cobrament"),
@@ -848,13 +845,17 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Superiores a", "Superiors a"),
     ("superior a", "superior a"),
     ("Superior a", "Superior a"),
-    ("Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
-     "Suma de les quotes d'IVA meritades als Estats membres de consum"),
+    (
+        "Suma de las cuotas de IVA devengadas en los Estados miembros de consumo",
+        "Suma de les quotes d'IVA meritades als Estats membres de consum",
+    ),
     ("Total cuotas repercutidas", "Total quotes repercutides"),
     ("cuotas repercutidas", "quotes repercutides"),
     ("Cuotas repercutidas", "Quotes repercutides"),
-    ("Tipo de actividad: empresarial, profesional o artística.",
-     "Tipus d'activitat: empresarial, professional o artística."),
+    (
+        "Tipo de actividad: empresarial, profesional o artística.",
+        "Tipus d'activitat: empresarial, professional o artística.",
+    ),
     ("Tipo de actividad", "Tipus d'activitat"),
     ("tipo de actividad", "tipus d'activitat"),
     ("empresarial", "empresarial"),
@@ -865,8 +866,10 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
     ("Artística", "Artística"),
     ("artístico", "artístic"),
     ("Artístico", "Artístic"),
-    ("Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
-     "Grup o epígraf de l'IAE assignat a l'activitat econòmica del subjecte passiu."),
+    (
+        "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
+        "Grup o epígraf de l'IAE assignat a l'activitat econòmica del subjecte passiu.",
+    ),
     ("Grupo o epígrafe", "Grup o epígraf"),
     ("grupo o epígrafe", "grup o epígraf"),
     ("Grupo", "Grup"),
@@ -887,9 +890,7 @@ _ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
 # unable to match (e.g. "personas o entidades vinculadas" → "persones
 # o entitats vinculades" would prevent the full sentence variant from
 # applying its idiomatic Catalan rendering).
-_ES_TO_CA_LEMMAS_ORDERED: tuple[tuple[str, str], ...] = tuple(
-    sorted(_ES_TO_CA_LEMMAS, key=lambda pair: -len(pair[0]))
-)
+_ES_TO_CA_LEMMAS_ORDERED: tuple[tuple[str, str], ...] = tuple(sorted(_ES_TO_CA_LEMMAS, key=lambda pair: -len(pair[0])))
 
 
 def _es_to_ca_via_lemmas(es_text: str) -> str:
@@ -910,7 +911,7 @@ def _es_to_ca_via_lemmas(es_text: str) -> str:
     for old, new in _ES_TO_CA_LEMMAS_ORDERED:
         if old == new:
             continue
-        pattern = r'(?<![A-Za-zÀ-ɏ])' + re.escape(old) + r'(?![A-Za-zÀ-ɏ])'
+        pattern = r"(?<![A-Za-zÀ-ɏ])" + re.escape(old) + r"(?![A-Za-zÀ-ɏ])"
         out = re.sub(pattern, new, out)
     return out
 
@@ -1037,7 +1038,7 @@ def _hu_restore_diacritics(hu_text: str) -> str:
     for old, new in _HU_DIACRITIC_LEMMAS:
         if old == new:
             continue
-        pattern = r'(?<![A-Za-zÀ-ɏ])' + re.escape(old) + r'(?![A-Za-zÀ-ɏ])'
+        pattern = r"(?<![A-Za-zÀ-ɏ])" + re.escape(old) + r"(?![A-Za-zÀ-ɏ])"
         out = re.sub(pattern, new, out)
     return out
 
@@ -2067,24 +2068,64 @@ def _upstream_modelos(modelo: str) -> tuple[str, ...]:
 # enum and these tables; nothing in this module hardcodes the
 # language count.
 _CROSS_MODELO_PHRASING_DEFAULT: dict[str, dict[str, str]] = {
-    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Resumen anual que consolida los datos trimestrales del"},
+    "es": {
+        "separator": " y ",
+        "modelo_word": "modelo",
+        "lead": "Resumen anual que consolida los datos trimestrales del",
+    },
     "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual summary consolidating the quarterly data of"},
     "ca": {"separator": " i ", "modelo_word": "model", "lead": "Resum anual que consolida les dades trimestrals del"},
-    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze:"},
+    "hu": {
+        "separator": " és ",
+        "modelo_word_suffix": "-os modell",
+        "lead": "Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze:",
+    },
 }
 
 _CROSS_MODELO_PHRASING_M100: dict[str, dict[str, str]] = {
-    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Declaración anual del IRPF; recoge los pagos fraccionados de los"},
-    "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual IRPF declaration; consolidates the fractional payments of"},
-    "ca": {"separator": " i ", "modelo_word": "model", "lead": "Declaració anual de l'IRPF; recull els pagaments fraccionats dels"},
-    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:"},
+    "es": {
+        "separator": " y ",
+        "modelo_word": "modelo",
+        "lead": "Declaración anual del IRPF; recoge los pagos fraccionados de los",
+    },
+    "en": {
+        "separator": " and ",
+        "modelo_word": "form",
+        "lead": "Annual IRPF declaration; consolidates the fractional payments of",
+    },
+    "ca": {
+        "separator": " i ",
+        "modelo_word": "model",
+        "lead": "Declaració anual de l'IRPF; recull els pagaments fraccionats dels",
+    },
+    "hu": {
+        "separator": " és ",
+        "modelo_word_suffix": "-os modell",
+        "lead": "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
+    },
 }
 
 _CROSS_MODELO_PHRASING_M200: dict[str, dict[str, str]] = {
-    "es": {"separator": " y ", "modelo_word": "modelo", "lead": "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del"},
-    "en": {"separator": " and ", "modelo_word": "form", "lead": "Annual Corporate Income Tax declaration; consolidates the fractional payments of"},
-    "ca": {"separator": " i ", "modelo_word": "model", "lead": "Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del"},
-    "hu": {"separator": " és ", "modelo_word_suffix": "-os modell", "lead": "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:"},
+    "es": {
+        "separator": " y ",
+        "modelo_word": "modelo",
+        "lead": "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del",
+    },
+    "en": {
+        "separator": " and ",
+        "modelo_word": "form",
+        "lead": "Annual Corporate Income Tax declaration; consolidates the fractional payments of",
+    },
+    "ca": {
+        "separator": " i ",
+        "modelo_word": "model",
+        "lead": "Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del",
+    },
+    "hu": {
+        "separator": " és ",
+        "modelo_word_suffix": "-os modell",
+        "lead": "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
+    },
 }
 
 
@@ -2211,10 +2252,8 @@ def _help_from_label(
         # language slot, Catalan goes through the Spanish→Catalan
         # lemma translator (Catalan ≠ Spanish) and every other language
         # falls back to the Spanish authoritative text.
-        if lang in label and label[lang]:
-            lang_label = (
-                _hu_restore_diacritics(label[lang]) if lang == "hu" else label[lang]
-            )
+        if label.get(lang):
+            lang_label = _hu_restore_diacritics(label[lang]) if lang == "hu" else label[lang]
         elif lang == "ca":
             lang_label = _es_to_ca_via_lemmas(label_es)
         else:

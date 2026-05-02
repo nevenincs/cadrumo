@@ -1,11 +1,18 @@
-"""Per-modelo calculation formula engine (#173).
+"""Per-modelo calculation formula engine.
 
-Public API surface for the deterministic, sandboxed, period-aware
-tax-formula engine. See the ADR at
-``.vault/adr/2026-04-17-modelo-formulas-adr.md`` for the design
-rationale. The implementation ships Modelo 130 (2024 and 2025)
-as the proof-of-concept ruleset; future waves extend to Modelo
-303 / 100 / 390 / ...
+Public API surface for the deterministic, sandboxed, period-aware tax-formula
+engine. The engine evaluates pydantic-typed formula trees over a
+period-versioned :class:`Ruleset`, producing a :class:`ComputationLedger` (or
+an :class:`AuditReport` when comparing against caller-supplied values).
+
+Key types:
+
+- :class:`Engine` — stateless evaluator with ``derive`` and
+  ``audit_against`` methods.
+- :class:`Ruleset` — period-versioned bundle of casillas, formulas,
+  parameters, and legal citations.
+- :class:`RulesetRegistry` — lookup by ``(modelo, variant, period)``.
+- :class:`FiscalPeriod` — closed period identifier.
 """
 
 from __future__ import annotations
@@ -26,10 +33,10 @@ from ._engine import Engine
 from ._formula import (
     AddFormula,
     BracketsFormula,
-    CasillaRef,
     ClampPositiveFormula,
     DivFormula,
     Formula,
+    FormulaCasillaRef,
     FormulaDefinition,
     Literal,
     MaxFormula,
@@ -63,7 +70,6 @@ __all__ = [
     "BracketsFormula",
     "CasillaDefinition",
     "CasillaNotDefinedError",
-    "CasillaRef",
     "ClampPositiveFormula",
     "ComputationLedger",
     "Discrepancy",
@@ -72,6 +78,7 @@ __all__ = [
     "EvaluationError",
     "FiscalPeriod",
     "Formula",
+    "FormulaCasillaRef",
     "FormulaCycleError",
     "FormulaDefinition",
     "FormulaOp",

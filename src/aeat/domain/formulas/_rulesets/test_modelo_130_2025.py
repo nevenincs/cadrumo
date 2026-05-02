@@ -1,9 +1,8 @@
 """Unit tests for the Modelo 130 2025 ruleset.
 
-to test_modelo_130_2024.py. The 2025 ruleset
-re-uses the 2024 casillas + citations (mid-year rule changes absent
-for 2024→2025 per the research doc), so the 2025 tests exercise the
-same formulas via the 2025 variant to confirm no drift.
+The 2025 ruleset re-uses the 2024 casillas + citations (mid-year rule
+changes were absent for 2024 → 2025); the 2025 tests exercise the same
+formulas via the 2025 variant to confirm no drift.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ def _provided() -> dict[str, Decimal]:
     """Identical shape to the 2024 test: 20 000 € ingresos, 5 000 € gastos.
 
     If the 2025 ruleset drifted from 2024 (rate change, formula
-    swap, casilla shuffle), this fixture would flag a discrepancy
+    swap, casilla shuffle) this fixture would flag a discrepancy
     against the engine-derived values.
     """
     return {
@@ -51,6 +50,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo130Ruleset2025:
+    """Formula-engine assertions for the 2025 Modelo 130 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_130_2025,
@@ -60,7 +61,7 @@ class TestModelo130Ruleset2025:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_agraria_income_computes_2_percent(self) -> None:
-        """Casilla 09 = 2% x 08. Agricultural autónomo fixture."""
+        """Casilla 09 = 2 % x 08 — agricultural autónomo fixture."""
         provided = _provided()
         # Set 08 = 5000 (agraria ingresos), expect 09 = 100.
         provided["08"] = Decimal("5000.00")
@@ -78,8 +79,9 @@ class TestModelo130Ruleset2025:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_2025_no_drift_from_2024(self) -> None:
-        """2025 ruleset MUST produce identical audit
-        to 2024 for any fixture where both rulesets would legally apply
+        """The 2025 ruleset must produce an identical audit to 2024.
+
+        Holds for any fixture where both rulesets would legally apply
         (i.e. no mid-year change). The casillas + formulas are shared
         module-level imports, so a drift would require an active change.
         """
@@ -110,17 +112,18 @@ class TestModelo130Ruleset2025:
     def test_external_worked_example_rirpf_art_110(self) -> None:
         """External anchor per Reglamento del IRPF (RD 439/2007) art. 110.1.a.
 
-        RIRPF art. 110.1.a fixes the pago fraccionado general at 20% of the
+        RIRPF art. 110.1.a fixes the pago fraccionado general at 20 % of the
         rendimiento neto acumulado for actividades económicas en estimación
         directa. Sister subsections: art. 110.1.b covers estimación objetiva
-        (módulos) at 4%/3%/2% depending on employee count; art. 110.1.c is
-        the 2% rate on actividades agrícolas/ganaderas/forestales/pesqueras.
-        The statute (BOE-A-2007-6820) — not the ruleset's ParameterTable —
-        is the external source. This test asserts the arithmetic mandated
-        by the statute using a scenario distinct from `_provided()` to
-        avoid mirroring the 2024 drift-check fixture.
+        (módulos) at 4 % / 3 % / 2 % depending on employee count;
+        art. 110.1.c is the 2 % rate on actividades agrícolas / ganaderas /
+        forestales / pesqueras. The statute (BOE-A-2007-6820) — not the
+        ruleset's ``ParameterTable`` — is the external source. This test
+        asserts the arithmetic mandated by the statute using a scenario
+        distinct from :func:`_provided` to avoid mirroring the 2024
+        drift-check fixture.
 
-        Scenario: Kent (autónomo actividad económica no-agraria) Q3 2025.
+        Scenario: autónomo actividad económica no-agraria Q3 2025.
           - Casilla 01 (ingresos acumulados): 48 000,00 EUR
           - Casilla 02 (gastos deducibles acumulados): 12 500,00 EUR
           - Casilla 03 (rendimiento neto): 48 000 - 12 500 = 35 500,00
@@ -169,12 +172,12 @@ class TestModelo130Ruleset2025:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
 
-# Issue #321: external-anchored threshold-edge cases for the casilla-13
-# minoración helper, in the 2025 ruleset's test file. The bracket
-# boundaries (9 000 / 10 000 / 11 000 / 12 000 €) are stable across
-# 2024 → 2025 → 2026 per the rule-delta manifest; the helper imports
-# from `modelo_130_2024` and the test exercises it through the 2025
-# import path to confirm no drift.
+# Externally-anchored threshold-edge cases for the casilla-13 minoración
+# helper, in the 2025 ruleset's test file. The bracket boundaries
+# (9 000 / 10 000 / 11 000 / 12 000 €) are stable across 2024 → 2025 →
+# 2026 per the rule-delta manifest; the helper imports from
+# ``modelo_130_2024`` and the test exercises it through the 2025 import
+# path to confirm no drift.
 @pytest.mark.parametrize(
     ("previous_year_rn", "expected_minoracion"),
     [

@@ -1,15 +1,16 @@
 """Typer sub-app for the ``aeat modelos`` CLI surface.
 
-Exposes four commands backed by :data:`aeat.domain.modelos.MODELO_REGISTRY`:
+Exposes four commands backed by :data:`aeat.domain.modelos._registry.MODELO_REGISTRY`:
 
 - ``aeat modelos list`` — filter and list catalogue entries.
 - ``aeat modelos show`` — dump a single entry.
 - ``aeat modelos applicable-to`` — list modelos for a profile.
 - ``aeat modelos year-plan`` — resolve filing windows through the
-  deadline engine.
+  :mod:`aeat.domain.deadlines` engine.
 
-Every command supports a ``--json`` flag that emits JSON via
-:meth:`pydantic.BaseModel.model_dump` instead of a rich table.
+Every command supports a ``--json`` flag that emits a JSON envelope
+via :func:`aeat.core.json_contract.emit_json_success` instead of the
+default :class:`rich.table.Table` render.
 """
 
 from __future__ import annotations
@@ -39,32 +40,33 @@ _CONSOLE = Console()
 
 @register_schema("modelos list")
 class ModeloListJson(OutputRootSchema[list[ModeloMetadata]]):
-    """Schema for ``aeat modelos list --json``."""
+    """JSON envelope schema for ``aeat modelos list --json``."""
 
 
 @register_schema("modelos show")
 class ModeloShowJson(OutputRootSchema[ModeloMetadata]):
-    """Schema for ``aeat modelos show --json``."""
+    """JSON envelope schema for ``aeat modelos show --json``."""
 
 
 @register_schema("modelos applicable-to")
 class ModeloApplicableToJson(OutputRootSchema[list[ModeloMetadata]]):
-    """Schema for ``aeat modelos applicable-to --json``."""
+    """JSON envelope schema for ``aeat modelos applicable-to --json``."""
 
 
 @register_schema("modelos year-plan")
 class ModeloYearPlanJson(OutputRootSchema[list[FilingObligation]]):
-    """Schema for ``aeat modelos year-plan --json``."""
+    """JSON envelope schema for ``aeat modelos year-plan --json``."""
 
 
 def _ensure_utf8_streams() -> None:
-    """Reconfigure stdout/stderr to UTF-8 for the current process.
+    """Reconfigure :data:`sys.stdout` and :data:`sys.stderr` to UTF-8.
 
     The modelo catalogue carries Spanish and Hungarian characters
     (á, é, ő, …) that Windows legacy code-page stdout (cp1252) cannot
-    encode. Calling this from the Typer callback scopes the side effect
-    to ``aeat modelos`` invocations instead of every import of this
-    module.
+    encode. Calling this from the Typer callback scopes the side
+    effect to ``aeat modelos`` invocations instead of every import of
+    this module. ``ValueError`` and ``OSError`` from non-reconfigurable
+    streams (already-redirected, in-memory) are swallowed.
     """
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
@@ -82,15 +84,17 @@ app = typer.Typer(
 
 @app.callback()
 def _main_callback() -> None:
-    """Initialise the ``aeat modelos`` sub-app for the current invocation."""
+    """Run sub-app setup before any ``aeat modelos`` command executes."""
     _ensure_utf8_streams()
 
 
 def _entries_sorted() -> tuple[ModeloMetadata, ...]:
+    """Return every registered :class:`ModeloMetadata` sorted by modelo code."""
     return tuple(sorted(MODELO_REGISTRY.values(), key=lambda m: m.code.value))
 
 
 def _emit_entries(entries: tuple[ModeloMetadata, ...], json_out: bool, *, command: str) -> None:
+    """Render ``entries`` either as a rich table or a JSON envelope."""
     if json_out or json_output_requested():
         emit_json_success(command, [e.model_dump(mode="json") for e in entries])
         return
@@ -121,7 +125,20 @@ def list_command(
     ),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:
-    """List catalogue entries, optionally filtered."""
+    """List catalogue entries, optionally filtered.
+
+    Args:
+        category: Restrict to entries with this
+            :class:`aeat.domain.modelos._categories.ModeloCategory`.
+        cadence: Restrict to entries with this
+            :class:`aeat.domain.modelos._categories.ModeloCadence`.
+        profile: Restrict to entries whose
+            :attr:`aeat.domain.modelos._applicability.ModeloApplicability.mandatory_profiles`
+            or
+            :attr:`aeat.domain.modelos._applicability.ModeloApplicability.optional_profiles`
+            contain this :class:`aeat.domain.modelos._categories.TaxpayerProfile`.
+        json_out: Emit a JSON envelope instead of a rich table.
+    """
     entries = _entries_sorted()
     if category is not None:
         entries = tuple(e for e in entries if e.category is category)
@@ -141,7 +158,16 @@ def show_command(
     code: str = typer.Argument(..., help="Three-character modelo code, e.g. '303'."),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:
-    """Resolve a single modelo and print its metadata."""
+    """Resolve a single modelo and print its metadata.
+
+    Args:
+        code: Three-character AEAT modelo code (e.g. ``"303"``).
+        json_out: Emit a JSON envelope instead of a rich table.
+
+    Raises:
+        typer.BadParameter: When ``code`` does not match any registered
+            :class:`aeat.domain.modelos._codes.ModeloCode`.
+    """
     try:
         metadata = get_modelo(code)
     except UnknownModeloError as exc:
@@ -163,19 +189,37 @@ def applicable_to_command(
     profile: TaxpayerProfile = typer.Argument(..., help="Taxpayer profile to query."),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:
-    """List modelos whose applicability matches ``profile``."""
+    """List modelos whose applicability matches ``profile``.
+
+    Args:
+        profile: The :class:`aeat.domain.modelos._categories.TaxpayerProfile`
+            to query.
+        json_out: Emit a JSON envelope instead of a rich table.
+    """
     entries = modelos_for_profile(profile)
     _emit_entries(entries, json_out, command="modelos applicable-to")
 
 
 def _profiles_from_autonomo(profile: AutonomoProfile) -> frozenset[TaxpayerProfile]:
-    """Infer every :class:`TaxpayerProfile` matching an :class:`AutonomoProfile`.
+    """Infer every matching :class:`TaxpayerProfile` for an autónomo.
 
-    An autónomo may match multiple archetypes at once (e.g. has employees
-    AND performs intra-EU operations); a single-profile hierarchy would
-    silently discard obligations from the non-selected traits. The CLI
-    uses the returned set via intersection against the registry's
-    applicability matrix so every matching obligation is retained.
+    An autónomo may match multiple archetypes at once (e.g. has
+    employees AND performs intra-EU operations); a single-profile
+    hierarchy would silently discard obligations from the non-selected
+    traits. The CLI uses the returned set via intersection against the
+    registry's applicability matrix so every matching obligation is
+    retained.
+
+    Args:
+        profile: The :class:`aeat.domain.deadlines.AutonomoProfile` to
+            classify.
+
+    Returns:
+        A :class:`frozenset` of every
+        :class:`aeat.domain.modelos._categories.TaxpayerProfile`
+        archetype matching ``profile``. Defaults to a singleton of
+        :attr:`aeat.domain.modelos._categories.TaxpayerProfile.AUTONOMO_ED_SOLO`
+        when no other trait matches.
     """
     matched: set[TaxpayerProfile] = set()
     if profile.bienes_extranjero_above_threshold:
@@ -227,7 +271,36 @@ def year_plan_command(
     ),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:
-    """Compute the filing :class:`aeat.domain.deadlines.Schedule` for a profile."""
+    """Compute the filing schedule for a fiscal year and autónomo profile.
+
+    Builds an :class:`aeat.domain.deadlines.AutonomoProfile` from the
+    flag values, asks the deadline engine for the year's
+    :class:`aeat.domain.deadlines.Schedule`, then drops any obligation
+    whose modelo is not applicable to the inferred taxpayer
+    archetypes.
+
+    Args:
+        year: Fiscal year to compute the plan for.
+        tax_id: NIF / NIE identifier.
+        iva_regime: :class:`aeat.domain.deadlines.IVARegime` the
+            autónomo files under.
+        has_employees: Whether the autónomo employs salaried workers.
+        pays_professionals_with_retencion: Whether the autónomo pays
+            professional fees subject to retención.
+        professional_income_withholding_ge_70pct: Whether at least
+            70% of prior-year professional income was already subject
+            to withholding.
+        pays_rent_with_retencion: Whether the autónomo pays local
+            alquiler con retención.
+        does_intracomunitario: Whether the autónomo performs intra-EU
+            operations.
+        third_party_transactions_above_347_threshold: Whether the
+            autónomo has exceeded the modelo 347 annual threshold with
+            any single third party.
+        bienes_extranjero_above_threshold: Whether the autónomo holds
+            bienes en el extranjero above the threshold.
+        json_out: Emit a JSON envelope instead of a rich table.
+    """
     profile = AutonomoProfile(
         tax_id=tax_id,
         iva_regime=iva_regime,

@@ -1,23 +1,26 @@
 """Governed-persistence repository for filing-history records.
 
-Wraps the substrate's :class:`Envelope[WireFilingHistory]` contract behind
-a small typed surface that the sync runner and any future consumer can
-call. Each modelo's filing history is persisted as its own envelope file
+Wraps the encrypted-envelope substrate's
+:class:`aeat.adapters.persistence.storage.Envelope` of
+:class:`aeat.domain.sync.WireFilingHistory` behind a small typed
+surface for the sync runner and any future consumer. Each modelo's
+filing history is persisted as its own envelope file
 (``<modelo>.envelope.json``) under
-:attr:`aeat.core.config.AeatSettings.aeat_filing_history_dir` with a
-per-modelo :func:`exclusive_file_lock`.
+:attr:`aeat.core.config.AeatSettings.aeat_filing_history_dir`, guarded
+by a per-modelo :func:`aeat.adapters.persistence.storage.exclusive_file_lock`.
 
 Sensitivity classification: a filing-history payload captures the
-sequence of submitted filings (modelo, period, submitted_at, status) the
-operator has on AEAT — auditable evidence with identity-bearing context,
-hence :class:`SensitivityClass.AUDIT`.
+sequence of submitted filings (modelo, period, submitted_at, status)
+the operator has on AEAT — auditable evidence with identity-bearing
+context, hence
+:attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT`.
 
 Out of scope: the optional HTML page archive remains in
-``aeat_filing_history_dir / pages/``. That artefact is operator-visible
-legal record and is owned by the page-archive subsystem; the repository
-governs only the *structured* filing-history shape so the modelo /
-period / submitted_at / status fields pass through the classification
-gate at load time.
+``aeat_filing_history_dir / pages/``. That artefact is an
+operator-visible legal record and is owned by the page-archive
+subsystem; the repository governs only the *structured* filing-history
+shape so the modelo / period / submitted_at / status fields pass
+through the classification gate at load time.
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
-from ..sync import WireFilingHistory
+from ...domain.sync import WireFilingHistory
 
 _HKDF_CONTEXT_FILING_HISTORY = b"aeat.application.filing.history.v1"
 
@@ -51,10 +54,11 @@ _HISTORY_LOCK_SUFFIX = ".lock"
 
 
 class HistoryMigrationSummary(BaseModel):
-    """Frozen summary of one ``migrate_legacy_filing_history_to_repository`` call.
+    """Frozen summary of one :func:`migrate_legacy_filing_history_to_repository` call.
 
     Attributes:
-        imported: Number of legacy modelo histories persisted by this call.
+        imported: Number of legacy modelo histories persisted by this
+            call.
         skipped: Number already present in the destination repository.
         errors: Number of legacy files the helper could not parse.
         store_dir: Resolved path to the repository's store directory.
@@ -69,7 +73,13 @@ class HistoryMigrationSummary(BaseModel):
 
 
 class FilingHistoryRepository:
-    """Repository over the per-modelo, file-locked, envelope-backed store."""
+    """Repository over the per-modelo, file-locked, envelope-backed store.
+
+    Every persisted record passes through the encrypted-envelope
+    substrate so the on-disk artefact is always AES-256-GCM
+    ciphertext at
+    :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT`.
+    """
 
     def __init__(self, *, store_dir: Path) -> None:
         """Bind the repository to a store directory.
@@ -98,11 +108,19 @@ class FilingHistoryRepository:
     def load(self, modelo: str) -> WireFilingHistory | None:
         """Return the persisted filing history for ``modelo`` or ``None``.
 
+        Args:
+            modelo: Modelo identifier (e.g. ``"130"``).
+
+        Returns:
+            The decrypted :class:`aeat.domain.sync.WireFilingHistory`
+            payload, or ``None`` when no envelope is persisted.
+
         Raises:
-            ClassificationError: If the on-disk envelope's class is not
-                AUDIT.
-            EnvelopeVersionError: If the envelope schema version is
-                higher than the consumer supports.
+            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
+                When the on-disk envelope's class is not ``AUDIT``.
+            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
+                When the envelope schema version is higher than this
+                consumer supports.
         """
         target = self.envelope_path_for(modelo)
         if not target.exists():
@@ -120,8 +138,14 @@ class FilingHistoryRepository:
     def save(self, modelo: str, history: WireFilingHistory) -> None:
         """Persist ``history`` for ``modelo`` atomically under the per-modelo lock.
 
-        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
-        no plaintext filing-state row lands on disk.
+        The on-disk envelope is AES-256-GCM ciphertext at
+        :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT`
+        — no plaintext filing-state row lands on disk.
+
+        Args:
+            modelo: Modelo identifier (e.g. ``"130"``).
+            history: The :class:`aeat.domain.sync.WireFilingHistory`
+                payload to persist.
         """
         safe_repository_id(modelo, context="modelo")
         self._store_dir.mkdir(parents=True, exist_ok=True)
@@ -140,7 +164,15 @@ class FilingHistoryRepository:
             )
 
     def delete(self, modelo: str) -> bool:
-        """Remove the filing-history envelope for ``modelo``."""
+        """Remove the filing-history envelope for ``modelo``.
+
+        Args:
+            modelo: Modelo identifier (e.g. ``"130"``).
+
+        Returns:
+            ``True`` when the envelope was deleted, ``False`` when no
+            envelope existed.
+        """
         target = self.envelope_path_for(modelo)
         if not self._store_dir.exists():
             return False
@@ -176,20 +208,20 @@ class FilingHistoryRepository:
                 yield modelo, payload
 
 
-# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.
 def migrate_legacy_filing_history_to_repository(
     legacy_dir: Path,
     *,
     repository: FilingHistoryRepository,
     overwrite: bool = False,
 ) -> HistoryMigrationSummary:
-    """Move legacy plaintext filing-history JSONs into the repository.
+    """Move legacy plaintext filing-history JSONs into the encrypted repository.
 
     The legacy filing-history store wrote each modelo's history as
     ``<modelo>.json`` containing the JSON serialisation of one
-    :class:`WireFilingHistory`. This helper reads every such file in
-    ``legacy_dir`` and persists each through the repository under
-    AUDIT class.
+    :class:`aeat.domain.sync.WireFilingHistory`. This helper reads
+    every such file in ``legacy_dir`` and persists each through the
+    repository under
+    :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT`.
 
     Sub-directories (notably ``pages/``, which carries archived HTML
     detail pages owned by a different subsystem) are skipped via the
@@ -198,18 +230,18 @@ def migrate_legacy_filing_history_to_repository(
     Args:
         legacy_dir: Source directory containing legacy
             ``<modelo>.json`` files.
-        repository: Destination repository.
+        repository: Destination :class:`FilingHistoryRepository`.
         overwrite: When ``True``, replaces any modelo's history
             already persisted in the repository. When ``False``
             (default), already-persisted modelos are counted under
-            ``skipped``.
+            :attr:`HistoryMigrationSummary.skipped`.
 
     Returns:
         A frozen :class:`HistoryMigrationSummary`.
 
     Raises:
-        FileNotFoundError: If ``legacy_dir`` does not exist.
-        NotADirectoryError: If ``legacy_dir`` is not a directory.
+        FileNotFoundError: When ``legacy_dir`` does not exist.
+        NotADirectoryError: When ``legacy_dir`` is not a directory.
     """
     if not legacy_dir.exists():
         raise FileNotFoundError(legacy_dir)

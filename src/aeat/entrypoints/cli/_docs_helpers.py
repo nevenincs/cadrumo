@@ -1,11 +1,16 @@
-"""Pure helpers for the Docs CLI sub-app.
+"""Pure helpers for the Google Docs CLI sub-app.
+
+This module hosts the side-effect-free helpers that prepare requests for
+the Google Docs ``documents.batchUpdate`` API and that decode
+``documents.get`` responses into plain text. Anything that requires a
+live Docs service belongs in :mod:`aeat.entrypoints.cli.docs`.
 
 The Docs API uses 1-indexed character offsets, with index 1 being the
 first usable position inside the body. ``insertText`` requests applied
 in document order shift every later index by the inserted length, so
 batches that perform multiple insertions are easiest to reason about
-when built **in reverse document order** — that way every previous
-index stays valid.
+when built in reverse document order — that way every previous index
+stays valid.
 """
 
 from __future__ import annotations

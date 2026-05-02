@@ -35,7 +35,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final
 
-from ..._extract import parse_spanish_decimal
+from ....pdf._label_regex import parse_spanish_decimal
 
 # Spanish-formatted amount (``1.234,56``). Kept local because the Modelo
 # 100 scanner also accepts integer-only values (``86441`` days) and
@@ -110,7 +110,16 @@ HEADER_FORWARD_CIDS: Final[frozenset[str]] = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class ScannedCasilla:
-    """One ``(casilla_id, printed_value)`` record from the scanner."""
+    """One ``(casilla_id, printed_value)`` record from the scanner.
+
+    Attributes:
+        casilla_id: The casilla identifier as printed.
+        raw_value: The raw value token captured from the PDF.
+        typed_value: The :func:`_type_value`-classified payload.
+        source_page: 1-based page number where the value was found.
+        primitive: The capture primitive that produced the record
+            (``"tail_cid"``, ``"forward_cid"``, or ``"legacy_tail"``).
+    """
 
     casilla_id: str
     raw_value: str
@@ -125,6 +134,14 @@ def scan_pages(pages: tuple[str, ...]) -> tuple[ScannedCasilla, ...]:
     First-pass wins — a later pass will not overwrite an earlier hit.
     The pass order is chosen so the strongest signals (modern
     tail-split) dominate over the weaker legacy forward-scan.
+
+    Args:
+        pages: Per-page text of the source PDF.
+
+    Returns:
+        Deterministic tuple of :class:`ScannedCasilla` records sorted
+        by ``(int(casilla_id), casilla_id)`` — the printed-form-friendly
+        ordering for both 2-digit and 4-digit IDs.
     """
     captures: dict[str, ScannedCasilla] = {}
 
@@ -192,11 +209,12 @@ def scan_pages(pages: tuple[str, ...]) -> tuple[ScannedCasilla, ...]:
 
 
 def _normalise(line: str) -> str:
+    """Collapse filler-glyph runs to a single space and strip the line."""
     return _FILLER_RUN_RE.sub(" ", line).strip()
 
 
 def _is_meaningful_value(value: str) -> bool:
-    """Return True if ``value`` is a real casilla payload (not filler)."""
+    """Return ``True`` when ``value`` is a real casilla payload (not filler)."""
     if not value:
         return False
     if re.fullmatch(r"[.…­�]+", value):
@@ -205,11 +223,11 @@ def _is_meaningful_value(value: str) -> bool:
 
 
 def _is_valid_cid(cid: str) -> bool:
-    """Return True iff ``cid`` is a plausible Modelo 100 casilla id.
+    """Return ``True`` iff ``cid`` is a plausible Modelo 100 casilla id.
 
     Rejects 4-digit tokens that don't start with ``0`` (they would be
-    years, OCR artifacts, or tokens like ``2021``) and 2-3 digit
-    tokens that fall in the 2000-2099 year range.
+    years, OCR artifacts, or tokens like ``2021``) and 2-3 digit tokens
+    that fall in the 2000-2099 year range.
     """
     if not cid.isdigit():
         return False
@@ -222,7 +240,7 @@ def _is_valid_cid(cid: str) -> bool:
 
 
 def _is_value_like(tok: str) -> bool:
-    """Return True iff ``tok`` looks like a casilla value (not a label word).
+    """Return ``True`` iff ``tok`` looks like a casilla value (not a label word).
 
     Values are Spanish amounts, integers, dates, NIFs, single-letter
     markers, all-uppercase codes, or single Title-case Spanish words
@@ -250,9 +268,16 @@ def _is_value_like(tok: str) -> bool:
 def _tail_split(line: str) -> tuple[str, str] | None:
     """Modern-layout tail-CID split: ``label VALUE CID``.
 
-    Returns ``(casilla_id, value)`` or ``None``. The value is obtained
-    by walking backwards from the CID and including tokens while they
-    remain value-like (amounts, uppercase codes, dates, NIF, etc.).
+    The value is obtained by walking backwards from the CID and
+    including tokens while they remain value-like (amounts, uppercase
+    codes, dates, NIF, etc.).
+
+    Args:
+        line: Single line of text from the PDF.
+
+    Returns:
+        ``(casilla_id, value)`` when the line matches; ``None`` when the
+        line is header noise or the CID is implausible.
     """
     if _HEADER_NOISE_RE.search(line):
         return None
@@ -282,6 +307,12 @@ def _walk_back_value_start(tokens: list[str]) -> int:
     lowercase letter (a label word), includes consecutive value-like
     tokens up to that point, and guarantees at least one token is
     designated as label and at least one as value.
+
+    Args:
+        tokens: The label-prefix tokens (excluding the trailing CID).
+
+    Returns:
+        The index in ``tokens`` where the value slice starts.
     """
     n = len(tokens)
     val_start = n
@@ -309,7 +340,13 @@ def _forward_scan(line: str, allowed: frozenset[str]) -> Iterable[tuple[str, str
     value is the concatenation of the following tokens up to the next
     allowed CID. Blank values (two adjacent allowed CIDs) are dropped.
 
-    Yields nothing for lines that contain no allowed CID tokens.
+    Args:
+        line: Single line of text from the PDF.
+        allowed: Whitelist of CID tokens permitted to start a column.
+
+    Yields:
+        ``(casilla_id, value)`` tuples — nothing if the line carries no
+        allowed CID tokens.
     """
     norm_line = _normalise(line)
     # "01Y4113523X" → "01 Y4113523X" so the leading CID is its own token.
@@ -346,12 +383,18 @@ def _legacy_tail_split(line: str, allowed: frozenset[str]) -> tuple[str, str] | 
     second-to-last and the value is the very last token (e.g.
     ``... 68 X`` for ``Tributación individual`` or ``... 70 09`` for the
     CCAA-code casilla). After filler-dot normalisation the line is
-    pattern-friendly — but the main ``_tail_split`` misses it because
-    the last token is the value, not the CID.
+    pattern-friendly — but :func:`_tail_split` misses it because the
+    last token is the value, not the CID.
 
-    Restricted to ``allowed`` (header casilla ids) so we don't
-    accidentally promote a random trailing 2-digit integer to a
-    casilla-id role on other pages.
+    Restricted to ``allowed`` (header casilla ids) so a random trailing
+    2-digit integer on other pages is not promoted to a casilla-id role.
+
+    Args:
+        line: Single line of text from the PDF.
+        allowed: Whitelist of CID tokens permitted in this position.
+
+    Returns:
+        ``(casilla_id, value)`` when the line matches; ``None`` otherwise.
     """
     if _HEADER_NOISE_RE.search(line):
         return None
@@ -376,9 +419,16 @@ def _legacy_tail_split(line: str, allowed: frozenset[str]) -> tuple[str, str] | 
 def _type_value(raw: str) -> Decimal | int | str | date:
     """Assign a strict type to ``raw`` matching ``ExtractedCasilla.printed_value``.
 
-    Priority: ``DD/MM/YYYY`` → date, Spanish-formatted decimal → Decimal,
-    bare integer → int, otherwise the raw string. Date parsing rejects
+    Priority: ``DD/MM/YYYY`` → :class:`datetime.date`,
+    Spanish-formatted decimal → :class:`decimal.Decimal`, bare integer →
+    :class:`int`, otherwise the raw string. Date parsing rejects
     impossible day/month combinations.
+
+    Args:
+        raw: Raw value token from the PDF.
+
+    Returns:
+        The strictly-typed value.
     """
     date_match = _DATE_RE.match(raw)
     if date_match is not None:

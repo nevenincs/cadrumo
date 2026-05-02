@@ -266,7 +266,7 @@ gcloud-auth:
         echo "GOOGLE_CLOUD_PROJECT is empty in env/.env — set it before continuing." >&2
         exit 1
     fi
-    SCOPES=$(uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
+    SCOPES=$(uv run python -c "from aeat.adapters.outbound.google import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)")
     echo "▶ gcloud auth login (browser will open)…"
     gcloud auth login --quiet
     echo "▶ gcloud config set project $PROJECT"
@@ -312,7 +312,7 @@ gcloud-auth:
         Write-Error "GOOGLE_CLOUD_PROJECT is empty in env/.env"
         exit 1
     }
-    $scopes = (& uv run python -c "from aeat.adapters.outbound.aeat.auth import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
+    $scopes = (& uv run python -c "from aeat.adapters.outbound.google import ADC_LOGIN_SCOPE_CSV; print(ADC_LOGIN_SCOPE_CSV)" | Select-Object -Last 1).Trim()
     Write-Host "▶ gcloud auth login (browser will open)…"
     & $gcloud.Source auth login --quiet
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

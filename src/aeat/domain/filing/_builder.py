@@ -1,8 +1,8 @@
-"""Builder ABC for the :mod:`aeat.application.filing` subpackage.
+"""Builder ABC for the :mod:`aeat.domain.filing` subpackage.
 
-Concrete builders live under :mod:`aeat.application.filing._builders` and
+Concrete builders live under :mod:`aeat.domain.filing._builders` and
 register themselves on import. Callers from outside
-:mod:`aeat.application.filing` MUST never import a builder directly.
+:mod:`aeat.domain.filing` MUST never import a builder directly.
 """
 
 from __future__ import annotations

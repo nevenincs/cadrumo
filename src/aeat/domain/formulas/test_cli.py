@@ -1,4 +1,9 @@
-"""Tests for the ``aeat formulas`` Typer subcommand surface."""
+"""Tests for the ``aeat formulas`` Typer subcommand surface.
+
+Exercises :data:`aeat.domain.formulas._cli.app` end-to-end through
+:class:`typer.testing.CliRunner`, covering ``list``, ``show``,
+``compute``, and ``audit`` subcommands plus their error paths.
+"""
 
 from __future__ import annotations
 
@@ -19,11 +24,7 @@ def runner() -> CliRunner:
 
 @pytest.mark.unit
 def test_list_subcommand(runner: CliRunner) -> None:
-    """``aeat formulas list`` emits the registered rulesets as JSON.
-
-     (#183) added two Modelo 303 rulesets alongside the
-    Modelo 130 pair.
-    """
+    """``aeat formulas list`` emits the registered rulesets as JSON."""
     result = runner.invoke(app, ["list"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)

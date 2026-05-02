@@ -1,4 +1,11 @@
-"""Portal: Modelo 111 — retenciones trabajo y actividades."""
+"""Catalogue entry for the *Modelo 111* withholdings procedure page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
+:attr:`aeat.domain.modelos.ModeloCode.MODELO_111`. Backs the periodic
+self-assessment of withholdings and on-account payments on labour income
+and economic activities.
+"""
 
 from __future__ import annotations
 
@@ -32,3 +39,4 @@ ENTRY: PortalMetadata = build_entry(
         "sobre rendimientos del trabajo y actividades económicas."
     ),
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 111 procedure page."""

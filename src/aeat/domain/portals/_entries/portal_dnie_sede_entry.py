@@ -1,4 +1,9 @@
-"""Portal: DNIe Sede entry point."""
+"""Catalogue entry for the AEAT Sede DNI electrónico (DNIe) entry point.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Reuses the shared
+certificate gateway for credential exchange.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +26,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Acceso mediante DNI electrónico a la Sede; reutiliza la pasarela de certificado.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the DNIe Sede entry page."""

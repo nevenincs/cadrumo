@@ -8,11 +8,13 @@ Modelo 100 calculations depend on autonomous-community context. LIRPF arts. 46 b
 
 ## Model
 
-The public package is `aeat.profile`.
+The domain package is `aeat.domain.profile`; local JSON persistence
+lives in `aeat.adapters.persistence.profile`; the CLI remains
+`aeat profile`.
 
 `KentTaxResidence` is a strict, frozen model with schema version `"1"`:
 
-- `ccaa`: one ordinary CCAA value from the closed CCAA enum re-exported by `aeat.profile`
+- `ccaa`: one ordinary CCAA value from the closed CCAA enum exported by `aeat.domain.profile`
 - `tax_residence_since`: optional start date
 - `tax_residence_change_history`: optional change history
 

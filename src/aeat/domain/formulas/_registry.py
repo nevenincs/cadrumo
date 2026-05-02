@@ -1,14 +1,12 @@
 """Ruleset registry — maps ``(modelo, variant, period)`` to a :class:`Ruleset`.
 
-the registry key from ``(modelo, period)`` to
-``(modelo, variant, period)``. The ``variant`` axis disambiguates
-partial (``summary``), alternate (``full``), and regional
-(``canarias``) encodings of the same modelo+period. See
-``.vault/adr/2026-04-22-ruleset-architecture-adr.md``.
+The registry key is ``(modelo, variant, period)``. The ``variant`` axis
+disambiguates partial (``summary``), alternate (``full``), and regional
+(``canarias``) encodings of the same ``modelo + period``.
 
-Overlap checking runs **per-``(modelo, variant)`` slot**: two
+Overlap checking runs **per ``(modelo, variant)`` slot**: two
 ``variant="default"`` rulesets may not overlap, but a
-``variant="canarias"`` ruleset may share effective range with a
+``variant="canarias"`` ruleset may share an effective range with a
 ``variant="default"`` one.
 """
 
@@ -25,14 +23,20 @@ __all__ = ["RulesetRegistry", "get_registry"]
 
 
 class RulesetRegistry(BaseModel):
-    """Immutable collection of rulesets with ``(modelo, variant, period)`` lookup."""
+    """Immutable collection of rulesets with ``(modelo, variant, period)`` lookup.
+
+    Attributes:
+        rulesets: Every :class:`aeat.domain.formulas.Ruleset` known to
+            the registry.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     rulesets: tuple[Ruleset, ...] = Field(default_factory=tuple)
 
     def model_post_init(self, _context: object) -> None:
-        # Overlap check runs per (modelo, variant) slot — ADR §1.
+        """Reject overlapping rulesets for the same ``(modelo, variant)`` slot."""
+        # Overlap check runs per (modelo, variant) slot.
         by_slot: dict[tuple[ModeloCode, str], list[Ruleset]] = {}
         for ruleset in self.rulesets:
             by_slot.setdefault((ruleset.modelo, ruleset.variant), []).append(ruleset)
@@ -63,9 +67,25 @@ class RulesetRegistry(BaseModel):
     ) -> Ruleset:
         """Return the ruleset active for the supplied modelo / variant / period.
 
-        Defaults ``variant="default"`` so existing callers keep working
-        unchanged; future callers pass ``variant="canarias"`` or similar
-        to reach regional/alternate encodings.
+        Args:
+            modelo: The :class:`aeat.domain.modelos.ModeloCode` to look
+                up.
+            period: The :class:`aeat.domain.formulas.FiscalPeriod` whose
+                ``start``..``end`` span must be covered by the ruleset.
+            variant: Disambiguates partial, alternate, and regional
+                encodings of the same ``modelo + period``. Defaults to
+                ``"default"`` so existing callers stay unchanged; pass
+                ``"canarias"`` or ``"summary"`` to reach the
+                corresponding variant slots.
+
+        Returns:
+            The single matching :class:`aeat.domain.formulas.Ruleset`.
+
+        Raises:
+            :exc:`aeat.core.errors.MissingRulesetError`: When no ruleset
+                covers the requested slot.
+            :exc:`aeat.core.errors.AmbiguousPeriodError`: When the period
+                straddles multiple rulesets in the same slot.
         """
         matches = [
             ruleset

@@ -1,25 +1,24 @@
-"""LIS art. 12.1.a) tabla de amortización lineal.
+"""Encode the LIS art. 12.1.a) tabla de amortización lineal.
 
-Encodes the official Spanish corporate-income-tax amortization table
-(applicable to actividades económicas IRPF en estimación directa
-normal per LIRPF art. 28). Each row carries:
-
-- `asset_class` — closed enum identifying the asset category.
-- `coef_max_pct` — maximum lineal coefficient (expressed as decimal
-  percentage, e.g. ``Decimal("12.00")`` = 12%).
-- `period_max_years` — maximum amortization period in years.
+Provides the official Spanish corporate-income-tax amortization table
+applicable to actividades económicas IRPF en estimación directa normal
+per LIRPF art. 28. Each row of :data:`LIS_ART_12_LINEAL_TABLE` carries
+an asset category, the maximum lineal coefficient and the maximum
+amortization period — see :class:`AmortizationCategory` for field
+definitions and :class:`AssetClass` for the closed enumeration of
+categories.
 
 The estimación directa simplificada régimen uses a separate
 amortization table (Orden de 27 de marzo de 1998 in its vigent
-version), NOT this table. Libertad de amortización (LIS arts. 12.3 +
+version), NOT this table. Libertad de amortización (LIS arts. 12.3 and
 102) bypasses the table for I+D, vehículos eléctricos (DA 18ª LIS via
 Ley 31/2022, DA 59ª LIRPF via RD-Ley 4/2024), and PYMES new-asset
 acquisition.
 
 Source: Ley 27/2014 (LIS) art. 12.1.a) consolidated text, BOE id
 ``BOE-A-2014-12328``. The Reglamento del IS (RD 634/2015,
-``BOE-A-2015-7771``) does NOT duplicate the table — the statutory
-text in the Ley is the only authoritative source.
+``BOE-A-2015-7771``) does NOT duplicate the table — the statutory text
+in the Ley is the only authoritative source.
 """
 
 from __future__ import annotations
@@ -34,7 +33,7 @@ class AssetClass(StrEnum):
     """Closed enumeration of LIS art. 12.1.a) asset categories.
 
     The table publishes ~30 distinct categories. Each member's value is
-    a stable identifier in `snake_case.dot` form (e.g.
+    a stable identifier in ``snake_case.dot`` form (for example
     ``"obra_civil.general"``) suitable for casilla naming and
     parameter-table keys.
     """
@@ -78,8 +77,14 @@ class AmortizationCategory(BaseModel):
     """A single row of the LIS art. 12.1.a) lineal table.
 
     The two numeric fields establish the maximum lineal coefficient and
-    the maximum amortization period. Either bound (whichever is more
-    restrictive in practice) is the legal cap.
+    the maximum amortization period. Either bound — whichever is more
+    restrictive in practice — is the legal cap.
+
+    Attributes:
+        asset_class: Identifier of the asset category.
+        coef_max_pct: Maximum lineal coefficient as a decimal percentage
+            (for example ``Decimal("12.00")`` represents 12 %).
+        period_max_years: Maximum amortization period in years.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

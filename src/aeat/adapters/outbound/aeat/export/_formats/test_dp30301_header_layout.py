@@ -1,19 +1,18 @@
 """DP30301 intra-segment header-field layout lock.
 
-The DP30301 page carries Kent's filing-identification block:
-TIPO_DECLARACION, NIF, APELLIDOS_Y_NOMBRE, DEVENGO_EJERCICIO,
-DEVENGO_PERIODO. Their exact offsets within DP30301 are Kent-
-observable — the verify test, the golden
-SHA, and the payload-length pre-flight all depend on
-these offsets being byte-stable.
+The DP30301 page carries the filing-identification block:
+``TIPO_DECLARACION``, ``NIF``, ``APELLIDOS_Y_NOMBRE``,
+``DEVENGO_EJERCICIO``, ``DEVENGO_PERIODO``. Their exact offsets
+within DP30301 are observable to the filer — the verify test, the
+golden SHA, and the payload-length pre-flight all depend on these
+offsets being byte-stable.
 
-inter-segment positions in the envelope; wave
-143 complements that by locking intra-segment positions in the
-Kent-critical DP30301 page. A fixture regeneration that shifts
-any of these fields (say, inserting a new RESERVED padding slot
-before TIPO_DECLARACION) would break every downstream Kent-
-byte-offset assertion at once — now it breaks here first, with
-a targeted message.
+The companion :mod:`.test_envelope_segment_layout` locks inter-segment
+positions in the envelope; this module locks intra-segment positions
+in the DP30301 page. A fixture regeneration that shifts any of these
+fields (for example by inserting a new RESERVED padding slot before
+TIPO_DECLARACION) would break every downstream byte-offset assertion
+at once — it now breaks here first with a targeted message.
 """
 
 from __future__ import annotations
@@ -50,6 +49,8 @@ _EXPECTED_DP30301_HEADER: list[tuple[str, int, int]] = [
 
 
 class TestDp30301HeaderLayout:
+    """Lock the intra-segment offsets of every DP30301 header field."""
+
     def test_header_fields_match_canonical_layout(self) -> None:
         segment = _dp30301()
         # type: ignore[attr-defined] — duck-typed for mypy; real type is SegmentSpec.
@@ -69,9 +70,9 @@ class TestDp30301HeaderLayout:
             )
 
     def test_apellidos_y_nombre_starts_at_offset_23(self) -> None:
-        """Kent's APELLIDOS_Y_NOMBRE slot must begin at DP30301 offset 23 (1-based,
+        """``APELLIDOS_Y_NOMBRE`` must begin at DP30301 offset 23 (1-based,
         immediately after the 9-byte NIF). The 80-byte slot ends at offset 102
-        inclusive; the DEVENGO_EJERCICIO that follows must begin at offset 103."""
+        inclusive; the ``DEVENGO_EJERCICIO`` that follows must begin at offset 103."""
         segment = _dp30301()
         by_field_id = {s.field_id: s for s in segment.specs}
         a_y_n = by_field_id["DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N"]
@@ -92,9 +93,9 @@ class TestDp30301HeaderLayout:
         assert nif.length == 9
 
     def test_periodo_is_2_bytes_at_offset_107(self) -> None:
-        """DP30301 PERIODO is 2 bytes at offset 107 (1-based); reclassified
-        this from RESERVED literal '01' to ALPHANUMERIC user-supplied. The offset
-        stays stable so the export byte assertion continues to work."""
+        """DP30301 ``PERIODO`` is a 2-byte ALPHANUMERIC user-supplied field at
+        offset 107 (1-based). The offset stays stable so the export byte
+        assertion continues to work."""
         segment = _dp30301()
         by_field_id = {s.field_id: s for s in segment.specs}
         periodo = by_field_id["DP30301_F010_DEVENGO_PER_ODO"]

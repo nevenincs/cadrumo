@@ -16,14 +16,6 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from aeat.adapters.inbound.financial import RawProvenance, SourceFormat
-from aeat.adapters.inbound.financial.providers import RawTransaction
-from aeat.domain.transactions import (
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
 from aeat.domain.invoices._errors import InvoiceLinkError, InvoiceLinkInconsistencyError
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -33,6 +25,15 @@ from aeat.domain.invoices._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from aeat.domain.transactions import (
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+)
+from aeat.domain.transactions._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -1,28 +1,30 @@
-"""Percent-rate mutation harness for every landed ruleset (#338).
+"""Percent-rate mutation harness for every landed ruleset.
 
-Issue #338 — Track 2 / EPIC #316. Extends the mutation harness with
-a ``percent_rate`` mutator class. For every :class:`PercentFormula`
-node in every landed ruleset variant whose rate operand is mutable
-(a :class:`Literal` value or a :class:`ParamRef` resolving via the
-:class:`ParameterTable`), the harness:
+Extends the mutation harness with a ``percent_rate`` mutator class. For
+every :class:`aeat.domain.formulas._formula.PercentFormula` node in
+every landed ruleset variant whose rate operand is mutable (a
+:class:`aeat.domain.formulas._formula.Literal` value or a
+:class:`aeat.domain.formulas._formula.ParamRef` resolving via the
+:class:`aeat.domain.formulas._parameters.ParameterTable`), the harness:
 
 1. Confirms the unmutated ruleset audits clean against the case's
    fixture (baseline sentinel).
 2. Constructs a mutated ruleset with the rate shifted by ±1 pp.
 3. Asserts the audit surfaces a discrepancy on at least one casilla
-   downstream of the mutated rate, and the ``|delta|`` on that
-   casilla is ``≥ 0.02 €`` (the detection floor inherited from the
+   downstream of the mutated rate, and the ``|delta|`` on that casilla
+   is ``>= 0.02 €`` (the detection floor inherited from the
    operand-swap harness).
 
-Rates living in compound expressions (e.g. the
-``percent_from_whole`` shape used by Modelo 200 casilla 00562 and
-Modelo 202 casilla 18, where the rate is a :class:`DivFormula`
-normalising a whole-percent input) are not in scope of this
-mutator; the mul/div scalar mutator catches the
-``Literal("100")`` denominator. Rates living in :class:`CasillaRef`
-operands (e.g. Modelo 303 casilla 66) are not mutable via AST and
-appear in the unflagged-nodes catalogue assembled by
-``test_mutator_kill_rate``.
+Rates living in compound expressions (e.g. the ``percent_from_whole``
+shape used by Modelo 200 casilla 00562 and Modelo 202 casilla 18, where
+the rate is a :class:`aeat.domain.formulas._formula.DivFormula`
+normalising a whole-percent input) are not in scope of this mutator;
+the mul/div scalar mutator catches the ``Literal("100")`` denominator.
+Rates living in
+:class:`aeat.domain.formulas._formula.FormulaCasillaRef` operands (e.g.
+Modelo 303 casilla 66) are not mutable via AST and appear in the
+unflagged-nodes catalogue assembled by
+:mod:`aeat.domain.formulas._rulesets.test_mutator_kill_rate`.
 """
 
 from __future__ import annotations
@@ -68,7 +70,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @dataclass(frozen=True)
 class _PercentCase:
-    """One enumerated mutation case — ruleset, target casilla, fixture, direction."""
+    """One enumerated mutation case: ruleset, target casilla, fixture, direction."""
 
     ruleset: Ruleset
     casilla_id: str
@@ -249,18 +251,18 @@ def _ruleset_cases() -> tuple[tuple[Ruleset, str, dict[str, Decimal]], ...]:
     the parameter-rate path.
     """
     return (
-        # Modelo 111 — 2024 + 2025 + 2026 (issue #318).
+        # Modelo 111 — 2024 + 2025 + 2026.
         (MODELO_111_2024, "09", _f111_premios_fixture()),
         (MODELO_111_2024, "12", _f111_arrendamiento_fixture()),
         (MODELO_111_2025, "09", _f111_premios_fixture()),
         (MODELO_111_2025, "12", _f111_arrendamiento_fixture()),
         (MODELO_111_2026, "09", _f111_premios_fixture()),
         (MODELO_111_2026, "12", _f111_arrendamiento_fixture()),
-        # Modelo 115 — 2024 + 2025 + 2026 (issue #319).
+        # Modelo 115 — 2024 + 2025 + 2026.
         (MODELO_115_2024, "03", _f115_fixture()),
         (MODELO_115_2025, "03", _f115_fixture()),
         (MODELO_115_2026, "03", _f115_fixture()),
-        # Modelo 130 — 2024 + 2025 + 2026 (issue #321).
+        # Modelo 130 — 2024 + 2025 + 2026.
         (MODELO_130_2024, "04", _f130_irpf_fixture()),
         (MODELO_130_2024, "09", _f130_agraria_fixture()),
         (MODELO_130_2025, "04", _f130_irpf_fixture()),

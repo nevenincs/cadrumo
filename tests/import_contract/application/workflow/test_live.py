@@ -18,8 +18,8 @@ from typing import cast
 
 import pytest
 
-from aeat.entrypoints.cli._live import requires_live_enabled
 from aeat.application.workflow import SubmissionEngineProtocol, WorkflowError, default_engine
+from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 

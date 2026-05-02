@@ -1,4 +1,13 @@
-"""Modelo 720 — declaración informativa sobre bienes y derechos en el extranjero."""
+"""Registry entry for Modelo 720 — informativa de bienes en el extranjero.
+
+Defines the curated :class:`aeat.domain.modelos._metadata.ModeloMetadata`
+``ENTRY`` for the annual information return on overseas assets and rights.
+The entry is consumed by :mod:`aeat.domain.modelos._registry` at import
+time and surfaces the modelo's category, cadence, legal basis,
+applicability partition over :class:`aeat.domain.modelos._categories.TaxpayerProfile`,
+and submission-portal cross-reference into
+:mod:`aeat.domain.portals`.
+"""
 
 from __future__ import annotations
 

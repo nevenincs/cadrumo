@@ -1,4 +1,10 @@
-"""Unit tests for N26 PDF financial ingestion."""
+"""Unit tests for the N26 PDF financial ingestion provider.
+
+Exercises :class:`aeat.adapters.inbound.financial.providers.PdfN26Provider`
+end-to-end against committed N26 statement fixtures. Each fixture is paired
+with a manually transcribed expected-row JSON so the test asserts that the
+provider's parsed transactions match the human-verified ground truth.
+"""
 
 from __future__ import annotations
 
@@ -31,7 +37,7 @@ def test_pdf_n26_provider_ingests_fixture_rows(
     fixture_name: str,
     expected_name: str,
 ) -> None:
-    """The provider should emit the manually transcribed rows for each fixture."""
+    """The provider must emit the manually transcribed rows for each fixture."""
     provider = PdfN26Provider()
     fixture = _FIXTURES / fixture_name
     validation = provider.validate_source(fixture)

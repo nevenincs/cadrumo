@@ -26,9 +26,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.i18n import Translatable
 from ...domain.invoices import Invoice
+from ...domain.sync import DivergenceRecord
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
-from ...domain.sync import DivergenceRecord
 from ._enums import ReviewItemKind, ReviewSeverity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

@@ -1,9 +1,8 @@
-"""End-to-end derivation tests for the Modelo 303 2024 ruleset (#183).
+"""End-to-end derivation tests for the Modelo 303 2024 ruleset.
 
-Cross-year parity tests live here too: since the régimen general
-rates were stable 2024 → 2025 (LIVA arts. 90/91 unamended), the
-2024 and 2025 rulesets must produce the exact same ledger for the
-same input set.
+Also exercises cross-year parity: since the régimen-general rates were
+stable 2024 → 2025 (LIVA arts. 90 / 91 unamended), the 2024 and 2025
+rulesets must produce the exact same ledger for the same input set.
 """
 
 from __future__ import annotations
@@ -20,13 +19,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _ledger(ruleset, inputs):
-    """Convenience derivation."""
+    """Derive ``ruleset`` against ``inputs`` and return the resulting ledger."""
     engine = Engine()
     return engine.derive(ruleset=ruleset, inputs=inputs)
 
 
 def test_modelo_303_2024_general_only() -> None:
-    """Base 07 = 10000, 65 = 100 ⇒ 71 = 2100.00 (2024 ruleset)."""
+    """Base 07 = 10 000, 65 = 100 ⇒ 71 = 2 100.00 (2024 ruleset)."""
     ledger = _ledger(MODELO_303_2024, {"07": Decimal("10000.00"), "65": Decimal("100")})
     values = {entry.casilla_id: entry.value for entry in ledger.entries}
     assert values["09"] == Decimal("2100.00")
@@ -34,7 +33,7 @@ def test_modelo_303_2024_general_only() -> None:
 
 
 def test_modelo_303_2024_constants() -> None:
-    """Casillas 02/05/08 carry the 4 / 10 / 21 printed rates."""
+    """Casillas 02 / 05 / 08 carry the 4 / 10 / 21 printed rates."""
     ledger = _ledger(MODELO_303_2024, {"65": Decimal("100")})
     values = {entry.casilla_id: entry.value for entry in ledger.entries}
     assert values["02"] == Decimal("4.00")

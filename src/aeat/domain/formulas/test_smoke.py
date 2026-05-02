@@ -1,4 +1,9 @@
-"""Public-surface smoke test for :mod:`aeat.domain.formulas`."""
+"""Public-surface smoke test for :mod:`aeat.domain.formulas`.
+
+Ensures every exported name resolves, the default registry exposes the
+expected ruleset fleet, and :class:`aeat.domain.formulas._engine.Engine`
+constructs without arguments.
+"""
 
 from __future__ import annotations
 
@@ -19,11 +24,7 @@ def test_every_public_name_imports() -> None:
 
 @pytest.mark.unit
 def test_registry_has_shipped_rulesets() -> None:
-    """The default registry must expose every shipped ruleset.
-
-    (#173) shipped two Modelo 130 rulesets (2024, 2025).
-    (#183) added two Modelo 303 rulesets (2024, 2025).
-    """
+    """The default registry must expose every shipped ruleset."""
     from . import get_registry
 
     registry = get_registry()

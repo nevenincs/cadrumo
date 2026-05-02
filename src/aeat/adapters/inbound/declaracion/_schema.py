@@ -1,4 +1,13 @@
-"""Strict pydantic v2 records for the declaración parser (#305)."""
+"""Strict pydantic v2 records for the declaración parser.
+
+Defines the boundary types every extractor produces — the
+:class:`TemplateRevision` triple that identifies an AEAT template
+revision, the :class:`ExtractionWarning` advisory record, the
+:class:`ExtractionStatus` coverage verdict, and the top-level
+:class:`DeclaracionFiling` aggregate. All models are frozen and
+``extra="forbid"`` so accidental field drift surfaces at validation
+time.
+"""
 
 from __future__ import annotations
 
@@ -16,27 +25,48 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class ExtractionStatus(StrEnum):
-    """Completion level of an extraction run."""
+    """Completion level of an extraction run.
+
+    Attributes:
+        COMPLETE: Every required casilla (per schema) was resolved AND
+            the extractor had a non-empty required set. A COMPLETE
+            filing with ``values=()`` is an invariant violation and MUST
+            NOT occur.
+        PARTIAL: At least 50% of required casillas resolved; remainder
+            recorded as :class:`ExtractionWarning`.
+        FAILED: Fewer than 50% of required casillas resolved.
+        UNVERIFIABLE: The extractor recognised the document (NIF /
+            ejercicio / período captured) but exposes no casilla-level
+            data — either because the scope is header-only pending a
+            text-value primitive (e.g. Modelos 036, 037, 232, 369, 720,
+            840), or because the required set was empty by construction.
+            Downstream consumers MUST NOT treat ``UNVERIFIABLE`` as a
+            successful verification; tax-law calculations based on zero
+            values are meaningless.
+    """
 
     COMPLETE = "COMPLETE"
-    """Every required casilla (per schema) was resolved AND the extractor had
-    a non-empty required set. A COMPLETE filing with ``values=()`` is an
-    invariant violation and MUST NOT occur."""
     PARTIAL = "PARTIAL"
-    """≥ 50% of required casillas resolved; remainder in warnings."""
     FAILED = "FAILED"
-    """< 50% of required casillas resolved."""
     UNVERIFIABLE = "UNVERIFIABLE"
-    """The extractor recognised the document (NIF/ejercicio/período captured)
-    but exposes no casilla-level data — either because the MVP scope is
-    header-only pending a text-value primitive (e.g. Modelos 036/037/232/
-    369/720/840), or because the required set was empty by construction.
-    Downstream consumers MUST NOT treat UNVERIFIABLE as a successful
-    verification; tax-law calculations based on zero values are meaningless."""
 
 
 class TemplateRevision(BaseModel):
-    """One AEAT template revision (``modelo``, ``año``, intra-año revision)."""
+    """One AEAT template revision (``modelo``, ``año``, intra-año revision).
+
+    Identifies a single layout variant of a Modelo PDF. The
+    :func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`
+    registry is keyed on the ``(modelo, año, revision)`` triple.
+
+    Attributes:
+        modelo: Stable modelo identifier (``"130"``, ``"303"``, ...).
+        año: Tax year as a four-digit integer (2000-2099).
+        revision: Intra-año revision tag (``"2025.01"``,
+            ``"2024.orden-819"``, ``"2021.legacy"``, ...).
+        detected_from: How this triple was resolved — ``"header"`` /
+            ``"footer"`` / ``"filename"`` for auto-detection, or
+            ``"explicit_override"`` for caller-supplied values.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -47,7 +77,23 @@ class TemplateRevision(BaseModel):
 
 
 class ExtractionWarning(BaseModel):
-    """One advisory emitted during extraction."""
+    """One advisory emitted during extraction.
+
+    Captures non-fatal extraction conditions (casilla missing, label
+    ambiguous, value unparseable, bbox fallback used, ...). Surfaces in
+    :attr:`DeclaracionFiling.warnings`.
+
+    Attributes:
+        casilla_id: The affected casilla identifier, or ``None`` when
+            the warning is global (not tied to a specific casilla).
+        code: Short stable identifier for the warning class
+            (``"casilla-not-found"``, ``"value-unparseable"``,
+            ``"ambiguous-label"``, ...).
+        message: Translatable human-readable description.
+        primitive_attempted: Which extraction primitive produced the
+            warning — ``"acroform"`` / ``"label_regex"`` / ``"bbox"`` /
+            ``"ocr"`` / ``"merged"``.
+    """
 
     model_config = _STRICT_FROZEN
 

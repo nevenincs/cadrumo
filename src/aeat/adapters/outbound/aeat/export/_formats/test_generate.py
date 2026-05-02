@@ -1,4 +1,12 @@
-"""Tests for the DR schema-module generator (EPIC #305)."""
+"""Tests for the DR schema-module generator.
+
+Drives
+:func:`aeat.adapters.outbound.aeat.export._formats._generate.generate_module_source`
+against the ``mini_303.json`` preview fixture and asserts that the
+emitted source is syntactically valid, references every expected
+helper, and round-trips byte-equivalent payloads against the
+hand-authored preview module.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +26,8 @@ _FIXTURE_DIR = (
 
 
 class TestGenerateModelo303Preview:
+    """Drive the generator against the ``mini_303.json`` preview fixture."""
+
     def test_generated_source_contains_envelope_constant(self) -> None:
         ingested = ingest_dr_spec_path(_FIXTURE_DIR / "mini_303.json")
         source = generate_module_source(

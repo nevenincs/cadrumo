@@ -164,7 +164,7 @@ class PromptRegistry(BaseModel):
                 version=1,
                 template=("Extract structured casilla information from the supplied source text.\n\nSource:\n{text}"),
                 expected_output_schema=None,
-                description="Placeholder seed for issue #23 casilla extraction workflows.",
+                description="Placeholder seed for casilla extraction workflows.",
             )
         )
         registry.register(
@@ -173,7 +173,7 @@ class PromptRegistry(BaseModel):
                 version=1,
                 template=("Extract structured tax rules from the supplied manual excerpt.\n\nManual excerpt:\n{text}"),
                 expected_output_schema=None,
-                description="Placeholder seed for issue #25 manual rule extraction workflows.",
+                description="Placeholder seed for manual rule extraction workflows.",
             )
         )
         return registry

@@ -1,4 +1,12 @@
-"""Unit tests for :mod:`aeat.application.workflow._models`."""
+"""Unit tests for the strict pydantic v2 records in
+:mod:`aeat.application.workflow._models`.
+
+Locks down the public stage and abort-reason ordering, the
+:func:`aeat.application.workflow.compute_run_id` hash stability, and
+the validators on :class:`aeat.application.workflow.WorkflowStep`,
+:class:`aeat.application.workflow.SiteHealthAlert`, and
+:class:`aeat.application.workflow.WorkflowResult`.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +16,12 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ...adapters.outbound.aeat.browser._site_health import (
+    _URL_ADAPTER,
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+)
 from . import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -15,12 +29,6 @@ from . import (
     WorkflowStage,
     WorkflowStep,
     compute_run_id,
-)
-from ...adapters.outbound.aeat.browser._site_health import (
-    SiteHealthEvidence,
-    SiteHealthState,
-    SiteHealthStatus,
-    _URL_ADAPTER,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -30,7 +38,7 @@ class TestWorkflowStageOrdering:
     """The read-only stage enum must stay exact and ordered."""
 
     def test_exact_read_only_stages(self) -> None:
-        """Every stage declared in the ADR is present exactly once."""
+        """Verify every read-only stage is present exactly once."""
         expected = (
             "LOADING_PROFILE",
             "SYNCING_CATALOGUES",
@@ -46,15 +54,14 @@ class TestWorkflowStageOrdering:
 
 
 class TestWorkflowAbortReasons:
-    """The abort reasons must match the issue spec exactly.
+    """The abort reasons must match the spec exactly.
 
-    ``SITE_UNAVAILABLE`` was added for #95 to carry the typed
-    site-health pause-and-alert contract alongside the original nine
-    reasons.
+    ``SITE_UNAVAILABLE`` carries the typed site-health pause-and-alert
+    contract alongside the original nine reasons.
     """
 
     def test_exact_nine_reasons(self) -> None:
-        """Every abort reason declared in the ADR is present exactly once."""
+        """Verify every abort reason is present exactly once."""
         expected = {
             "NO_PENDING_OBLIGATION",
             "INBOX_BLOCKING_REQUERIMIENTO",
@@ -121,6 +128,10 @@ class TestWorkflowStepValidation:
 
 
 class TestSiteHealthAlert:
+    """Validation invariants on
+    :class:`aeat.application.workflow.SiteHealthAlert`.
+    """
+
     def _status(self) -> SiteHealthStatus:
         evidence = SiteHealthEvidence(
             url=_URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/"),

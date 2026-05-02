@@ -1,4 +1,10 @@
-"""Tests for the pydantic formula-node models."""
+"""Tests for the pydantic formula-node models.
+
+Covers validation, default-quantize behaviour, structural invariants
+(ascending brackets, single-rounding), JSON round-tripping, and the
+casilla / parameter reference walkers exposed by
+:mod:`aeat.domain.formulas._formula`.
+"""
 
 from __future__ import annotations
 
@@ -11,9 +17,9 @@ from ._formula import (
     AddFormula,
     Bracket,
     BracketsFormula,
-    CasillaRef,
     DivFormula,
     Formula,
+    FormulaCasillaRef,
     Literal,
     ParamRef,
     PercentFormula,
@@ -112,11 +118,11 @@ def test_iter_casilla_refs_collects_all_refs() -> None:
     """Nested formulas yield their casilla references in traversal order."""
     formula = SubFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="01"),
+            FormulaCasillaRef(casilla_id="01"),
             AddFormula(
                 operands=(  # type: ignore[arg-type]
-                    CasillaRef(casilla_id="02"),
-                    CasillaRef(casilla_id="03"),
+                    FormulaCasillaRef(casilla_id="02"),
+                    FormulaCasillaRef(casilla_id="03"),
                 )
             ),
         )
@@ -130,7 +136,7 @@ def test_iter_param_refs_collects_all_refs() -> None:
     formula = PercentFormula(
         operands=(  # type: ignore[arg-type]
             ParamRef(param_id="irpf.rate"),
-            CasillaRef(casilla_id="03"),
+            FormulaCasillaRef(casilla_id="03"),
         )
     )
     assert iter_param_refs(formula) == ["irpf.rate"]
@@ -141,8 +147,8 @@ def test_formula_round_trips_through_json() -> None:
     """Discriminated-union formulas survive JSON serialisation."""
     original = SubFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="01"),
-            CasillaRef(casilla_id="02"),
+            FormulaCasillaRef(casilla_id="01"),
+            FormulaCasillaRef(casilla_id="02"),
         )
     )
     adapter: TypeAdapter[Formula] = TypeAdapter(Formula)

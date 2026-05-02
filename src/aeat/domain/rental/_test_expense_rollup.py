@@ -1,4 +1,9 @@
-"""LIRPF art. 23.1 expense rollup tests (#454)."""
+"""Unit tests for the LIRPF art. 23.1 expense rollup.
+
+Exercises :func:`aeat.domain.rental.compute_gastos_for_year` against the
+per-category aggregation, the LIRPF art. 23.1.a) cap, and the
+4-year carry-forward consumption / expiration rules.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +31,8 @@ def _expense(category: ExpenseCategory, amount: Decimal, *, year: int = 2025) ->
 
 
 class TestPerCategoryAggregation:
+    """Per-:class:`aeat.domain.rental.ExpenseCategory` aggregation behaviour."""
+
     def test_sums_per_category(self) -> None:
         expenses = [
             _expense(ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES, Decimal("420.00")),
@@ -57,6 +64,8 @@ class TestPerCategoryAggregation:
 
 
 class TestArt2311aCap:
+    """LIRPF art. 23.1.a) ingreso-bound cap on financiación / reparación expenses."""
+
     def test_below_cap_no_excess(self) -> None:
         expenses = [
             _expense(ExpenseCategory.FINANCIACION_INTERESES, Decimal("3000.00")),
@@ -96,6 +105,8 @@ class TestArt2311aCap:
 
 
 class TestCarryForwardConsumption:
+    """4-year :class:`aeat.domain.rental.CarryForwardEntry` consumption + expiry."""
+
     def test_carry_consumed_against_remaining_capacity(self) -> None:
         """Year-1 originated 500 carry; year-2 capped subtotal 7 000, ingresos
         10 000 → remaining capacity 3 000 → 500 consumed."""
@@ -164,5 +175,3 @@ class TestCarryForwardConsumption:
         # Original carry preserved + new excess (2 000) added.
         ages = sorted(entry.origination_year for entry in rollup.carry_forward_after)
         assert ages == [2024, 2025]
-
-

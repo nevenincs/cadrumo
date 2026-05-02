@@ -1,4 +1,12 @@
-"""Unit tests for category profile validation."""
+"""Unit tests for :class:`~aeat.domain.categories.CategoryProfile` validation.
+
+Exercises the profile-level invariants: authoritative Spanish label
+required on the display label, casilla-mapping cadence rules, and
+the no-duplicate-mapping invariant. The factory helpers
+(:func:`_citation`, :func:`_mapping`, :func:`_rule`) build minimal
+valid stand-ins so each test can focus on the failure mode it
+covers.
+"""
 
 from __future__ import annotations
 
@@ -11,9 +19,9 @@ from ..casillas import ModeloCode, PeriodType
 from . import (
     CasillaMapping,
     CasillaMappingSign,
+    CategoryCitation,
+    CategoryCitationSource,
     CategoryProfile,
-    Citation,
-    CitationSource,
     ProportionalityKind,
     ProportionalityRule,
     SpendingCategory,
@@ -23,9 +31,9 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _citation() -> Citation:
-    return Citation(
-        source=CitationSource.MANUAL_RENTA,
+def _citation() -> CategoryCitation:
+    return CategoryCitation(
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="test",
         url=parse_http_url("https://example.com/manual.pdf"),

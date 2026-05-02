@@ -1,19 +1,19 @@
-"""CasillaRef-topology mutation harness (issue #457 closure).
+"""FormulaCasillaRef-topology mutation harness for ruleset formula bodies.
 
-Closes the topology-typo deferral catalogued in the a
-typo where the author wrote ``ref("0431")`` instead of ``ref("0432")``
-silently routes the wrong upstream value into the formula. The
-existing harnesses cover operand-level (sub_op swap), rate (percent),
-literal (mul_div_scalar / threshold_literal), and operator-class
-(arithmetic_op_swap) regressions but NOT topology drift in
-:class:`CasillaRef` operands.
+Defends against topology typos in formula bodies: an author who writes
+``ref("0431")`` instead of ``ref("0432")`` silently routes the wrong
+upstream value into the formula. The other mutation harnesses cover
+operand-level (sub_op swap), rate (percent), literal (mul_div_scalar /
+threshold_literal), and operator-class (arithmetic_op_swap)
+regressions but not topology drift in
+:class:`aeat.domain.formulas._formula.FormulaCasillaRef` operands.
 
-The new :class:`CASILLA_REF_TOPOLOGY` mutator class re-targets every
-:class:`CasillaRef` to a substitute casilla_id whose fixture value
-differs from the original by ``>= 0.02 €``. The substitute is
-selected at parametrize-build time from the fixture's value space;
-positions where no valid substitute exists (the fixture has no
-sufficiently-different alternative casilla) are catalogued in
+The mutator re-targets every :class:`FormulaCasillaRef` to a substitute
+``casilla_id`` whose fixture value differs from the original by at
+least ``0.02 EUR``. The substitute is selected at parametrize-build
+time from the fixture's value space; positions where no valid
+substitute exists (the fixture has no sufficiently-different
+alternative casilla) are catalogued in
 :data:`_FIXTURE_MASKED_REF_POSITIONS_RATIONALES` with rationale and
 skipped.
 """
@@ -85,7 +85,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @dataclass(frozen=True)
-class _CasillaRefCase:
+class _FormulaCasillaRefCase:
     """One enumerated mutation case for the casilla-ref-topology mutator."""
 
     ruleset: Ruleset
@@ -145,18 +145,27 @@ def _select_substitute_target(
 ) -> str | None:
     """Pick a casilla_id substitute with a fixture value differing from ``original_target``.
 
-    Iterates the fixture in declared order (deterministic across
-    runs) and returns the first casilla_id whose value differs from
-    the original by ``>= 0.02 €``. The substitute must:
+    Iterates the fixture in declared order (deterministic across runs)
+    and returns the first ``casilla_id`` whose value differs from the
+    original by at least ``0.02 EUR``. The substitute must:
 
-    1. Be a valid casilla_id in the ruleset (so the engine can
-       resolve it post-mutation).
-    2. Have a fixture value (so audit_against has a baseline to
-       check).
-    3. Differ from the original's value by at least the detection
-       floor.
+    - Be a valid ``casilla_id`` in the ruleset (so the engine can
+      resolve it post-mutation).
+    - Have a fixture value (so :meth:`Engine.audit_against` has a
+      baseline to check).
+    - Differ from the original's value by at least the detection floor.
 
-    Returns ``None`` if no valid substitute exists in the fixture.
+    Args:
+        ruleset: Ruleset whose casilla universe constrains the
+            substitute pool.
+        original_target: Casilla identifier currently referenced by the
+            mutation site.
+        fixture: User-provided values mapping ``casilla_id`` to the
+            audit-baseline :class:`~decimal.Decimal`.
+
+    Returns:
+        The chosen substitute ``casilla_id``, or ``None`` if no valid
+        substitute exists in the fixture.
     """
     valid_ids = {casilla.casilla_id for casilla in ruleset.casillas}
     if original_target not in fixture or original_target not in valid_ids:
@@ -181,10 +190,10 @@ def _runtime_probe_masked(
 ) -> bool:
     """Return ``True`` if the topology swap fails to surface a discrepancy.
 
-    Even with a substitute whose fixture value differs, the swap
-    might be masked downstream (e.g. ``Mul(literal_zero, ref)`` —
-    multiplying by zero kills any topology change). The runtime
-    probe verifies detection.
+    Even with a substitute whose fixture value differs, the swap might
+    be masked downstream (for example ``Mul(literal_zero, ref)``
+    multiplying by zero kills any topology change). The runtime probe
+    verifies detection.
     """
     engine = Engine()
     baseline = engine.audit_against(ruleset=ruleset, provided=fixture, tolerance=Decimal("0.01"))
@@ -207,7 +216,7 @@ def _runtime_probe_masked(
 def _build_test_params() -> list:
     """Generate one pytest.param per non-masked (ruleset, casilla, ref_path) triple.
 
-    For each :class:`CasillaRef` position, picks a substitute
+    For each :class:`FormulaCasillaRef` position, picks a substitute
     casilla_id from the fixture and probes detection. Masked
     positions (no valid substitute, or detection fails because the
     swap is downstream-masked) are catalogued and skipped.
@@ -239,7 +248,7 @@ def _build_test_params() -> list:
                 path_id = "_".join(str(p) for p in ref_path) if ref_path else "root"
                 params.append(
                     pytest.param(
-                        _CasillaRefCase(
+                        _FormulaCasillaRefCase(
                             ruleset=ruleset,
                             casilla_id=fd.casilla_id,
                             ref_path=ref_path,
@@ -260,12 +269,12 @@ _TEST_PARAMS_CACHE = _build_test_params()
 
 
 @pytest.mark.parametrize("case", _TEST_PARAMS_CACHE)
-def test_casilla_ref_topology_swap_is_detected(case: _CasillaRefCase) -> None:
-    """Re-targeting a CasillaRef MUST surface a discrepancy.
+def test_casilla_ref_topology_swap_is_detected(case: _FormulaCasillaRefCase) -> None:
+    """Re-targeting a FormulaCasillaRef MUST surface a discrepancy.
 
-    Baseline-clean sentinel first; then the mutated ruleset audits
-    and MUST surface a discrepancy on at least one casilla with
-    ``|delta| >= 0.02 €``.
+    Baseline-clean sentinel first; then the mutated ruleset audits and
+    MUST surface a discrepancy on at least one casilla with
+    ``|delta| >= 0.02 EUR``.
     """
     engine = Engine()
     baseline = engine.audit_against(ruleset=case.ruleset, provided=case.fixture, tolerance=Decimal("0.01"))
@@ -287,10 +296,10 @@ def test_casilla_ref_topology_swap_is_detected(case: _CasillaRefCase) -> None:
 
 
 def test_iter_casilla_ref_paths_yields_every_ref() -> None:
-    """Walker enumerates every CasillaRef descendant in operand-index order.
+    """Walker enumerates every FormulaCasillaRef descendant in operand-index order.
 
     Modelo 130 casilla 03 = ``Sub(ref('01'), ref('02'))``. The walker
-    yields exactly two :class:`CasillaRef` positions at paths (0, 0)
+    yields exactly two :class:`FormulaCasillaRef` positions at paths (0, 0)
     and (0, 1).
     """
     fd = MODELO_130_2025.formula_for("03")
@@ -302,7 +311,7 @@ def test_iter_casilla_ref_paths_yields_every_ref() -> None:
 
 
 def test_mutate_casilla_ref_rejects_non_ref_path() -> None:
-    """Targeting a non-CasillaRef path raises ``TypeError``."""
+    """Targeting a non-FormulaCasillaRef path raises ``TypeError``."""
     fd = MODELO_130_2025.formula_for("03")
     assert fd is not None
     # Path () is the RoundFormula root.
@@ -311,9 +320,9 @@ def test_mutate_casilla_ref_rejects_non_ref_path() -> None:
 
 
 def test_casilla_ref_coverage_is_non_trivial() -> None:
-    """Sanity: harness covers a non-trivial number of CasillaRef positions.
+    """Sanity: harness covers a non-trivial number of FormulaCasillaRef positions.
 
-    Walker enumerates ~580 CasillaRef positions across all rulesets;
+    Walker enumerates ~580 FormulaCasillaRef positions across all rulesets;
     after fixture-mask filtering, the harness should still cover a
     substantial majority. A regression that drops coverage to zero
     would silently de-arm this defense.

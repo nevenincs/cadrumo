@@ -2,8 +2,10 @@
 
 All sanitiser errors inherit from
 :class:`aeat.core.errors.AeatError` so callers can catch the family
-without importing implementation details. The hierarchy mirrors
-the failure surfaces enumerated in the PDF-sanitiser ADR.
+without importing implementation details. The hierarchy mirrors the
+failure surfaces the sanitiser pipeline can encounter — source-parse
+failure, signature-present refusal, already-sanitised guard, and
+unhandled PII surfaces.
 """
 
 from __future__ import annotations
@@ -64,12 +66,12 @@ class AlreadySanitizedError(SanitizationError):
 class UnknownSurfaceError(SanitizationError):
     """Raised when a PII surface is detected that the sanitiser does not handle.
 
-    Used for surfaces enumerated in the ADR's threat-model table
-    that this version of the sanitiser is not yet wired to scrub
-    (e.g. a future modelo introduces an `OCProperties` shape we
-    have not characterised). The default policy is *fail*; callers
-    can downgrade to a warning by toggling the relevant
-    ``drop_*`` flag off and accepting the resulting warning.
+    Used for threat-model surfaces this version of the sanitiser is
+    not yet wired to scrub (e.g. a future modelo introduces an
+    ``OCProperties`` shape we have not characterised). The default
+    policy is *fail*; callers can downgrade to a warning by toggling
+    the relevant ``drop_*`` flag off and accepting the resulting
+    warning.
     """
 
     pass

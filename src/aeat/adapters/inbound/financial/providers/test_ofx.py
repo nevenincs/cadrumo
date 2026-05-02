@@ -1,4 +1,9 @@
-"""Unit tests for OFX financial ingestion."""
+"""Unit tests for OFX financial ingestion.
+
+Covers FITID + payee preservation on the synthetic single-account
+fixture and the multi-account dispatch path that drives every
+``STMTTRNRS`` block in a real OFX file.
+"""
 
 from __future__ import annotations
 

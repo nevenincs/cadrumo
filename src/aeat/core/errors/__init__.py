@@ -7,7 +7,7 @@ predictable error handling throughout the application.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
     from ..i18n import Translatable
@@ -107,7 +107,7 @@ class SiteHealthError(AeatError):
                 instance describing the detected non-OK state.
         """
 
-        state = getattr(status, "state")
+        state = status.state
         state_value = getattr(state, "value", state)
         super().__init__(str(state_value), context={"state": str(state_value)})
         self.status: Any = status

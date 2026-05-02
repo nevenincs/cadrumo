@@ -1,4 +1,9 @@
-"""Unit tests for the Modelo 131 2024 ruleset."""
+"""Unit tests for the Modelo 131 2024 ruleset.
+
+Exercises the cent-exact derivations of the six computed liquidación rows
+of :data:`aeat.domain.formulas._rulesets.MODELO_131_2024` against
+externally-anchored RIRPF art. 110 worked examples.
+"""
 
 from __future__ import annotations
 

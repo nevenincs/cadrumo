@@ -1,32 +1,35 @@
-"""Modelo 100 Anexo F — bases imponibles + reducciónes + mínimos (2025).
+"""Define the Modelo 100 Anexo F ruleset for 2025 bases imponibles.
 
-Anexo F closes the income side of M100 by:
+Anexo F closes the income side of M100 by performing four arithmetic
+operations on caller-supplied and engine-computed casillas:
 
-1. Aggregating per-anexo rendimientos netos into the two base
-   imponibles (general LIRPF art. 48; ahorro art. 49).
-2. Applying reducciónes de la base imponible: planes de pensiones
-   (art. 51, cap art. 52 1.500 EUR general + 8.500 EUR contrib.
-   empresariales — caller-validated), tributación conjunta (art. 84).
-3. Computing the mínimo personal y familiar total (LIRPF arts. 56-61)
-   as the sum of its four components, each caller-supplied (the
-   per-componente lookup tables 5.550 / 2.400-4.500 / 1.150-1.400 /
-   3.000-9.000 + 3.000 EUR depend on caller-known descendiente count,
-   ascendiente / discapacidad metadata that lives outside the formula
-   layer).
-4. Computing the base liquidable general (clamp_pos(BIG - reducciónes))
-   and base liquidable ahorro (= base imponible ahorro since the
-   default reducciónes do not absorb at this layer; the cross-over of
-   mínimo personal happens in Anexo G via the tarifa application).
+- Aggregating per-anexo rendimientos netos into the two bases
+  imponibles (general per LIRPF art. 48, ahorro per art. 49).
+- Applying reducciónes de la base imponible: planes de pensiones
+  (art. 51, capped by art. 52 at 1.500 EUR general plus 8.500 EUR
+  contribuciones empresariales — caller-validated) and tributación
+  conjunta (art. 84).
+- Computing the mínimo personal y familiar total (LIRPF arts. 56-61)
+  as the sum of its four components, each caller-supplied because the
+  per-componente lookup tables (5.550 / 2.400-4.500 / 1.150-1.400 /
+  3.000-9.000 + 3.000 EUR) depend on descendiente count, ascendiente
+  metadata, and discapacidad classification that live outside the
+  formula layer.
+- Computing the base liquidable general (``clamp_pos(BIG -
+  reducciónes)``) and base liquidable ahorro (equal to the base
+  imponible ahorro at this layer; the mínimo personal cross-over
+  happens in :mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_g_2025`
+  via the tarifa application).
 
 The base imponible general aggregation pulls casillas from B1 (0022),
-B2's contribution to general is zero by design (capital mobiliario =
-ahorro), C (0107 + 0085), D normal (0205), D simplificada (0240), D
-modulos (0260), E (0399). Base imponible ahorro = B2 (0049) + E (0400).
+B2's contribution to general (zero by design — capital mobiliario
+flows into ahorro), C (0107 + 0085), D normal (0205), D simplificada
+(0240), D modulos (0260), and E (0399). The base imponible ahorro
+combines B2 (0049) and E (0400).
 
-Stable across 2024 / 2025 / 2026 (LIRPF arts. 47-61 unchanged at BOE
-consolidated text consult 2026-02-28; the 2024 amounts of arts. 57-60
-remain in force per the year-by-year delta map in the rule-delta
-manifest).
+Stable across the 2024, 2025, and 2026 ejercicios — LIRPF arts. 47-61
+are unchanged in the consolidated BOE text and the 2024 amounts of
+arts. 57-60 remain in force per the project rule-delta manifest.
 """
 
 from __future__ import annotations
@@ -46,10 +49,14 @@ from .._common import (
 from ._common import cite_lirpf
 
 EFFECTIVE_FROM = date(2025, 1, 1)
+"""First day of the ejercicio in which this Anexo F ruleset applies."""
+
 EFFECTIVE_TO = date(2025, 12, 31)
+"""Last day of the ejercicio in which this Anexo F ruleset applies."""
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` mapping for label texts."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -132,6 +139,7 @@ CITATIONS = (
         "suministra como casilla 0455).",
     ),
 )
+"""LIRPF citations underpinning the Anexo F bases imponibles."""
 
 
 CASILLAS = (
@@ -254,6 +262,7 @@ CASILLAS = (
         legal_basis=(CITATIONS[2],),
     ),
 )
+"""Casilla declarations exposed by the Anexo F ruleset."""
 
 
 # Base imponible general (LIRPF art. 48): sum of B1 0022 + C 0107 +
@@ -310,9 +319,11 @@ FORMULAS = (
         body=ref("0460"),
     ),
 )
+"""Engine formula bindings for the 2025 Anexo F computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo F declares no parametric tables."""
 
 
 __all__ = [

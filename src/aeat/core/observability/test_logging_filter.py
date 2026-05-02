@@ -1,4 +1,17 @@
-"""Verify the run-context logging filter injects run_id / step_id attributes."""
+"""Tests for the run-context logging filter and stderr suppression filter.
+
+Two related concerns:
+
+* :class:`TestRunContextLoggingFilter` verifies that the
+  :func:`aeat.core.logging.get_logger` factory stamps ``run_id`` and
+  ``step_id`` attributes onto every :class:`logging.LogRecord`, both
+  inside and outside an active
+  :func:`aeat.core.observability.run_context`.
+* :class:`TestStderrRunEventFilter` verifies that the default stderr
+  handler installed by :mod:`aeat.core.logging` drops records that
+  carry a ``run_event`` extra — without this, every observability event
+  would also print on stderr, spamming long workflows.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +27,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 class _CaptureHandler(logging.Handler):
-    """Real logging handler that appends every record it sees."""
+    """Real :class:`logging.Handler` that appends every record it sees.
+
+    Used to assert against the actual :class:`logging.LogRecord`
+    attributes the framework's record factory installs, rather than
+    against a captured string representation.
+    """
 
     def __init__(self) -> None:
         super().__init__(level=logging.DEBUG)
@@ -55,12 +73,12 @@ class TestRunContextLoggingFilter:
 
 
 class TestStderrRunEventFilter:
-    """The default stderr handler must drop records carrying run_event.
+    """The default stderr handler must drop records carrying ``run_event``.
 
-    S2 concern: ``record_event`` logs at INFO through
-    ``aeat.core.observability`` which propagates to the root stderr
+    :func:`aeat.core.observability.record_event` logs at INFO through
+    ``aeat.core.observability``, which propagates to the root stderr
     handler. Without the filter, every event would print on stderr —
-    spamming long workflows. The filter drops only records with a
+    spamming long workflows. The filter drops only records that carry a
     ``run_event`` extra; plain log lines still reach stderr.
     """
 

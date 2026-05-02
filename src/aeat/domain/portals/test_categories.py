@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_portal_category_has_exactly_7_members() -> None:
-    """ADR §3: 7 members."""
+    """The category enum exposes exactly 7 members."""
     expected = {
         PortalCategory.AUTH,
         PortalCategory.FILING,
@@ -25,7 +25,7 @@ def test_portal_category_has_exactly_7_members() -> None:
 
 
 def test_auth_method_has_exactly_7_members() -> None:
-    """ADR §3: 7 members including ANONYMOUS and REFERENCE_NUMBER."""
+    """The auth-method enum exposes exactly 7 members including ANONYMOUS and REFERENCE_NUMBER."""
     expected = {
         AuthMethod.ANONYMOUS,
         AuthMethod.CLAVE_PIN,
@@ -40,7 +40,7 @@ def test_auth_method_has_exactly_7_members() -> None:
 
 
 def test_url_stability_has_exactly_4_members() -> None:
-    """ADR §3: 4 tiers."""
+    """The URL-stability enum exposes exactly 4 tiers."""
     expected = {
         UrlStability.STABLE_PROTOCOL_GRADE,
         UrlStability.STABLE_WITHIN_CAMPAIGN,
@@ -52,7 +52,7 @@ def test_url_stability_has_exactly_4_members() -> None:
 
 
 def test_subdomain_has_exactly_7_members() -> None:
-    """ADR §3: 7 hosts."""
+    """The subdomain enum exposes exactly 7 hosts."""
     expected_values = {
         "sede.agenciatributaria.gob.es",
         "www1.agenciatributaria.gob.es",

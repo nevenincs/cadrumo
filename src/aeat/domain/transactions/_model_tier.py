@@ -1,24 +1,26 @@
-"""Model capability tiers for the LLM classifier (#236).
+"""Model capability tiers for the LLM classifier.
 
-Decouples Kent's tool code from the shifting sands of model IDs at
-each provider. The operator picks a *capability tier* (``LOW`` /
+Decouples consumer code from the shifting sands of model IDs at each
+provider. The operator picks a *capability tier* (``LOW`` /
 ``MEDIUM`` / ``HIGH``) and a *provider* (``claude`` / ``gemini`` /
-``codex``); the resolver picks a current model ID that meets the
-tier for that provider.
+``codex``); :func:`resolve_profile` returns the current
+:class:`ModelProfile` whose ``model_id`` meets the tier floor for
+that provider.
 
 Rationale:
 
 - Model IDs change every few months (``sonnet-4.5``, ``gemini-2.5-pro``,
-  ``o3`` → ``o4``). Hard-coding IDs in CLI flags forces Kent to chase
-  them. A stable tier + alias table is a better interface.
+  ``o3`` -> ``o4``). Hard-coding IDs in CLI flags forces consumers to
+  chase them. A stable tier + alias table is a better interface.
 - Thinking models (multi-step reasoning, chain-of-thought) classify
   ambiguous transactions more accurately than single-shot models but
-  cost more tokens. Surfacing the ``ModelCapability`` axis lets the
-  operator pick a trade-off.
+  cost more tokens. Surfacing the :class:`ModelCapability` axis lets
+  the operator pick a trade-off.
 - Classification accuracy on realistic autónomo data is acceptable at
-  ``MEDIUM`` and above; ``LOW`` models are prone to ignoring the strict
-  JSON schema or picking the wrong classification on ambiguous inputs.
-  ``MINIMUM_CLASSIFICATION_TIER`` enforces this floor.
+  :attr:`ModelTier.MEDIUM` and above; :attr:`ModelTier.LOW` models are
+  prone to ignoring the strict JSON schema or picking the wrong
+  classification on ambiguous inputs.
+  :data:`MINIMUM_CLASSIFICATION_TIER` enforces this floor.
 """
 
 from __future__ import annotations
@@ -28,7 +30,15 @@ from enum import IntEnum, StrEnum
 
 
 class ModelTier(IntEnum):
-    """Ordered capability tier. Comparison operators work as expected."""
+    """Ordered capability tier. Comparison operators work as expected.
+
+    Attributes:
+        LOW: Cheap / fast models prone to schema drift on ambiguous
+            inputs.
+        MEDIUM: Solid single-shot reasoning; the floor for the
+            classification pipeline.
+        HIGH: Top-tier models with strong multi-step reasoning.
+    """
 
     LOW = 1
     MEDIUM = 2
@@ -36,7 +46,14 @@ class ModelTier(IntEnum):
 
 
 class ModelCapability(StrEnum):
-    """Whether the model natively does multi-step reasoning before answering."""
+    """Whether the model natively does multi-step reasoning before answering.
+
+    Attributes:
+        NON_THINKING: Single-shot models that emit one response without
+            internal chain-of-thought passes.
+        THINKING: Models that perform explicit multi-step reasoning
+            before producing the final answer.
+    """
 
     NON_THINKING = "non_thinking"
     THINKING = "thinking"
@@ -50,7 +67,7 @@ class ModelProfile:
         provider: Lower-case provider name (``claude`` / ``gemini`` /
             ``codex``).
         alias: Stable human-friendly identifier, e.g. ``claude-sonnet``.
-            Kent uses this on the CLI; the tool maps it to ``model_id``.
+            The operator uses this on the CLI; the tool maps it to ``model_id``.
         model_id: Current provider-specific model argument. MAY be
             empty when the provider CLI defaults to the right model
             (e.g. ``codex`` picks its own default).
@@ -71,6 +88,13 @@ class ModelProfile:
 # on more than a handful of transactions per batch, which defeats the
 # confidence filter Kent relies on downstream.
 MINIMUM_CLASSIFICATION_TIER: ModelTier = ModelTier.MEDIUM
+"""Minimum :class:`ModelTier` permitted for the classification pipeline.
+
+The observable failure mode at :attr:`ModelTier.LOW` is schema drift
+(the model returns prose instead of JSON, or picks a classification
+outside the allow-list) on more than a handful of transactions per
+batch, which defeats the confidence filter downstream consumers rely
+on."""
 
 
 # Per-provider catalogue of known models. Keep the list tight and prefer
@@ -139,12 +163,26 @@ _CATALOGUE: tuple[ModelProfile, ...] = (
 
 
 def catalogue() -> tuple[ModelProfile, ...]:
-    """Return the full known-model catalogue."""
+    """Return the full known-model catalogue.
+
+    Returns:
+        A tuple of every registered :class:`ModelProfile`, in the
+        catalogue's declared order.
+    """
     return _CATALOGUE
 
 
 def profiles_for_provider(provider: str) -> tuple[ModelProfile, ...]:
-    """Return every profile registered for ``provider``."""
+    """Return every profile registered for ``provider``.
+
+    Args:
+        provider: Provider name; matched case-insensitively against
+            :attr:`ModelProfile.provider`.
+
+    Returns:
+        A tuple of every :class:`ModelProfile` registered for the
+        normalised provider name. Empty tuple when no profile matches.
+    """
     normalised = provider.lower().strip()
     return tuple(p for p in _CATALOGUE if p.provider == normalised)
 
@@ -159,6 +197,16 @@ def resolve_profile(
 
     When ``alias`` is None, the default is the LOWEST-tier profile at or
     above ``minimum_tier`` for the provider (cheap but capable).
+
+    Args:
+        provider: Provider name (matched case-insensitively).
+        alias: Optional capability-tier alias; when ``None`` the
+            cheapest-meets-minimum profile is chosen.
+        minimum_tier: Refuses aliases (and default selections) below
+            this tier. Defaults to :data:`MINIMUM_CLASSIFICATION_TIER`.
+
+    Returns:
+        The resolved :class:`ModelProfile`.
 
     Raises:
         ValueError: If the provider is unknown, if the alias is unknown

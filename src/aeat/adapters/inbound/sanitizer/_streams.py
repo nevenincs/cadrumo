@@ -304,8 +304,8 @@ def _build_instruction(
     Centralises the construction so the static-type-checker comment
     lives in one place and call sites stay legible.
     """
-    # Cast to the iterable-overload signature: pikepdf's typed
-    # stub declares the iterable accepts ``Object | int | float``;
+    # Cast to the iterable-overload signature: pikepdf's typing
+    # metadata declares the iterable accepts ``Object | int | float``;
     # the runtime accepts any operand type the operator allows.
     from typing import cast
 

@@ -1,43 +1,45 @@
-"""Modelo 100 Anexo N — deducciones autónomicas (ejercicio 2025).
+"""Define the Modelo 100 Anexo N ruleset for 2025 deducciones autonómicas.
 
 LIRPF art. 46 bis articulates the cesión de competencias normativas en
-materia de IRPF entre el Estado y las Comunidades Autónomas: cada CCAA
-puede establecer deducciones aplicables sobre la cuota íntegra
-autonómica (LIRPF art. 73-77). The per-CCAA deduction inventory varies
-substantially:
+materia de IRPF between the Estado and the Comunidades Autónomas: each
+CCAA may establish deductions applicable to the cuota íntegra
+autonómica (LIRPF arts. 73-77). The per-CCAA deduction inventory
+varies substantially:
 
-- Andalucía ~16 deducciones; Aragón ~19; Asturias ~27; Illes Balears
-  ~26; Canarias ~29; Cantabria ~21; Castilla-La Mancha ~27; Castilla y
-  León ~18; Cataluña ~13; Comunitat Valenciana ~41; Extremadura ~19;
-  Galicia ~25; Madrid ~23; Murcia ~28; La Rioja ~24.
+- Andalucía ~16, Aragón ~19, Asturias ~27, Illes Balears ~26, Canarias
+  ~29, Cantabria ~21, Castilla-La Mancha ~27, Castilla y León ~18,
+  Cataluña ~13, Comunitat Valenciana ~41, Extremadura ~19, Galicia
+  ~25, Madrid ~23, Murcia ~28, La Rioja ~24.
 
 The DSL has no conditional operator, so the per-CCAA deductions are
-modeled as **15 caller-supplied aggregate-deduction casillas** — one
-per ordinary CCAA. The caller computes the per-deduction sub-totals per
-CCAA per the AEAT manual práctico tabla y suplementa LIRPF art. 46 bis,
-aggregates them into the relevant CCAA casilla, and leaves the other 14
-zero. Only ONE CCAA casilla is non-zero in any real filing.
+modelled as fifteen caller-supplied aggregate-deduction casillas — one
+per ordinary CCAA. The caller computes the per-deduction sub-totals
+following the AEAT manual práctico tabla complementing LIRPF art. 46
+bis, aggregates them into the relevant CCAA casilla, and leaves the
+other fourteen at zero. Only one CCAA casilla is non-zero in any real
+filing.
 
 **Casilla numbering rationale (1101-1115)**: the BOE-published M100
 casilla space tops out around the 0900s for autonomic deductions; the
-1101-1115 range sits ABOVE that range and is project-internal (not
-reflected on the AEAT printed form). This avoids collision with any
-official BOE casilla. The autonomic-deduction breakdown that AEAT
-prints uses per-CCAA per-deduction casilla IDs in the 0700-0900 range
-that vary per Comunidad — modeling those exhaustively would require
-~336 casillas/year (per the rule-delta reference manifest's per-CCAA
-count summary) and is deferred to a follow-up issue; this aggregate
-shape is the minimum viable encoding for cross-anexo arithmetic.
+1101-1115 range sits above that range and is project-internal (not
+reflected on the AEAT printed form), which avoids collision with any
+official BOE casilla. The per-CCAA per-deduction casilla IDs that AEAT
+prints sit in the 0700-0900 range and vary per Comunidad — modelling
+them exhaustively would require ~336 casillas per year, so this
+aggregate shape is the minimum viable encoding for cross-anexo
+arithmetic.
 
 The state-level casilla 0622 (deducciones autonómicas total, consumed
-by Anexo G via 0630 = 0620 + 0622) is computed here as the sum of all
-15 per-CCAA aggregates. País Vasco / Navarra are out of scope (foral
-regimes, separate Norma Foral / Decreto Foral Legislativo per #424).
+by :mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_g_2025` via
+``0630 = 0620 + 0622``) is computed here as the sum of all fifteen
+per-CCAA aggregates. País Vasco and Navarra are out of scope (foral
+regimes use separate Norma Foral / Decreto Foral Legislativo
+rulesets).
 
-Stable structurally across 2024 / 2025 / 2026 — only the per-deduction
-amounts and per-CCAA Ley de Presupuestos vary yearly. For 2026 only
-Andalucía has published its Ley 8/2025 PGCA 2026 at retrieval
-2026-04-27; the other 14 CCAAs use 2025 amounts as the conservative
+Stable structurally across the 2024, 2025, and 2026 ejercicios — only
+the per-deduction amounts and per-CCAA Ley de Presupuestos vary
+yearly. For 2026 only Andalucía has published its Ley 8/2025 PGCA
+2026; the other fourteen CCAAs use 2025 amounts as the conservative
 baseline pending each Comunidad's 2026 publication.
 """
 
@@ -58,10 +60,14 @@ from .._common import (
 from ._common import LIRPF_CONSULT_2026_02_28_URL, M100_RETRIEVAL_DATE
 
 EFFECTIVE_FROM = date(2025, 1, 1)
+"""First day of the ejercicio in which this Anexo N ruleset applies."""
+
 EFFECTIVE_TO = date(2025, 12, 31)
+"""Last day of the ejercicio in which this Anexo N ruleset applies."""
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` mapping for label texts."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -90,6 +96,7 @@ CITATIONS = (
         retrieval_date=M100_RETRIEVAL_DATE,
     ),
 )
+"""Citations underpinning the Anexo N deducciones autonómicas surface."""
 
 
 _CCAA_LABELS = (
@@ -144,6 +151,11 @@ CASILLAS = (
         legal_basis=(CITATIONS[0],),
     ),
 )
+"""Casilla declarations exposed by the Anexo N ruleset.
+
+Includes one input casilla per CCAA (1101-1115) and the computed
+state-level aggregate :data:`casilla 0622`.
+"""
 
 
 # 0622 = add_op over 15 per-CCAA aggregate-deduction casillas. Folded
@@ -159,9 +171,11 @@ FORMULAS = (
         body=_TOTAL_AUTONOMICAS_BODY,
     ),
 )
+"""Engine formula bindings for the 2025 Anexo N computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo N declares no parametric tables."""
 
 
 __all__ = [

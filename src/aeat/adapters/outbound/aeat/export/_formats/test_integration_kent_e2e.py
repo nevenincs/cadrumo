@@ -1,20 +1,19 @@
-"""End-to-end integration: ruleset engine → serialise → deserialise.
+"""End-to-end integration: ruleset engine to serialise to deserialise.
 
-Kent's complete produce → verify → export journey in a single
+Walks the complete produce-verify-export journey in a single
 pytest: the Modelo 130 2024 formula ruleset derives casillas from
-Kent's inputs (ingresos + gastos), the serialiser emits the
-fichero-BOE bytes, and the deserialiser rebuilds the casilla map.
+ingresos and gastos inputs, the serialiser emits the fichero-BOE
+bytes, and the deserialiser rebuilds the casilla map.
 
-This bridges the two EPIC tracks (A: submission / export, B:
-financial input / formula derivation) inside a single assertion:
-the derived casillas serialise to the SHA256 when
-fed the same inputs the golden fixture pins.
+The assertion bridges the formula engine and the envelope
+serialiser by demanding that derived casillas serialise to a
+golden SHA256 when fed the inputs the fixture pins.
 
 If this test fails, either the ruleset's formulas drifted away
-from the AEAT BOE law, or the serialiser/schema drifted away from
-dr130.09.pdf. Both failure modes are named explicitly in the
-assertion messages so a git bisect + stack trace point at the
-right layer.
+from the BOE law or the serialiser / schema drifted away from
+``dr130.09.pdf``. Both failure modes are named explicitly in the
+assertion messages so a git bisect plus the stack trace point at
+the right layer.
 """
 
 from __future__ import annotations
@@ -46,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 class TestKentE2EModelo130Q12024:
-    """Kent's Q1 2024 scenario: 20 000 ingresos, 5 000 gastos.
+    """Q1 2024 Modelo 130 scenario: 20 000 ingresos, 5 000 gastos.
 
     The ruleset derives every cascade casilla (03, 04, 07, 09, 11,
     12, 14, 17, 19); the serialiser stamps them into the 878-byte
@@ -62,7 +61,7 @@ class TestKentE2EModelo130Q12024:
     _HEADERS: ClassVar[dict[str, str]] = dict(kent_130_headers("2024"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
-        """Run the Modelo 130 2024 ruleset over Kent's inputs."""
+        """Run the Modelo 130 2024 ruleset over the scenario inputs."""
         ledger = Engine().derive(ruleset=RULESET_130_2024, inputs=self._INPUTS)
         derived: dict[str, Decimal] = {**self._INPUTS}
         for entry in ledger.entries:
@@ -70,7 +69,7 @@ class TestKentE2EModelo130Q12024:
         return derived
 
     def test_ruleset_derives_every_cascade_casilla(self) -> None:
-        """Prove the formula engine computes casillas 03 / 04 / 07 / 12 / 14 / 17 / 19."""
+        """Assert the formula engine computes casillas 03 / 04 / 07 / 12 / 14 / 17 / 19."""
         casillas = self._derive_casillas()
         # Key arithmetic checks: these lock the sum/subtraction/20% rules
         # against the BOE ruleset so a later formula edit is audible here.
@@ -83,8 +82,7 @@ class TestKentE2EModelo130Q12024:
         assert casillas["19"] == Decimal("3000.00"), "resultado a ingresar"
 
     def test_ruleset_to_serialised_bytes_hits_golden_sha(self) -> None:
-        """End-to-end: ruleset → serialise should be byte-identical to
-        the fixture."""
+        """Assert ruleset-derived casillas serialise to a byte-identical fixture."""
         casillas = self._derive_casillas()
         payload = serialise(
             casilla_values=casillas,
@@ -102,13 +100,13 @@ class TestKentE2EModelo130Q12024:
             f"  expected SHA256: {expected_golden}\n"
             f"  actual   SHA256: {actual}\n"
             "Either:\n"
-            "  - the Modelo 130 2024 ruleset changed a formula (Track B), OR\n"
-            "  - the schema/serialiser shifted a byte (Track A).\n"
-            "Both layers ship to Kent together, so this test guards the seam."
+            "  - the Modelo 130 2024 ruleset changed a formula, OR\n"
+            "  - the schema/serialiser shifted a byte.\n"
+            "Both layers ship together, so this test guards the seam."
         )
 
     def test_round_trip_recovers_ruleset_casillas(self) -> None:
-        """serialise → deserialise reproduces every casilla the ruleset emitted."""
+        """Assert ``serialise`` then ``deserialise`` reproduces every casilla the ruleset emitted."""
         casillas = self._derive_casillas()
         payload = serialise(
             casilla_values=casillas,
@@ -130,13 +128,13 @@ class TestKentE2EModelo130Q12024:
 
 
 class TestKentE2EModelo130Q12025:
-    """2025 ejercicio clone parity end-to-end.
+    """2025 ejercicio clone-parity end-to-end coverage.
 
-    The 2025 ruleset re-exports the 2024 formulas, and the 2025
-    schema re-exports the 2024 specs. Feeding the same Kent inputs
-    with ejercicio=2025 must produce the SHA256
-    because the only byte-level difference is the 4-byte EJERCICIO
-    stamp at position 70-73.
+    The 2025 ruleset re-exports the 2024 formulas and the 2025
+    schema re-exports the 2024 specs. Feeding the same inputs with
+    ``ejercicio=2025`` must produce a fixed SHA256 because the only
+    byte-level difference is the 4-byte ``EJERCICIO`` stamp at
+    positions 70-73.
     """
 
     _INPUTS: ClassVar[dict[str, Decimal]] = {
@@ -147,6 +145,7 @@ class TestKentE2EModelo130Q12025:
     _HEADERS: ClassVar[dict[str, str]] = dict(kent_130_headers("2025"))
 
     def _derive_casillas(self) -> dict[str, Decimal]:
+        """Run the Modelo 130 2025 ruleset over the scenario inputs."""
         ledger = Engine().derive(ruleset=RULESET_130_2025, inputs=self._INPUTS)
         derived: dict[str, Decimal] = {**self._INPUTS}
         for entry in ledger.entries:
@@ -154,8 +153,7 @@ class TestKentE2EModelo130Q12025:
         return derived
 
     def test_2025_ruleset_matches_2024_arithmetic(self) -> None:
-        """The clone contract says 2024 and 2025 rulesets compute
-        identical casilla values when fed identical inputs."""
+        """Assert the 2024 and 2025 rulesets compute identical casilla values for identical inputs."""
         ledger_2024 = Engine().derive(ruleset=RULESET_130_2024, inputs=self._INPUTS)
         ledger_2025 = Engine().derive(ruleset=RULESET_130_2025, inputs=self._INPUTS)
         derived_2024 = {e.casilla_id: e.value for e in ledger_2024.entries}
@@ -167,6 +165,7 @@ class TestKentE2EModelo130Q12025:
         )
 
     def test_2025_ruleset_to_serialised_hits_golden_sha(self) -> None:
+        """Pin the 2025 serialisation of the scenario to a fixed SHA256."""
         casillas = self._derive_casillas()
         payload = serialise(
             casilla_values=casillas,

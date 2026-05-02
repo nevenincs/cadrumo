@@ -1,4 +1,4 @@
-"""Domain errors for the :mod:`aeat.application.filing` subpackage.
+"""Domain errors for the :mod:`aeat.domain.filing` subpackage.
 
 Every exception inherits from :class:`aeat.core.errors.AeatError` so
 callers can catch the project-wide base.
@@ -10,7 +10,7 @@ from ...core.errors import AeatError
 
 
 class FilingDraftError(AeatError):
-    """Base class for every error raised inside :mod:`aeat.application.filing`."""
+    """Base class for every error raised inside :mod:`aeat.domain.filing`."""
 
 
 class FilingBuilderError(FilingDraftError):

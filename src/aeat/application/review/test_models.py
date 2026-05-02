@@ -11,7 +11,6 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ...core.i18n import Translatable
-from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
 from ...domain.invoices import (
     Invoice,
     InvoiceKind,
@@ -19,14 +18,21 @@ from ...domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.transactions import BusinessClassification, Transaction, TransactionDirection
-from ..filing import FilingFindingSeverity, FilingValidationFinding
-from ..sync import (
+from ...domain.sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceRecord,
     ModeloIdentifier,
 )
+from ...domain.transactions import (
+    BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionDirection,
+)
+from ..filing import FilingFindingSeverity, FilingValidationFinding
 from . import (
     DivergenceReviewItem,
     FindingReviewItem,

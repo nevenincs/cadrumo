@@ -1,4 +1,10 @@
-"""Unit tests for verify_declaracion (#305)."""
+"""Unit tests for :func:`aeat.application.verification.verify_declaracion`.
+
+Covers the happy-path verdict, every branch of the discrepancy
+classifier (correctness divergence, rounding, extraction-unreliable),
+the unverifiable-without-ruleset short-circuit, and JSON round-tripping
+of :class:`aeat.application.verification.VerificationVerdict`.
+"""
 
 from __future__ import annotations
 
@@ -34,7 +40,9 @@ def _build_filing(
     period: str = "2025Q1",
     ejercicio: str = "2025",
 ) -> DeclaracionFiling:
-    """Assemble a synthetic DeclaracionFiling with given casilla values."""
+    """Assemble a synthetic
+    :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling`.
+    """
     extracted = tuple(
         ExtractedCasilla(
             casilla_id=casilla_id,
@@ -78,8 +86,10 @@ def _first_quarter_2025():
 
 
 class TestVerifyHappyPath:
+    """Verdict when every printed casilla agrees with the engine output."""
+
     def test_all_literals_match_derived_reports_verified(self) -> None:
-        """When Kent's printed values satisfy the ruleset, status = VERIFIED."""
+        """Verify status is ``VERIFIED`` when printed values satisfy the ruleset."""
         # Modelo 130 ruleset for 2025Q1 computes 03 = 01 - 02, 04 = 20% of 03, 07 = max(0, 04-05-06).
         # Provide a consistent set.
         values: tuple[tuple[str, Decimal], ...] = (
@@ -99,8 +109,10 @@ class TestVerifyHappyPath:
 
 
 class TestVerifyDiscrepancyClassification:
+    """Branches of the per-discrepancy cause classifier."""
+
     def test_correctness_divergence_needs_review(self) -> None:
-        """A big delta on a ruleset casilla → CORRECTNESS_DIVERGENCE."""
+        """Verify a large delta routes to ``CORRECTNESS_DIVERGENCE``."""
         # Deliberately wrong casilla 07 — off by much more than 10 xtolerance.
         values: tuple[tuple[str, Decimal], ...] = (
             ("01", Decimal("10000.00")),
@@ -118,7 +130,7 @@ class TestVerifyDiscrepancyClassification:
         assert DiscrepancyCause.CORRECTNESS_DIVERGENCE in causes
 
     def test_rounding_delta_classified_as_rounding(self) -> None:
-        """Small delta (< 10 xtolerance) on a computed casilla → ROUNDING."""
+        """Verify a small delta (< 10x tolerance) routes to ``ROUNDING``."""
         # Casilla 03 = 01 - 02 = 6000 exactly; introduce a 0.03 delta.
         values: tuple[tuple[str, Decimal], ...] = (
             ("01", Decimal("10000.00")),
@@ -137,7 +149,7 @@ class TestVerifyDiscrepancyClassification:
         assert verdict.status in {VerificationStatus.VERIFIED, VerificationStatus.NEEDS_REVIEW}
 
     def test_extraction_warning_upgrades_to_unreliable(self) -> None:
-        """Declaration warnings on a casilla flip its discrepancy to EXTRACTION_UNRELIABLE."""
+        """Verify extractor warnings flip the cause to ``EXTRACTION_UNRELIABLE``."""
         values: tuple[tuple[str, Decimal], ...] = (
             ("01", Decimal("10000.00")),
             ("02", Decimal("4000.00")),
@@ -163,7 +175,10 @@ class TestVerifyDiscrepancyClassification:
 
 
 class TestVerifyUnverifiable:
+    """Behaviour when no ruleset is available for the filing."""
+
     def test_no_ruleset_produces_unverifiable_status(self) -> None:
+        """Verify that ``ruleset=None`` short-circuits to ``UNVERIFIABLE``."""
         filing = _build_filing(values=(("01", Decimal("0")),))
         verdict = verify_declaracion(filing, ruleset=None)
         assert verdict.status is VerificationStatus.UNVERIFIABLE
@@ -172,7 +187,12 @@ class TestVerifyUnverifiable:
 
 
 class TestVerdictJsonRoundTrip:
+    """JSON serialisation invariants for
+    :class:`aeat.application.verification.VerificationVerdict`.
+    """
+
     def test_verdict_is_json_serialisable(self) -> None:
+        """Verify a computed verdict survives ``model_dump_json`` round-trip."""
         filing = _build_filing(
             values=(
                 ("01", Decimal("100.00")),

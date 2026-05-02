@@ -1,4 +1,12 @@
-"""CSV financial provider with bank-layout-aware parsing."""
+"""CSV financial provider with bank-layout-aware parsing.
+
+Provides :class:`CsvProvider`, an implementation of
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
+Revolut layouts. Each layout is described by a frozen
+:class:`CsvBankLayout` carrying the header aliases, date-format
+hint, and decimal-separator hint the parser needs.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
@@ -30,7 +38,22 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class CsvColumnMap(BaseModel):
-    """Alias sets for one bank CSV layout."""
+    """Alias sets for one bank CSV layout.
+
+    Each tuple lists the lower-cased header strings the parser will
+    treat as equivalent for the corresponding logical column. The
+    :func:`_layout_score` helper scores a candidate header row by the
+    number of these aliases it satisfies.
+
+    Attributes:
+        booked_date: Aliases for the posting date column.
+        value_date: Aliases for the value date column.
+        amount: Aliases for the signed amount column.
+        currency: Aliases for the optional currency column.
+        description: Aliases for the free-form description column.
+        counterparty: Aliases for the optional counterparty column.
+        external_id: Aliases for the optional external transaction id.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -44,7 +67,17 @@ class CsvColumnMap(BaseModel):
 
 
 class CsvBankLayout(BaseModel):
-    """Named bank CSV layout supported by the provider."""
+    """Named bank CSV layout supported by the provider.
+
+    Attributes:
+        bank_name: Human-readable bank identifier embedded in
+            synthetic transaction ids and detection diagnostics.
+        columns: Header aliases for every logical column.
+        day_first_dates: Whether the bank prints dates in
+            ``DD/MM/YYYY`` (the European default) or ``YYYY-MM-DD``.
+        decimal_separator: Decimal separator the bank uses; ``,`` for
+            Spanish banks, ``.`` for Revolut.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -110,10 +143,19 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     CAIXABANK_LAYOUT,
     REVOLUT_LAYOUT,
 )
+"""Ordered tuple of bank layouts the CSV provider will try to match."""
 
 
 class CsvProvider(FinancialProvider):
-    """Ingest raw transactions from bank CSV exports."""
+    """Ingest raw transactions from bank CSV exports.
+
+    Detects the bank layout by scoring the first ten rows of the
+    decoded text against every entry in :data:`CSV_LAYOUTS`, then
+    streams the data rows through :func:`build_raw_transaction`. The
+    decoder honours :attr:`aeat.core.config.Settings.financial_default_csv_encoding`
+    as the preferred encoding before falling back to a fixed
+    UTF-8 / CP-1252 / ISO-8859-1 sequence.
+    """
 
     name = "CSV provider"
     supported_extensions = frozenset({".csv", ".txt"})

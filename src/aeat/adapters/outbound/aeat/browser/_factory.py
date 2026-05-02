@@ -1,14 +1,14 @@
-"""Default browser-session factory for auth providers (#285).
+"""Default browser-session factory for auth providers.
 
 Auth providers accept a ``BrowserSessionFactory`` — an async callable
-that returns a ``BrowserSessionLike``. Until this module, the only
-production wiring was the live-test fixture that manually opened a
-Playwright instance and built a :class:`BrowserSession`. That left
-``aeat auth login`` unable to run end-to-end because
-:func:`aeat.adapters.outbound.aeat.auth.select_provider` constructs providers with
-``browser_session_factory=None`` by default.
+that returns a ``BrowserSessionLike``. The default factory wires
+``aeat auth login`` end-to-end by supplying a Playwright-backed
+session, while
+:func:`aeat.adapters.outbound.aeat.auth.select_provider` continues to
+accept ``browser_session_factory=None`` so tests can inject their own
+in-process implementations.
 
-This module closes that gap by providing:
+This module provides:
 
 * :class:`DefaultBrowserSession` — a ``BrowserSessionLike`` wrapper
   that owns a ``Playwright`` instance + :class:`BrowserSession`
@@ -19,7 +19,7 @@ This module closes that gap by providing:
 
 The CLI wires this factory into ``select_provider`` so
 ``aeat auth login`` just works in production, while tests keep
-injecting their own fakes.
+injecting their own in-process implementations.
 """
 
 from __future__ import annotations

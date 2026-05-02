@@ -1,4 +1,9 @@
-"""Tests for :class:`RulesetRegistry`."""
+"""Tests for :class:`aeat.domain.formulas._registry.RulesetRegistry`.
+
+Covers full-fleet membership, period-aware ruleset resolution,
+duplicate detection, and the convenience accessors on
+:func:`aeat.domain.formulas._registry.get_registry`.
+"""
 
 from __future__ import annotations
 
@@ -38,12 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @pytest.mark.unit
 def test_registry_ships_modelo_130_and_303_rulesets() -> None:
-    """The registry contains every shipped ruleset.
-
-     (#173) added the Modelo 130 2024+2025 pair;
-    (#183) added the Modelo 303 2024+2025 pair. EPIC #305
-    extends the fleet with the Modelo 115 2025 ruleset.
-    """
+    """The registry contains every shipped ruleset."""
     registry = get_registry()
     ids = sorted(r.ruleset_id for r in registry.rulesets)
     assert ids == [
@@ -128,7 +128,7 @@ def test_resolve_180_backfill_binds_2024() -> None:
 
 @pytest.mark.unit
 def test_resolve_180_binds_2026() -> None:
-    """Issue #323: Modelo 180 resolves for 2026 annual filings."""
+    """Modelo 180 resolves for 2026 annual filings."""
     registry = get_registry()
     ruleset = registry.resolve(
         modelo=ModeloCode.MODELO_180,
@@ -139,7 +139,7 @@ def test_resolve_180_binds_2026() -> None:
 
 @pytest.mark.unit
 def test_resolve_200_binds_each_annual_year() -> None:
-    """Issue #324: Modelo 200 resolves 2024, 2025, and 2026 annual filings."""
+    """Modelo 200 resolves 2024, 2025, and 2026 annual filings."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_200,
@@ -160,7 +160,7 @@ def test_resolve_200_binds_each_annual_year() -> None:
 
 @pytest.mark.unit
 def test_resolve_111_backfill_binds_2024() -> None:
-    """/45: Modelo 111 2024 backfill resolves for 2024-period complementarias."""
+    """Modelo 111 2024 backfill resolves for 2024-period complementarias."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_111,
@@ -176,7 +176,7 @@ def test_resolve_111_backfill_binds_2024() -> None:
 
 @pytest.mark.unit
 def test_resolve_123_backfill_binds_2024() -> None:
-    """/45: Modelo 123 2024 backfill resolves for 2024-period filings."""
+    """Modelo 123 2024 backfill resolves for 2024-period filings."""
     registry = get_registry()
     ruleset_2024 = registry.resolve(
         modelo=ModeloCode.MODELO_123,
@@ -192,7 +192,7 @@ def test_resolve_123_backfill_binds_2024() -> None:
 
 @pytest.mark.unit
 def test_resolve_123_binds_2026() -> None:
-    """Issue #320: Modelo 123 resolves for 2026-period filings."""
+    """Modelo 123 resolves for 2026-period filings."""
     registry = get_registry()
     ruleset = registry.resolve(
         modelo=ModeloCode.MODELO_123,
@@ -219,12 +219,12 @@ def test_resolve_modelo_100_summary_via_variant() -> None:
 
 @pytest.mark.unit
 def test_resolve_default_variant_returns_full_form_not_summary() -> None:
-    """Issue #317: default variant resolves to the full-form ruleset.
+    """Default variant resolves to the full-form ruleset.
 
-    Default-variant lookup now binds to the full-form
-    ``modelo_100.<year>`` ruleset (landed by the M100 RENTA megaproject),
-    NOT the partial ``modelo_100.summary.2025``. The summary variant
-    remains reachable explicitly via ``variant="summary"``.
+    Default-variant lookup binds to the full-form
+    ``modelo_100.<year>`` ruleset, not the partial
+    ``modelo_100.summary.2025``. The summary variant remains reachable
+    explicitly via ``variant="summary"``.
     """
     from ._rulesets.modelo_100_2025 import RULESET as MODELO_100_2025
     from ._rulesets.modelo_100_summary_2025 import (

@@ -1,14 +1,14 @@
 """Golden-fixture byte-exactness tests for Modelo 303 2024.
 
-Pins the full 7996-byte multi-segment envelope for a known-good
-autónomo Kent filing scenario. Any schema/encoder/serialiser change
+Pin the full 7996-byte multi-segment envelope for a known-good
+autónomo filing scenario. Any schema, encoder, or serialiser change
 that shifts a single byte fails this test immediately.
 
-The SHA256 digest is the audit-trail anchor. A future wave that
-genuinely needs to change the byte layout (e.g., DR303 update for
-ejercicio 2025+ or a classifier correction) MUST update this file
-AND document the reason in the commit message. Stray byte shifts
-must never pass silently.
+The SHA256 digest is the audit-trail anchor. A change that genuinely
+needs to alter the byte layout (a DR303 update for ejercicio 2025 or
+a classifier correction, for example) must update this file AND
+document the reason in the commit message. Stray byte shifts must
+never pass silently.
 """
 
 from __future__ import annotations
@@ -46,8 +46,8 @@ class TestModelo3032024GoldenKentQ1:
         """Golden digest — DO NOT change without documented intent.
 
         A byte-layout change that alters this digest is a decision,
-        not an accident. The commit message must name which offset /
-        encoder / field changed and why.
+        not an accident. The commit message must name which offset,
+        encoder, or field changed and why.
         """
         payload = self._serialise_kent_q1()
         expected = "32ca797eee318d0565c0970ea26e1d0651f5b63355feecb8ea7654f4366500fd"
@@ -56,7 +56,7 @@ class TestModelo3032024GoldenKentQ1:
             f"byte-layout drift detected!\n"
             f"  expected SHA256: {expected}\n"
             f"  actual   SHA256: {actual}\n"
-            f"If the change is intentional (wave-Nx offset correction),\n"
+            f"If the change is intentional (offset correction),\n"
             f"update the `expected` literal above AND document the\n"
             f"reason in the commit message."
         )
@@ -66,7 +66,7 @@ class TestModelo3032024GoldenKentQ1:
         assert payload.endswith(b"\r\n")
 
     def test_envelope_opener_and_trailer(self) -> None:
-        """Envelope is bracketed by ``<T303...>`` and ``</T303...>``."""
+        """The envelope is bracketed by ``<T303...>`` and ``</T303...>``."""
         payload = self._serialise_kent_q1()
         # Opener: `<T` + `303` + `0` + `2024` + `01` + `0000>`.
         assert payload[0:2] == b"<T"

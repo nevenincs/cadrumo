@@ -1,4 +1,11 @@
-"""Tests for the governed-persistence FilingDraftRepository."""
+"""Tests for the governed-persistence :class:`FilingDraftRepository`.
+
+Exercises round-trip save/load, idempotent saves, list/iter and stray
+file filtering, deletion, the FINANCIAL classification gate, the
+unsafe-id rejection, the per-draft lock isolation, the legacy
+migration helper (including overwrite, unparseable input, and held-lock
+behaviour), and the frozen :class:`DraftMigrationSummary` record.
+"""
 
 from __future__ import annotations
 
@@ -17,13 +24,13 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from . import build_draft
 from ...domain.filing._repository import (
     DraftMigrationSummary,
     FilingDraftRepository,
     migrate_legacy_drafts_to_repository,
 )
 from ...domain.filing._schema import FilingDraft
+from . import build_draft
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -202,12 +209,12 @@ class TestUnsafeDraftIds:
 
 
 class TestPerDraftLockIsolation:
-    """Phase-1 design: per-draft locks so concurrent saves of distinct drafts
-    do not contend.
+    """Per-draft locks so concurrent saves of distinct drafts do not contend.
 
-    We assert the lock TARGETS differ. That is enough to know the
-    ``exclusive_file_lock`` calls operate on disjoint sidecars; lower-level
-    concurrency is covered by the substrate's own lock tests.
+    Asserts the lock targets differ. That is enough to know the
+    ``exclusive_file_lock`` calls operate on disjoint sidecars;
+    lower-level concurrency is covered by the substrate's own lock
+    tests.
     """
 
     def test_lock_target_per_draft(self, store_dir: Path) -> None:

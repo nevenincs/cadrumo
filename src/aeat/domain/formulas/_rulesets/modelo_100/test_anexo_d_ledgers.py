@@ -1,4 +1,13 @@
-"""Tests for M100 Anexo D ledger-derived input overlays."""
+"""Cover the Anexo D ledger-derived input overlay helper.
+
+Exercises
+:func:`aeat.domain.formulas._rulesets.modelo_100.anexo_d_ledgers.derive_anexo_d_normal_inputs`
+to confirm caller-supplied direct aggregates are preserved when no
+ledger context is provided and that
+:class:`aeat.domain.profile.assets.AmortizationLedger` and
+:class:`aeat.domain.profile.inventory.InventoryLedger` overrides win
+when supplied.
+"""
 
 from __future__ import annotations
 

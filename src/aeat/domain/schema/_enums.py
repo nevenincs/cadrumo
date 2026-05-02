@@ -13,8 +13,6 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ..casillas.models import CasillaDataType
-
 
 class SchemaSource(StrEnum):
     """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.

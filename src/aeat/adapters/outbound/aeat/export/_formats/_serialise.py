@@ -1,17 +1,21 @@
-"""Fichero-BOE serialiser reading `RECORD_SPECS` (EPIC #201 C3b,).
+"""Fichero-BOE serialiser reading ``RECORD_SPECS`` from a modelo module.
 
-Per the :doc:`fichero-BOE export ADR` the serialiser is format-generic:
-one function drives every modelo via its `RECORD_SPECS` tuple. A
-concrete modelo module supplies:
+The serialiser is format-generic: one
+:func:`serialise` drives every modelo via its
+``RECORD_SPECS`` tuple. A concrete modelo module supplies:
 
 - ``RECORD_SPECS``: the field layout (validated at import time).
-- ``RECORD_LENGTH``: content bytes (excluding CRLF terminator).
+- ``RECORD_LENGTH``: content bytes excluding the CRLF terminator.
 - ``ENCODING``: per-modelo wire encoding.
-- ``REQUIRED_HEADER_FIELDS``: field_ids the draft MUST provide.
+- ``REQUIRED_HEADER_FIELDS``: ``field_id`` values the draft MUST
+  provide.
 
-The caller passes a :class:`FilingDraft` plus a ``headers`` mapping
-for metadata fields (NIF, ejercicio, período, etc.). CRLF terminator
-ownership stays with this function; encoders do not emit line endings.
+The caller passes a :class:`aeat.application.filing.FilingDraft` plus
+a ``headers`` mapping for metadata fields (NIF, ejercicio, período,
+and so on). CRLF terminator ownership stays with this function; the
+per-field encoders in
+:mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` do
+not emit line endings.
 """
 
 from __future__ import annotations
@@ -51,26 +55,29 @@ def serialise(
     """Emit a fichero-BOE payload for one filing draft.
 
     Args:
-        casilla_values: per-casilla numeric values. Missing casillas
-            default to :class:`Decimal` zero — AEAT expects every
-            CURRENCY field filled, zero-padded when not declared.
-        headers: metadata fields (NIF, ejercicio, período, apellidos,
-            nombre, tipo_declaracion, etc.) keyed by ``field_id``.
+        casilla_values: Per-casilla numeric values. Missing casillas
+            default to :class:`decimal.Decimal` zero — AEAT expects
+            every CURRENCY field filled, zero-padded when not declared.
+        headers: Metadata fields (NIF, ejercicio, período, apellidos,
+            nombre, tipo_declaracion, ...) keyed by ``field_id``.
             Dates must be :class:`datetime.date` instances; other
-            scalar text / numeric fields are strings.
-        specs: the ordered tuple of :class:`RecordFieldSpec` entries.
-        encoding: wire encoding for the payload (typically ``"cp1252"``).
-        total_length: expected content-byte count (excluding CRLF).
+            scalar text and numeric fields are strings.
+        specs: Ordered tuple of
+            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec`
+            entries.
+        encoding: Wire encoding for the payload (typically
+            ``"cp1252"``).
+        total_length: Expected content-byte count, excluding CRLF.
         required_field_ids: ``field_id`` values the caller guarantees
             must be present in ``headers``; missing required fields
-            raise :class:`ValueError` before any bytes are emitted.
+            raise :exc:`ValueError` before any bytes are emitted.
 
     Returns:
         The ``total_length + 2`` byte payload (content + CRLF).
 
     Raises:
-        ValueError: on missing required headers, on serialised-length
-            mismatch, or from the individual encoders on overflow /
+        ValueError: On missing required headers, on serialised-length
+            mismatch, or from the individual encoders on overflow or
             non-encoding-compatible characters.
     """
     # Fail-fast on missing required headers before emitting any bytes.
@@ -156,32 +163,33 @@ def serialise_envelope(
     encoding: FicheroBoeEncoding,
     required_field_ids: frozenset[str] = frozenset(),
 ) -> bytes:
-    """Emit a multi-segment fichero-BOE envelope (EPIC #201,).
+    """Emit a multi-segment fichero-BOE envelope.
 
-    Modelo 303+ use an XML-tagged envelope of ordered segments rather
-    than a flat record. This helper serialises each segment via
-    :func:`serialise` and concatenates the results. The CRLF terminator
-    is appended ONCE at the end (AEAT expects a single terminator per
-    file, not per segment).
+    Modelo 303 (and later IVA modelos) use an XML-tagged envelope of
+    ordered segments rather than a flat record. This helper serialises
+    each segment via :func:`serialise` and concatenates the results.
+    The CRLF terminator is appended ONCE at the end — AEAT expects a
+    single terminator per file, not per segment.
 
     Args:
-        casilla_values: per-casilla values shared across every segment.
-        headers: metadata header fields shared across every segment.
+        casilla_values: Per-casilla values shared across every segment.
+        headers: Metadata header fields shared across every segment.
             Individual segments reference whichever headers they
             declare; unused headers are ignored per-segment.
-        segments: ordered tuple of :class:`SegmentSpec` to emit.
-            Callers supplying the envelope decide which optional
-            segments are present (e.g., Modelo 303 page 4 appears
-            only in exonerado-390 annual filings).
-        encoding: wire encoding shared across segments.
-        required_field_ids: fail-fast check applied ONCE at envelope
+        segments: Ordered tuple of
+            :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
+            to emit. Callers supplying the envelope decide which
+            optional segments are present (Modelo 303 page 4, for
+            example, appears only in exonerado-390 annual filings).
+        encoding: Wire encoding shared across segments.
+        required_field_ids: Fail-fast check applied ONCE at envelope
             start; individual segments do not re-check.
 
     Returns:
         The full envelope byte payload with a single trailing CRLF.
 
     Raises:
-        ValueError: same conditions as :func:`serialise`, plus any
+        ValueError: Same conditions as :func:`serialise`, plus any
             per-segment width mismatch.
     """
     # Pre-flight required headers once (not per-segment).

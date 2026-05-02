@@ -1,4 +1,10 @@
-"""Portal: Pago de autoliquidaciones con tarjeta o Bizum."""
+"""Registry entry for self-assessment payment via card or Bizum.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Pago de autoliquidaciones mediante tarjeta bancaria o Bizum.",
 )
+"""Portal entry for self-assessment payment via bank card or Bizum."""

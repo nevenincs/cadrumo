@@ -1,18 +1,16 @@
-"""Cross-validation: casilla schema ⊇ formula ruleset (#305).
+"""Cross-validation: casilla schema is a superset of the formula ruleset.
 
 Silent drift between the casilla schema (what the builder iterates) and
 the formula ruleset (what the formula engine computes) is a real
 correctness bug. The builder honours only casillas the schema knows
-about; any ruleset entry outside that set is silently orphaned — drafts
-built today for Modelo 130 are missing 6 of 9 formula casillas for
-exactly this reason.
+about; any ruleset entry outside that set is silently orphaned.
 
-This test parametrises over every ``(modelo, año)`` tuple that has both a
-schema and a ruleset, and asserts that the schema's casilla-ID set is a
-superset of the ruleset's. Phase-1 lands the test with ``xfail(strict=True)``
-markers for modelos whose corpus is known-incomplete (Modelo 130). As
-phase-2 and phase-3 flesh out the corpus, each xfail flips to xpass and
-hard-fails the build, forcing the coverage improvement to stay green.
+This module parametrises over every ``(modelo, año)`` tuple that has
+both a schema and a ruleset, asserting that the schema's casilla-ID set
+is a superset of the ruleset's. See
+:mod:`aeat.domain.formulas._rulesets` for the ruleset definitions and
+:func:`aeat.application.filing.runtime.build_runtime_schema_provider` for
+the schema source.
 """
 
 from __future__ import annotations
@@ -54,11 +52,10 @@ def test_schema_covers_every_ruleset_casilla(
     ruleset,
 ) -> None:
     """Every casilla written by the ruleset must appear in the schema."""
-    del año  # reserved for per-año schema versioning in cluster-B phase-2
+    del año  # reserved for per-año schema versioning
     schema_ids = _schema_casilla_ids(modelo)
     ruleset_ids = _ruleset_casilla_ids(ruleset)
     missing = ruleset_ids - schema_ids
     assert not missing, (
-        f"Ruleset references casillas missing from schema: {sorted(missing)}. "
-        "Schema/ruleset drift — cluster-B completion required."
+        f"Ruleset references casillas missing from schema: {sorted(missing)}. Schema/ruleset drift detected."
     )

@@ -1,4 +1,10 @@
-"""Portal: Sede Electrónica landing page."""
+"""Registry entry for the AEAT Sede Electrónica root landing page.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +27,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Página raíz de la Sede Electrónica de la AEAT.",
 )
+"""Portal entry for the Sede Electrónica root URL."""

@@ -1,7 +1,8 @@
-"""Unit tests for Modelo 100 Anexo C — capital inmobiliario (2024).
+"""Cover Modelo 100 Anexo C (capital inmobiliario) for the 2024 ejercicio.
 
-External-anchored to LIRPF arts. 22-24 + 85 with the post-Ley 12/2023
-tiered art. 23.2 reducción.
+Worked examples are externally anchored to LIRPF arts. 22-24 and 85
+including the post-Ley 12/2023 tiered art. 23.2 reducción, so the
+suite remains independent of the ruleset's own arithmetic.
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo100AnexoC:
+    """Audit Anexo C against the 2024 ruleset using LIRPF-derived anchors."""
+
     def test_consistent_arrendamiento_default_50pct(self) -> None:
         """Default tier (50 %): ingresos 12.000, gastos 3.500, amortización
         1.500 -> rendimiento neto previo 7.000; reducción 50 % = 3.500;

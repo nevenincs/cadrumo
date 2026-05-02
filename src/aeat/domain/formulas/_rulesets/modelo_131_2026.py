@@ -1,12 +1,16 @@
 """Modelo 131 ruleset covering the full 2026 fiscal year.
 
-The repository's current Modelo 131 ruleset covers the liquidación
-chain for quarterly IRPF payments under estimación objetiva: 2% on
-ventas/ingresos when no datos-base are available, the 2% agricultural
-income branch, retenciones/minoraciones, prior negatives, vivienda,
-and complementaria offsets. RIRPF art. 110 remains the operative
-source for those percentages, while Orden HAC/1425/2025 keeps the
-2026 módulos amounts and instructions aligned with Orden HAC/1347/2024.
+The Modelo 131 ruleset covers the liquidación chain for quarterly IRPF
+payments under estimación objetiva: 2 % on ventas/ingresos when no
+datos-base are available, the 2 % agricultural income branch,
+retenciones/minoraciones, prior negatives, vivienda, and complementaria
+offsets. RIRPF art. 110 remains the operative source for those
+percentages, while Orden HAC/1425/2025 keeps the 2026 módulos amounts
+and instructions aligned with Orden HAC/1347/2024.
+
+The casilla layout is re-imported from
+:mod:`aeat.domain.formulas._rulesets.modelo_131_2025` and rewrapped with
+the 2026-extended citation tuple.
 """
 
 from __future__ import annotations

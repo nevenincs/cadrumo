@@ -1,4 +1,21 @@
-"""Inventory ledgers for actividad economica stock valuation."""
+"""Inventory ledgers for actividad economica stock valuation.
+
+Defines strict pydantic v2 records for tracking opening stock,
+period movements (purchases, COGS, counts), and closing stock per
+activity / year, plus the FIFO and weighted-average (PMP / coste
+medio) valuation engines required by LIS art. 17.1. LIFO is rejected
+explicitly via :class:`aeat.domain.profile.errors.LIFOForbiddenError`.
+
+Public functions:
+    :func:`parse_valuation_method` — coerce user input into a
+    :class:`aeat.domain.formulas.ValuationMethod`, refusing LIFO.
+    :func:`compute_inventory_valuation` — value closing stock and
+    COGS for one ledger.
+    :func:`compute_inventory_variation` — signed Anexo D ``0155``
+    closing-minus-opening stock variation.
+    :func:`compute_anexo_d_inventory_variation` — per-activity
+    aggregation across multiple ledgers.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +29,8 @@ from ...formulas import ValuationMethod
 from ..errors import InventoryLedgerError, LIFOForbiddenError
 
 SCHEMA_VERSION = "1"
+"""Forward-compatible schema version stamped onto every record in this module."""
+
 _CENT = Decimal("0.01")
 _ZERO = Decimal("0.00")
 _ONE = Decimal("1")
@@ -19,7 +38,15 @@ _HUNDRED = Decimal("100")
 
 
 class MovementKind(StrEnum):
-    """Supported inventory movement kinds."""
+    """Supported inventory movement kinds.
+
+    Attributes:
+        OPENING: Stock present at the start of the period.
+        PURCHASE: Inbound inventory acquisition.
+        COGS: Cost-of-goods-sold consumption.
+        COUNT: Adjustment to the physical count, modelled as a
+            synthetic COGS movement against the discrepancy.
+    """
 
     OPENING = "opening"
     PURCHASE = "purchase"
@@ -28,7 +55,24 @@ class MovementKind(StrEnum):
 
 
 class MovementRecord(BaseModel):
-    """One inventory movement for an activity/year."""
+    """One inventory movement for an activity/year.
+
+    Attributes:
+        movement_id: Stable natural key for the movement.
+        movement_date: Date the movement applies on.
+        kind: :class:`MovementKind`.
+        sku: SKU / item identifier; defaults to ``"default"`` for
+            single-SKU ledgers.
+        quantity: Movement quantity (strictly positive).
+        unit_cost: VAT-exclusive per-unit cost.
+        taxable_base: Invoice taxable base (VAT-exclusive).
+        vat_rate: VAT rate percentage (0-100).
+        vat_amount: Optional explicit VAT amount; when set must equal
+            ``taxable_base * vat_rate / 100``.
+        deductible_vat_ratio: Fraction of input VAT the contribuyente
+            may deduct (0-1).
+        schema_version: Forward-compatible schema version. ``"1"``.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -47,7 +91,6 @@ class MovementRecord(BaseModel):
     @property
     def value(self) -> Decimal:
         """Return the VAT-exclusive movement value."""
-
         if self.taxable_base is not None:
             return self.taxable_base
         if self.unit_cost is None:
@@ -56,8 +99,7 @@ class MovementRecord(BaseModel):
 
     @property
     def resolved_unit_cost(self) -> Decimal:
-        """Return the VAT-exclusive unit cost."""
-
+        """Return the VAT-exclusive unit cost, falling back to ``taxable_base / quantity``."""
         if self.unit_cost is not None:
             return self.unit_cost
         if self.taxable_base is None:
@@ -67,12 +109,14 @@ class MovementRecord(BaseModel):
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
+        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
             raise ValueError(f"unsupported MovementRecord schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
     def _validate_movement_amounts(self) -> MovementRecord:
+        """Enforce that opening / purchase movements carry a cost and VAT decomposes consistently."""
         needs_cost = self.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
             raise ValueError("opening and purchase movements require unit_cost or taxable_base")
@@ -84,7 +128,16 @@ class MovementRecord(BaseModel):
 
 
 class StockLayer(BaseModel):
-    """Remaining inventory quantity at one VAT-exclusive unit cost."""
+    """Remaining inventory quantity at one VAT-exclusive unit cost.
+
+    Attributes:
+        sku: SKU / item identifier.
+        quantity: Layer quantity (strictly positive).
+        unit_cost: Per-unit cost the layer was acquired at.
+        source_movement_id: Stable id of the originating
+            :class:`MovementRecord` (or a synthetic id for opening
+            stock and weighted-average pools).
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -95,7 +148,22 @@ class StockLayer(BaseModel):
 
 
 class InventoryLedger(BaseModel):
-    """Per-activity inventory ledger for one tax year."""
+    """Per-activity inventory ledger for one tax year.
+
+    Attributes:
+        actividad_id: Activity identifier the ledger is keyed by.
+        year: Calendar year the ledger covers.
+        valuation_method: :class:`aeat.domain.formulas.ValuationMethod`
+            (FIFO, PMP, or coste medio; LIFO is forbidden).
+        opening_stock: Aggregate VAT-exclusive opening valuation.
+        opening_layers: Per-layer breakdown of opening stock; when
+            non-empty must value-balance with ``opening_stock``.
+        closing_stock: Optional explicit closing valuation; when
+            ``None`` it is derived from movements at compute time.
+        period_movements: Tuple of :class:`MovementRecord` rows
+            covering the period.
+        schema_version: Forward-compatible schema version. ``"1"``.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -111,19 +179,26 @@ class InventoryLedger(BaseModel):
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
+        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
             raise ValueError(f"unsupported InventoryLedger schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
     def _opening_stock_matches_layers(self) -> InventoryLedger:
+        """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
         if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
             raise ValueError("opening_stock must equal the value of opening_layers")
         return self
 
 
 class InventoryLedgerDocument(BaseModel):
-    """JSON document containing inventory ledgers."""
+    """JSON document containing inventory ledgers.
+
+    Attributes:
+        schema_version: Forward-compatible schema version. ``"1"``.
+        ledgers: Tuple of :class:`InventoryLedger` rows.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -133,14 +208,25 @@ class InventoryLedgerDocument(BaseModel):
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
+        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
             raise ValueError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
         return value
 
 
 def parse_valuation_method(raw: str) -> ValuationMethod:
-    """Parse a user-supplied valuation method and refuse LIFO explicitly."""
+    """Parse a user-supplied valuation method and refuse LIFO explicitly.
 
+    Args:
+        raw: User input (case- and separator-insensitive).
+
+    Returns:
+        The matching :class:`aeat.domain.formulas.ValuationMethod` member.
+
+    Raises:
+        LIFOForbiddenError: When the input normalises to ``"lifo"``.
+        InventoryLedgerError: When the input matches no known method.
+    """
     normalized = raw.strip().lower().replace("-", "_")
     if normalized == "lifo":
         raise LIFOForbiddenError(raw)
@@ -156,13 +242,18 @@ def parse_valuation_method(raw: str) -> ValuationMethod:
 def compute_inventory_variation(ledger: InventoryLedger, year: int) -> Decimal:
     """Compute signed Anexo D inventory variation for a ledger.
 
-    Returns closing stock minus opening stock for `0155`. If closing stock is
-    not supplied, it is derived from opening stock plus signed movement values.
-    Method-specific layer valuation is intentionally left to the continuation
-    persistence and UX audit because this v1 model does not store opening
-    quantities or stock layers.
-    """
+    Returns closing stock minus opening stock for casilla ``0155``. If
+    ``closing_stock`` is not supplied, it is derived via
+    :func:`compute_inventory_valuation`.
 
+    Args:
+        ledger: Ledger to evaluate.
+        year: Period year. The ledger is skipped when its ``year``
+            does not match.
+
+    Returns:
+        Signed closing-minus-opening valuation, quantised to cents.
+    """
     if ledger.year != year:
         return _ZERO
     closing = ledger.closing_stock
@@ -172,7 +263,16 @@ def compute_inventory_variation(ledger: InventoryLedger, year: int) -> Decimal:
 
 
 class InventoryValuationResult(BaseModel):
-    """Computed valuation outcome for an inventory ledger."""
+    """Computed valuation outcome for an inventory ledger.
+
+    Attributes:
+        closing_layers: Tuple of :class:`StockLayer` rows surviving
+            after period movements were applied.
+        closing_value: Aggregate closing valuation.
+        cogs_value: Cost-of-goods-sold for the period.
+        purchase_value: Aggregate value of PURCHASE movements during
+            the period.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -188,8 +288,17 @@ def compute_anexo_d_inventory_variation(
     *,
     ledgers: tuple[InventoryLedger, ...] = (),
 ) -> Decimal:
-    """Compute Anexo D normal casilla `0155` for one activity."""
+    """Compute Anexo D normal casilla ``0155`` for one activity.
 
+    Args:
+        year: Calendar year being filed.
+        actividad: Activity identifier to filter ledgers by.
+        ledgers: Ledgers to aggregate over.
+
+    Returns:
+        Sum of :func:`compute_inventory_variation` across matching
+        ledgers, quantised to cents.
+    """
     total = _ZERO
     for ledger in ledgers:
         if ledger.actividad_id == actividad:
@@ -198,8 +307,23 @@ def compute_anexo_d_inventory_variation(
 
 
 def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationResult:
-    """Value closing stock and COGS using the ledger's valuation method."""
+    """Value closing stock and COGS using the ledger's valuation method.
 
+    Dispatches to the FIFO or weighted-average implementation per
+    :attr:`InventoryLedger.valuation_method`.
+
+    Args:
+        ledger: Ledger to value.
+
+    Returns:
+        :class:`InventoryValuationResult` carrying the closing layers,
+        closing valuation, COGS, and purchase totals.
+
+    Raises:
+        InventoryLedgerError: When ``valuation_method`` is not
+            supported (defence-in-depth — should be unreachable as
+            LIFO is rejected at parse time).
+    """
     if ledger.valuation_method is ValuationMethod.FIFO:
         return _compute_fifo(ledger)
     if ledger.valuation_method in {ValuationMethod.PMP, ValuationMethod.COSTE_MEDIO}:

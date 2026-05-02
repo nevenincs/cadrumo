@@ -1,8 +1,11 @@
 """Modelo 100 (RENTA / IRPF anual) full-form ruleset — ejercicio 2025.
 
-Default-variant slot (`modelo_100.2025`) coexisting with the existing
-`modelo_100.summary.2025`. The aggregator composes the per-anexo
-modules from the `modelo_100/` sub-package into one `Ruleset` covering:
+Default-variant slot (``modelo_100.2025``) coexisting with the
+``modelo_100.summary.2025`` partial in
+:mod:`aeat.domain.formulas._rulesets.modelo_100_summary_2025`. The
+aggregator composes the per-anexo modules from
+:mod:`aeat.domain.formulas._rulesets.modelo_100` into one
+:class:`aeat.domain.formulas._ruleset.Ruleset` covering:
 
 - Anexo B1 — rendimientos del trabajo (LIRPF arts. 17-20)
 - Anexo B2 — capital mobiliario (LIRPF arts. 25-26 + 101.4)
@@ -16,9 +19,9 @@ modules from the `modelo_100/` sub-package into one `Ruleset` covering:
   tarifa estatal del ahorro + Ceuta/Melilla 60 % (LIRPF arts. 63-79)
 - Anexo Ñ — deducciones autonómicas (LIRPF art. 46 bis + 73-77)
 
-The 2024 / 2025 / 2026 rulesets share casillas + citations via re-
-import from the 2025 canonical anexo modules; only year-scoped
-formula IDs and effective dates are per-year specific.
+The 2024 / 2025 / 2026 rulesets share casillas + citations via
+re-import from the 2025 canonical anexo modules; only year-scoped
+formula identifiers and effective dates are per-year specific.
 """
 
 from __future__ import annotations
@@ -106,3 +109,9 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
+"""Aggregated Modelo 100 ruleset for ejercicio 2025.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` composed from the
+per-anexo modules of :mod:`aeat.domain.formulas._rulesets.modelo_100`,
+re-exported as :data:`aeat.domain.formulas._rulesets.MODELO_100_2025`.
+"""

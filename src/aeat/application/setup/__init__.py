@@ -1,12 +1,26 @@
-"""First-run interactive setup wizard (#61).
+"""First-run interactive setup wizard.
 
-This subpackage ships ``aeat setup``, the on-ramp a fresh Spanish
-autónomo runs after ``just bootstrap`` to produce a valid
-``env/.env`` and an :class:`aeat.domain.deadlines.AutonomoProfile` JSON
-file, without ever writing a certificate password to disk.
+Ships ``aeat setup``, the on-ramp a fresh Spanish autónomo runs after
+``just bootstrap`` to produce a valid ``env/.env`` and an
+:class:`aeat.domain.deadlines.AutonomoProfile` JSON file — without
+ever writing a certificate password to disk.
 
 Callers outside the subpackage import only from this module, honouring
-the project's public-API-discipline rule.
+the project's public-API-discipline rule. Key entry points:
+
+* :class:`SetupWizard` — orchestrates the linear setup flow.
+* :class:`Verifier` — pure post-write verification step.
+* :class:`SetupAnswers`, :class:`SetupResult`, :class:`SetupStep`,
+  :class:`SetupOutcome`, :class:`VerifyFinding`,
+  :class:`VerifySeverity` — strict pydantic v2 records / enums for
+  cross-boundary state.
+* :class:`Prompter`, :class:`FirstRunRunner` — Protocol surfaces the
+  wizard delegates to.
+* :class:`QueuedPrompter`, :class:`TyperPrompter` — concrete
+  prompter implementations.
+* :func:`write_env_file`, :func:`write_profile_file`,
+  :func:`load_profile_envelope`, :func:`load_answers_from_file`,
+  :func:`owned_env_keys` — file-system helpers.
 """
 
 from __future__ import annotations

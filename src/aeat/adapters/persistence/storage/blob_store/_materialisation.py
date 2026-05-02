@@ -34,9 +34,9 @@ from threading import Lock
 from typing import TYPE_CHECKING
 
 from .....core.logging import get_logger
-from ._blob_store import EncryptedBlobStore
 from ..master_key._master_key import get_master_key_provider
 from ..secret_store._secret_store import SecretStore
+from ._blob_store import EncryptedBlobStore
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -52,7 +52,7 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
     The first call constructs the store from the resolved
     :class:`Settings`; subsequent calls return the same instance.
     Tests should call :func:`override_secret_store` to inject a
-    deterministic stub.
+    deterministic implementation.
 
     Args:
         settings: Optional pre-built settings instance. When ``None``,

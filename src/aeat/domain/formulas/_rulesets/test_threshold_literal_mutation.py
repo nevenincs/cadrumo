@@ -1,21 +1,26 @@
-"""Threshold-literal mutation harness (issue #457 strict-audit closure).
+"""Threshold-literal mutation harness.
 
-Closes the gap surfaced by the strict-review audit: ~120
-:class:`Literal` nodes across the landed rulesets are operands of
-:class:`SubFormula`, :class:`MinFormula`, :class:`MaxFormula`,
-:class:`AddFormula`, :class:`RoundFormula`, or
-:class:`ClampPositiveFormula` — bracket boundaries (e.g. M100 0540's
-12450 / 20200 / 35200 / 60000 / 300000), LIRPF art. 20 piecewise
-thresholds (14852 / 17673.52 / 7302 / 2364.34), IVA rate constants
-(M303 02/05/08 = 4 / 10 / 21), additive-padding zeros, etc. A typo in
-any of these silently miscalculates tax for taxpayers near the
-boundary.
+Approximately 120
+:class:`aeat.domain.formulas._formula.Literal` nodes across the landed
+rulesets are operands of
+:class:`aeat.domain.formulas._formula.SubFormula`,
+:class:`aeat.domain.formulas._formula.MinFormula`,
+:class:`aeat.domain.formulas._formula.MaxFormula`,
+:class:`aeat.domain.formulas._formula.AddFormula`,
+:class:`aeat.domain.formulas._formula.RoundFormula`, or
+:class:`aeat.domain.formulas._formula.ClampPositiveFormula` — bracket
+boundaries (e.g. M100 0540's 12450 / 20200 / 35200 / 60000 / 300000),
+LIRPF art. 20 piecewise thresholds (14852 / 17673.52 / 7302 / 2364.34),
+IVA rate constants (M303 02/05/08 = 4 / 10 / 21), additive-padding
+zeros, and so on. A typo in any of these silently miscalculates tax for
+taxpayers near the boundary.
 
 The mutator shifts the literal by ±1 € and asserts the audit surfaces
 a discrepancy on the casilla. Architectural identities — ``Max(0, X)``
 or ``Min(0, X)`` with ``X > 0`` — are filtered by
-:func:`is_additive_identity_literal` (any small mutation has no
-observable effect because the identity literal is dominated).
+:func:`aeat.domain.formulas._rulesets._mutators.is_additive_identity_literal`
+(any small mutation has no observable effect because the identity
+literal is dominated).
 """
 
 from __future__ import annotations

@@ -61,9 +61,14 @@ The vocabulary is locked by [ADR `pdf-taxonomy`](../../.vault/adr/2026-04-21-pdf
 | datos fiscales | ❌ (inputs, not outputs) | ❌ | — (not an import source) |
 | datos personales | ❌ | ❌ | — (identity, not filing data) |
 
-## Why we keep the Spanish module names
+## Why we keep the Spanish package names
 
-Per project mandate, Spanish is the authoritative AEAT terminology baseline. Module names mirror the Spanish originals: `aeat.justificante`, `aeat.declaracion`, `aeat.borrador`, `aeat.predeclaracion`. No anglicisation of concepts that AEAT itself names. CLI flags follow the same rule.
+Per project mandate, Spanish is the authoritative AEAT terminology baseline.
+Package names mirror the Spanish originals inside their architectural layer:
+`aeat.adapters.inbound.justificante`, `aeat.adapters.inbound.declaracion`,
+`aeat.adapters.inbound.borrador`, and future predeclaración support under
+`aeat.adapters.inbound`. No anglicisation of concepts that AEAT itself names.
+CLI flags follow the same rule.
 
 ## See also
 

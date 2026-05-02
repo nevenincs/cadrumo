@@ -1,8 +1,13 @@
-"""Modelo 100 Anexo G — cuotas + tarifas + deducciones estatales (2026).
+"""Define the Modelo 100 Anexo G ruleset for the 2026 ejercicio.
 
-Ejercicio 2026 inherits the 2025 numerical surface for both tarifa
-estatal general (LIRPF art. 63) and tarifa estatal del ahorro (art.
-66 post Ley 7/2024) per BOE consolidated text consult 2026-02-28.
+Ejercicio 2026 inherits the 2025 numerical surface for both the tarifa
+estatal general (LIRPF art. 63) and the tarifa estatal del ahorro
+(art. 66 post Ley 7/2024) per the consolidated BOE text. This module
+re-exports the 2025 :data:`CASILLAS`, :data:`CITATIONS`, the two
+tarifa tables, and the :func:`progressive_tarifa` AST builder from
+:mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_g_2025`, and
+only redeclares the year-scoped :data:`FORMULAS` and effective-date
+constants.
 """
 
 from __future__ import annotations
@@ -27,7 +32,10 @@ from .anexo_g_2025 import (
 )
 
 EFFECTIVE_FROM = date(2026, 1, 1)
+"""First day of the ejercicio in which this Anexo G ruleset applies."""
+
 EFFECTIVE_TO = date(2026, 12, 31)
+"""Last day of the ejercicio in which this Anexo G ruleset applies."""
 
 
 _CUOTA_TARIFA_BLG_BODY = progressive_tarifa(ref("0545"), TARIFA_ESTATAL_GENERAL_2025)
@@ -91,9 +99,11 @@ FORMULAS = (
         ),
     ),
 )
+"""Engine formula bindings for the 2026 Anexo G computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo G declares no parametric tables."""
 
 
 __all__ = [

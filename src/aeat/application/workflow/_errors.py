@@ -1,11 +1,11 @@
 """Exception hierarchy for :mod:`aeat.application.workflow`.
 
-All workflow errors inherit from :class:`aeat.core.errors.AeatError` per the
-project-wide error-hierarchy rule. The engine's *default* path never
+All workflow errors inherit from :class:`aeat.core.errors.AeatError` per
+the project-wide error-hierarchy rule. The engine's default path never
 raises :class:`WorkflowAbortedError`: aborts are first-class outcomes
-encoded in the returned :class:`aeat.application.workflow.WorkflowResult`. Callers
-who want exception-on-abort behaviour opt in by inspecting the result
-themselves.
+encoded in the returned
+:class:`aeat.application.workflow.WorkflowResult`. Callers who want
+exception-on-abort behaviour opt in by inspecting the result themselves.
 """
 
 from __future__ import annotations

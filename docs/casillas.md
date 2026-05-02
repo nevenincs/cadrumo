@@ -30,19 +30,19 @@ The default corpus root is `PROJECT_ROOT / "corpus" / "casillas"`. It is configu
 - `AEAT_CASILLAS_ROOT`
 - `AEAT_CASILLAS_REVIEW_REQUIRED`
 
-Both live in `src/aeat/config.py` and are mirrored in `env/.env.example`.
+Both live in `src/aeat/core/config.py` and are mirrored in `env/.env.example`.
 
 ## Package Surface
 
-The public casillas API lives in `aeat.casillas`. Callers should import from `aeat.casillas`, not internal modules.
+The public casillas API lives in `aeat.domain.casillas`. Callers should import from `aeat.domain.casillas`, not internal modules.
 
 Relevant surfaces:
 
-- `src/aeat/casillas/__init__.py`: public package surface
-- `src/aeat/casillas/models.py`: canonical models and invariants
-- `src/aeat/casillas/catalogue.py`: loader, verifier, canonical path resolution, and canonical persistence
-- `src/aeat/cli/casillas.py`: `aeat casillas ...` subcommands
-- `src/aeat/cli/__init__.py`: root CLI wiring
+- `src/aeat/domain/casillas/__init__.py`: public package surface
+- `src/aeat/domain/casillas/models.py`: canonical models and invariants
+- `src/aeat/domain/casillas/catalogue.py`: loader, verifier, canonical path resolution, and canonical persistence
+- `src/aeat/entrypoints/cli/casillas.py`: `aeat casillas ...` subcommands
+- `src/aeat/entrypoints/cli/__init__.py`: root CLI wiring
 
 ## Bootstrap
 
@@ -60,7 +60,7 @@ gh issue view 23 --json number,title,body,comments
 
 ## Adding A New Modelo
 
-Supported modelos are currently hardcoded in `KNOWN_MODELO_IDS` inside `src/aeat/casillas/models.py`.
+Supported modelos are currently hardcoded in `KNOWN_MODELO_IDS` inside `src/aeat/domain/casillas/models.py`.
 
 If you add a new modelo, update that set first. Otherwise the new catalogue will fail model validation before it reaches verification.
 
@@ -147,12 +147,12 @@ JSON yourself at the canonical path.
 
 ## Creating A New Canonical Catalogue
 
-1. Add the modelo identifier to `KNOWN_MODELO_IDS` in `src/aeat/casillas/models.py`.
+1. Add the modelo identifier to `KNOWN_MODELO_IDS` in `src/aeat/domain/casillas/models.py`.
 2. Create `corpus/casillas/<modelo.lower()>/<period>.json`.
 3. Ensure every record has:
    - `synthetic: false`
-   - trilingual `label`
-   - trilingual `help`
+   - quadlingual `label`
+   - quadlingual `help`
    - `source_manual_url`
    - `definition_reviewed_by`
    - `definition_reviewed_at`
@@ -212,8 +212,8 @@ Use the checked-in catalogues as references for shape and path conventions:
 
 ## Known Caveats
 
-- Issue `#23` originally described `src/aeat/schema/casillas.py`, but the implemented package lives under `src/aeat/casillas/`. The codebase path is authoritative.
-- Persisted formula and validation payloads currently use Pydantic stand-ins (`FormulaReference`, `ValidationRuleReference`) while broader future-facing stubs live in `src/aeat/casillas/_protocols.py`.
+- Historical note: issue `#23` originally described `src/aeat/domain/schema/casillas.py`. The active canonical home is `src/aeat/domain/casillas/`.
+- Persisted formula and validation payloads currently use Pydantic stand-ins (`FormulaReference`, `ValidationRuleReference`) while broader future-facing protocols live under the domain casillas package.
 - The issue text expects live extract/translate tests against a real LLM provider. Current live tests stay skipped until the real issue-21 client surface lands.
 - The issue text mentions glossary constraints. Current verification enforces authoritative Spanish text, but there is no separate glossary-specific verifier yet.
 - Current code uses `AEAT_LIVE_TESTS_ENABLED=true`, not `AEAT_LIVE_TESTS=1`.

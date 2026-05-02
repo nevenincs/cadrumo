@@ -9,13 +9,10 @@ micropyme/pyme rate boxes introduced by Orden HAC/262/2025.
 Legal base: Orden HFP/227/2017 (BOE-A-2017-2778); modified by Orden
 HFP/312/2023 and Orden HAC/262/2025 (BOE-A-2025-5407).
 
-casilla 34 "Cantidad a ingresar (mayor de claves
-[32] y [33])" is VERIFIED real on the 2025 form per BOE-A-2025-5407
-Anexo I pág. 36465 (liquidación block 4). An earlier audit stream
-wrongly claimed the liquidación terminates at casilla 33 — the
-research resolved against primary source, confirmed by the
-`Ingreso (8)` block on the same page which references ``Importe
-(casilla [34] ó [03])``.
+Casilla 34 ("Cantidad a ingresar — mayor de claves [32] y [33]") is
+verified against the 2025 form per BOE-A-2025-5407 Anexo I pág. 36465
+(liquidación block 4) and the ``Ingreso (8)`` block on the same page
+which references ``Importe (casilla [34] ó [03])``.
 """
 
 from __future__ import annotations
@@ -27,7 +24,16 @@ from .._schema import TemplateRevision
 
 
 class Modelo202V2025Extractor(GenericDeclaracionExtractor):
-    """Concrete extractor for Modelo 202 tax year 2025."""
+    """Concrete extractor for Modelo 202 tax year 2025.
+
+    Owns the nine-casilla liquidación map covering the base, tipo,
+    cuota íntegra, bonificaciones, retenciones, prior-period payments,
+    resultado, mínimo, and the final cantidad a ingresar.
+
+    Attributes:
+        template_revision: Pinned to ``("202", 2025, "2025.01")``.
+        casilla_ids: Tuple of every casilla parsed by the extractor.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="202",

@@ -1,4 +1,12 @@
-"""XLSX financial provider with header-row detection."""
+"""XLSX financial provider with header-row detection.
+
+Implements :class:`XlsxProvider`, an
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+backed by ``openpyxl``. Reuses the bank-layout catalogue and scoring
+helpers from :mod:`aeat.adapters.inbound.financial.providers._csv` so
+the same alias rules apply to spreadsheet exports as to the
+matching CSV downloads.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +18,7 @@ from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
@@ -35,14 +43,30 @@ from ._csv import (
 
 
 class XlsxProvider(FinancialProvider):
-    """Ingest raw transactions from `.xlsx` bank statement exports."""
+    """Ingest raw transactions from ``.xlsx`` bank statement exports.
+
+    Iterates every worksheet, scoring the first ten rows of each
+    against :data:`aeat.adapters.inbound.financial.providers._csv.CSV_LAYOUTS`
+    and selecting the worksheet/row pair with the highest match
+    score. Numeric and date cell values are read directly from the
+    cell types (rather than coerced through their printed strings)
+    so locale-formatted ``Decimal`` and ``date`` parsing stays
+    accurate.
+
+    Attributes:
+        _last_sheet_name: Name of the worksheet selected by the most
+            recent :meth:`_locate_sheet` call; surfaced via
+            ``ProviderValidation.detected_dialect``.
+        _last_header_index: 1-based index of the header row in that
+            worksheet.
+    """
 
     name = "XLSX provider"
     supported_extensions = frozenset({".xlsx"})
     source_format = SourceFormat.XLSX
 
     def __init__(self) -> None:
-        """Initialize validation metadata placeholders."""
+        """Initialise the validation metadata placeholders."""
         self._last_sheet_name = "Sheet1"
         self._last_header_index = 1
 

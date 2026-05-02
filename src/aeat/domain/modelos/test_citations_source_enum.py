@@ -1,20 +1,18 @@
-"""Closed-catalogue tests for :class:`LegalCitationSource` (#339).
+"""Closed-catalogue tests for :class:`LegalCitationSource`.
 
-The issue mandates that ``LegalCitation.source`` be constrained to a
-recognised enum value with no freeform strings. The existing
-:class:`LegalCitationSource` :class:`enum.StrEnum` already satisfies
-this contract — these tests serve as living documentation of the
-constraint and a regression guard against any future widening of the
-field type to ``str``.
+Locks the contract that
+:attr:`aeat.domain.modelos._citations.LegalCitation.source` is constrained
+to recognised :class:`enum.StrEnum` members with no freeform strings.
+These tests are living documentation of the constraint and a
+regression guard against any future widening of the field type to
+``str``.
 
-The handover prompt's proposed catalogue (BOE / RD / Orden / Directiva
-UE / LIRPF / LIVA / LIS / RIRPF / RIVA / RIS / LGT) conflates source-
-kind (BOE, RD, Orden, Directiva UE) with individual norms (LIRPF, LIVA,
-LIS, …). The shipped enum uses the source-kind axis: an LIRPF citation
-is ``(source=LEY, article="99")``; a RIRPF citation is
-``(source=REGLAMENTO, article="110")``. ``DIRECTIVA_UE`` is not a
-member because zero landed rulesets cite an EU directive directly —
-adding it now would be premature.
+The shipped enum uses the source-kind axis (BOE, Real Decreto, Orden
+Ministerial, Reglamento, Manual Práctico) rather than per-norm
+identifiers: an LIRPF citation is ``(source=LEY, article="99")``; a
+RIRPF citation is ``(source=REGLAMENTO, article="110")``.
+``DIRECTIVA_UE`` is intentionally absent because no landed ruleset
+cites an EU directive directly — adding it now would be premature.
 """
 
 from __future__ import annotations
@@ -81,11 +79,11 @@ def test_freeform_string_source_rejected() -> None:
 def test_string_canonical_value_rejected_in_strict_mode() -> None:
     """A canonical enum-value string is still rejected in strict mode.
 
-    :class:`LegalCitation` is declared ``strict=True``, so even a
-    string that exactly matches an enum member's canonical value
-    (``"ley"`` vs :data:`LegalCitationSource.LEY`) is refused. This
-    is the tightest constraint available — only true enum instances
-    pass — and is the behaviour locked by the modelo-inventory ADR.
+    :class:`aeat.domain.modelos._citations.LegalCitation` is declared
+    ``strict=True``, so even a string that exactly matches an enum
+    member's canonical value (``"ley"`` vs
+    :data:`LegalCitationSource.LEY`) is refused. This is the tightest
+    constraint available — only true enum instances pass.
     """
     with pytest.raises(ValidationError):
         _build("ley")

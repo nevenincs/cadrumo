@@ -1,4 +1,4 @@
-"""Tests for the fichero-BOE serialiser (EPIC #201 C3b,)."""
+"""Tests for the fichero-BOE serialiser against the Modelo 130 2024 schema."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 def _base_headers() -> dict[str, str]:
-    """Minimal valid headers for Modelo 130 serialisation."""
+    """Return a minimal valid header dict for Modelo 130 serialisation."""
     return {
         "EJERCICIO": "2024",
         "PERIODO": "1T",
@@ -30,7 +30,7 @@ def _base_headers() -> dict[str, str]:
 
 
 def _base_casillas() -> dict[str, Decimal]:
-    """Positive-result Q1 filing."""
+    """Return a fully-populated positive-result Q1 casilla dict."""
     return {
         "01": Decimal("10000.00"),
         "02": Decimal("3000.00"),
@@ -55,8 +55,10 @@ def _base_casillas() -> dict[str, Decimal]:
 
 
 class TestSerialiseModelo1302024:
+    """Byte-level expectations for :func:`serialise` against the 2024 schema."""
+
     def test_total_output_is_content_plus_crlf(self) -> None:
-        """Output is RECORD_LENGTH + 2 bytes (CRLF terminator)."""
+        """Assert output length equals ``RECORD_LENGTH + 2`` (content + CRLF terminator)."""
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
@@ -69,6 +71,7 @@ class TestSerialiseModelo1302024:
         assert result.endswith(b"\r\n")
 
     def test_header_bytes_are_canonical(self) -> None:
+        """Assert canonical header byte positions (MODELO, PAGINA, TIPO, NIF, EJERCICIO, PERIODO)."""
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
@@ -91,7 +94,7 @@ class TestSerialiseModelo1302024:
         assert result[74:76] == b"1T"
 
     def test_casilla_01_bytes(self) -> None:
-        """INGRESOS_COMPUTABLES at positions 77-89; Decimal 10000.00 → 13 zero-padded cents."""
+        """Assert ``INGRESOS_COMPUTABLES`` (positions 77-89) renders ``Decimal("10000.00")`` as 13 zero-padded cents."""
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
@@ -104,7 +107,7 @@ class TestSerialiseModelo1302024:
         assert result[76:89] == b"0000001000000"
 
     def test_apellidos_space_padded(self) -> None:
-        """APELLIDOS is left-justified, space-padded to 30 bytes."""
+        """Assert ``APELLIDOS`` is left-justified and space-padded to 30 bytes."""
         result = serialise(
             casilla_values=_base_casillas(),
             headers=_base_headers(),
@@ -117,6 +120,7 @@ class TestSerialiseModelo1302024:
         assert result[25:55] == b"DOE RODRIGUEZ                 "
 
     def test_missing_nif_raises(self) -> None:
+        """Assert serialisation raises :exc:`ValueError` when ``NIF_DECLARANTE`` is absent."""
         headers = _base_headers()
         del headers["NIF_DECLARANTE"]
         with pytest.raises(ValueError, match="NIF_DECLARANTE"):
@@ -130,6 +134,7 @@ class TestSerialiseModelo1302024:
             )
 
     def test_empty_required_raises(self) -> None:
+        """Assert serialisation raises :exc:`ValueError` when a required header is empty."""
         headers = _base_headers()
         headers["EJERCICIO"] = ""
         with pytest.raises(ValueError, match="EJERCICIO"):
@@ -143,8 +148,10 @@ class TestSerialiseModelo1302024:
             )
 
     def test_missing_casilla_defaults_to_zero(self) -> None:
-        """Absent casilla → 13-byte zero-padded. AEAT expects every
-        CURRENCY slot filled."""
+        """Assert an absent casilla renders as a 13-byte zero-padded slot.
+
+        AEAT expects every CURRENCY slot to be present on the wire.
+        """
         sparse = {"01": Decimal("500.00")}  # only casilla 01 provided
         result = serialise(
             casilla_values=sparse,
@@ -160,9 +167,12 @@ class TestSerialiseModelo1302024:
         assert result[76:89] == b"0000000050000"
 
     def test_negative_tipo_n_filing(self) -> None:
-        """Negative-result filing: TIPO_DECLARACION='N', casilla 19 could be
-        negative via casilla 15/18 offsets — but in BOE the MAGNITUDE is
-        unsigned and the TIPO flag encodes the sign."""
+        """Assert default ``signed=False`` rejects negative magnitudes for ``TIPO_DECLARACION='N'``.
+
+        On the BOE wire the magnitude is unsigned and the
+        ``TIPO_DECLARACION`` flag encodes the sign; the caller must
+        wire the SIGNO/TIPO flag flip explicitly.
+        """
         headers = _base_headers()
         headers["TIPO_DECLARACION"] = "N"
         casillas = _base_casillas()
@@ -182,7 +192,7 @@ class TestSerialiseModelo1302024:
             )
 
     def test_all_zero_filing_is_well_formed(self) -> None:
-        """A zero-value filing still emits a well-formed 880-byte record."""
+        """Assert a zero-value filing still emits a well-formed 880-byte record."""
         zeros = {f"{i:02d}": Decimal("0.00") for i in range(1, 20)}
         result = serialise(
             casilla_values=zeros,

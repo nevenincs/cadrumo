@@ -1,22 +1,21 @@
 """Closed-table VAT classification (issuer / customer / kind / direction).
 
-Layered on top of the :mod:`aeat.domain.vat` substrate
-(`VATCategory` enum, `VATRate` records, `lookup_rate`), this
-module adds the missing classification axes so a transaction can
-be tagged deterministically based on the parties' tax residency,
-the customer's VAT-status, the transaction kind, and the invoice
-direction.
+Layered on top of the :mod:`aeat.domain.vat` substrate (the
+:class:`aeat.domain.vat.VATCategory` enum, :class:`aeat.domain.vat.VATRate`
+records, and :func:`aeat.domain.vat.lookup_rate`), this module adds the
+classification axes needed to tag a transaction deterministically based on
+the parties' tax residency, the customer's VAT status, the transaction kind,
+and the invoice direction.
 
-The resolver implementation is a closed first-match-wins decision
-table over the rules R01-R99 from the ADR (#183). Each
-rule is a plain :class:`typing.NamedTuple` carrying a stable
-identifier, a description and a predicate; the table itself is a
-module-level constant. There is no dynamic dispatch, no string
-expression evaluation, no caller-supplied callback — every
-classification outcome is reproducible by replaying the same
+The resolver implementation is a closed first-match-wins decision table over
+the rules ``R01`` through ``R99``. Each rule is a plain
+:class:`typing.NamedTuple` carrying a stable identifier, a description and a
+predicate; the table itself is a module-level constant. There is no dynamic
+dispatch, no string expression evaluation, no caller-supplied callback —
+every classification outcome is reproducible by replaying the same
 :class:`VATClassificationCriteria`.
 
-Example:
+Examples:
     >>> from datetime import date
     >>> from . import (
     ...     CustomerResidency,
@@ -72,10 +71,17 @@ class IssuerResidency(StrEnum):
     """Tax-residency classification of the invoice issuer.
 
     The five values partition the universe of issuer residencies the
-    distinguishes. ``ES_CANARIAS`` and
-    ``ES_CEUTA_MELILLA`` are NOT subject to LIVA; the classifier
-    short-circuits to :class:`VATCategory.DOMESTIC_NOT_SUBJECT` for
-    those issuers (out of TAI).
+    classifier distinguishes. Issuers in Canarias, Ceuta or Melilla are NOT
+    subject to LIVA; the classifier short-circuits to
+    :attr:`aeat.domain.vat.VATCategory.DOMESTIC_NOT_SUBJECT` for those issuers
+    (out of TAI).
+
+    Attributes:
+        ES_MAINLAND: Spanish mainland and Balearic Islands (TAI).
+        ES_CANARIAS: Canary Islands — IGIC territory, out of LIVA.
+        ES_CEUTA_MELILLA: Ceuta and Melilla — IPSI territory, out of LIVA.
+        EU_MEMBER: Any of the other 26 EU member states.
+        THIRD_COUNTRY: Any non-EU jurisdiction.
     """
 
     ES_MAINLAND = "es_mainland"
@@ -86,7 +92,18 @@ class IssuerResidency(StrEnum):
 
 
 class CustomerResidency(StrEnum):
-    """Tax-residency classification of the invoice customer."""
+    """Tax-residency classification of the invoice customer.
+
+    Mirrors :class:`IssuerResidency` so the classifier can match cross-border
+    rules symmetrically.
+
+    Attributes:
+        ES_MAINLAND: Spanish mainland and Balearic Islands (TAI).
+        ES_CANARIAS: Canary Islands — IGIC territory, out of LIVA.
+        ES_CEUTA_MELILLA: Ceuta and Melilla — IPSI territory, out of LIVA.
+        EU_MEMBER: Any of the other 26 EU member states.
+        THIRD_COUNTRY: Any non-EU jurisdiction.
+    """
 
     ES_MAINLAND = "es_mainland"
     ES_CANARIAS = "es_canarias"
@@ -98,10 +115,17 @@ class CustomerResidency(StrEnum):
 class CustomerTaxStatus(StrEnum):
     """VAT-status classification of the customer.
 
-    ``B2B_VAT_REGISTERED`` requires a valid NIF-IVA on record;
-    classifier rules that depend on reverse-charge mechanics check
-    this field. ``UNKNOWN`` is a sentinel for transactions whose
-    counterparty status has not been resolved upstream.
+    Classifier rules that depend on reverse-charge mechanics check
+    :attr:`B2B_VAT_REGISTERED`, which requires a valid NIF-IVA on record.
+    :attr:`UNKNOWN` is a sentinel for transactions whose counterparty status
+    has not been resolved upstream.
+
+    Attributes:
+        B2B_VAT_REGISTERED: Business customer with a valid VAT-ID.
+        B2B_NOT_REGISTERED: Business customer without a VAT-ID.
+        B2C_CONSUMER: Private individual.
+        PUBLIC_ADMINISTRATION: Public-sector body.
+        UNKNOWN: Counterparty status unresolved.
     """
 
     B2B_VAT_REGISTERED = "b2b_vat_registered"
@@ -114,13 +138,25 @@ class CustomerTaxStatus(StrEnum):
 class TransactionKind(StrEnum):
     """Kind-of-supply classification.
 
-    Drives place-of-supply rules (services general vs. land-related
-    vs. digital), reverse-charge sub-rules (construction, waste,
-    consumer electronics) and rate-tier defaulting (passenger
-    transport @ 10 %, restaurant @ 10 %). Kind is orthogonal to
-    rate tier; ``rate_tier`` on
-    :class:`VATClassificationCriteria` is the explicit rate-tier
-    axis the caller supplies for ES-to-ES domestic rules.
+    Drives place-of-supply rules (services general vs. land-related vs.
+    digital), reverse-charge sub-rules (construction, waste, consumer
+    electronics) and rate-tier defaulting (passenger transport at 10 %,
+    restaurants at 10 %). Kind is orthogonal to rate tier;
+    :attr:`VATClassificationCriteria.rate_tier` is the explicit rate-tier axis
+    the caller supplies for ES-to-ES domestic rules.
+
+    Attributes:
+        GOODS: Tangible goods supply.
+        SERVICES_GENERAL: Services not covered by a specialised category.
+        SERVICES_DIGITAL_B2C_OSS: Digital services routed through OSS.
+        SERVICES_LAND_RELATED: Land-related services (Art. 70).
+        SERVICES_PASSENGER_TRANSPORT: Passenger transport service.
+        SERVICES_RESTAURANT: Restaurant or catering service.
+        IMMOVABLE_PROPERTY: Real-estate transaction.
+        PASSENGER_CAR: Private-use passenger vehicle (deductibility flag).
+        CONSTRUCTION_REVERSE_CHARGE: Art. 84.Uno.2º.f construction works.
+        WASTE_REVERSE_CHARGE: Art. 84.Uno.2º.c waste / recovery materials.
+        ELECTRONICS_REVERSE_CHARGE: Art. 84.Uno.2º.g B2B consumer electronics.
     """
 
     GOODS = "goods"
@@ -137,7 +173,12 @@ class TransactionKind(StrEnum):
 
 
 class InvoiceDirection(StrEnum):
-    """Whether the autónomo issued or received the invoice."""
+    """Whether the autónomo issued or received the invoice.
+
+    Attributes:
+        ISSUED: The autónomo is the issuer.
+        RECEIVED: The autónomo is the recipient.
+    """
 
     ISSUED = "issued"
     RECEIVED = "received"
@@ -149,9 +190,23 @@ class InvoiceDirection(StrEnum):
 class VATClassificationCriteria(_VatStrictFrozen):
     """Input record for :func:`classify_vat`.
 
-    Carries every axis the closed decision table inspects. The
-    record is strict + frozen so it can be used as a dict key in
-    upstream caches.
+    Carries every axis the closed decision table inspects. The record is
+    strict and frozen so it can be used as a dict key in upstream caches.
+
+    Attributes:
+        transaction_date: When the supply takes place.
+        issuer_residency: Issuer's tax residency.
+        customer_residency: Customer's tax residency.
+        customer_tax_status: Customer's VAT status.
+        kind: Kind of supply.
+        direction: ``ISSUED`` or ``RECEIVED``.
+        issuer_member_state: Issuer's :class:`aeat.domain.vat.EUMemberState`,
+            required when :attr:`issuer_residency` is
+            :attr:`IssuerResidency.EU_MEMBER`.
+        customer_member_state: Customer's
+            :class:`aeat.domain.vat.EUMemberState`, required when
+            :attr:`customer_residency` is :attr:`CustomerResidency.EU_MEMBER`.
+        rate_tier: Explicit rate-tier axis for ES-to-ES domestic rules.
     """
 
     transaction_date: date = Field(description="When the supply takes place.")
@@ -185,20 +240,21 @@ class VATClassificationCriteria(_VatStrictFrozen):
     def _validate_member_state_consistency(self) -> VATClassificationCriteria:
         """Enforce residency and rate-tier invariants.
 
-        Three checks, each raising :class:`ValueError` on violation:
+        Three checks, each raising :exc:`ValueError` on violation:
 
         * ``issuer_residency == EU_MEMBER`` requires ``issuer_member_state``.
-        * ``customer_residency == EU_MEMBER`` requires ``customer_member_state``.
-        * ES-to-ES domestic transactions (both residencies
-          ``ES_MAINLAND``) that would fall through to the R05
-          ``DOMESTIC_*`` rule require an explicit ``rate_tier``. The
-          classifier never silently defaults to ``GENERAL``; the
-          caller must supply the tier that applied at invoice time.
-          Dedicated reverse-charge ``TransactionKind`` values
-          (CONSTRUCTION / WASTE / ELECTRONICS) are exempted because
-          rules R01-R03 route them to ``DOMESTIC_REVERSE_CHARGE``
-          before R05 runs, so their rate tier is a payload concern,
-          not a classification axis.
+        * ``customer_residency == EU_MEMBER`` requires
+          ``customer_member_state``.
+        * ES-to-ES domestic transactions (both residencies ``ES_MAINLAND``)
+          that would fall through to the ``R05`` ``DOMESTIC_*`` rule require
+          an explicit :attr:`rate_tier`. The classifier never silently
+          defaults to ``GENERAL``; the caller must supply the tier that
+          applied at invoice time. Dedicated reverse-charge
+          :class:`TransactionKind` values (``CONSTRUCTION``, ``WASTE``,
+          ``ELECTRONICS``) are exempted because rules ``R01`` through ``R03``
+          route them to :attr:`aeat.domain.vat.VATCategory.DOMESTIC_REVERSE_CHARGE`
+          before ``R05`` runs, so their rate tier is a payload concern not a
+          classification axis.
         """
         if self.issuer_residency is IssuerResidency.EU_MEMBER and self.issuer_member_state is None:
             raise ValueError("issuer_member_state is required when issuer_residency is EU_MEMBER")
@@ -226,11 +282,20 @@ class VATClassificationCriteria(_VatStrictFrozen):
 class VATClassification(_VatStrictFrozen):
     """Output record returned by :func:`classify_vat`.
 
-    Exposes the matched :class:`VATCategory`, the resolved
-    :class:`VATRate` (or ``None`` for rate-irrelevant categories),
-    a reverse-charge flag, the matched rule identifier, and any
-    free-form note the resolver emits (typically used for
-    fall-through documentation).
+    Exposes the matched :class:`aeat.domain.vat.VATCategory`, the resolved
+    :class:`aeat.domain.vat.VATRate` (or ``None`` for rate-irrelevant
+    categories), a reverse-charge flag, the matched rule identifier, and any
+    free-form note the resolver emits (typically used for fall-through
+    documentation).
+
+    Attributes:
+        category: Resolved VAT category.
+        rate: Applicable :class:`aeat.domain.vat.VATRate`, when relevant.
+        requires_reverse_charge: ``True`` when the rule triggers
+            *inversión del sujeto pasivo*.
+        matched_rule_id: Stable rule identifier (e.g.
+            ``R10_intra_community_supply``).
+        notes: Free-form explanatory note.
     """
 
     category: VATCategory = Field(description="Resolved VAT category.")
@@ -244,12 +309,12 @@ class VATClassification(_VatStrictFrozen):
 
 
 def _is_es(residency: IssuerResidency | CustomerResidency) -> bool:
-    """Return True when ``residency`` is mainland Spain (TAI)."""
+    """Return ``True`` when ``residency`` is mainland Spain (TAI)."""
     return residency in {IssuerResidency.ES_MAINLAND, CustomerResidency.ES_MAINLAND}
 
 
 def _r01_construction_rc(criteria: VATClassificationCriteria) -> bool:
-    """ES-to-ES construction reverse-charge (Art. 84.Uno.2º.f)."""
+    """Match ES-to-ES construction reverse-charge under Art. 84.Uno.2º.f."""
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
@@ -264,7 +329,7 @@ def _r01_construction_rc(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r02_waste_rc(criteria: VATClassificationCriteria) -> bool:
-    """ES-to-ES waste / recovery reverse-charge (Art. 84.Uno.2º.c)."""
+    """Match ES-to-ES waste / recovery reverse-charge under Art. 84.Uno.2º.c."""
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
@@ -279,7 +344,7 @@ def _r02_waste_rc(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r03_electronics_rc(criteria: VATClassificationCriteria) -> bool:
-    """ES-to-ES B2B consumer-electronics reverse-charge (Art. 84.Uno.2º.g)."""
+    """Match ES-to-ES B2B consumer-electronics reverse-charge under Art. 84.Uno.2º.g."""
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
@@ -289,7 +354,7 @@ def _r03_electronics_rc(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r04_immovable_b2c_exempt(criteria: VATClassificationCriteria) -> bool:
-    """ES-to-ES second-and-later immovable supplies are exempt (Art. 20.Uno.22º)."""
+    """Match ES-to-ES second-and-later immovable supplies (Art. 20.Uno.22º exempt)."""
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
@@ -299,7 +364,7 @@ def _r04_immovable_b2c_exempt(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r05_domestic_at_rate(criteria: VATClassificationCriteria) -> bool:
-    """ES-to-ES default — pick the domestic category implied by ``rate_tier``."""
+    """Match the ES-to-ES default; downstream picks a domestic category from ``rate_tier``."""
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
@@ -313,7 +378,7 @@ def _r05_domestic_at_rate(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r10_ic_supply_goods(criteria: VATClassificationCriteria) -> bool:
-    """ES → EU_MEMBER B2B goods supply (Art. 25)."""
+    """Match an ES to EU_MEMBER B2B goods supply (Art. 25 exempt)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.EU_MEMBER
@@ -324,7 +389,7 @@ def _r10_ic_supply_goods(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r11_ic_acquisition_goods(criteria: VATClassificationCriteria) -> bool:
-    """EU_MEMBER → ES B2B goods acquisition (Art. 13 + reverse charge)."""
+    """Match an EU_MEMBER to ES B2B goods acquisition (Art. 13 + reverse charge)."""
     return (
         criteria.issuer_residency is IssuerResidency.EU_MEMBER
         and criteria.customer_residency is CustomerResidency.ES_MAINLAND
@@ -335,7 +400,7 @@ def _r11_ic_acquisition_goods(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r12_services_b2b_eu_outbound(criteria: VATClassificationCriteria) -> bool:
-    """ES → EU_MEMBER B2B services — place of supply at destination (Art. 69)."""
+    """Match an ES to EU_MEMBER B2B services supply (Art. 69, place of supply at destination)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.EU_MEMBER
@@ -346,7 +411,7 @@ def _r12_services_b2b_eu_outbound(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r13_services_b2b_eu_inbound(criteria: VATClassificationCriteria) -> bool:
-    """EU_MEMBER → ES B2B services — reverse charge at ES (Art. 84.Uno.2º.a)."""
+    """Match an EU_MEMBER to ES B2B services supply (Art. 84.Uno.2º.a reverse charge at ES)."""
     return (
         criteria.issuer_residency is IssuerResidency.EU_MEMBER
         and criteria.customer_residency is CustomerResidency.ES_MAINLAND
@@ -357,7 +422,7 @@ def _r13_services_b2b_eu_inbound(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r14_digital_b2c_oss_outbound(criteria: VATClassificationCriteria) -> bool:
-    """ES → EU_MEMBER B2C digital services — OSS at destination (Art. 70.Uno.4º)."""
+    """Match an ES to EU_MEMBER B2C digital service routed via OSS (Art. 70.Uno.4º)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.EU_MEMBER
@@ -368,7 +433,7 @@ def _r14_digital_b2c_oss_outbound(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r15_distance_sales_b2c_outbound(criteria: VATClassificationCriteria) -> bool:
-    """ES → EU_MEMBER B2C goods (distance sales — caller enforces threshold)."""
+    """Match an ES to EU_MEMBER B2C distance-sales supply (caller enforces threshold)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.EU_MEMBER
@@ -379,7 +444,7 @@ def _r15_distance_sales_b2c_outbound(criteria: VATClassificationCriteria) -> boo
 
 
 def _r20_export_goods(criteria: VATClassificationCriteria) -> bool:
-    """ES → THIRD_COUNTRY goods export (Art. 21, exenta plena)."""
+    """Match an ES to THIRD_COUNTRY goods export (Art. 21, exención plena)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.THIRD_COUNTRY
@@ -389,7 +454,7 @@ def _r20_export_goods(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r21_import_goods(criteria: VATClassificationCriteria) -> bool:
-    """THIRD_COUNTRY → ES goods import (Art. 18)."""
+    """Match a THIRD_COUNTRY to ES goods import (Art. 18)."""
     return (
         criteria.issuer_residency is IssuerResidency.THIRD_COUNTRY
         and criteria.customer_residency is CustomerResidency.ES_MAINLAND
@@ -399,7 +464,7 @@ def _r21_import_goods(criteria: VATClassificationCriteria) -> bool:
 
 
 def _r22_services_outbound_third_country(criteria: VATClassificationCriteria) -> bool:
-    """ES → THIRD_COUNTRY services — place of supply outside TAI (Art. 69)."""
+    """Match an ES to THIRD_COUNTRY services supply (Art. 69, place of supply outside TAI)."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.THIRD_COUNTRY
@@ -409,7 +474,7 @@ def _r22_services_outbound_third_country(criteria: VATClassificationCriteria) ->
 
 
 def _r30_canarias_ceuta_melilla(criteria: VATClassificationCriteria) -> bool:
-    """Issuer is in Canarias / Ceuta / Melilla — out of TAI."""
+    """Match issuers based in Canarias / Ceuta / Melilla (out of TAI)."""
     return criteria.issuer_residency in {
         IssuerResidency.ES_CANARIAS,
         IssuerResidency.ES_CEUTA_MELILLA,
@@ -431,7 +496,18 @@ _CATEGORY_TO_RATE_TIER: dict[VATCategory, VATRateKind] = {
 
 
 class _VatClassificationRule(NamedTuple):
-    """Module-private decision-table row."""
+    """Module-private decision-table row.
+
+    Attributes:
+        rule_id: Stable string identifier (e.g. ``R10_intra_community_supply``).
+        description: Human-readable summary surfaced as
+            :attr:`VATClassification.notes`.
+        predicate: Predicate over a :class:`VATClassificationCriteria`.
+        category: Concrete :class:`aeat.domain.vat.VATCategory` to assign on a
+            match, or ``None`` when the resolver derives the category from
+            other inputs (used by ``R05`` against
+            :attr:`VATClassificationCriteria.rate_tier`).
+    """
 
     rule_id: str
     description: str
@@ -542,14 +618,21 @@ _R99_FALLTHROUGH_ID = "R99_fallthrough"
 def classify_vat(criteria: VATClassificationCriteria) -> VATClassification:
     """Apply the closed decision table; first match wins.
 
+    Iterates the module-level rule table in declaration order, returning the
+    first :class:`VATClassification` whose predicate accepts ``criteria``.
+    Falls through to the ``R99`` sentinel
+    (:attr:`aeat.domain.vat.VATCategory.UNKNOWN`) only when no rule matches —
+    a state that requires human review per the
+    :class:`aeat.domain.vat.VATCategory.UNKNOWN` contract.
+
     Args:
-        criteria: The :class:`VATClassificationCriteria` carrying
-            every classification axis.
+        criteria: The :class:`VATClassificationCriteria` carrying every
+            classification axis.
 
     Returns:
-        A :class:`VATClassification` with the resolved category,
-        rate, reverse-charge flag, matched rule identifier, and
-        any explanatory note.
+        A :class:`VATClassification` with the resolved category, rate,
+        reverse-charge flag, matched rule identifier, and any explanatory
+        note.
     """
     for rule in _RULES:
         if not rule.predicate(criteria):
@@ -591,15 +674,23 @@ def _resolve_rate_for_category(
     criteria: VATClassificationCriteria,
     category: VATCategory,
 ) -> VATRate | None:
-    """Resolve the :class:`VATRate` applicable to ``category``.
+    """Resolve the :class:`aeat.domain.vat.VATRate` applicable to ``category``.
 
-    Returns ``None`` for categories whose rate is not directly
-    derivable from the substrate (intracomunitarias, exports,
-    imports, exempt, not-subject, reverse-charge — the cuota is
-    self-assessed, declared zero, or computed from a downstream
-    invoice line). For ``DOMESTIC_*`` categories the rate is
-    looked up against the issuer's residency on the transaction
-    date.
+    Returns ``None`` for categories whose rate is not directly derivable from
+    the substrate (intracomunitarias, exports, imports, exempt, not-subject,
+    reverse-charge — the cuota is self-assessed, declared zero, or computed
+    from a downstream invoice line). For ``DOMESTIC_*`` categories the rate
+    is looked up against the issuer's residency on the transaction date.
+
+    Args:
+        criteria: The classification criteria; used for the issuer's member
+            state and the transaction date.
+        category: The category whose rate to resolve.
+
+    Returns:
+        The matched :class:`aeat.domain.vat.VATRate`, or ``None`` when the
+        category does not carry a directly-derivable rate or when
+        :func:`aeat.domain.vat.lookup_rate` cannot find one.
     """
     tier = _CATEGORY_TO_RATE_TIER.get(category)
     if tier is None:

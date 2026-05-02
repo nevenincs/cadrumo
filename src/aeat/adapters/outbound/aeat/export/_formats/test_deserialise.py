@@ -1,4 +1,12 @@
-"""Tests for the fichero-BOE deserialiser + round-trip fidelity (EPIC #201 C3d,)."""
+"""Tests for the fichero-BOE deserialiser and round-trip fidelity.
+
+Drives
+:func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`
+against bytes produced by
+:func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
+using Modelo 130 2024 specs, asserting that every field and casilla
+value survives the round trip byte-for-byte.
+"""
 
 from __future__ import annotations
 
@@ -34,6 +42,8 @@ def _base_casillas() -> dict[str, Decimal]:
 
 
 class TestDeserialiseModelo1302024:
+    """Per-field deserialisation behaviour against the Modelo 130 2024 spec."""
+
     def test_parses_literal_values(self) -> None:
         """RESERVED fields surface their literal_value in field_values."""
         payload = serialise(
@@ -129,8 +139,8 @@ class TestDeserialiseModelo1302024:
 
 
 class TestRoundTripFidelity:
-    """The single most important C3d acceptance test: serialise -> deserialise
-    preserves every casilla value and every header."""
+    """Acceptance check: ``serialise`` -> ``deserialise`` preserves every
+    casilla value and every header byte-for-byte."""
 
     def test_round_trip_preserves_casilla_values(self) -> None:
         casillas = _base_casillas()

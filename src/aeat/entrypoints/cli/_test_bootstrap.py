@@ -1,8 +1,9 @@
 """Unit tests for the pure helpers in :mod:`aeat.entrypoints.cli.bootstrap`.
 
 The Drive API interactions and the env-file write are exercised by the
-live smoke tests in . Here we cover only the dedup decision
-logic, which is straightforward to test against a synthetic listing.
+live smoke tests in the ``_test_*_live`` modules. Here we cover only
+the dedup decision logic, which is straightforward to test against a
+synthetic listing.
 """
 
 from __future__ import annotations

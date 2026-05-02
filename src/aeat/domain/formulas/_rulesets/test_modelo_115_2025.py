@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 115 2025 ruleset."""
+"""Unit tests for the Modelo 115 2025 ruleset.
+
+Exercises the formula-engine derivations and externally-anchored worked
+example for :data:`aeat.domain.formulas._rulesets.MODELO_115_2025`. Covers
+the 19 % retención rate on arrendamientos urbanos and the
+resultado-a-ingresar chain.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo115Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 115 ruleset."""
+
     def test_matches_published_values_is_clean(self) -> None:
         provided = {
             "01": Decimal("2"),
@@ -30,7 +38,7 @@ class TestModelo115Ruleset:
         assert report.is_clean()
 
     def test_retention_percent_mismatch_reported(self) -> None:
-        # Kent typos 2280 → 2300 (off by ~20€ vs. 19% of 12000).
+        # User typos 2280 → 2300 (off by ~20€ vs. 19% of 12000).
         provided = {
             "01": Decimal("2"),
             "02": Decimal("12000.00"),
@@ -65,36 +73,32 @@ class TestModelo115Ruleset:
         assert report.is_clean()
 
     def test_includes_reglamento_and_ley_citations(self) -> None:
-        # RIRPF art. 100 has NO sub-letter structure
-        # in the BOE consolidated text (BOE-A-2007-6820). The 19% rate on
-        # arrendamientos urbanos lives in art. 100.1; art. 100.2 carries
-        # the Ceuta/Melilla 60% reduction. The prior that
-        # the rate lived in "art. 100.3.a" was factually wrong — corrected
-        # across ruleset + tests in /68.
+        """RIRPF art. 100.1 (19 %) + LIRPF art. 101.8 must be registered.
+
+        RIRPF art. 100 has NO sub-letter structure in the BOE consolidated
+        text (BOE-A-2007-6820): the 19 % rate on arrendamientos urbanos
+        lives in art. 100.1 and art. 100.2 carries the Ceuta / Melilla
+        60 % reduction.
+        """
         articles = {c.article for c in MODELO_115_2025.legal_citations}
         assert "100.1" in articles  # Reglamento: fija el 19%
         assert "101.8" in articles  # LIRPF: delega el tipo al reglamento
 
     def test_external_worked_example_rirpf_100_1(self) -> None:
-        """External-anchored worked example (closure;
-        citation corrected ).
+        """Externally-anchored worked example for the RIRPF art. 100.1 19 % rate.
 
-        Provenance: RD 439/2007 (RIRPF) art. 100.1 fixes the 19%
+        Provenance: RD 439/2007 (RIRPF) art. 100.1 fixes the 19 %
         retención rate on rendimientos del arrendamiento o
         subarrendamiento de bienes inmuebles urbanos (quote: "el
         porcentaje del 19 por ciento sobre todos los conceptos que
         se satisfagan al arrendador, excluido el Impuesto sobre el
         Valor Añadido"). LIRPF art. 101.8 hooks the obligation. This
         fixture derives the expected retención + resultado values
-        from the statutory 19% rate independently of the ruleset's
-        `irpf.arrendamientos_rate` parameter. BOE-A-2007-6820
-        consolidated retrieval 2026-04-22.
+        from the statutory 19 % rate independently of the ruleset's
+        ``irpf.arrendamientos_rate`` parameter. Citation:
+        BOE-A-2007-6820.
 
-        Prior-wave miscite (tracked): art. 100.3.a —
-        invalid; RIRPF art. 100 has no sub-letter structure.
-        Corrected in .
-
-        Scenario: Q3 2025 Kent leasing a commercial premise:
+        Scenario: Q3 2025 lessee leasing a commercial premise:
         - 01 perceptores = 1 (single landlord).
         - 02 base = 15 000.
         - 03 retención = 15 000 x 19% = 2 850 per RIRPF 100.1.

@@ -1,11 +1,16 @@
 """Modelo 131 ruleset covering the full 2024 fiscal year.
 
-Modelo 131 keeps the same liquidación template across the 2024 and
-2025 annual periods. The 2% rate on volumen ventas and volumen ingresos
+Modelo 131 keeps the same liquidación template across the 2024 and 2025
+annual periods. The 2 % rate on volumen ventas and volumen ingresos
 agrícolas is anchored in RIRPF art. 110.1.b (módulos, estimación
 objetiva) and art. 110.1.c (actividades agrícolas/ganaderas/forestales/
-pesqueras). Kent uses this for 2024-period complementaria filings under
-módulos.
+pesqueras). The 2024 ruleset supports complementaria filings under
+módulos for that fiscal year.
+
+The casilla layout is re-imported from
+:mod:`aeat.domain.formulas._rulesets.modelo_131_2025` and rewrapped with
+2024-scoped legal citations (Orden HFP/1359/2023 for that year's
+estimación objetiva / IVA simplificado refresh).
 """
 
 from __future__ import annotations

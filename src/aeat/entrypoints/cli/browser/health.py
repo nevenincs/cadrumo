@@ -1,10 +1,10 @@
-"""``aeat browser health`` command implementation (#95).
+"""``aeat browser health`` command implementation.
 
 Runs a single navigation probe against
 :attr:`aeat.core.config.Settings.site_health_probe_url` and prints either a
 human-readable summary or the JSON-serialised
 :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`. Exit codes follow
-the table locked into [[2026-04-13-aeat-mantenimiento-detection-adr]]:
+this table:
 
 - ``0`` — :attr:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthState.OK`
 - ``2`` — :attr:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthState.MANTENIMIENTO`
@@ -67,7 +67,9 @@ class HealthProbeLike(Protocol):
     response as non-OK.
     """
 
-    async def probe(self, url: str) -> None: ...
+    async def probe(self, url: str) -> None:
+        """Navigate to ``url`` and return when the response is classified OK."""
+        ...
 
 
 class _RealProbe:
@@ -85,6 +87,7 @@ class _RealProbe:
         self._playwright = playwright
 
     async def probe(self, url: str) -> None:
+        """Navigate to ``url`` and tear the Playwright context down on exit."""
         context: Any = None
         try:
             context = await self._session.create_context()
@@ -133,7 +136,7 @@ PROBE_FACTORY = _default_probe_factory
 Tests replace this attribute with a concrete async factory that
 returns a :class:`HealthProbeLike` double built from a real fixture.
 Replacing the factory is the project-sanctioned dependency-injection
-seam for the CLI; no ``unittest.mock`` is required.
+seam for the CLI; no ``unittest`` import is required.
 """
 
 ProbeFactory = Callable[[Settings], Awaitable[HealthProbeLike]]

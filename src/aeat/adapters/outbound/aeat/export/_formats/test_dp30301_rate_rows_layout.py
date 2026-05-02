@@ -1,21 +1,21 @@
 """DP30301 régimen-general rate-rows layout lock.
 
-The 4% / 5% / 10% / 21% IVA rate rows in DP30301 are 39-byte
+The 4 % / 5 % / 10 % / 21 % IVA rate rows in DP30301 are 39-byte
 blocks: a 17-byte base-imponible CURRENCY, a 5-byte rate literal
-(RESERVED, the tipo impositivo), and a 17-byte cuota CURRENCY.
-A fixture extension that inserts a NEW rate row (e.g. some future
-hypothetical extra reduced rate) must preserve the byte positions
-of the existing rows — otherwise every downstream byte-offset
-assertion shifts silently.
+(RESERVED, the tipo impositivo), and a 17-byte cuota CURRENCY. A
+fixture extension that inserts a new rate row (some future
+hypothetical extra reduced rate, for example) must preserve the byte
+positions of the existing rows — otherwise every downstream
+byte-offset assertion shifts silently.
 
-Canonical rate-row offsets per DR303e24:
+Canonical rate-row offsets per ``DR303e24``::
 
-  4%  : CAS01 base  @ 169,  CAS02 tipo @ 186 (5B RESERVED), CAS03 cuota @ 191
-  5%  : CAS153 base @ 208,  CAS154 tipo @ 225 (5B RESERVED), CAS155 cuota @ 230
-  10% : CAS04 base  @ 247,  CAS05 tipo @ 264 (5B RESERVED), CAS06 cuota @ 269
-  21% : CAS07 base  @ 286,  CAS08 tipo @ 303 (5B RESERVED), CAS09 cuota @ 308
+    4%  : CAS01 base  @ 169,  CAS02 tipo @ 186 (5B RESERVED), CAS03 cuota @ 191
+    5%  : CAS153 base @ 208,  CAS154 tipo @ 225 (5B RESERVED), CAS155 cuota @ 230
+    10% : CAS04 base  @ 247,  CAS05 tipo @ 264 (5B RESERVED), CAS06 cuota @ 269
+    21% : CAS07 base  @ 286,  CAS08 tipo @ 303 (5B RESERVED), CAS09 cuota @ 308
 
-all four row layouts + their rate-literal values.
+The tests lock all four row layouts and their rate-literal values.
 """
 
 from __future__ import annotations
@@ -49,6 +49,8 @@ _RATE_ROWS: list[tuple[str, str, str, str, str, int]] = [
 
 
 class TestRegimenGeneralRateRows:
+    """Per-row layout assertions for the 4 / 5 / 10 / 21 % rate rows."""
+
     @pytest.mark.parametrize(
         ("label", "base", "tipo", "tipo_literal", "cuota", "row_start"),
         _RATE_ROWS,
@@ -89,6 +91,8 @@ class TestRegimenGeneralRateRows:
 
 
 class TestRateRowsAreContiguous:
+    """The four rate rows must be byte-contiguous, with no padding between them."""
+
     def test_5_percent_row_immediately_follows_4_percent(self) -> None:
         """The 5% row (alimentos temporal) starts at offset 208 —
         exactly the byte after the 4% row ends (169 + 39 = 208)."""

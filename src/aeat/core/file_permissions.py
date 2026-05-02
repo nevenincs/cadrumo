@@ -2,18 +2,21 @@
 
 Both the FNMT-certificate-backed authenticator and the Cl@ve Móvil
 provider persist session-state JSON containing bearer-equivalent
-material (storage state cookies, OAuth tokens, refresh tokens). The
+material (storage-state cookies, OAuth tokens, refresh tokens). The
 files must be restricted to the operator's user account.
 
 POSIX: ``chmod 0o600`` is sufficient. Windows: ``icacls.exe
-/inheritance:r /grant:r <user>:(F)`` strips inherited ACLs and
-grants full control to the operator only. The ``icacls`` call is
-best-effort and tries both ``DOMAIN\\user`` and ``user`` candidate
-names so it works on standalone machines and domain-joined hosts.
+/inheritance:r /grant:r <user>:(F)`` strips inherited ACLs and grants
+full control to the operator only. The ``icacls`` call is best-effort
+and tries both ``DOMAIN\\user`` and ``user`` candidate names so it works
+on standalone machines and domain-joined hosts.
 
-The helper is shared between :mod:`aeat.adapters.outbound.aeat.auth._authenticator`
-and :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` so the
-Windows-ACL discipline cannot diverge between the two session writers.
+The helper is shared between
+:mod:`aeat.adapters.outbound.aeat.auth._authenticator` and
+:mod:`aeat.adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
+discipline cannot diverge between the two session writers.
+
+See :func:`restrict_file_permissions` for the public entry point.
 """
 
 from __future__ import annotations
@@ -30,32 +33,31 @@ _log = get_logger(__name__)
 
 
 def restrict_file_permissions(path: Path) -> None:
-    """Best-effort restrict ``path`` to the operator's user only.
+    """Best-effort restrict ``path`` to the operator's user account.
 
-    POSIX: ``os.chmod(path, 0o600)``.
+    POSIX: calls :func:`os.chmod` with mode ``0o600``.
 
-    Windows: shells out to ``icacls.exe`` to strip inherited ACLs
-    and grant ``F`` (Full control) to the operator's account only.
-    Tries both ``DOMAIN\\user`` and bare ``user`` candidates because
-    standalone machines have no ``USERDOMAIN`` and domain-joined
-    machines may need the qualified form. Logs at ``WARNING`` if
-    every candidate fails — the file remains on disk with whatever
-    ACL it inherited from the parent directory.
+    Windows: shells out to ``icacls.exe`` to strip inherited ACLs and
+    grant ``F`` (Full control) to the operator's account only. Tries
+    both ``DOMAIN\\user`` and bare ``user`` candidates because standalone
+    machines have no ``USERDOMAIN`` and domain-joined machines may need
+    the qualified form. Logs at ``WARNING`` when every candidate fails
+    — the file stays on disk with whatever ACL it inherited from its
+    parent directory.
 
-    Best-effort: every error is swallowed. The auth flow does not
-    abort if hardening fails — the operator's session is still
-    written; the worst case is a slightly more permissive ACL than
-    intended, surfaced via the warning log.
+    Best-effort: every error is swallowed so the auth flow never aborts
+    on a hardening side-effect. Worst case is a slightly more permissive
+    ACL than intended, surfaced via the warning log.
+
+    Args:
+        path: Path to the file whose permissions must be tightened.
     """
     if os.name == "nt":  # pragma: no cover - Windows-specific
         # Wrap every Windows-only call in a single try/except so the
         # docstring's "best-effort, never raises" contract holds even
         # when icacls.exe is missing from PATH (FileNotFoundError),
         # getpass.getuser() raises (no operator name available), or
-        # the subprocess.run hits an unexpected OSError. Issue #469
-        # gemini-review MEDIUM on PR #470: the previous code path
-        # could raise OSError out of subprocess.run / getpass and
-        # abort the auth flow entirely.
+        # the subprocess.run hits an unexpected OSError.
         try:
             username = getpass.getuser()
             icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\\Windows")) / "System32" / "icacls.exe"
@@ -93,9 +95,9 @@ def restrict_file_permissions(path: Path) -> None:
             # cannot ACL), but a future ``getpass`` / ``subprocess``
             # internal change could surface other exception types
             # here, and the auth flow must NOT abort because of a
-            # best-effort hardening side-effect. (gemini #471
-            # finding: ``KeyError`` was redundant — os.environ.get
-            # returns None, never raises.)
+            # best-effort hardening side-effect. ``KeyError`` is
+            # not in the catch list because ``os.environ.get``
+            # returns ``None`` rather than raising on a missing key.
             _log.warning(
                 "restrict_file_permissions: best-effort hardening failed on %s: %s",
                 path,

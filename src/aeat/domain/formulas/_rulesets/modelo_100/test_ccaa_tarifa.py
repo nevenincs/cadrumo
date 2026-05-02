@@ -1,14 +1,16 @@
 """Unit tests for per-CCAA tarifa autonómica brackets.
 
-Verifies the per-CCAA progressive scales for the 5 highest-population
-CCAAs (Madrid, Cataluña, Andalucía, Comunitat Valenciana, Castilla y
-León) at boundary + midpoint anchors. Each bracket boundary is hit so
-any rate / threshold drift in `_ccaa.py` would surface as a test
-failure.
+Verifies the per-CCAA progressive scales encoded in
+:mod:`aeat.domain.formulas._rulesets.modelo_100._ccaa` for the five
+highest-population CCAAs (Madrid, Cataluña, Andalucía, Comunitat
+Valenciana, Castilla y León) at boundary + midpoint anchors. Each
+bracket boundary is hit so any rate / threshold drift would surface as
+a test failure.
 
-The `compute_cuota_autonomica_general()` helper is the public surface
-callers use to derive casilla 0551 externally before supplying it to
-the engine via Anexo G's caller-supplied 0551 input.
+:func:`aeat.domain.formulas._rulesets.modelo_100._ccaa.compute_cuota_autonomica_general`
+is the public surface callers use to derive casilla 0551 externally
+before supplying it to the engine via Anexo G's caller-supplied 0551
+input.
 """
 
 from __future__ import annotations
@@ -53,6 +55,7 @@ class TestTarifaMadrid:
         ],
     )
     def test_madrid_progressive_anchors(self, blg: Decimal, expected: Decimal) -> None:
+        """Verify Madrid's progressive cuota at each bracket anchor."""
         assert compute_cuota_autonomica_general(blg, CCAA.MADRID) == expected
 
 
@@ -63,10 +66,11 @@ class TestTarifaCataluna:
     """
 
     def test_cataluna_zero(self) -> None:
+        """Zero BLG yields zero cuota."""
         assert compute_cuota_autonomica_general(Decimal("0.00"), CCAA.CATALUNA) == Decimal("0.00")
 
     def test_cataluna_first_bracket_cap(self) -> None:
-        # 12450 * 0.105 = 1307.25
+        """At the first-bracket cap (12.450) cuota = 12450 * 0.105 = 1307.25."""
         assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.CATALUNA) == Decimal("1307.25")
 
     def test_cataluna_top_bracket_active(self) -> None:
@@ -101,6 +105,7 @@ class TestTarifaAndalucia:
         ],
     )
     def test_andalucia_progressive_anchors(self, blg: Decimal, expected: Decimal) -> None:
+        """Verify Andalucía's progressive cuota at each bracket anchor."""
         assert compute_cuota_autonomica_general(blg, CCAA.ANDALUCIA) == expected
 
 
@@ -112,10 +117,11 @@ class TestTarifaComunidadValenciana:
     """
 
     def test_valenciana_zero(self) -> None:
+        """Zero BLG yields zero cuota."""
         assert compute_cuota_autonomica_general(Decimal("0.00"), CCAA.COMUNIDAD_VALENCIANA) == Decimal("0.00")
 
     def test_valenciana_first_bracket(self) -> None:
-        # 12000 * 0.09 = 1080
+        """At BLG 12.000 cuota = 12000 * 0.09 = 1080."""
         assert compute_cuota_autonomica_general(Decimal("12000.00"), CCAA.COMUNIDAD_VALENCIANA) == Decimal("1080.00")
 
     def test_valenciana_top_bracket(self) -> None:
@@ -150,6 +156,7 @@ class TestTarifaCastillaYLeon:
         ],
     )
     def test_castilla_leon_progressive_anchors(self, blg: Decimal, expected: Decimal) -> None:
+        """Verify Castilla y León's progressive cuota at each bracket anchor."""
         assert compute_cuota_autonomica_general(blg, CCAA.CASTILLA_Y_LEON) == expected
 
 
@@ -177,6 +184,7 @@ class TestRemainingStableCCAAs:
         ],
     )
     def test_stable_ccaa_first_bracket_anchors(self, ccaa: CCAA, blg: Decimal, expected: Decimal) -> None:
+        """Verify the first-bracket cuota for each year-stable CCAA."""
         assert compute_cuota_autonomica_general(blg, ccaa) == expected
 
 
@@ -194,6 +202,7 @@ class TestYearDependentCCAAs:
         assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS, año=2025) == Decimal("1120.50")
 
     def test_asturias_2026_inherits_2025(self) -> None:
+        """Asturias 2026 retains the post-Ley 3/2025 9% first bracket."""
         assert compute_cuota_autonomica_general(Decimal("12450.00"), CCAA.ASTURIAS, año=2026) == Decimal("1120.50")
 
     def test_canarias_2024_pre_ley_5_2024(self) -> None:
@@ -232,6 +241,7 @@ class TestPerCCAATarifaCoverage:
         assert len(PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR) == 6
 
     def test_each_tarifa_has_open_top_bracket(self) -> None:
+        """Every encoded CCAA tarifa must end in an open-ended top bracket."""
         for ccaa, brackets in PER_CCAA_TARIFA_AUTONOMICA.items():
             _, last_to, _ = brackets[-1]
             assert last_to is None, f"{ccaa.value}: top bracket must be open-ended"
@@ -240,6 +250,7 @@ class TestPerCCAATarifaCoverage:
             assert last_to is None, f"{ccaa.value} año {año}: top bracket must be open-ended"
 
     def test_each_tarifa_has_ascending_brackets(self) -> None:
+        """Bracket bounds must form a strictly ascending, abutting sequence."""
         all_brackets: list[tuple[str, tuple[tuple[str, str | None, str], ...]]] = [
             (ccaa.value, brackets) for ccaa, brackets in PER_CCAA_TARIFA_AUTONOMICA.items()
         ]

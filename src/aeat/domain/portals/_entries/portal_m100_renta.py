@@ -1,4 +1,11 @@
-"""Portal: Modelo 100 — IRPF renta anual."""
+"""Catalogue entry for the *Modelo 100* IRPF annual return procedure page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
+:attr:`aeat.domain.modelos.ModeloCode.MODELO_100`. Accepts the IRPF-only
+:attr:`aeat.domain.portals.AuthMethod.REFERENCE_NUMBER` credential in
+addition to the standard certificate / Cl@ve / DNIe set.
+"""
 
 from __future__ import annotations
 
@@ -30,3 +37,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Presentación de la declaración anual del IRPF (Renta).",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""

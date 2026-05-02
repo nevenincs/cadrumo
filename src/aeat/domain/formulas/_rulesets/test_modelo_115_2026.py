@@ -1,14 +1,11 @@
 """Unit tests for the Modelo 115 2026 ruleset.
 
-Issue #319 (Tier-L per-modelo calc-verify-roundtrip): the 2026
-ruleset is a structural clone of the 2024 / 2025 rulesets because
-RIRPF art. 100 was not amended for 2025 or 2026 (see the rule-
-delta manifest at ``.vault/reference/2026-115-rule-delta.md``).
-These tests assert the no-drift invariant against the 2025
-ruleset and ship an external-anchored worked example whose
-expected values come from RIRPF art. 100 verbatim — not from the
-2026 ruleset's stored parameters. A typo in either the ruleset's
-``irpf.arrendamientos_rate`` parameter or the formula chain
+The 2026 ruleset is a structural clone of the 2024 / 2025 rulesets because
+RIRPF art. 100 was not amended for 2025 or 2026. These tests assert the
+no-drift invariant against the 2025 ruleset and ship an externally-
+anchored worked example whose expected values come from RIRPF art. 100
+verbatim — not from the 2026 ruleset's stored parameters. A typo in either
+the ruleset's ``irpf.arrendamientos_rate`` parameter or the formula chain
 would therefore fail one of the cases below.
 """
 
@@ -28,11 +25,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _provided() -> dict[str, Decimal]:
     """Worked-example fixture for a Q3 2026 lessee with three landlords.
 
-    Distinct numerical scenario from the 2025 fixtures (which use
-    12 000 € / 15 000 €) to avoid mirror-fixture coupling: a Q3
-    lessee paying rent to three landlords with both a small in-
-    kind component (casilla 04) and a complementaria adjustment
-    (casilla 05).
+    The numerical scenario is intentionally distinct from the 2025
+    fixtures (which use 12 000 € / 15 000 €) to avoid mirror-fixture
+    coupling: a Q3 lessee paying rent to three landlords with both a
+    small in-kind component (casilla 04) and a complementaria
+    adjustment (casilla 05).
 
     Inputs (RIRPF art. 100 ¶ 1 — 19 % rate):
       - Casilla 01 (nº arrendadores): 3
@@ -57,6 +54,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo115Ruleset2026:
+    """Formula-engine assertions for the 2026 Modelo 115 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_115_2026,
@@ -66,7 +65,7 @@ class TestModelo115Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_2026_no_drift_from_2025(self) -> None:
-        """Issue #319 invariant: 2026 audit must equal 2025 audit on identical inputs.
+        """The 2026 audit must equal the 2025 audit on identical inputs.
 
         RIRPF art. 100 is unchanged across 2025 → 2026 per the
         rule-delta manifest. The 2026 ruleset re-imports
@@ -99,21 +98,20 @@ class TestModelo115Ruleset2026:
         assert MODELO_115_2026.effective_to == date(2026, 12, 31)
 
     def test_external_worked_example_rirpf_art_100_2026(self) -> None:
-        """External-anchored worked example for the 2026 ruleset.
+        """Externally-anchored worked example for the 2026 ruleset.
 
         Provenance: RD 439/2007 (RIRPF) art. 100, ¶ 1 fixes the
         19 % retention rate on rendimientos del arrendamiento o
         subarrendamiento de bienes inmuebles urbanos (verbatim
         statute: "el porcentaje del 19 por ciento sobre todos los
         conceptos que se satisfagan al arrendador, excluido el
-        Impuesto sobre el Valor Añadido"). Fixture values derived
+        Impuesto sobre el Valor Añadido"). Fixture values are derived
         from that rate, NOT from the ruleset's ``ParameterTable``.
 
-        Citation: BOE-A-2007-6820 RD 439/2007 art. 100
-        (consolidated text last update 2026-02-28; no 2025 / 2026
+        Citation: BOE-A-2007-6820 RD 439/2007 art. 100 (no 2025 / 2026
         amendment to art. 100).
 
-        Scenario distinct from ``_provided()`` to avoid coupling:
+        Scenario distinct from :func:`_provided` to avoid coupling:
         a 4T 2026 lessee with a single landlord, no in-kind
         retribution, no complementaria adjustment.
           - Casilla 01: 1
@@ -164,9 +162,9 @@ class TestModelo115Ruleset2026:
         assert report.is_clean()
 
     def test_retention_rate_mismatch_raises(self) -> None:
-        """Casilla 03 = 19 % x 02. Kent applies 18 % (under by 240 €).
+        """Casilla 03 = 19 % x 02; user applies 18 % (under by 240 €).
 
-        Negative-path test: confirm the 2026 audit surfaces a
+        Negative-path test: confirms the 2026 audit surfaces a
         casilla-03 discrepancy when the user-supplied value
         departs from the engine's re-derivation by more than the
         audit tolerance.
@@ -182,16 +180,15 @@ class TestModelo115Ruleset2026:
         assert "03" in {d.casilla_id for d in report.discrepancies}
 
     def test_ceuta_melilla_fixture_validates_against_base_rate(self) -> None:
-        """Caller-gated Ceuta / Melilla 60 % overlay does not change base rate.
+        """Caller-gated Ceuta / Melilla 60 % overlay does not change the base rate.
 
         RIRPF art. 100 ¶ 2 prescribes a 60 % reduction on the
         retention rate when the inmueble urbano is in Ceuta or
         Melilla. The base ruleset preserves the 19 % rate — the
         overlay is caller-gated (the ruleset does not own the
         territoriality flag). This test confirms that an audit on
-        a non-Ceuta/Melilla quarter returns clean against the base
-        19 % rate (the overlay is the caller's responsibility, per
-        ADR §D12 / watch-list).
+        a non-Ceuta / Melilla quarter returns clean against the base
+        19 % rate.
         """
         # 02 = 5 000,00 → 03 = 5 000 x 0,19 = 950,00 (statute base rate).
         provided = {
@@ -210,11 +207,11 @@ class TestModelo115Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
 
-# Issue #319: parametrised per-base-amount cases for casilla 03 +
-# casilla 06 exercised through the 2026 path. The 19 % retention
-# rate (RIRPF art. 100 ¶ 1) is stable across 2024 → 2025 → 2026
-# per the rule-delta manifest; these cases pin the cent-exact
-# derivations against externally-anchored expected values.
+# Parametrised per-base-amount cases for casilla 03 + casilla 06 exercised
+# through the 2026 path. The 19 % retention rate (RIRPF art. 100 ¶ 1) is
+# stable across 2024 → 2025 → 2026 per the rule-delta manifest; these
+# cases pin the cent-exact derivations against externally-anchored
+# expected values.
 @pytest.mark.parametrize(
     ("base", "ingresos_especie", "complementaria", "expected_03", "expected_06"),
     [

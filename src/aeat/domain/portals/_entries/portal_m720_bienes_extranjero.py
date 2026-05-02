@@ -1,4 +1,10 @@
-"""Portal: Modelo 720 — bienes y derechos en el extranjero."""
+"""Registry entry for Modelo 720 — foreign assets and rights informational return.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -28,3 +34,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Declaración informativa sobre bienes y derechos situados en el extranjero.",
 )
+"""Portal entry for Modelo 720 (foreign assets and rights informational return)."""

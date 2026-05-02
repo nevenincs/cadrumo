@@ -1,10 +1,14 @@
-"""Unit tests for Modelo 100 Anexo G — cuotas + tarifas (2024).
+"""Unit tests for Modelo 100 Anexo G — cuotas + tarifas (ejercicio 2024).
 
-External-anchored to LIRPF arts. 63 + 66 + 67 + 68.4 + 79.
+Exercises the cuota chain (tarifa estatal general + tarifa estatal del
+ahorro + Ceuta/Melilla 60 % deduction) of
+:data:`aeat.domain.formulas._rulesets.MODELO_100_2024` against worked
+inputs anchored to LIRPF arts. 63, 66, 67, 68.4, and 79.
 
-Strategy: use `Engine.derive()` directly and inspect specific ledger
-entries. Avoids the audit-comparison cascade that would surface
-unrelated discrepancies when only the focal casillas matter.
+Tests call :meth:`aeat.domain.formulas._engine.Engine.derive` directly
+and inspect specific ledger entries to avoid the audit-comparison
+cascade that would surface unrelated discrepancies when only the focal
+casillas matter.
 """
 
 from __future__ import annotations
@@ -20,12 +24,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _zero_inputs(ruleset) -> dict[str, Decimal]:
-    """Return zero values for every NON-COMPUTED casilla."""
+    """Return zero values for every non-computed casilla in ``ruleset``.
+
+    Args:
+        ruleset: A :class:`aeat.domain.formulas._ruleset.Ruleset` whose
+            non-computed casillas seed the input dictionary.
+
+    Returns:
+        Mapping of casilla id to ``Decimal("0.00")``.
+    """
     return {c.casilla_id: Decimal("0.00") for c in ruleset.casillas if not c.computed}
 
 
 def _derived(ruleset, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
-    """Run the engine and return derived values keyed by casilla_id."""
+    """Run :class:`aeat.domain.formulas._engine.Engine` and key by casilla id.
+
+    Args:
+        ruleset: Ruleset to derive against.
+        inputs: User-supplied casilla values.
+
+    Returns:
+        Mapping of casilla id to its derived ledger value.
+    """
     ledger = Engine().derive(ruleset=ruleset, inputs=inputs)
     return {entry.casilla_id: entry.value for entry in ledger.entries}
 
@@ -121,7 +141,10 @@ class TestProgressiveTarifaAhorro2024:
 
 
 class TestProgressiveTarifaAhorroDelta:
-    """Pre-Ley 7/2024: top bracket >300000 is 14% state half (vs 15% post)."""
+    """Verify the 2024 vs 2025 top-bracket delta on the ahorro scale.
+
+    Pre-Ley 7/2024: top bracket >300000 is 14% state half (vs 15% post).
+    """
 
     def test_tarifa_ahorro_top_bracket_2024_pre_ley_7_2024(self) -> None:
         """At BIA 500.000: 2024 tarifa estatal = 35940 + 200000*0.14 = 63940."""
