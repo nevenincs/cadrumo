@@ -35,7 +35,7 @@ class ModeloMetadata(BaseModel):
         code: The :class:`ModeloCode` this entry describes.
         official_name_es: Authoritative Spanish name of the modelo.
             Non-empty after stripping.
-        display_label: Quad-lingual display label with non-empty
+        display_label: Multilingual display label with non-empty
             ``es`` / ``en`` / ``hu`` keys.
         category: Functional :class:`ModeloCategory`.
         cadence: Canonical filing :class:`ModeloCadence`. Exact
@@ -92,7 +92,7 @@ class ModeloMetadata(BaseModel):
 
     @field_validator("display_label")
     @classmethod
-    def _display_label_quad_lingual(cls, value: Translatable) -> Translatable:
+    def _display_label_multilingual(cls, value: Translatable) -> Translatable:
         """Require non-empty ``es`` / ``en`` / ``hu`` keys on display_label.
 
         Args:

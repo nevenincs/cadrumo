@@ -1,4 +1,4 @@
-"""Pydantic v2 strict models for the first-run setup wizard (#61).
+"""Pydantic v2 strict models for the first-run setup wizard.
 
 Every record that crosses the subpackage boundary lives here as a
 strict, frozen :class:`pydantic.BaseModel` (or :class:`enum.StrEnum`
@@ -28,7 +28,7 @@ class SetupStep(StrEnum):
     capture typed answers. ``FIXTURE_PROVISIONING`` records the Google
     Workspace fixture opt-in. ``VERIFY`` runs the pure verifier.
     ``FIRST_RUN`` optionally hands off to the workflow-engine runner
-    (Protocol-stubbed until #59 lands). ``DONE`` is terminal.
+    (Protocol-backed). ``DONE`` is terminal.
     """
 
     WELCOME = "WELCOME"
@@ -74,8 +74,8 @@ class VerifyFinding(BaseModel):
     Attributes:
         name: Short machine-readable identifier for the check.
         severity: One of :class:`VerifySeverity`.
-        message: Trilingual human-readable message.
-        remediation: Optional trilingual remediation hint.
+        message: Multilingual human-readable message.
+        remediation: Optional multilingual remediation hint.
     """
 
     model_config = _STRICT_FROZEN

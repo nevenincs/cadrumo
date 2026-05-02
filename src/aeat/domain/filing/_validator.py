@@ -1,4 +1,4 @@
-"""Cross-cutting validator for :mod:`aeat.application.filing` drafts.
+"""Cross-cutting validator for :mod:`aeat.domain.filing` drafts.
 
 The validator is intentionally pure: it consumes a draft + the
 casilla collection it was built against and returns a tuple of
@@ -34,8 +34,8 @@ class FilingValidator:
     """Apply cross-cutting validation rules to a :class:`FilingDraft`.
 
     The validator depends on Protocols, not concrete subpackages,
-    so the in-flight #9 / #23 / #38 work can be plugged in via a
-    rebase later.
+    so alternative casilla, formula, or deadline implementations can
+    be supplied without touching the validator.
     """
 
     def __init__(
@@ -53,7 +53,7 @@ class FilingValidator:
                 truth for required-ness, ranges, and formula
                 inputs.
             deadline_checker: Optional deadline check Protocol
-                stub. When ``None`` the validator skips the
+                implementation. When ``None`` the validator skips the
                 deadline rule.
             quarterly_303_drafts: Optional tuple of four Modelo
                 303 quarterly drafts. When populated and the
@@ -221,7 +221,7 @@ class FilingValidator:
           are re-evaluated. Divergences emit
           ``filing-303-internal-mismatch`` ERROR findings against
           the 390 draft, with the offending 303 ``draft_id`` in
-          the trilingual message payload.
+          the multilingual message payload.
 
         Args:
             draft: The draft under validation.
@@ -340,7 +340,7 @@ class FilingValidator:
 
 
 #: Mapping of 390 quarterly-sum casilla → 303 source casilla.
-#: Duplicated from :mod:`aeat.application.filing._builders.modelo_390` so the
+#: Duplicated from :mod:`aeat.domain.filing._builders.modelo_390` so the
 #: validator has no import dependency on the private builder.
 _MODELO_390_QUARTERLY_MAP: dict[str, str] = {
     "100": "01",

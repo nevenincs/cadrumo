@@ -10,8 +10,8 @@ from ..casillas import ModeloCode, PeriodType
 from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
-    Citation,
-    CitationSource,
+    CategoryCitation,
+    CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
@@ -43,29 +43,29 @@ _COARSE_IVA = (
     CasillaMapping(
         modelo=ModeloCode.MODELO_303,
         period_type=PeriodType.QUARTERLY,
-        casilla_code="71",
+        casilla_code="04",
         sign=CasillaMappingSign.CREDIT,
     ),
 )
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
-    """Build a trilingual label payload."""
+    """Build a multilingual label payload."""
 
     return {"es": es, "en": en, "hu": hu}
 
 
 def _citation(
     *,
-    source: CitationSource,
+    source: CategoryCitationSource,
     reference: str,
     locator: str,
     url: str,
     quote_es: str,
-) -> Citation:
+) -> CategoryCitation:
     """Build a citation with a compact Spanish quote."""
 
-    return Citation(
+    return CategoryCitation(
         source=source,
         reference=reference,
         locator=locator,
@@ -77,7 +77,7 @@ def _citation(
 def _rule(
     *,
     kind: ProportionalityKind,
-    citations: tuple[Citation, ...],
+    citations: tuple[CategoryCitation, ...],
     notes_es: str,
     fixed_pct: Decimal | None = None,
     default_ratio: Decimal | None = None,
@@ -120,14 +120,14 @@ def _profile(
 
 _CIT_GENERAL_EXPENSES = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Rendimientos de actividades económicas, gastos fiscalmente deducibles",
         url=_MANUAL_RENTA_2025,
         quote_es="Son deducibles los gastos necesarios para la obtención de ingresos.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -136,7 +136,7 @@ _CIT_GENERAL_EXPENSES = (
 )
 _CIT_HOME_SUPPLIES = (
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 30.2.5.b",
         url=_LEY_IRPF,
@@ -145,7 +145,7 @@ _CIT_HOME_SUPPLIES = (
         ),
     ),
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Vivienda parcialmente afecta",
         url=_MANUAL_RENTA_2025,
@@ -154,7 +154,7 @@ _CIT_HOME_SUPPLIES = (
 )
 _CIT_TELEFONIA_MOVIL = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Afectación exclusiva del elemento patrimonial",
         url=_MANUAL_RENTA_2025,
@@ -163,7 +163,7 @@ _CIT_TELEFONIA_MOVIL = (
         ),
     ),
     _citation(
-        source=CitationSource.REGLAMENTO_IRPF,
+        source=CategoryCitationSource.REGLAMENTO_IRPF,
         reference="Reglamento IRPF",
         locator="art. 22",
         url=_REGLAMENTO_IRPF,
@@ -172,14 +172,14 @@ _CIT_TELEFONIA_MOVIL = (
 )
 _CIT_DIETAS = (
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 6/2017 / Ley IRPF",
         locator="art. 30.2.5.c",
         url=_LEY_IRPF,
         quote_es="Serán deducibles los gastos de manutención del propio contribuyente con los límites reglamentarios.",
     ),
     _citation(
-        source=CitationSource.REGLAMENTO_IRPF,
+        source=CategoryCitationSource.REGLAMENTO_IRPF,
         reference="Reglamento IRPF",
         locator="art. 9.A.3.a",
         url=_REGLAMENTO_IRPF,
@@ -188,14 +188,14 @@ _CIT_DIETAS = (
 )
 _CIT_VEHICLE = (
     _citation(
-        source=CitationSource.REGLAMENTO_IRPF,
+        source=CategoryCitationSource.REGLAMENTO_IRPF,
         reference="Reglamento IRPF",
         locator="art. 22",
         url=_REGLAMENTO_IRPF,
         quote_es="Los turismos se presumen no afectos salvo prueba de utilización exclusiva en la actividad.",
     ),
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Vehículos y afectación exclusiva",
         url=_MANUAL_RENTA_2025,
@@ -204,14 +204,14 @@ _CIT_VEHICLE = (
 )
 _CIT_RETA = (
     _citation(
-        source=CitationSource.AEAT_HELP,
+        source=CategoryCitationSource.AEAT_HELP,
         reference="AEAT ayuda Renta 2025",
         locator="Cotizaciones al RETA",
         url=_AEAT_RETA,
         quote_es="Las cotizaciones al RETA tienen la consideración de gasto fiscalmente deducible.",
     ),
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Seguridad Social del titular",
         url=_MANUAL_RENTA_2025,
@@ -220,14 +220,14 @@ _CIT_RETA = (
 )
 _CIT_PROFESSIONAL_SERVICES = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Servicios de profesionales independientes",
         url=_MANUAL_RENTA_2025,
         quote_es="Los servicios exteriores necesarios para la actividad tienen la consideración de gasto deducible.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -236,7 +236,7 @@ _CIT_PROFESSIONAL_SERVICES = (
 )
 _CIT_OTHER_SERVICES = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Otros servicios exteriores",
         url=_MANUAL_RENTA_2025,
@@ -246,7 +246,7 @@ _CIT_OTHER_SERVICES = (
         ),
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -255,14 +255,14 @@ _CIT_OTHER_SERVICES = (
 )
 _CIT_HEALTH_INSURANCE = (
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 30.2.5.c regla 1.a",
         url=_LEY_IRPF,
         quote_es="Son deducibles las primas de seguro de enfermedad con el límite de 500 euros por persona asegurada.",
     ),
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Primas de seguro de enfermedad",
         url=_MANUAL_RENTA_2025,
@@ -271,14 +271,14 @@ _CIT_HEALTH_INSURANCE = (
 )
 _CIT_AMORTIZATION = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Amortizaciones del inmovilizado",
         url=_MANUAL_RENTA_2025,
         quote_es="Las inversiones en inmovilizado se deducen mediante las amortizaciones fiscalmente admitidas.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -287,14 +287,14 @@ _CIT_AMORTIZATION = (
 )
 _CIT_TAXES = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Tributos fiscalmente deducibles",
         url=_MANUAL_RENTA_2025,
         quote_es="Son deducibles los tributos no estatales que recaen sobre elementos afectos.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 14 LIS por remisión",
         url=_LEY_IRPF,
@@ -303,14 +303,14 @@ _CIT_TAXES = (
 )
 _CIT_FINANCIAL = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Gastos financieros y bancarios",
         url=_MANUAL_RENTA_2025,
         quote_es="Los gastos financieros vinculados a la actividad pueden deducirse como gasto corriente.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -319,14 +319,14 @@ _CIT_FINANCIAL = (
 )
 _CIT_LOCAL_RENT = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Arrendamientos y cánones",
         url=_MANUAL_RENTA_2025,
         quote_es="Los arrendamientos del local afecto son gasto deducible de la actividad.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 28.1",
         url=_LEY_IRPF,
@@ -335,14 +335,14 @@ _CIT_LOCAL_RENT = (
 )
 _CIT_HOME_RENT = (
     _citation(
-        source=CitationSource.MANUAL_RENTA,
+        source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="Vivienda parcialmente afecta",
         url=_MANUAL_RENTA_2025,
         quote_es="La vivienda parcialmente afecta exige prorratear solo los gastos admitidos por la norma.",
     ),
     _citation(
-        source=CitationSource.LEY_IRPF,
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 30.2.5.b",
         url=_LEY_IRPF,

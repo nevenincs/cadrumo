@@ -7,8 +7,7 @@ have a single root they can catch at integration boundaries.
 ``adapters/outbound/aeat/export`` layer) because:
 
 1. The gate module (``core/access_gate/``) raises it, and
-   ``core/`` cannot import from ``adapters/`` under the
-   import-linter contract.
+   ``core/`` must remain independent from adapter implementations.
 2. The policy "live AEAT submission is permanently forbidden" is
    a foundational invariant, not an adapter implementation detail.
 """
@@ -19,8 +18,8 @@ from ..errors import AeatError
 from ..i18n import Translatable
 
 
-class SubmissionError(AeatError):
-    """Base class for every error raised by the submission pipeline.
+class AccessGateSubmissionError(AeatError):
+    """Base class for live-write access-gate submission policy failures.
 
     Attributes:
         translated_message: Optional :class:`aeat.core.i18n.Translatable`
@@ -32,18 +31,18 @@ class SubmissionError(AeatError):
 
         Args:
             message: English-authoritative error message (logged).
-            translated_message: Optional trilingual payload surfaced
+            translated_message: Optional multilingual payload surfaced
                 to the CLI and any user-facing consumer.
         """
         super().__init__(message)
         self.translated_message: Translatable | None = translated_message
 
 
-class SubmissionPreflightError(SubmissionError):
-    """Raised when preflight gating rejects a draft before any browser work."""
+class AccessGateSubmissionPreflightError(AccessGateSubmissionError):
+    """Raised when access-gate preflight rejects a write-shaped operation."""
 
 
-class LiveSubmitForbiddenError(SubmissionPreflightError):
+class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
     """Raised when any caller attempts a permanently forbidden live AEAT write."""
 
     def __init__(
@@ -93,7 +92,7 @@ class AeatLiveReadNotEnabledError(AeatError):
 
 __all__ = [
     "AeatLiveReadNotEnabledError",
+    "AccessGateSubmissionError",
+    "AccessGateSubmissionPreflightError",
     "LiveSubmitForbiddenError",
-    "SubmissionError",
-    "SubmissionPreflightError",
 ]

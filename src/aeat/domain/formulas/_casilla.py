@@ -1,9 +1,9 @@
 """Casilla-definition model used inside a :class:`Ruleset`.
 
-A :class:`CasillaDefinition` is the engine-side description of a
-single casilla (tax-form box): its identifier, trilingual label,
-data type, whether it is user-entered or computed, and the
-legal citations that govern it.
+A :class:`CasillaDefinition` is the engine-side description of a single
+casilla (tax-form box): its identifier, multilingual label, data type,
+whether it is user-entered or computed, and the legal citations that
+govern it.
 """
 
 from __future__ import annotations
@@ -18,10 +18,8 @@ from ...core.i18n import Translatable, require_authoritative
 from ..casillas import CasillaDataType
 from ..modelos import LegalCitation
 
-# TODO post-#398: register an ErrorCode for RulesetValidationError under the
-# INTEGRITY category once the error-code registry lands.
-
 _CASILLA_ID_RE = re.compile(r"^\d{2,5}$")
+"""Permitted casilla-identifier shape: 2 to 5 ASCII digits."""
 
 
 class CasillaDefinition(BaseModel):
@@ -29,7 +27,7 @@ class CasillaDefinition(BaseModel):
 
     Attributes:
         casilla_id: The 2-4 digit casilla identifier (e.g. ``"01"``).
-        label: Trilingual label (Spanish authoritative).
+        label: Multilingual label (Spanish authoritative).
         computed: ``True`` when the engine derives this casilla from
             a :class:`FormulaDefinition`; ``False`` when the caller
             supplies the value.
@@ -61,18 +59,15 @@ class CasillaDefinition(BaseModel):
     def _require_legal_basis_for_computed(self) -> CasillaDefinition:
         """Refuse construction of a computed casilla without a legal citation.
 
-        Issue #339 closure of the audit finding referenced in EPIC #316:
-        ``CasillaDefinition.legal_basis`` was previously optional, which
-        let a ruleset author ship a ``computed=True`` row with zero legal
-        provenance — bypassing the ``KnownBadCitation`` blocklist
-        entirely (the blocklist only fires when a citation is present).
-        Tax math without legal citations is unverifiable for an AEAT-
-        inspector scenario.
+        ``CasillaDefinition.legal_basis`` is required for ``computed=True``
+        rows because tax math without legal citations is unverifiable for
+        an AEAT-inspector scenario, and the ``KnownBadCitation`` blocklist
+        only fires when a citation is present.
 
         The companion ``aeat audit rulesets citations`` CLI (under
-        :mod:`aeat.entrypoints.cli.audit`) reports per-modelo coverage and fails non-
-        zero on any gap, so future drift surfaces both at import time and
-        in the dedicated audit surface.
+        :mod:`aeat.entrypoints.cli.audit`) reports per-modelo coverage and
+        fails non-zero on any gap, so future drift surfaces both at import
+        time and in the dedicated audit surface.
         """
         if self.computed and not self.legal_basis:
             raise RulesetValidationError(

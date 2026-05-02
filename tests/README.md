@@ -212,4 +212,4 @@ Checklist:
 - `tests/test_marker_integrity.py` - AST-backed drift detector.
 - `scripts/README.md` - Google Workspace fixture provisioning for
   `live_read` tests.
-- `CLAUDE.md` - trilingual testing contract and module-layout mandate.
+- `CLAUDE.md` - multilingual testing contract and module-layout mandate.
