@@ -2,7 +2,7 @@
 
 Walks a committed manual part, validates every JSON file against the
 strict schema, and reports dangling cross-references, missing
-trilingual completeness, and records lacking reviewer metadata. The
+quad-lingual completeness, and records lacking reviewer metadata. The
 report is a pydantic model so the CLI can render it deterministically
 and so tests can assert on its shape.
 """
@@ -21,8 +21,14 @@ from .errors import ManifestError, ManualNotFoundError, ManualParseError, Manual
 _logger = get_logger(__name__)
 
 
-class VerificationIssue(BaseModel):
-    """Single issue flagged by the verifier."""
+class ManualVerificationIssue(BaseModel):
+    """Single issue flagged by the verifier.
+
+    Attributes:
+        level: Either ``'error'`` or ``'warning'``.
+        code: Stable identifier for the issue category.
+        message: Human-readable description, including the offending path.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -31,23 +37,31 @@ class VerificationIssue(BaseModel):
     message: str = Field(description="Human-readable description, including the offending path.")
 
 
-class VerificationReport(BaseModel):
-    """Aggregate report returned by :func:`verify_manual_dir`."""
+class ManualVerificationReport(BaseModel):
+    """Aggregate report returned by :func:`verify_manual_dir`.
+
+    Attributes:
+        manual_id: Identifier of the verified handbook.
+        year: Tax year.
+        part: Volume split within the year.
+        issues: Every :class:`ManualVerificationIssue` collected during
+            the walk.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     manual_id: ManualId
     year: int
     part: ManualPart
-    issues: tuple[VerificationIssue, ...] = Field(default_factory=tuple)
+    issues: tuple[ManualVerificationIssue, ...] = Field(default_factory=tuple)
 
     @property
-    def errors(self) -> tuple[VerificationIssue, ...]:
+    def errors(self) -> tuple[ManualVerificationIssue, ...]:
         """Return only the ``level == 'error'`` issues."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property
-    def warnings(self) -> tuple[VerificationIssue, ...]:
+    def warnings(self) -> tuple[ManualVerificationIssue, ...]:
         """Return only the ``level == 'warning'`` issues."""
         return tuple(issue for issue in self.issues if issue.level == "warning")
 
@@ -57,14 +71,14 @@ class VerificationReport(BaseModel):
         return not self.errors
 
 
-def _section_trilingual_warnings(section: Section) -> list[VerificationIssue]:
-    """Warn when a ``Section`` is missing ``en`` or ``hu`` translations."""
-    issues: list[VerificationIssue] = []
+def _section_quad_lingual_warnings(section: Section) -> list[ManualVerificationIssue]:
+    """Warn when a :class:`~aeat.domain.manuals.Section` is missing ``en`` or ``hu`` translations."""
+    issues: list[ManualVerificationIssue] = []
     for field_name, translatable in (("title", section.title), ("summary", section.summary)):
         for lang in (Language.EN, Language.HU):
             if not translatable.get(lang.value):
                 issues.append(
-                    VerificationIssue(
+                    ManualVerificationIssue(
                         level="warning",
                         code="missing-translation",
                         message=(f"section {section.section_id!r}: {field_name} missing '{lang.value}' translation"),
@@ -81,14 +95,14 @@ def _collect_section_ids(sections: tuple[Section, ...]) -> set[str]:
 def _cross_reference_issues(
     sections: tuple[Section, ...],
     known_section_ids: set[str],
-) -> list[VerificationIssue]:
+) -> list[ManualVerificationIssue]:
     """Flag rules and sections referencing unknown section IDs."""
-    issues: list[VerificationIssue] = []
+    issues: list[ManualVerificationIssue] = []
     for section in sections:
         for target in section.references_sections:
             if target not in known_section_ids:
                 issues.append(
-                    VerificationIssue(
+                    ManualVerificationIssue(
                         level="error",
                         code="dangling-section-ref",
                         message=(f"section {section.section_id!r} references unknown section {target!r}"),
@@ -98,7 +112,7 @@ def _cross_reference_issues(
             for target in rule.references_sections:
                 if target not in known_section_ids:
                     issues.append(
-                        VerificationIssue(
+                        ManualVerificationIssue(
                             level="error",
                             code="dangling-section-ref",
                             message=(f"rule {rule.rule_id!r} references unknown section {target!r}"),
@@ -114,7 +128,7 @@ def verify_manual_dir(
     part: ManualPart = ManualPart.SINGLE,
     review_required: bool | None = None,
     settings: Settings | None = None,
-) -> VerificationReport:
+) -> ManualVerificationReport:
     """Verify every record under a manual part on disk.
 
     Args:
@@ -122,16 +136,16 @@ def verify_manual_dir(
         year: Tax year.
         part: Volume split within the year.
         review_required: Reserved for the future soft-review gate
-            (sentinel-based reviewer placeholders). In v1 this flag
-            has no effect because ``_schema._Reviewer`` already
-            enforces a non-empty reviewer at load time; records
-            failing that constraint surface as ``load-failed``
+            (sentinel-based reviewer placeholders). Currently this
+            flag has no effect because the ``_Reviewer`` constrained
+            type already enforces a non-empty reviewer at load time;
+            records failing that constraint surface as ``load-failed``
             errors. Defaults to the ``AEAT_MANUALS_REVIEW_REQUIRED``
             setting value.
         settings: Optional settings instance.
 
     Returns:
-        A :class:`VerificationReport` summarising every issue found.
+        A :class:`ManualVerificationReport` summarising every issue found.
 
     Raises:
         ManualNotFoundError: If neither the structure nor the manifest
@@ -142,7 +156,7 @@ def verify_manual_dir(
     _ = review_required if review_required is not None else resolved.aeat_manuals_review_required
 
     part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=resolved)
-    issues: list[VerificationIssue] = []
+    issues: list[ManualVerificationIssue] = []
 
     if not part_root.exists():
         raise ManualNotFoundError(f"manual part root does not exist: {part_root}")
@@ -150,7 +164,7 @@ def verify_manual_dir(
     manifest_path = part_root / "manifest.json"
     if not manifest_path.exists():
         issues.append(
-            VerificationIssue(
+            ManualVerificationIssue(
                 level="warning",
                 code="missing-manifest",
                 message=f"{manifest_path} is absent; run 'aeat manual fetch' to materialise it",
@@ -159,8 +173,8 @@ def verify_manual_dir(
 
     structure_dir = part_root / "structure"
     if not (structure_dir / "manual.json").exists():
-        # v1 default state: structure/ is empty. Nothing to validate beyond the manifest.
-        return VerificationReport(
+        # Default state: structure/ is empty. Nothing to validate beyond the manifest.
+        return ManualVerificationReport(
             manual_id=manual_id,
             year=year,
             part=part,
@@ -171,13 +185,13 @@ def verify_manual_dir(
         manual = load_manual(manual_id, year, part, settings=resolved)
     except (ManualParseError, ManualNotFoundError, ManifestError) as exc:
         issues.append(
-            VerificationIssue(
+            ManualVerificationIssue(
                 level="error",
                 code="load-failed",
                 message=str(exc),
             )
         )
-        return VerificationReport(
+        return ManualVerificationReport(
             manual_id=manual_id,
             year=year,
             part=part,
@@ -191,7 +205,7 @@ def verify_manual_dir(
     known_ids = _collect_section_ids(sections_tuple)
 
     for section in sections_tuple:
-        issues.extend(_section_trilingual_warnings(section))
+        issues.extend(_section_quad_lingual_warnings(section))
     issues.extend(_cross_reference_issues(sections_tuple, known_ids))
 
     _logger.info(
@@ -201,7 +215,7 @@ def verify_manual_dir(
         part.value,
         len(issues),
     )
-    return VerificationReport(
+    return ManualVerificationReport(
         manual_id=manual_id,
         year=year,
         part=part,
@@ -209,8 +223,8 @@ def verify_manual_dir(
     )
 
 
-def raise_on_errors(report: VerificationReport) -> None:
-    """Raise :class:`ManualReviewRequiredError` if the report has errors.
+def raise_on_errors(report: ManualVerificationReport) -> None:
+    """Raise :exc:`ManualReviewRequiredError` if the report has errors.
 
     Thin helper so the CLI can collapse a report into a non-zero exit
     without re-implementing the error-check logic.
@@ -219,7 +233,7 @@ def raise_on_errors(report: VerificationReport) -> None:
         report: Report produced by :func:`verify_manual_dir`.
 
     Raises:
-        ManualReviewRequiredError: When the report contains any
+        :exc:`ManualReviewRequiredError`: When the report contains any
             ``error``-level issues.
     """
     if not report.ok:
