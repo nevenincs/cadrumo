@@ -1,4 +1,4 @@
-"""Shared strict+frozen records consumed across PDF-import modules (#305).
+"""Shared strict+frozen records consumed across PDF-import modules.
 
 :class:`ExtractedCasilla` is the boundary-crossing record every per-modelo
 extractor produces. It pairs a stable casilla identifier with the printed
@@ -37,9 +37,9 @@ class ExtractedCasilla(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    # max_length raised from 8 → 32 (EPIC #305) to allow
-    # named-field identifiers (e.g. ``total_operadores``) for modelos
-    # 036/037/232/369/720 whose summary blocks have no numeric casilla IDs.
+    # max_length is 32 to allow named-field identifiers
+    # (e.g. ``total_operadores``) for modelos 036/037/232/369/720
+    # whose summary blocks have no numeric casilla IDs.
     casilla_id: str = Field(min_length=1, max_length=32)
     printed_value: Decimal | int | str | bool | date | None
     source_page: int = Field(ge=1)

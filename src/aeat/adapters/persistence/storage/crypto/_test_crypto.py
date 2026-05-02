@@ -6,6 +6,7 @@ import secrets
 
 import pytest
 
+from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 from ._crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
@@ -15,7 +16,6 @@ from ._crypto import (
     derive_key,
     encrypt_record,
 )
-from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

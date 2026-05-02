@@ -1,7 +1,9 @@
-"""Unit tests for :mod:`aeat.adapters.inbound.pdf._shared` (#305).
+"""Unit tests for :mod:`aeat.adapters.inbound.pdf._shared`.
 
-Exercises the strict+frozen invariants of :class:`ExtractedCasilla` and the
-:class:`PdfFilingImportError` root's inheritance chain.
+Exercises the strict + frozen invariants of :class:`ExtractedCasilla`
+(value-type tolerance, frozen attributes, source-page bounds,
+extraction-confidence range, bounding-box shape, JSON round-trip) and
+the :class:`PdfFilingImportError` root's inheritance chain.
 """
 
 from __future__ import annotations
@@ -21,7 +23,7 @@ _PrintedValue = Decimal | int | str | bool | date | None
 
 
 class TestExtractedCasillaShape:
-    """Strict+frozen invariants of :class:`ExtractedCasilla`."""
+    """Strict + frozen invariants of :class:`ExtractedCasilla`."""
 
     def _build(
         self,
@@ -32,6 +34,7 @@ class TestExtractedCasillaShape:
         source_bbox: tuple[float, float, float, float] | None = None,
         extraction_confidence: float = 1.0,
     ) -> ExtractedCasilla:
+        """Build a populated :class:`ExtractedCasilla` for assertion targets."""
         return ExtractedCasilla(
             casilla_id=casilla_id,
             printed_value=printed_value,

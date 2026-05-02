@@ -17,7 +17,7 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.adapters.outbound.aeat.export._models import (
+from aeat.domain.submission import (
     SubmissionAttempt,
     SubmissionStatus,
     SubmittedFiling,

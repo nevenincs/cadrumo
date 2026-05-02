@@ -1,7 +1,9 @@
 """Closed enumerations for the unified review queue.
 
-See [[2026-04-18-unified-review-queue-adr]] decision D5 for the
-kind, severity, and state taxonomy.
+Defines the kind, severity, and state taxonomy used by every
+:class:`aeat.application.review.ReviewItem`. Reserved-but-unimplemented
+``--kind`` tokens are tracked in :data:`_RESERVED_KINDS` and surfaced
+to callers via :func:`reserved_kind_reason`.
 """
 
 from __future__ import annotations
@@ -15,17 +17,15 @@ class ReviewItemKind(StrEnum):
     """Stable identifier for the source of a review item.
 
     The four members below cover every pending source the project
-    currently produces. Two future-only members are reserved by the
-    ADR (see [[2026-04-18-unified-review-queue-adr#kind-namespace-reservations]]):
-
-    - ``classification`` — blocked on the ``ClassificationDecision``
-      record type (umbrella #202 child C4h).
-    - ``approval-stale`` — blocked on ``FilingDraftStatus.APPROVED``
-      (#230) and the staleness detector (C4f).
+    currently produces. Two future-only tokens are reserved at the
+    parser surface — ``classification`` (blocked on a
+    ``ClassificationDecision`` record type) and ``approval-stale``
+    (folded into the ``finding`` source once the ``APPROVAL_STALE``
+    draft status surfaced as a HIGH-severity finding row).
 
     Both reserved tokens are recognised by the CLI but currently
     rejected with a ``ReviewKindReservedError`` that names the
-    blocking issue.
+    blocking dependency.
     """
 
     TRANSACTION = "transaction"
@@ -37,8 +37,8 @@ class ReviewItemKind(StrEnum):
 class ReviewSeverity(StrEnum):
     """Editorial severity of a review item.
 
-    Severity is derived per-source by the adapter (see ADR D5),
-    not stored on the underlying record. The ranking is fixed:
+    Severity is derived per-source by the adapter, not stored on the
+    underlying record. The ranking is fixed:
     CRITICAL > HIGH > NORMAL > INFO.
     """
 
@@ -66,8 +66,8 @@ def severity_rank(severity: ReviewSeverity) -> int:
 class ReviewState(StrEnum):
     """Filter state for the review queue CLI.
 
-    ``PENDING`` (default) returns only items that currently want
-    Kent's attention. ``ALL`` is reserved for a future "show
+    ``PENDING`` (default) returns only items that currently want the
+    operator's attention. ``ALL`` is reserved for a future "show
     resolved too" mode and is currently identical to ``PENDING``
     because every adapter only emits pending items today.
     """
@@ -87,9 +87,9 @@ class ReviewFormat(StrEnum):
 # rejected by the CLI with a descriptive error.
 _RESERVED_KINDS: Mapping[str, str] = MappingProxyType(
     {
-        "classification": "blocked on ClassificationDecision record (umbrella #202 child C4h)",
+        "classification": "blocked on ClassificationDecision record",
         "approval-stale": (
-            "now surfaced under --kind finding since #230 shipped — "
+            "now surfaced under --kind finding — "
             "drafts with FilingDraftStatus.APPROVAL_STALE emit a HIGH-severity finding row"
         ),
     }

@@ -1,24 +1,23 @@
-"""Arithmetic-op-class mutation harness (issue #457 closure).
+"""Arithmetic-op-class mutation harness for ruleset formula bodies.
 
-Closes the operator-class-typo deferral catalogued in the
-audit: a typo where the author wrote ``add_op`` but meant ``sub_op``
-(or vice versa) was previously NOT exercised by any mutator. The
-existing operand-swap harness covers operand-order regressions
-(``a-b`` → ``b-a``) but NOT operator-class regressions (``a-b`` →
-``a+b``).
+Defends against operator-class typos: an author who writes ``add_op``
+but means ``sub_op`` (or vice versa) is otherwise not caught by the
+operand-swap harness in :mod:`test_operand_swap_mutation`, which only
+covers operand-order regressions (``a - b`` -> ``b - a``) and not
+operator-class regressions (``a - b`` -> ``a + b``).
 
-The new :class:`ARITHMETIC_OP_SWAP` mutator class swaps every
-:class:`AddFormula` <-> :class:`SubFormula` node at any AST position:
+The mutator swaps every :class:`AddFormula` <-> :class:`SubFormula`
+node at any AST position:
 
-- 2-operand AddFormula → SubFormula(same operands).
-- 2-operand SubFormula → AddFormula(same operands).
-- N-operand AddFormula → SubFormula(AddFormula(operands[:-1]), operands[-1])
-  — the last + is flipped to - (single-character typo pattern).
+- 2-operand AddFormula -> SubFormula(same operands).
+- 2-operand SubFormula -> AddFormula(same operands).
+- N-operand AddFormula -> SubFormula(AddFormula(operands[:-1]), operands[-1])
+  -- the last ``+`` is flipped to ``-`` (single-character typo pattern).
 
-For each (ruleset, casilla, op_path) triple, the mutated ruleset
+For each ``(ruleset, casilla, op_path)`` triple, the mutated ruleset
 audits against the same fixture used by the operand-swap harness
-(asymmetric non-zero operands at every Add/Sub site) and surfaces a
-discrepancy on the casilla.
+(asymmetric non-zero operands at every Add/Sub site) and must surface
+a discrepancy on the casilla.
 """
 
 from __future__ import annotations

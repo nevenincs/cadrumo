@@ -1,4 +1,9 @@
-"""Unit tests for the strict pydantic v2 schema."""
+"""Unit tests for the strict pydantic v2 schema in :mod:`aeat.domain.normatives`.
+
+Exercises :class:`aeat.domain.normatives.Articulo` and
+:class:`aeat.domain.normatives.NormativeReference` validation, frozen-model
+semantics, and rejection of forbidden extra fields.
+"""
 
 from __future__ import annotations
 
@@ -54,6 +59,8 @@ def _reference(
 
 
 class TestArticulo:
+    """Validation behaviour of :class:`aeat.domain.normatives.Articulo`."""
+
     def test_happy_path(self) -> None:
         articulo = _articulo()
         assert articulo.numero == "32"
@@ -84,6 +91,8 @@ class TestArticulo:
 
 
 class TestNormativeReference:
+    """Validation behaviour of :class:`aeat.domain.normatives.NormativeReference`."""
+
     def test_happy_path(self) -> None:
         ref = _reference()
         assert ref.id == "ley-35-2006"

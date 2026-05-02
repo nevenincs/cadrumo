@@ -1,0 +1,70 @@
+"""Unit tests for tax-residence JSON persistence.
+
+Covers round-tripping :class:`aeat.domain.profile.KentTaxResidence`,
+atomic write semantics (no orphan tempfiles, even on serialization failure),
+clear semantics, and OS-specific default-path resolution for both
+:envvar:`XDG_CONFIG_HOME` (POSIX) and :envvar:`APPDATA` (Windows).
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import pytest
+
+from ....domain.profile import CCAA, KentTaxResidence
+from ....domain.profile._errors import TaxResidenceProfileError
+from .tax_residence import (
+    _default_path,
+    clear_json,
+    load_json,
+    load_tax_residence,
+    save_json,
+    save_tax_residence,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+def test_round_trip_json_serialization(tmp_path: Path) -> None:
+    target = tmp_path / "tax-residence.json"
+    residence = KentTaxResidence(ccaa=CCAA.GALICIA)
+    save_tax_residence(residence, target)
+    assert load_tax_residence(target) == residence
+
+
+def test_atomic_write_replaces_existing_file(tmp_path: Path) -> None:
+    target = tmp_path / "tax-residence.json"
+    save_tax_residence(KentTaxResidence(ccaa=CCAA.MADRID), target)
+    save_tax_residence(KentTaxResidence(ccaa=CCAA.CATALUNA), target)
+    residence = load_tax_residence(target)
+    assert residence is not None
+    assert residence.ccaa is CCAA.CATALUNA
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_atomic_write_cleans_temp_file_when_serialization_fails(tmp_path: Path) -> None:
+    target = tmp_path / "tax-residence.json"
+    with pytest.raises(TaxResidenceProfileError):
+        save_json({"schema_version": "1", "ccaa": object()}, target)
+    assert not target.exists()
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_clear_removes_profile(tmp_path: Path) -> None:
+    target = tmp_path / "tax-residence.json"
+    save_tax_residence(KentTaxResidence(ccaa=CCAA.MURCIA), target)
+    clear_json(target)
+    assert load_json(target) is None
+
+
+def test_default_path_resolution_linux_xdg() -> None:
+    path = _default_path({"XDG_CONFIG_HOME": "/home/kent/.config"}, "posix")
+    assert path == Path("/home/kent/.config") / "aeat" / "tax-residence.json"
+
+
+def test_default_path_resolution_windows_appdata() -> None:
+    path = _default_path({"APPDATA": r"C:\Users\Kent\AppData\Roaming"}, "nt")
+    assert str(path).endswith(os.path.join("aeat", "tax-residence.json"))
+    assert "AppData" in str(path)

@@ -1,14 +1,19 @@
-"""Smoke tests for the storage subpackage public surface."""
+"""Smoke tests for the storage subpackage's public surface.
+
+Verifies that :mod:`aeat.adapters.persistence.storage` is importable,
+exposes the expected error hierarchy, and that every name in
+``__all__`` resolves on the package root.
+"""
 
 from __future__ import annotations
 
 import pytest
 
 from ....core import errors, logging
-from . import __doc__ as storage_doc
-from . import __all__ as storage_all
 from . import MigrationError, RepositoryError, StorageError
+from . import __all__ as storage_all
 from . import __dict__ as storage_namespace
+from . import __doc__ as storage_doc
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

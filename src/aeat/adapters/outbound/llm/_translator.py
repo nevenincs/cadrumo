@@ -1,4 +1,11 @@
-"""Translation helpers built on top of the public LLM client."""
+"""Translation helpers layered on top of the public LLM client.
+
+Provides a high-level :class:`Translator` for single-text translation and a
+:class:`BulkTranslator` for concurrent batches with built-in rate-limit
+backoff. Both delegate prompt rendering and provider invocation to
+:class:`aeat.adapters.outbound.llm.LLMClient` and the
+``translation_v1`` prompt in :class:`aeat.adapters.outbound.llm.PromptRegistry`.
+"""
 
 from __future__ import annotations
 
@@ -15,14 +22,23 @@ from ._prompts import render_prompt
 
 
 class Translator:
-    """High-level translation API backed by `LLMClient`.
+    """High-level translation API backed by :class:`LLMClient`.
 
-    Args:
-        client: Optional shared LLM client instance.
-        prompt_registry: Optional prompt registry override.
+    Attributes:
+        client: Underlying LLM client used to issue completion requests.
+        prompt_registry: Prompt registry consulted for the
+            ``translation_v1`` template.
     """
 
     def __init__(self, client: LLMClient | None = None, prompt_registry: PromptRegistry | None = None) -> None:
+        """Initialize the translator.
+
+        Args:
+            client: Shared LLM client instance; a new caller-tagged client is
+                created when omitted.
+            prompt_registry: Prompt registry override; defaults to the registry
+                exposed by the chosen :attr:`client`.
+        """
         self.client = client or LLMClient(caller="aeat.adapters.outbound.llm.translator", prompt_id="translation_v1")
         self.prompt_registry = prompt_registry or self.client.prompt_registry
 
@@ -34,16 +50,20 @@ class Translator:
         *,
         context: str | None = None,
     ) -> Translation:
-        """Translate text between two languages.
+        """Translate ``text`` from ``source_lang`` into ``target_lang``.
+
+        The system prompt instructs the model to preserve numbers and field
+        identifiers verbatim, which matters for legal and tax content.
 
         Args:
             text: Source text to translate.
             source_lang: Source ISO 639-1 language code.
             target_lang: Target ISO 639-1 language code.
-            context: Optional translation context.
+            context: Optional translation context surfaced to the model.
 
         Returns:
-            Structured translation result.
+            Structured :class:`Translation` carrying the translated text,
+            normalized language codes, and provider accounting metadata.
         """
 
         normalized_source = normalize_language_code(source_lang)
@@ -83,12 +103,16 @@ class Translator:
 
 
 class BulkTranslator:
-    """Translate many texts concurrently with retry handling.
+    """Translate many texts concurrently with rate-limit-aware retry.
 
-    Args:
-        translator: Optional translator override.
-        concurrency: Maximum concurrent in-flight translations.
-        max_retries: Optional retry override for rate-limit failures.
+    Concurrency is bounded by an :class:`asyncio.Semaphore`; rate-limit
+    failures from :class:`LLMRateLimitError` are retried with jittered
+    exponential backoff, capped at :attr:`max_retries`.
+
+    Attributes:
+        translator: Underlying single-text translator.
+        concurrency: Maximum number of in-flight translations.
+        max_retries: Maximum retry attempts for rate-limit failures.
     """
 
     def __init__(
@@ -98,6 +122,15 @@ class BulkTranslator:
         concurrency: int = 5,
         max_retries: int | None = None,
     ) -> None:
+        """Initialize the bulk translator.
+
+        Args:
+            translator: Translator override; a new :class:`Translator` is
+                created when omitted.
+            concurrency: Maximum concurrent in-flight translations.
+            max_retries: Override for rate-limit retry attempts; falls back to
+                :attr:`aeat.core.config.Settings.aeat_llm_max_retries`.
+        """
         self.translator = translator or Translator()
         settings = self.translator.client.settings if self.translator.client else Settings()
         self.concurrency = concurrency
@@ -118,12 +151,12 @@ class BulkTranslator:
             texts: Source texts to translate.
             source_lang: Source ISO 639-1 language code.
             target_lang: Target ISO 639-1 language code.
-            context: Optional translation context.
-            progress: Optional progress callback receiving completed and total
-                counts.
+            context: Optional translation context shared by every text.
+            progress: Optional progress callback invoked as
+                ``progress(completed, total)`` after each item finishes.
 
         Returns:
-            Completed translations in input order.
+            Completed translations in the same order as ``texts``.
         """
 
         semaphore = asyncio.Semaphore(self.concurrency)
@@ -150,7 +183,12 @@ class BulkTranslator:
         *,
         context: str | None = None,
     ) -> Translation:
-        """Retry on provider rate limits with jittered exponential backoff.
+        """Translate one text, retrying rate-limit failures with backoff.
+
+        On :exc:`LLMRateLimitError` the call is retried up to
+        :attr:`max_retries` times, sleeping for ``retry_after_seconds``
+        (or a capped exponential fallback) plus a small random jitter
+        sourced from :func:`secrets.randbelow`.
 
         Args:
             text: Source text to translate.
@@ -159,7 +197,11 @@ class BulkTranslator:
             context: Optional translation context.
 
         Returns:
-            Completed translation result.
+            Completed :class:`Translation`.
+
+        Raises:
+            :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: Re-raised
+                after :attr:`max_retries` is exhausted.
         """
 
         attempt = 0

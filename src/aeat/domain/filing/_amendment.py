@@ -3,7 +3,7 @@
 Houses the immutable records that describe a filing amendment — the
 :class:`FilingAmendment` aggregate, its :class:`CasillaChange` delta
 entries, and the :class:`AmendmentKind` enum. The orchestration use
-case (``build_complementaria``) lives at
+case :func:`aeat.application.filing.build_complementaria` lives at
 :mod:`aeat.application.filing._complementaria`; this module contains
 only the typed shapes and the deterministic
 :func:`make_amendment_id` helper so the repository (also under

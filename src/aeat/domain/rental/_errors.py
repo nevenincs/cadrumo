@@ -1,8 +1,8 @@
-"""Domain errors for the rental register (#454).
+"""Domain errors for the rental register.
 
 Every subclass is registered in ``aeat.core.errors._registry._DECLARED_ERROR_CODES``
-so the ``__init_subclass__`` hook on :class:`AeatError` can bind a stable
-:class:`ErrorCode` per #398.
+so the ``__init_subclass__`` hook on :class:`aeat.core.errors.AeatError`
+can bind a stable :class:`aeat.core.errors.ErrorCode`.
 """
 
 from __future__ import annotations

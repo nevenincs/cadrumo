@@ -2,9 +2,11 @@
 
 This ruleset deliberately keeps Modelo 200's current verified surface to
 page-14 liquidación arithmetic. The fiscal-year 2026 annual Modelo 200
-order is not available on BOE as of 2026-04-28, so the ruleset is based
-on consolidated LIS/RIS formulas that remain year-invariant for the
-casillas modeled here.
+order is not yet published on BOE, so the ruleset is anchored to the
+consolidated LIS/RIS formulas that remain year-invariant for the
+casillas modeled here. Casilla and formula construction is delegated to
+:func:`aeat.domain.formulas._rulesets.modelo_200_2024._make_casillas` and
+:func:`aeat.domain.formulas._rulesets.modelo_200_2024._make_formulas`.
 """
 
 from __future__ import annotations

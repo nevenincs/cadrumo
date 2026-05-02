@@ -1,4 +1,11 @@
-"""Private provider adapter contract."""
+"""Provider adapter contract for the LLM outbound subpackage.
+
+Defines the normalized request and response shapes that every concrete provider
+adapter (Anthropic, OpenAI, Gemini, local, deterministic) consumes and produces,
+so the higher-level :class:`aeat.adapters.outbound.llm.LLMClient` can stay
+provider-agnostic. Adapters live in sibling modules under
+:mod:`aeat.adapters.outbound.llm._providers`.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +18,18 @@ from .._models import LLMProvider
 
 
 class ProviderRequest(BaseModel):
-    """Normalized provider request."""
+    """Normalized inbound payload passed to a provider adapter.
+
+    Attributes:
+        request_id: Stable opaque hash identifying the public request, suitable
+            for cross-referencing cache and usage records.
+        model: Fully resolved provider model identifier.
+        prompt: Rendered prompt text sent to the provider.
+        system: Optional system prompt prepended to the conversation.
+        max_tokens: Maximum number of output tokens to request.
+        temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``.
+        timeout_s: Per-request timeout in seconds.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -25,7 +43,17 @@ class ProviderRequest(BaseModel):
 
 
 class ProviderCompletion(BaseModel):
-    """Normalized provider response."""
+    """Normalized provider response returned to the public client.
+
+    Attributes:
+        text: Generated text payload.
+        model: Provider model that actually served the request (may differ from
+            the requested model when a vendor performs upstream routing).
+        input_tokens: Provider-reported prompt token count.
+        output_tokens: Provider-reported output token count.
+        provider_request_id: Provider-native request or message id when
+            available, otherwise ``None``.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True)
 
@@ -37,17 +65,41 @@ class ProviderCompletion(BaseModel):
 
 
 class _ProviderAdapter(ABC):
-    """Private interface implemented by every provider adapter."""
+    """Private interface every concrete provider adapter implements.
+
+    Concrete subclasses bind :attr:`provider` to a member of
+    :class:`aeat.adapters.outbound.llm._models.LLMProvider` and implement
+    :meth:`complete` to translate the normalized
+    :class:`ProviderRequest` into a vendor-specific call.
+
+    Attributes:
+        provider: Identifier of the LLM vendor this adapter speaks to.
+    """
 
     provider: LLMProvider
 
     @abstractmethod
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
-        """Execute a completion request against the provider."""
+        """Execute a completion request against the underlying provider.
+
+        Args:
+            request: Normalized request payload.
+
+        Returns:
+            Normalized completion response.
+        """
 
 
 def parse_retry_after(value: str | None) -> float | None:
-    """Parse a ``Retry-After`` header into seconds, if possible."""
+    """Parse an HTTP ``Retry-After`` header value into seconds.
+
+    Args:
+        value: Raw header value, or ``None`` when the header is absent.
+
+    Returns:
+        Number of seconds to wait, or ``None`` when the value is missing or
+        not a plain numeric string.
+    """
 
     if value is None:
         return None
@@ -58,6 +110,14 @@ def parse_retry_after(value: str | None) -> float | None:
 
 
 def raise_rate_limit(message: str, retry_after: str | None) -> None:
-    """Raise a normalized rate-limit error."""
+    """Raise a normalized rate-limit error with parsed retry hint.
+
+    Args:
+        message: Human-readable error message to attach.
+        retry_after: Raw ``Retry-After`` header value supplied by the provider.
+
+    Raises:
+        :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: Always raised.
+    """
 
     raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))

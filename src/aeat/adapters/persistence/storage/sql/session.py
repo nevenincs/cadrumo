@@ -1,7 +1,10 @@
-"""Session / unit-of-work helpers.
+"""Session and unit-of-work helpers for the SQL persistence layer.
 
 Thin wrappers around :class:`sqlalchemy.orm.sessionmaker` that enforce
-commit-on-success / rollback-on-exception semantics via a context manager.
+commit-on-success and rollback-on-exception semantics via a context
+manager. Pairs with :func:`aeat.adapters.persistence.storage.sql.engine.get_engine`
+to provide a default binding when callers do not pass an explicit
+engine.
 """
 
 from __future__ import annotations

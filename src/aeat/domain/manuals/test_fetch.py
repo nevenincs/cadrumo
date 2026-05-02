@@ -37,10 +37,10 @@ def _manifest(sha256: str = "a" * 64, length: int = 10) -> FetchedManualPart:
 
 
 class TestPartSpecs:
-    """The PartSpec table covers every v1 triple and only those triples."""
+    """The PartSpec table covers every supported triple and only those triples."""
 
     def test_part_specs_cover_v1_triples(self) -> None:
-        """PART_SPECS contains exactly the three v1 (renta p1, renta p2, iva) entries."""
+        """PART_SPECS contains exactly the three (renta p1, renta p2, iva) entries."""
         triples = {(spec.manual_id, spec.year, spec.part) for spec in PART_SPECS}
         assert triples == {
             (ManualId.RENTA, 2025, ManualPart.PARTE_1),

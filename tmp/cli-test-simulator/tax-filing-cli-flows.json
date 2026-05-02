@@ -1,0 +1,125 @@
+{
+  "artifact": "aeat-cli-tax-filing-flows-v5",
+  "status": "review-candidate",
+  "rules": [
+    "Setup and app are separate domains.",
+    "Import is an action, not a nested command domain.",
+    "Import verification is ledger import with --verify.",
+    "Skip and unskip use ledger edit --skip true|false.",
+    "Split shares are normalized and must add to 1.0.",
+    "Corrective declaration work uses --amend --id JUSTIFICANTE_ID.",
+    "Export uses --output.",
+    "Verify does not use --export."
+  ],
+  "commands": [
+    "aeat setup auth status",
+    "aeat setup auth configure --provider clave_movil",
+    "aeat setup auth login",
+    "aeat setup profile list-keys",
+    "aeat setup profile set KEY VALUE",
+    "aeat setup profile validate",
+    "aeat app overview --calendar --from DATE --to DATE",
+    "aeat app overview --period PERIOD --verbose",
+    "aeat app ledger import PATH --provider PROVIDER --dry-run",
+    "aeat app ledger import PATH --provider PROVIDER --verify --original PATH",
+    "aeat app ledger list --filter KEY=VALUE",
+    "aeat app ledger show --id RECORD_ID --verbose",
+    "aeat app ledger edit --id RECORD_ID --set COLUMN=VALUE --reason REASON",
+    "aeat app ledger edit --id RECORD_ID --skip true|false --reason REASON",
+    "aeat app ledger split --id RECORD_ID --business SHARE --personal SHARE --reason REASON",
+    "aeat app ledger split --id RECORD_ID --clear --reason REASON",
+    "aeat app invoice import PATH --kind issued|received",
+    "aeat app invoice list --filter KEY=VALUE",
+    "aeat app invoice show --id INVOICE_ID --verbose",
+    "aeat app invoice edit --id INVOICE_ID --set COLUMN=VALUE --reason REASON",
+    "aeat app invoice match --period PERIOD",
+    "aeat app declaration calculate --period PERIOD --modelo MODELO",
+    "aeat app declaration review --period PERIOD --modelo MODELO --format table",
+    "aeat app declaration approve --period PERIOD --modelo MODELO --reason REASON",
+    "aeat app declaration validate --period PERIOD --modelo MODELO",
+    "aeat app declaration export --period PERIOD --modelo MODELO --format boe --output PATH",
+    "aeat app declaration verify --period PERIOD --modelo MODELO --format json --output PATH",
+    "aeat app declaration calculate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID"
+  ],
+  "tapes": [
+    {
+      "id": "invalid-incomplete-imports",
+      "name": "Invalid and incomplete N26 imports",
+      "commands": [
+        "aeat app ledger import ./downloads/n26-invoices.pdf --provider n26 --dry-run",
+        "aeat app ledger import ./downloads/n26-jan.csv --provider n26 --dry-run",
+        "aeat app ledger import ./downloads/n26-jan.csv --provider n26 --verify --original ./downloads/n26-jan.pdf --verbose",
+        "aeat app ledger import ./downloads/n26-feb-mar.csv --provider n26 --dry-run",
+        "aeat app ledger import ./downloads/n26-feb-mar.csv --provider n26 --verify --original ./downloads/n26-feb-mar.pdf",
+        "aeat app ledger list --filter issue=gap --filter period=2026-Q1"
+      ]
+    },
+    {
+      "id": "duplicate-wrong-account",
+      "name": "Duplicate and wrong account import",
+      "commands": [
+        "aeat app ledger import ./downloads/n26-business-q1.csv --provider n26 --verify",
+        "aeat app ledger import ./downloads/n26-business-q1-copy.csv --provider n26 --verify --verbose",
+        "aeat app ledger list --filter issue=duplicate --filter period=2026-Q1",
+        "aeat app ledger edit --id row_dup_002 --skip true --reason duplicate-file",
+        "aeat app ledger import ./downloads/n26-personal-q1.csv --provider n26 --verify --original ./downloads/n26-personal-q1.pdf",
+        "aeat app ledger list --filter import=import_003 --filter period=2026-Q1",
+        "aeat app ledger edit --id row_personal_001 --skip true --reason personal-account",
+        "aeat app ledger edit --id row_personal_001 --skip false --reason user-corrected-account",
+        "aeat app ledger edit --id row_personal_001 --skip true --reason personal-account-confirmed"
+      ]
+    },
+    {
+      "id": "manual-ledger-decisions",
+      "name": "Manual ledger record decisions",
+      "commands": [
+        "aeat app ledger list --filter status=pending --filter period=2026-Q1",
+        "aeat app ledger show --id row_1042",
+        "aeat app ledger edit --id row_1042 --set category=software --set business.share=1.0 --set reference=invoice-901 --set comments=invoice-reviewed --reason invoice",
+        "aeat app ledger edit --id row_1043 --set category=design-services --set business.share=1.0 --set comments=client-payment --reason client-payment",
+        "aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment",
+        "aeat app ledger split --id row_1050 --clear --reason corrected-single-use",
+        "aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment-confirmed",
+        "aeat app ledger edit --id row_1051 --skip true --reason private-expense",
+        "aeat app ledger edit --id row_1051 --skip false --reason invoice-found",
+        "aeat app ledger edit --id row_1051 --set category=supplies --set business.share=1.0 --set document.path=./receipts/receipt-901.pdf --reason invoice-found"
+      ]
+    },
+    {
+      "id": "normal-export",
+      "name": "Normal Modelo 303 local export path",
+      "commands": [
+        "aeat app declaration calculate --period 2026-Q1 --modelo 303",
+        "aeat app declaration review --period 2026-Q1 --modelo 303 --format table",
+        "aeat app declaration approve --period 2026-Q1 --modelo 303 --reason reviewed-against-ledger",
+        "aeat app declaration validate --period 2026-Q1 --modelo 303",
+        "aeat app declaration export --period 2026-Q1 --modelo 303 --format boe --output ./exports/2026-q1",
+        "aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-verify.json"
+      ]
+    },
+    {
+      "id": "corrective-declaration",
+      "name": "Corrective declaration after new data",
+      "commands": [
+        "aeat app invoice import ./late-file/invoice-2026-041.pdf --kind received --dry-run",
+        "aeat app invoice import ./late-file/invoice-2026-041.pdf --kind received",
+        "aeat app invoice edit --id inv_2041 --set base=320.00 --set iva.rate=21 --set iva.amount=67.20 --set payment.id=row_1141 --reason late-invoice",
+        "aeat app ledger edit --id row_1141 --set category=supplies --set business.share=1.0 --set reference=inv_2041 --reason found-after-export",
+        "aeat app invoice match --period 2026-Q1",
+        "aeat app declaration calculate --period 2026-Q1 --modelo 303 --amend --id 3031234567890",
+        "aeat app declaration review --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format table",
+        "aeat app declaration approve --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --reason amend-reviewed",
+        "aeat app declaration validate --period 2026-Q1 --modelo 303 --amend --id 3031234567890",
+        "aeat app declaration export --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format boe --output ./exports/2026-q1-amend",
+        "aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-amend-verify.json"
+      ]
+    }
+  ],
+  "gaps": [
+    "Backend audit for ledger fields, skip state, split metadata, and edit history.",
+    "Backend audit for import verification output.",
+    "Backend audit for invoice retention, IVA category, and payment linkage.",
+    "Backend contract for declaration calculate output.",
+    "Official AEAT behavior for latest justificante id in amended declarations."
+  ]
+}

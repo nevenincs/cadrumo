@@ -1,18 +1,17 @@
-"""Non-ASCII header round-trip invariant per encoding.
+"""Non-ASCII header round-trip invariants per wire encoding.
 
-Kent's APELLIDOS / NOMBRE often contain Spanish tildes and
-accents (ñ, á, é, í, ó, ú, ü plus their upper-case variants,
-and ¡ ¿ punctuation). The fichero-BOE serialiser + deserialiser
-pair must round-trip these characters losslessly under both
-encodings we ship:
+The filer's APELLIDOS / NOMBRE often contain Spanish tildes and
+accents (ñ, á, é, í, ó, ú, ü plus their upper-case variants, and ¡ ¿
+punctuation). The fichero-BOE serialiser and deserialiser pair must
+round-trip these characters losslessly under both shipped encodings:
 
-- **cp1252** (Modelo 130) — full Western-European superset;
-  includes the Euro sign (€) at position 0x80.
-- **iso-8859-1** (Modelo 303) — base Latin-1; does NOT define
-  the Euro sign, so any € in a 303 header must fail loud at
-  encode time rather than silently mojibake into ``?``.
+- ``cp1252`` (Modelo 130) — full Western-European superset; includes
+  the Euro sign (€) at position 0x80.
+- ``iso-8859-1`` (Modelo 303) — base Latin-1; does NOT define the
+  Euro sign, so any ``€`` in a 303 header must fail loud at encode
+  time rather than silently mojibake into ``?``.
 
-these invariants end-to-end.
+The tests exercise these invariants end-to-end.
 """
 
 from __future__ import annotations
@@ -67,6 +66,8 @@ _CP1252_ONLY_SAMPLES: list[str] = [
 
 
 class TestModelo130AccentedRoundTrip:
+    """Round-trip non-ASCII headers through the Modelo 130 ``cp1252`` path."""
+
     @pytest.mark.parametrize("apellidos", _LATIN1_SAFE_SAMPLES, ids=lambda v: v.replace(" ", "_"))
     def test_130_preserves_spanish_accents(self, apellidos: str) -> None:
         headers = kent_130_headers("2024") | {"APELLIDOS": apellidos}
@@ -85,8 +86,8 @@ class TestModelo130AccentedRoundTrip:
 
     @pytest.mark.parametrize("apellidos", _CP1252_ONLY_SAMPLES, ids=lambda v: v.replace(" ", "_"))
     def test_130_accepts_cp1252_only_characters(self, apellidos: str) -> None:
-        """cp1252 supports the extended Western-European range; 130 round-trips
-        the Euro sign, trade-mark, etc. without drift."""
+        """``cp1252`` supports the extended Western-European range; 130
+        round-trips the Euro sign, trade-mark, etc. without drift."""
         headers = kent_130_headers("2024") | {"APELLIDOS": apellidos}
         payload = serialise(
             casilla_values=KENT_130_CASILLAS,
@@ -101,6 +102,8 @@ class TestModelo130AccentedRoundTrip:
 
 
 class TestModelo303AccentedRoundTrip:
+    """Round-trip non-ASCII headers through the Modelo 303 ``iso-8859-1`` path."""
+
     @pytest.mark.parametrize("name", _LATIN1_SAFE_SAMPLES, ids=lambda v: v.replace(" ", "_"))
     def test_303_preserves_spanish_accents(self, name: str) -> None:
         headers = kent_303_headers("2024") | {
@@ -119,7 +122,7 @@ class TestModelo303AccentedRoundTrip:
 
     @pytest.mark.parametrize("name", _CP1252_ONLY_SAMPLES, ids=lambda v: v.replace(" ", "_"))
     def test_303_refuses_cp1252_only_characters(self, name: str) -> None:
-        """iso-8859-1 does NOT define the Euro sign / trade-mark / bullet.
+        """``iso-8859-1`` does NOT define the Euro sign / trade-mark / bullet.
         A 303 filing must raise rather than emit mojibake."""
         headers = kent_303_headers("2024") | {
             "DP30301_F008_IDENTIFICACI_N_APELLIDOS_Y_N": name,

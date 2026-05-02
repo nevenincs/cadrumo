@@ -1,9 +1,9 @@
 """Modelo 100 Anexo B2 — rendimientos del capital mobiliario (ejercicio 2026).
 
-LIRPF arts. 25-26 + 101.4 unchanged for 2026 at BOE consolidated text
-consult 2026-02-28. The 2026 ruleset inherits the 2025 surface; any
-2026-specific delta lands as a follow-up issue when the 2026 Orden
-HAC publishes.
+LIRPF arts. 25-26 and 101.4 are unchanged for 2026 at the BOE
+consolidated-text consult of 2026-02-28. The 2026 ruleset inherits the
+2025 surface from :mod:`.anexo_b2_2025`; any 2026-specific delta is
+added when the 2026 Orden HAC publishes.
 """
 
 from __future__ import annotations

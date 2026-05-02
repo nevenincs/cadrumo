@@ -1,4 +1,9 @@
-"""Unit tests for the Modelo 180 2024 ruleset."""
+"""Unit tests for the Modelo 180 2024 ruleset.
+
+Pins :data:`aeat.domain.formulas._rulesets.MODELO_180_2024` against the
+RIRPF art. 100.1 19 % retención rate and asserts the parametrised cent-
+exact derivations of casilla 03.
+"""
 
 from __future__ import annotations
 

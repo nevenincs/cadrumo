@@ -1,4 +1,14 @@
-"""Strict immutable models for the invoice catalogue."""
+"""Strict immutable models for the invoice catalogue.
+
+Defines the pydantic v2 records that back :mod:`aeat.domain.invoices`:
+:class:`InvoiceLine`, :class:`Invoice`, and the keyed
+:class:`InvoiceCatalogue`. Every model is strict, frozen, and forbids
+extra fields; identity-bearing fields on :class:`Invoice` are
+canonicalised in a ``model_validator`` and the stable
+:attr:`Invoice.invoice_id` is derived via :func:`derive_invoice_id`.
+Counterparty identity validation is delegated to
+:mod:`aeat.domain.invoices._validators`.
+"""
 
 from __future__ import annotations
 
@@ -12,8 +22,9 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
+from ...core.identity import validate_spanish_tax_id
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
-from ._validators import validate_country_code, validate_spanish_tax_id, validate_vat_number
+from ._validators import validate_country_code, validate_vat_number
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LINE_TOLERANCE = Decimal("0.01")

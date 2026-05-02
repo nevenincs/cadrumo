@@ -372,7 +372,7 @@ def _modelo_303_fixture() -> dict[str, Decimal]:
 
 
 def _modelo_111_fixture() -> dict[str, Decimal]:
-    """Issue #314 fixture for Modelo 111 casilla 30.
+    """Asymmetric fixture for Modelo 111 casilla 30.
 
     Chain: 09=19% * 08; 12=19% * 11; 28=03+06+09+12+15+18;
     30=sub_op(28, 29). Outer swap of 30 yields 29-28=-1652 vs
@@ -394,7 +394,7 @@ def _modelo_111_fixture() -> dict[str, Decimal]:
 
 
 def _modelo_115_fixture() -> dict[str, Decimal]:
-    """Issue #314 fixture for Modelo 115 casilla 06.
+    """Asymmetric fixture for Modelo 115 casilla 06.
 
     Chain: 03 = 19% * 02; 06 = sub_op(add_op(03, 04), 05).
     Outer swap of 06 yields 05 - (03+04) = -1830 vs correct 1830,
@@ -410,7 +410,7 @@ def _modelo_115_fixture() -> dict[str, Decimal]:
 
 
 def _modelo_123_fixture() -> dict[str, Decimal]:
-    """Issue #314 fixture for Modelo 123 casilla 11.
+    """Asymmetric fixture for Modelo 123 casilla 11.
 
     Chain: 09 = 07 + 08; 11 = sub_op(09, 10). Outer swap of 11
     yields 10-09 = -750 vs correct 750, delta 1500 >> 0.02.
@@ -425,7 +425,7 @@ def _modelo_123_fixture() -> dict[str, Decimal]:
 
 
 def _modelo_100_summary_fixture() -> dict[str, Decimal]:
-    """Issue #314 fixture for Modelo 100 summary casilla 0720.
+    """Asymmetric fixture for Modelo 100 summary casilla 0720.
 
     Chain: 0595 = 0550+0551+0560+0561; 0630 = 0620+0622;
     0698 = clamp_pos(0595-0630); 0720 = sub_op(sub_op(0698, 0699), 0700).
@@ -660,9 +660,9 @@ def _modelo_100_art20_piece_b_fixture() -> dict[str, Decimal]:
 
 # Path-specific fixture overrides for sub_op nodes whose detection
 # requires a different operand range than the comprehensive default.
-# Issue #457: only the LIRPF art. 20 piecewise reducción in M100
-# casilla 0021 needs this — both pieces share a single ``max_op`` so
-# only one piece's chain is observable per fixture.
+# Only the LIRPF art. 20 piecewise reducción in M100 casilla 0021
+# needs this — both pieces share a single ``max_op`` so only one
+# piece's chain is observable per fixture.
 _SUB_OP_PATH_OVERRIDES: dict[
     tuple[str, str, tuple[int, ...]],
     Callable[[], dict[str, Decimal]],
@@ -689,7 +689,7 @@ def _modelo_390_fixture() -> dict[str, Decimal]:
     """Asymmetric fixture for Modelo 390 sub_op chains.
 
     Three sub_op-bearing computed casillas live in the Modelo 390
-    ruleset (issue #327): casilla 105 = sub_op(96, 104), casilla 191 =
+    ruleset: casilla 105 = sub_op(96, 104), casilla 191 =
     sub_op(190, 662), casilla 193 = clamp_pos(sub_op(0, 191)). The
     fixture sets each LHS strictly larger than its RHS so an operand
     swap on any of them flips the sign and produces a delta well
@@ -795,7 +795,7 @@ _SUB_OP_COVERAGE_DATA: tuple[
     (lambda: MODELO_390_2026, "191", _modelo_390_fixture),
     (lambda: MODELO_390_2026, "193", _modelo_390_fixture),
     # Modelo 100 full-form — every sub_op-bearing casilla x 3 years.
-    # Issue #457 closure: the M100 megaproject's full per-anexo coverage.
+    # M100 full per-anexo coverage.
     (lambda: MODELO_100_2024, "0020", _modelo_100_full_fixture_2024),
     (lambda: MODELO_100_2024, "0021", _modelo_100_full_fixture_2024),
     (lambda: MODELO_100_2024, "0022", _modelo_100_full_fixture_2024),
@@ -973,14 +973,14 @@ def test_sub_op_operand_swap_at_path_is_detected(
 
 
 def test_mutate_outer_sub_op_descends_through_clamp_pos() -> None:
-    """Issue #457: the helper descends through ``ClampPositiveFormula`` wrappers.
+    """The helper descends through :class:`ClampPositiveFormula` wrappers.
 
     M100 casilla 0545 (base liquidable general) wraps its outer
-    ``sub_op`` chain in a ``clamp_pos``. Without the descent step
-    introduced for #457, ``_mutate_outer_sub_op`` would raise
-    ``TypeError`` on the wrapper. This test asserts the helper
-    successfully swaps the underlying ``SubFormula`` and the audit
-    surfaces the resulting discrepancy on casilla 0545.
+    ``sub_op`` chain in a ``clamp_pos``. Without the descent step,
+    :func:`_mutate_outer_sub_op` would raise :exc:`TypeError` on the
+    wrapper. This test asserts the helper successfully swaps the
+    underlying :class:`SubFormula` and the audit surfaces the resulting
+    discrepancy on casilla 0545.
     """
     fixture = _modelo_100_full_fixture_2024()
     engine = Engine()
@@ -1006,7 +1006,7 @@ def test_mutate_outer_sub_op_rejects_nonsubop_inside_clamp_pos() -> None:
 
 
 def test_sub_op_path_overrides_point_at_real_subformula_nodes() -> None:
-    """Issue #457 strict-audit defense: every override key resolves to a live ``SubFormula``.
+    """Every override key must resolve to a live :class:`SubFormula`.
 
     :data:`_SUB_OP_PATH_OVERRIDES` is keyed by hand-typed path tuples;
     a future M100 ruleset refactor that changes the AST shape would

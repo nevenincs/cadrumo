@@ -22,7 +22,17 @@ from .._schema import TemplateRevision
 
 
 class Modelo123V2025Extractor(GenericDeclaracionExtractor):
-    """Concrete extractor for Modelo 123 tax year 2025."""
+    """Concrete extractor for Modelo 123 tax year 2025.
+
+    Owns the canonical 11-casilla map for the dividend / non-dividend
+    liquidación split — perceptor counts (01-03), bases (04-06),
+    retenciones (07-09), the complementaria offset (10), and the final
+    resultado a ingresar (11).
+
+    Attributes:
+        template_revision: Pinned to ``("123", 2025, "2025.01")``.
+        casilla_ids: Tuple of every casilla ID parsed by the extractor.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="123",
@@ -45,7 +55,11 @@ class Modelo123V2025Extractor(GenericDeclaracionExtractor):
 
 
 class Modelo123V2024Extractor(Modelo123V2025Extractor):
-    """Modelo 123 v2024 extractor using the same liquidación layout."""
+    """Modelo 123 v2024 extractor — inherits the v2025 liquidación layout.
+
+    Attributes:
+        template_revision: Pinned to ``("123", 2024, "2024.01")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="123",
@@ -55,7 +69,11 @@ class Modelo123V2024Extractor(Modelo123V2025Extractor):
 
 
 class Modelo123V2026Extractor(Modelo123V2025Extractor):
-    """Modelo 123 v2026 extractor using the same liquidación layout."""
+    """Modelo 123 v2026 extractor — inherits the v2025 liquidación layout.
+
+    Attributes:
+        template_revision: Pinned to ``("123", 2026, "2026.01")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="123",

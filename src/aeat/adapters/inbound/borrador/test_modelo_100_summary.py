@@ -1,4 +1,10 @@
-"""Round-trip + artefact-kind tests for the Modelo 100 summary extractor."""
+"""Round-trip and artefact-kind tests for the Modelo 100 summary extractor.
+
+Exercises :func:`aeat.adapters.inbound.borrador.parse_borrador` end to
+end against synthesised PDFs from the L3 generator, asserting:
+artefact-kind detection, casilla extraction, marker disambiguation
+precedence, sparse-PDF behaviour, and explicit override paths.
+"""
 
 from __future__ import annotations
 
@@ -75,6 +81,8 @@ def _generate_pdf(
 
 
 class TestArtefactKindDetection:
+    """Detect the correct :class:`ArtefactKind` per artefact marker."""
+
     def test_detects_borrador(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
         filing = parse_borrador(pdf)
@@ -99,6 +107,8 @@ class TestArtefactKindDetection:
 
 
 class TestSummaryBlockExtraction:
+    """Round-trip the summary-block casillas through the extractor."""
+
     def test_roundtrip_extracts_every_summary_casilla(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path)
         filing: BorradorFiling = parse_borrador(pdf)
@@ -128,7 +138,7 @@ class TestSummaryBlockExtraction:
 
 
 class TestDetectionDisambiguation:
-    """Audit M3: make precedence of markers observable."""
+    """Make the precedence of artefact markers observable."""
 
     def test_csv_plus_borrador_body_classifies_as_declaracion(self, tmp_path: Path) -> None:
         """A DECLARACION carrying a CSV must stay a DECLARACION regardless of body text."""
@@ -148,7 +158,7 @@ class TestDetectionDisambiguation:
 
 
 class TestSparseExtraction:
-    """Audit M4: sparse PREDECLARACION yields a strictly smaller value tuple."""
+    """A sparse PREDECLARACION yields a strictly smaller value tuple."""
 
     def test_sparse_predeclaracion_yields_fewer_values(self, tmp_path: Path) -> None:
         sparse = {
@@ -175,6 +185,8 @@ class TestSparseExtraction:
 
 
 class TestOverrides:
+    """Verify the explicit ``artefact_kind_override`` entry-point arg."""
+
     def test_artefact_kind_override_skips_detection(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
         # Force DECLARACION even though the PDF has no CSV — the extractor

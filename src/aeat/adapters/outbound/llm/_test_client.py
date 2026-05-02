@@ -1,4 +1,10 @@
-"""Unit tests for the public LLM client."""
+"""Unit tests for the public LLM client.
+
+Exercises :class:`aeat.adapters.outbound.llm.LLMClient` against the
+deterministic provider adapter to verify cache reuse, error surfacing, and
+that secret material configured via :class:`aeat.core.config.Settings` never
+leaks through ``repr`` or JSON serialization.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,7 @@ from . import (
     LLMRequest,
     UsageRecorder,
 )
-from ._providers import ProviderRequest, _FakeAdapter
+from ._providers import ProviderRequest, _DeterministicAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -27,10 +33,10 @@ class _IsolatedSettings(Settings):
     model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
 
-def test_fake_adapter_contract() -> None:
-    """The fake adapter should satisfy the provider contract without mocks."""
+def test_deterministic_adapter_contract() -> None:
+    """The deterministic adapter should satisfy the provider contract."""
 
-    adapter = _FakeAdapter(response_text="done")
+    adapter = _DeterministicAdapter(response_text="done")
     completion = asyncio.run(
         adapter.complete(
             ProviderRequest(
@@ -57,7 +63,7 @@ def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
         aeat_llm_cache_dir=tmp_path / "cache",
         aeat_llm_usage_dir=tmp_path / "usage",
     )
-    adapter = _FakeAdapter(response_text="cached")
+    adapter = _DeterministicAdapter(response_text="cached")
     client = LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
@@ -85,7 +91,7 @@ def test_client_surfaces_provider_error(tmp_path: Path) -> None:
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=_FakeAdapter(error_mode="provider"),
+        _adapter=_DeterministicAdapter(error_mode="provider"),
     )
     with pytest.raises(LLMProviderError):
         asyncio.run(client.complete(LLMRequest(prompt="hello")))
@@ -104,7 +110,7 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=_FakeAdapter(error_mode="rate-limit"),
+        _adapter=_DeterministicAdapter(error_mode="rate-limit"),
     )
     with pytest.raises(LLMRateLimitError):
         asyncio.run(client.complete(LLMRequest(prompt="hello")))

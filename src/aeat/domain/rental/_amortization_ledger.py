@@ -1,4 +1,4 @@
-"""LIRPF art. 23.1.f amortización 3 % multi-year ledger (#454).
+"""LIRPF art. 23.1.f amortización 3 % multi-year ledger.
 
 Per-finca per-period amortización accrual with cumulative-through-
 year cap tracking. The depreciable basis at year N is

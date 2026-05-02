@@ -23,7 +23,18 @@ from .._schema import TemplateRevision
 
 
 class Modelo131V2025Extractor(GenericDeclaracionExtractor):
-    """Concrete extractor for Modelo 131 tax year 2025 (quarterly)."""
+    """Concrete extractor for Modelo 131 tax year 2025 (quarterly).
+
+    Owns the 15-casilla liquidación map covering the módulos coefficient
+    blocks, retenciones, the negative-result carryover, the vivienda-
+    habitual deduction, and the resultado a ingresar. Labels
+    cross-checked against the AEAT Instrucciones Modelo 131.
+
+    Attributes:
+        template_revision: Pinned to ``("131", 2025, "2025.01")``.
+        casilla_ids: Tuple of every casilla ID parsed by the extractor
+            (01..15, in printed order).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="131",

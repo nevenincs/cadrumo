@@ -1,24 +1,24 @@
 """Modelo 115 ruleset covering the full 2025 fiscal year.
 
 Modelo 115 is the quarterly withholdings form for urban-real-estate
-arrendamiento (commercial office/commercial premises). It has six
+arrendamiento (commercial office / commercial premises). It has six
 casillas:
 
-- 01: nº arrendadores
-- 02: base de retención
-- 03: retenciones (percent of 02)
-- 04: ingresos a cuenta
-- 05: resultados negativos anteriores
-- 06: resultado a ingresar
+- ``01``: nº arrendadores
+- ``02``: base de retención
+- ``03``: retenciones (percent of 02)
+- ``04``: ingresos a cuenta
+- ``05``: resultados negativos anteriores
+- ``06``: resultado a ingresar
 
 Two algebraic formulas:
 
-- ``03 = 19% x 02`` (RIRPF art. 100.1 / RD 439/2007, tipo fijo
-  desde 2016; the obligation hook is LIRPF art. 101.8).
+- ``03 = 19 % x 02`` (RIRPF art. 100.1 / RD 439/2007, tipo fijo desde
+  2016; the obligation hook is LIRPF art. 101.8).
 - ``06 = 03 + 04 - 05`` (resultado a ingresar — instrucciones AEAT).
 
 Parameter ``irpf.arrendamientos_rate`` lets us widen to historical
-years without code changes; for 2016 onward AEAT has kept the 19%
+years without code changes; for 2016 onward AEAT has kept the 19 %
 rate, so a single effective-range value suffices.
 """
 
@@ -46,6 +46,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` for ES/EN/HU labels."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -168,3 +169,10 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
+"""Modelo 115 ruleset for ejercicio 2025.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` carrying the six
+arrendamientos urbanos casillas, the two algebraic formulas, and the
+19 % ``irpf.arrendamientos_rate`` parameter. Re-exported as
+:data:`aeat.domain.formulas._rulesets.MODELO_115_2025`.
+"""

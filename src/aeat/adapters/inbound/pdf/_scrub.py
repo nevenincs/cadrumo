@@ -1,8 +1,8 @@
-"""Deterministic PII scrubbing for AEAT filing PDFs (EPIC #305).
+"""Deterministic PII scrubbing for AEAT filing PDFs.
 
-Real filings carry Kent's NIF, real amounts, his name, an AEAT-assigned
-CSV, and occasionally his IBAN / address. Committing any of that to a
-test corpus is a PII leak.
+Real filings carry the operator's NIF, real amounts, their name, an
+AEAT-assigned CSV, and occasionally their IBAN / address. Committing
+any of that to a test corpus is a PII leak.
 
 This module deterministically rewrites a source PDF so the output
 carries synthetic but structurally-faithful replacements — same digit
@@ -27,7 +27,7 @@ recording provenance + consent.
 
 The library is **never invoked at runtime** from production code — only
 from contributor-local workflows (``just scrub-from-drive``) and
-``src/aeat/_pdf_import/test_scrub.py`` tests.
+``src/aeat/adapters/inbound/pdf/test_scrub.py`` tests.
 """
 
 from __future__ import annotations

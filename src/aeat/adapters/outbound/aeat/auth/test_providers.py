@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from . import (
+from .....application.auth import (
     AuthProviderDescription,
     AuthProviderKind,
     describe_provider_operator_impact,

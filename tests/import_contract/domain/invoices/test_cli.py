@@ -1,4 +1,4 @@
-"""CLI smoke tests for ``aeat financial invoices`` and ``aeat invoices``."""
+"""CLI smoke tests for ``aeat financial invoices``."""
 
 from __future__ import annotations
 
@@ -18,18 +18,19 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from aeat.entrypoints.cli import app as root_app
-from aeat.adapters.inbound.financial import RawProvenance, SourceFormat
-from aeat.adapters.inbound.financial.providers import RawTransaction
+from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
+from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
+from aeat.domain.invoices._repository import InvoiceCatalogueRepository
 from aeat.domain.transactions import (
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
-from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
-from aeat.domain.invoices._repository import InvoiceCatalogueRepository
+from aeat.entrypoints.cli import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -280,13 +281,3 @@ def test_financial_invoices_unmatched_lists_unlinked_invoices(tmp_path: Path) ->
     assert result.exit_code == 0, result.output
     for invoice in invoices.values():
         assert invoice.invoice_id in result.output
-
-
-def test_top_level_invoices_alias_works(tmp_path: Path) -> None:
-    """`aeat invoices list` (top-level alias) must match the nested command."""
-    invoices, _, env = _seed_environment(tmp_path)
-    invoice = next(invoices.values())
-    result = _RUNNER.invoke(root_app, ["invoices", "show", invoice.invoice_id], env=env)
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.stdout)
-    assert payload["invoice_id"] == invoice.invoice_id

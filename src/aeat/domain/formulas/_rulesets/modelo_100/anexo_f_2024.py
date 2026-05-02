@@ -1,4 +1,12 @@
-"""Modelo 100 Anexo F — bases imponibles + reducciones + minimos (2024)."""
+"""Define the Modelo 100 Anexo F ruleset for the 2024 ejercicio.
+
+Bases imponibles, reducciónes, and the mínimo personal y familiar share
+the structural surface defined for 2025 in
+:mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_f_2025`. LIRPF
+arts. 47-61 are unchanged in 2024, so this module re-exports the 2025
+:data:`CASILLAS` and :data:`CITATIONS` and only redeclares the
+year-scoped :data:`FORMULAS` and effective-date constants.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +23,10 @@ from .._common import (
 from .anexo_f_2025 import CASILLAS, CITATIONS
 
 EFFECTIVE_FROM = date(2024, 1, 1)
+"""First day of the ejercicio in which this Anexo F ruleset applies."""
+
 EFFECTIVE_TO = date(2024, 12, 31)
+"""Last day of the ejercicio in which this Anexo F ruleset applies."""
 
 
 _BIG_BODY = add_op(
@@ -68,9 +79,11 @@ FORMULAS = (
         body=ref("0460"),
     ),
 )
+"""Engine formula bindings for the 2024 Anexo F computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo F declares no parametric tables."""
 
 
 __all__ = [

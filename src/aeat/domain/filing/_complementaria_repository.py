@@ -1,22 +1,23 @@
 """Governed-persistence repository for filing amendments.
 
-Wraps the substrate's :class:`Envelope[FilingAmendment]` contract behind
-a small typed surface that the complementaria flow can call. Each
-amendment is persisted as its own envelope file
-(``<amendment_id>.envelope.json``) under
-``aeat_submissions_dir / amendments/`` with a per-record
-:func:`exclusive_file_lock`.
+Wraps the substrate's :class:`aeat.adapters.persistence.storage.Envelope`
+contract behind a small typed surface that the complementaria flow can
+call. Each amendment is persisted as its own envelope file
+(``<amendment_id>.envelope.json``) under ``aeat_submissions_dir /
+amendments/`` with a per-record
+:func:`aeat.adapters.persistence.storage.exclusive_file_lock`.
 
-Sensitivity classification: an amendment record captures the casilla
-delta the operator is filing as a corrective. That carries identity-
-bearing context plus arithmetic that drives the corrected tax due —
-:class:`SensitivityClass.AUDIT` per the default policy table (the
-amendment is the audit-grade evidence of *why* the filing was changed).
+**Sensitivity classification.** An amendment record captures the casilla
+delta the operator is filing as a corrective. That carries
+identity-bearing context plus arithmetic that drives the corrected tax due
+— :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT` per the
+default policy table (the amendment is the audit-grade evidence of *why*
+the filing was changed).
 
-Co-located with the submission repository because the existing
-complementaria flow consumes both submitted-filing records (to derive
-the amendment's ``submission_id``) and amendment records (to persist
-the result).
+Co-located with :mod:`aeat.domain.filing._repository` because the existing
+complementaria flow consumes both submitted-filing records (to derive the
+amendment's ``submission_id``) and amendment records (to persist the
+result).
 """
 
 from __future__ import annotations
@@ -100,11 +101,19 @@ class FilingAmendmentRepository:
     def load(self, amendment_id: str) -> FilingAmendment | None:
         """Return the persisted amendment or ``None`` if absent.
 
+        Args:
+            amendment_id: Repository-safe amendment identifier.
+
+        Returns:
+            The :class:`aeat.domain.filing._amendment.FilingAmendment`
+            payload, or ``None`` when no envelope exists.
+
         Raises:
-            ClassificationError: If the on-disk envelope's class is not
-                AUDIT.
-            EnvelopeVersionError: If the envelope schema version is
-                higher than the consumer supports.
+            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
+                If the on-disk envelope's class is not AUDIT.
+            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
+                If the envelope schema version is higher than the consumer
+                supports.
         """
         target = self.envelope_path_for(amendment_id)
         if not target.exists():
@@ -125,6 +134,10 @@ class FilingAmendmentRepository:
         The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
         no plaintext casilla delta or original-CSV reference lands on
         disk.
+
+        Args:
+            amendment: Amendment payload to persist; its
+                ``amendment_id`` selects the envelope path.
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self.lock_target_for(amendment.amendment_id)):
@@ -142,7 +155,12 @@ class FilingAmendmentRepository:
             )
 
     def delete(self, amendment_id: str) -> bool:
-        """Remove the envelope for ``amendment_id``."""
+        """Remove the envelope for ``amendment_id``.
+
+        Returns:
+            ``True`` when an envelope existed and was removed,
+            ``False`` when nothing was on disk.
+        """
         target = self.envelope_path_for(amendment_id)
         if not self._store_dir.exists():
             return False
@@ -178,7 +196,7 @@ class FilingAmendmentRepository:
                 yield payload
 
 
-# TODO(#477): remove after 2026-10-27 retention window per restructure ADR Decision 10.
+# TODO: remove after 2026-10-27 retention window.
 def migrate_legacy_amendments_to_repository(
     legacy_dir: Path,
     *,

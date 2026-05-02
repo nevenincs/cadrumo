@@ -1,4 +1,9 @@
-"""Unit tests for fichero-BOE record-spec primitives (EPIC #201)."""
+"""Unit tests for fichero-BOE record-spec primitives.
+
+Covers :class:`RecordFieldSpec` validation, the per-kind encoders
+(:func:`encode_currency`, :func:`encode_text`, :func:`encode_date`),
+and the cross-spec invariant guard :func:`validate_record_specs`.
+"""
 
 from __future__ import annotations
 

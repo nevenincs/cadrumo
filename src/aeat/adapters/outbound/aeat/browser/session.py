@@ -22,7 +22,7 @@ from playwright.async_api import (
 from .....core.config import Settings
 from .....core.errors import AeatError, SiteHealthError
 from .....core.logging import get_logger
-from ..auth import CERTIFICATE_CONTEXT_MARKER, BrowserContextProvisioner
+from ..auth import BrowserContextProvisioner
 from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,
@@ -34,9 +34,6 @@ from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
 logger = get_logger(__name__)
-
-CERTIFICATE_THUMBPRINT_MARKER = CERTIFICATE_CONTEXT_MARKER
-"""Backward-compatible alias for the certificate context marker name."""
 
 
 class BrowserError(AeatError):

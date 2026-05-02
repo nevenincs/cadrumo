@@ -1,4 +1,12 @@
-"""Mappings from spending categories to AEAT casilla codes."""
+"""Mappings from spending categories to AEAT casilla codes.
+
+Defines the closed enum / model pair that links one
+:class:`~aeat.domain.categories.SpendingCategory` (held inside a
+:class:`~aeat.domain.categories.CategoryProfile`) to the casilla
+buckets it feeds on a given AEAT modelo. The validator enforces the
+period-cadence rules baked into the autónomo modelo set: 390 is
+annual; 130 and 303 are quarterly.
+"""
 
 from __future__ import annotations
 
@@ -16,14 +24,30 @@ class _CategoryMappingStrictFrozenModel(BaseModel):
 
 
 class CasillaMappingSign(StrEnum):
-    """Signed flow direction into a casilla bucket."""
+    """Signed flow direction into a casilla bucket.
+
+    Attributes:
+        DEBIT: The category contributes to the debit / outgoing
+            side of the casilla.
+        CREDIT: The category contributes to the credit / incoming
+            side of the casilla.
+    """
 
     DEBIT = "debit"
     CREDIT = "credit"
 
 
 class CasillaMapping(_CategoryMappingStrictFrozenModel):
-    """One category-to-casilla mapping for a filing modelo."""
+    """One category-to-casilla mapping for a filing modelo.
+
+    Attributes:
+        modelo: Target :class:`~aeat.domain.casillas.ModeloCode`.
+        period_type: Filing cadence; must satisfy the modelo's
+            cadence rules (annual for 390; quarterly for 130 / 303).
+        casilla_code: Numeric casilla identifier (string-typed so
+            leading zeros survive round-trips).
+        sign: Flow direction encoded by :class:`CasillaMappingSign`.
+    """
 
     modelo: ModeloCode
     period_type: PeriodType

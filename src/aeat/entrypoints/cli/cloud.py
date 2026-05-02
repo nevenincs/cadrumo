@@ -1,8 +1,9 @@
 """``aeat cloud`` sub-app — GCP product helpers (Functions / Run / Storage).
 
-Each sub-sub-app builds the dedicated ``google-cloud-*`` client lazily.
-List operations are list-only and free; deploy is intentionally out of
-scope for this feature (see the gsuite-bootstrap ADR).
+Each sub-sub-app builds the dedicated ``google-cloud-*`` client lazily
+so ``aeat --help`` does not pay the import cost. Operations exposed here
+are read-only (``list`` / ``describe`` / ``ls``); deploy is intentionally
+out of scope.
 """
 
 from __future__ import annotations
@@ -12,6 +13,8 @@ from typing import Any
 import typer
 from rich.console import Console
 from rich.table import Table
+
+from ._i18n import t, tr
 
 app = typer.Typer(name="cloud", no_args_is_help=True, help="GCP product helpers.")
 functions_app = typer.Typer(name="functions", no_args_is_help=True, help="Cloud Functions v2 helpers.")
@@ -29,7 +32,17 @@ def _project() -> str:
 
     project = Settings().google_cloud_project
     if not project:
-        typer.secho("GOOGLE_CLOUD_PROJECT is empty in env/.env", fg=typer.colors.RED)
+        typer.secho(
+            tr(
+                t(
+                    "GOOGLE_CLOUD_PROJECT está vacío en env/.env",
+                    "GOOGLE_CLOUD_PROJECT is empty in env/.env",
+                    "GOOGLE_CLOUD_PROJECT és buit a env/.env",
+                    "GOOGLE_CLOUD_PROJECT üres a env/.env-ben",
+                )
+            ),
+            fg=typer.colors.RED,
+        )
         raise typer.Exit(code=1)
     return project
 
@@ -70,7 +83,16 @@ def functions_list() -> None:
             str(getattr(function, "update_time", "")),
         )
     Console().print(table)
-    typer.echo(f"{count} function(s)")
+    typer.echo(
+        tr(
+            t(
+                f"{count} función(es)",
+                f"{count} function(s)",
+                f"{count} funció/-ns",
+                f"{count} fuggveny",
+            )
+        )
+    )
 
 
 @functions_app.command(name="describe", help="Print one Cloud Function's metadata.")
@@ -106,7 +128,16 @@ def run_list() -> None:
             str(getattr(service, "update_time", "")),
         )
     Console().print(table)
-    typer.echo(f"{count} service(s)")
+    typer.echo(
+        tr(
+            t(
+                f"{count} servicio(s)",
+                f"{count} service(s)",
+                f"{count} servei(s)",
+                f"{count} szolgaltatas",
+            )
+        )
+    )
 
 
 @run_app.command(name="describe", help="Print one Cloud Run service's metadata.")
@@ -137,7 +168,16 @@ def storage_buckets() -> None:
         count += 1
         table.add_row(bucket.name, bucket.location or "", bucket.storage_class or "")
     Console().print(table)
-    typer.echo(f"{count} bucket(s)")
+    typer.echo(
+        tr(
+            t(
+                f"{count} cubo(s)",
+                f"{count} bucket(s)",
+                f"{count} cubell(s)",
+                f"{count} bucket",
+            )
+        )
+    )
 
 
 @storage_app.command(name="ls", help="List objects inside a bucket.")
@@ -158,7 +198,16 @@ def storage_ls(
         count += 1
         table.add_row(blob.name, str(blob.size or ""), str(blob.updated or ""))
     Console().print(table)
-    typer.echo(f"{count} object(s)")
+    typer.echo(
+        tr(
+            t(
+                f"{count} objeto(s)",
+                f"{count} object(s)",
+                f"{count} objecte(s)",
+                f"{count} objektum",
+            )
+        )
+    )
 
 
 __all__ = ["app"]

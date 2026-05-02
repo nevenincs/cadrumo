@@ -1,7 +1,9 @@
-"""Migration round-trip test.
+"""Round-trip test for the Alembic migration stack.
 
-Applies ``upgrade head`` → ``downgrade base`` → ``upgrade head`` against a
-fresh temp SQLite file and then verifies the resulting schema is writable.
+Applies ``upgrade head`` -> ``downgrade base`` -> ``upgrade head``
+against a fresh temp SQLite file and then verifies the resulting
+schema is writable through
+:class:`aeat.adapters.persistence.storage.sql.ModeloRepository`.
 """
 
 from __future__ import annotations

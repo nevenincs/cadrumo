@@ -1,7 +1,13 @@
-"""SQLAlchemy engine factory.
+"""SQLAlchemy engine factory for the storage subpackage.
 
-Provides a lazy, URL-keyed singleton engine used by the rest of the storage
-subpackage. Tests can dispose the cached engines between runs via
+Provides a lazy, URL-keyed singleton engine used by the rest of
+:mod:`aeat.adapters.persistence.storage`. The factory normalises SQLite
+URLs against :data:`aeat.core.paths.PROJECT_ROOT`, ensures the parent
+directory exists, and attaches a ``connect`` listener that enables
+``PRAGMA foreign_keys=ON`` so cascade rules declared in the schema are
+enforced at runtime.
+
+Tests can dispose the cached engines between runs via
 :func:`dispose_engine`.
 """
 
@@ -30,6 +36,11 @@ def _normalize_sqlite_url(url: str) -> str:
 
     Args:
         url: SQLAlchemy URL. No-op for non-SQLite URLs and in-memory databases.
+
+    Returns:
+        The original ``url`` for non-SQLite or in-memory targets, otherwise an
+        equivalent URL whose database path has been resolved through
+        :func:`aeat.core.paths.resolve_project_path`.
     """
     parsed = make_url(url)
     if not parsed.drivername.startswith("sqlite"):
@@ -51,7 +62,11 @@ def _normalize_sqlite_url(url: str) -> str:
 
 
 def _ensure_sqlite_parent(url: str) -> None:
-    """Create the parent directory of a SQLite database file if needed."""
+    """Create the parent directory of a SQLite database file if needed.
+
+    Args:
+        url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
+    """
 
     parsed = make_url(_normalize_sqlite_url(url))
     database = parsed.database
@@ -67,7 +82,7 @@ def _enable_sqlite_foreign_keys(engine: Engine) -> None:
     no-op for non-SQLite dialects.
 
     Args:
-        engine: Engine to attach the listener to.
+        engine: :class:`~sqlalchemy.engine.Engine` to attach the listener to.
     """
     if not engine.dialect.name.startswith("sqlite"):
         return
@@ -82,7 +97,7 @@ def _enable_sqlite_foreign_keys(engine: Engine) -> None:
 
 
 def create_engine_from_settings(settings: Settings) -> Engine:
-    """Create a fresh SQLAlchemy ``Engine`` from the given settings.
+    """Create a fresh SQLAlchemy :class:`~sqlalchemy.engine.Engine` from settings.
 
     When the engine targets SQLite, a ``connect`` listener enables
     ``PRAGMA foreign_keys=ON`` on every new connection so that
@@ -90,13 +105,15 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     are enforced at runtime.
 
     Args:
-        settings: Application settings carrying ``aeat_database_url``.
+        settings: Application :class:`~aeat.core.config.Settings` carrying
+            ``aeat_database_url``.
 
     Returns:
         A new SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
 
     Raises:
-        StorageError: If the configured URL is empty or cannot be parsed.
+        :exc:`aeat.adapters.persistence.storage.errors.StorageError`: If the
+            configured URL is empty or cannot be parsed.
     """
     url = settings.aeat_database_url
     if not url:
@@ -115,12 +132,19 @@ def create_engine_from_settings(settings: Settings) -> Engine:
 def get_engine(settings: Settings | None = None) -> Engine:
     """Return a process-wide singleton engine, keyed by database URL.
 
+    On first access, runs Alembic ``upgrade head`` against the new engine
+    when :attr:`aeat.core.config.Settings.aeat_storage_auto_migrate` is
+    enabled. The Alembic API is imported lazily so this module stays free
+    of an Alembic dependency at import time.
+
     Args:
-        settings: Optional settings override. When ``None``, a fresh
-            :func:`load_settings` call is used.
+        settings: Optional :class:`~aeat.core.config.Settings` override.
+            When ``None``, a fresh :func:`aeat.core.config.load_settings`
+            call is used.
 
     Returns:
-        The cached engine for the resolved URL, creating it on first access.
+        The cached :class:`~sqlalchemy.engine.Engine` for the resolved URL,
+        creating it on first access.
     """
     resolved = settings or load_settings()
     url = resolved.aeat_database_url
@@ -148,8 +172,8 @@ def dispose_engine(settings: Settings | None = None) -> None:
     """Dispose and forget the cached engine for the given settings.
 
     Args:
-        settings: Optional settings override. When ``None``, every cached
-            engine is disposed.
+        settings: Optional :class:`~aeat.core.config.Settings` override.
+            When ``None``, every cached engine is disposed.
     """
     with _lock:
         if settings is None:

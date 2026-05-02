@@ -1,4 +1,9 @@
-"""Unit tests for the engine factory."""
+"""Unit tests for the SQLAlchemy engine factory.
+
+Exercises :func:`aeat.adapters.persistence.storage.sql.create_engine_from_settings`
+covering the round-trip happy path, parent-directory creation, fail-fast
+on empty URLs, and the project-root anchoring of relative SQLite URLs.
+"""
 
 from __future__ import annotations
 

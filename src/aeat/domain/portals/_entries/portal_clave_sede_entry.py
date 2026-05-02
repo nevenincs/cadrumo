@@ -1,4 +1,9 @@
-"""Portal: Cl@ve gateway on AEAT Sede."""
+"""Catalogue entry for the AEAT Sede *Cl@ve* gateway page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Anonymous landing
+page that redirects authenticated users to ``clave.gob.es``.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +26,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Punto de entrada a Cl@ve desde la Sede Electrónica (redirige a clave.gob.es).",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Sede Cl@ve gateway page."""

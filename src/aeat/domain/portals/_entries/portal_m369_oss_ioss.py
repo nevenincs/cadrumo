@@ -1,4 +1,10 @@
-"""Portal: Modelo 369 — ventanilla única OSS / IOSS."""
+"""Registry entry for Modelo 369 — OSS / IOSS one-stop-shop return.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Autoliquidación del IVA de servicios y ventas a distancia intracomunitarias bajo el régimen OSS/IOSS.",
 )
+"""Portal entry for Modelo 369 (OSS / IOSS one-stop-shop VAT return)."""

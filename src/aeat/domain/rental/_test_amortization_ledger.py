@@ -1,4 +1,10 @@
-"""LIRPF art. 23.1.f amortización 3 % ledger tests (#454)."""
+"""Unit tests for the LIRPF art. 23.1.f amortización 3 % ledger.
+
+Exercises :func:`aeat.domain.rental.compute_amortization_for_year` and
+:func:`aeat.domain.rental.computation_to_ledger_entry` across single-
+year accruals, multi-year cumulative threading, partial / full clamp
+at the cost-basis cap, and the strict-mode overflow path.
+"""
 
 from __future__ import annotations
 

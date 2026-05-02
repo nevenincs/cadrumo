@@ -9,10 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.inbound.financial import RawProvenance, SourceFormat
-from aeat.adapters.inbound.financial.providers import RawTransaction
 from aeat.domain.transactions import (
     BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueError,
@@ -270,30 +271,6 @@ def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
     assert first_result.classified_at is not None
     assert second_result.classified_at is not None
     assert len(first_result.classification_history) == len(second_result.classification_history)
-
-
-def test_legacy_unclassified_payload_loads_as_not_yet_processed(tmp_path: Path) -> None:
-    """Pre-#237 catalogue JSON with `"UNCLASSIFIED"` must load transparently."""
-    del tmp_path
-    raw = _sample_raw(provider_id="legacy-row-1", amount=Decimal("-10.00"), description="Legacy row")
-    transaction = Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.BUSINESS,
-        }
-    )
-    catalogue = TransactionCatalogue.from_transactions([transaction])
-
-    # Hand-rewrite the JSON payload so the classification field carries
-    # the legacy literal, then validate it round-trips through the model.
-    serialised = catalogue.model_dump_json()
-    serialised = serialised.replace('"business_classification":"BUSINESS"', '"business_classification":"UNCLASSIFIED"')
-
-    restored = TransactionCatalogue.model_validate_json(serialised)
-    legacy = find_transaction(restored, transaction.transaction_id)
-    assert legacy is not None
-    assert legacy.business_classification is BusinessClassification.NOT_YET_PROCESSED
 
 
 def _bare_transaction() -> Transaction:

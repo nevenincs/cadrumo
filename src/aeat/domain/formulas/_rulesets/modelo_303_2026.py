@@ -12,13 +12,14 @@ The scoped régimen-general liquidación arithmetic is unchanged from
 - RIVA art. 71 and Orden EHA/3786/2008 continue to ground Modelo 303
   as the periodic autoliquidación form.
 
-The 2026 file intentionally mirrors the 2024 / 2025 formula graph with
-year-scoped formula identifiers and a 2026 ``ParameterTable``. Form
-families not represented in the existing M303 ruleset, including
-franquicia / small-enterprise special-regime treatment, simplified
-regime, recargo de equivalencia, and regional regimes, remain outside
-this base régimen-general ruleset and are tracked by the IVA complexity
-workstream.
+The 2026 file mirrors the 2024 / 2025 formula graph with year-scoped
+formula identifiers and a 2026 :class:`ParameterTable`. The shared
+casilla and citation tuples are re-imported from
+:mod:`aeat.domain.formulas._rulesets.modelo_303_2024`. Form families
+not represented in the M303 ruleset — franquicia / small-enterprise
+special-regime treatment, simplified regime, recargo de equivalencia,
+and regional regimes — remain outside this base régimen-general
+ruleset.
 """
 
 from __future__ import annotations

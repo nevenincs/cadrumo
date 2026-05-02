@@ -1,4 +1,30 @@
-"""Shared CLI error-emission boundary."""
+"""Shared CLI error-emission boundary.
+
+This module is the single funnel for translating exceptions raised
+inside Typer callbacks into the structured CLI error contract — a
+stable stderr payload (text or JSON) plus a stable :class:`typer.Exit`
+code drawn from :class:`aeat.entrypoints.cli._exit_codes.ExitCode`.
+
+Two narrow boundary exceptions wrap unexpected failures so they reach
+:func:`render_error_text` and :func:`render_error_json` with a
+predictable shape:
+
+- :exc:`CliValidationBoundaryError` wraps a leaked
+  :exc:`pydantic.ValidationError`.
+- :exc:`CliUnexpectedBoundaryError` wraps any other non-control-flow
+  exception.
+
+A third type, :exc:`CliRefusedBoundaryError`, is reserved for refusals
+emitted in JSON mode whose payload is intentionally stderr-only.
+
+The :func:`command_error_boundary` decorator wraps a callback so that
+:class:`aeat.core.errors.AeatError` instances are emitted via
+:func:`_emit_error_and_exit`. :func:`decorate_typer_app` walks a
+:class:`typer.Typer` tree and applies the decorator to every registered
+command and group callback (with an opt-out via ``skip_paths``).
+:func:`error_boundary_under_test` toggles the boundary off for tests
+that want to assert on the raised exception directly.
+"""
 
 from __future__ import annotations
 
@@ -31,17 +57,30 @@ _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
 
 
 class _ReconfigurableTextIO(Protocol):
-    """Text stream that supports runtime encoding reconfiguration."""
+    """Structural type for a text stream that supports ``reconfigure``."""
 
     def reconfigure(self, *, encoding: str | None = None, errors: str | None = None) -> None:
-        """Reconfigure the underlying text stream."""
+        """Reconfigure the underlying text stream's encoding and error mode."""
 
 
 class CliValidationBoundaryError(AeatError):
-    """Raised when a CLI callback leaks a Pydantic validation failure."""
+    """Raised when a CLI callback leaks a :exc:`pydantic.ValidationError`.
+
+    The original exception is preserved on :attr:`original_exception` so
+    downstream renderers and tests can inspect it without losing the
+    typed pydantic detail.
+
+    Attributes:
+        original_exception: The underlying :exc:`pydantic.ValidationError`.
+    """
 
     def __init__(self, error: ValidationError) -> None:
-        """Wrap ``error`` in the structured CLI boundary contract."""
+        """Wrap ``error`` in the structured CLI boundary contract.
+
+        Args:
+            error: The pydantic validation error raised inside the
+                Typer callback.
+        """
 
         super().__init__(
             "The command input failed validation.",
@@ -54,10 +93,24 @@ class CliValidationBoundaryError(AeatError):
 
 
 class CliUnexpectedBoundaryError(AeatError):
-    """Raised when a CLI callback leaks an unexpected exception."""
+    """Raised when a CLI callback leaks an unexpected exception.
+
+    Used for any exception that is not :class:`AeatError`,
+    :exc:`pydantic.ValidationError`, or Typer/Click control flow. The
+    original exception is preserved on :attr:`original_exception`.
+
+    Attributes:
+        original_exception: The underlying exception raised by the
+            callback.
+    """
 
     def __init__(self, error: Exception) -> None:
-        """Wrap ``error`` in the structured CLI boundary contract."""
+        """Wrap ``error`` in the structured CLI boundary contract.
+
+        Args:
+            error: The unexpected exception raised inside the Typer
+                callback.
+        """
 
         super().__init__(
             "The command failed due to an unexpected internal error.",
@@ -70,11 +123,33 @@ class CliUnexpectedBoundaryError(AeatError):
 
 
 class CliRefusedBoundaryError(AeatError):
-    """Raised when CLI JSON mode must refuse a request with stderr-only output."""
+    """Raised when JSON-mode CLI must refuse a request with stderr-only output.
+
+    Refusals are emitted as plain stderr text even in JSON mode because
+    the structured payload contract intentionally does not expose them
+    on stdout.
+    """
 
 
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`AeatError` emits the structured stderr form.
+
+    The wrapper catches three exception families and routes them to
+    :func:`_emit_error_and_exit`:
+
+    - :class:`aeat.core.errors.AeatError` is forwarded verbatim.
+    - :exc:`pydantic.ValidationError` is wrapped in
+      :exc:`CliValidationBoundaryError`.
+    - Any other non-control-flow exception is wrapped in
+      :exc:`CliUnexpectedBoundaryError`.
+
+    Typer/Click control-flow exceptions (e.g. :exc:`click.exceptions.Exit`,
+    :exc:`click.Abort`, :exc:`typer.Exit`) propagate untouched so the
+    framework can act on them. When :func:`error_boundary_under_test` is
+    active the original exception is re-raised instead of being emitted.
+
+    Calls are memoised by callback identity so wrapping the same
+    callback twice returns the original wrapper.
 
     Args:
         callback: Typer callback to wrap.
@@ -116,11 +191,16 @@ def decorate_typer_app(
     *,
     skip_paths: Sequence[tuple[str, ...]] = (),
 ) -> None:
-    """Apply the error boundary to every registered Typer callback.
+    """Apply :func:`command_error_boundary` across an entire Typer tree.
+
+    Walks ``app`` recursively and wraps every command and group callback
+    that is a plain function. Sub-apps are descended into.
 
     Args:
-        app: Root or nested Typer app.
-        skip_paths: Fully-qualified command paths that must remain untouched.
+        app: Root or nested :class:`typer.Typer` app to decorate.
+        skip_paths: Fully-qualified command paths (as tuples of name
+            segments) that must remain undecorated. Useful for callbacks
+            that intentionally manage their own error reporting.
     """
 
     skip_set = set(skip_paths)
@@ -128,7 +208,20 @@ def decorate_typer_app(
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
-    """Write ``text`` to stderr with UTF-8-safe fallback behaviour."""
+    """Write ``text`` to stderr with UTF-8-safe fallback behaviour.
+
+    On Windows consoles whose default encoding is cp1252, raw writes of
+    non-ASCII characters raise :exc:`UnicodeEncodeError`. This helper
+    first attempts to reconfigure the stream to UTF-8 via
+    :class:`_ReconfigurableTextIO`; on encoding failure it falls back to
+    the underlying byte buffer with ``errors="replace"``, and finally to
+    an ASCII-safe replacement string.
+
+    Args:
+        text: Text payload to emit.
+        stream: Optional target stream to write to instead of
+            :data:`sys.stderr`. Primarily useful in tests.
+    """
 
     target = sys.stderr if stream is None else stream
     if _supports_reconfigure(target):
@@ -150,7 +243,13 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
 
 
 def _emit_error_and_exit(error: AeatError) -> Never:
-    """Render ``error`` to stderr and terminate with the stable exit code."""
+    """Render ``error`` to stderr and terminate with its registered exit code.
+
+    Selects the JSON or text renderer based on whether the active
+    callback opted into JSON output via :func:`json_output_requested`,
+    writes the payload through :func:`write_stderr`, and raises
+    :class:`typer.Exit` with the category-mapped exit code.
+    """
 
     code = get_registered_error_code(error)
     payload = render_error_json(error) if json_output_requested() else render_error_text(error)
@@ -160,7 +259,18 @@ def _emit_error_and_exit(error: AeatError) -> Never:
 
 @contextmanager
 def error_boundary_under_test() -> Iterator[None]:
-    """Temporarily force the boundary to re-raise the original exception."""
+    """Temporarily force :func:`command_error_boundary` to re-raise originals.
+
+    Tests that need to assert on the raised exception type rather than
+    the rendered stderr payload should wrap their invocation in this
+    context manager. The override is scoped to the active context via
+    :class:`contextvars.ContextVar`, so concurrent callbacks are
+    unaffected.
+
+    Yields:
+        :data:`None`. The context's only purpose is the side effect on
+        the internal flag.
+    """
 
     token: Token[bool] = _UNDER_TEST.set(True)
     try:
@@ -175,6 +285,8 @@ def _decorate_typer_node(
     prefix: tuple[str, ...],
     skip_paths: set[tuple[str, ...]],
 ) -> None:
+    """Recursively decorate every command/group callback under ``app``."""
+
     for command in app.registered_commands:
         name = command.name or _callback_name(command.callback)
         path = (*prefix, name)
@@ -190,6 +302,8 @@ def _decorate_typer_node(
 
 
 def _callback_name(callback: Callable[..., object] | None) -> str:
+    """Return a stable name for a Typer callback, even if it's a callable class."""
+
     if callback is None:
         return "<unknown>"
     if inspect.isfunction(callback):
@@ -198,15 +312,23 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
 
 
 def _is_wrap_candidate(callback: object) -> TypeGuard[Callable[..., object]]:
+    """Narrow ``callback`` to a plain function suitable for wrapping."""
+
     return inspect.isfunction(callback)
 
 
 def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
+    """Narrow ``stream`` to a text stream that exposes ``reconfigure``."""
+
     return hasattr(stream, "reconfigure")
 
 
 def _is_click_control_flow(error: Exception) -> bool:
-    """Return ``True`` when ``error`` is Typer/Click control flow, not a bug."""
+    """Return :data:`True` when ``error`` is Typer/Click control flow, not a bug.
+
+    Recognises :exc:`click.ClickException`, :exc:`click.exceptions.Exit`,
+    :exc:`click.Abort`, and :exc:`typer.Exit`.
+    """
 
     return isinstance(error, (click.ClickException, click.exceptions.Exit, click.Abort, typer.Exit))
 

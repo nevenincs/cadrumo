@@ -1,8 +1,9 @@
 """PDF backend implementations for the declaración parser.
 
-``_pdfplumber_backend.py`` extracts per-page text via pdfplumber, the
-default backend. Additional backends (pypdf AcroForm, OCR) land in
-later phases.
+:mod:`aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend`
+extracts per-page text via pdfplumber and is the default backend.
+Additional backends (pypdf AcroForm, OCR) plug in alongside it as
+extraction needs grow.
 """
 
 from __future__ import annotations

@@ -4,7 +4,7 @@ Modelo 390 is the annual summary filed once per ejercicio by
 Spanish autónomos and businesses in the general IVA regime. It
 reconciles every quarterly Modelo 303 filed during the year and
 exposes the annual totals in a single declarative form. v1
-coverage per :mod:`aeat.application.filing._builders._modelo_390_schema`
+coverage per :mod:`aeat.domain.filing._builders._modelo_390_schema`
 comprises the arithmetic backbone of the régimen general annual
 totals plus reconciliation findings against the four quarterly
 303 drafts.

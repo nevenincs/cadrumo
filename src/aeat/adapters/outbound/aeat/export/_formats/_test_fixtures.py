@@ -1,20 +1,20 @@
-"""Shared Kent-profile test fixtures for golden + E2E tests.
+"""Shared Kent-profile test fixtures for golden and end-to-end tests.
 
-These builders cover the canonical "Kent the autónomo" filing scenario
-reused across every byte-exactness and cross-track integration test:
+These builders cover the canonical "Kent the autónomo" filing
+scenario reused across every byte-exactness and cross-track
+integration test:
 
 - :class:`KentProfile` pins NIF / APELLIDOS / NOMBRE once so a change
   to the profile flows through every test automatically.
-- :const:`KENT_130_CASILLAS` carries the nine-casilla Q1 2024 Modelo
-  130 fixture (ingresos 20 000, gastos 5 000, resultado 3 000) which
-  the / pin + the E2E derives from
-  Engine inputs.
-- :const:`KENT_303_CASILLAS_HAND` carries the twenty-casilla Q1 2024
-  Modelo 303 fixture used by the / hand-picked
-  goldens (régimen general, cuota 3 150 a ingresar).
-- :func:`kent_130_headers` / :func:`kent_303_headers` return the
+- :data:`KENT_130_CASILLAS` carries the nine-casilla Q1 2024 Modelo
+  130 fixture (ingresos 20 000, gastos 5 000, resultado 3 000) used
+  by the Modelo 130 golden tests.
+- :data:`KENT_303_CASILLAS_HAND` carries the twenty-casilla Q1 2024
+  Modelo 303 fixture used by the hand-picked goldens (régimen
+  general, cuota 3 150 a ingresar).
+- :func:`kent_130_headers` and :func:`kent_303_headers` return the
   per-ejercicio header dict (canonical CLI-side or DR303 field IDs
-  respectively). ``ejercicio`` is a free parameter so 2024 vs 2025
+  respectively). ``ejercicio`` is a free parameter so 2024 and 2025
   tests share the same helper.
 
 Not public API — name prefixed with ``_`` to keep it out of the
@@ -39,7 +39,16 @@ class KentProfile:
     """Immutable canonical Kent filer attributes.
 
     The NIF is a real-valid NIE per the AEAT check-letter algorithm
-    (X=0, 1234567 % 23 = 19 → ``L``).
+    (``X = 0``, ``1234567 % 23 = 19`` -> ``L``).
+
+    Attributes:
+        nif: NIF / NIE string (9 ASCII characters).
+        apellidos: First and second surnames in upper case.
+        nombre: Given name in upper case.
+        tipo_declaracion: Single-letter declaration kind (``"I"``
+            ingresar, ``"D"`` devolución, etc.).
+        periodo: Two-character AEAT period code (e.g., ``"1T"`` for
+            the first quarter).
     """
 
     nif: str = "X1234567L"
@@ -50,6 +59,7 @@ class KentProfile:
 
 
 KENT: KentProfile = KentProfile()
+"""Default :class:`KentProfile` instance reused across the fixture helpers."""
 
 
 KENT_130_CASILLAS: dict[str, Decimal] = {
@@ -63,6 +73,7 @@ KENT_130_CASILLAS: dict[str, Decimal] = {
     "17": Decimal("3000.00"),
     "19": Decimal("3000.00"),
 }
+"""Q1 2024 Modelo 130 casillas for Kent's canonical filing scenario."""
 
 
 KENT_303_CASILLAS_HAND: dict[str, Decimal] = {
@@ -87,10 +98,11 @@ KENT_303_CASILLAS_HAND: dict[str, Decimal] = {
     "69": Decimal("3150.00"),
     "71": Decimal("3150.00"),
 }
+"""Hand-picked Q1 2024 Modelo 303 casillas (régimen general, 21 % cuota)."""
 
 
 def kent_130_headers(ejercicio: str) -> dict[str, str]:
-    """Canonical Modelo 130 CLI-side headers stamped with ``ejercicio``."""
+    """Build the canonical Modelo 130 CLI-side headers for ``ejercicio``."""
     return {
         "EJERCICIO": ejercicio,
         "PERIODO": KENT.periodo,
@@ -102,7 +114,7 @@ def kent_130_headers(ejercicio: str) -> dict[str, str]:
 
 
 def kent_303_headers(ejercicio: str) -> dict[str, str]:
-    """Canonical Modelo 303 DR303-field-id headers stamped with ``ejercicio``."""
+    """Build the canonical Modelo 303 DR303-field-id headers for ``ejercicio``."""
     return {
         # Envelope header (DP30300).
         "DP30300_F004_EJERCICIO_DE_DEVENGO": ejercicio,

@@ -1,4 +1,10 @@
-"""Strict immutable models for the attachment service."""
+"""Strict immutable pydantic models for the attachment service.
+
+Defines :class:`Attachment` (one manifest entry) and :class:`AttachmentCatalogue`
+(an immutable in-memory mapping of attachments keyed by ``attachment_id``).
+Both models reject extra fields and freeze after validation so they can be
+shared safely across application code without defensive copying.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +23,18 @@ _HEX_DIGITS = frozenset("0123456789abcdef")
 
 
 def _normalize_hex_digest(value: str, *, field_name: str) -> str:
-    """Normalise and validate a 64-character lowercase hex digest."""
+    """Normalise and validate a 64-character lowercase hex digest.
+
+    Args:
+        value: Untrusted digest candidate.
+        field_name: Field name used in the raised error message.
+
+    Returns:
+        The validated digest, lowercased and stripped of surrounding whitespace.
+
+    Raises:
+        ValueError: When ``value`` is not a 64-character hex string.
+    """
     normalized = value.strip().lower()
     if len(normalized) != 64 or any(char not in _HEX_DIGITS for char in normalized):
         raise ValueError(f"{field_name} must be a 64-character lowercase hex digest")
@@ -25,7 +42,18 @@ def _normalize_hex_digest(value: str, *, field_name: str) -> str:
 
 
 def _dedupe_preserve_order(values: Iterable[str], *, field_name: str) -> tuple[str, ...]:
-    """Trim, validate, and deduplicate linked-ID tuples preserving first-seen order."""
+    """Trim, validate, and deduplicate linked-ID tuples preserving first-seen order.
+
+    Args:
+        values: Iterable of candidate identifiers.
+        field_name: Field name used in raised error messages.
+
+    Returns:
+        Deduplicated tuple of trimmed identifiers in first-seen order.
+
+    Raises:
+        ValueError: When any element is not a string or is blank.
+    """
     seen: dict[str, None] = {}
     for raw in values:
         if not isinstance(raw, str):
@@ -38,7 +66,34 @@ def _dedupe_preserve_order(values: Iterable[str], *, field_name: str) -> tuple[s
 
 
 class Attachment(BaseModel):
-    """Immutable attachment manifest tying bytes to transactions/invoices."""
+    """Immutable attachment manifest tying bytes to transactions and invoices.
+
+    Each attachment is content-addressed: ``attachment_id`` is the SHA-256 of
+    the stored bytes, and the model enforces that ``attachment_id == sha256``
+    so the manifest cannot drift from the byte payload it references.
+
+    The manifest also records the originating channel (:class:`aeat.domain.attachments.AttachmentSource`),
+    the document kind (:class:`aeat.domain.attachments.AttachmentKind`), and
+    optional cross-references back to transaction and invoice identifiers so
+    the evidence layer is traversable in either direction.
+
+    Attributes:
+        attachment_id: 64-character lowercase hex SHA-256 digest. Equals
+            :attr:`sha256`.
+        kind: Document kind. See :class:`aeat.domain.attachments.AttachmentKind`.
+        source: Channel the bytes were captured from. See
+            :class:`aeat.domain.attachments.AttachmentSource`.
+        source_reference: Channel-specific reference (e.g. a Gmail message id,
+            a Drive file id, a local path).
+        sha256: 64-character lowercase hex SHA-256 of the stored bytes.
+        mime_type: Trimmed non-empty MIME type string.
+        bytes_size: Size in bytes of the stored payload.
+        captured_at: Timezone-aware capture timestamp.
+        linked_transaction_ids: Transaction identifiers this attachment supports.
+        linked_invoice_ids: Invoice identifiers this attachment supports.
+        metadata: Frozen string-to-string mapping for channel-specific metadata.
+        notes: Free-form trimmed notes; the empty string is allowed.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -156,7 +211,17 @@ class Attachment(BaseModel):
 
 
 class AttachmentCatalogue(BaseModel):
-    """In-memory immutable catalogue keyed by ``attachment_id``."""
+    """In-memory immutable catalogue keyed by ``attachment_id``.
+
+    Accepts construction from either a bare mapping, an iterable of
+    :class:`Attachment` instances, or attachment payload dictionaries via
+    :meth:`from_attachments`. Every mapping key is verified to match the
+    embedded :attr:`Attachment.attachment_id` so lookups cannot drift from
+    the manifest content.
+
+    Attributes:
+        attachments: Frozen mapping from ``attachment_id`` to :class:`Attachment`.
+    """
 
     model_config = _STRICT_FROZEN
 

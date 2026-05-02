@@ -1,22 +1,19 @@
-"""Hand-curated static casilla schema for Modelo 390 (v1).
+"""Hand-curated static casilla schema for Modelo 390.
 
-Modelo 390 is the annual IVA ``declaración-resumen`` filed once
-a year by Spanish autónomos and businesses whose IVA obligations
-are settled via the quarterly Modelo 303. The v1 casilla coverage
-committed in the ADR ``2026-04-12-modelo-303-390-adr`` is the
-arithmetic backbone that reconciles the annual IVA general
-regime totals against the four quarterly Modelo 303 drafts; the
-full form carries hundreds of additional casillas which are out
-of scope for v1 and will ship via follow-up issues.
+Modelo 390 is the annual IVA ``declaración-resumen`` filed once a year by
+Spanish autónomos and businesses whose IVA obligations are settled via the
+quarterly Modelo 303. The current casilla coverage is the arithmetic
+backbone that reconciles the annual IVA general regime totals against the
+four quarterly Modelo 303 drafts; the full form additionally carries
+hundreds of casillas which are out of scope for this static schema.
 
-Quarterly-sum casillas (100, 101, 104, 105, 108, 109, 190, 191,
-192, 193) declare EMPTY ``formula_inputs`` at the schema level
-because they are not summed from the 390's own casillas but from
-*four different drafts*. Their provenance is carried on the
-:class:`FilingValue` as a synthetic trace so that the existing
-``_validate_formula_traces`` rule does not flag them. The
-intra-390 aggregates (84, 85, 86, 95) use real
-``formula_inputs`` that refer to the preceding 390 casillas.
+Quarterly-sum casillas (100, 101, 104, 105, 108, 109, 190, 191, 192, 193)
+declare empty ``formula_inputs`` at the schema level because they are not
+summed from the 390's own casillas but from *four different drafts*. Their
+provenance is carried on the corresponding ``FilingValue`` as a synthetic
+trace so the existing ``_validate_formula_traces`` rule does not flag them.
+The intra-390 aggregates (84, 85, 86, 95) use real ``formula_inputs`` that
+refer to the preceding 390 casillas.
 """
 
 from __future__ import annotations
@@ -30,11 +27,17 @@ from ._modelo_130_schema import StaticCasillaCollection, StaticCasillaSchema
 def _quarterly_sum(id_: str, description: str) -> StaticCasillaSchema:
     """Return a schema record for a 390 casilla summed from quarterly drafts.
 
-    These casillas are populated by :class:`Modelo390Builder` via
-    a synthetic ``formula_trace`` referring to 303 quarterly
-    drafts. They keep ``formula_inputs`` empty because the
-    validator's formula-trace rule compares to *in-draft*
-    casilla IDs only.
+    These casillas are populated by ``Modelo390Builder`` via a synthetic
+    ``formula_trace`` referring to 303 quarterly drafts. They keep
+    ``formula_inputs`` empty because the validator's formula-trace rule
+    compares to *in-draft* casilla IDs only.
+
+    Args:
+        id_: Casilla identifier.
+        description: Human-readable label.
+
+    Returns:
+        A configured :class:`StaticCasillaSchema`.
     """
     return StaticCasillaSchema(
         id=id_,

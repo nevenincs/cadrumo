@@ -3,14 +3,14 @@
 The expediente-tree walker (`_walker.walk_expedientes_tree`) walks
 ``Mis Expedientes`` (``/wlpl/TEWV-CORE/ResumenVlt``) which is a
 *procedures* surface — sanciones, recursos, gestión recaudación —
-not the canonical filings register. To read Kent's actual filing
-history (every quarterly Modelo 130 / 303, annual Modelo 100 / 390,
-retentions, informativas) we drive the
+not the canonical filings register. To read the operator's actual
+filing history (every quarterly Modelo 130 / 303, annual Modelo 100 /
+390, retentions, informativas) we drive the
 ``Consultar declaraciones presentadas`` form at
 ``/wlpl/SCEJ-MANT/CONSUL/index.zul``.
 
-Captured live (2026-04-25, NIE Y4113523X): the form is built on the
-ZK framework. Input ids (``c5uX10``, ``jQSGd0``, ...) are
+Captured live against a live NIE: the form is built on the ZK
+framework. Input ids (``c5uX10``, ``jQSGd0``, ...) are
 auto-generated and reshuffle on every page load — selectors must
 bind on label text, not on ids. The submit action is a real
 ``Buscar`` button issuing a ZK AJAX RPC; URL parameters alone do
@@ -61,7 +61,7 @@ _BUSCAR_SETTLE_MS = 3_000
 _VER_CLICK_TIMEOUT_MS = 15_000
 
 # AEAT CSV shape: 8-24 uppercase alphanumeric characters. Mirror
-# of ``_CSV_LABEL_RE`` in :mod:`aeat.domain.justificante._extract`. Used
+# of ``_CSV_LABEL_RE`` in :mod:`aeat.adapters.inbound.justificante._extract`. Used
 # to shape-validate the CSV extracted from a cotejo URL so a
 # malformed AEAT response cannot land arbitrary text in the
 # downstream :class:`JustificanteRef.pdf_url`.

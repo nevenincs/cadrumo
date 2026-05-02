@@ -1,9 +1,8 @@
-"""Shape + contiguity tests for the Modelo 130 2024 fichero-BOE spec.
+"""Shape and contiguity tests for the Modelo 130 2024 fichero-BOE spec.
 
- (EPIC #201 / EPIC #305). This test suite proves the
-concrete `RECORD_SPECS` tuple is well-formed. The actual
-serialise / parse round-trip lands in the C3b
-serialiser + a golden-fixture byte-exact test.
+Proves that the concrete ``RECORD_SPECS`` tuple is well-formed. The
+serialise / parse round-trip lives separately in the serialiser
+golden-fixture suite.
 """
 
 from __future__ import annotations
@@ -17,14 +16,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 class TestModelo1302024Shape:
+    """Structural invariants on :data:`RECORD_SPECS`."""
+
     def test_specs_are_contiguous_and_fill_record(self) -> None:
-        """runs at import time; re-asserting here
+        """Re-assert :func:`validate_record_specs` at test time.
+
+        The validator runs at import time too, but re-asserting here
         catches any future regression that smuggles an import-order
-        trick past the module-level call."""
+        trick past the module-level call.
+        """
         validate_record_specs(RECORD_SPECS, total_length=RECORD_LENGTH)
 
     def test_header_block_canonical_offsets(self) -> None:
-        """offsets pinned to dr130.09.pdf consolidated spec."""
+        """Pin header-block offsets to the ``dr130.09.pdf`` consolidated spec."""
         first = RECORD_SPECS[0]
         assert first.field_id == "MODELO"
         assert first.literal_value == "130"
@@ -48,8 +52,11 @@ class TestModelo1302024Shape:
         assert by_id["PERIODO"].offset == 75
 
     def test_all_19_casillas_mapped(self) -> None:
-        """The Modelo 130 ruleset has 19 casillas (01..19); every one
-        must have exactly one corresponding record field."""
+        """Assert every Modelo 130 casilla (01..19) has exactly one record field.
+
+        The Modelo 130 ruleset enumerates 19 casillas; each one must
+        map to exactly one entry in :data:`RECORD_SPECS`.
+        """
         casilla_ids = {s.casilla_id for s in RECORD_SPECS if s.casilla_id is not None}
         expected = {f"{i:02d}" for i in range(1, 20)}
         assert casilla_ids == expected, (
@@ -57,7 +64,7 @@ class TestModelo1302024Shape:
         )
 
     def test_every_casilla_is_currency_13_bytes(self) -> None:
-        """every casilla field is 13-byte currency (11 int + 2 dec)."""
+        """Assert every casilla field is 13-byte CURRENCY (11 int + 2 dec)."""
         for spec in RECORD_SPECS:
             if spec.casilla_id is None:
                 continue
@@ -67,5 +74,6 @@ class TestModelo1302024Shape:
             assert spec.length == 13, f"casilla {spec.casilla_id!r} length={spec.length}, expected 13"
 
     def test_final_field_reaches_record_end(self) -> None:
+        """Assert the trailing field's offset + length saturates :data:`RECORD_LENGTH`."""
         final = RECORD_SPECS[-1]
         assert final.offset + final.length - 1 == RECORD_LENGTH

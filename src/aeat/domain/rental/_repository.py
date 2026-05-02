@@ -1,4 +1,4 @@
-"""Typed repositories for the rental-register record types (#454).
+"""Typed repositories for the rental-register record types.
 
 Bridges between the public :mod:`aeat.domain.rental._models` records and the
 internal :mod:`aeat.adapters.persistence.storage._orm` mapper rows. Every method routes
@@ -51,14 +51,20 @@ class RentalFincaRepository:
         self._session = session
 
     def list_all(self) -> list[RentalFinca]:
+        """Return every record in the table, ordered by surrogate id."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.RentalFincaRow).order_by(_orm.RentalFincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalFinca:
-        from ...adapters.persistence.storage.sql import _orm
+        """Return the record with surrogate id ``record_id``.
+
+        Raises:
+            RepositoryError: When no row matches.
+        """
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalFincaRow, record_id)
         if row is None:
@@ -66,6 +72,7 @@ class RentalFincaRepository:
         return self._to_record(row)
 
     def get_by_identifier(self, identifier: str) -> RentalFinca | None:
+        """Return the record matching ``identifier``, or ``None`` if absent."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -74,8 +81,9 @@ class RentalFincaRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalFinca) -> RentalFinca:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row: _orm.RentalFincaRow | None = None
         if record.id is not None:
@@ -121,8 +129,9 @@ class RentalFincaRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage.sql import _orm
+        """Delete the record with surrogate id ``record_id``."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalFincaRow, record_id)
         if row is None:
@@ -164,12 +173,14 @@ class RentalContractRepository:
         self._session = session
 
     def list_all(self) -> list[RentalContract]:
+        """Return every record in the table, ordered by surrogate id."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.RentalContractRow).order_by(_orm.RentalContractRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[RentalContract]:
+        """Return every record attached to the supplied finca."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -184,8 +195,13 @@ class RentalContractRepository:
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> RentalContract:
-        from ...adapters.persistence.storage.sql import _orm
+        """Return the record with surrogate id ``record_id``.
+
+        Raises:
+            RepositoryError: When no row matches.
+        """
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalContractRow, record_id)
         if row is None:
@@ -193,8 +209,9 @@ class RentalContractRepository:
         return self._to_record(row)
 
     def upsert(self, record: RentalContract) -> RentalContract:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row: _orm.RentalContractRow | None = None
         if record.id is not None:
@@ -211,8 +228,9 @@ class RentalContractRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage.sql import _orm
+        """Delete the record with surrogate id ``record_id``."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalContractRow, record_id)
         if row is None:
@@ -275,6 +293,7 @@ class RentalIncomeRepository:
         self._session = session
 
     def list_for_period(self, period_year: int) -> list[RentalIncomeRecord]:
+        """Return every record whose period overlaps the supplied window."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -293,6 +312,7 @@ class RentalIncomeRepository:
         contract_id: int,
         period_year: int,
     ) -> RentalIncomeRecord | None:
+        """Return the record for ``contract_id`` matching ``period``, or ``None``."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -304,8 +324,9 @@ class RentalIncomeRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalIncomeRecord) -> RentalIncomeRecord:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row: _orm.RentalIncomeRecordRow | None = None
         if record.id is not None:
@@ -336,8 +357,9 @@ class RentalIncomeRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage.sql import _orm
+        """Delete the record with surrogate id ``record_id``."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalIncomeRecordRow, record_id)
         if row is None:
@@ -364,6 +386,7 @@ class RentalExpenseRepository:
         self._session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[RentalExpense]:
+        """Return every record attached to ``finca_id`` within the period window."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -381,8 +404,9 @@ class RentalExpenseRepository:
         return [self._to_record(row) for row in rows]
 
     def add(self, record: RentalExpense) -> RentalExpense:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert ``record`` into the underlying store and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         if record.id is not None:
             raise RepositoryError(
@@ -400,8 +424,9 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def upsert(self, record: RentalExpense) -> RentalExpense:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         if record.id is None:
             return self.add(record)
@@ -417,8 +442,9 @@ class RentalExpenseRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage.sql import _orm
+        """Delete the record with surrogate id ``record_id``."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalExpenseRow, record_id)
         if row is None:
@@ -453,6 +479,7 @@ class RentalAmortizationLedgerRepository:
         self._session = session
 
     def list_for_finca(self, finca_id: int) -> list[RentalAmortizationLedgerEntry]:
+        """Return every record attached to the supplied finca."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -471,6 +498,7 @@ class RentalAmortizationLedgerRepository:
         finca_id: int,
         period_year: int,
     ) -> RentalAmortizationLedgerEntry | None:
+        """Return the record for ``finca_id`` matching ``period``, or ``None``."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -482,8 +510,9 @@ class RentalAmortizationLedgerRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: RentalAmortizationLedgerEntry) -> RentalAmortizationLedgerEntry:
-        from ...adapters.persistence.storage.sql import _orm
+        """Insert or update ``record`` and return the persisted entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row: _orm.RentalAmortizationLedgerRow | None = None
         if record.id is not None:
@@ -520,8 +549,9 @@ class RentalAmortizationLedgerRepository:
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
-        from ...adapters.persistence.storage.sql import _orm
+        """Delete the record with surrogate id ``record_id``."""
         from ...adapters.persistence.storage.errors import RepositoryError
+        from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.get(_orm.RentalAmortizationLedgerRow, record_id)
         if row is None:

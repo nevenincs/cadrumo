@@ -1,4 +1,10 @@
-"""Modelo 100 Anexo D — E.D. normal (2024). LIS arts. 12-14 + 17 stable."""
+"""Modelo 100 Anexo D — estimación directa normal (ejercicio 2024).
+
+Re-exports ``CASILLAS`` and ``CITATIONS`` from
+:mod:`.anexo_d_normal_2025`; LIS arts. 12-14 and 17 are stable across
+2024, 2025 and 2026, so only ``FORMULAS`` (year-scoped formula IDs)
+and the effective-date constants are year-specific.
+"""
 
 from __future__ import annotations
 

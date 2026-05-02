@@ -1,10 +1,13 @@
 """Canonical filing-window calendar for the autónomo modelo set.
 
-The :data:`CALENDAR` table is the v1 source of truth for filing
-windows. Every entry is sourced from the AEAT *calendario del
-contribuyente* and the BOE order that fixes the filing schedule for
-the modelo, with citations propagated to every emitted
+The :data:`CALENDAR` table is the in-code source of truth for
+filing windows. Every entry is sourced from the AEAT *calendario
+del contribuyente* and the BOE order that fixes the filing schedule
+for the modelo, with citations propagated through to every emitted
 :class:`aeat.domain.deadlines.FilingObligation`.
+
+The supported years are listed in :data:`SUPPORTED_YEARS` and the
+authoritative modelo set in :data:`KNOWN_AUTONOMO_MODELOS`.
 """
 
 from __future__ import annotations
@@ -13,13 +16,19 @@ from calendar import monthrange
 from datetime import date
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class PeriodKind(StrEnum):
-    """Period granularity supported by the v1 engine."""
+    """Period granularity supported by the deadline engine.
+
+    Attributes:
+        MONTHLY: Monthly filing cadence.
+        QUARTERLY: Quarterly filing cadence.
+        ANNUAL: Annual filing cadence.
+    """
 
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
@@ -51,13 +60,6 @@ class CanonicalWindow(BaseModel):
     closes_on: date
     payment_cutoff_on: date | None = None
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
-
-    @field_validator("kind", mode="before")
-    @classmethod
-    def _coerce_legacy_period_kind(cls, value: object) -> object:
-        if isinstance(value, str):
-            return PeriodKind(value.lower())
-        return value
 
     @model_validator(mode="after")
     def _check_window_order(self) -> CanonicalWindow:
@@ -94,12 +96,12 @@ def _quarterly_windows(
 
     The standard autónomo schedule is:
 
-    - Q1: 1-20 April
-    - Q2: 1-20 July
-    - Q3: 1-20 October
-    - Q4: 1-30 January (of ``year + 1``)
+    - Q1: 1–20 April
+    - Q2: 1–20 July
+    - Q3: 1–20 October
+    - Q4: 1–30 January (of ``year + 1``)
 
-    Direct-debit cutoff is ``closes_on - 5`` days for v1.
+    Direct-debit cutoff is ``closes_on - 5`` days.
     """
     starts = [
         (date(year, 4, 1), date(year, 4, 20)),
@@ -159,10 +161,9 @@ def _build_year(year: int) -> tuple[CanonicalWindow, ...]:
     """Materialise the canonical windows for ``year``.
 
     The 2025 and 2026 entries derive from the AEAT *calendario del
-    contribuyente* for those years; both years follow the same
-    standard autónomo schedule documented in the research note. The
-    helper produces deterministic output for any year in
-    :data:`SUPPORTED_YEARS`.
+    contribuyente* for those years; both follow the same standard
+    autónomo schedule. The helper produces deterministic output for
+    any year in :data:`SUPPORTED_YEARS`.
     """
     out: list[CanonicalWindow] = []
 
@@ -218,7 +219,7 @@ def _build_year(year: int) -> tuple[CanonicalWindow, ...]:
         )
     )
     # Modelo 100 - IRPF anual: filed in year+1 for income earned in year.
-    # Window for v1: 2 April → 30 June of year+1.
+    # Window: 2 April → 30 June of year+1.
     out.append(
         _annual_window(
             "100",
@@ -249,7 +250,7 @@ SUPPORTED_YEARS: tuple[int, ...] = (2024, 2025, 2026, 2027)
 
 
 CALENDAR: tuple[CanonicalWindow, ...] = tuple(window for year in SUPPORTED_YEARS for window in _build_year(year))
-"""The closed, frozen tuple of canonical filing windows for v1."""
+"""Closed, frozen tuple of canonical filing windows."""
 
 
 KNOWN_AUTONOMO_MODELOS: tuple[str, ...] = (
@@ -265,4 +266,4 @@ KNOWN_AUTONOMO_MODELOS: tuple[str, ...] = (
     "390",
     "720",
 )
-"""Closed v1 set of autónomo-relevant modelos the engine considers."""
+"""Closed set of autónomo-relevant modelos the engine considers."""

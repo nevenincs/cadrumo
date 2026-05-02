@@ -1,4 +1,10 @@
-"""Portal: Modelo 349 — operaciones intracomunitarias."""
+"""Registry entry for Modelo 349 — intra-EU transactions return.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -28,3 +34,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Declaración recapitulativa de entregas y adquisiciones intracomunitarias (VAT VIES).",
 )
+"""Portal entry for Modelo 349 (intra-EU recapitulative VAT statement)."""

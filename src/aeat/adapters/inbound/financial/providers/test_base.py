@@ -1,4 +1,10 @@
-"""Unit tests for financial provider boundary models and detection."""
+"""Unit tests for financial provider boundary models and detection.
+
+Exercises the strict + frozen :class:`RawTransaction` and
+:class:`ProviderValidation` records, the
+:func:`detect_provider` extension/sniff dispatch, and the
+:func:`parse_amount_value` decimal-separator override.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import ProviderValidation, RawTransaction, SourceFormat, detect_provider
+from .....domain.transactions import RawTransaction, SourceFormat
+from .. import ProviderValidation, detect_provider
 from ._base import parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

@@ -1,4 +1,10 @@
-"""Portal: Renta Web borrador (IRPF pre-filled draft)."""
+"""Registry entry for Renta Web — IRPF pre-filled draft (borrador).
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -31,3 +37,4 @@ ENTRY: PortalMetadata = build_entry(
     purpose_es="Acceso al borrador y servicio Renta Web para la declaración del IRPF.",
     notes_es=("Ruta WebLogic: puede rotar entre campañas Renta.",),
 )
+"""Portal entry for Renta Web (IRPF pre-filled draft and filing service)."""

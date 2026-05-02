@@ -1,4 +1,12 @@
-"""Unit tests for the ``aeat deadlines`` CLI sub-app."""
+"""Unit tests for the ``aeat deadlines`` CLI sub-app.
+
+Verifies that ``list``, ``next``, and ``explain`` render correctly for
+a representative :class:`aeat.domain.deadlines.AutonomoProfile`,
+respect the ``--profile`` flag, and fall back to
+``AEAT_DEFAULT_PROFILE_PATH`` when the flag is omitted. Profile fixtures
+are written through the encrypted persistence layer so the CLI loads a
+real on-disk envelope.
+"""
 
 from __future__ import annotations
 

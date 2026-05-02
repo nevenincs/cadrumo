@@ -1,8 +1,10 @@
 """Unit tests for the LIRPF arts. 57-60 mínimo personal y familiar helper.
 
-External-anchored to LIRPF arts. 57 / 58 / 59 / 60 + the canonical
-amounts that have been stable since 2015 (no posterior law modification
-at BOE consult 2026-04-28).
+Exercises
+:func:`aeat.domain.formulas._rulesets.modelo_100._minimos.compute_minimo_personal_familiar`
+against the canonical amounts that have been stable since 2015, anchored
+to LIRPF arts. 57 (mínimo del contribuyente), 58 (descendientes),
+59 (ascendientes), and 60 (discapacidad).
 """
 
 from __future__ import annotations
@@ -28,17 +30,20 @@ class TestMinimoContribuyente:
     """
 
     def test_base_minimo_age_lt_65(self) -> None:
+        """Default profile (<65) yields the 5.550 EUR base mínimo."""
         profile = MinimosProfile()
         result = compute_minimo_personal_familiar(profile)
         assert result["0505"] == Decimal("5550.00")
         assert result["0500"] == Decimal("5550.00")
 
     def test_age_over_65(self) -> None:
+        """>65 supplement: 5.550 + 1.150 = 6.700."""
         profile = MinimosProfile(contribuyente_over_65=True)
         result = compute_minimo_personal_familiar(profile)
         assert result["0505"] == Decimal("6700.00")  # 5550 + 1150
 
     def test_age_over_75(self) -> None:
+        """>75 stacks on top of >65: 5.550 + 1.150 + 1.400 = 8.100."""
         profile = MinimosProfile(contribuyente_over_65=True, contribuyente_over_75=True)
         result = compute_minimo_personal_familiar(profile)
         assert result["0505"] == Decimal("8100.00")  # 5550 + 1150 + 1400
@@ -62,6 +67,7 @@ class TestMinimoDescendientes:
         ],
     )
     def test_descendientes_per_orden(self, n_descendientes: int, expected: Decimal) -> None:
+        """Verify the per-orden cumulative amount for n descendientes."""
         profile = MinimosProfile(n_descendientes=n_descendientes)
         result = compute_minimo_personal_familiar(profile)
         assert result["0510"] == expected
@@ -87,11 +93,13 @@ class TestMinimoAscendientes:
     """LIRPF art. 59 — 1.150 per ascendiente >=65 + 1.400 supplement per >75."""
 
     def test_no_ascendientes(self) -> None:
+        """Default profile has zero ascendientes mínimo."""
         profile = MinimosProfile()
         result = compute_minimo_personal_familiar(profile)
         assert result["0515"] == Decimal("0.00")
 
     def test_one_ascendiente_over_65(self) -> None:
+        """Single ascendiente >=65 yields the 1.150 EUR base."""
         profile = MinimosProfile(n_ascendientes_over_65=1)
         result = compute_minimo_personal_familiar(profile)
         assert result["0515"] == Decimal("1150.00")
@@ -103,6 +111,7 @@ class TestMinimoAscendientes:
         assert result["0515"] == Decimal("2550.00")  # 1150 + 1400
 
     def test_two_ascendientes_one_over_75(self) -> None:
+        """2 ascendientes >=65 + 1 also >=75: 2*1150 + 1*1400 = 3.700."""
         profile = MinimosProfile(n_ascendientes_over_65=2, n_ascendientes_over_75=1)
         result = compute_minimo_personal_familiar(profile)
         # 2 * 1150 + 1 * 1400 = 2300 + 1400 = 3700
@@ -113,6 +122,7 @@ class TestMinimoDiscapacidad:
     """LIRPF art. 60 — 3.000 / 9.000 + 3.000 asistencia bonus."""
 
     def test_no_discapacidad(self) -> None:
+        """Default profile has zero discapacidad mínimo."""
         profile = MinimosProfile()
         result = compute_minimo_personal_familiar(profile)
         assert result["0520"] == Decimal("0.00")
@@ -214,14 +224,17 @@ class TestPydanticDiscipline:
     """The MinimosProfile model enforces strict + frozen + extra=forbid."""
 
     def test_negative_count_rejected(self) -> None:
+        """Negative dependent counts violate the field constraint."""
         with pytest.raises(ValidationError):
             MinimosProfile(n_descendientes=-1)
 
     def test_extra_field_rejected(self) -> None:
+        """Unknown fields are rejected by ``extra=forbid``."""
         with pytest.raises(ValidationError):
             MinimosProfile.model_validate({"n_descendientes": 1, "unknown_extra": "bogus"})
 
     def test_frozen(self) -> None:
+        """A constructed profile cannot be mutated post-instantiation."""
         profile = MinimosProfile(n_descendientes=1)
         with pytest.raises(ValidationError):
             profile.n_descendientes = 5  # type: ignore[misc]

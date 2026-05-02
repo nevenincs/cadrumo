@@ -1,12 +1,16 @@
-"""Catalogue-level verification for ``aeat.domain.vat``.
+"""Catalogue-level verification for :mod:`aeat.domain.vat`.
 
-Runs cross-record checks on top of the per-model validation that
-pydantic already performs: every :class:`VATCategory` member must be
-present; every regulation must carry ≥1 :class:`Citation`; every
-citation must have non-empty ``quoted_text_es``; every
-``boe_references`` id must match the kebab-case shape used by
-:mod:`aeat.domain.normatives`; every ``declares_in_modelos`` entry must be
-three ASCII digits.
+Runs cross-record checks on top of the per-model validation that pydantic
+already performs:
+
+* Every :class:`aeat.domain.vat.VATCategory` member must be present.
+* Every regulation must carry at least one
+  :class:`aeat.domain.vat.VatCitation`.
+* Every citation must have non-empty
+  :attr:`aeat.domain.vat.VatCitation.quoted_text_es`.
+* Every ``boe_references`` id must match the kebab-case shape used by
+  :mod:`aeat.domain.normatives`.
+* Every ``declares_in_modelos`` entry must be three ASCII digits.
 """
 
 from __future__ import annotations
@@ -17,8 +21,8 @@ from ...core.logging import get_logger
 from ._schema import (
     VATCatalogue,
     VATCategory,
-    VerificationIssue,
-    VerificationReport,
+    VatVerificationIssue,
+    VatVerificationReport,
 )
 
 _logger = get_logger(__name__)
@@ -27,22 +31,23 @@ _NORMATIVE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 _MODELO_PATTERN = re.compile(r"^[0-9]{3}$")
 
 
-def verify_catalogue(catalogue: VATCatalogue) -> VerificationReport:
+def verify_catalogue(catalogue: VATCatalogue) -> VatVerificationReport:
     """Run every cross-record check on ``catalogue``.
 
     Args:
-        catalogue: The :class:`VATCatalogue` under audit.
+        catalogue: The :class:`aeat.domain.vat.VATCatalogue` under audit.
 
     Returns:
-        A :class:`VerificationReport` aggregating every finding.
+        A :class:`aeat.domain.vat.VatVerificationReport` aggregating every
+        finding.
     """
-    issues: list[VerificationIssue] = []
+    issues: list[VatVerificationIssue] = []
 
     present = set(catalogue.regulations.keys())
     missing = [member for member in VATCategory if member not in present]
     for member in missing:
         issues.append(
-            VerificationIssue(
+            VatVerificationIssue(
                 level="error",
                 code="missing_category",
                 message=f"catalogue does not cover VATCategory.{member.name}",
@@ -53,17 +58,17 @@ def verify_catalogue(catalogue: VATCatalogue) -> VerificationReport:
     for regulation in catalogue:
         if not regulation.citations:
             issues.append(
-                VerificationIssue(
+                VatVerificationIssue(
                     level="error",
                     code="missing_citation",
-                    message="regulation has no Citation records",
+                    message="regulation has no VatCitation records",
                     category_id=regulation.category.value,
                 )
             )
         for citation in regulation.citations:
             if not citation.quoted_text_es.strip():
                 issues.append(
-                    VerificationIssue(
+                    VatVerificationIssue(
                         level="error",
                         code="empty_quoted_text",
                         message=f"citation {citation.article!r} has empty quoted_text_es",
@@ -73,7 +78,7 @@ def verify_catalogue(catalogue: VATCatalogue) -> VerificationReport:
         for ref in regulation.boe_references:
             if not _NORMATIVE_ID_PATTERN.fullmatch(ref):
                 issues.append(
-                    VerificationIssue(
+                    VatVerificationIssue(
                         level="error",
                         code="invalid_normative_id",
                         message=f"boe_reference {ref!r} is not a kebab-case normative id",
@@ -83,7 +88,7 @@ def verify_catalogue(catalogue: VATCatalogue) -> VerificationReport:
         for modelo in regulation.declares_in_modelos:
             if not _MODELO_PATTERN.fullmatch(modelo):
                 issues.append(
-                    VerificationIssue(
+                    VatVerificationIssue(
                         level="error",
                         code="invalid_modelo",
                         message=f"declares_in_modelos {modelo!r} is not a 3-digit modelo number",
@@ -92,7 +97,7 @@ def verify_catalogue(catalogue: VATCatalogue) -> VerificationReport:
                 )
 
     _logger.info("verify_catalogue produced %d issue(s)", len(issues))
-    return VerificationReport(issues=tuple(issues))
+    return VatVerificationReport(issues=tuple(issues))
 
 
 __all__ = ["verify_catalogue"]

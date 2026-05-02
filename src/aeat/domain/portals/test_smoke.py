@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ...core import errors, logging
-from . import PORTAL_REGISTRY, __all__ as portals_all
+from . import PORTAL_REGISTRY
+from . import __all__ as portals_all
 from . import __doc__ as portals_doc
 from . import __name__ as _package_name
 

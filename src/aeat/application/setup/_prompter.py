@@ -1,4 +1,4 @@
-"""In-process prompter implementations.
+"""In-process prompter implementations for :class:`SetupWizard`.
 
 Two concrete prompters are provided:
 
@@ -9,6 +9,10 @@ Two concrete prompters are provided:
 * :class:`TyperPrompter` — a thin wrapper over ``typer.prompt`` /
   ``typer.confirm`` for the real interactive CLI. Lives here so the
   wizard body has no direct Typer import.
+
+Both implementations satisfy the
+:class:`aeat.application.setup.Prompter` Protocol consumed by
+:meth:`aeat.application.setup.SetupWizard.run`.
 """
 
 from __future__ import annotations
@@ -35,10 +39,17 @@ class QueuedPrompter:
     """
 
     def __init__(self, answers: Iterable[Any]) -> None:
+        """Seed the prompter with the queued answers.
+
+        Args:
+            answers: Iterable of typed answers in the order the wizard
+                will ask for them.
+        """
         self._queue: deque[Any] = deque(answers)
         self.announcements: list[tuple[str, str]] = []
 
     def _pop(self, key: str, expected: type) -> Any:
+        """Pop the next queued answer and assert its runtime type."""
         if not self._queue:
             msg = f"QueuedPrompter ran out of answers while resolving {key!r}"
             raise SetupError(msg)
@@ -49,14 +60,17 @@ class QueuedPrompter:
         return value
 
     def prompt_text(self, *, key: str, prompt: str, default: str | None = None) -> str:
+        """Pop and return the next queued ``str`` answer for ``key``."""
         del prompt, default
         return self._pop(key, str)  # type: ignore[no-any-return]
 
     def prompt_bool(self, *, key: str, prompt: str, default: bool) -> bool:
+        """Pop and return the next queued ``bool`` answer for ``key``."""
         del prompt, default
         return self._pop(key, bool)  # type: ignore[no-any-return]
 
     def prompt_path(self, *, key: str, prompt: str, default: Path | None = None) -> Path:
+        """Pop and return the next queued :class:`Path` answer for ``key``."""
         del prompt, default
         return self._pop(key, Path)  # type: ignore[no-any-return]
 
@@ -68,6 +82,11 @@ class QueuedPrompter:
         choices: tuple[str, ...],
         default: str,
     ) -> str:
+        """Pop the next queued answer and assert it is in ``choices``.
+
+        Raises:
+            SetupError: When the popped value is not one of ``choices``.
+        """
         del prompt, default
         value = self._pop(key, str)
         if value not in choices:
@@ -76,6 +95,7 @@ class QueuedPrompter:
         return value  # type: ignore[no-any-return]
 
     def announce(self, *, key: str, message: str) -> None:
+        """Record an announcement; assertions can inspect :attr:`announcements`."""
         self.announcements.append((key, message))
 
     @property
@@ -93,21 +113,25 @@ class TyperPrompter:
     """
 
     def __init__(self) -> None:
+        """Lazily import ``typer`` so the wizard body stays Typer-free."""
         import typer  # local import to keep the wizard body Typer-free
 
         self._typer = typer
 
     def prompt_text(self, *, key: str, prompt: str, default: str | None = None) -> str:
+        """Prompt the user for free-form text via ``typer.prompt``."""
         del key
         if default is None:
             return str(self._typer.prompt(prompt))
         return str(self._typer.prompt(prompt, default=default))
 
     def prompt_bool(self, *, key: str, prompt: str, default: bool) -> bool:
+        """Prompt the user for a yes/no answer via ``typer.confirm``."""
         del key
         return bool(self._typer.confirm(prompt, default=default))
 
     def prompt_path(self, *, key: str, prompt: str, default: Path | None = None) -> Path:
+        """Prompt the user for a path and return its expanded form."""
         del key
         raw = self._typer.prompt(prompt, default=str(default) if default is not None else None)
         return Path(str(raw)).expanduser()
@@ -120,6 +144,7 @@ class TyperPrompter:
         choices: tuple[str, ...],
         default: str,
     ) -> str:
+        """Prompt the user until the entered value is one of ``choices``."""
         del key
         choice_text = ", ".join(choices)
         full = f"{prompt} [{choice_text}]"
@@ -130,5 +155,6 @@ class TyperPrompter:
             self._typer.echo(f"Please enter one of: {choice_text}")
 
     def announce(self, *, key: str, message: str) -> None:
+        """Echo an informational message via ``typer.echo``."""
         del key
         self._typer.echo(message)

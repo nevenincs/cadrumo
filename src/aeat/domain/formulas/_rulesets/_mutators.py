@@ -803,5 +803,3 @@ def all_concrete_operand_types() -> Iterable[type]:
         BracketsFormula,
         RoundFormula,
     )
-
-

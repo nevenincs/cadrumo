@@ -1,9 +1,10 @@
 """Files-only persistence for :class:`aeat.application.workflow.WorkflowResult`.
 
 Each run is persisted as an ``Envelope[WorkflowResult]`` ciphertext
-envelope at AUDIT class via the substrate's ``save_encrypted_envelope``
-helper. The on-disk file carries no plaintext NIFs, casilla values,
-or filing IDs.
+envelope at :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT`
+via :func:`aeat.adapters.persistence.storage.save_encrypted_envelope`.
+The on-disk file carries no plaintext NIFs, casilla values, or filing
+identifiers.
 
 Storage imports are deferred inside each function body so the workflow
 package's import chain doesn't pull Alembic plugin discovery into CLI

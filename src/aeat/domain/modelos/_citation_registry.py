@@ -1,46 +1,38 @@
-"""Known-bad citation blocklist (EPIC #305).
+"""Blocklist of known-bad Spanish-tax legal citations.
 
-Six consecutive audit waves (59c, 61a, 63a, 65a, 67a, 68) surfaced
-Spanish-tax citation errors where a ``(source, article)`` pair was
-attributed the wrong role — e.g., `LIRPF art. 103` cited for "cuota
-diferencial" (art. 103 is actually "Liquidaciones provisionales").
-Each miscite shipped through code review because `quoted_text_es`
+Recurring review surfaced citation errors where a
+``(source, article)`` pair was attributed the wrong role — e.g.,
+``LIRPF art. 103`` cited for "cuota diferencial" when art. 103 is
+actually "Liquidaciones provisionales". Each miscite shipped through
+code review because :attr:`aeat.domain.modelos._citations.LegalCitation.quoted_text_es`
 was internally self-consistent with the wrong article number; human
 review caught the error only on a later external verification pass.
 
-This module implements the blocklist half of the stream-3
-recommendation: an import-time ``ValueError`` for any
-``(source, article, role-substring)`` triple matching a prior miscite.
-The complementary positive-registry half (enforcing that every
-``(source, article)`` pair maps to a verified BOE plain-text title)
-is deferred as a larger structural change tracked under EPIC #305 —
-adding it requires pinning a title for every existing citation,
-which is itself subject to the same error mode.
+This module exposes :data:`_KNOWN_BAD_CITATIONS`, a closed table of
+``(source, article, role-substring)`` triples that have been flagged
+in the past, and :func:`find_known_bad`, the lookup helper invoked by
+:meth:`aeat.domain.modelos._citations.LegalCitation._reject_known_bad_citations`
+at construction time. A complementary positive-registry half
+(enforcing that every ``(source, article)`` pair maps to a verified
+BOE plain-text title) is intentionally deferred: adding it requires
+pinning a title for every existing citation, which is itself subject
+to the same error mode.
 
-## How to extend
+To extend the blocklist, append a new :class:`KnownBadCitation` row
+to :data:`_KNOWN_BAD_CITATIONS`. Every row names:
 
-When a future audit surfaces a new citation error, add one row to
-``_KNOWN_BAD_CITATIONS``. Every row names:
-
-- ``source``: the ``LegalCitationSource`` enum value.
+- ``source``: the :class:`aeat.domain.modelos._categories.LegalCitationSource`
+  enum value.
 - ``article``: the article identifier as a string (matches
-  ``LegalCitation.article`` verbatim).
+  :attr:`aeat.domain.modelos._citations.LegalCitation.article` verbatim).
 - ``role_substring_es``: a lowercase Spanish word/phrase that
   characterises the wrong role-of-the-article. The validator matches
   if this substring appears in ``quoted_text_es.lower()``. Keep the
-  substring narrow enough that legitimate historical references
-  (e.g., "the art. 103 / cuota diferencial miscite")
-  don't false-positive — prefer the role name alone, not the article
-  number.
-- ``audit_wave``: the first wave that flagged the miscite, for
-  audit-trail provenance.
-
-## References
-
-- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (5 miscites)
-- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (4 more miscites)
-- ``.vault/audit/2026-04-22-real-pdf-import--exhaustive-audit.md`` (RIRPF 100.3.a)
-- recommendation for a hybrid registry+blocklist.
+  substring narrow enough that legitimate historical references don't
+  false-positive — prefer the role name alone, not the article number.
+- ``audit_wave``: free-form provenance marker for the audit trail.
+- ``reason``: prose explanation that points the reader at the correct
+  article so the error can be fixed in place.
 """
 
 from __future__ import annotations
@@ -52,22 +44,42 @@ from ._categories import LegalCitationSource
 
 
 def _fold_diacritics(text: str) -> str:
-    """Normalise a string for accent-insensitive substring matching.
+    """Lowercase and strip diacritics for accent-insensitive matching.
 
-    closure (caution): pdfplumber and
-    hand-typed ``quoted_text_es`` routinely drop diacritics. Without
-    this fold, ``"cuota liquida"`` (no accent) would defeat the
-    blocklist entry keyed on ``"cuota líquida"``. ``unicodedata.
-    normalize("NFKD", ...)`` decomposes accented characters into a
-    base + combining-diacritic pair; ASCII-encoding drops the
-    diacritics. Monotonic on existing matches — no false-positives
-    added.
+    pdfplumber output and hand-typed ``quoted_text_es`` strings
+    routinely drop diacritics; without this fold, a string like
+    ``"cuota liquida"`` (no accent) would defeat a blocklist entry
+    keyed on ``"cuota líquida"``. The function NFKD-decomposes the
+    text into base + combining-diacritic pairs, then ASCII-encodes to
+    drop the combining marks. The transformation is monotonic on
+    existing substring matches — it never introduces false positives.
+
+    Args:
+        text: The string to fold.
+
+    Returns:
+        The lowercased, diacritic-stripped, ASCII-encoded form of
+        ``text``.
     """
     return unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode("ascii")
 
 
 class KnownBadCitation(NamedTuple):
-    """One entry in the citation-error blocklist."""
+    """One entry in the citation-error blocklist.
+
+    Attributes:
+        source: The :class:`aeat.domain.modelos._categories.LegalCitationSource`
+            this entry blocks.
+        article: The article identifier this entry blocks (matches
+            :attr:`aeat.domain.modelos._citations.LegalCitation.article`
+            verbatim).
+        role_substring_es: Lowercase Spanish substring whose presence
+            in ``quoted_text_es`` indicates the wrong role-of-the-article.
+        audit_wave: Free-form provenance marker recording the audit
+            that first flagged the miscite.
+        reason: Prose explanation pointing the reader at the correct
+            article so the offending citation can be fixed in place.
+    """
 
     source: LegalCitationSource
     article: str
@@ -216,19 +228,27 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
 
 
 def find_known_bad(source: LegalCitationSource, article: str, quoted_text_es: str) -> KnownBadCitation | None:
-    """Return a :class:`KnownBadCitation` if the triple matches the blocklist.
+    """Return the matching :class:`KnownBadCitation`, or ``None``.
 
-    A match requires:
-    - Exact equality on ``source`` AND ``article``.
-    - The blocklisted ``role_substring_es`` appears as a substring
-      of ``quoted_text_es.lower()``.
+    A match requires exact equality on ``source`` and ``article`` and
+    that the blocklisted ``role_substring_es`` appears as a substring
+    of ``quoted_text_es`` (after diacritic folding). The role-substring
+    gate prevents false positives on citations that use the same
+    article for a different, correctly-attributed role: e.g., a future
+    citation of ``LIRPF art. 67`` for the actually-correct "cuota
+    líquida estatal" role won't trip the blocklist entry keyed on
+    "cuota íntegra estatal" because the wrong role-phrase isn't
+    present.
 
-    The role-substring match prevents false positives on citations
-    that use the same article for a different (correctly-attributed)
-    role. E.g., if a future citation uses ``LIRPF art. 67`` for the
-    actually-correct "cuota líquida estatal" role, the blocklist's
-    ``"cuota íntegra estatal"`` substring won't match because the
-    wrong role-phrase isn't present.
+    Args:
+        source: The citation's :class:`aeat.domain.modelos._categories.LegalCitationSource`.
+        article: The article identifier under inspection.
+        quoted_text_es: The candidate Spanish quotation to scan for
+            blocklisted role substrings.
+
+    Returns:
+        The matching :class:`KnownBadCitation` row, or ``None`` if the
+        triple is not blocklisted.
     """
     folded = _fold_diacritics(quoted_text_es)
     for entry in _KNOWN_BAD_CITATIONS:

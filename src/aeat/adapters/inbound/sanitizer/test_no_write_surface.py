@@ -1,22 +1,20 @@
-"""Write-guard test for :mod:`aeat.adapters.inbound.sanitizer` and ``aeat.entrypoints.cli.sanitize``.
+"""Write-guard tests for :mod:`aeat.adapters.inbound.sanitizer`.
 
 The sanitiser subpackage MUST NOT contain any public symbol whose
-name implies an AEAT mutation. This is a CI-time grep guard that
-fails the build if a refactor introduces a forbidden verb in the
-public API surface or in any module name. The same pattern is
-applied to every read-only AEAT subpackage (parent ADR layer 3).
+name implies an AEAT mutation. This module is a CI-time grep guard
+that fails the build if a refactor introduces a forbidden verb in
+the public API surface or in any module name. The same pattern
+applies to every read-only AEAT subpackage.
 
-The guard inspects:
+The guard inspects every ``.py`` file under
+``src/aeat/adapters/inbound/sanitizer/`` and
+``src/aeat/entrypoints/cli/sanitize/``, every public function and
+class definition with module-level constants, plus every public
+CLI verb attached to the Typer ``app``.
 
-* Every ``.py`` file under ``src/aeat/sanitizer/`` and
-  ``src/aeat/cli/sanitize/``.
-* Public function / class definitions and module-level constants.
-* Public CLI verb names attached to the Typer ``app``.
-
-False-positive whitelist is narrow: ``commit_id`` is allowed
+The false-positive whitelist is narrow: ``commit_id`` is allowed
 because git commit identifiers are read-only state, not mutation
-verbs. ``surface_label`` cleared values use ``cleared``, not any
-banned verb.
+verbs.
 """
 
 from __future__ import annotations

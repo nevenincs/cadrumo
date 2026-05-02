@@ -1,4 +1,10 @@
-"""Portal: Modelo 180 — resumen anual retenciones arrendamientos."""
+"""Registry entry for Modelo 180 — annual summary of rental withholdings.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -31,3 +37,4 @@ ENTRY: PortalMetadata = build_entry(
         "arrendamientos de inmuebles urbanos (complementa al Modelo 115)."
     ),
 )
+"""Portal entry for Modelo 180 (annual summary of rental withholdings)."""

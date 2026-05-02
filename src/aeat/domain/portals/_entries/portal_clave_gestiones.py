@@ -1,4 +1,9 @@
-"""Portal: Cl@ve gestiones (password + registration)."""
+"""Catalogue entry for the AEAT *Cl@ve PIN gestiones* self-service page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH` for password
+registration, recovery, and renewal via Cl@ve permanente.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +26,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Gestiones Cl@ve: registro, recuperación y renovación de contraseñas.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve self-service page."""

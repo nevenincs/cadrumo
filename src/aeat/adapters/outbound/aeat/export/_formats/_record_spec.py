@@ -1,31 +1,29 @@
 """Fixed-width record-spec primitives for fichero-BOE export.
 
-EPIC #201 + primitive-safety hardening. See ADR
-``.vault/adr/2026-04-22-aeat-fichero-boe-export-adr.md`` §2-4 for
-the design rationale.
-
 Every concrete modelo module authors a tuple of
 :class:`RecordFieldSpec` entries describing the BOE *Diseño de
 registros* field layout. The encoders defined here produce the
 byte-exact output the AEAT portal expects via "importar datos".
 
-primitive-safety contract:
+Primitive-safety contract:
 
-- ``encode_currency`` uses explicit ``ROUND_HALF_UP`` matching AEAT
-  *Instrucciones de cumplimentación* (NOT banker's rounding).
-- ``encode_text`` raises on overflow (no silent truncation) to
+- :func:`encode_currency` uses explicit
+  :data:`decimal.ROUND_HALF_UP` matching the AEAT
+  *Instrucciones de cumplimentación* (not banker's rounding).
+- :func:`encode_text` raises on overflow (no silent truncation) to
   prevent NIF / razón-social corruption from mis-measured specs.
-- ``RecordFieldSpec`` enforces the RESERVED ⇔ literal_value
+- :class:`RecordFieldSpec` enforces the RESERVED ↔ ``literal_value``
   invariant at construction time.
-- :func:`validate_record_specs` enforces monotonic ``offset + length
-  == next.offset`` across a module's spec tuple. entry-
-  gate for modelo schemas.
+- :func:`validate_record_specs` enforces monotonic
+  ``offset + length == next.offset`` across a module's spec tuple,
+  the entry gate for modelo schemas.
 
-Per-modelo encoding: most modelos use **Windows-1252 / ISO-8859-1**
+Per-modelo encoding: most modelos use Windows-1252 or ISO-8859-1
 (Modelo 130 per Orden EHA/672/2007; Modelo 303 post-HAC/819/2024;
-etc.). A handful of annual informativas (190 / 347) historically
-used ISO-8859-15 for Euro-symbol compatibility. Concrete modelo
-modules pin the encoding explicitly.
+etc.). A handful of annual informativas (190 / 347) historically used
+ISO-8859-15 for Euro-symbol compatibility. Concrete modelo modules
+pin the encoding explicitly via the
+:data:`FicheroBoeEncoding` literal.
 """
 
 from __future__ import annotations
@@ -42,14 +40,36 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # equivalent for fichero-BOE purposes. ISO-8859-15 adds the Euro
 # symbol at 0xA4 and other minor deltas.
 FicheroBoeEncoding = Literal["cp1252", "iso-8859-1", "iso-8859-15"]
+"""Allowed wire encodings for fichero-BOE payloads.
+
+Windows-1252 is a superset of ISO-8859-1 that adds characters in the
+0x80-0x9F range; AEAT treats them as equivalent for fichero-BOE
+purposes. ISO-8859-15 adds the Euro symbol at 0xA4 plus other minor
+deltas needed by some annual informativas.
+"""
+
 DEFAULT_ENCODING: FicheroBoeEncoding = "cp1252"
+"""Default wire encoding when a modelo module does not pin one explicitly."""
 
 
 class FieldKind(StrEnum):
     """Semantic kind of a fixed-width field.
 
-    Determines the pad-character and justification defaults plus
-    the encoder routing in :func:`RecordFieldSpec.encode`.
+    Determines the pad-character and justification defaults plus the
+    encoder routing performed in
+    :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
+
+    Attributes:
+        ALPHANUMERIC: Free-form text fields; left-justified, space-padded
+            by default.
+        NUMERIC: Integer-shaped numeric fields; right-justified,
+            zero-padded by default.
+        CURRENCY: Two-decimal monetary amounts encoded as zero-padded
+            cents via :func:`encode_currency`.
+        DATE: Calendar date encoded per the field's :class:`DateFmt`.
+        RESERVED: Literal constant slots (modelo code, separators,
+            envelope opener / closer) emitted verbatim from
+            :attr:`RecordFieldSpec.literal_value`.
     """
 
     ALPHANUMERIC = "alphanumeric"
@@ -60,7 +80,12 @@ class FieldKind(StrEnum):
 
 
 class Justification(StrEnum):
-    """Fixed-width field alignment."""
+    """Fixed-width field alignment.
+
+    Attributes:
+        LEFT: Pad on the right.
+        RIGHT: Pad on the left.
+    """
 
     LEFT = "left"
     RIGHT = "right"
@@ -69,8 +94,13 @@ class Justification(StrEnum):
 class DateFmt(StrEnum):
     """BOE date shapes encountered across modelos.
 
-    Most 2020+ modelos use ``YYYYMMDD``; some legacy and informativas
-    still emit ``DDMMYYYY``. The concrete spec pins the shape per field.
+    Most 2020-or-later modelos use ``YYYYMMDD``; some legacy and
+    informativa modelos still emit ``DDMMYYYY``. The concrete spec
+    pins the shape per field.
+
+    Attributes:
+        YYYYMMDD: Year-first calendar date, eight ASCII digits.
+        DDMMYYYY: Day-first calendar date, eight ASCII digits.
     """
 
     YYYYMMDD = "yyyymmdd"
@@ -81,19 +111,20 @@ class SignedMode(StrEnum):
     """Sign-convention for a CURRENCY field.
 
     Different AEAT modelos use different conventions for negative
-    amounts in the fichero-BOE wire format:
+    amounts in the fichero-BOE wire format. Concrete modelo modules
+    declare the correct mode per field; the serialiser routes to
+    :func:`encode_currency` accordingly. Modelo 130 keeps ``UNSIGNED``
+    via the default; Modelo 303 (and later IVA modelos) declare
+    ``INLINE_SIGN`` explicitly on signed casillas.
 
-    - ``UNSIGNED``: field is always non-negative. Callers must
-      either pass abs(value) or rely on an adjacent SIGNO/TIPO
-      flag elsewhere in the record. Modelo 130 default.
-    - ``INLINE_SIGN``: byte 0 is ``"N"`` for negatives or ``" "``
-      for non-negatives; remaining bytes carry |value|. Modelo 303
-      type-N fields (casillas 69, 71, and many others).
-
-    Concrete modelo modules declare the correct mode per field;
-    the serialiser routes to ``encode_currency(inline_sign=...)``
-    accordingly. Modelo 130 keeps ``UNSIGNED`` via default; Modelo
-    303+ explicit ``INLINE_SIGN`` on signed casillas.
+    Attributes:
+        UNSIGNED: Field is always non-negative. Callers must either
+            pass ``abs(value)`` or rely on an adjacent SIGNO / TIPO
+            flag elsewhere in the record. The Modelo 130 default.
+        INLINE_SIGN: Byte 0 is ``"N"`` for negatives or ``" "`` for
+            non-negatives; remaining bytes carry the absolute
+            magnitude. Used by Modelo 303 type-N fields (casillas 69,
+            71, and many others).
     """
 
     UNSIGNED = "unsigned"
@@ -103,9 +134,36 @@ class SignedMode(StrEnum):
 class RecordFieldSpec(BaseModel):
     """One fixed-width field in a fichero-BOE record.
 
-    Strict/frozen/extra=forbid per the project's boundary-record
-    mandate. Validated at module-import time when the concrete
-    ``RECORD_SPECS`` tuple is constructed.
+    Strict / frozen / ``extra="forbid"`` per the project's
+    boundary-record mandate. Validated at module-import time when the
+    concrete ``RECORD_SPECS`` tuple is constructed via
+    :func:`record_field` and :func:`validate_record_specs`.
+
+    Attributes:
+        offset: 1-based byte offset per BOE convention.
+        length: Field byte length.
+        field_id: AEAT field identifier (for example ``F01001``,
+            ``NIF``, ``EJERCICIO``). The 96-char cap accommodates the
+            auto-extracted descriptive names from DR*.xlsx where AEAT
+            uses long Spanish-language field names (such as
+            ``DP30301_F001_INICIO_DEL_IDENTIFICADOR_DE_REGISTRO``).
+        casilla_id: Optional mapping to a ruleset casilla. ``None`` for
+            header, reserved, or literal fields that do not correspond
+            to a casilla.
+        kind: Semantic :class:`FieldKind` selecting the encoder route.
+        justification: Where to align the value within the ``length``
+            window.
+        pad_char: Single-byte pad character (typically ``" "`` for
+            text, ``"0"`` for numeric).
+        literal_value: For RESERVED literal fields, the exact byte
+            string to emit. Required when ``kind == RESERVED`` and
+            forbidden otherwise.
+        date_fmt: Required when ``kind == DATE``; ignored otherwise.
+        signed_mode: How CURRENCY fields encode negative amounts.
+            Defaults to ``UNSIGNED`` (Modelo 130 convention: magnitude
+            plus a separate SIGNO flag). Set to ``INLINE_SIGN`` for
+            Modelo 303 type-N fields that carry the sign in the
+            leading byte. Ignored for non-CURRENCY kinds.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -117,17 +175,10 @@ class RecordFieldSpec(BaseModel):
     """Field byte length."""
 
     field_id: Annotated[str, Field(min_length=1, max_length=96)]
-    """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``).
-
-    the cap from 32 to 96 chars to accommodate the
-    auto-extracted descriptive names from DR*.xlsx where AEAT uses
-    long Spanish-language field names (e.g.,
-    ``DP30301_F001_INICIO_DEL_IDENTIFICADOR_DE_REGISTRO``).
-    """
+    """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``)."""
 
     casilla_id: Annotated[str, Field(max_length=5)] | None = None
-    """Optional mapping to a ruleset casilla. ``None`` for header /
-    reserved / literal fields that don't correspond to a casilla."""
+    """Optional mapping to a ruleset casilla."""
 
     kind: FieldKind
 
@@ -135,34 +186,28 @@ class RecordFieldSpec(BaseModel):
     """Where to align the value within the ``length`` window."""
 
     pad_char: Annotated[str, Field(min_length=1, max_length=1)] = " "
-    """Single-byte pad character (e.g. ``" "`` for text, ``"0"`` for
-    numeric)."""
+    """Single-byte pad character."""
 
     literal_value: str | None = None
-    """For RESERVED / literal fields: the exact byte string to emit.
-    Ignored for data fields (kind != RESERVED)."""
+    """For RESERVED / literal fields: the exact byte string to emit."""
 
     date_fmt: DateFmt | None = None
     """Required when ``kind == DATE``; ignored otherwise."""
 
     signed_mode: SignedMode = SignedMode.UNSIGNED
-    """how CURRENCY fields encode negative amounts.
-
-    Defaults to ``UNSIGNED`` (Modelo 130 convention: magnitude +
-    separate SIGNO flag). Set to ``INLINE_SIGN`` for Modelo 303
-    type-N fields that carry the sign in the leading byte.
-    Ignored for non-CURRENCY kinds.
-    """
+    """How CURRENCY fields encode negative amounts."""
 
     @model_validator(mode="after")
     def _reserved_requires_literal(self) -> RecordFieldSpec:
-        """enforce RESERVED ⇔ literal_value invariant.
+        """Enforce the RESERVED ↔ ``literal_value`` invariant.
 
         A RESERVED field is a literal constant (modelo code, record
-        separator, filler "0000", etc.). Constructing a RESERVED spec
-        without a ``literal_value`` makes the serialiser undefined;
-        declaring a ``literal_value`` on a non-RESERVED field is a
-        modelling error.
+        separator, filler ``"0000"``, etc.). Constructing a RESERVED
+        spec without a ``literal_value`` makes the serialiser
+        undefined; declaring a ``literal_value`` on a non-RESERVED
+        field is a modelling error. Also asserts ``DATE`` carries a
+        :class:`DateFmt` and ``INLINE_SIGN`` only appears on CURRENCY
+        fields.
         """
         if self.kind is FieldKind.RESERVED and self.literal_value is None:
             raise ValueError(f"RESERVED fields must carry a literal_value; got None for {self.field_id!r}")
@@ -193,14 +238,31 @@ def record_field(
 ) -> RecordFieldSpec:
     """Concise constructor for :class:`RecordFieldSpec`.
 
-    Mirrors the :func:`aeat.domain.formulas._rulesets._common.formula`
-    helper pattern used in the formulas package. Applies
-    kind-appropriate defaults for ``justification`` and ``pad_char``
-    so most field declarations only need offset/length/field_id/kind.
+    Mirrors the
+    :func:`aeat.domain.formulas._rulesets._common.formula` helper
+    pattern used in the formulas package. Applies kind-appropriate
+    defaults for ``justification`` and ``pad_char`` so most field
+    declarations only need ``offset`` / ``length`` / ``field_id`` /
+    ``kind``:
 
-    Defaults:
-    - NUMERIC / CURRENCY → right-justified, zero-padded.
-    - ALPHANUMERIC / RESERVED / DATE → left-justified, space-padded.
+    - ``NUMERIC`` and ``CURRENCY`` are right-justified and zero-padded.
+    - ``ALPHANUMERIC``, ``RESERVED``, and ``DATE`` are left-justified
+      and space-padded.
+
+    Args:
+        offset: 1-based byte offset within the record.
+        length: Field byte length.
+        field_id: AEAT field identifier.
+        casilla_id: Optional ruleset-casilla mapping.
+        kind: Semantic :class:`FieldKind`.
+        justification: Override the kind-aware default justification.
+        pad_char: Override the kind-aware default pad character.
+        literal_value: Required for ``kind == RESERVED``.
+        date_fmt: Required for ``kind == DATE``.
+        signed_mode: Sign convention for ``kind == CURRENCY``.
+
+    Returns:
+        A validated :class:`RecordFieldSpec`.
     """
     if justification is None:
         justification = Justification.RIGHT if kind in {FieldKind.NUMERIC, FieldKind.CURRENCY} else Justification.LEFT
@@ -228,29 +290,37 @@ def encode_currency(
     inline_sign: bool = False,
     encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
 ) -> bytes:
-    """Right-justified, zero-padded currency with 2 implicit decimals.
+    """Encode currency as right-justified, zero-padded cents with two implicit decimals.
 
     AEAT fichero-BOE currency fields emit the ``value * 100`` integer
     with no separators. ``Decimal("1234.56")`` in a length-13 field
     produces ``b"0000000123456"``.
 
-        - Explicit ``ROUND_HALF_UP`` matching AEAT *Instrucciones* (not
-      banker's rounding). ``Decimal("2.005")`` → ``b"000201"``.
-    - ``signed=False`` (default) rejects negative inputs so a caller
-      who forgot to wire the adjacent SIGNO field gets a clear error
-      instead of a byte-legal but semantically-wrong positive
-      magnitude. Set ``signed=True`` when you have explicitly
-      arranged the SIGNO flip elsewhere.
+    Rounding uses an explicit :data:`decimal.ROUND_HALF_UP` to match
+    AEAT *Instrucciones de cumplimentación* — not banker's rounding —
+    so ``Decimal("2.005")`` rounds to ``b"000201"``.
 
-     (Modelo 303+ inline-sign convention):
-    - ``inline_sign=True`` switches from AEAT's "separate SIGNO/TIPO
-      field" convention (Modelo 130 ``TIPO_DECLARACION="N"``) to the
-      inline "N"-prefix convention used by Modelo 303 and other IVA
-      modelos. With ``inline_sign=True`` and a negative value, the
-      LEADING byte becomes ``"N"`` and the remaining ``length - 1``
-      bytes carry the zero-padded absolute magnitude. Positive
-      values emit a leading space instead of ``"N"``. ``signed=True``
-      is not required when ``inline_sign=True``.
+    Args:
+        value: Monetary amount to encode. Must be non-negative unless
+            ``signed`` or ``inline_sign`` is ``True``.
+        length: Total field width in bytes (including the sign byte
+            when ``inline_sign=True``).
+        signed: When ``True``, allow negative inputs whose sign has
+            been wired through a separate SIGNO / TIPO field elsewhere
+            in the record (Modelo 130 convention).
+        inline_sign: When ``True``, switch to the leading ``"N"`` /
+            ``" "`` sign-byte convention used by Modelo 303 and other
+            IVA modelos. The remaining ``length - 1`` bytes carry the
+            zero-padded absolute magnitude.
+        encoding: Output byte encoding.
+
+    Returns:
+        The fixed-width byte sequence for the currency field.
+
+    Raises:
+        ValueError: If ``value`` is negative without ``signed`` or
+            ``inline_sign``, the magnitude overflows ``length``, or
+            ``inline_sign=True`` is used with ``length < 2``.
     """
     negative = value < 0
     if negative and not (signed or inline_sign):
@@ -295,16 +365,28 @@ def encode_text(
     truncate: bool = False,
     encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
 ) -> bytes:
-    """Alphanumeric encoder.
+    """Encode an alphanumeric value into a fixed-width byte field.
 
-        - Raises ``ValueError`` when ``len(value) > length`` (no silent
-      truncation). A mis-measured spec that would clip a NIF or
-      razón-social is a legally-binding corruption; fail loud.
-    - Set ``truncate=True`` only when the caller has a concrete
-      reason to allow clipping (rare; prefer fixing the spec).
-    - Per-modelo ``encoding`` override. Default is Windows-1252
-      (CP1252) which is a superset of ISO-8859-1; ISO-8859-15 for
-      Euro-symbol modelos.
+    Args:
+        value: Text value to encode.
+        length: Target field width in bytes.
+        justification: Where to align ``value`` within ``length``.
+        pad_char: Single-character pad applied to fill the remainder.
+        truncate: When ``False`` (default), raise on overflow rather
+            than silently clipping. A mis-measured spec that would
+            clip a NIF or razón-social is a legally-binding corruption
+            — fail loud. Set ``truncate=True`` only when the caller
+            has a concrete reason to allow clipping.
+        encoding: Per-modelo wire encoding. Default Windows-1252 is a
+            superset of ISO-8859-1; ISO-8859-15 is required for some
+            Euro-symbol modelos.
+
+    Returns:
+        The fixed-width byte sequence.
+
+    Raises:
+        ValueError: If ``pad_char`` is not exactly one character or
+            ``len(value) > length`` and ``truncate`` is ``False``.
     """
     if len(pad_char) != 1:
         raise ValueError("pad_char must be a single character")
@@ -325,7 +407,16 @@ def encode_date(
     *,
     encoding: FicheroBoeEncoding = DEFAULT_ENCODING,
 ) -> bytes:
-    """Date encoder per BOE *Diseño de registros* shapes."""
+    """Encode a :class:`datetime.date` per the BOE *Diseño de registros* ``fmt``.
+
+    Args:
+        value: Calendar date to encode.
+        fmt: Wire-format selector.
+        encoding: Output byte encoding.
+
+    Returns:
+        Eight-byte ASCII representation of the date.
+    """
     match fmt:
         case DateFmt.YYYYMMDD:
             return value.strftime("%Y%m%d").encode(encoding)
@@ -336,28 +427,30 @@ def encode_date(
 class SegmentSpec(BaseModel):
     """A named, variable-length segment in a multi-segment fichero-BOE envelope.
 
-     (EPIC #201, Modelo 303+ support). Modelo 303 — and every
-    IVA modelo post-HAC/819/2024 — is not a single flat record. The
-    on-wire format is an envelope like::
+    Modelo 303 — and every IVA modelo published under Orden
+    HAC/819/2024 — is not a single flat record. The on-wire format is
+    an envelope like::
 
         <T3030AAAAPP0000> ... <AUX> ... </AUX> ... <T30301...>page1</T30301...> ...
 
-    Each ``<T303PPPPP...>`` segment is itself a fixed-width record with
-    its own field layout, opener + closer literal, and byte length.
-    Segment IDs also reset their internal offsets to 1 (per-segment
+    Each ``<T303PPPPP...>`` segment is itself a fixed-width record
+    with its own field layout, opener + closer literal, and byte
+    length. Segment IDs reset their internal offsets to 1 (per-segment
     numbering — unlike Modelo 130's single flat 1..878 range).
 
     A :class:`SegmentSpec` carries one segment's layout. The envelope
-    itself is a tuple of :class:`SegmentSpec` plus a per-draft selector
-    that decides which optional segments are emitted (e.g., Modelo 303
-    page 4 is emitted only on the last-period exonerado-390 filing).
+    itself is a tuple of :class:`SegmentSpec` plus a per-draft
+    selector that decides which optional segments are emitted (for
+    example Modelo 303 page 4 is emitted only on the last-period
+    exonerado-390 filing).
 
     Attributes:
-        segment_id: AEAT segment identifier (``"DP30300"``, ``"DP30301"``).
-        specs: the field layout for this segment. Offsets are
-            segment-local (1-based within this segment, NOT global).
-        total_length: byte content length of this segment (excluding
-            any CRLF terminator if present).
+        segment_id: AEAT segment identifier (``"DP30300"``,
+            ``"DP30301"``).
+        specs: The field layout for this segment. Offsets are
+            segment-local (1-based within this segment, not global).
+        total_length: Byte content length of this segment, excluding
+            any CRLF terminator.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -372,8 +465,12 @@ def validate_segment_specs(segments: tuple[SegmentSpec, ...]) -> None:
 
     Runs :func:`validate_record_specs` on each segment and checks that
     segment IDs are unique across the envelope. Does NOT enforce a
-    global offset (each segment resets to 1). to
-    :func:`validate_record_specs`.
+    global offset — each segment resets to 1.
+
+    Raises:
+        ValueError: If ``segments`` is empty, a ``segment_id`` repeats,
+            or any segment fails its internal :func:`validate_record_specs`
+            check.
     """
     if not segments:
         raise ValueError("segments must not be empty")
@@ -393,19 +490,25 @@ def validate_record_specs(
     *,
     total_length: int,
 ) -> None:
-    """enforce the monotonic offset/length invariant.
+    """Enforce the monotonic offset / length invariant for one segment.
 
     Each concrete modelo module calls this at import time to guard
     against hand-authoring off-by-one errors that would cascade
-    through every subsequent field. Checks:
+    through every subsequent field. The checks are:
 
     - First field starts at offset 1 (BOE 1-based convention).
     - Fields are monotonically contiguous: no gaps, no overlaps.
     - Terminal field fills exactly to ``total_length``.
     - ``field_id`` values are unique.
-    - ``casilla_id`` values are unique where non-None.
+    - ``casilla_id`` values are unique where non-``None``.
 
-    Raises ``ValueError`` with a precise pointer on any violation.
+    Args:
+        specs: Ordered tuple of field specs covering the segment.
+        total_length: Expected segment byte content length.
+
+    Raises:
+        ValueError: Carries a precise pointer (field id, offset,
+            expected vs actual) for any violation.
     """
     if not specs:
         raise ValueError("record specs must not be empty")

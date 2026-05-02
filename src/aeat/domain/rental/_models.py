@@ -1,4 +1,13 @@
-"""Frozen-strict pydantic v2 records for the rental register (#454)."""
+"""Frozen-strict pydantic v2 records for the rental register.
+
+Defines the persistent record types backing the M100 Anexo C
+aggregator: :class:`RentalFinca` (urban inmueble metadata),
+:class:`RentalContract` (per-tenant arrendamiento), :class:`RentalIncomeRecord`
+(per-period gross-rent ledger), :class:`RentalExpense` (LIRPF
+art. 23.1 deductible-category surface), and
+:class:`RentalAmortizationLedgerEntry` (LIRPF art. 23.1.f 3 %
+amortización cumulative ledger).
+"""
 
 from __future__ import annotations
 

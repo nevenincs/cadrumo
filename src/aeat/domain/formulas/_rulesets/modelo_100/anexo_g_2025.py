@@ -1,41 +1,40 @@
-"""Modelo 100 Anexo G — cuotas + tarifas + deducciones estatales (2025).
+"""Define the Modelo 100 Anexo G ruleset for 2025 cuotas and tarifas.
 
-Anexo G applies the IRPF tarifa progresiva to the base liquidable
-general and to the base liquidable del ahorro, both per LIRPF arts. 63
-+ 66, accounting for the LIRPF art. 56 mínimo personal y familiar
-absorption at the lowest brackets. The autonomic half (LIRPF arts.
-73-77) is caller-supplied per-CCAA (cesión de competencias normativas
-via Ley 22/2009; the per-CCAA distinct tarifa scales for Madrid /
-Cataluña / Andalucía / Comunitat Valenciana / Castilla y León are
-encoded as casilla parameter tables in the rule-delta reference
-manifest; the 10 remaining CCAAs use the LIRPF DT primera default
-unless overridden).
+Anexo G applies the IRPF tarifa progresiva to both the base liquidable
+general and the base liquidable del ahorro per LIRPF arts. 63 and 66,
+accounting for the LIRPF art. 56 mínimo personal y familiar absorption
+at the lowest brackets. The autonomic half (LIRPF arts. 73-77) is
+caller-supplied per-CCAA: Ley 22/2009 cedes the normative competence,
+so the distinct tarifa scales for Madrid, Cataluña, Andalucía,
+Comunitat Valenciana, and Castilla y León are encoded as casilla
+parameter tables in the project rule-delta reference; the remaining
+ten CCAAs use the LIRPF DT primera default unless overridden.
 
-Tarifa estatal general (LIRPF art. 63, stable 2021-2026, vigent for
+Tarifa estatal general (LIRPF art. 63, stable 2021-2026, in force for
 2025):
 
-  0       - 12.450 EUR  -> 9,50 %
-  12.450  - 20.200 EUR  -> 12,00 %
-  20.200  - 35.200 EUR  -> 15,00 %
-  35.200  - 60.000 EUR  -> 18,50 %
-  60.000  - 300.000 EUR -> 22,50 %
-  300.000 - inf         -> 24,50 %
+* 0       - 12.450 EUR  -> 9,50 %
+* 12.450  - 20.200 EUR  -> 12,00 %
+* 20.200  - 35.200 EUR  -> 15,00 %
+* 35.200  - 60.000 EUR  -> 18,50 %
+* 60.000  - 300.000 EUR -> 22,50 %
+* 300.000 - inf         -> 24,50 %
 
-Tarifa estatal del ahorro (LIRPF art. 66, post Ley 7/2024 vigent
+Tarifa estatal del ahorro (LIRPF art. 66, post Ley 7/2024 in force
 1/1/2025):
 
-  0       - 6.000 EUR   -> 9,50 %
-  6.000   - 50.000 EUR  -> 10,50 %
-  50.000  - 200.000 EUR -> 11,50 %
-  200.000 - 300.000 EUR -> 13,50 %
-  300.000 - inf         -> 15,00 %  (raised from 14,00 % in 2024 by Ley 7/2024)
+* 0       - 6.000 EUR   -> 9,50 %
+* 6.000   - 50.000 EUR  -> 10,50 %
+* 50.000  - 200.000 EUR -> 11,50 %
+* 200.000 - 300.000 EUR -> 13,50 %
+* 300.000 - inf         -> 15,00 % (raised from 14 % in 2024 by Ley 7/2024)
 
-Encoding: progressive cuota = sum over brackets of
-  rate * (clamp_pos(operand - bracket_start) -
-           clamp_pos(operand - bracket_end))
-which yields the correct progressive tax. The LIRPF art. 56 minimum
-(mínimo personal y familiar) absorption applies the same scale to
-min(BLG, 0500) and subtracts.
+Encoding: the progressive cuota is the sum over brackets of
+``rate * (clamp_pos(operand - bracket_start) -
+clamp_pos(operand - bracket_end))``, which yields the correct
+progressive tax. The LIRPF art. 56 mínimo personal y familiar
+absorption applies the same scale to ``min(BLG, 0500)`` and subtracts.
+See :func:`progressive_tarifa` for the AST builder.
 """
 
 from __future__ import annotations
@@ -58,14 +57,17 @@ from .._common import (
 from ._common import cite_lirpf
 
 EFFECTIVE_FROM = date(2025, 1, 1)
+"""First day of the ejercicio in which this Anexo G ruleset applies."""
+
 EFFECTIVE_TO = date(2025, 12, 31)
+"""Last day of the ejercicio in which this Anexo G ruleset applies."""
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` mapping for label texts."""
     return {"es": es, "en": en, "hu": hu}
 
 
-# Tarifa estatal general (LIRPF art. 63) — stable 2021-2026.
 TARIFA_ESTATAL_GENERAL_2025: tuple[tuple[str, str | None, str], ...] = (
     ("0", "12450.00", "0.095"),
     ("12450.00", "20200.00", "0.12"),
@@ -74,8 +76,13 @@ TARIFA_ESTATAL_GENERAL_2025: tuple[tuple[str, str | None, str], ...] = (
     ("60000.00", "300000.00", "0.225"),
     ("300000.00", None, "0.245"),
 )
+"""Tarifa estatal general per LIRPF art. 63 — stable across 2021-2026.
 
-# Tarifa estatal del ahorro (LIRPF art. 66) — 2025 + 2026 post Ley 7/2024.
+Each tuple is ``(from_value, to_value, rate)`` with ``to_value=None``
+for the open-ended top bracket. Consumed by :func:`progressive_tarifa`
+to build the engine AST for casillas 0540 and 0542.
+"""
+
 TARIFA_ESTATAL_AHORRO_2025: tuple[tuple[str, str | None, str], ...] = (
     ("0", "6000.00", "0.095"),
     ("6000.00", "50000.00", "0.105"),
@@ -83,19 +90,40 @@ TARIFA_ESTATAL_AHORRO_2025: tuple[tuple[str, str | None, str], ...] = (
     ("200000.00", "300000.00", "0.135"),
     ("300000.00", None, "0.15"),
 )
+"""Tarifa estatal del ahorro per LIRPF art. 66 — 2025 and 2026 post Ley 7/2024.
+
+The ceiling rate of 15 % replaces the 2024 value of 14 % (see
+:data:`aeat.domain.formulas._rulesets.modelo_100.anexo_g_2024.TARIFA_ESTATAL_AHORRO_2024`).
+Consumed by :func:`progressive_tarifa` to build the engine AST for
+casilla 0560.
+"""
 
 
 def progressive_tarifa(
     operand: Operand,
     brackets: tuple[tuple[str, str | None, str], ...],
 ) -> Operand:
-    """Build the AST for a progressive tax cuota.
+    """Build the engine AST that evaluates a progressive tax cuota.
 
-    Each bracket contributes ``rate * (portion of operand within
-    [from, to])``. Portions: ``clamp_pos(operand - from) -
-    clamp_pos(operand - to)`` for bounded brackets;
-    ``clamp_pos(operand - from)`` for the open-ended top bracket.
-    Returns ``add_op`` over per-bracket contributions.
+    Each bracket contributes ``rate * portion`` where ``portion`` is the
+    slice of ``operand`` that falls inside the bracket. For bounded
+    brackets the portion is ``clamp_pos(operand - from) -
+    clamp_pos(operand - to)``; for the open-ended top bracket it is
+    ``clamp_pos(operand - from)``. The returned :class:`Operand` is an
+    :class:`aeat.domain.formulas._formula.AddFormula` over per-bracket
+    contributions when more than one bracket is supplied.
+
+    Args:
+        operand: The :class:`Operand` whose value the tarifa is applied
+            to (typically a casilla reference such as
+            :func:`aeat.domain.formulas._rulesets.modelo_100._common.ref`
+            for the base liquidable).
+        brackets: Tuple of ``(from_value, to_value, rate)`` tuples,
+            with ``to_value=None`` marking the open-ended top bracket.
+
+    Returns:
+        The composite :class:`Operand` representing the progressive
+        cuota.
     """
     parts: list[Operand] = []
     for from_value, to_value, rate in brackets:
@@ -193,6 +221,7 @@ CITATIONS = (
         "cuota líquida.",
     ),
 )
+"""LIRPF citations underpinning the Anexo G cuotas and tarifas."""
 
 
 CASILLAS = (
@@ -354,6 +383,7 @@ CASILLAS = (
         legal_basis=(CITATIONS[7],),
     ),
 )
+"""Casilla declarations exposed by the Anexo G ruleset."""
 
 
 _CUOTA_TARIFA_BLG_BODY = progressive_tarifa(ref("0545"), TARIFA_ESTATAL_GENERAL_2025)
@@ -417,9 +447,11 @@ FORMULAS = (
         ),
     ),
 )
+"""Engine formula bindings for the 2025 Anexo G computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo G declares no parametric tables."""
 
 
 __all__ = [

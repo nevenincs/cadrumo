@@ -1,7 +1,10 @@
 """Truth-table tests for :func:`aeat.domain.deadlines.applies_to`.
 
-Each parametrised case asserts the documented BOE / Manual práctico
-rule for one autónomo modelo against one profile-flag combination.
+Each parametrised case asserts the documented BOE / Manual práctico rule
+for one autónomo modelo against one combination of
+:class:`aeat.domain.deadlines.AutonomoProfile` flags. The companion
+:func:`aeat.domain.deadlines.explain` helper is exercised under the same
+modelos to guarantee both branches stay in lockstep.
 """
 
 from __future__ import annotations

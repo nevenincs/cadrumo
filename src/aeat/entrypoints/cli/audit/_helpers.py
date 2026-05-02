@@ -1,11 +1,11 @@
-"""Helpers for the ``aeat audit`` subcommand surface (#339).
+"""Helpers for the ``aeat audit`` subcommand surface.
 
 Exposes a strict pydantic :class:`CitationCoverageReport` and the pure
 function :func:`validate_citation_coverage` that builds one from a
-:class:`Ruleset`. Public from :mod:`aeat.entrypoints.cli.audit` for forward
-compatibility with the future ``#394`` 13-root Kent-first tree (where
-the ``audit`` root is first-class) and the ``#399`` ``--json`` output
-schema work.
+:class:`aeat.domain.formulas._ruleset.Ruleset`. Public from
+:mod:`aeat.entrypoints.cli.audit` so the operator-facing command
+tree (where ``audit`` is a first-class root) and the structured
+``--json`` output schema can both depend on the same report shape.
 """
 
 from __future__ import annotations
@@ -18,19 +18,32 @@ from pydantic import BaseModel, ConfigDict, Field
 from ....domain.formulas._ruleset import Ruleset
 from ....domain.modelos import ModeloCode
 
-# TODO post-#399: register an OutputSchema for the audit-rulesets-citations
-# command using CitationCoverageReport.model_json_schema() once the
-# JSON-output contract lands.
-
 
 class CitationCoverageReport(BaseModel):
     """Per-ruleset citation coverage on ``computed=True`` casillas.
 
-    ``coverage_percent`` is a fraction in the closed interval [0.0, 1.0].
+    ``coverage_percent`` is a fraction in the closed interval ``[0.0, 1.0]``.
     ``missing_casillas`` is non-empty iff ``coverage_percent < 1.0``.
     ``modelo`` is :data:`None` only on aggregate reports that span more
-    than one distinct :class:`ModeloCode`; per-ruleset reports always
-    carry the ruleset's modelo.
+    than one distinct :class:`aeat.domain.modelos.ModeloCode`; per-ruleset
+    reports always carry the ruleset's modelo.
+
+    Attributes:
+        ruleset_id: Stable identifier of the source ruleset, or
+            ``"aggregate"`` on aggregated reports.
+        modelo: The modelo the report covers, or ``None`` for a
+            multi-modelo aggregate.
+        effective_from: First date on which the ruleset (or earliest
+            ruleset in an aggregate) is in force.
+        effective_to: Last date on which the ruleset is in force, or
+            ``None`` for an open span.
+        total_computed: Number of casillas marked ``computed=True``.
+        with_citation: Subset of ``total_computed`` carrying at least one
+            legal citation.
+        coverage_percent: ``with_citation / total_computed``, or ``1.0``
+            when ``total_computed`` is zero.
+        missing_casillas: Casilla ids that are computed but have no
+            legal basis attached.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -46,7 +59,7 @@ class CitationCoverageReport(BaseModel):
 
     @property
     def is_complete(self) -> bool:
-        """``True`` iff every computed casilla carries at least one citation."""
+        """Return ``True`` iff every computed casilla carries at least one citation."""
         return self.coverage_percent == 1.0
 
 
@@ -54,12 +67,20 @@ def validate_citation_coverage(ruleset: Ruleset) -> CitationCoverageReport:
     """Return a :class:`CitationCoverageReport` for ``ruleset``.
 
     Walks every casilla on the ruleset; a casilla counts toward
-    ``total_computed`` only when ``computed=True``. ``with_citation``
-    counts the subset whose ``legal_basis`` is non-empty. The
-    :class:`CasillaDefinition` validator (#339) guarantees these are
-    equal for every ruleset that imports successfully — the gap path
-    can only be observed via fixtures built through pydantic's
-    documented ``model_construct`` escape hatch.
+    ``total_computed`` only when ``computed=True``, and toward
+    ``with_citation`` only when its ``legal_basis`` tuple is non-empty.
+    The :class:`aeat.domain.formulas._casilla.CasillaDefinition`
+    validator guarantees these two counts are equal for every ruleset
+    that imports successfully — the gap path can only be observed via
+    fixtures built through pydantic's documented ``model_construct``
+    escape hatch.
+
+    Args:
+        ruleset: The ruleset to inspect.
+
+    Returns:
+        A frozen :class:`CitationCoverageReport` describing citation
+        coverage on ``ruleset``.
     """
     computed = tuple(c for c in ruleset.casillas if c.computed)
     total = len(computed)
@@ -87,11 +108,21 @@ def aggregate_reports(reports: Iterable[CitationCoverageReport]) -> CitationCove
     across rulesets and prefixed with the contributing ``ruleset_id``
     so the reported ids stay unique.
 
-    ``modelo`` is set to the shared :class:`ModeloCode` only when every
-    input report carries the same modelo; otherwise it is ``None`` to
-    signal a multi-modelo aggregate. Picking an arbitrary
-    "representative" modelo from a mixed bag would mislead any
-    downstream consumer that filters by modelo.
+    ``modelo`` is set to the shared
+    :class:`aeat.domain.modelos.ModeloCode` only when every input
+    report carries the same modelo; otherwise it is ``None`` to signal
+    a multi-modelo aggregate. Picking an arbitrary "representative"
+    modelo from a mixed bag would mislead any downstream consumer that
+    filters by modelo.
+
+    Args:
+        reports: One or more reports to fold together.
+
+    Returns:
+        A single aggregate :class:`CitationCoverageReport`.
+
+    Raises:
+        ValueError: When ``reports`` is empty.
     """
     bag = tuple(reports)
     if not bag:

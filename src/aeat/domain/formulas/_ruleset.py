@@ -1,10 +1,10 @@
 """Ruleset + parameter-table models.
 
-A :class:`Ruleset` is the unit of period-versioned legislation. It
-bundles the full casilla set, every computed casilla's formula, the
-date-keyed parameter table, and the legal citations grounding the
-rules. Structural invariants (DAG acyclicity, casilla/param closure,
-single-rounding) are enforced at load time in ``model_post_init``.
+A :class:`Ruleset` is the unit of period-versioned legislation. It bundles
+the full casilla set, every computed casilla's formula, the date-keyed
+parameter table, and the legal citations grounding the rules. Structural
+invariants (DAG acyclicity, casilla/param closure, single-rounding) are
+enforced at load time in ``model_validator(mode="after")``.
 """
 
 from __future__ import annotations
@@ -42,7 +42,14 @@ __all__ = [
 
 
 class ParameterValue(BaseModel):
-    """One date-keyed value for a named ruleset parameter."""
+    """One date-keyed value for a named ruleset parameter.
+
+    Attributes:
+        effective_from: First date the value is in force (inclusive).
+        effective_to: Last date the value is in force (inclusive). When
+            ``None`` the value extends indefinitely.
+        value: The :class:`decimal.Decimal` parameter value.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -58,7 +65,13 @@ class ParameterValue(BaseModel):
 
 
 class ParameterTable(BaseModel):
-    """Named parameters (rates, thresholds, ...) grouped by id."""
+    """Named parameters (rates, thresholds, ...) grouped by id.
+
+    Attributes:
+        entries: Mapping of parameter id to a tuple of
+            :class:`ParameterValue` rows. Each tuple must be non-empty
+            and free of overlapping date spans.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -79,7 +92,21 @@ class ParameterTable(BaseModel):
         return self
 
     def resolve(self, name: str, *, on: date) -> Decimal:
-        """Return the parameter value active on the supplied date."""
+        """Return the parameter value active on the supplied date.
+
+        Args:
+            name: Parameter id.
+            on: Date at which the value should be active.
+
+        Returns:
+            The :class:`decimal.Decimal` value in force on ``on``.
+
+        Raises:
+            :exc:`aeat.core.errors.MissingRulesetError`: When ``name`` is
+                undeclared, or no value covers ``on``.
+            :exc:`aeat.core.errors.AmbiguousPeriodError`: When more than
+                one entry covers ``on``.
+        """
         if name not in self.entries:
             raise MissingRulesetError(f"parameter {name!r} not declared")
         matches = [
@@ -93,7 +120,29 @@ class ParameterTable(BaseModel):
 
 
 class Ruleset(BaseModel):
-    """A period-versioned formula ruleset for one modelo."""
+    """A period-versioned formula ruleset for one modelo.
+
+    Attributes:
+        ruleset_id: Unique identifier in the ``modelo_{code}[.{variant}].{year}``
+            grammar.
+        modelo: The :class:`aeat.domain.modelos.ModeloCode` this ruleset
+            covers.
+        variant: Disambiguates partial / alternate / regional encodings
+            of the same ``(modelo, period)`` slot. Defaults to
+            ``"default"``.
+        effective_from: First date the ruleset applies (inclusive).
+        effective_to: Last date the ruleset applies (inclusive); ``None``
+            means open-ended.
+        casillas: Tuple of every :class:`CasillaDefinition` in the
+            ruleset.
+        formulas: Tuple of :class:`FormulaDefinition` rows, one per
+            computed casilla.
+        parameters: :class:`ParameterTable` exposing every named
+            parameter referenced by the formulas.
+        legal_citations: Tuple of
+            :class:`aeat.domain.modelos.LegalCitation` records grounding
+            the ruleset.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -101,11 +150,10 @@ class Ruleset(BaseModel):
     modelo: ModeloCode
     variant: Annotated[str, Field(min_length=1, max_length=32)] = "default"
     """Disambiguates partial / alternate / regional encodings of the same
-    ``(modelo, period)``. the key-axis extension
-    committed in ``2026-04-22-ruleset-architecture-adr.md``. Existing
-    canonical rulesets (130.2024, 303.2025, etc.) are ``variant="default"``;
-    partials (``modelo_100.summary.2025``) and future regional variants
-    (``modelo_303.canarias.2025``) carry their own variant slug.
+    ``(modelo, period)`` slot. Canonical rulesets (130.2024, 303.2025,
+    etc.) are ``variant="default"``; partials (``modelo_100.summary.2025``)
+    and regional variants (``modelo_303.canarias.2025``) carry their own
+    variant slug.
     """
     effective_from: date
     effective_to: date | None = None

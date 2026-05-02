@@ -1,10 +1,10 @@
-"""Unified live-AEAT authenticator facade.
+"""Unified live-AEAT authenticator.
 
-This module is the single entry point every future remote-read
-module (filing history #168, missing-filing detection #169, AEAT
-messages #170, VAT balance tracking #171) should depend on. It
-composes the certificate loader, the Playwright browser session,
-and the login-assertion flow into a narrow async surface.
+This module is the single entry point every remote-read module
+(filing history, missing-filing detection, AEAT messages, VAT balance
+tracking) depends on. It composes the certificate loader, the
+Playwright browser session, and the login-assertion flow into a narrow
+async surface.
 
 The module also defines :class:`AeatSession` and
 :class:`AeatLoginAssertion` — the two pydantic records that describe
@@ -13,15 +13,14 @@ happened the last time we verified that access". Both records are
 strict, frozen, carry no secret material, and are safe to log or
 serialise into the submission audit trail.
 
-Design notes — see
-``.vault/adr/2026-04-17-aeat-access-gate-adr.md``:
+Design notes:
 
 * The module holds an 18-minute session idle TTL as a code-level
   constant. The value is deliberately **not** an env var — the
   operator surface is kept narrow, and AEAT's observed idle window
   is ~20 minutes (the extra 2 minutes is safety margin).
 * ``authenticate()`` accepts an optional injectable browser session
-  factory. Unit tests pass a fake factory that produces a stand-in
+  factory. Unit tests pass an in-process factory that produces a stand-in
   context honouring the ``_aeat_certificate_thumbprint`` marker
   contract. This lets the whole authenticator exercise run under
   ``@pytest.mark.unit`` without importing Playwright.
@@ -146,22 +145,26 @@ class AeatLoginAssertion(BaseModel):
 
     @property
     def handshake_success(self) -> bool | None:
+        """Whether the TLS handshake leg succeeded; ``None`` for non-certificate providers."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
             return self.assertion_detail.handshake_success
         return None
 
     @property
     def certificate_recognised(self) -> bool | None:
+        """Whether AEAT recognised the presented certificate; ``None`` for non-certificate providers."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
             return self.assertion_detail.certificate_recognised
         return None
 
     @property
     def parsed_nif(self) -> str | None:
+        """Convenience alias for :attr:`identity_nif`."""
         return self.identity_nif
 
     @property
     def parsed_subject(self) -> str | None:
+        """RFC-4514 subject DN of the certificate; ``None`` for non-certificate providers."""
         if isinstance(self.assertion_detail, CertificateLoginAssertionDetail):
             return self.assertion_detail.parsed_subject
         return None
@@ -183,8 +186,7 @@ class AeatSession(BaseModel):
             ``_aeat_certificate_thumbprint`` marker attribute is
             set to the same value.
         certificate_subject: RFC-4514 subject DN of the cert.
-        certificate_nif: DNI / NIE extracted from the subject via
-            :func:`extract_nif_from_subject`.
+        identity_nif: DNI / NIE identifying the authenticated taxpayer.
         authenticated_at: Timezone-aware UTC timestamp of the
             successful ``authenticate()`` call that produced this
             record.
@@ -210,22 +212,21 @@ class AeatSession(BaseModel):
 
     @property
     def certificate_thumbprint(self) -> str | None:
+        """SHA-256 thumbprint of the cert; ``None`` for non-certificate providers."""
         if isinstance(self.provider_detail, CertificateSessionDetail):
             return self.provider_detail.certificate_thumbprint
         return None
 
     @property
     def certificate_subject(self) -> str | None:
+        """RFC-4514 subject DN of the cert; ``None`` for non-certificate providers."""
         if isinstance(self.provider_detail, CertificateSessionDetail):
             return self.provider_detail.certificate_subject
         return None
 
     @property
-    def certificate_nif(self) -> str:
-        return self.identity_nif
-
-    @property
     def handshake(self) -> HandshakeResult | None:
+        """Embedded TLS-leg handshake outcome; ``None`` for non-certificate providers."""
         if isinstance(self.provider_detail, CertificateSessionDetail):
             return self.provider_detail.handshake
         return None
@@ -336,8 +337,7 @@ class AeatAuthenticator:
     * Session lifecycle: ``authenticate``, ``reauthenticate``,
       ``close``.
 
-    The class is async and meant to be used as an async context
-    manager::
+    Use as an async context manager::
 
         async with AeatAuthenticator(settings) as auth:
             session = await auth.authenticate()
@@ -368,7 +368,7 @@ class AeatAuthenticator:
                 returning a :class:`BrowserSessionLike`. When
                 omitted, the authenticator constructs a real
                 :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
-                :meth:`authenticate` time. Tests pass a fake here
+                :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
         """
         self._settings = settings
@@ -552,7 +552,7 @@ class AeatAuthenticator:
                 raise
             log.info(
                 "AeatAuthenticator: authenticated nif=%s thumbprint=%s",
-                session.certificate_nif,
+                session.identity_nif,
                 session.certificate_thumbprint,
             )
             return session
@@ -587,7 +587,7 @@ class AeatAuthenticator:
         """
         log.info(
             "AeatAuthenticator: reauthenticate old_nif=%s old_authenticated_at=%s",
-            session.certificate_nif,
+            session.identity_nif,
             session.authenticated_at.isoformat(),
         )
         # Delegate teardown to close() (itself lock-protected and
@@ -641,7 +641,7 @@ class AeatAuthenticator:
 
             raise AeatSessionExpiredError(
                 redact_for_log(
-                    f"session for nif={session.certificate_nif} is stale "
+                    f"session for nif={session.identity_nif} is stale "
                     f"(idle_deadline={session.idle_deadline.isoformat()})"
                 )
             )
@@ -867,7 +867,7 @@ class AeatAuthenticator:
         metadata = _PersistedSessionMetadata(
             certificate_thumbprint=certificate_thumbprint,
             certificate_subject=certificate_subject,
-            certificate_nif=session.certificate_nif,
+            certificate_nif=session.identity_nif,
             authenticated_at=session.authenticated_at,
             idle_deadline=session.idle_deadline,
             storage_state_sha256=storage_state_sha256,
@@ -985,7 +985,7 @@ class AeatAuthenticator:
             raise
         log.info(
             "AeatAuthenticator: resumed persisted session nif=%s thumbprint=%s",
-            session.certificate_nif,
+            session.identity_nif,
             session.certificate_thumbprint,
         )
         return session
@@ -1138,8 +1138,7 @@ class AeatAuthenticator:
 
         Delegates to :func:`aeat.core.file_permissions.restrict_file_permissions`
         so the Windows ACL hardening discipline is shared with the
-        Cl@ve Móvil provider (issue #469 M-2 — the Cl@ve Móvil writer
-        previously skipped ACL hardening on Windows entirely).
+        Cl@ve Móvil provider.
         """
         from .....core.file_permissions import restrict_file_permissions
 
@@ -1196,7 +1195,7 @@ class AeatAuthenticator:
         The Protocol does not mandate a ``close()`` coroutine; real
         :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` wraps a Playwright
         ``Browser`` which owns a Chromium OS process. Tests supply
-        fakes that may not. We probe for the method and call it when
+        lightweight implementations that may not. We probe for the method and call it when
         present; failure to close is logged but never raised.
         """
         if session is None:
@@ -1217,7 +1216,7 @@ class BrowserSessionFactory(Protocol):
 
     The factory receives the active :class:`Settings` and is
     responsible for constructing / configuring the Playwright
-    session. Unit tests supply a fake factory; the production
+    session. Unit tests supply an in-process factory; the production
     factory lives with the caller (typically the CLI layer) so
     ``aeat.adapters.outbound.aeat.auth`` does not import ``aeat.adapters.outbound.aeat.browser`` at module load.
     """

@@ -6,10 +6,13 @@ whole-percent value, and the ruleset verifies the invariant arithmetic
 from base imponible to cuota íntegra, cuota diferencial, and líquido a
 ingresar or devolver.
 
-As of 2026-04-28 the annual Orden Ministerial approving the Modelo 200
-layout for periods initiated in 2025 has not been published on BOE. The
-ruleset is therefore anchored to the consolidated LIS/RIS arithmetic and
-keeps the same extractor-visible page-14 casillas as Orden HAC/657/2025.
+The annual Orden Ministerial approving the Modelo 200 layout for periods
+initiated in 2025 is not yet published on BOE; the ruleset is therefore
+anchored to the consolidated LIS/RIS arithmetic and keeps the same
+extractor-visible page-14 casillas as Orden HAC/657/2025. Casilla and
+formula construction is delegated to
+:func:`aeat.domain.formulas._rulesets.modelo_200_2024._make_casillas` and
+:func:`aeat.domain.formulas._rulesets.modelo_200_2024._make_formulas`.
 """
 
 from __future__ import annotations

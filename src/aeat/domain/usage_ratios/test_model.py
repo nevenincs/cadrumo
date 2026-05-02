@@ -1,4 +1,10 @@
-"""Unit tests for :class:`UsageRatioProfile` and the resolver (#259)."""
+"""Unit tests for :class:`aeat.domain.usage_ratios.UsageRatioProfile` and the
+:func:`aeat.domain.usage_ratios.resolve_user_ratio` helper.
+
+Covers strict bound checks, eligibility enforcement, frozen-attribute
+semantics, the non-mutating builder methods, and the canonical key ordering
+that keeps the persisted envelope diff-free across re-saves.
+"""
 
 from __future__ import annotations
 
@@ -107,7 +113,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     The eligibility set is derived from ``CATEGORY_PROFILES_2025`` at import
     time. This test re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
-    removing a USAGE_RATIO_* category) cannot silently drift from what the
+    removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
     usage-ratio feature accepts. The count pin (twelve) is a secondary
     guardrail that makes accidental additions visible in diffs.
     """
@@ -122,12 +128,15 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
 
 
 def test_consumer_fallback_pattern_documentation() -> None:
-    """Reference example of the #257 consumer pattern.
+    """Reference example of the deductibility-compute consumer pattern.
 
     This is a documentation test, not a regression guard for shipped code.
-    It pins the pattern #257's deductibility-compute service is expected to
-    use when it lands; when that service ships, its own tests become
-    authoritative and this one can be retired.
+    It pins the pattern the deductibility-compute service in
+    :mod:`aeat.domain.deductibility` is expected to use: prefer
+    :func:`resolve_user_ratio` and fall back to the statutory
+    :attr:`aeat.domain.categories.ProportionalityRule.default_ratio` when the
+    profile carries no override. When that service ships, its own tests
+    become authoritative and this one can be retired.
     """
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
 
@@ -143,17 +152,18 @@ def test_consumer_fallback_pattern_documentation() -> None:
 
 
 def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
-    """#257 compute may look up any category; ineligible ones must return None
+    """Compute may look up any category; ineligible ones return ``None``
     gracefully rather than raise — the caller then falls back to the
-    statutory default or non-USAGE_RATIO semantics without special-casing."""
+    statutory default or non-``USAGE_RATIO`` semantics without special-casing.
+    """
     profile = UsageRatioProfile()
     assert resolve_user_ratio(profile, SpendingCategory.MATERIAL_OFICINA) is None
 
 
 def test_saved_profile_has_canonical_key_order() -> None:
     """Two equal profiles serialise to identical bytes regardless of the
-    order in which ratios were added — preventing spurious diffs when
-    Kent's ``var/financial/usage-ratios.json`` is git-tracked."""
+    order in which ratios were added — preventing spurious diffs when Kent's
+    persisted usage-ratio envelope is git-tracked."""
     forward = UsageRatioProfile(
         ratios={
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21"),

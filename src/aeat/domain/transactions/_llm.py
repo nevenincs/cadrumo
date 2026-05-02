@@ -1,31 +1,31 @@
-"""LLM-backed transaction classifiers with parametric prompt builder (#236).
+"""LLM-backed transaction classifiers with a parametric prompt builder.
 
 Defines the :class:`LLMClassifier` protocol plus subprocess-based
-reference implementations for the three local LLM CLIs (claude,
-gemini, codex). The prompt is built PROGRAMMATICALLY from the
-available enum values so the LLM prompt stays in sync with the
-Python enum — adding a new :class:`BusinessClassification` value
-automatically requires a developer to decide whether it belongs in
-the default LLM choice set (via the
-``test_default_spec_accounts_for_every_classification_member`` guard
-in ``test_llm.py``).
+reference implementations for the three local LLM CLIs
+(:func:`build_claude_classifier`, :func:`build_gemini_classifier`,
+:func:`build_codex_classifier`). The prompt is built
+PROGRAMMATICALLY from the available enum values so the LLM prompt
+stays in sync with :class:`aeat.domain.transactions.BusinessClassification`:
+adding a new value automatically requires a developer to decide
+whether it belongs in the default LLM choice set.
 
 The prompt spec is parametrized:
 
-- ``classifications``: which :class:`BusinessClassification` values
-  the LLM may pick. Defaults to the four *decision* states
+- ``classifications``: which :class:`aeat.domain.transactions.BusinessClassification`
+  values the LLM may pick. Defaults to the four *decision* states
   (``BUSINESS`` / ``PERSONAL`` / ``MIXED`` / ``PROCESSED_UNCLASSIFIED``).
   Pipeline-state values (``NOT_YET_PROCESSED``, ``SKIPPED_BY_RULE``,
   ``FAILED_VALIDATION``) are excluded because they are not LLM
-  decisions — they are internal pipeline bookkeeping.
-- ``categories``: optional :class:`SpendingCategory` values the LLM
-  may additionally attach. Empty by default (classification-only).
-  When populated, the response includes a ``category`` field.
+  decisions -- they are internal pipeline bookkeeping.
+- ``categories``: optional :class:`aeat.domain.categories.SpendingCategory`
+  values the LLM may additionally attach. Empty by default
+  (classification-only). When populated, the response includes a
+  ``category`` field.
 
 Every decision the LLM emits is validated against the spec's
-allow-list: a response that picks a value outside the allowed set
-raises :class:`LLMClassifierError`, so a hallucinating model cannot
-corrupt the catalogue.
+allow-list via :func:`parse_response`: a response that picks a value
+outside the allowed set raises :class:`LLMClassifierError`, so a
+hallucinating model cannot corrupt the catalogue.
 """
 
 from __future__ import annotations
@@ -189,12 +189,21 @@ def prompt_spec_with_every_spending_category(
     """Return a prompt spec that also asks the LLM to suggest a SpendingCategory.
 
     Pulls authoritative Spanish display labels from
-    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` (shipped by
-    #253) rather than inventing ad-hoc hints from the enum value —
-    the LLM picks categories far more accurately against the real AEAT
-    terminology than against mangled snake_case. Categories with no
-    registered profile (none today; every :class:`SpendingCategory`
-    member is covered) fall back to the humanised enum value.
+    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` rather than
+    inventing ad-hoc hints from the enum value -- the LLM picks
+    categories far more accurately against the real AEAT terminology
+    than against mangled snake_case. Categories with no registered
+    profile (none today; every
+    :class:`aeat.domain.categories.SpendingCategory` member is covered)
+    fall back to the humanised enum value.
+
+    Args:
+        classifications: Optional override for the classification
+            choices; defaults to :func:`default_classification_choices`.
+
+    Returns:
+        A :class:`PromptSpec` whose ``categories`` tuple covers every
+        registered :class:`aeat.domain.categories.SpendingCategory`.
     """
     category_choices = tuple(CategoryChoice(value=value, hint=_category_hint(value)) for value in SpendingCategory)
     return PromptSpec(
@@ -207,12 +216,13 @@ def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
     Pulls the Spanish display label plus the proportionality kind and
-    (first 80 chars of) ``notes_es`` from :data:`CATEGORY_PROFILES_2025`
-    shipped by #253 — gives the LLM the authoritative AEAT terminology
-    AND the deductibility context (e.g. ``full_deductible``,
-    ``usage_ratio_home_area``) that disambiguates home-office from
-    premises rent or drives MIXED vs BUSINESS decisions. Falls back to
-    the humanised enum value when a category has no registered profile.
+    (first 80 chars of) ``notes_es`` from
+    :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` -- gives the
+    LLM the authoritative AEAT terminology AND the deductibility
+    context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
+    disambiguates home-office from premises rent or drives MIXED vs
+    BUSINESS decisions. Falls back to the humanised enum value when a
+    category has no registered profile.
     """
     profile = CATEGORY_PROFILES_2025.get(value)
     if profile is None:
@@ -287,12 +297,6 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
         ]
     )
     return "\n".join(sections)
-
-
-# Kept for backward-compatible imports from earlier drafts/tests.
-def build_prompt(transaction: Transaction, *, spec: PromptSpec | None = None) -> str:
-    """Render the classification prompt for one transaction against ``spec``."""
-    return (spec or default_prompt_spec()).render(transaction)
 
 
 # ── response parsing ──────────────────────────────────────────────
@@ -481,6 +485,10 @@ def build_claude_classifier(
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier (default:
             :data:`MINIMUM_CLASSIFICATION_TIER`).
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the
+        ``claude`` CLI.
     """
     resolved_model = _resolve_model_id(provider="claude", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("claude", "--bare", "-p")
@@ -515,6 +523,10 @@ def build_gemini_classifier(
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the
+        ``gemini`` CLI with ``prompt_via_argument=True``.
     """
     resolved_model = _resolve_model_id(provider="gemini", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command = ("gemini", "-p") if not resolved_model else ("gemini", "-m", resolved_model, "-p")
@@ -547,6 +559,10 @@ def build_codex_classifier(
         model: Explicit provider-specific model override.
         spec: Prompt spec override.
         minimum_tier: Refuses aliases below this tier.
+
+    Returns:
+        A :class:`SubprocessLLMClassifier` configured for the
+        ``codex`` CLI with ``output_from_file_flag`` set.
     """
     resolved_model = _resolve_model_id(provider="codex", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("codex", "exec", "--ephemeral", "--skip-git-repo-check")
@@ -667,7 +683,6 @@ __all__ = [
     "build_claude_classifier",
     "build_codex_classifier",
     "build_gemini_classifier",
-    "build_prompt",
     "default_classification_choices",
     "default_prompt_spec",
     "parse_response",

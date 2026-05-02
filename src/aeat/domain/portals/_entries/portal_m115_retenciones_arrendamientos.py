@@ -1,4 +1,11 @@
-"""Portal: Modelo 115 — retenciones arrendamientos urbanos."""
+"""Catalogue entry for the *Modelo 115* urban-rental withholdings procedure.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
+:attr:`aeat.domain.modelos.ModeloCode.MODELO_115`. Backs the periodic
+self-assessment of withholdings and on-account payments on income from
+urban property leases.
+"""
 
 from __future__ import annotations
 
@@ -32,3 +39,4 @@ ENTRY: PortalMetadata = build_entry(
         "sobre rendimientos de arrendamiento de inmuebles urbanos."
     ),
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""

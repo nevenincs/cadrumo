@@ -1,15 +1,12 @@
 """Unit tests for the Modelo 130 2026 ruleset.
 
-Issue #321 (Tier-L per-modelo calc-verify-roundtrip): the 2026
-ruleset is a structural clone of the 2024 / 2025 rulesets because
-RIRPF art. 110 was not amended for 2025 or 2026 (see the rule-delta
-manifest at ``.vault/reference/2026-130-rule-delta.md``). These
-tests assert the no-drift invariant against the 2025 ruleset and
-ship an external-anchored worked example whose expected values come
-from RIRPF art. 110 verbatim — not from the 2026 ruleset's stored
-parameters. A typo in either the ruleset's parameters or the
-helper's bracket boundaries would therefore fail one of the cases
-below.
+The 2026 ruleset is a structural clone of the 2024 / 2025 rulesets because
+RIRPF art. 110 was not amended for 2025 or 2026. These tests assert the
+no-drift invariant against the 2025 ruleset and ship an externally-
+anchored worked example whose expected values come from RIRPF art. 110
+verbatim — not from the 2026 ruleset's stored parameters. A typo in either
+the ruleset's parameters or the helper's bracket boundaries would
+therefore fail one of the cases below.
 """
 
 from __future__ import annotations
@@ -29,11 +26,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _provided() -> dict[str, Decimal]:
     """Worked-example fixture for a Q2 2026 estimación-directa autónomo.
 
-    Distinct numerical scenario from the 2024 / 2025 fixtures (which
-    use 20 000 € / 5 000 € and 48 000 € / 12 500 € respectively) to
-    avoid mirror-fixture coupling: a Q2 autónomo with both an
-    estimación-directa slice (Apartado I) and a small agraria slice
-    (Apartado II) plus a non-zero minoración.
+    The numerical scenario is intentionally distinct from the 2024 / 2025
+    fixtures (which use 20 000 € / 5 000 € and 48 000 € / 12 500 €
+    respectively) to avoid mirror-fixture coupling: a Q2 autónomo with
+    both an estimación-directa slice (Apartado I) and a small agraria
+    slice (Apartado II) plus a non-zero minoración.
 
     Inputs (RIRPF art. 110.1.a + 110.1.c + 110.3.c):
       - Casilla 01 (ingresos acumulados): 24 000,00 EUR
@@ -84,6 +81,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo130Ruleset2026:
+    """Formula-engine assertions for the 2026 Modelo 130 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_130_2026,
@@ -93,7 +92,7 @@ class TestModelo130Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_2026_no_drift_from_2025(self) -> None:
-        """Issue #321 invariant: 2026 audit must equal 2025 audit on identical inputs.
+        """The 2026 audit must equal the 2025 audit on identical inputs.
 
         RIRPF art. 110 is unchanged across 2025 → 2026 per the rule-
         delta manifest. The casillas + citations are shared module-
@@ -125,19 +124,18 @@ class TestModelo130Ruleset2026:
         assert MODELO_130_2026.effective_to == date(2026, 12, 31)
 
     def test_external_worked_example_rirpf_art_110_2026(self) -> None:
-        """External-anchored worked example for the 2026 ruleset.
+        """Externally-anchored worked example for the 2026 ruleset.
 
         Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20 %
         rate on actividades en estimación directa; art. 110.1.c fixes
         the 2 % rate on actividades agrícolas / ganaderas / forestales /
-        pesqueras. Fixture values derived from those rates, NOT from
+        pesqueras. Fixture values are derived from those rates, NOT from
         the ruleset's ``ParameterTable``.
 
-        Citation: BOE-A-2007-6820 RD 439/2007 art. 110 (consolidated
-        text last update 2026-02-28; no 2025 / 2026 amendment to art.
-        110).
+        Citation: BOE-A-2007-6820 RD 439/2007 art. 110 (no 2025 / 2026
+        amendment to art. 110).
 
-        Scenario distinct from ``_provided()`` to avoid coupling: a 4T
+        Scenario distinct from :func:`_provided` to avoid coupling: a 4T
         2026 autónomo with no agraria activity, no minoración, and a
         small retención-a-cuenta carry from earlier quarters.
           - Casilla 01: 60 000,00 EUR
@@ -284,9 +282,9 @@ class TestModelo130Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_pago_fraccionado_rate_mismatch_raises(self) -> None:
-        """Casilla 04 = 20 % x 03. Kent applies 18 % (1 800 short).
+        """Casilla 04 = 20 % x 03; user applies 18 % (1 800 € short).
 
-        Negative-path test: confirm the 2026 audit surfaces a casilla-04
+        Negative-path test: confirms the 2026 audit surfaces a casilla-04
         discrepancy when the user-supplied value departs from the
         engine's re-derivation by more than the audit tolerance.
         """
@@ -300,12 +298,12 @@ class TestModelo130Ruleset2026:
         assert "04" in {d.casilla_id for d in report.discrepancies}
 
 
-# Issue #321: external-anchored threshold-edge cases for the casilla-13
-# minoración helper exercised through the 2026 path. The bracket
-# boundaries (9 000 / 10 000 / 11 000 / 12 000 €) are stable across
-# 2024 → 2025 → 2026 per the rule-delta manifest; the helper imports
-# from `modelo_130_2024` and the test exercises it through the 2026
-# import path to confirm no drift.
+# Externally-anchored threshold-edge cases for the casilla-13 minoración
+# helper exercised through the 2026 path. The bracket boundaries
+# (9 000 / 10 000 / 11 000 / 12 000 €) are stable across 2024 → 2025 →
+# 2026 per the rule-delta manifest; the helper imports from
+# ``modelo_130_2024`` and the test exercises it through the 2026 import
+# path to confirm no drift.
 @pytest.mark.parametrize(
     ("previous_year_rn", "expected_minoracion"),
     [

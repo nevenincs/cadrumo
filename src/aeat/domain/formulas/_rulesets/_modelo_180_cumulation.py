@@ -1,4 +1,11 @@
-"""Cumulation helpers for Modelo 180 annual summary fixtures."""
+"""Cumulation helpers for Modelo 180 annual summary fixtures.
+
+Aggregates four quarterly :class:`Modelo180QuarterlyRetention` records
+(typically derived from Modelo 115 casillas) into the four-casilla annual
+:class:`Modelo180AnnualSummary` that Modelo 180 expects, applying the 19 %
+retención rate to the annual base rather than summing rounded quarterly
+amounts.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +18,17 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class Modelo180QuarterlyRetention(BaseModel):
-    """One quarterly Modelo 115-style rental withholding source."""
+    """One quarterly Modelo 115-style rental-withholding source.
+
+    Attributes:
+        recipients: Number of distinct landlords; must equal
+            ``len(recipient_ids)``.
+        recipient_ids: Tuple of unique landlord NIFs / NIEs.
+        base_retencion: Rental base subject to retención for the
+            quarter.
+        retenciones: Retenciones declared for the quarter.
+        ingresos_especie: In-kind income reported for the quarter.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -36,7 +53,18 @@ class Modelo180QuarterlyRetention(BaseModel):
         *,
         recipient_ids: tuple[str, ...],
     ) -> Modelo180QuarterlyRetention:
-        """Build a quarterly source from the Modelo 115 casilla subset feeding M180."""
+        """Build a quarterly source from the Modelo 115 casilla subset feeding M180.
+
+        Args:
+            casillas: Modelo 115 casilla mapping; required keys are
+                ``"01"`` (recipients), ``"02"`` (base), ``"03"``
+                (retenciones), and ``"04"`` (ingresos en especie).
+            recipient_ids: Unique landlord identifiers backing the
+                recipient count.
+
+        Returns:
+            A populated :class:`Modelo180QuarterlyRetention`.
+        """
         return cls(
             recipients=casillas["01"],
             recipient_ids=recipient_ids,
@@ -47,7 +75,16 @@ class Modelo180QuarterlyRetention(BaseModel):
 
 
 class Modelo180AnnualSummary(BaseModel):
-    """Modelo 180 four-casilla annual summary derived from quarterlies."""
+    """Modelo 180 four-casilla annual summary derived from quarterlies.
+
+    Attributes:
+        recipients: Distinct-landlord count across the year.
+        recipient_ids: Sorted tuple of unique landlord NIFs / NIEs.
+        base_retencion: Annual base subject to retención.
+        retenciones: Annual retenciones (computed from the annual base
+            at the 19 % rate, not by summing quarterly amounts).
+        ingresos_especie: Annual in-kind income (sum of quarters).
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -73,6 +110,18 @@ def aggregate_modelo_180_from_quarters(quarters: Iterable[Modelo180QuarterlyRete
     Modelo 180 verifies casilla 03 from the annual base rather than by
     summing rounded quarterly retenciones. That keeps cumulation aligned
     with the annual ruleset's terminal two-decimal calculation.
+
+    Args:
+        quarters: Four :class:`Modelo180QuarterlyRetention` records, one
+            per fiscal quarter.
+
+    Returns:
+        A :class:`Modelo180AnnualSummary` ready for the Modelo 180
+        casilla map.
+
+    Raises:
+        ValueError: When ``quarters`` does not contain exactly four
+            entries.
     """
     quarter_list = tuple(quarters)
     if len(quarter_list) != 4:

@@ -1,8 +1,9 @@
-"""LIRPF art. 23.2 tier-resolver tests (#454).
+"""Unit tests for the LIRPF art. 23.2 tier resolver.
 
-Exercises every BOE trigger condition + every priority-order edge +
-every effective-date branch, plus the LAU 17.6 forfeit sentinel and
-the qualifying-share split for tier 70-b-1.
+Exercises :func:`aeat.domain.rental.resolve_reduccion` against every BOE
+trigger condition, every priority-order edge, every effective-date
+branch, the LAU art. 17.6 forfeit sentinel, and the qualifying-share
+split for the tier 70-b-1 (joven inquilino) ordinal.
 """
 
 from __future__ import annotations
@@ -77,6 +78,8 @@ def _contract(
 
 
 class TestPreAmendmentAndDt38:
+    """Effective-date dispatch for ejercicios before the Ley 12/2023 amendment."""
+
     def test_pre_amendment_ejercicio_returns_flat_60(self) -> None:
         """Filings of ejercicio 2023 use the prior flat 60 % regardless of contract date."""
         result = resolve_reduccion(_contract(celebration=date(2024, 1, 1)), _finca(), period_year=2023)
@@ -107,6 +110,8 @@ class TestPreAmendmentAndDt38:
 
 
 class TestLau176Forfeit:
+    """LAU art. 17.6 non-compliance forfeits the reducción entirely."""
+
     def test_non_compliant_contract_forfeits_reduccion(self) -> None:
         result = resolve_reduccion(
             _contract(
@@ -126,6 +131,8 @@ class TestLau176Forfeit:
 
 
 class TestTier90:
+    """Tier 90-a — same landlord + zona tensionada + > 5 % rebaja triggers."""
+
     def test_happy_path_more_than_5pct_rebaja(self) -> None:
         """90-a: same landlord + zona tensionada + initial rent 6 % below prior."""
         result = resolve_reduccion(
@@ -168,6 +175,8 @@ class TestTier90:
 
 
 class TestTier70Joven:
+    """Tier 70-b-1 — first-rental + zona tensionada + 18-35 yo qualifying share."""
+
     def test_single_qualifying_co_tenant_full_share(self) -> None:
         result = resolve_reduccion(
             _contract(
@@ -254,6 +263,8 @@ class TestTier70Joven:
 
 
 class TestTier70PublicAdmin:
+    """Tier 70-b-2 — Public Admin / Ley 49/2002 / IMV / public-program triggers."""
+
     def test_public_admin_tenant_qualifies(self) -> None:
         result = resolve_reduccion(
             _contract(celebration=date(2024, 6, 1), tenant_is_public_admin=True),
@@ -294,6 +305,8 @@ class TestTier70PublicAdmin:
 
 
 class TestTier60Rehab:
+    """Tier 60-c — rehabilitation finished within 730 days of contract."""
+
     def test_rehab_finished_365_days_before_qualifies(self) -> None:
         result = resolve_reduccion(
             _contract(
@@ -345,6 +358,8 @@ class TestTier60Rehab:
 
 
 class TestTier50Default:
+    """Tier 50 fallback when no higher-priority trigger applies."""
+
     def test_no_triggers_returns_50(self) -> None:
         result = resolve_reduccion(
             _contract(celebration=date(2024, 6, 1)),
@@ -357,6 +372,8 @@ class TestTier50Default:
 
 
 class TestPriorityOrder:
+    """BOE priority order — highest applicable tier wins when multiple match."""
+
     def test_90_wins_over_70_when_both_apply(self) -> None:
         """90-a + 70-b-1 conditions both met → 90-a wins (BOE priority)."""
         result = resolve_reduccion(

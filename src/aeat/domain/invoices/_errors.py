@@ -1,4 +1,11 @@
-"""Domain exceptions for ``aeat.domain.invoices``."""
+"""Domain exceptions for the invoice catalogue.
+
+Defines the typed error hierarchy raised by :mod:`aeat.domain.invoices`.
+Every failure path inherits from :class:`InvoiceError` so callers can
+catch the whole domain, while :class:`InvoiceCatalogueError` and its
+subclasses narrow to catalogue-level faults (persistence, missing
+records, broken cross-catalogue links).
+"""
 
 from __future__ import annotations
 
@@ -41,6 +48,12 @@ class InvoiceLinkInconsistencyError(InvoiceLinkError):
 
     Carries both filesystem paths and both identifiers so an operator can
     manually reconcile the invoice and transaction catalogues.
+
+    Attributes:
+        invoice_path: Path to the invoice catalogue file.
+        transactions_path: Path to the transaction catalogue file.
+        invoice_id: Invoice identifier involved in the failed link.
+        transaction_id: Transaction identifier involved in the failed link.
     """
 
     def __init__(

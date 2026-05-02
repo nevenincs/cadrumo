@@ -5,8 +5,7 @@ Empresarios, Profesionales y Retenedores. Completa (~8 pages, all
 obligados tributarios regardless of size/régimen). Event-triggered —
 filed within 1 month of the hecho censal (article 10 RD 1065/2007).
 
-the extractor off the header-only MVP to the
-named-field primitive, capturing the most-used censal decisions:
+Captures the most-used censal decisions via the named-field primitive:
 
 - causa de presentación (alta / modificación / baja).
 - régimen IVA (general, simplificado, agricultura, recargo de
@@ -27,7 +26,21 @@ from .._schema import TemplateRevision
 
 
 class Modelo036V2025Extractor(GenericDeclaracionExtractor):
-    """Named-field extractor for Modelo 036."""
+    """Named-field extractor for Modelo 036 (Declaración censal completa).
+
+    Uses :class:`aeat.adapters.inbound.declaracion._generic_extractor.GenericDeclaracionExtractor`'s
+    named-field primitive — Modelo 036 prints censal decisions as
+    ``label : value`` pairs rather than numbered casillas, so
+    :attr:`casilla_ids` is empty and :attr:`named_field_patterns`
+    carries the regex map.
+
+    Attributes:
+        template_revision: Pinned to ``("036", 2025, "2025.01")``.
+        casilla_ids: Empty — Modelo 036 has no numbered casillas.
+        named_field_patterns: Label regex map keyed by canonical field
+            name (``causa_presentacion``, ``regimen_iva``,
+            ``regimen_irpf``, ``epigrafe_iae``, ``fecha_efectos``).
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="036",

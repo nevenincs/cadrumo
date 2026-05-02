@@ -1,4 +1,10 @@
-"""Tests for the governed-persistence FilingAmendmentRepository."""
+"""Tests for the governed-persistence :class:`FilingAmendmentRepository`.
+
+Exercises the round-trip save/load API, list/iter/delete behaviour,
+the AUDIT classification gate, the unsafe-id rejection, the
+legacy-store migration helper, and the per-amendment lock isolation
+of :class:`aeat.domain.filing.FilingAmendmentRepository`.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,6 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from . import build_draft
 from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
@@ -29,6 +34,7 @@ from ...domain.filing._complementaria_repository import (
     FilingAmendmentRepository,
     migrate_legacy_amendments_to_repository,
 )
+from . import build_draft
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

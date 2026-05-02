@@ -1,4 +1,8 @@
-"""Smoke tests for the llm CLI subtree."""
+"""Smoke tests for :mod:`aeat.entrypoints.cli.llm`.
+
+Asserts that the registered Typer sub-app exposes the expected
+top-level verbs (``complete``, ``translate``, ``cache``, ``usage``).
+"""
 
 import pytest
 from typer.testing import CliRunner
@@ -9,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_llm_cli_has_expected_subcommands() -> None:
-    """The llm subtree should expose the required verbs."""
+    """The ``aeat llm`` subtree exposes the four required verbs in ``--help``."""
 
     runner = CliRunner()
     result = runner.invoke(app, ["--help"])

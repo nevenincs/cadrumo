@@ -1,4 +1,4 @@
-"""Unit tests for the setup-wizard pydantic models (#61)."""
+"""Unit tests for the setup-wizard pydantic models in :mod:`aeat.application.setup`."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ def test_verify_finding_roundtrip() -> None:
 
 
 def test_setup_step_catalogue_is_closed() -> None:
-    """The 10-step catalogue from issue #61 is fixed and closed."""
+    """The ten-step :class:`SetupStep` catalogue is fixed and closed."""
     assert {step.value for step in SetupStep} == {
         "WELCOME",
         "PROFILE",

@@ -1,4 +1,11 @@
-"""Unit tests for proportionality rule validation."""
+"""Unit tests for :class:`~aeat.domain.categories.ProportionalityRule` validation.
+
+Verifies the cross-field invariants on the rule shape: fixed-percentage
+rules require ``fixed_pct``; statutory-cap rules require a cap value
+and reject the daily / generic mix; usage-ratio rules reject
+statutory-cap fields; and full-deductible rules reject
+``default_ratio``.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from . import (
-    Citation,
-    CitationSource,
+    CategoryCitation,
+    CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
@@ -19,9 +26,9 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _citation() -> Citation:
-    return Citation(
-        source=CitationSource.LEY_IRPF,
+def _citation() -> CategoryCitation:
+    return CategoryCitation(
+        source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 30",
         url=parse_http_url("https://example.com/ley"),

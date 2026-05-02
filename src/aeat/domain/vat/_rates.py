@@ -1,38 +1,37 @@
 """Hand-curated VAT rate table for the 27 EU member states.
 
-The numeric rates were codified from the European Commission's
-"VAT rates applied in the Member States of the European Union"
-reference (retrieval_date = 2026-04-13). Spain and Germany are fully
-expanded with every tier the TDP classifier needs; France, Italy
-and the Netherlands are expanded with the two common tiers; every
-other member state is covered with at least the ``GENERAL`` tier so
-``lookup_rate`` can round-trip every :class:`EUMemberState` member.
+The numeric rates were codified from the European Commission's *VAT rates
+applied in the Member States of the European Union* reference. Spain and
+Germany are fully expanded with every tier the classifier needs; France,
+Italy and the Netherlands are expanded with the two common tiers; every
+other member state is covered with at least the
+:attr:`aeat.domain.vat.VATRateKind.GENERAL` tier so
+:func:`aeat.domain.vat.lookup_rate` can round-trip every
+:class:`aeat.domain.vat.EUMemberState` member.
 
-Per the Modelo 303 ADR (#183) the ES row carries two
-date-bounded windows per rate kind:
+The ES row carries two date-bounded windows per rate kind:
 
 - 2024 baseline: ``effective_from=2024-01-01``,
   ``effective_until=2024-12-31``.
-- 2025 baseline: ``effective_from=2025-01-01``,
-  ``effective_until=None`` (open-ended until the next change).
+- 2025 baseline: ``effective_from=2025-01-01``, ``effective_until=None``
+  (open-ended until the next change).
 
-The régimen-general percentages (21 / 10 / 4) are stable across
-the 2024-2025 transition. Temporal product-class rates from
-Ley 7/2024 (alimentación básica), Ley 38/2022 (energía), and
-RDL 20/2022 are deliberately NOT included in this table — they
-are keyed by product class, not by ``(member_state, kind)``, and
-adding them under the existing shape would either overlap with
-the baseline 4 % super-reducido entry or require a new
-``VATRateKind`` member that the does not yet
-distinguish. See the ADR for the deferred follow-up.
+The régimen-general percentages (21 / 10 / 4) are stable across the
+2024 to 2025 transition. Temporal product-class rates from Ley 7/2024
+(alimentación básica), Ley 38/2022 (energía), and RDL 20/2022 are
+deliberately NOT included in this table — they are keyed by product class,
+not by ``(member_state, kind)``, and adding them under the existing shape
+would either overlap with the baseline 4 % super-reducido entry or require a
+new :class:`aeat.domain.vat.VATRateKind` member that the substrate does not
+yet distinguish.
 
-A load-time invariant asserts that no two :class:`VATRate`
-records under the same ``(member_state, kind)`` partition have
-overlapping date windows; violations raise
-:class:`VatRateOverlapError` at module import time.
+A load-time invariant asserts that no two :class:`aeat.domain.vat.VATRate`
+records under the same ``(member_state, kind)`` partition have overlapping
+date windows; violations raise :exc:`aeat.domain.vat.VatRateOverlapError` at
+module import time.
 
-The individual :class:`VATRate` records are frozen pydantic models;
-the aggregate :data:`VAT_RATE_TABLE` is an immutable mapping so the
+The individual :class:`aeat.domain.vat.VATRate` records are frozen pydantic
+models; the aggregate :data:`VAT_RATE_TABLE` is an immutable mapping so the
 substrate cannot be mutated in place after import.
 """
 
@@ -60,17 +59,20 @@ def _rate(
     effective_from: date | None = None,
     effective_until: date | None = None,
 ) -> VATRate:
-    """Shorthand builder for a :class:`VATRate`.
+    """Shorthand builder for a :class:`aeat.domain.vat.VATRate` record.
 
     Args:
         member_state: Issuing member state.
         kind: Rate tier.
         pct: Rate percentage as a string (Decimal-safe).
-        reference: BOE / Directive reference for the rate.
-        effective_from: Optional start date; defaults to the module's
-            ``_EFFECTIVE_FROM`` (2025-01-01) when ``None``.
+        reference: BOE or Council Directive reference for the rate.
+        effective_from: Optional start date; defaults to ``2025-01-01`` when
+            ``None``.
         effective_until: Optional end date; defaults to ``None``
             (open-ended).
+
+    Returns:
+        A frozen :class:`aeat.domain.vat.VATRate`.
     """
     return VATRate(
         member_state=member_state,
@@ -300,19 +302,21 @@ def _assert_no_overlap(
     member_state: EUMemberState,
     rates: Iterable[VATRate],
 ) -> None:
-    """Raise :class:`VatRateOverlapError` on any same-kind window overlap.
+    """Raise :exc:`aeat.domain.vat.VatRateOverlapError` on any same-kind overlap.
 
-    For each ``(member_state, kind)`` partition, asserts that the
-    half-open intervals ``[effective_from, effective_until]`` are
-    pairwise disjoint. Records with ``effective_until=None`` are
-    treated as covering up to ``date.max``.
+    For each ``(member_state, kind)`` partition, asserts that the half-open
+    intervals ``[effective_from, effective_until]`` are pairwise disjoint.
+    Records with ``effective_until=None`` are treated as covering up to
+    ``date.max``.
 
     Args:
         member_state: The member state under audit.
-        rates: The :class:`VATRate` records belonging to ``member_state``.
+        rates: The :class:`aeat.domain.vat.VATRate` records belonging to
+            ``member_state``.
 
     Raises:
-        VatRateOverlapError: If any two records overlap.
+        :exc:`aeat.domain.vat.VatRateOverlapError`: If any two records
+            overlap.
     """
     by_kind: dict[VATRateKind, list[VATRate]] = {}
     for rate in rates:
@@ -339,11 +343,11 @@ for _ms, _partition in _MUTABLE_TABLE.items():
 VAT_RATE_TABLE: Mapping[EUMemberState, tuple[VATRate, ...]] = MappingProxyType(_MUTABLE_TABLE)
 """Immutable view over the hand-curated EU VAT rate table.
 
-The mapping covers all 27 EU member states. Spain carries two
-date-bounded windows per rate kind (2024 + 2025); other member
-states carry the 2025 baseline only. The total record count is
-≥50 entries. A non-overlap invariant is enforced at module
-import time per ``(member_state, kind)`` partition.
+The mapping covers all 27 EU member states. Spain carries two date-bounded
+windows per rate kind (2024 plus 2025); other member states carry the 2025
+baseline only. The total record count is at least 50 entries. A non-overlap
+invariant is enforced at module import time per ``(member_state, kind)``
+partition via :func:`_assert_no_overlap`.
 """
 
 

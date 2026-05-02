@@ -1,4 +1,10 @@
-"""Period-versioned VAT rate lookup tests (#183)."""
+"""Period-versioned VAT rate lookup tests.
+
+Confirms that :func:`aeat.domain.vat.lookup_rate` resolves the correct
+:class:`aeat.domain.vat.VATRate` record across the 2024 / 2025 ES window
+boundary, and that the load-time non-overlap invariant in
+:func:`aeat.domain.vat._rates._assert_no_overlap` rejects clashing windows.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,9 @@
-"""Tests for the secret store."""
+"""Unit tests for :class:`aeat.adapters.persistence.storage.secret_store.SecretStore`.
+
+Exercises the put/get/delete/rotate API, the index encryption
+invariants, the retention-policy gate, and the blob-cleanup behaviour
+of overwrites.
+"""
 
 from __future__ import annotations
 
@@ -12,13 +17,13 @@ import pytest
 from .....core.classification import SensitivityClass
 from ..blob_store import EncryptedBlobStore
 from ..crypto import KEY_SIZE
-from ..master_key import EphemeralMasterKeyProvider
-from ._secret_store import SecretRecord, SecretStore
 from ..errors import (
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
 )
+from ..master_key import EphemeralMasterKeyProvider
+from ._secret_store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

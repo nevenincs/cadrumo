@@ -18,10 +18,10 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.entrypoints.cli._live import requires_live_enabled
 from aeat.adapters.outbound.aeat.sede._declarations import Declaration, capture_declaration, walk_declarations_register
 from aeat.adapters.outbound.aeat.sede._errors import SedeError
 from aeat.adapters.outbound.aeat.sede._schema import SedeCapture
+from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
@@ -35,11 +35,11 @@ def _load_active_clave_session():
         operator hasn't opted into live tests.
     """
     # Local imports keep the test file lightweight when skipped.
+    from aeat.adapters.outbound.aeat.auth._authenticator import AEAT_SESSION_IDLE_TTL, AeatSession
+    from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind, ClaveMovilSessionDetail
     from aeat.core.config import load_settings
     from aeat.entrypoints.cli.auth import _session
     from aeat.entrypoints.cli.auth._paths import storage_state_paths
-    from aeat.adapters.outbound.aeat.auth._authenticator import AEAT_SESSION_IDLE_TTL, AeatSession
-    from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind, ClaveMovilSessionDetail
 
     settings = load_settings()
     persisted = _session.load(settings, None)

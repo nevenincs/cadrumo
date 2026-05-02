@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from ...adapters.outbound.aeat.auth import GoogleAuthPath
+from ...adapters.outbound.google import GoogleAuthPath
 from ...core.config import Settings
 from . import doctor as doctor_module
 from .doctor import (
@@ -63,7 +63,7 @@ class TestAdcWellKnownPath:
         monkeypatch.delenv("CLOUDSDK_CONFIG", raising=False)
         if sys.platform != "win32":
             pytest.skip("windows-only default")
-        monkeypatch.setenv("APPDATA", "C:/fake-appdata")
+        monkeypatch.setenv("APPDATA", "C:/test-appdata")
         result = adc_well_known_path()
         assert "gcloud" in result.parts
         assert result.name == "application_default_credentials.json"

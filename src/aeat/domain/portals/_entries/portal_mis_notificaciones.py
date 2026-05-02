@@ -1,4 +1,10 @@
-"""Portal: Mis notificaciones."""
+"""Registry entry for the AEAT electronic notifications mailbox.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Buzón electrónico de notificaciones y comunicaciones recibidas de la AEAT.",
 )
+"""Portal entry for the AEAT electronic notifications and communications mailbox."""

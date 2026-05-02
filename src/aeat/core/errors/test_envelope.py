@@ -9,7 +9,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from . import WorkspaceLockedError, build_error_envelope, render_error_json, render_error_text
+from ..locks_errors import LockAcquisitionError
+from . import build_error_envelope, render_error_json, render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -28,7 +29,7 @@ def _output_language(language: str) -> Iterator[None]:
 
 
 def test_error_envelope_serializes_deterministically() -> None:
-    error = WorkspaceLockedError(context={"z_key": "last", "a_key": "first"})
+    error = LockAcquisitionError(context={"z_key": "last", "a_key": "first"})
     first = render_error_json(error)
     second = render_error_json(error)
 
@@ -37,7 +38,7 @@ def test_error_envelope_serializes_deterministically() -> None:
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
-    error = WorkspaceLockedError(
+    error = LockAcquisitionError(
         context={
             "api_token": "top-secret",
             "cookie": "session-cookie",
@@ -61,10 +62,10 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
 
 
 def test_schema_version_is_present() -> None:
-    envelope = build_error_envelope(WorkspaceLockedError())
+    envelope = build_error_envelope(LockAcquisitionError())
     assert envelope.schema_version == "1"
 
-    payload = json.loads(render_error_json(WorkspaceLockedError()))
+    payload = json.loads(render_error_json(LockAcquisitionError()))
     assert payload["error"]["schema_version"] == "1"
 
 
@@ -77,7 +78,7 @@ def test_schema_version_is_present() -> None:
     ],
 )
 def test_default_messages_follow_requested_language(language: str, expected_attribute: str) -> None:
-    error = WorkspaceLockedError()
+    error = LockAcquisitionError()
     code = type(error).code
 
     with _output_language(language):

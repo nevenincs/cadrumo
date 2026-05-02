@@ -1,4 +1,15 @@
-"""`aeat financial ingest` command."""
+"""Implement the ``aeat financial ingest`` Typer command.
+
+Wires the inbound financial provider registry
+(:mod:`aeat.adapters.inbound.financial.providers`) to the persisted
+transaction catalogue
+(:class:`aeat.domain.transactions.TransactionCatalogueRepository`).
+The command validates a source file, ingests its rows into
+:class:`aeat.domain.transactions.RawTransaction`
+records, optionally persists them through the governed repository,
+and emits either NDJSON or a rich human-readable summary depending on
+operator flags and TTY status.
+"""
 
 from __future__ import annotations
 
@@ -11,8 +22,16 @@ import typer
 from rich.console import Console
 from rich.json import JSON
 
-from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider, detect_provider
-from ....adapters.inbound.financial.providers import FinancialProviderError, RawTransaction
+from ....adapters.inbound.financial.providers import (
+    CsvProvider,
+    FinancialProviderError,
+    OfxProvider,
+    PdfN26Provider,
+    XlsxProvider,
+    detect_provider,
+)
+from ....domain.transactions import RawTransaction
+from .._i18n import t, tr
 
 if TYPE_CHECKING:
     from ....domain.transactions import ImportSummary
@@ -21,7 +40,20 @@ _CONSOLE = Console()
 
 
 class ProviderChoice(StrEnum):
-    """Selectable ingest-provider names."""
+    """Selectable inbound provider for ``aeat financial ingest``.
+
+    Each member maps either to a concrete provider class in
+    :mod:`aeat.adapters.inbound.financial.providers` or to the
+    auto-detection helper :func:`aeat.adapters.inbound.financial.providers.detect_provider`.
+
+    Attributes:
+        AUTO: Run the detector first, then fall back to file-extension
+            heuristics in :func:`_resolve_provider`.
+        CSV: Force :class:`aeat.adapters.inbound.financial.providers.CsvProvider`.
+        XLSX: Force :class:`aeat.adapters.inbound.financial.providers.XlsxProvider`.
+        OFX: Force :class:`aeat.adapters.inbound.financial.providers.OfxProvider`.
+        N26_PDF: Force :class:`aeat.adapters.inbound.financial.providers.PdfN26Provider`.
+    """
 
     AUTO = "auto"
     CSV = "csv"
@@ -66,22 +98,95 @@ def ingest_cmd(
         help=("Optional override for the catalogue directory. Defaults to AEAT_FINANCIAL_TXS_DIR / <provider-name>."),
     ),
 ) -> None:
-    """Validate a source file and emit strict raw transaction records."""
+    """Validate a source file and emit strict raw transaction records.
+
+    Resolves the requested provider (auto-detecting when ``provider`` is
+    :attr:`ProviderChoice.AUTO`), runs the provider's
+    :meth:`~aeat.adapters.inbound.financial.providers.FinancialProvider.validate_source`
+    check, ingests the file into a tuple of
+    :class:`aeat.domain.transactions.RawTransaction`
+    records, and then either persists them through
+    :func:`_persist_transactions` and/or streams them to stdout.
+
+    Args:
+        path: Source file path; must exist and be a regular file.
+        provider: Provider selector. ``AUTO`` invokes
+            :func:`aeat.adapters.inbound.financial.providers.detect_provider`
+            with extension fallbacks.
+        output_json: When ``True`` emit each
+            :class:`~aeat.domain.transactions.RawTransaction`
+            as a JSON line on stdout.
+        verbose: When ``True`` pretty-print every emitted record on
+            stderr after ingest.
+        persist: Tri-state persistence toggle. ``None`` means default
+            (ON when stdout is a TTY, OFF when piped) so the legacy
+            stdout-only pipe workflow keeps working without a flag.
+        catalogue_dir: Optional override for the catalogue directory.
+            Defaults to ``AEAT_FINANCIAL_TXS_DIR`` when persistence
+            is enabled.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when no provider can
+            handle ``path``, when validation fails, or when the
+            provider raises
+            :exc:`~aeat.adapters.inbound.financial.providers.FinancialProviderError`
+            during ingest.
+    """
     provider_impl = _resolve_provider(provider, path)
     if provider_impl is None:
-        typer.echo(f"refusing: no provider can handle {path}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"rechazado: ningún proveedor puede procesar {path}",
+                    f"refusing: no provider can handle {path}",
+                    f"rebutjat: cap proveïdor pot processar {path}",
+                    f"elutasitva: egyetlen szolgaltato sem tudja kezelni: {path}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     validation = provider_impl.validate_source(path)
     if not validation.is_valid:
         for warning in validation.warnings:
-            typer.echo(f"validation error: {warning}", err=True)
+            typer.echo(
+                tr(
+                    t(
+                        f"error de validación: {warning}",
+                        f"validation error: {warning}",
+                        f"error de validació: {warning}",
+                        f"validacios hiba: {warning}",
+                    )
+                ),
+                err=True,
+            )
         raise typer.Exit(code=2)
     for warning in validation.warnings:
-        typer.echo(f"warning: {warning}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"aviso: {warning}",
+                    f"warning: {warning}",
+                    f"avís: {warning}",
+                    f"figyelmeztetes: {warning}",
+                )
+            ),
+            err=True,
+        )
     try:
         transactions = tuple(provider_impl.ingest(path))
     except FinancialProviderError as exc:
-        typer.echo(f"ingest error: {exc}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"error de ingesta: {exc}",
+                    f"ingest error: {exc}",
+                    f"error d'ingesta: {exc}",
+                    f"betoltesi hiba: {exc}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2) from exc
 
     # --persist defaults: ON when stdout is a TTY (interactive
@@ -99,17 +204,30 @@ def ingest_cmd(
             typer.echo(summary.model_dump_json(), err=True)
         else:
             typer.echo(
-                f"ingested {len(transactions)} record(s) via {provider_impl.name}",
+                tr(
+                    t(
+                        f"ingeridos {len(transactions)} registro(s) vía {provider_impl.name}",
+                        f"ingested {len(transactions)} record(s) via {provider_impl.name}",
+                        f"ingerits {len(transactions)} registre(s) via {provider_impl.name}",
+                        f"betoltve {len(transactions)} rekord ezzel: {provider_impl.name}",
+                    )
+                ),
                 err=True,
             )
         return
 
     _CONSOLE.print(
-        f"[green]ingested[/green] {len(transactions)} record(s) via [bold]{provider_impl.name}[/bold]",
+        "[green]"
+        + tr(t("ingeridos", "ingested", "ingerits", "betoltve"))
+        + f"[/green] {len(transactions)} "
+        + tr(t("registro(s) vía", "record(s) via", "registre(s) via", "rekord ezzel:"))
+        + f" [bold]{provider_impl.name}[/bold]",
     )
     if summary is not None:
         _CONSOLE.print(
-            f"[green]persisted[/green] imported={summary.imported} "
+            "[green]"
+            + tr(t("persistidos", "persisted", "persistits", "elmentve"))
+            + f"[/green] imported={summary.imported} "
             f"skipped={summary.skipped} catalogue={summary.catalogue_path}",
         )
     if verbose:
@@ -128,10 +246,20 @@ def _persist_transactions(
     lazily on first persist so other CLI commands that never touch
     the financial-domain persistence path are not slowed down by
     Alembic plugin discovery during import.
+
+    Args:
+        transactions: Raw provider rows produced by the ingest stage.
+        catalogue_dir: Optional override for the catalogue directory.
+            When ``None``, falls back to
+            :attr:`aeat.core.config.Settings.aeat_financial_txs_dir`.
+
+    Returns:
+        :class:`aeat.domain.transactions.ImportSummary` describing how
+        many rows were imported, skipped, and the on-disk catalogue
+        location.
     """
     from ....core.config import load_settings
-    from ....domain.transactions import TransactionCatalogueRepository
-    from ....domain.transactions._enums import TransactionDirection
+    from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
 
     def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
         # Zero-amount rows (fee waivers, FX-zero adjustments, paired
@@ -154,7 +282,24 @@ def _persist_transactions(
 
 
 def _resolve_provider(provider: ProviderChoice, path: Path):
-    """Resolve the requested or auto-detected provider instance."""
+    """Resolve the requested or auto-detected provider instance.
+
+    For :attr:`ProviderChoice.AUTO` the detector
+    (:func:`aeat.adapters.inbound.financial.providers.detect_provider`)
+    runs first; on miss, file-extension heuristics select
+    :class:`~aeat.adapters.inbound.financial.providers.CsvProvider`,
+    :class:`~aeat.adapters.inbound.financial.providers.XlsxProvider`,
+    or :class:`~aeat.adapters.inbound.financial.providers.OfxProvider`.
+
+    Args:
+        provider: Provider selector from ``--provider``.
+        path: Source file path used by the auto-detector.
+
+    Returns:
+        A provider instance ready for validation and ingest, or
+        ``None`` when no provider can handle ``path`` under
+        :attr:`ProviderChoice.AUTO`.
+    """
     if provider is ProviderChoice.AUTO:
         detected = detect_provider(path)
         if detected is not None:

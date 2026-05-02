@@ -1,15 +1,13 @@
 """Cross-module Protocols consumed by :mod:`aeat.application.filing`.
 
-Every upstream collaborator (modelos #6, casilla schemas #9 / #23,
-deadline engine #38) is represented by a runtime-checkable
-Protocol so :mod:`aeat.application.filing` does not take a hard import on any
-in-flight sibling subpackage. Concrete implementations live in
-the test suite for now and will be replaced on rebase once the
-upstream subpackages land.
+Every upstream collaborator (modelo identity, casilla schemas, deadline
+engine) is represented by a :class:`typing.Protocol` so the filing
+application package does not take a hard import on any sibling subpackage.
+Concrete implementations are wired at runtime by the entrypoint.
 
 These Protocols are intentionally minimal: they describe only the
-attributes :mod:`aeat.application.filing` actually consumes. They are not
-attempting to model the full surface of the upstream subpackages.
+attributes :mod:`aeat.application.filing` actually consumes. They do not
+attempt to model the full surface of the upstream subpackages.
 """
 
 from __future__ import annotations
@@ -55,19 +53,32 @@ class CasillaSchema(Protocol):
     """
 
     @property
-    def id(self) -> str: ...
+    def id(self) -> str:
+        """Return the casilla identifier."""
+
     @property
-    def value_type(self) -> str: ...
+    def value_type(self) -> str:
+        """Return the casilla value-type tag."""
+
     @property
-    def required(self) -> bool: ...
+    def required(self) -> bool:
+        """Return whether the casilla must be present in a valid draft."""
+
     @property
-    def formula_inputs(self) -> tuple[str, ...]: ...
+    def formula_inputs(self) -> tuple[str, ...]:
+        """Return the casilla IDs this casilla's formula depends on."""
+
     @property
-    def min_value(self) -> float | int | None: ...
+    def min_value(self) -> float | int | None:
+        """Return the inclusive lower bound, if any."""
+
     @property
-    def max_value(self) -> float | int | None: ...
+    def max_value(self) -> float | int | None:
+        """Return the inclusive upper bound, if any."""
+
     @property
-    def default(self) -> object | None: ...
+    def default(self) -> object | None:
+        """Return the default value used when no input is supplied."""
 
 
 @runtime_checkable
@@ -79,18 +90,21 @@ class CasillaCollection(Protocol):
         """Return the version of the underlying casilla DB."""
 
     def __iter__(self) -> object:  # pragma: no cover - Protocol
-        ...
+        """Iterate the collection."""
 
-    def get(self, casilla_id: str) -> CasillaSchema | None: ...
+    def get(self, casilla_id: str) -> CasillaSchema | None:
+        """Return the casilla schema for ``casilla_id``, or ``None``."""
 
-    def all(self) -> Sequence[CasillaSchema]: ...
+    def all(self) -> Sequence[CasillaSchema]:
+        """Return every casilla schema in the collection."""
 
 
 @runtime_checkable
 class CasillaSchemaProvider(Protocol):
     """Resolves a casilla collection for a given modelo."""
 
-    def get_collection(self, modelo: str) -> CasillaCollection: ...
+    def get_collection(self, modelo: str) -> CasillaCollection:
+        """Return the casilla collection for ``modelo``."""
 
 
 @runtime_checkable
@@ -98,16 +112,20 @@ class DeadlineStatus(Protocol):
     """Result of a deadline check for a (modelo, period) tuple."""
 
     @property
-    def due_date(self) -> date: ...
+    def due_date(self) -> date:
+        """Return the AEAT-published due date."""
+
     @property
-    def is_overdue(self) -> bool: ...
+    def is_overdue(self) -> bool:
+        """Return ``True`` when the reference date is past ``due_date``."""
 
 
 @runtime_checkable
 class DeadlineChecker(Protocol):
     """Checks the filing deadline for a (modelo, period) tuple."""
 
-    def check(self, modelo: str, period: str) -> DeadlineStatus: ...
+    def check(self, modelo: str, period: str) -> DeadlineStatus:
+        """Return the :class:`DeadlineStatus` for ``modelo`` and ``period``."""
 
 
 @runtime_checkable
@@ -120,13 +138,19 @@ class FilingProfile(Protocol):
     """
 
     @property
-    def tax_id(self) -> str: ...
+    def tax_id(self) -> str:
+        """Return the taxpayer's NIF / NIE."""
+
     @property
-    def display_name(self) -> str: ...
+    def display_name(self) -> str:
+        """Return a short human-readable label for the taxpayer."""
+
     @property
-    def applicable_modelos(self) -> tuple[str, ...]: ...
+    def applicable_modelos(self) -> tuple[str, ...]:
+        """Return the modelos this profile is obliged to file."""
 
 
 # A typed alias for the raw input mapping passed into builders.
 # Mapping not dict so callers may pass any read-only mapping.
 FilingInputs = Mapping[str, object]
+"""Read-only input mapping for casilla values handed to a filing builder."""

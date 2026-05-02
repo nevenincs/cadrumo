@@ -1,16 +1,17 @@
-"""Brackets-threshold mutation harness (#338).
+"""Brackets-threshold mutation harness.
 
-The eleven landed rulesets currently expose **zero** in-formula
+The currently landed rulesets expose **zero** in-formula
 :class:`BracketsFormula` nodes — the only real-world bracket table is
 the Modelo 130 minoración (RIRPF art. 110.3.c), and that lives as the
-``compute_casilla_13_minoracion`` Python helper, not as a
-:class:`FormulaDefinition` body. The brackets-threshold mutator is
-therefore tested against a **synthetic ruleset** that mirrors the
-Modelo 130 minoración step function. When a future ruleset adopts
-``BracketsFormula`` inside a :class:`FormulaDefinition` body, the
-mutator inherits the proven behaviour and the
-``test_mutator_exhaustiveness`` defence ensures the harness extends
-without silent gaps.
+:func:`aeat.domain.formulas._rulesets.modelo_130_2024.compute_casilla_13_minoracion`
+Python helper, not as a
+:class:`aeat.domain.formulas._formula.FormulaDefinition` body. The
+brackets-threshold mutator is therefore tested against a **synthetic
+ruleset** that mirrors the Modelo 130 minoración step function. When a
+future ruleset adopts :class:`BracketsFormula` inside a
+:class:`FormulaDefinition` body, the mutator inherits the proven
+behaviour and the ``test_mutator_exhaustiveness`` defence ensures the
+harness extends without silent gaps.
 
 For each non-terminal bracket, a fixture whose probe input lands
 within ±5 € of the boundary is supplied. Shifting the boundary by
@@ -111,6 +112,7 @@ SYNTHETIC_BRACKETS_RULESET: Ruleset = Ruleset(
     formulas=_FORMULAS,
     legal_citations=_CITATIONS,
 )
+"""Synthetic Modelo-130-shaped ruleset wrapping :data:`_BRACKETS` for the harness."""
 
 
 # -- Test cases ---------------------------------------------------------

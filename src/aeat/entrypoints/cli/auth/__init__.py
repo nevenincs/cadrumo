@@ -1,9 +1,10 @@
-"""``aeat auth`` sub-app — authentication provider management (#285).
+"""``aeat auth`` sub-app — authentication provider management.
 
-Kent runs these commands to discover which providers are configured,
-sign in, inspect the live session TTL, and clear a persisted session.
-The four subcommands are thin dispatch layers over the shared
-``AuthProvider`` abstraction in :mod:`aeat.adapters.outbound.aeat.auth`; no auth logic is
+The operator runs these commands to discover which providers are
+configured, sign in, inspect the live session TTL, and clear a
+persisted session. The four subcommands are thin dispatch layers over
+the shared ``AuthProvider`` abstraction in
+:mod:`aeat.adapters.outbound.aeat.auth`; no auth logic is
 reimplemented here.
 """
 
@@ -20,20 +21,18 @@ import typer
 from pydantic_settings import SettingsConfigDict
 from rich.console import Console
 
-from ....adapters.outbound.aeat.auth import (
-    AuthProviderKind,
-)
 from ....adapters.outbound.google import (
     SCOPES,
     GoogleAuthPath,
     get_credentials,
     inspect_google_auth,
 )
+from ....application.auth import AuthProviderKind
 from ....core.config import PROJECT_ROOT, Settings
 from ....core.env_io import write_env_vars
 from ....core.logging import get_logger
-from ...mcp.launch_google_workspace import ensure_credentials_dir, ensure_project_env_file
 from .._errors import CliRefusedBoundaryError, json_output_requested
+from .._i18n import t, tr
 from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ..oauth import CREDENTIALS_PAGE_TEMPLATE, REQUIRED_BLOCK, parse_oauth_client_json
 from . import _registry, _session
@@ -56,12 +55,31 @@ app = typer.Typer(
     name="auth",
     no_args_is_help=True,
     help=(
-        "Kent-first auth setup plus AEAT authentication provider management: "
+        "Operator-facing auth setup plus AEAT authentication provider management: "
         "init, configure, list-providers, login, status, whoami, logout."
     ),
 )
 
 _CONSOLE = Console()
+
+
+def ensure_credentials_dir(path: Path) -> Path:
+    """Create and return the Google credentials directory."""
+
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def ensure_project_env_file(env_path: Path, example_path: Path) -> Path:
+    """Ensure the project env file exists, seeding from the example when present."""
+
+    env_path.parent.mkdir(parents=True, exist_ok=True)
+    if not env_path.exists():
+        if example_path.exists():
+            shutil.copyfile(example_path, env_path)
+        else:
+            env_path.touch()
+    return env_path
 
 
 class AuthListProvidersRowJson(OutputSchema):
@@ -160,13 +178,19 @@ def _print_step(
     success: str,
     continuation: str,
 ) -> None:
+    purpose_label = tr(t("Propósito:", "Purpose:", "Propòsit:", "Cél:"))
+    action_label = tr(t("Acción:", "Action:", "Acció:", "Művelet:"))
+    source_label = tr(t("Origen:", "Source:", "Origen:", "Forrás:"))
+    browser_label = tr(t("Navegador:", "Browser:", "Navegador:", "Böngésző:"))
+    success_label = tr(t("Éxito:", "Success:", "Èxit:", "Siker:"))
+    next_label = tr(t("Siguiente:", "Next:", "Següent:", "Következő:"))
     console.print(f"[bold]{title}[/bold]")
-    console.print(f"Purpose: {purpose}")
-    console.print(f"Action: {action}")
-    console.print(f"Source: {source}")
-    console.print(f"Browser: {browser}")
-    console.print(f"Success: {success}")
-    console.print(f"Next: {continuation}")
+    console.print(f"{purpose_label} {purpose}")
+    console.print(f"{action_label} {action}")
+    console.print(f"{source_label} {source}")
+    console.print(f"{browser_label} {browser}")
+    console.print(f"{success_label} {success}")
+    console.print(f"{next_label} {continuation}")
     console.print()
 
 
@@ -221,6 +245,8 @@ def _mcp_credentials_dir() -> Path:
 
 def _google_settings() -> Settings:
     class ProjectRootSettings(Settings):
+        """Settings shape pinned to the repository's ``env/.env`` file."""
+
         model_config = SettingsConfigDict(
             env_file=PROJECT_ROOT / "env" / ".env",
             env_file_encoding="utf-8",
@@ -239,14 +265,32 @@ def _parse_kind(raw: str) -> AuthProviderKind:
         kind = AuthProviderKind(raw)
     except ValueError as exc:
         valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(f"unknown provider {raw!r}; valid values: {valid}") from exc
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"proveedor desconocido {raw!r}; valores válidos: {valid}",
+                    f"unknown provider {raw!r}; valid values: {valid}",
+                    f"proveïdor desconegut {raw!r}; valors vàlids: {valid}",
+                    f"ismeretlen szolgaltato {raw!r}; ervenyes ertekek: {valid}",
+                )
+            )
+        ) from exc
     if kind not in _registry.iter_kinds():
         valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(f"unsupported provider {raw!r}; valid values: {valid}")
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"proveedor no soportado {raw!r}; valores válidos: {valid}",
+                    f"unsupported provider {raw!r}; valid values: {valid}",
+                    f"proveïdor no admès {raw!r}; valors vàlids: {valid}",
+                    f"nem tamogatott szolgaltato {raw!r}; ervenyes ertekek: {valid}",
+                )
+            )
+        )
     return kind
 
 
-@app.command("init", help="Guide Kent through the supported Google authentication paths.")
+@app.command("init", help="Guide the operator through the supported Google authentication paths.")
 def init(
     path: GoogleAuthPath | None = typer.Option(
         None,
@@ -293,7 +337,18 @@ def init(
     if selected_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         if json_path is not None:
             if not json_path.exists():
-                console.print(f"[red]Desktop OAuth client JSON does not exist: {json_path}[/]")
+                console.print(
+                    "[red]"
+                    + tr(
+                        t(
+                            f"el JSON del cliente OAuth Desktop no existe: {json_path}",
+                            f"Desktop OAuth client JSON does not exist: {json_path}",
+                            f"el JSON del client OAuth Desktop no existeix: {json_path}",
+                            f"a Desktop OAuth kliens JSON nem létezik: {json_path}",
+                        )
+                    )
+                    + "[/]"
+                )
                 raise typer.Exit(code=1)
             stable_path = _copy_oauth_client_json(json_path)
             _print_step(
@@ -406,11 +461,7 @@ def init(
                 source="No external file is needed for this step.",
                 browser="No browser opens during MCP cache preparation.",
                 success=f"{_mcp_credentials_dir()} now exists.",
-                continuation=(
-                    "Launch the Google Workspace MCP server once to finish MCP "
-                    "credential preparation, or run just gcloud-auth if you "
-                    "still need ADC-backed wrappers."
-                ),
+                continuation=("Launch the Google Workspace MCP server once to finish MCP credential preparation."),
             )
 
         _print_step(
@@ -420,12 +471,11 @@ def init(
                 "Confirm which remaining step is on the path from local auth to verified CLI/bootstrap readiness."
             ),
             action=(
-                "If you rely on the legacy ADC wrapper chain, run just gcloud-auth. "
                 "If you need MCP access, launch the Google Workspace MCP server once. "
                 "Then verify the current state with aeat doctor."
             ),
-            source="This decision depends on whether your workflow still needs the ADC-backed wrapper path.",
-            browser="just gcloud-auth opens one or two browser-managed gcloud login flows. aeat doctor does not.",
+            source="This decision depends on whether your workflow needs MCP credential preparation.",
+            browser="Launching the MCP server may open a browser-managed OAuth flow. aeat doctor does not.",
             success=(
                 "Desktop OAuth client material is present, the CLI token is usable, "
                 "and the MCP cache directory is prepared for first launch."
@@ -435,7 +485,18 @@ def init(
     else:
         if service_account_json is not None:
             if not service_account_json.exists():
-                console.print(f"[red]Service-account key does not exist: {service_account_json}[/]")
+                console.print(
+                    "[red]"
+                    + tr(
+                        t(
+                            f"la clave de cuenta de servicio no existe: {service_account_json}",
+                            f"Service-account key does not exist: {service_account_json}",
+                            f"la clau del compte de servei no existeix: {service_account_json}",
+                            f"a szolgáltatásfiók kulcs nem létezik: {service_account_json}",
+                        )
+                    )
+                    + "[/]"
+                )
                 raise typer.Exit(code=1)
             stable_path = _copy_service_account_json(service_account_json)
             _print_step(
@@ -477,7 +538,7 @@ def init(
         _print_step(
             console,
             "Service-account automation status",
-            purpose="Confirm the headless path is selected and point Kent to the final readiness check.",
+            purpose="Confirm the headless path is selected and point the operator to the final readiness check.",
             action="Run aeat doctor to verify the active path, API readiness, and any inactive-path drift.",
             source="The service-account key path is already stored in env/.env.",
             browser="No browser flow should be required on this path.",
@@ -509,8 +570,8 @@ def list_providers(
         help="Emit JSON instead of a pretty table.",
     ),
 ) -> None:
-    """Kent-facing overview of every supported auth provider in the registry."""
-    del show_all  # reserved for future use; see ADR
+    """Operator-facing overview of every supported auth provider in the registry."""
+    del show_all  # reserved for future use
     settings = _load_settings()
 
     rows = []
@@ -573,7 +634,7 @@ async def _do_login(settings: Settings, kind: AuthProviderKind) -> AeatSession:
     (identity, timestamps, storage-state path, cookie-hash) is a plain
     value already persisted to disk at this point. A future provider
     whose ``AeatSession`` grows a live in-memory handle (e.g. an open
-    httpx client) MUST restructure this helper before that lands.
+    httpx client) MUST extend this helper to keep the handle alive.
     """
     provider = _registry.build_provider(kind, settings)
     try:
@@ -586,7 +647,16 @@ def _resolve_env_file(settings: Settings) -> Path:
     """Return the env file Settings is bound to (``env/.env`` by default)."""
     env_file = settings.model_config.get("env_file")
     if env_file is None:
-        raise typer.BadParameter("Settings has no `env_file` configured; cannot write provider configuration.")
+        raise typer.BadParameter(
+            tr(
+                t(
+                    "Settings no tiene `env_file` configurado; no se puede escribir la configuración del proveedor.",
+                    "Settings has no `env_file` configured; cannot write provider configuration.",
+                    "Settings no té `env_file` configurat; no es pot escriure la configuració del proveïdor.",
+                    "A Settings nem rendelkezik `env_file` beállítással; nem írható ki a szolgáltató konfigurációja.",
+                )
+            )
+        )
     if isinstance(env_file, Path):
         return env_file
     if isinstance(env_file, str):
@@ -600,8 +670,18 @@ def _resolve_env_file(settings: Settings) -> Path:
             if isinstance(candidate, str):
                 return Path(candidate)
     raise typer.BadParameter(
-        f"Settings.env_file has an unsupported shape ({type(env_file).__name__}); "
-        "cannot determine where to persist provider configuration."
+        tr(
+            t(
+                f"Settings.env_file tiene una forma no soportada ({type(env_file).__name__}); "
+                "no se puede determinar dónde persistir la configuración del proveedor.",
+                f"Settings.env_file has an unsupported shape ({type(env_file).__name__}); "
+                "cannot determine where to persist provider configuration.",
+                f"Settings.env_file té una forma no admesa ({type(env_file).__name__}); "
+                "no es pot determinar on persistir la configuració del proveïdor.",
+                f"A Settings.env_file alakja nem támogatott ({type(env_file).__name__}); "
+                "nem állapítható meg, hová mentsük a szolgáltató konfigurációját.",
+            )
+        )
     )
 
 
@@ -683,8 +763,18 @@ def configure(
     kind = _parse_kind(provider)
     if kind is not AuthProviderKind.CLAVE_MOVIL:
         raise typer.BadParameter(
-            f"`aeat auth configure --provider {provider}` is not supported yet. "
-            "Run `aeat setup` for the certificate provider."
+            tr(
+                t(
+                    f"`aeat auth configure --provider {provider}` aún no es compatible. "
+                    "Ejecuta `aeat setup` para el proveedor de certificado.",
+                    f"`aeat auth configure --provider {provider}` is not supported yet. "
+                    "Run `aeat setup` for the certificate provider.",
+                    f"`aeat auth configure --provider {provider}` encara no s'admet. "
+                    "Executa `aeat setup` per al proveïdor de certificat.",
+                    f"`aeat auth configure --provider {provider}` meg nem tamogatott. "
+                    "Futtasd: `aeat setup` a tanusitvany szolgaltatohoz.",
+                )
+            )
         )
 
     settings = _load_settings()
@@ -692,16 +782,54 @@ def configure(
 
     if dni_nie is None and not non_interactive:
         _CONSOLE.print(
-            "\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\n"
-            "Every login sends a push notification to the Cl@ve app on your "
-            "phone; you tap 'Approve' to sign in. This step only records the "
-            "details AEAT needs to trigger that push."
+            tr(
+                t(
+                    "\nConfigura el inicio de sesión Cl@ve Móvil para la Sede Electrónica de la AEAT.\n"
+                    "Cada inicio envía una notificación push a la app Cl@ve en tu móvil; "
+                    "tocas 'Aprobar' para autenticarte. Este paso solo guarda los datos que "
+                    "la AEAT necesita para activar ese push.",
+                    "\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\n"
+                    "Every login sends a push notification to the Cl@ve app on your "
+                    "phone; you tap 'Approve' to sign in. This step only records the "
+                    "details AEAT needs to trigger that push.",
+                    "\nConfigura l'inici de sessió Cl@ve Móvil per a la Seu Electrònica de l'AEAT.\n"
+                    "Cada inici envia una notificació push a l'aplicació Cl@ve al teu mòbil; "
+                    "toques 'Aprovar' per autenticar-te. Aquest pas només desa les dades que "
+                    "l'AEAT necessita per activar aquest push.",
+                    "\nKonfiguráld a Cl@ve Móvil bejelentkezést az AEAT Sede Electrónica-hoz.\n"
+                    "Minden bejelentkezés push értesítést küld a Cl@ve alkalmazásba a telefonodra; "
+                    "az 'Aprovar' gombra koppintasz a hitelesítéshez. Ez a lépés csak az adatokat "
+                    "rögzíti, amelyek az AEAT-nak szükségesek a push aktiválásához.",
+                )
+            )
         )
 
     if dni_nie is None:
         if non_interactive:
-            raise typer.BadParameter("--dni-nie is required with --non-interactive")
-        dni_nie = typer.prompt("Enter your DNI or NIE").strip().upper()
+            raise typer.BadParameter(
+                tr(
+                    t(
+                        "--dni-nie es obligatorio con --non-interactive",
+                        "--dni-nie is required with --non-interactive",
+                        "--dni-nie és obligatori amb --non-interactive",
+                        "--dni-nie kötelező a --non-interactive mellett",
+                    )
+                )
+            )
+        dni_nie = (
+            typer.prompt(
+                tr(
+                    t(
+                        "Introduce tu DNI o NIE",
+                        "Enter your DNI or NIE",
+                        "Introdueix el teu DNI o NIE",
+                        "Add meg a DNI vagy NIE számodat",
+                    )
+                )
+            )
+            .strip()
+            .upper()
+        )
     else:
         dni_nie = dni_nie.strip().upper()
 
@@ -715,12 +843,48 @@ def configure(
     if resolved_prefer_non_qr:
         if identity_kind == "DNI" and not dni_fecha:
             if non_interactive:
-                raise typer.BadParameter("--dni-fecha is required with --prefer-non-qr for a DNI identity")
-            dni_fecha = typer.prompt("Enter the validity date printed on your DNI (YYYY-MM-DD)").strip()
+                raise typer.BadParameter(
+                    tr(
+                        t(
+                            "--dni-fecha es obligatorio con --prefer-non-qr para una identidad DNI",
+                            "--dni-fecha is required with --prefer-non-qr for a DNI identity",
+                            "--dni-fecha és obligatori amb --prefer-non-qr per a una identitat DNI",
+                            "--dni-fecha kötelező a --prefer-non-qr mellett DNI azonossághoz",
+                        )
+                    )
+                )
+            dni_fecha = typer.prompt(
+                tr(
+                    t(
+                        "Introduce la fecha de validez impresa en tu DNI (YYYY-MM-DD)",
+                        "Enter the validity date printed on your DNI (YYYY-MM-DD)",
+                        "Introdueix la data de validesa impresa al teu DNI (YYYY-MM-DD)",
+                        "Add meg a DNI-n szereplő érvényességi dátumot (YYYY-MM-DD)",
+                    )
+                )
+            ).strip()
         if identity_kind == "NIE" and not nie_soporte:
             if non_interactive:
-                raise typer.BadParameter("--nie-soporte is required with --prefer-non-qr for a NIE identity")
-            nie_soporte = typer.prompt("Enter the support number printed on your NIE document").strip()
+                raise typer.BadParameter(
+                    tr(
+                        t(
+                            "--nie-soporte es obligatorio con --prefer-non-qr para una identidad NIE",
+                            "--nie-soporte is required with --prefer-non-qr for a NIE identity",
+                            "--nie-soporte és obligatori amb --prefer-non-qr per a una identitat NIE",
+                            "--nie-soporte kötelező a --prefer-non-qr mellett NIE azonossághoz",
+                        )
+                    )
+                )
+            nie_soporte = typer.prompt(
+                tr(
+                    t(
+                        "Introduce el número de soporte impreso en tu documento NIE",
+                        "Enter the support number printed on your NIE document",
+                        "Introdueix el número de suport imprès al teu document NIE",
+                        "Add meg a NIE dokumentumon szereplő támogató számot",
+                    )
+                )
+            ).strip()
 
     from ....core.env_io import write_env_vars
 
@@ -738,25 +902,91 @@ def configure(
     write_env_vars(env_file, mapping)
     # The CLI never echoes the written values (DNI/NIE + contraste are
     # PII) and no longer surfaces the underlying env-var names either —
-    # Kent thinks in human terms ("my NIE", "my support number"), not in
-    # UPPER_SNAKE_CASE environment variables. A single prose sentence
-    # confirms what the CLI saved and where.
+    # the operator thinks in human terms ("my NIE", "my support number"),
+    # not in UPPER_SNAKE_CASE environment variables. A single prose
+    # sentence confirms what the CLI saved and where.
     human_terms: list[str] = []
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_NIE"):
-        human_terms.append("your DNI/NIE")
+        human_terms.append(tr(t("tu DNI/NIE", "your DNI/NIE", "el teu DNI/NIE", "a DNI/NIE számod")))
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_FECHA"):
-        human_terms.append("the DNI validity date")
+        human_terms.append(
+            tr(
+                t(
+                    "la fecha de validez del DNI",
+                    "the DNI validity date",
+                    "la data de validesa del DNI",
+                    "a DNI érvényességi datuma",
+                )
+            )
+        )
     if mapping.get("AEAT_CLAVE_MOVIL_NIE_SOPORTE"):
-        human_terms.append("the NIE support number")
+        human_terms.append(
+            tr(
+                t(
+                    "el número de soporte del NIE",
+                    "the NIE support number",
+                    "el número de suport del NIE",
+                    "a NIE támogató szám",
+                )
+            )
+        )
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "true":
-        human_terms.append("the direct-push preference")
+        human_terms.append(
+            tr(
+                t(
+                    "la preferencia push directo",
+                    "the direct-push preference",
+                    "la preferència de push directe",
+                    "a közvetlen push beállítás",
+                )
+            )
+        )
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "false":
-        human_terms.append("the QR-code preference")
+        human_terms.append(
+            tr(
+                t(
+                    "la preferencia código QR",
+                    "the QR-code preference",
+                    "la preferència de codi QR",
+                    "a QR kód beállítás",
+                )
+            )
+        )
     if mapping.get("AEAT_AUTH_PROVIDER"):
-        human_terms.append("Cl@ve Móvil as the default provider")
-    human_list = human_terms[0] if len(human_terms) == 1 else ", ".join(human_terms[:-1]) + ", and " + human_terms[-1]
+        human_terms.append(
+            tr(
+                t(
+                    "Cl@ve Móvil como proveedor por defecto",
+                    "Cl@ve Móvil as the default provider",
+                    "Cl@ve Móvil com a proveïdor per defecte",
+                    "Cl@ve Móvil mint alapertelmezett szolgaltato",
+                )
+            )
+        )
+    if len(human_terms) == 1:
+        human_list = human_terms[0]
+    else:
+        and_word = tr(t(" y ", ", and ", " i ", " es "))
+        human_list = ", ".join(human_terms[:-1]) + and_word + human_terms[-1]
     _CONSOLE.print(
-        f"[green]Saved {human_list} to {env_file}.[/green]\nRun `aeat auth login` to sign in with Cl@ve Móvil."
+        "[green]"
+        + tr(
+            t(
+                f"Guardado {human_list} en {env_file}.",
+                f"Saved {human_list} to {env_file}.",
+                f"Desat {human_list} a {env_file}.",
+                f"Mentve: {human_list} ide: {env_file}.",
+            )
+        )
+        + "[/green]\n"
+        + tr(
+            t(
+                "Ejecuta `aeat auth login` para iniciar sesión con Cl@ve Móvil.",
+                "Run `aeat auth login` to sign in with Cl@ve Móvil.",
+                "Executa `aeat auth login` per iniciar sessió amb Cl@ve Móvil.",
+                "Futtasd: `aeat auth login` a Cl@ve Móvil bejelentkezeshez.",
+            )
+        )
     )
 
 
@@ -784,13 +1014,17 @@ def login(
     kind = _resolve_kind(settings, _parse_kind(provider) if provider else None)
 
     if non_interactive and kind in _registry.INTERACTIVE_KINDS:
-        if json_output or json_output_requested():
-            raise CliRefusedBoundaryError(
-                f"provider {kind.value} requires an interactive approval step; cannot run with --non-interactive"
+        msg = tr(
+            t(
+                f"el proveedor {kind.value} requiere un paso de aprobación interactivo; no puede ejecutarse con --non-interactive",
+                f"provider {kind.value} requires an interactive approval step; cannot run with --non-interactive",
+                f"el proveïdor {kind.value} requereix un pas d'aprovació interactiu; no es pot executar amb --non-interactive",
+                f"a {kind.value} szolgaltato interaktiv jovahagyast igenyel; nem futtathato --non-interactive mellett",
             )
-        _CONSOLE.print(
-            f"[red]provider {kind.value} requires an interactive approval step; cannot run with --non-interactive[/red]"
         )
+        if json_output or json_output_requested():
+            raise CliRefusedBoundaryError(msg)
+        _CONSOLE.print(f"[red]{msg}[/red]")
         raise typer.Exit(code=2)
 
     try:
@@ -803,13 +1037,24 @@ def login(
     except Exception as exc:
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print(f"[red]AEAT authentication failed: {exc}[/red]")
+        _CONSOLE.print(
+            "[red]"
+            + tr(
+                t(
+                    f"falló la autenticación AEAT: {exc}",
+                    f"AEAT authentication failed: {exc}",
+                    f"l'autenticació AEAT ha fallat: {exc}",
+                    f"AEAT hitelesites sikertelen: {exc}",
+                )
+            )
+            + "[/red]"
+        )
         raise typer.Exit(code=1) from exc
 
     if json_output or json_output_requested():
         # The storage_state_path is intentionally omitted from the JSON
-        # surface — it is an internal file location that Kent has no
-        # reason to consume from a login command. Downstream scripts
+        # surface — it is an internal file location that the operator has
+        # no reason to consume from a login command. Downstream scripts
         # that need the path should resolve it via
         # ``aeat.entrypoints.cli.auth._paths.storage_state_paths(settings, kind)``
         # rather than scraping login's output.
@@ -827,15 +1072,41 @@ def login(
     label = _registry.get_entry(session.provider_kind).label
     if remaining_seconds <= 0:
         _CONSOLE.print(
-            f"[yellow]Signed in as {session.identity_nif} via {label}, but the "
-            "session is already past its idle deadline. AEAT may refuse subsequent "
-            "requests; run `aeat auth login` again if reads fail.[/yellow]"
+            "[yellow]"
+            + tr(
+                t(
+                    f"Sesión iniciada como {session.identity_nif} vía {label}, pero la "
+                    "sesión ya superó su límite de inactividad. La AEAT puede rechazar "
+                    "peticiones posteriores; vuelve a ejecutar `aeat auth login` si las lecturas fallan.",
+                    f"Signed in as {session.identity_nif} via {label}, but the "
+                    "session is already past its idle deadline. AEAT may refuse subsequent "
+                    "requests; run `aeat auth login` again if reads fail.",
+                    f"Sessió iniciada com a {session.identity_nif} via {label}, però la "
+                    "sessió ja ha superat el límit d'inactivitat. L'AEAT pot rebutjar "
+                    "peticions posteriors; torna a executar `aeat auth login` si les lectures fallen.",
+                    f"Bejelentkezve mint {session.identity_nif} ({label}), de a "
+                    "munkamenet mar tullepte a tetlensegi hatarat. Az AEAT elutasithatja a "
+                    "kovetkezo kereseket; futtasd ujra: `aeat auth login`, ha az olvasasok hibasak.",
+                )
+            )
+            + "[/yellow]"
         )
     else:
         remaining_minutes = max(1, remaining_seconds // 60)
         _CONSOLE.print(
-            f"[green]Signed in as {session.identity_nif} via {label}. "
-            f"Session expires in about {remaining_minutes}m.[/green]"
+            "[green]"
+            + tr(
+                t(
+                    f"Sesión iniciada como {session.identity_nif} vía {label}. "
+                    f"La sesión expira en aproximadamente {remaining_minutes}m.",
+                    f"Signed in as {session.identity_nif} via {label}. Session expires in about {remaining_minutes}m.",
+                    f"Sessió iniciada com a {session.identity_nif} via {label}. "
+                    f"La sessió expira en aproximadament {remaining_minutes}m.",
+                    f"Bejelentkezve mint {session.identity_nif} ({label}). "
+                    f"A munkamenet kb. {remaining_minutes} perc mulva lejar.",
+                )
+            )
+            + "[/green]"
         )
 
 
@@ -945,7 +1216,18 @@ def whoami(
     except Exception as exc:
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print(f"[red]AEAT probe failed: {exc}[/red]")
+        _CONSOLE.print(
+            "[red]"
+            + tr(
+                t(
+                    f"falló la sonda AEAT: {exc}",
+                    f"AEAT probe failed: {exc}",
+                    f"la sonda AEAT ha fallat: {exc}",
+                    f"AEAT lekerdezes sikertelen: {exc}",
+                )
+            )
+            + "[/red]"
+        )
         raise typer.Exit(code=1) from exc
 
     if json_output or json_output_requested():
@@ -972,11 +1254,29 @@ def whoami(
     label = _registry.get_entry(refreshed.provider_kind).label
     if assertion.is_valid:
         _CONSOLE.print(
-            f"[green]Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the cached session.[/green]"
+            "[green]"
+            + tr(
+                t(
+                    f"Sesión iniciada como {refreshed.identity_nif} vía {label}. La AEAT aceptó la sesión guardada.",
+                    f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the cached session.",
+                    f"Sessió iniciada com a {refreshed.identity_nif} via {label}. L'AEAT ha acceptat la sessió desada.",
+                    f"Bejelentkezve mint {refreshed.identity_nif} ({label}). Az AEAT elfogadta a tarolt munkamenetet.",
+                )
+            )
+            + "[/green]"
         )
     else:
         _CONSOLE.print(
-            f"[yellow]The cached {label} session is stale or revoked. Run `aeat auth login` to sign in again.[/yellow]"
+            "[yellow]"
+            + tr(
+                t(
+                    f"La sesión guardada de {label} está caducada o revocada. Ejecuta `aeat auth login` para iniciar sesión de nuevo.",
+                    f"The cached {label} session is stale or revoked. Run `aeat auth login` to sign in again.",
+                    f"La sessió desada de {label} està caducada o revocada. Executa `aeat auth login` per iniciar sessió de nou.",
+                    f"A tarolt {label} munkamenet lejart vagy visszavonva. Futtasd: `aeat auth login` az ujboli bejelentkezeshez.",
+                )
+            )
+            + "[/yellow]"
         )
         raise typer.Exit(code=1)
 
@@ -1003,8 +1303,17 @@ def logout(
     """Delete the storage-state + metadata pair for the selected provider(s)."""
     if all_providers and provider is not None:
         raise typer.BadParameter(
-            "Pass either --provider or --all, not both: --all clears every "
-            "provider's cached session, so --provider would be ignored."
+            tr(
+                t(
+                    "Pasa --provider o --all, no ambos: --all limpia la sesión guardada "
+                    "de cada proveedor, por lo que --provider sería ignorado.",
+                    "Pass either --provider or --all, not both: --all clears every "
+                    "provider's cached session, so --provider would be ignored.",
+                    "Passa --provider o --all, no ambdós: --all neteja la sessió desada "
+                    "de cada proveïdor, així que --provider seria ignorat.",
+                    "Add at: --provider VAGY --all, ne mindkettot: az --all minden szolgáltató tárolt munkamenetet torli, igy a --provider figyelmen kivul maradna.",
+                )
+            )
         )
     settings = _load_settings()
 
@@ -1033,8 +1342,8 @@ def logout(
                 removed.extend(removed_for_kind)
     else:
         # No --provider → clear whichever provider currently has a session
-        # on disk. This matches Kent's intuition: `aeat auth logout`
-        # clears his active session regardless of which provider produced it.
+        # on disk. This matches the operator's intuition: `aeat auth logout`
+        # clears the active session regardless of which provider produced it.
         try:
             persisted = _session.load(settings)
         except _session.CorruptAuthSessionError:
@@ -1056,15 +1365,42 @@ def logout(
         return
 
     if not removed:
-        _CONSOLE.print("No active session found. Nothing to clear.")
+        _CONSOLE.print(
+            tr(
+                t(
+                    "No se encontró sesión activa. Nada que limpiar.",
+                    "No active session found. Nothing to clear.",
+                    "No s'ha trobat sessió activa. Res a netejar.",
+                    "Nincs aktív munkamenet. Nincs mit törölni.",
+                )
+            )
+        )
         return
 
     labels = [_registry.get_entry(k).label for k in cleared_kinds]
     if len(labels) == 1:
-        _CONSOLE.print(f"Signed out of {labels[0]}.")
+        _CONSOLE.print(
+            tr(
+                t(
+                    f"Sesión cerrada en {labels[0]}.",
+                    f"Signed out of {labels[0]}.",
+                    f"Sessió tancada a {labels[0]}.",
+                    f"Kijelentkezve: {labels[0]}.",
+                )
+            )
+        )
     else:
         joined = ", ".join(labels)
-        _CONSOLE.print(f"Signed out of {joined}.")
+        _CONSOLE.print(
+            tr(
+                t(
+                    f"Sesión cerrada en {joined}.",
+                    f"Signed out of {joined}.",
+                    f"Sessió tancada a {joined}.",
+                    f"Kijelentkezve: {joined}.",
+                )
+            )
+        )
 
 
 __all__ = ["app"]

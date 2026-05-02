@@ -19,7 +19,7 @@ _CERT_RENEWAL_URL = "https://www.sede.fnmt.gob.es/certificados/persona-fisica/re
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ....adapters.outbound.aeat.auth import AuthProviderDescription, AuthProviderKind
+    from ....application.auth import AuthProviderDescription, AuthProviderKind
     from ....core.config import Settings
     from ._registry import ProviderRegistryEntry
     from ._session import PersistedAuthSession
@@ -49,23 +49,24 @@ def _format_expires(description: AuthProviderDescription) -> str:
 
 
 def _format_health(description: AuthProviderDescription, entry: ProviderRegistryEntry) -> str:
-    """Render the HEALTH column as Kent-readable prose.
+    """Render the HEALTH column as operator-readable prose.
 
     Implemented providers either supply a prose ``health_summary``
     (Cl@ve Móvil emits "ready — requires push approval on the Cl@ve
     app") that is passed through, or the cert-provider's legacy
     ``"{severity}:{days_until_expiry}"`` sentinel token (e.g.
-    ``"CRITICAL:3"``). The sentinel is translated into Kent-readable
+    ``"CRITICAL:3"``). The sentinel is translated into operator-readable
     copy here, with a renewal URL surfaced on every non-healthy
-    certificate severity so Kent always has a next step.
+    certificate severity so the operator always has a next step.
     """
     severity = (description.health_severity or "").upper()
     days = description.days_until_expiry
     summary = description.health_summary or ""
 
     # Cert provider encodes health as a "SEV:days" sentinel token in
-    # health_summary; strip it so we never echo it at Kent. Cl@ve
-    # providers emit prose summaries that are passed through untouched.
+    # health_summary; strip it so we never echo it at the operator.
+    # Cl@ve providers emit prose summaries that are passed through
+    # untouched.
     if summary and ":" in summary and summary.split(":", 1)[0].upper() == severity:
         summary = ""
 
@@ -133,7 +134,7 @@ def _provider_label(kind: AuthProviderKind) -> str:
 
 
 def render_status_line(session: PersistedAuthSession, now: datetime | None = None) -> str:
-    """Render Kent's one-line human status string."""
+    """Render the operator's one-line human status string."""
     current = now or datetime.now(UTC)
     label = _provider_label(session.provider_kind)
     if session.is_expired(current):

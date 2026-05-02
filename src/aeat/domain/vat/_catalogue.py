@@ -1,25 +1,26 @@
 """Hand-curated 2025 VAT regulation catalogue.
 
-One :class:`VATRegulation` per :class:`VATCategory`, each backed by
-at least two :class:`Citation` records that quote (or faithfully
-paraphrase) articles of **Ley 37/1992** (BOE-A-1992-28740). The
-catalogue is the in-memory fallback used by
-:func:`load_vat_rules_from_manual` when no on-disk year-keyed
+One :class:`aeat.domain.vat.VATRegulation` per
+:class:`aeat.domain.vat.VATCategory`, each backed by at least two
+:class:`aeat.domain.vat.VatCitation` records that quote (or faithfully
+paraphrase) articles of **Ley 37/1992** (BOE-A-1992-28740). The catalogue is
+the in-memory fallback used by
+:func:`aeat.domain.vat.load_vat_rules_from_manual` when no on-disk year-keyed
 catalogue is present.
 
-The quoted Spanish text is a faithful paraphrase of the operative
-statutory language where a verbatim extract would require copying
-multi-paragraph blocks from the BOE. Auditability relies on the
-combination of :attr:`Citation.source`, :attr:`Citation.article` and
-:attr:`Citation.quoted_text_es` — the quoted text is sufficient to
-re-locate the article on boe.es and confirm the rule.
+The quoted Spanish text is a faithful paraphrase of the operative statutory
+language where a verbatim extract would require copying multi-paragraph
+blocks from the BOE. Auditability relies on the combination of
+:attr:`aeat.domain.vat.VatCitation.source`,
+:attr:`aeat.domain.vat.VatCitation.article` and
+:attr:`aeat.domain.vat.VatCitation.quoted_text_es` — the quoted text is
+sufficient to re-locate the article on boe.es and confirm the rule.
 
-Per the Modelo 303 ADR (#183) this module also exposes a
-period-keyed mapping :data:`VAT_CATALOGUES_BY_YEAR` and a
-:func:`resolve_catalogue` helper. the 2025 catalogue
-only; non-2025 years fall back to the 2025 entry with a debug log
-line. The mapping infrastructure is in place so future waves can
-slot in year-specific catalogues without touching call sites.
+This module also exposes the period-keyed mapping
+:data:`VAT_CATALOGUES_BY_YEAR` and the :func:`resolve_catalogue` helper.
+Currently only the 2025 catalogue is populated; other years fall back to it
+with a debug log line. The mapping infrastructure is in place so year-specific
+catalogues can be slotted in without touching call sites.
 """
 
 from __future__ import annotations
@@ -30,10 +31,10 @@ from types import MappingProxyType
 
 from ...core.logging import get_logger
 from ._schema import (
-    Citation,
-    CitationSource,
     VATCatalogue,
     VATCategory,
+    VatCitation,
+    VatCitationSource,
     VATRegulation,
 )
 
@@ -47,10 +48,24 @@ def _cite(
     article: str,
     quoted_text_es: str,
     *,
-    source: CitationSource = CitationSource.LEY_37_1992,
-) -> Citation:
-    """Shorthand builder for a 2026-04-13 retrieval of ``article``."""
-    return Citation(
+    source: VatCitationSource = VatCitationSource.LEY_37_1992,
+) -> VatCitation:
+    """Shorthand builder for a :class:`VatCitation` against ``article``.
+
+    Stamps every record with the module's :data:`_RETRIEVAL` date so the
+    audit trail is consistent across the catalogue.
+
+    Args:
+        article: Free-form article reference (e.g. ``Art. 91.Uno``).
+        quoted_text_es: Spanish quote or faithful paraphrase.
+        source: Legal source enum value; defaults to
+            :attr:`VatCitationSource.LEY_37_1992`.
+
+    Returns:
+        A frozen :class:`VatCitation` ready to embed in a
+        :class:`VATRegulation`.
+    """
+    return VatCitation(
         source=source,
         article=article,
         url=None,
@@ -1141,12 +1156,13 @@ _REGULATIONS: tuple[VATRegulation, ...] = (
 
 
 def _build_catalogue() -> VATCatalogue:
-    """Build the module-level :data:`VAT_CATALOGUE_2025` instance."""
+    """Assemble the module-level :data:`VAT_CATALOGUE_2025` instance."""
     return VATCatalogue(regulations={regulation.category: regulation for regulation in _REGULATIONS})
 
 
 VAT_CATALOGUE_2025: VATCatalogue = _build_catalogue()
-"""Hand-curated 2025 VAT catalogue covering every :class:`VATCategory`."""
+"""Hand-curated 2025 :class:`aeat.domain.vat.VATCatalogue` covering every
+:class:`aeat.domain.vat.VATCategory` member."""
 
 
 VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = MappingProxyType(
@@ -1154,28 +1170,28 @@ VAT_CATALOGUES_BY_YEAR: Mapping[int, VATCatalogue] = MappingProxyType(
         2025: VAT_CATALOGUE_2025,
     }
 )
-"""Year-keyed view over the available :class:`VATCatalogue` instances.
+"""Year-keyed view over the available :class:`aeat.domain.vat.VATCatalogue`
+instances.
 
- (#183) ships only the 2025 entry. Future waves slot in year-
-specific catalogues (e.g., a 2026 entry once Ley 7/2024-derived
-amendments require divergent regulation text) without touching
-call sites — :func:`resolve_catalogue` performs the lookup with a
-documented fallback.
+Currently the mapping carries only the 2025 entry. Year-specific catalogues
+(for instance a 2026 entry once Ley 7/2024-derived amendments require
+divergent regulation text) can be added without touching call sites —
+:func:`resolve_catalogue` performs the lookup with a documented fallback.
 """
 
 
 def resolve_catalogue(*, on: date) -> VATCatalogue:
-    """Return the :class:`VATCatalogue` effective on ``on``.
+    """Return the :class:`aeat.domain.vat.VATCatalogue` effective on ``on``.
 
-    Looks up :data:`VAT_CATALOGUES_BY_YEAR` by ``on.year``. Falls
-    back to the closest available year (currently 2025) and emits
-    a ``debug`` log line when the exact year is not yet populated.
+    Looks up :data:`VAT_CATALOGUES_BY_YEAR` by ``on.year``. Falls back to the
+    closest available year (currently 2025) and emits a ``debug`` log line
+    when the exact year is not yet populated.
 
     Args:
         on: The transaction date for which the catalogue is needed.
 
     Returns:
-        The :class:`VATCatalogue` covering ``on.year`` or the
+        The :class:`aeat.domain.vat.VATCatalogue` covering ``on.year`` or the
         fallback 2025 catalogue.
     """
     catalogue = VAT_CATALOGUES_BY_YEAR.get(on.year)

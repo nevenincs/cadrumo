@@ -3,18 +3,17 @@
 .. warning::
 
    This module is a proof-of-concept skeleton, NOT a production schema.
-   audit (stream verification against DR303e24.xlsx /
-   DR303e25.xlsx) confirmed that stream-D research offsets were
-   off-by-one on 3 of 5 spot-checks and miscategorised casilla 01's
-   semantics. A full schema requires xlsx-ingestion tooling (wave
-   86+) to avoid hand-transcription errors across ~2600 DP30301
-   fields alone.
+   Verification against DR303e24.xlsx / DR303e25.xlsx revealed that
+   the prior research offsets were off-by-one on 3 of 5 spot-checks
+   and miscategorised casilla 01's semantics. A full schema requires
+   xlsx-ingestion tooling to avoid hand-transcription errors across
+   the ~2600 DP30301 fields alone.
 
    This skeleton exists to exercise the multi-segment
    envelope architecture + inline-sign encoder END-TO-END,
    proving the primitives work for Modelo 303's shape without
    committing to specific casilla offsets. It is NOT wired into the
-   CLI schema registry (see ``src/aeat/cli/submission/export.py``).
+   CLI schema registry (see ``src/aeat/entrypoints/cli/submission/export.py``).
 
 ## Record shape (verified from DR303e25.xlsx)
 
@@ -23,7 +22,6 @@
   (identification + devengado) + ``DP30302`` (simplificado) +
   ``DP30303`` (resultado + rectificativa) + ``DP30304`` (annual
   exonerados) + ``DP30305`` (prorratas) + ``DP303DID`` (trailer).
-  Stream-D earlier claimed 5; correct is 7.
 - Encoding: ISO-8859-1 (Latin-1), NOT CP1252 and NOT ISO-8859-15.
   Confirmed via AEAT portal error-message docs explicitly
   specifying Latin-1.
@@ -69,7 +67,7 @@ ENCODING: FicheroBoeEncoding = "iso-8859-1"
 
 # DP30300 envelope header — minimal: just enough to carry the
 # ejercicio/período/NIF trio. Real envelope also has programa ED,
-# AUX block, closer tag — deferred to .
+# AUX block, and closer tag — deferred to the production schema.
 _DP30300_MINI = SegmentSpec(
     segment_id="DP30300_PREVIEW",
     specs=(

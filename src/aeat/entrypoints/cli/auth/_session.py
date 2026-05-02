@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ....adapters.outbound.aeat.auth import AuthProviderKind
+from ....application.auth import AuthProviderKind
 from ....core.errors import AeatError
 from ._paths import storage_state_paths
 
@@ -40,11 +40,9 @@ class PersistedAuthSession(BaseModel):
 
     provider_kind: AuthProviderKind = Field(
         description=(
-            "Provider that produced the session. Required — callers must "
-            "supply it explicitly (via the path-derived `kind_hint` in "
-            "`_parse_single`) so a sidecar missing the key is treated as "
-            "corrupt rather than silently attributed to the certificate "
-            "provider."
+            "Provider that produced the session. Required so a sidecar "
+            "missing the key is treated as corrupt rather than silently "
+            "attributed to a provider."
         ),
     )
     identity_nif: str = Field(min_length=1)
@@ -60,15 +58,14 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
     """Parse ``metadata_path`` into a :class:`PersistedAuthSession`.
 
     ``kind_hint`` is the provider kind implied by the path location
-    (cert sidecar vs Cl@ve sidecar) and is used as the provider_kind
-    fallback when the sidecar schema does not carry an explicit field.
+    and is validated against the sidecar's explicit ``provider_kind``.
     """
     try:
         raw = json.loads(metadata_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        # Kent does not need the forensic filesystem path — it only helps
-        # a developer. The path remains on the __cause__ chain for
-        # debug tooling.
+        # The operator does not need the forensic filesystem path — it
+        # only helps a developer. The path remains on the __cause__
+        # chain for debug tooling.
         raise CorruptAuthSessionError(
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
@@ -78,23 +75,20 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         )
 
-    payload = dict(raw)
-    # Cert sidecar writes `certificate_nif`; provider-agnostic loaders
-    # expect `identity_nif`. Shim both keys so the CLI works against
-    # every provider sidecar we know about today.
-    if "identity_nif" not in payload and "certificate_nif" in payload:
-        payload["identity_nif"] = payload["certificate_nif"]
-    payload.setdefault("provider_kind", kind_hint.value)
-
     try:
-        return PersistedAuthSession.model_validate(payload)
+        session = PersistedAuthSession.model_validate(raw)
     except ValidationError as exc:
         # Keep the original Pydantic error on the __cause__ chain for
         # debug tooling, but do not embed its multi-line field dump or
-        # the internal filesystem path in the Kent-facing message.
+        # the internal filesystem path in the operator-facing message.
         raise CorruptAuthSessionError(
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
+    if session.provider_kind is not kind_hint:
+        raise CorruptAuthSessionError(
+            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+        )
+    return session
 
 
 def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
@@ -102,9 +96,7 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
 
     When ``kind`` is given, the lookup targets that provider's sidecar
     only. When ``kind`` is ``None`` the loader walks every known
-    provider kind and returns the first session it finds, preferring
-    the certificate layout for backward compatibility with older
-    on-disk files.
+    provider kind and returns the first explicit session it finds.
     """
     if kind is not None:
         paths = storage_state_paths(settings, kind)
@@ -115,8 +107,6 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
     for candidate in (
         AuthProviderKind.CERTIFICATE,
         AuthProviderKind.CLAVE_MOVIL,
-        AuthProviderKind.CLAVE_PERMANENTE,
-        AuthProviderKind.CLAVE_PIN,
     ):
         paths = storage_state_paths(settings, candidate)
         if paths.metadata.exists():
@@ -137,8 +127,6 @@ def delete(settings: Settings, kind: AuthProviderKind | None = None) -> list[Pat
         else [
             AuthProviderKind.CERTIFICATE,
             AuthProviderKind.CLAVE_MOVIL,
-            AuthProviderKind.CLAVE_PERMANENTE,
-            AuthProviderKind.CLAVE_PIN,
         ]
     )
     for candidate_kind in kinds:

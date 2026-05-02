@@ -1,4 +1,11 @@
-"""Error hierarchy for the justificante parser (#44, #305)."""
+"""Error hierarchy for the justificante parser.
+
+Defines the typed exceptions raised by :mod:`aeat.domain.justificante`
+when a PDF filing receipt cannot be parsed, when no Código Seguro de
+Verificación is present, or when the live AEAT verification round-trip
+fails. Every class derives from :class:`PdfFilingImportError` so PDF
+filing import callers can catch the whole domain at once.
+"""
 
 from __future__ import annotations
 

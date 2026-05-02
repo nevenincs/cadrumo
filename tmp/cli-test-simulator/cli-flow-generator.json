@@ -1,0 +1,150 @@
+{
+  "name": "aeat-cli-flow-generator-v5",
+  "description": "Compiles scenario facts into granular AEAT CLI v5 command tapes.",
+  "status": "review-candidate-not-approved",
+  "rules": [
+    "Commands name operational tasks, not emotions.",
+    "Use --help, not bare help.",
+    "Use setup for prerequisites and app for tax work.",
+    "Use auth configure/login/status/whoami/logout.",
+    "Use schema-backed profile key commands.",
+    "Use singular app domains: overview, ledger, invoice, declaration.",
+    "Use ledger import PATH --provider PROVIDER, with --verify for import diagnostics.",
+    "Use --filter key=value for filtering.",
+    "Use --set column=value for record edits.",
+    "Use ledger edit --skip true|false for skipped rows.",
+    "Use normalized split shares that add to 1.0.",
+    "Use --amend --id JUSTIFICANTE_ID for amended declarations.",
+    "Do not generate user-facing session/workspace save-load commands."
+  ],
+  "removedCommands": [
+    "aeat setup account ...",
+    "aeat setup auth import ...",
+    "aeat app ledger import verify ...",
+    "aeat app ledger import gaps ...",
+    "aeat app ledger import duplicates ...",
+    "aeat app ledger import exclude ...",
+    "aeat app ledger import restore ...",
+    "aeat app ledger exclude ...",
+    "aeat app ledger restore ...",
+    "aeat app declaration amendment create ...",
+    "aeat app declaration verify --export PATH",
+    "--csv-code",
+    "--amendment",
+    "--needs-review",
+    "session/workspace save-load commands"
+  ],
+  "inputs": {
+    "profile": ["taxpayer", "activity", "bank", "setup_state", "auth_provider", "profile_keys"],
+    "scenario": ["as_of", "scope", "filing_history", "deadline_state"],
+    "ledger": ["imports", "original_files", "record_review", "mixed_payments", "personal_imports", "document_links"],
+    "invoice": ["issued", "received", "metadata", "matching", "retention_or_iva_category"],
+    "declaration": ["modelos", "manual_edits", "review_state"],
+    "recovery": ["amend_needed", "justificante_id", "export_expected"]
+  },
+  "phases": [
+    {
+      "id": "setup-auth",
+      "templates": [
+        "aeat setup auth status",
+        "aeat setup auth providers",
+        "aeat setup auth configure --provider {provider}",
+        "aeat setup auth login",
+        "aeat setup auth whoami"
+      ]
+    },
+    {
+      "id": "setup-profile",
+      "templates": [
+        "aeat setup profile list-keys",
+        "aeat setup profile create {profile_name}",
+        "aeat setup profile use {profile_name}",
+        "aeat setup profile set {key} {value}",
+        "aeat setup profile unset {key}",
+        "aeat setup profile validate"
+      ]
+    },
+    {
+      "id": "overview",
+      "templates": [
+        "aeat app overview --calendar --from {from_date} --to {to_date}",
+        "aeat app overview --period {period} --verbose"
+      ]
+    },
+    {
+      "id": "ledger-import",
+      "templates": [
+        "aeat app ledger import {path} --provider {provider} --dry-run",
+        "aeat app ledger import {path} --provider {provider} --verify --original {original_file}",
+        "aeat app ledger list --filter issue=gap --filter period={period}",
+        "aeat app ledger list --filter issue=duplicate --filter period={period}"
+      ]
+    },
+    {
+      "id": "ledger-review",
+      "templates": [
+        "aeat app ledger list --filter status=pending --filter period={period}",
+        "aeat app ledger show --id {row_id} --verbose",
+        "aeat app ledger edit --id {row_id} --set category={category} --set business.share={share} --reason {reason}",
+        "aeat app ledger edit --id {row_id} --skip true --reason {reason}",
+        "aeat app ledger edit --id {row_id} --skip false --reason {reason}",
+        "aeat app ledger split --id {row_id} --business {business_share} --personal {personal_share} --reason {reason}",
+        "aeat app ledger split --id {row_id} --clear --reason {reason}"
+      ]
+    },
+    {
+      "id": "invoice-review",
+      "templates": [
+        "aeat app invoice import {path} --kind issued --dry-run",
+        "aeat app invoice import {path} --kind received --dry-run",
+        "aeat app invoice list --filter status=pending --filter kind=received",
+        "aeat app invoice show --id {invoice_id} --verbose",
+        "aeat app invoice edit --id {invoice_id} --set base={base} --set iva.rate={iva_rate} --set iva.amount={iva_amount} --reason {reason}",
+        "aeat app invoice match --period {period}"
+      ]
+    },
+    {
+      "id": "declaration",
+      "templates": [
+        "aeat app declaration calculate --period {period} --modelo {modelo}",
+        "aeat app declaration review --period {period} --modelo {modelo} --format table",
+        "aeat app declaration status --filter status=pending --period {period} --modelo {modelo}",
+        "aeat app declaration edit --period {period} --modelo {modelo} --set {column}={value} --reason {reason}",
+        "aeat app declaration approve --period {period} --modelo {modelo} --reason {reason}",
+        "aeat app declaration validate --period {period} --modelo {modelo}",
+        "aeat app declaration validate --period {period} --modelo {modelo} --format json --output {path}",
+        "aeat app declaration preview --period {period} --modelo {modelo} --format pdf",
+        "aeat app declaration export --period {period} --modelo {modelo} --format boe --output {path}",
+        "aeat app declaration verify --period {period} --modelo {modelo} --format json --output {path}"
+      ]
+    },
+    {
+      "id": "declaration-amend",
+      "templates": [
+        "aeat app declaration calculate --period {period} --modelo {modelo} --amend --id {justificante_id}",
+        "aeat app declaration review --period {period} --modelo {modelo} --amend --id {justificante_id} --format table",
+        "aeat app declaration approve --period {period} --modelo {modelo} --amend --id {justificante_id} --reason {reason}",
+        "aeat app declaration validate --period {period} --modelo {modelo} --amend --id {justificante_id}",
+        "aeat app declaration export --period {period} --modelo {modelo} --amend --id {justificante_id} --format boe --output {path}"
+      ]
+    }
+  ],
+  "scoring": {
+    "bad_signals": [
+      "Generated import subcommands.",
+      "Generated ledger exclude or restore.",
+      "Generated amendment nouns.",
+      "Generated verify --export.",
+      "Generated CSV-code identity.",
+      "Generated split shares that do not add to 1.0."
+    ],
+    "good_signals": [
+      "Generated import --verify.",
+      "Generated edit --skip true|false.",
+      "Generated normalized split and clear.",
+      "Generated visible declaration calculate step.",
+      "Generated export --output and verify --format json --output.",
+      "Generated --amend --id JUSTIFICANTE_ID."
+    ]
+  }
+}

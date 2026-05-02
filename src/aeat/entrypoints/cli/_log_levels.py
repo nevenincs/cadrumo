@@ -1,4 +1,13 @@
-"""CLI log-level resolution for quiet/default/verbose/debug modes."""
+"""CLI log-level resolution for quiet/default/verbose/debug modes.
+
+Encapsulates the contract for translating the CLI's ``--quiet`` /
+``--verbose`` / ``--debug`` flag triple plus the ``AEAT_LOG_LEVEL``
+environment variable into a single :class:`LogLevel` value, and applies
+that value to the configured root logger via
+:func:`apply_to_root_logger`. Every CLI entrypoint funnels its
+verbosity decision through :func:`resolve_log_level` so behaviour stays
+consistent across commands.
+"""
 
 from __future__ import annotations
 
@@ -12,11 +21,23 @@ from ...core.errors import AeatError
 
 
 class LogLevelResolutionError(AeatError):
-    """Raised when the requested CLI log-level inputs are contradictory."""
+    """Raised when the requested CLI log-level inputs are contradictory.
+
+    Examples include passing more than one of ``--quiet`` / ``--verbose``
+    / ``--debug`` together, or setting ``AEAT_LOG_LEVEL`` to a value
+    outside the :class:`LogLevel` vocabulary.
+    """
 
 
 class LogLevel(StrEnum):
-    """Stable CLI log-level names exposed through flags and env vars."""
+    """Stable CLI log-level names exposed through flags and env vars.
+
+    Attributes:
+        QUIET: Suppress everything below :data:`logging.ERROR`.
+        DEFAULT: Standard verbosity at :data:`logging.WARNING`.
+        VERBOSE: Informational output at :data:`logging.INFO`.
+        DEBUG: Full diagnostics at :data:`logging.DEBUG`.
+    """
 
     QUIET = "quiet"
     DEFAULT = "default"
@@ -41,18 +62,24 @@ def resolve_log_level(
 ) -> LogLevel:
     """Resolve the effective CLI log level from flags and environment.
 
+    Flags take precedence over the environment in the order
+    ``debug > verbose > quiet``. When no flag is set, ``AEAT_LOG_LEVEL``
+    is consulted; an empty value falls back to :attr:`LogLevel.DEFAULT`.
+
     Args:
-        quiet: ``--quiet`` flag.
-        verbose: ``--verbose`` flag.
-        debug: ``--debug`` flag.
-        env: Optional environment mapping for deterministic tests.
+        quiet: Whether ``--quiet`` was passed.
+        verbose: Whether ``--verbose`` was passed.
+        debug: Whether ``--debug`` was passed.
+        env: Optional environment mapping for deterministic tests; when
+            :data:`None`, :data:`os.environ` is used.
 
     Returns:
         The effective :class:`LogLevel`.
 
     Raises:
-        LogLevelResolutionError: If multiple verbosity flags are active
-            or the environment value is invalid.
+        LogLevelResolutionError: If more than one verbosity flag is
+            active simultaneously, or if ``AEAT_LOG_LEVEL`` carries a
+            value outside the :class:`LogLevel` vocabulary.
     """
 
     selected_flags = sum((quiet, verbose, debug))
@@ -78,6 +105,10 @@ def resolve_log_level(
 
 def apply_to_root_logger(level: LogLevel) -> None:
     """Apply the resolved CLI log level to the configured root logger.
+
+    Calls :func:`aeat.core.logging.configure_logging` first so the
+    project-wide logging contract is in place, then sets the level on
+    the root logger and every attached handler.
 
     Args:
         level: Target CLI log level.

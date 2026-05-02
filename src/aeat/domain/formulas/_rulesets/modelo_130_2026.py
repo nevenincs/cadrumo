@@ -11,12 +11,12 @@ art. 110 (RD 439/2007) was not amended between 2024 and 2026:
 - RD 253/2025 (the only 2025 modification of RIRPF) touched art. 69
   (information obligations), not art. 110.
 
-The separate ruleset file simplifies future divergence (e.g., the
-La Palma 60 % reduction overlay tracked under EPIC #316, which
-lands as a dedicated territorial overlay rather than a base-
-ruleset amendment). The rule-delta manifest at
-``.vault/reference/2026-130-rule-delta.md`` documents the 2024 →
-2025 → 2026 trail with BOE citations.
+The separate ruleset file simplifies future divergence — territorial
+overlays (for example a La Palma 60 % reduction) layer on top rather
+than amending this base ruleset. The casilla and citation tuples are
+re-imported from :mod:`aeat.domain.formulas._rulesets.modelo_130_2024`;
+only the formula identifiers and parameter effective range are bound
+to 2026.
 """
 
 from __future__ import annotations

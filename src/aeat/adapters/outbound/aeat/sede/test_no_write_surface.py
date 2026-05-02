@@ -1,6 +1,6 @@
-"""Layer-3 write-guard for aeat.adapters.outbound.aeat.sede (#239).
+"""Layer-3 write-guard for aeat.adapters.outbound.aeat.sede.
 
-Walks every ``.py`` source file in ``src/aeat/sede/`` and fails the
+Walks every ``.py`` source file in ``aeat.adapters.outbound.aeat.sede`` and fails the
 build if a forbidden call-context verb appears. The forbidden tokens
 themselves live in ``_no_write_surface_fixture.txt`` so this test
 file can reference them without tripping its own guard.
@@ -52,7 +52,7 @@ def _load_forbidden_verbs() -> tuple[str, ...]:
 
 
 def _iter_sede_sources() -> tuple[Path, ...]:
-    """Every .py file under src/aeat/sede/ (includes this test module)."""
+    """Every .py file under aeat.adapters.outbound.aeat.sede (includes this test module)."""
     return tuple(p for p in _SEDE_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
 
 
@@ -71,8 +71,9 @@ class TestNoCallContextWriteVerbs:
             for line_no, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
                 if pattern.search(line):
                     offenders.append(f"{source.relative_to(_SEDE_ROOT)}:{line_no}: {line.strip()}")
-        assert not offenders, f"Forbidden write verb {verb!r} used in a call context inside aeat.adapters.outbound.aeat.sede:\n" + "\n".join(
-            offenders
+        assert not offenders, (
+            f"Forbidden write verb {verb!r} used in a call context inside aeat.adapters.outbound.aeat.sede:\n"
+            + "\n".join(offenders)
         )
 
 

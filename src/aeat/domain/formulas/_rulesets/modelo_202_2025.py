@@ -1,15 +1,15 @@
 """Modelo 202 ruleset covering the full 2025 fiscal year.
 
 Modelo 202 is the IS / IRNR-EP instalment filing — 1P / 2P / 3P
-(April, October, December). MVP covers the liquidación block that
-Kent's filing must satisfy on every period:
+(April, October, December). The ruleset covers the liquidación block
+that every period filing must satisfy:
 
 - casilla 18 = casilla 16 x (casilla 17 / 100) (cuota integra = base
   x tipo, under modalidad art. 40.3 LIS — running current-year base).
-  AEAT prints casilla 17 as the whole-percent value (``17,00`` ⇒ 17%);
+  AEAT prints casilla 17 as the whole-percent value (``17,00`` -> 17 %);
   the ``/ 100`` normalisation happens in the formula so the ruleset
   can be applied directly to raw PDF-extracted values without
-  pre-processing (fix).
+  pre-processing.
 - casilla 32 = 18 - 27 - 28 - 30 (resultado — cuota integra menos
   bonificaciones, retenciones e ingresos a cuenta, pagos fraccionados
   anteriores).
@@ -17,17 +17,17 @@ Kent's filing must satisfy on every period:
   resultado y el mínimo a ingresar art. 40.3 LIS párr. 2).
 
 Modalidad art. 40.2 (prior-year cuota) uses a different formula chain
-and lands in sub-EPIC #305-Modelo-202-full.
+and is tracked outside this base ruleset.
 
 Legal base: Orden HFP/227/2017 (BOE-A-2017-2778); refreshed by
 HFP/312/2023 and HAC/262/2025 (BOE-A-2025-5407) — the 2025 Orden
 introduced the micropyme / pyme rate boxes relevant to casilla 17.
 
-casilla 34 "Cantidad a ingresar (mayor de claves
-[32] y [33])" is VERIFIED against BOE-A-2025-5407 Anexo I pág. 36465
-liquidación block 4. The same page's Ingreso (8) block references
-``Importe (casilla [34] ó [03])`` — confirming 34 is the terminal
-payable field on the 2025 form, not a fabrication.
+casilla 34 "Cantidad a ingresar (mayor de claves [32] y [33])" is
+verified against BOE-A-2025-5407 Anexo I pág. 36465 liquidación block
+4; the same page's Ingreso (8) block references ``Importe (casilla
+[34] ó [03])``, confirming 34 is the terminal payable field on the
+2025 form.
 """
 
 from __future__ import annotations
@@ -52,6 +52,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a :class:`aeat.core.i18n.Translatable` mapping for the three locales."""
     return {"es": es, "en": en, "hu": hu}
 
 

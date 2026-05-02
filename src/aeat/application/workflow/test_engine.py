@@ -1,9 +1,9 @@
 """Unit tests for :class:`aeat.application.workflow.WorkflowEngine`.
 
-Every test uses real Protocol-conforming test doubles. No mocks,
-patches, or ``unittest.mock`` imports — the project-wide no-mocks
-mandate applies to this suite especially, because the engine *is*
-the place where composition correctness is validated.
+Every test uses real Protocol-conforming test doubles. No imports from
+``unittest`` — the project-wide pytest-only mandate applies to this
+suite especially, because the engine *is* the place where composition
+correctness is validated.
 
 The shared :class:`_Fixtures` helper builds a healthy set of doubles
 and lets individual tests override exactly the knob that should
@@ -33,14 +33,12 @@ from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ...adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
 from ...adapters.outbound.aeat.export import (
-    AuthProviderDescription,
-    AuthProviderKind,
     DraftStatus,
     FilingFinding,
     FilingFindingSeverity,
-    SubmissionPreflightError,
 )
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
+from ...application.auth import AuthProviderDescription, AuthProviderKind
 from ...core.config import PROJECT_ROOT, Settings
 from ...core.errors import SiteHealthError
 from ...domain.deadlines import (
@@ -50,6 +48,7 @@ from ...domain.deadlines import (
     ObligationStatus,
     Schedule,
 )
+from ...domain.submission import SubmissionPreflightError
 from . import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
@@ -70,7 +69,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @dataclass
-class _FakeDraft:
+class _ConcreteDraft:
     """Structural :class:`aeat.adapters.outbound.aeat.export.FilingDraftLike` test double."""
 
     draft_id: str = "draft-xyz"
@@ -83,7 +82,7 @@ class _FakeDraft:
 
 
 @dataclass
-class _FakeDeadlineEngine:
+class _ConcreteDeadlineEngine:
     obligation: FilingObligation | None
     profile: AutonomoProfile
     raise_exc: BaseException | None = None
@@ -107,8 +106,8 @@ class _FakeDeadlineEngine:
 
 
 @dataclass
-class _FakeDraftBuilder:
-    draft: _FakeDraft
+class _ConcreteDraftBuilder:
+    draft: _ConcreteDraft
     raise_exc: BaseException | None = None
 
     def build(
@@ -119,25 +118,25 @@ class _FakeDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> _FakeDraft:
+    ) -> _ConcreteDraft:
         if self.raise_exc is not None:
             raise self.raise_exc
         return self.draft
 
 
 @dataclass
-class _FakeSubmissionEngine:
+class _ConcreteSubmissionEngine:
     preflight_exc: BaseException | None = None
     preflight_calls: list[date] = field(default_factory=list)
 
-    def preflight(self, draft: _FakeDraft, *, today: date) -> None:
+    def preflight(self, draft: _ConcreteDraft, *, today: date) -> None:
         self.preflight_calls.append(today)
         if self.preflight_exc is not None:
             raise self.preflight_exc
 
 
 @dataclass
-class _FakeSyncRunner:
+class _ConcreteSyncRunner:
     raise_exc: BaseException | None = None
     summary: SyncRunSummary = field(
         default_factory=lambda: SyncRunSummary(divergence_count=0, auto_healed_count=0, escalated_count=0)
@@ -156,7 +155,7 @@ class _FakeSyncRunner:
 
 
 @dataclass
-class _FakeExpedientesSource:
+class _ConcreteExpedientesSource:
     """Seam over :func:`aeat.adapters.outbound.aeat.sede.walk_expedientes_tree` for tests.
 
     Returns whatever expedientes the test put on ``self.expedientes``;
@@ -175,7 +174,7 @@ class _FakeExpedientesSource:
 
 
 @dataclass
-class _FakeNotificationsSource:
+class _ConcreteNotificationsSource:
     """Seam over :func:`aeat.adapters.outbound.aeat.sede.fetch_notifications_query` for tests."""
 
     rows: tuple[RemoteNotification, ...] = ()
@@ -192,7 +191,7 @@ class _FakeNotificationsSource:
 
 
 @dataclass
-class _FakeCertificateBundle:
+class _ConcreteCertificateBundle:
     raise_exc: BaseException | None = None
     subject: str = "CN=Test"
     not_after: date | None = field(default_factory=lambda: date(2027, 1, 15))
@@ -214,7 +213,7 @@ class _FakeCertificateBundle:
 
 
 @dataclass
-class _FakeInputsProvider:
+class _ConcreteInputsProvider:
     inputs: Mapping[str, object] = field(default_factory=lambda: {"01": "1000"})
     raise_exc: BaseException | None = None
 
@@ -269,15 +268,15 @@ class _Fixtures:
 
     profile: AutonomoProfile
     obligation: FilingObligation
-    draft: _FakeDraft
-    deadline_engine: _FakeDeadlineEngine
-    draft_builder: _FakeDraftBuilder
-    submission_engine: _FakeSubmissionEngine
-    sync_runner: _FakeSyncRunner
-    expedientes_source: _FakeExpedientesSource
-    notifications_source: _FakeNotificationsSource
-    certificate_bundle: _FakeCertificateBundle
-    inputs_provider: _FakeInputsProvider
+    draft: _ConcreteDraft
+    deadline_engine: _ConcreteDeadlineEngine
+    draft_builder: _ConcreteDraftBuilder
+    submission_engine: _ConcreteSubmissionEngine
+    sync_runner: _ConcreteSyncRunner
+    expedientes_source: _ConcreteExpedientesSource
+    notifications_source: _ConcreteNotificationsSource
+    certificate_bundle: _ConcreteCertificateBundle
+    inputs_provider: _ConcreteInputsProvider
     settings: Settings
     today: date
     session: AeatSession
@@ -308,19 +307,19 @@ _SENTINEL_SESSION = cast(AeatSession, object())
 def _fixtures() -> _Fixtures:
     profile = _profile()
     obligation = _obligation()
-    draft = _FakeDraft(profile_tax_id=profile.tax_id)
+    draft = _ConcreteDraft(profile_tax_id=profile.tax_id)
     return _Fixtures(
         profile=profile,
         obligation=obligation,
         draft=draft,
-        deadline_engine=_FakeDeadlineEngine(obligation=obligation, profile=profile),
-        draft_builder=_FakeDraftBuilder(draft=draft),
-        submission_engine=_FakeSubmissionEngine(),
-        sync_runner=_FakeSyncRunner(),
-        expedientes_source=_FakeExpedientesSource(),
-        notifications_source=_FakeNotificationsSource(),
-        certificate_bundle=_FakeCertificateBundle(),
-        inputs_provider=_FakeInputsProvider(),
+        deadline_engine=_ConcreteDeadlineEngine(obligation=obligation, profile=profile),
+        draft_builder=_ConcreteDraftBuilder(draft=draft),
+        submission_engine=_ConcreteSubmissionEngine(),
+        sync_runner=_ConcreteSyncRunner(),
+        expedientes_source=_ConcreteExpedientesSource(),
+        notifications_source=_ConcreteNotificationsSource(),
+        certificate_bundle=_ConcreteCertificateBundle(),
+        inputs_provider=_ConcreteInputsProvider(),
         settings=Settings(),
         today=date(2026, 4, 12),
         session=_SENTINEL_SESSION,
@@ -398,7 +397,7 @@ class TestAbortReasons:
         """A closed-window target triggers DEADLINE_PASSED."""
         fx = _fixtures()
         past = _obligation(period="2025Q4", closes_on=date(2026, 1, 20))
-        fx.deadline_engine = _FakeDeadlineEngine(obligation=past, profile=fx.profile)
+        fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
         result = asyncio.run(
             fx.engine().run_for_period(
                 fx.profile,
@@ -451,14 +450,14 @@ class TestAbortReasons:
     def test_draft_has_errors_via_status(self) -> None:
         """Builder returning a merely validated draft aborts at BUILDING_DRAFT."""
         fx = _fixtures()
-        fx.draft = _FakeDraft(status=DraftStatus.VALIDATED)
+        fx.draft = _ConcreteDraft(status=DraftStatus.VALIDATED)
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
         fx = _fixtures()
-        fx.draft = _FakeDraft(status=DraftStatus.READY_TO_SUBMIT)
+        fx.draft = _ConcreteDraft(status=DraftStatus.READY_TO_SUBMIT)
         fx.draft_builder.draft = fx.draft
         fx.submission_engine.preflight_exc = SubmissionPreflightError(
             "draft not approved for submission (status=READY_TO_SUBMIT)"
@@ -469,7 +468,7 @@ class TestAbortReasons:
     def test_draft_has_errors_via_validation(self) -> None:
         """A READY draft that carries ERROR findings aborts at VALIDATING_DRAFT."""
         fx = _fixtures()
-        fx.draft = _FakeDraft(
+        fx.draft = _ConcreteDraft(
             findings=(
                 FilingFinding(
                     severity=FilingFindingSeverity.ERROR,
@@ -496,10 +495,10 @@ class TestAbortReasons:
         assert result.aborted_reason is WorkflowAbortReason.CERT_INVALID
 
     def test_cert_pre_expiry_critical_aborts(self) -> None:
-        """A cert within the critical window aborts CERT_INVALID (#94)."""
+        """A cert within the critical window aborts CERT_INVALID."""
         fx = _fixtures()
         # today=2026-04-12, default critical_days=14 → cert closes 2026-04-20 ⇒ 8 days.
-        fx.certificate_bundle = _FakeCertificateBundle(
+        fx.certificate_bundle = _ConcreteCertificateBundle(
             subject="CN=Expiring",
             not_after=date(2026, 4, 20),
         )
@@ -511,10 +510,10 @@ class TestAbortReasons:
         assert preflight_step.details["cert_days_until_expiry"] == "8"
 
     def test_cert_pre_expiry_expired_aborts(self) -> None:
-        """An already-expired cert aborts CERT_INVALID with EXPIRED detail (#94)."""
+        """An already-expired cert aborts CERT_INVALID with EXPIRED detail."""
         fx = _fixtures()
         # today=2026-04-12, not_after=2026-04-01 → -11 days.
-        fx.certificate_bundle = _FakeCertificateBundle(
+        fx.certificate_bundle = _ConcreteCertificateBundle(
             subject="CN=Expired",
             not_after=date(2026, 4, 1),
         )
@@ -526,10 +525,10 @@ class TestAbortReasons:
         assert preflight_step.details["cert_days_until_expiry"] == "-11"
 
     def test_cert_pre_expiry_warn_proceeds(self) -> None:
-        """A cert in the warn window proceeds and reaches DONE (#94)."""
+        """A cert in the warn window proceeds and reaches DONE."""
         fx = _fixtures()
         # today=2026-04-12, default warn_days=60 → cert closes 2026-05-30 ⇒ 48 days.
-        fx.certificate_bundle = _FakeCertificateBundle(
+        fx.certificate_bundle = _ConcreteCertificateBundle(
             subject="CN=Warning",
             not_after=date(2026, 5, 30),
         )
@@ -540,19 +539,19 @@ class TestAbortReasons:
         assert preflight_step.details["cert_severity"] == "WARN"
         assert preflight_step.details["cert_days_until_expiry"] == "48"
 
-    def test_provider_without_expiry_metadata_does_not_abort(self) -> None:
-        """A non-certificate provider with no expiry metadata skips the cert window gate."""
+    def test_clave_movil_without_expiry_metadata_does_not_abort(self) -> None:
+        """Cl@ve Movil has no expiry metadata and skips the cert window gate."""
         fx = _fixtures()
-        fx.certificate_bundle = _FakeCertificateBundle(
-            subject="Cl@ve Permanente",
+        fx.certificate_bundle = _ConcreteCertificateBundle(
+            subject="Cl@ve Movil",
             not_after=None,
-            kind=AuthProviderKind.CLAVE_PERMANENTE,
+            kind=AuthProviderKind.CLAVE_MOVIL,
         )
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.final_stage is WorkflowStage.DONE
         preflight_step = next(s for s in result.steps if s.stage is WorkflowStage.RUNNING_PREFLIGHT)
         assert preflight_step.details is not None
-        assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_PERMANENTE.value
+        assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_MOVIL.value
 
     def test_unhandled_exception_from_deadline_engine(self) -> None:
         fx = _fixtures()

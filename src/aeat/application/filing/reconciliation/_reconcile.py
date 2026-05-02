@@ -32,8 +32,8 @@ from ._schema import (
 )
 
 if TYPE_CHECKING:
-    from ....domain.justificante import Justificante
     from ....domain.filing import FilingDraft
+    from ....domain.justificante import Justificante
 
 
 # Shared with aeat.application.verification: "one cent" is the Kent-visible

@@ -1,30 +1,29 @@
 """End-to-end integration test for the governed-persistence chain.
 
-Walks every together against real on-disk persistence:
+Drives a single filing through every encrypted-envelope repository
+against real on-disk persistence:
 
 - :class:`aeat.domain.filing.FilingDraftRepository` (FINANCIAL)
-- :class:`aeat.domain.submission._repository.SubmissionRepository` (AUDIT)
-- :class:`aeat.domain.filing.FilingAmendmentRepository`
+- :class:`aeat.domain.submission._repository.SubmissionRepository`
   (AUDIT)
-- :class:`aeat.domain.justificante._repository.JustificanteRepository` (AUDIT)
+- :class:`aeat.domain.filing.FilingAmendmentRepository` (AUDIT)
+- :class:`aeat.domain.justificante._repository.JustificanteRepository`
+  (AUDIT)
 - :class:`aeat.application.filing._history_repository.FilingHistoryRepository`
   (AUDIT)
 
-NOTE: (live-submit governed audit sink) has been excised
-because the upstream charter #116 / PR #432 permanently forbade live
-AEAT submission. With no live-submit code path there is no audit-event
-emission to govern; the JSONL redaction discipline still holds via
-the run-trace sink and the LLM cache + usage log
-.
+Live-submit audit emission is intentionally absent because live AEAT
+submission is permanently forbidden; the JSONL redaction discipline is
+still exercised end-to-end via the run-trace sink and the LLM
+cache plus usage log.
 
 The test asserts:
 
-1. The on-disk envelope's classification matches the repository's intent
-   at every step (FINANCIAL for drafts; AUDIT for submission, amendment,
-   justificante, filing-history).
-2. Re-running the same step against the same store is idempotent.
-
-These are the load-bearing claims of the ADR's .
+- The on-disk envelope's classification matches each repository's
+  intent (FINANCIAL for drafts; AUDIT for submission, amendment,
+  justificante, filing-history).
+- The plaintext NIF canary never appears on disk after encryption.
+- Re-running the same step against the same store is idempotent.
 """
 
 from __future__ import annotations
@@ -38,13 +37,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ...adapters.outbound.aeat.export._models import (
-    SubmissionAttempt,
-    SubmissionStatus,
-    SubmittedFiling,
-    make_submission_id,
-)
-from ...domain.submission._repository import SubmissionRepository
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
@@ -52,20 +44,26 @@ from ...adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from ...domain.justificante._repository import JustificanteRepository
-from ...domain.justificante._schema import Justificante
-from ..sync import WireFilingEntry, WireFilingHistory
-from ..sync._protocols import ModeloIdentifier
-from . import build_draft
 from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
     FilingAmendment,
 )
 from ...domain.filing._complementaria_repository import FilingAmendmentRepository
-from ._history_repository import FilingHistoryRepository
 from ...domain.filing._repository import FilingDraftRepository
 from ...domain.filing._schema import FilingDraft
+from ...domain.justificante._repository import JustificanteRepository
+from ...domain.justificante._schema import Justificante
+from ...domain.submission import (
+    SubmissionAttempt,
+    SubmissionStatus,
+    SubmittedFiling,
+    make_submission_id,
+)
+from ...domain.submission._repository import SubmissionRepository
+from ...domain.sync import ModeloIdentifier, WireFilingEntry, WireFilingHistory
+from . import build_draft
+from ._history_repository import FilingHistoryRepository
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -182,11 +180,12 @@ def _build_justificante(tmp_path: Path, *, csv: str) -> Justificante:
 
 
 def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
-    """Walk one filing all the way through every repository.
+    """Walk one filing through every governed-persistence repository.
 
     Asserts at every step that the on-disk envelope carries the
-    expected classification, that the live-submit audit log is
-    redacted, and that re-running each persist call is idempotent.
+    expected classification, that NIF canaries never escape the
+    encryption boundary, and that re-running each persist call is
+    idempotent.
     """
     draft_repo = FilingDraftRepository(store_dir=tmp_path / "drafts")
     submission_repo = SubmissionRepository(store_dir=tmp_path / "submissions")
@@ -234,12 +233,11 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
     assert justificante.csv not in justificante_envelope_text
     assert justificante_repo.load(justificante.csv) == justificante
 
-    # NOTE: live-submit audit emission was originally ,
-    # but the upstream PR #432 (charter #116) permanently forbade live
-    # AEAT submission. With no live emissions the GovernedLiveSubmitAuditSink
-    # has no use case and was excised. The redaction discipline still
-    # holds end-to-end via the run-trace JSONL sink and the
-    # LLM cache + usage redaction.
+    # Live-submit audit emission is intentionally absent: live AEAT
+    # submission is permanently forbidden, so the governed live-submit
+    # audit sink has no use case. The redaction discipline still holds
+    # end-to-end via the run-trace JSONL sink and the LLM cache plus
+    # usage redaction.
 
     # --- 5. Persist the filing-history record for the modelo. --------
     history = WireFilingHistory(
@@ -261,7 +259,7 @@ def test_wave4_end_to_end_flow(tmp_path: Path) -> None:
 
 
 def test_wave4_idempotent_replay(tmp_path: Path) -> None:
-    """Running the full chain twice is a no-op on the second pass."""
+    """Running the full chain twice yields a no-op on the second pass."""
     draft_repo = FilingDraftRepository(store_dir=tmp_path / "drafts")
     submission_repo = SubmissionRepository(store_dir=tmp_path / "submissions")
 

@@ -1,4 +1,10 @@
-"""Lookup helpers for the VAT substrate."""
+"""Lookup helpers for the :mod:`aeat.domain.vat` substrate.
+
+Exposes :func:`lookup_rate` for resolving a member-state / tier / date triple
+against :data:`aeat.domain.vat.VAT_RATE_TABLE`, and :func:`cite` for rendering
+the canonical citation string for a :class:`aeat.domain.vat.VATCategory`.
+Both helpers are pure and side-effect free.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +21,12 @@ def lookup_rate(
     kind: VATRateKind,
     on_date: date,
 ) -> VATRate:
-    """Return the :class:`VATRate` matching ``member_state`` / ``kind`` / ``on_date``.
+    """Return the :class:`aeat.domain.vat.VATRate` matching the supplied query.
+
+    Iterates the rates registered for ``member_state`` in
+    :data:`aeat.domain.vat.VAT_RATE_TABLE` and returns the first record whose
+    :attr:`aeat.domain.vat.VATRate.kind` matches ``kind`` and whose
+    effective window covers ``on_date``.
 
     Args:
         member_state: The EU member state whose rate is requested.
@@ -23,10 +34,11 @@ def lookup_rate(
         on_date: The effective date for the lookup.
 
     Returns:
-        The matching :class:`VATRate`.
+        The matching :class:`aeat.domain.vat.VATRate`.
 
     Raises:
-        VatRateNotFoundError: If no registered rate satisfies the query.
+        :exc:`aeat.domain.vat.VatRateNotFoundError`: If no registered rate
+            satisfies the query.
     """
     rates = VAT_RATE_TABLE.get(member_state)
     if not rates:
@@ -51,24 +63,23 @@ def cite(
 ) -> str:
     """Return the canonical citation string for ``category``.
 
-    Uses the first :class:`Citation` on the regulation as the
-    canonical reference. Includes the source tag and the article
-    reference so the result is self-identifying when written to a
-    log line.
+    Uses the first :class:`aeat.domain.vat.VatCitation` on the matching
+    regulation as the canonical reference. The result includes a
+    human-readable source label and the article reference so it is
+    self-identifying when written to a log line.
 
     Args:
-        category: The VAT category whose canonical citation is
-            requested.
+        category: The VAT category whose canonical citation is requested.
         catalogue: Optional catalogue override; defaults to
-            :data:`VAT_CATALOGUE_2025`.
+            :data:`aeat.domain.vat.VAT_CATALOGUE_2025`.
 
     Returns:
         A canonical citation string such as
         ``"Ley 37/1992, Art. 90.Uno — <quoted_text_es>"``.
 
     Raises:
-        VatCategoryNotFoundError: If ``category`` is absent from the
-            catalogue.
+        :exc:`aeat.domain.vat.VatCategoryNotFoundError`: If ``category`` is
+            absent from the catalogue.
     """
     cat = catalogue if catalogue is not None else VAT_CATALOGUE_2025
     regulation = cat.get(category)
@@ -85,6 +96,7 @@ _SOURCE_LABELS: dict[str, str] = {
     "directive-2006-112-ec": "Directive 2006/112/EC",
     "other": "other",
 }
+"""Human-readable labels for each :class:`aeat.domain.vat.VatCitationSource`."""
 
 
 __all__ = ["cite", "lookup_rate"]

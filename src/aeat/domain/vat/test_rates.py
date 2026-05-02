@@ -1,4 +1,9 @@
-"""Unit tests for :mod:`aeat.domain.vat._rates`."""
+"""Unit tests for the EU VAT rate table exposed by :mod:`aeat.domain.vat`.
+
+Covers the 27-state coverage invariant, the Spanish multi-tier expansion, the
+:func:`aeat.domain.vat.lookup_rate` happy and error paths, and the per-record
+window well-orderedness invariant.
+"""
 
 from __future__ import annotations
 
@@ -24,7 +29,7 @@ def test_rate_table_covers_all_27_member_states() -> None:
 
 
 def test_rate_table_has_at_least_50_entries() -> None:
-    """Aggregate rate count must meet the ≥50 acceptance threshold."""
+    """Aggregate rate count must meet the at-least-50-entries acceptance threshold."""
     total = sum(len(rates) for rates in VAT_RATE_TABLE.values())
     assert total >= 50
 
@@ -55,15 +60,15 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
 def test_lookup_rate_respects_effective_from() -> None:
     """Rates dated before the earliest registered window must not match.
 
-     (#183) added the 2024 baseline ES window so 2024-12-31
-    now resolves; the pre-2024 window still has no record.
+    The 2024 baseline ES window means ``2024-12-31`` resolves successfully;
+    the pre-2024 range still has no registered record and must raise.
     """
     with pytest.raises(VatRateNotFoundError):
         lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2023, 12, 31))
 
 
 def test_every_rate_window_is_well_ordered() -> None:
-    """Every VATRate with both bounds set must have from <= until."""
+    """Every :class:`VATRate` with both bounds set must satisfy ``effective_from <= effective_until``."""
     for rates in VAT_RATE_TABLE.values():
         for rate in rates:
             if rate.effective_until is not None:

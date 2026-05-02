@@ -2,7 +2,7 @@
 
 from .anthropic import AnthropicAdapter
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter
-from .fake import _FakeAdapter
+from .deterministic import _DeterministicAdapter
 from .gemini import GeminiAdapter
 from .local import LocalAdapter
 from .openai import OpenAIAdapter
@@ -14,6 +14,6 @@ __all__ = [
     "OpenAIAdapter",
     "ProviderCompletion",
     "ProviderRequest",
-    "_FakeAdapter",
+    "_DeterministicAdapter",
     "_ProviderAdapter",
 ]

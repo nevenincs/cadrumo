@@ -1,21 +1,24 @@
-"""Spanish identity-document parsing + validation.
+"""Spanish identity-document parsing and validation.
 
-Public surface for NIF / NIE / CIF documents — the three identity-
-number shapes Spanish autónomos, individuals, and legal entities use
-in tax filings. The module is intentionally tiny:
+Public surface for NIF / NIE / CIF documents — the three identity-number
+shapes Spanish autónomos, individuals, and legal entities use in tax
+filings. The module is intentionally tiny:
 
-- :class:`IdentityDocument` is the closed StrEnum naming the three
-  document kinds.
-- :func:`validate_identity` parses a candidate string and returns
-  the matching :class:`IdentityDocument` on success.
-- :class:`IdentityError` is the typed failure shape; it registers
-  a stable :class:`ErrorCode` (``INTEGRITY_IDENTITY_DOCUMENT``).
+* :class:`IdentityDocument` — closed :class:`enum.StrEnum` naming the
+  three document kinds.
+* :func:`validate_identity` — parses a candidate string and returns the
+  matching :class:`IdentityDocument` on success.
+* :func:`validate_spanish_tax_id` — pure-string validator that returns
+  the canonical form rather than the kind enum, used by call sites that
+  only need to check well-formedness.
+* :class:`IdentityError` — typed failure shape that registers under the
+  stable error code ``INTEGRITY_IDENTITY_DOCUMENT``.
 
-The module lives outside :mod:`aeat.adapters.persistence.storage` because identity
-validation is a domain concern, not a persistence concern. The
-substrate's redaction rule patterns remain permissive (over-
-redaction is the safer failure mode); domain code that needs a
-strict yes / no consumes this module instead.
+The module lives in :mod:`aeat.core` because identity validation is a
+domain concern, not a persistence concern. The persistence layer's
+redaction rule patterns remain permissive (over-redaction is the safer
+failure mode); domain code that needs a strict yes/no answer consumes
+this module instead.
 """
 
 from __future__ import annotations

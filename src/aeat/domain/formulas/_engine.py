@@ -3,13 +3,15 @@
 Public surface: :class:`Engine` with two methods —
 
 * :meth:`Engine.derive` — forward evaluation of every computed casilla
-  in the ruleset, producing a :class:`ComputationLedger`.
-* :meth:`Engine.audit_against` — reverse evaluation comparing a caller-
-  supplied value set against a freshly-derived ledger, emitting a
-  :class:`AuditReport` with any :class:`Discrepancy` records.
+  in the ruleset, producing a
+  :class:`aeat.domain.formulas.ComputationLedger`.
+* :meth:`Engine.audit_against` — reverse evaluation comparing a
+  caller-supplied value set against a freshly-derived ledger, emitting an
+  :class:`aeat.domain.formulas.AuditReport` with any
+  :class:`aeat.domain.formulas.Discrepancy` records.
 
-Both modes treat missing user-input casillas as ``Decimal('0')`` per
-AEAT Instrucciones (a blank Modelo 130 casilla equals zero).
+Both modes treat missing user-input casillas as ``Decimal('0')`` per AEAT
+Instrucciones (a blank Modelo 130 casilla equals zero).
 """
 
 from __future__ import annotations
@@ -24,9 +26,9 @@ from ._codes import FormulaOp
 from ._formula import (
     AddFormula,
     BracketsFormula,
-    CasillaRef,
     ClampPositiveFormula,
     DivFormula,
+    FormulaCasillaRef,
     Literal,
     MaxFormula,
     MinFormula,
@@ -49,7 +51,7 @@ _DEFAULT_TOLERANCE = Decimal("0.01")
 
 
 class Engine:
-    """Stateless evaluator for a :class:`Ruleset`."""
+    """Stateless evaluator for a :class:`aeat.domain.formulas.Ruleset`."""
 
     def derive(
         self,
@@ -57,7 +59,27 @@ class Engine:
         ruleset: Ruleset,
         inputs: Mapping[str, Decimal],
     ) -> ComputationLedger:
-        """Evaluate every computed casilla using the supplied inputs."""
+        """Evaluate every computed casilla using the supplied inputs.
+
+        Args:
+            ruleset: The period-versioned ruleset to evaluate.
+            inputs: Mapping of casilla id to caller-supplied
+                :class:`decimal.Decimal` value. Missing user-input
+                casillas default to ``Decimal('0')``.
+
+        Returns:
+            A :class:`aeat.domain.formulas.ComputationLedger` carrying
+            one :class:`aeat.domain.formulas.LedgerEntry` per computed
+            casilla, in topological evaluation order.
+
+        Raises:
+            ValueError: When an input is not a :class:`decimal.Decimal`
+                instance.
+            :exc:`aeat.core.errors.CasillaNotDefinedError`: When ``inputs``
+                names a casilla absent from ``ruleset``.
+            :exc:`aeat.core.errors.EvaluationError`: When formula
+                evaluation fails for any computed casilla.
+        """
         self._reject_non_decimal(inputs)
         self._reject_unknown(ruleset, inputs.keys())
 
@@ -125,7 +147,24 @@ class Engine:
         provided: Mapping[str, Decimal],
         tolerance: Decimal = _DEFAULT_TOLERANCE,
     ) -> AuditReport:
-        """Recompute and compare against caller-supplied values."""
+        """Recompute and compare against caller-supplied values.
+
+        Args:
+            ruleset: The period-versioned ruleset to evaluate.
+            provided: Full set of caller-supplied casilla values
+                (including computed casillas, which are checked against
+                the ledger).
+            tolerance: Absolute discrepancy tolerance in EUR. Must be
+                non-negative. Defaults to ``Decimal("0.01")``.
+
+        Returns:
+            An :class:`aeat.domain.formulas.AuditReport` carrying the
+            forward ledger plus every detected
+            :class:`aeat.domain.formulas.Discrepancy`.
+
+        Raises:
+            ValueError: When ``tolerance`` is negative.
+        """
         if tolerance < _ZERO:
             raise ValueError("tolerance must be non-negative")
 
@@ -179,7 +218,7 @@ class Engine:
     ) -> Decimal:
         if isinstance(operand, Literal):
             return operand.value
-        if isinstance(operand, CasillaRef):
+        if isinstance(operand, FormulaCasillaRef):
             if operand.casilla_id not in values:
                 raise EvaluationError(f"casilla {operand.casilla_id!r} referenced before evaluation")
             return values[operand.casilla_id]

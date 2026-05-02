@@ -36,7 +36,7 @@ class _Step(Protocol):
 
 
 class _StatusStep:
-    """Stand-in for ``aeat.status``."""
+    """Stand-in for the status stage."""
 
     def __call__(self, label: str) -> None:
         record_event(
@@ -46,7 +46,7 @@ class _StatusStep:
 
 
 class _InboxStep:
-    """Stand-in for ``aeat.inbox`` — calls into ``status`` next."""
+    """Stand-in for the inbox stage, which calls into status next."""
 
     def __init__(self, downstream: _Step) -> None:
         self._downstream = downstream

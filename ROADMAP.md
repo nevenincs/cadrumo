@@ -78,9 +78,12 @@ Conscious project-mandate exception. Project mandates require every milestone to
 - Hexagonal layout move + top-5 monolithic splits (`storage` ~12k, `cli` ~7.6k, `auth` ~4.8k, `filing` ~4.5k, `errors` ~3k)
 - `submission/` → `adapters/outbound/aeat/export/` rename (legal-liability clarity)
 - `models/` → `domain/modelos/` (Spanish-canonical, avoids Pydantic naming collision)
-- Static import-boundary enforcement via `import-linter` (CI fails on violation)
+- Static import-boundary checks were staged during the restructure,
+  but `import-linter` is not the current quality gate for ordinary
+  delivery.
 - Test-marker realignment in lockstep (`domain_local_state` bifurcates into `domain_model` + `domain_persistence`; `domain_aeat_remote` → `domain_outbound`; etc.)
-- Public-surface preservation via re-export shims (`from aeat.errors`, `from aeat.auth`)
+- Hard cutover to canonical modules; no root compatibility re-export
+  layer was retained.
 - Vault-corpus supersession (Tier 1-4 contradiction list, hard gate on Tier 2 security guardrails)
 - Dead-code workstream Phase 1 + Phase 2 (~590 LOC + 4 empty placeholder subpackages)
 

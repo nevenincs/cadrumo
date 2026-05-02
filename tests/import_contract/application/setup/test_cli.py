@@ -16,11 +16,11 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
+from aeat.application.setup import SetupAnswers
 from aeat.core.i18n import Language
 from aeat.domain.deadlines import IVARegime
 from aeat.domain.profile import CCAA
 from aeat.entrypoints.cli import app
-from aeat.application.setup import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

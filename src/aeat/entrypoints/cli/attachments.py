@@ -16,6 +16,11 @@ from pathlib import Path
 
 import typer
 
+from ...application.attachments import (
+    add_attachment,
+    list_attachments,
+    load_attachment,
+)
 from ...core.config import load_settings
 from ...domain.attachments import (
     Attachment,
@@ -23,11 +28,6 @@ from ...domain.attachments import (
     AttachmentKind,
     AttachmentSource,
     AttachmentStore,
-)
-from ...application.attachments import (
-    add_attachment,
-    list_attachments,
-    load_attachment,
 )
 from ._i18n import t, tr
 

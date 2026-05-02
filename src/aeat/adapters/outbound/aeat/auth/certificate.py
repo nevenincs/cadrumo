@@ -5,8 +5,7 @@ against the Spanish tax authority's Sede Electrónica. Callers import
 exclusively from :mod:`aeat.adapters.outbound.aeat.auth`; the backend implementations live in
 the private :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` package.
 
-Design constraints (see
-``.vault/adr/2026-04-12-cert-auth-adr.md``):
+Design constraints:
 
 * All boundary records are pydantic v2 ``BaseModel`` with
   ``model_config = ConfigDict(strict=True, frozen=True)``.
@@ -35,6 +34,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
+from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.errors import AeatError
 from .....core.logging import get_logger
 
@@ -129,18 +129,6 @@ class AeatSessionExpiredError(CertificateError):
     The error deliberately does not carry the session instance —
     callers re-derive authentication from ``Settings`` rather than
     retry with stale state.
-    """
-
-
-class AeatLiveReadNotEnabledError(AeatError):
-    """Raised when live-read access is required but the gate is shut.
-
-    Emitted by :meth:`AeatAccessGate.require_live_read` when
-    ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
-    per-test ``if os.environ[...] != "1": pytest.skip(...)``
-    boilerplate is not replaced — this error gives non-test callers
-    (future live-read CLI commands, sync runners) a typed failure
-    shape.
     """
 
 

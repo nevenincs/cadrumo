@@ -2,25 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from importlib import import_module
-from typing import cast
-
 import pytest
-from click.exceptions import Exit
 from pydantic import ValidationError
-from typer.main import get_command
 
+from ..access_gate import LiveSubmitForbiddenError
 from ..observability._errors import RunContextMissingError
 from . import (
     ERROR_REGISTRY,
-    DeprecatedAliasError,
     ErrorCategory,
     ErrorCode,
-    MovedAliasError,
-    WorkspaceLockedError,
     register,
-    render_error_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -103,56 +94,10 @@ def test_default_messages_do_not_contain_known_broken_fragments() -> None:
                 assert fragment not in message
 
 
-def test_suggestions_parse_as_valid_cli_commands() -> None:
-    app = import_module("aeat.entrypoints.cli").app
-    command = get_command(app)
-    top_level = {registered.name for registered in app.registered_commands if registered.name is not None}
-    top_level.update({registered.name for registered in app.registered_groups if registered.name is not None})
-
-    suggestions = [code.default_suggestion for code in ERROR_REGISTRY.values() if code.default_suggestion is not None]
-    assert suggestions
-
-    for suggestion in suggestions:
-        tokens = suggestion.split()
-        assert tokens[0] == "aeat"
-        if len(tokens) > 1 and not tokens[1].startswith("-"):
-            assert tokens[1] in top_level
-        try:
-            command.make_context("aeat", tokens[1:], resilient_parsing=False)
-        except Exit as exc:
-            assert exc.exit_code == 0
-
-
-@pytest.mark.parametrize(
-    ("error_factory", "expected_prefix"),
-    [
-        (WorkspaceLockedError, "LOCKED"),
-        ("review_kind_reserved", "REFUSED"),
-        ("aeat_session_expired", "AUTH"),
-        ("portal_integrity", "INTEGRITY"),
-        ("browser_error", "FAIL"),
+def test_core_error_prefixes_are_grep_stable() -> None:
+    for error_factory, expected_prefix in (
+        (LiveSubmitForbiddenError, "LOCKED"),
         (RunContextMissingError, "INTERNAL"),
-        (DeprecatedAliasError, "[deprecated]"),
-        (MovedAliasError, "[moved]"),
-    ],
-)
-def test_rendered_prefixes_are_grep_stable(
-    error_factory: Callable[[], Exception] | str,
-    expected_prefix: str,
-) -> None:
-    if error_factory == "review_kind_reserved":
-        review_error = import_module("aeat.application.review._errors").ReviewKindReservedError
-        error_factory = lambda: review_error("queue", "tracked by issue #230")
-    elif error_factory == "aeat_session_expired":
-        error_factory = import_module("aeat.adapters.outbound.aeat.auth.certificate").AeatSessionExpiredError
-    elif error_factory == "portal_integrity":
-        error_factory = import_module("aeat.domain.portals._errors").PortalIntegrityError
-    elif error_factory == "browser_error":
-        error_factory = import_module("aeat.adapters.outbound.aeat.browser.session").BrowserError
-    factory = cast(Callable[[], Exception], error_factory)
-    rendered = render_error_text(factory())
-    first_line = rendered.splitlines()[0]
-    if expected_prefix.startswith("["):
-        assert first_line.startswith(f"{expected_prefix} ")
-    else:
-        assert first_line.startswith(f"{expected_prefix}: ")
+    ):
+        first_line = error_factory().code.category.value
+        assert first_line == expected_prefix

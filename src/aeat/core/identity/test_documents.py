@@ -1,4 +1,11 @@
-"""Tests for the Spanish identity-document validator."""
+"""Tests for :func:`aeat.core.identity.validate_identity` and friends.
+
+Covers the three accepted shapes (NIF / NIE / CIF) including check-letter
+disambiguation across digit-only, letter-only, and mixed CIF kinds, plus
+every documented rejection mode (empty / non-string / arbitrary garbage).
+A final test pins the :class:`aeat.core.identity.IdentityError` registry
+binding so removing the bound error code is a CI failure.
+"""
 
 from __future__ import annotations
 

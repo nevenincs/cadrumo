@@ -1,4 +1,12 @@
-"""Public ``parse_declaracion`` entry point (EPIC #305)."""
+"""Public ``parse_declaracion`` entry point for declaración PDFs.
+
+Single-function module that ties detection
+(:func:`aeat.adapters.inbound.declaracion._detect.detect_template_revision`)
+to extraction (:func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`)
+behind one call. Callers may override modelo / año / revision; the
+function reconciles overrides against the auto-detected triple and
+raises on conflict.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +27,12 @@ def parse_declaracion(
 ) -> DeclaracionFiling:
     """Parse an AEAT declaración PDF into a :class:`DeclaracionFiling`.
 
+    Resolves the
+    :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
+    triple by combining auto-detection with any caller-supplied
+    overrides, then dispatches to the matching extractor obtained from
+    :func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`.
+
     Args:
         pdf_path: Path to the declaración PDF.
         modelo_override: Explicit modelo identifier (skips detection).
@@ -26,15 +40,20 @@ def parse_declaracion(
         año_override: Explicit four-digit tax year (skips detection).
 
     Returns:
-        A strict :class:`DeclaracionFiling`.
+        A strict :class:`DeclaracionFiling` populated with the extracted
+        casillas, warnings, and provenance metadata.
 
     Raises:
-        TemplateNotDetectedError: When auto-detection fails and no
-            override is supplied.
-        NoExtractorRegisteredError: When no extractor is registered for
-            the resolved template revision.
-        DeclaracionParseError: Base class for other parse errors (PDF
-            not found, empty text, required header field missing).
+        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
+            When auto-detection fails and the caller did not supply both
+            ``modelo_override`` and ``año_override``.
+        :exc:`aeat.adapters.inbound.declaracion._errors.NoExtractorRegisteredError`:
+            When no extractor is registered for the resolved template
+            revision.
+        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+            For other parse errors (PDF not found, empty text, required
+            header field missing, override conflicts with detected
+            metadata).
     """
     path = Path(pdf_path)
 
@@ -57,7 +76,29 @@ def _resolve_template(
     template_revision_override: str | None,
     año_override: int | None,
 ) -> TemplateRevision:
-    """Resolve to an explicit :class:`TemplateRevision` — override > detect."""
+    """Resolve a :class:`TemplateRevision` from overrides plus detection.
+
+    Override precedence: when modelo, año, AND revision are all
+    supplied, detection is skipped entirely. Otherwise the detected
+    triple is reconciled against any partial override; conflicts raise
+    :exc:`DeclaracionParseError`.
+
+    Args:
+        path: Path to the source PDF.
+        modelo_override: Explicit modelo identifier or ``None``.
+        template_revision_override: Explicit revision string or ``None``.
+        año_override: Explicit four-digit tax year or ``None``.
+
+    Returns:
+        The resolved :class:`TemplateRevision`.
+
+    Raises:
+        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
+            When detection fails and the caller did not supply both
+            modelo and año.
+        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+            When an override conflicts with the detected metadata.
+    """
     if modelo_override and año_override and template_revision_override:
         return TemplateRevision(
             modelo=modelo_override,

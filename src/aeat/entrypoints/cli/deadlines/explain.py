@@ -1,4 +1,9 @@
-"""``aeat deadlines explain`` - print the applies-because rationale for one modelo."""
+"""``aeat deadlines explain`` — print the applies-because rationale for one modelo.
+
+Loads the current :class:`aeat.domain.deadlines.AutonomoProfile` and
+asks :func:`aeat.domain.deadlines.explain` for the human-readable rule
+that determines whether the named modelo applies.
+"""
 
 from __future__ import annotations
 
