@@ -94,20 +94,15 @@
     },
     {
       "casilla_id": "04",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(modulos.dos_por_ciento * 03)",
-        "references_casillas": [
-          "03"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "2% on casilla 03. Computed as (modulos.dos_por_ciento * 03). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "2% s/casilla 03. Se calcula como (modulos.dos_por_ciento * 03). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "2%-os arány. Számítás: (modulos.dos_por_ciento * 03). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "2% on casilla 03 (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "2% s/casilla 03 (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "2%-os arány (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "2% on casilla 03",
@@ -117,12 +112,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "03"
-      ],
-      "references_rules": [
-        "modelo_131.2025.dos_por_ciento_ventas"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -130,11 +121,6 @@
       "source_section": "II. Actividades en estimación objetiva (sin datos base)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",
@@ -174,20 +160,15 @@
     },
     {
       "casilla_id": "06",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(modulos.dos_por_ciento * 05)",
-        "references_casillas": [
-          "05"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "2% on casilla 05. Computed as (modulos.dos_por_ciento * 05). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "2% s/casilla 05. Se calcula como (modulos.dos_por_ciento * 05). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "2%-os arány. Számítás: (modulos.dos_por_ciento * 05). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "2% on casilla 05 (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "2% s/casilla 05 (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "2%-os arány (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "2% on casilla 05",
@@ -197,12 +178,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "05"
-      ],
-      "references_rules": [
-        "modelo_131.2025.dos_por_ciento_agricolas"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -210,11 +187,6 @@
       "source_section": "III. Actividades agrícolas, ganaderas, forestales y pesqueras",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",
@@ -224,22 +196,15 @@
     },
     {
       "casilla_id": "07",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(02 + 04 + 06)",
-        "references_casillas": [
-          "02",
-          "04",
-          "06"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total. Computed as (02 + 04 + 06). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "Total 02+04+06. Se calcula como (02 + 04 + 06). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Összesen. Számítás: (02 + 04 + 06). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "Total (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "Total 02+04+06 (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "Összesen (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "Total",
@@ -249,14 +214,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "02",
-        "04",
-        "06"
-      ],
-      "references_rules": [
-        "modelo_131.2025.total_previo"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -264,11 +223,6 @@
       "source_section": "II. Actividades en estimación objetiva (sin datos base)",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",
@@ -338,22 +292,15 @@
     },
     {
       "casilla_id": "10",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((07 - 08) - 09)",
-        "references_casillas": [
-          "07",
-          "08",
-          "09"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Result after credits. Computed as ((07 - 08) - 09). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "Resultado 07-08-09. Se calcula como ((07 - 08) - 09). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Levonás utáni eredmény. Számítás: ((07 - 08) - 09). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "Result after credits (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "Resultado 07-08-09 (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "Levonás utáni eredmény (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "Result after credits",
@@ -363,14 +310,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "07",
-        "08",
-        "09"
-      ],
-      "references_rules": [
-        "modelo_131.2025.resultado_tras_credits"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -378,11 +319,6 @@
       "source_section": "IV. Total liquidación tras retenciones e ingresos a cuenta",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",
@@ -452,22 +388,15 @@
     },
     {
       "casilla_id": "13",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((10 - 11) - 12)",
-        "references_casillas": [
-          "10",
-          "11",
-          "12"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Intermediate result. Computed as ((10 - 11) - 12). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "Resultado 10-11-12. Se calcula como ((10 - 11) - 12). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Köztes eredmény. Számítás: ((10 - 11) - 12). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "Intermediate result (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "Resultado 10-11-12 (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "Köztes eredmény (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "Intermediate result",
@@ -477,14 +406,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "10",
-        "11",
-        "12"
-      ],
-      "references_rules": [
-        "modelo_131.2025.resultado_intermedio"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -492,11 +415,6 @@
       "source_section": "V. Resultado tras minoraciones y deducciones",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",
@@ -536,21 +454,15 @@
     },
     {
       "casilla_id": "15",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(13 - 14)",
-        "references_casillas": [
-          "13",
-          "14"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net amount payable. Computed as (13 - 14). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "es": "Resultado a ingresar. Se calcula como (13 - 14). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)",
-        "hu": "Fizetendő eredmény. Számítás: (13 - 14). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032.)"
+        "en": "Net amount payable (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "Resultado a ingresar (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "Fizetendő eredmény (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "Net amount payable",
@@ -560,13 +472,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_131",
       "period": "2023Q1",
-      "references_casillas": [
-        "13",
-        "14"
-      ],
-      "references_rules": [
-        "modelo_131.2025.resultado_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -574,11 +481,6 @@
       "source_section": "VI. Resultado a ingresar",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "RIRPF art. 110.1: instrumentos de estimación objetiva siempre ≥ 0.",
           "rule": "non_negative",

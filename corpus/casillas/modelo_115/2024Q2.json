@@ -69,15 +69,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(irpf.arrendamientos_rate * 02)",
+        "expression": "(19% * 02)",
         "references_casillas": [
           "02"
         ]
       },
       "help": {
-        "en": "Withholdings. Computed as (irpf.arrendamientos_rate * 02). (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "es": "Retenciones e ingresos a cuenta. Se calcula como (irpf.arrendamientos_rate * 02). (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Levonások. Számítás: (irpf.arrendamientos_rate * 02). (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "en": "Withholdings. Computed as (19% * 02). (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Retenciones e ingresos a cuenta. Se calcula como (19% * 02). (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Levonások. Számítás: (19% * 02). (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Withholdings",

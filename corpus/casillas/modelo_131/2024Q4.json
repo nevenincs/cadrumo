@@ -99,15 +99,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(modulos.dos_por_ciento * 03)",
+        "expression": "(2% * 03)",
         "references_casillas": [
           "03"
         ]
       },
       "help": {
-        "en": "2% on casilla 03. Computed as (modulos.dos_por_ciento * 03). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
-        "es": "2% s/casilla 03. Se calcula como (modulos.dos_por_ciento * 03). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
-        "hu": "2%-os arány. Számítás: (modulos.dos_por_ciento * 03). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
+        "en": "2% on casilla 03. Computed as (2% * 03). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "2% s/casilla 03. Se calcula como (2% * 03). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "2%-os arány. Számítás: (2% * 03). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "2% on casilla 03",
@@ -179,15 +179,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(modulos.dos_por_ciento * 05)",
+        "expression": "(2% * 05)",
         "references_casillas": [
           "05"
         ]
       },
       "help": {
-        "en": "2% on casilla 05. Computed as (modulos.dos_por_ciento * 05). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
-        "es": "2% s/casilla 05. Se calcula como (modulos.dos_por_ciento * 05). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
-        "hu": "2%-os arány. Számítás: (modulos.dos_por_ciento * 05). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
+        "en": "2% on casilla 05. Computed as (2% * 05). (Legal basis: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "es": "2% s/casilla 05. Se calcula como (2% * 05). (Base legal: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "hu": "2%-os arány. Számítás: (2% * 05). (Jogalap: reglamento, art. 110, BOE-A-2007-6820; orden ministerial, art. EHA/672/2007, BOE-A-2007-6032; orden ministerial, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
         "en": "2% on casilla 05",

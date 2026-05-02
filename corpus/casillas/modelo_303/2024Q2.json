@@ -85,15 +85,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(iva.rate_superreducido * 01)",
+        "expression": "(4% * 01)",
         "references_casillas": [
           "01"
         ]
       },
       "help": {
-        "en": "Output VAT at 4 % (01 x 0.04). Computed as (iva.rate_superreducido * 01). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 4 %. Se calcula como (iva.rate_superreducido * 01). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04). Számítás: (iva.rate_superreducido * 01). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Output VAT at 4 % (01 x 0.04). Computed as (4% * 01). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 4 %. Se calcula como (4% * 01). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04). Számítás: (4% * 01). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 4 % (01 x 0.04)",
@@ -206,15 +206,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(iva.rate_reducido * 04)",
+        "expression": "(10% * 04)",
         "references_casillas": [
           "04"
         ]
       },
       "help": {
-        "en": "Output VAT at 10 % (04 x 0.10). Computed as (iva.rate_reducido * 04). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 10 %. Se calcula como (iva.rate_reducido * 04). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10). Számítás: (iva.rate_reducido * 04). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
+        "en": "Output VAT at 10 % (04 x 0.10). Computed as (10% * 04). (Legal basis: ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 10 %. Se calcula como (10% * 04). (Base legal: ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10). Számítás: (10% * 04). (Jogalap: ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 10 % (04 x 0.10)",
@@ -327,15 +327,15 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(iva.rate_general * 07)",
+        "expression": "(21% * 07)",
         "references_casillas": [
           "07"
         ]
       },
       "help": {
-        "en": "Output VAT at 21 % (07 x 0.21). Computed as (iva.rate_general * 07). (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 21 %. Se calcula como (iva.rate_general * 07). (Base legal: ley, art. 90, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21). Számítás: (iva.rate_general * 07). (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
+        "en": "Output VAT at 21 % (07 x 0.21). Computed as (21% * 07). (Legal basis: ley, art. 90, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 21 %. Se calcula como (21% * 07). (Base legal: ley, art. 90, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21). Számítás: (21% * 07). (Jogalap: ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Output VAT at 21 % (07 x 0.21)",

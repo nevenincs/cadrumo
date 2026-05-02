@@ -160,21 +160,15 @@
     },
     {
       "casilla_id": "00562",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((00558 / 100) * 00552)",
-        "references_casillas": [
-          "00558",
-          "00552"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Gross tax amount. Computed as ((00558 / 100) * 00552). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Cuota integra. Se calcula como ((00558 / 100) * 00552). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Bruttó adóösszeg. Számítás: ((00558 / 100) * 00552). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Gross tax amount (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "es": "Cuota integra (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "hu": "Bruttó adóösszeg (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
         "en": "Gross tax amount",
@@ -184,26 +178,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
       "period": "2023",
-      "references_casillas": [
-        "00558",
-        "00552"
-      ],
-      "references_rules": [
-        "modelo_200.2025.cuota_integra"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Página 14 — Liquidación cuota íntegra",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "00582",
@@ -447,24 +430,15 @@
     },
     {
       "casilla_id": "00611",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((((00592 - 00599) - 00601) - 00603) - 00605)",
-        "references_casillas": [
-          "00592",
-          "00599",
-          "00601",
-          "00603",
-          "00605"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Tax differential. Computed as ((((00592 - 00599) - 00601) - 00603) - 00605). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Adókülönbözet. Számítás: ((((00592 - 00599) - 00601) - 00603) - 00605). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Tax differential (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "es": "Cuota diferencial (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "hu": "Adókülönbözet (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
         "en": "Tax differential",
@@ -474,48 +448,27 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
       "period": "2023",
-      "references_casillas": [
-        "00592",
-        "00599",
-        "00601",
-        "00603",
-        "00605"
-      ],
-      "references_rules": [
-        "modelo_200.2025.cuota_diferencial"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Página 14 — Cuota diferencial",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "00621",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((00611 - 00615) + 00619)",
-        "references_casillas": [
-          "00611",
-          "00615",
-          "00619"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Net payable or refundable (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "es": "Liquido a ingresar o devolver (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "hu": "Fizetendő vagy visszatérítendő (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; orden ministerial, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
         "en": "Net payable or refundable",
@@ -525,27 +478,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
       "period": "2023",
-      "references_casillas": [
-        "00611",
-        "00615",
-        "00619"
-      ],
-      "references_rules": [
-        "modelo_200.2025.liquido_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Página 14 — Líquido a ingresar / devolver",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     }
   ]
 }

@@ -64,20 +64,15 @@
     },
     {
       "casilla_id": "03",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(irpf.arrendamientos_rate * 02)",
-        "references_casillas": [
-          "02"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Withholdings. Computed as (irpf.arrendamientos_rate * 02). (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "es": "Retenciones e ingresos a cuenta. Se calcula como (irpf.arrendamientos_rate * 02). (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Levonások. Számítás: (irpf.arrendamientos_rate * 02). (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "en": "Withholdings (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Retenciones e ingresos a cuenta (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Levonások (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Withholdings",
@@ -87,25 +82,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_115",
       "period": "2023Q4",
-      "references_casillas": [
-        "02"
-      ],
-      "references_rules": [
-        "modelo_115.2025.retenciones"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "Datos relativos a la liquidación",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "04",
@@ -169,22 +154,15 @@
     },
     {
       "casilla_id": "06",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((03 + 04) - 05)",
-        "references_casillas": [
-          "03",
-          "04",
-          "05"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net amount payable. Computed as ((03 + 04) - 05). (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "es": "Resultado a ingresar. Se calcula como ((03 + 04) - 05). (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Fizetendő eredmény. Számítás: ((03 + 04) - 05). (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "en": "Net amount payable (Legal basis: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar (Base legal: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény (Jogalap: ley, art. 101.8, BOE-A-2006-20764; reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net amount payable",
@@ -194,14 +172,8 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_115",
       "period": "2023Q4",
-      "references_casillas": [
-        "03",
-        "04",
-        "05"
-      ],
-      "references_rules": [
-        "modelo_115.2025.resultado_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
@@ -209,11 +181,6 @@
       "source_section": "Resultado a ingresar",
       "synthetic": false,
       "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        },
         {
           "description": "Resultado a ingresar trimestral debe ser ≥ 0 (RIRPF art. 100.1).",
           "rule": "non_negative",

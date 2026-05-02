@@ -70,21 +70,15 @@
     },
     {
       "casilla_id": "18",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "((17 / 100) * 16)",
-        "references_casillas": [
-          "17",
-          "16"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Gross tax amount. Computed as ((17 / 100) * 16). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "es": "Cuota integra. Se calcula como ((17 / 100) * 16). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "en": "Gross tax amount (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Cuota integra (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Bruttó adóösszeg (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Gross tax amount",
@@ -94,26 +88,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
       "period": "2023Q4",
-      "references_casillas": [
-        "17",
-        "16"
-      ],
-      "references_rules": [
-        "modelo_202.2025.cuota_integra"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Apartado A — Cuota íntegra",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "27",
@@ -207,23 +190,15 @@
     },
     {
       "casilla_id": "32",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(((18 - 27) - 28) - 30)",
-        "references_casillas": [
-          "18",
-          "27",
-          "28",
-          "30"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net result. Computed as (((18 - 27) - 28) - 30). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "en": "Net result (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Resultado (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Nettó eredmény (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Net result",
@@ -233,28 +208,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
       "period": "2023Q4",
-      "references_casillas": [
-        "18",
-        "27",
-        "28",
-        "30"
-      ],
-      "references_rules": [
-        "modelo_202.2025.resultado"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Apartado C — Resultado y mínimo a ingresar",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "33",
@@ -288,21 +250,15 @@
     },
     {
       "casilla_id": "34",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "max(32, 33)",
-        "references_casillas": [
-          "32",
-          "33"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Amount payable. Computed as max(32, 33). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "es": "Cantidad a ingresar. Se calcula como max(32, 33). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Fizetendő összeg. Számítás: max(32, 33). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "en": "Amount payable (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Cantidad a ingresar (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Fizetendő összeg (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Amount payable",
@@ -312,26 +268,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
       "period": "2023Q4",
-      "references_casillas": [
-        "32",
-        "33"
-      ],
-      "references_rules": [
-        "modelo_202.2025.cantidad_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
       "source_page": 1,
       "source_section": "Apartado C — Resultado y mínimo a ingresar",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     }
   ]
 }

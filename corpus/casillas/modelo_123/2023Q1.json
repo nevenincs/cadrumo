@@ -64,21 +64,15 @@
     },
     {
       "casilla_id": "03",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(01 + 02)",
-        "references_casillas": [
-          "01",
-          "02"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total recipients. Computed as (01 + 02). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "es": "Total perceptores. Se calcula como (01 + 02). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Összes kedvezményezett. Számítás: (01 + 02). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
+        "en": "Total recipients (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Total perceptores (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Összes kedvezményezett (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total recipients",
@@ -88,26 +82,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
       "period": "2023Q1",
-      "references_casillas": [
-        "01",
-        "02"
-      ],
-      "references_rules": [
-        "modelo_123.2025.total_perceptores"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "I. Total perceptores (dividendos / otras rentas)",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "04",
@@ -171,21 +154,15 @@
     },
     {
       "casilla_id": "06",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(04 + 05)",
-        "references_casillas": [
-          "04",
-          "05"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total withholding base. Computed as (04 + 05). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "es": "Base total retenciones. Se calcula como (04 + 05). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Teljes levonási alap. Számítás: (04 + 05). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
+        "en": "Total withholding base (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Base total retenciones (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Teljes levonási alap (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholding base",
@@ -195,26 +172,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
       "period": "2023Q1",
-      "references_casillas": [
-        "04",
-        "05"
-      ],
-      "references_rules": [
-        "modelo_123.2025.base_total"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "II. Base retenciones (dividendos / otras rentas)",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "07",
@@ -278,21 +244,15 @@
     },
     {
       "casilla_id": "09",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(07 + 08)",
-        "references_casillas": [
-          "07",
-          "08"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Total withholdings. Computed as (07 + 08). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "es": "Total retenciones. Se calcula como (07 + 08). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás. Számítás: (07 + 08). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
+        "en": "Total withholdings (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Total retenciones (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Teljes levonás (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
@@ -302,26 +262,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
       "period": "2023Q1",
-      "references_casillas": [
-        "07",
-        "08"
-      ],
-      "references_rules": [
-        "modelo_123.2025.total_retenciones"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "III. Total retenciones e ingresos a cuenta",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     },
     {
       "casilla_id": "10",
@@ -355,21 +304,15 @@
     },
     {
       "casilla_id": "11",
-      "computed": true,
+      "computed": false,
       "data_type": "currency_eur",
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
-      "formula": {
-        "expression": "(09 - 10)",
-        "references_casillas": [
-          "09",
-          "10"
-        ]
-      },
+      "formula": null,
       "help": {
-        "en": "Net amount payable. Computed as (09 - 10). (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "es": "Resultado a ingresar. Se calcula como (09 - 10). (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
-        "hu": "Fizetendő eredmény. Számítás: (09 - 10). (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
+        "en": "Net amount payable (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 101.4, BOE-A-2006-20764; reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net amount payable",
@@ -379,26 +322,15 @@
       "llm_draft_provenance": null,
       "modelo": "MODELO_123",
       "period": "2023Q1",
-      "references_casillas": [
-        "09",
-        "10"
-      ],
-      "references_rules": [
-        "modelo_123.2025.resultado_a_ingresar"
-      ],
+      "references_casillas": [],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
       "source_page": 1,
       "source_section": "IV. Resultado a ingresar",
       "synthetic": false,
-      "validation": [
-        {
-          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
-          "rule": "must_derive",
-          "value": true
-        }
-      ]
+      "validation": []
     }
   ]
 }
