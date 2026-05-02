@@ -74,7 +74,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Importe total que debe ingresarse al erario español, equivalente a la suma de cuotas devengadas (no se admiten deducciones en este régimen).",
+        "ca": "Import total que debe ingresarse al erario español, equivalente a la suma de cuotas devengadas (no se admiten deducciones en este régimen).",
         "en": "Total amount payable to the Spanish treasury — equal to the output VAT sum (deductions are not allowed under this regime).",
         "es": "Importe total que debe ingresarse al erario español, equivalente a la suma de cuotas devengadas (no se admiten deducciones en este régimen).",
         "hu": "A spanyol kincstárnak fizetendő teljes összeg, ami megegyezik a felszámított ÁFA-val (e rendszerben levonás nem alkalmazható)."

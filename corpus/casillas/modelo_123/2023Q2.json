@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Perceptores dividendos",
+        "ca": "Perceptors dividends",
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
         "hu": "Osztalék-kedvezményezettek"
       },
       "label": {
-        "ca": "Perceptores dividendos",
+        "ca": "Perceptors dividends",
         "en": "Dividend recipients",
         "es": "Perceptores dividendos",
         "hu": "Osztalék-kedvezményezettek"
@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Perceptores otras rentas",
+        "ca": "Perceptors otras rendes",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
       },
       "label": {
-        "ca": "Perceptores otras rentas",
+        "ca": "Perceptors otras rendes",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total perceptores (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Total perceptors (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "en": "Total recipients (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total perceptores (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Összes kedvezményezett (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total perceptores",
+        "ca": "Total perceptors",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes kedvezményezett"
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones dividendos",
+        "ca": "Base retenciones dividends",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
       },
       "label": {
-        "ca": "Base retenciones dividendos",
+        "ca": "Base retenciones dividends",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
@@ -138,13 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones otras rentas",
+        "ca": "Base retenciones otras rendes",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
       },
       "label": {
-        "ca": "Base retenciones otras rentas",
+        "ca": "Base retenciones otras rendes",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
@@ -202,13 +202,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones dividendos",
+        "ca": "Retencions dividends",
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
         "hu": "Osztalék-levonás"
       },
       "label": {
-        "ca": "Retenciones dividendos",
+        "ca": "Retencions dividends",
         "en": "Dividend withholdings",
         "es": "Retenciones dividendos",
         "hu": "Osztalék-levonás"
@@ -234,13 +234,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones otras rentas",
+        "ca": "Retencions otras rendes",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
       },
       "label": {
-        "ca": "Retenciones otras rentas",
+        "ca": "Retencions otras rendes",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
@@ -266,13 +266,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Total retencions (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "en": "Total withholdings (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Teljes levonás (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total retenciones",
+        "ca": "Total retencions",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Teljes levonás"
@@ -298,13 +298,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat declaracion anterior (complementaria)",
+        "ca": "Resultado declaracion anterior (complementària)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
       },
       "label": {
-        "ca": "Resultat declaracion anterior (complementaria)",
+        "ca": "Resultado declaracion anterior (complementària)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
@@ -330,13 +330,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat a ingresar (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Resultat a ingressar (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "en": "Net amount payable (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Fizetendő eredmény (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultat a ingresar",
+        "ca": "Resultat a ingressar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"

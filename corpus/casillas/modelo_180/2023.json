@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total perceptores Resum anual que consolida les dades trimestrals del model 115.",
+        "ca": "Total perceptors Resum anual que consolida les dades trimestrals del model 115.",
         "en": "Total recipients Annual summary consolidating the quarterly data of form 115.",
         "es": "Total perceptores Resumen anual que consolida los datos trimestrales del modelo 115.",
         "hu": "Összes bérbeadó Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
-        "ca": "Total perceptores",
+        "ca": "Total perceptors",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes bérbeadó"
@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total retenciones Resum anual que consolida les dades trimestrals del model 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "ca": "Total retencions Resum anual que consolida les dades trimestrals del model 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "en": "Total withholdings Annual summary consolidating the quarterly data of form 115. (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "es": "Total retenciones Resumen anual que consolida los datos trimestrales del modelo 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "hu": "Teljes levonás Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell. (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Total retenciones",
+        "ca": "Total retencions",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Teljes levonás"
@@ -112,13 +112,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total ingresos a cuenta por retribuciones en especie Resum anual que consolida les dades trimestrals del model 115.",
+        "ca": "Total ingressos a cuenta por retribucions en espècie Resum anual que consolida les dades trimestrals del model 115.",
         "en": "In-kind payments on account Annual summary consolidating the quarterly data of form 115.",
         "es": "Total ingresos a cuenta por retribuciones en especie Resumen anual que consolida los datos trimestrales del modelo 115.",
         "hu": "Természetbeni előlegek Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
-        "ca": "Total ingresos a cuenta por retribuciones en especie",
+        "ca": "Total ingressos a cuenta por retribucions en espècie",
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
         "hu": "Természetbeni előlegek"

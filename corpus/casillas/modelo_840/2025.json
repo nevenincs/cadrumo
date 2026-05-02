@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Ejercicio al que se refiere la declaración del IAE.",
+        "ca": "Exercici al que se refiere la declaració del IAE.",
         "en": "Tax year covered by the IAE declaration.",
         "es": "Ejercicio al que se refiere la declaración del IAE.",
         "hu": "Az IAE-bevallás vonatkozó adóéve."
       },
       "label": {
-        "ca": "Ejercicio",
+        "ca": "Exercici",
         "en": "Tax year",
         "es": "Ejercicio",
         "hu": "Adóév"
@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas.",
+        "ca": "Acto censal que motiva la declaració: alta, variació o baja en el Impuesto sobre Actividades Económicas.",
         "en": "Census act prompting the declaration: enrolment, change, or removal in the IAE.",
         "es": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas.",
         "hu": "A bejelentést indokoló esemény: beiratkozás, módosítás vagy kijelentkezés."
       },
       "label": {
-        "ca": "Causa de presentación",
+        "ca": "Causa de presentació",
         "en": "Filing cause",
         "es": "Causa de presentación",
         "hu": "Bejelentés oka"
@@ -234,7 +234,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Fecha desde la que produce efectos la presente declaración del IAE.",
+        "ca": "Fecha desde la que produce efectos la presente declaració del IAE.",
         "en": "Date from which this IAE declaration takes effect.",
         "es": "Fecha desde la que produce efectos la presente declaración del IAE.",
         "hu": "A bejelentés hatálybalépésének dátuma."

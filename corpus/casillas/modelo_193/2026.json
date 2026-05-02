@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25). Resum anual que consolida les dades trimestrals del model 123.",
+        "ca": "Total acumulado anual de perceptors de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25). Resum anual que consolida les dades trimestrals del model 123.",
         "en": "Annual cumulative number of recipients of investment income subject to withholding (LIRPF art. 25). Annual summary consolidating the quarterly data of form 123.",
         "es": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25). Resumen anual que consolida los datos trimestrales del modelo 123.",
         "hu": "Tőkejövedelemben részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 123-os modell."
       },
       "label": {
-        "ca": "N.º total perceptores",
+        "ca": "N.º total perceptors",
         "en": "Total recipients",
         "es": "N.º total perceptores",
         "hu": "Összes kedvezményezett"
@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4). Resum anual que consolida les dades trimestrals del model 123.",
+        "ca": "Suma anual de las retenciones e ingressos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4). Resum anual que consolida les dades trimestrals del model 123.",
         "en": "Annual sum of withholdings and payments on account at the 19% rate (LIRPF art. 101.4). Annual summary consolidating the quarterly data of form 123.",
         "es": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4). Resumen anual que consolida los datos trimestrales del modelo 123.",
         "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 123-os modell."
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta",
+        "ca": "Retencions e ingressos a cuenta",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
