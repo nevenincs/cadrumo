@@ -12,14 +12,12 @@
       "help": {
         "en": "Tax year covered by the IAE declaration.",
         "es": "Ejercicio al que se refiere la declaración del IAE.",
-        "hu": "Az IAE-bevallás vonatkozó adóéve.",
-        "ca": "Ejercicio al que se refiere la declaración del IAE."
+        "hu": "Az IAE-bevallás vonatkozó adóéve."
       },
       "label": {
         "en": "Tax year",
         "es": "Ejercicio",
-        "hu": "Adóév",
-        "ca": "Ejercicio"
+        "hu": "Adóév"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Census act prompting the declaration: enrolment, change, or removal in the IAE.",
         "es": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas.",
-        "hu": "A bejelentést indokoló esemény: beiratkozás, módosítás vagy kijelentkezés.",
-        "ca": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas."
+        "hu": "A bejelentést indokoló esemény: beiratkozás, módosítás vagy kijelentkezés."
       },
       "label": {
         "en": "Filing cause",
         "es": "Causa de presentación",
-        "hu": "Bejelentés oka",
-        "ca": "Causa de presentación"
+        "hu": "Bejelentés oka"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -76,14 +72,12 @@
       "help": {
         "en": "IAE quota class: municipal, provincial or national.",
         "es": "Clase de cuota del IAE: municipal, provincial o nacional.",
-        "hu": "IAE-adóosztály: önkormányzati, tartományi vagy országos.",
-        "ca": "Clase de cuota del IAE: municipal, provincial o nacional."
+        "hu": "IAE-adóosztály: önkormányzati, tartományi vagy országos."
       },
       "label": {
         "en": "Quota class",
         "es": "Clase de cuota",
-        "hu": "Adóosztály",
-        "ca": "Clase de cuota"
+        "hu": "Adóosztály"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -108,14 +102,12 @@
       "help": {
         "en": "Activity type: business, professional or artistic.",
         "es": "Tipo de actividad: empresarial, profesional o artística.",
-        "hu": "Tevékenység típusa: vállalkozói, szakmai vagy művészi.",
-        "ca": "Tipo de actividad: empresarial, profesional o artística."
+        "hu": "Tevékenység típusa: vállalkozói, szakmai vagy művészi."
       },
       "label": {
         "en": "Activity type",
         "es": "Tipo de actividad",
-        "hu": "Tevékenység típusa",
-        "ca": "Tipo de actividad"
+        "hu": "Tevékenység típusa"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -140,14 +132,12 @@
       "help": {
         "en": "IAE group or heading assigned to the taxpayer's economic activity.",
         "es": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
-        "hu": "A tevékenységhez rendelt IAE-csoport vagy tételszám.",
-        "ca": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo."
+        "hu": "A tevékenységhez rendelt IAE-csoport vagy tételszám."
       },
       "label": {
         "en": "Group or heading",
         "es": "Grupo o epígrafe",
-        "hu": "Csoport vagy tételszám",
-        "ca": "Grupo o epígrafe"
+        "hu": "Csoport vagy tételszám"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -172,14 +162,12 @@
       "help": {
         "en": "Municipality where the declared activity is carried out.",
         "es": "Municipio en el que se ejerce la actividad declarada.",
-        "hu": "A tevékenység végzésének helye szerinti település.",
-        "ca": "Municipio en el que se ejerce la actividad declarada."
+        "hu": "A tevékenység végzésének helye szerinti település."
       },
       "label": {
         "en": "Municipality",
         "es": "Municipio",
-        "hu": "Település",
-        "ca": "Municipio"
+        "hu": "Település"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -204,14 +192,12 @@
       "help": {
         "en": "Province where the declared activity is carried out.",
         "es": "Provincia en la que se ejerce la actividad declarada.",
-        "hu": "A tevékenység végzésének helye szerinti tartomány.",
-        "ca": "Provincia en la que se ejerce la actividad declarada."
+        "hu": "A tevékenység végzésének helye szerinti tartomány."
       },
       "label": {
         "en": "Province",
         "es": "Provincia",
-        "hu": "Tartomány",
-        "ca": "Provincia"
+        "hu": "Tartomány"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
@@ -236,14 +222,12 @@
       "help": {
         "en": "Date from which this IAE declaration takes effect.",
         "es": "Fecha desde la que produce efectos la presente declaración del IAE.",
-        "hu": "A bejelentés hatálybalépésének dátuma.",
-        "ca": "Fecha desde la que produce efectos la presente declaración del IAE."
+        "hu": "A bejelentés hatálybalépésének dátuma."
       },
       "label": {
         "en": "Effective date",
         "es": "Fecha de efectos",
-        "hu": "Hatálybalépés dátuma",
-        "ca": "Fecha de efectos"
+        "hu": "Hatálybalépés dátuma"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_840",
