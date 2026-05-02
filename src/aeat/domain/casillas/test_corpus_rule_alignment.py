@@ -398,3 +398,27 @@ def test_corpus_formula_presence_aligns_with_computed_flag() -> None:
                 failures.append(f"{modelo} {period} cas {rec.casilla_id}: not computed but carries a formula")
     if failures:
         pytest.fail("Corpus formula/computed drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_formula_expression_mentions_match_references_casillas() -> None:
+    """Casilla IDs inside the rendered formula expression must match references_casillas exactly."""
+    import re
+
+    token_re = re.compile(r"\b(\d{2,5})\b(?!%)")
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        catalogue_ids = {r.casilla_id for r in catalogue.records}
+        for rec in catalogue.records:
+            if rec.formula is None:
+                continue
+            mentioned = sorted({tok for tok in token_re.findall(rec.formula.expression) if tok in catalogue_ids})
+            declared = sorted(set(rec.references_casillas))
+            if mentioned != declared:
+                failures.append(
+                    f"{modelo} {period} cas {rec.casilla_id}: expr {rec.formula.expression!r} "
+                    f"mentions {mentioned} but declared refs are {declared}"
+                )
+    if failures:
+        pytest.fail("Corpus formula expression vs refs drift:\n" + "\n".join(f" - {f}" for f in failures))
