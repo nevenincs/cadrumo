@@ -74,7 +74,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total perceptors (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Total perceptors (Base legal: Llei, art. 25, BOE-A-2006-20764; Llei, art. 101.4, BOE-A-2006-20764; Reglament, art. 90, BOE-A-2007-6820.)",
         "en": "Total recipients (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total perceptores (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Összes kedvezményezett (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
@@ -170,7 +170,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base total retencions (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Base total retencions (Base legal: Llei, art. 25, BOE-A-2006-20764; Llei, art. 101.4, BOE-A-2006-20764; Reglament, art. 90, BOE-A-2007-6820.)",
         "en": "Total withholding base (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Base total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Teljes levonási alap (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
@@ -266,7 +266,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total retencions (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Total retencions (Base legal: Llei, art. 25, BOE-A-2006-20764; Llei, art. 101.4, BOE-A-2006-20764; Reglament, art. 90, BOE-A-2007-6820.)",
         "en": "Total withholdings (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Teljes levonás (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
@@ -330,7 +330,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat a ingressar (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Resultat a ingressar (Base legal: Llei, art. 25, BOE-A-2006-20764; Llei, art. 101.4, BOE-A-2006-20764; Reglament, art. 90, BOE-A-2007-6820.)",
         "en": "Net amount payable (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Fizetendő eredmény (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"

@@ -176,7 +176,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Quota íntegra Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Quota íntegra Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Ordre, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Gross tax amount Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Cuota integra Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Bruttó adóösszeg Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"
@@ -464,7 +464,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Quota diferencial Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Quota diferencial Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Ordre, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Tax differential Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Cuota diferencial Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Adókülönbözet Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"
@@ -496,7 +496,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Liquido a ingressar o devolver Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Liquido a ingressar o devolver Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Ordre, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Net payable or refundable Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Liquido a ingresar o devolver Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Fizetendő vagy visszatérítendő Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"

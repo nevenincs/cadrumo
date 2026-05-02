@@ -208,7 +208,7 @@
         ]
       },
       "help": {
-        "ca": "Total IVA suportat deducible. Es calcula com (100 + 101). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "ca": "Total IVA suportat deducible. Es calcula com (100 + 101). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 92, BOE-A-1992-28740; Llei, art. 102, BOE-A-1992-28740.)",
         "en": "Total deductible input VAT. Computed as (100 + 101). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
         "es": "Total IVA soportado deducible. Se calcula como (100 + 101). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
         "hu": "Összes levonható ÁFA. Számítás: (100 + 101) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)"
@@ -257,7 +257,7 @@
         ]
       },
       "help": {
-        "ca": "Resultat règim general. Es calcula com (96 - 104). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Resultat règim general. Es calcula com (96 - 104). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 90, BOE-A-1992-28740; Llei, art. 91, BOE-A-1992-28740; Llei, art. 92, BOE-A-1992-28740; Llei, art. 102, BOE-A-1992-28740; Llei, art. 164, BOE-A-1992-28740.)",
         "en": "Result (general regime). Computed as (96 - 104). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Resultado régimen general. Se calcula como (96 - 104). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Általános rendszer eredménye. Számítás: (96 - 104) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
@@ -371,7 +371,7 @@
         ]
       },
       "help": {
-        "ca": "Suma resultat. Es calcula com (105 + 108 + 109). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Suma resultat. Es calcula com (105 + 108 + 109). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 164, BOE-A-1992-28740.)",
         "en": "Result sum. Computed as (105 + 108 + 109). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Suma resultado. Se calcula como (105 + 108 + 109). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Eredmény összege. Számítás: (105 + 108 + 109) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
@@ -421,7 +421,7 @@
         ]
       },
       "help": {
-        "ca": "Quota resultante anual. Es calcula com (190 - 662). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Quota resultante anual. Es calcula com (190 - 662). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 107, BOE-A-1992-28740; Llei, art. 164, BOE-A-1992-28740.)",
         "en": "Annual result quota. Computed as (190 - 662). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Cuota resultante anual. Se calcula como (190 - 662). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Éves eredmény-összeg. Számítás: (190 - 662) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
@@ -469,7 +469,7 @@
         ]
       },
       "help": {
-        "ca": "Total a ingressar. Es calcula com max(0, 191). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a ingressar. Es calcula com max(0, 191). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 164, BOE-A-1992-28740; Reglament, art. 71.7, BOE-A-1992-28925; Ordre, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "en": "Total payable. Computed as max(0, 191). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "es": "Total a ingresar. Se calcula como max(0, 191). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "hu": "Fizetendő összeg. Számítás: max(0, 191) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
@@ -521,7 +521,7 @@
         ]
       },
       "help": {
-        "ca": "Total a retornar. Es calcula com max(0, (0 - 191)). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a retornar. Es calcula com max(0, (0 - 191)). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Llei, art. 164, BOE-A-1992-28740; Reglament, art. 71.7, BOE-A-1992-28925; Ordre, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "en": "Total refundable. Computed as max(0, (0 - 191)). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "es": "Total a devolver. Se calcula como max(0, (0 - 191)). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
