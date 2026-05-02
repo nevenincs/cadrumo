@@ -16,6 +16,11 @@ related:
 
 **COMPLETE** — three sub-passes ran; all findings have a disposition; the override-list candidate set is enumerated and audit-grounded.
 
+Historical execution note: this is a pre-move planning scan. References
+to shim-based preservation reflect the planning state at Step 1 and are
+superseded by the delivered hard-cutover outcome (no retained root
+compatibility shim layer).
+
 ## sub-pass 1 — dynamic imports / entry points
 
 ### method

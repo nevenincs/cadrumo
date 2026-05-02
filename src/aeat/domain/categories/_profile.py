@@ -12,21 +12,21 @@ from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
 
-class _StrictFrozenModel(BaseModel):
+class _CategoryProfileStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
 
 class VatCategory(StrEnum):
-    """Local VAT hint stub kept decoupled from the VAT taxonomy branch."""
+    """Local VAT hint kept decoupled from the VAT taxonomy branch."""
 
     GENERAL = "general"
     EXEMPT_OR_NON_SUBJECT = "exempt_or_non_subject"
     NON_DEDUCTIBLE_INPUT = "non_deductible_input"
 
 
-class CategoryProfile(_StrictFrozenModel):
+class CategoryProfile(_CategoryProfileStrictFrozenModel):
     """Explainable category profile for one spending category."""
 
     category: SpendingCategory

@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ..casillas import ModeloCode, PeriodType
 
 
-class _StrictFrozenModel(BaseModel):
+class _CategoryMappingStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -22,7 +22,7 @@ class CasillaMappingSign(StrEnum):
     CREDIT = "credit"
 
 
-class CasillaMapping(_StrictFrozenModel):
+class CasillaMapping(_CategoryMappingStrictFrozenModel):
     """One category-to-casilla mapping for a filing modelo."""
 
     modelo: ModeloCode

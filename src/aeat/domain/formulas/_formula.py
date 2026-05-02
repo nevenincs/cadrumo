@@ -45,7 +45,7 @@ def _coerce_decimal(value: Any) -> Any:
 _DecimalField = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 
 
-class _StrictFrozenModel(BaseModel):
+class _FormulaStrictFrozenModel(BaseModel):
     """Shared base for every formula-node model."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -54,21 +54,21 @@ class _StrictFrozenModel(BaseModel):
 # -- Leaf operands --------------------------------------------------------
 
 
-class Literal(_StrictFrozenModel):
+class Literal(_FormulaStrictFrozenModel):
     """A decimal literal inside a formula."""
 
     op: TLiteral["literal"] = "literal"
     value: _DecimalField
 
 
-class CasillaRef(_StrictFrozenModel):
+class FormulaCasillaRef(_FormulaStrictFrozenModel):
     """Reference to another casilla's value inside the current evaluation."""
 
     op: TLiteral["casilla_ref"] = "casilla_ref"
     casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
 
 
-class ParamRef(_StrictFrozenModel):
+class ParamRef(_FormulaStrictFrozenModel):
     """Reference to a named parameter in the ruleset's parameter table."""
 
     op: TLiteral["param_ref"] = "param_ref"
@@ -78,28 +78,28 @@ class ParamRef(_StrictFrozenModel):
 # -- Compound operators ---------------------------------------------------
 
 
-class AddFormula(_StrictFrozenModel):
+class AddFormula(_FormulaStrictFrozenModel):
     """N-ary addition."""
 
     op: TLiteral["add"] = "add"
     operands: tuple[Operand, ...] = Field(min_length=2)
 
 
-class SubFormula(_StrictFrozenModel):
+class SubFormula(_FormulaStrictFrozenModel):
     """Binary subtraction (``a - b``)."""
 
     op: TLiteral["sub"] = "sub"
     operands: tuple[Operand, Operand]
 
 
-class MulFormula(_StrictFrozenModel):
+class MulFormula(_FormulaStrictFrozenModel):
     """N-ary multiplication."""
 
     op: TLiteral["mul"] = "mul"
     operands: tuple[Operand, ...] = Field(min_length=2)
 
 
-class DivFormula(_StrictFrozenModel):
+class DivFormula(_FormulaStrictFrozenModel):
     """Binary division with an explicit quantize to cap precision."""
 
     op: TLiteral["div"] = "div"
@@ -107,42 +107,42 @@ class DivFormula(_StrictFrozenModel):
     quantize: _DecimalField = Decimal("0.0001")
 
 
-class MinFormula(_StrictFrozenModel):
+class MinFormula(_FormulaStrictFrozenModel):
     """N-ary minimum."""
 
     op: TLiteral["min"] = "min"
     operands: tuple[Operand, ...] = Field(min_length=2)
 
 
-class MaxFormula(_StrictFrozenModel):
+class MaxFormula(_FormulaStrictFrozenModel):
     """N-ary maximum."""
 
     op: TLiteral["max"] = "max"
     operands: tuple[Operand, ...] = Field(min_length=2)
 
 
-class ClampPositiveFormula(_StrictFrozenModel):
+class ClampPositiveFormula(_FormulaStrictFrozenModel):
     """Unary ``max(0, x)`` clamp."""
 
     op: TLiteral["clamp_positive"] = "clamp_positive"
     operands: tuple[Operand]
 
 
-class PercentFormula(_StrictFrozenModel):
+class PercentFormula(_FormulaStrictFrozenModel):
     """Binary ``rate x base`` (both Decimal)."""
 
     op: TLiteral["percent"] = "percent"
     operands: tuple[Operand, Operand]
 
 
-class Bracket(_StrictFrozenModel):
+class Bracket(_FormulaStrictFrozenModel):
     """One bracket in a :class:`BracketsFormula` step function."""
 
     upper_inclusive: _DecimalField | None = None
     value: _DecimalField
 
 
-class BracketsFormula(_StrictFrozenModel):
+class BracketsFormula(_FormulaStrictFrozenModel):
     """Step function over a single operand.
 
     Walks ``brackets`` in order; the first bracket whose
@@ -170,11 +170,11 @@ class BracketsFormula(_StrictFrozenModel):
         return self
 
 
-class RoundFormula(_StrictFrozenModel):
+class RoundFormula(_FormulaStrictFrozenModel):
     """Terminal rounding to a declared precision.
 
     The engine enforces that no ``RoundFormula`` contains another
-    ``RoundFormula`` anywhere in its operand tree — the
+    ``RoundFormula`` anywhere in its operand tree â€” the
     single-rounding invariant from the ADR.
     """
 
@@ -207,7 +207,7 @@ Formula = Annotated[
 
 Operand = Annotated[
     Literal
-    | CasillaRef
+    | FormulaCasillaRef
     | ParamRef
     | AddFormula
     | SubFormula
@@ -288,7 +288,7 @@ def _contains_round(operand: object) -> bool:
     return False
 
 
-class FormulaDefinition(_StrictFrozenModel):
+class FormulaDefinition(_FormulaStrictFrozenModel):
     """Binding of a computed casilla to the formula that derives it."""
 
     casilla_id: Annotated[str, Field(min_length=2, max_length=5)]
@@ -300,14 +300,14 @@ class FormulaDefinition(_StrictFrozenModel):
 
 
 def iter_casilla_refs(operand: object) -> list[str]:
-    """Collect every :class:`CasillaRef.casilla_id` in ``operand``."""
+    """Collect every :class:`FormulaCasillaRef.casilla_id` in ``operand``."""
     refs: list[str] = []
     _collect_casilla_refs(operand, refs)
     return refs
 
 
 def _collect_casilla_refs(operand: object, into: list[str]) -> None:
-    if isinstance(operand, CasillaRef):
+    if isinstance(operand, FormulaCasillaRef):
         into.append(operand.casilla_id)
         return
     if _is_compound(operand):

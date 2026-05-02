@@ -1,28 +1,28 @@
-"""Mutation-harness primitives for ruleset regression detection.
+﻿"""Mutation-harness primitives for ruleset regression detection.
 
 The mutators here are *test infrastructure*. None of them is imported
 by production code. Each mutator returns a fresh :class:`Ruleset`
-(via ``model_copy``) with one — and only one — leaf-level value
+(via ``model_copy``) with one Ã¢â,¬â€ and only one Ã¢â,¬â€ leaf-level value
 perturbed; the surrounding test then asserts that the engine surfaces
 a discrepancy on the dependent casilla.
 
 Four mutator classes are wired:
 
-- ``sub_op`` — outermost-:class:`SubFormula` operand swap (kept in
+- ``sub_op`` Ã¢â,¬â€ outermost-:class:`SubFormula` operand swap (kept in
   ``test_operand_swap_mutation`` for historical-marker reasons; see
   the ADR file-organisation rationale).
-- ``percent_rate`` — perturb a :class:`PercentFormula` rate operand
-  by ±1 percentage point. Two underlying mechanisms: literal-rate
+- ``percent_rate`` Ã¢â,¬â€ perturb a :class:`PercentFormula` rate operand
+  by Ã,Â±1 percentage point. Two underlying mechanisms: literal-rate
   (mutate the :class:`Literal` value) and parameter-rate (mutate
   the entry in the ruleset's :class:`ParameterTable`). A
-  ``CasillaRef`` rate is unmuturable via AST and is recorded in the
+  ``FormulaCasillaRef`` rate is unmuturable via AST and is recorded in the
   unflagged-nodes catalogue.
-- ``brackets_threshold`` — perturb a non-terminal
-  :class:`Bracket`'s ``upper_inclusive`` by ±1 €.
-- ``mul_div_scalar`` — perturb a leaf :class:`Literal` operand of
-  a :class:`MulFormula` or :class:`DivFormula` by ±1 %.
+- ``brackets_threshold`` Ã¢â,¬â€ perturb a non-terminal
+  :class:`Bracket`'s ``upper_inclusive`` by Ã,Â±1 Ã¢â€šÂ¬.
+- ``mul_div_scalar`` Ã¢â,¬â€ perturb a leaf :class:`Literal` operand of
+  a :class:`MulFormula` or :class:`DivFormula` by Ã,Â±1 %.
 
-The walker yields *paths* into the formula tree — tuples of integers
+The walker yields *paths* into the formula tree Ã¢â,¬â€ tuples of integers
 indexing the ``operands`` of each compound node along the descent
 from the casilla's :class:`FormulaDefinition.formula` root. A
 mutator can then rebuild the tree along a path, replacing the leaf
@@ -41,10 +41,10 @@ from .._formula import (
     AddFormula,
     Bracket,
     BracketsFormula,
-    CasillaRef,
     ClampPositiveFormula,
     DivFormula,
     Formula,
+    FormulaCasillaRef,
     FormulaDefinition,
     Literal,
     MaxFormula,
@@ -84,29 +84,29 @@ __all__ = [
 # -- Pydantic models ------------------------------------------------------
 
 
-class _StrictFrozenModel(BaseModel):
+class _MutatorStrictFrozenModel(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class MutatorClass(_StrictFrozenModel):
+class MutatorClass(_MutatorStrictFrozenModel):
     """Identity of a mutator class.
 
-    ``slug`` — short identifier used in test ids and in catalogue rows.
-    ``description`` — human-readable label for the exec summary.
+    ``slug`` Ã¢â,¬â€ short identifier used in test ids and in catalogue rows.
+    ``description`` Ã¢â,¬â€ human-readable label for the exec summary.
     """
 
     slug: str = Field(min_length=1, max_length=64)
     description: str = Field(min_length=1, max_length=256)
 
 
-class PercentRateLocation(_StrictFrozenModel):
+class PercentRateLocation(_MutatorStrictFrozenModel):
     """Where a :class:`PercentFormula` rate lives in the ruleset.
 
-    ``mode`` — one of ``"literal"`` (rate is a :class:`Literal` inside
+    ``mode`` Ã¢â,¬â€ one of ``"literal"`` (rate is a :class:`Literal` inside
     the formula tree), ``"param"`` (rate is a :class:`ParamRef`
     resolving via :class:`ParameterTable`), ``"casilla_ref"`` (rate is
-    a :class:`CasillaRef` resolving to a fixture input value), or
-    ``"compound"`` (rate is a compound formula — e.g. a
+    a :class:`FormulaCasillaRef` resolving to a fixture input value), or
+    ``"compound"`` (rate is a compound formula Ã¢â,¬â€ e.g. a
     :class:`DivFormula` produced by ``percent_from_whole``; mutation
     is delegated to descendant mutators).
     """
@@ -139,7 +139,7 @@ def _walk_with_paths(node: object, prefix: tuple[int, ...]) -> Iterator[tuple[tu
     ``path`` is a tuple of operand indices from the original root; an
     empty tuple identifies the root. The walker descends through every
     compound node's ``operands`` field but does NOT recurse into the
-    ``brackets`` field of a :class:`BracketsFormula` — bracket-step
+    ``brackets`` field of a :class:`BracketsFormula` Ã¢â,¬â€ bracket-step
     enumeration is handled by :func:`mutate_brackets_threshold` and
     :func:`iter_brackets_nodes` directly.
     """
@@ -170,7 +170,7 @@ def iter_scalar_leaf_paths(
 
     A "scalar leaf" is a :class:`Literal` that is a *direct* operand
     of a :class:`MulFormula` or :class:`DivFormula`. The parent_op_slug
-    is ``"mul"`` or ``"div"`` — used in test ids and the exec summary.
+    is ``"mul"`` or ``"div"`` Ã¢â,¬â€ used in test ids and the exec summary.
     """
     for path, node in _walk_with_paths(formula, ()):
         if isinstance(node, MulFormula):
@@ -194,12 +194,12 @@ def iter_threshold_literal_paths(
     (cap upper bounds), ``MaxFormula`` (clamp lower bounds), and
     ``AddFormula`` (additive padding) were previously not exercised by
     any mutator class. A typo in any of these silently miscalculates
-    tax. This walker complements :func:`iter_scalar_leaf_paths` —
+    tax. This walker complements :func:`iter_scalar_leaf_paths` Ã¢â,¬â€
     together the two cover every :class:`Literal` position in the
     formula tree.
 
     The parent_op_slug is one of ``"sub"``, ``"min"``, ``"max"``,
-    ``"add"``, ``"round"``, ``"clamp_pos"``, ``"percent"`` — used in
+    ``"add"``, ``"round"``, ``"clamp_pos"``, ``"percent"`` Ã¢â,¬â€ used in
     test ids and the exec summary. ``"percent"`` covers the rate
     operand at index 0 of a :class:`PercentFormula`; the rate's
     detection floor is owned by the ``percent_rate`` mutator class
@@ -242,9 +242,9 @@ def is_additive_identity_literal(parent_slug: str, literal_value: Decimal) -> bo
     Identity positions are deliberately excluded from the threshold
     harness because a small mutation has no observable effect:
 
-    - ``Max(0, X)`` with ``X > 0`` — the literal 0 is dominated; any
+    - ``Max(0, X)`` with ``X > 0`` Ã¢â,¬â€ the literal 0 is dominated; any
       epsilon-mutation leaves the max at X.
-    - ``Min(0, X)`` with ``X > 0`` — symmetric (literal 0 wins).
+    - ``Min(0, X)`` with ``X > 0`` Ã¢â,¬â€ symmetric (literal 0 wins).
 
     The rationale doubles as documentation of why the harness skips
     these positions; a future contributor adding a new identity
@@ -295,7 +295,7 @@ def mutate_arithmetic_op(
     - 2-operand ``AddFormula`` -> ``SubFormula(operands)``.
     - 2-operand ``SubFormula`` -> ``AddFormula(operands)``.
     - N-operand (>= 3) ``AddFormula`` -> ``SubFormula(AddFormula(operands[:-1]), operands[-1])``
-      — flips the last + to a -, modelling a single-character typo.
+      Ã¢â,¬â€ flips the last + to a -, modelling a single-character typo.
 
     Raises:
         LookupError: ``ruleset`` has no formula for ``casilla_id``.
@@ -330,8 +330,8 @@ def mutate_arithmetic_op(
 
 def iter_casilla_ref_paths(
     formula: Formula,
-) -> Iterator[tuple[tuple[int, ...], CasillaRef]]:
-    """Yield ``(path, casilla_ref)`` for every :class:`CasillaRef` in ``formula``.
+) -> Iterator[tuple[tuple[int, ...], FormulaCasillaRef]]:
+    """Yield ``(path, casilla_ref)`` for every :class:`FormulaCasillaRef` in ``formula``.
 
     Closes the topology-typo gap catalogued in the a
     typo where the author wrote ``ref("0431")`` instead of
@@ -342,7 +342,7 @@ def iter_casilla_ref_paths(
     typo surfaces a discrepancy.
     """
     for path, node in _walk_with_paths(formula, ()):
-        if isinstance(node, CasillaRef):
+        if isinstance(node, FormulaCasillaRef):
             yield path, node
 
 
@@ -353,26 +353,26 @@ def mutate_casilla_ref(
     *,
     new_target: str,
 ) -> Ruleset:
-    """Return a ruleset with the :class:`CasillaRef` at ``ref_path`` re-targeted.
+    """Return a ruleset with the :class:`FormulaCasillaRef` at ``ref_path`` re-targeted.
 
-    Replaces ``CasillaRef(casilla_id=A)`` at ``ref_path`` with
-    ``CasillaRef(casilla_id=new_target)``. The new target must be a
+    Replaces ``FormulaCasillaRef(casilla_id=A)`` at ``ref_path`` with
+    ``FormulaCasillaRef(casilla_id=new_target)``. The new target must be a
     valid casilla_id in the ruleset; the per-class harness selects
     a substitute whose fixture value differs from the original's so
     the swap surfaces a discrepancy.
 
     Raises:
         LookupError: ``ruleset`` has no formula for ``casilla_id``.
-        TypeError: the node at ``ref_path`` is not a :class:`CasillaRef`.
+        TypeError: the node at ``ref_path`` is not a :class:`FormulaCasillaRef`.
     """
     fd = _formula_for(ruleset, casilla_id)
     target_node = _node_at_path(fd.formula, ref_path)
-    if not isinstance(target_node, CasillaRef):
+    if not isinstance(target_node, FormulaCasillaRef):
         raise TypeError(
-            f"expected CasillaRef at path {ref_path} for ruleset {ruleset.ruleset_id} "
+            f"expected FormulaCasillaRef at path {ref_path} for ruleset {ruleset.ruleset_id} "
             f"casilla {casilla_id}; got {type(target_node).__name__}"
         )
-    new_ref = CasillaRef(casilla_id=new_target)
+    new_ref = FormulaCasillaRef(casilla_id=new_target)
     new_formula = _replace_at_path(fd.formula, ref_path, new_ref)
     return _replace_formula_in_ruleset(ruleset, casilla_id, cast(Formula, new_formula))
 
@@ -427,7 +427,7 @@ def _replace_at_path(node: object, path: tuple[int, ...], replacement: object) -
     if head < 0 or head >= len(operands):
         raise IndexError(f"operand index {head} out of range for {type(node).__name__}")
     operands[head] = _replace_at_path(operands[head], tuple(tail), replacement)
-    # Every compound branch is a pydantic v2 BaseModel subclass — the
+    # Every compound branch is a pydantic v2 BaseModel subclass Ã¢â,¬â€ the
     # _is_compound check above proved it. Cast for the type-checker.
     return cast(BaseModel, node).model_copy(update={"operands": tuple(operands)})
 
@@ -473,7 +473,7 @@ def classify_percent_rate(
     elif isinstance(rate, ParamRef):
         mode = "param"
         param_id = rate.param_id
-    elif isinstance(rate, CasillaRef):
+    elif isinstance(rate, FormulaCasillaRef):
         mode = "casilla_ref"
         param_id = None
     else:
@@ -498,7 +498,7 @@ def mutate_percent_literal_rate(
     """Return a ruleset with a literal-rate :class:`PercentFormula` shifted.
 
     ``rate_path`` is the full path from the formula-tree root to the
-    rate leaf — i.e. the path to the :class:`PercentFormula` plus
+    rate leaf Ã¢â,¬â€ i.e. the path to the :class:`PercentFormula` plus
     ``(0,)`` for the rate operand.
     """
     fd = _formula_for(ruleset, casilla_id)
@@ -581,7 +581,7 @@ def mutate_brackets_threshold(
         value=target.value,
     )
     # Construct fresh so :func:`BracketsFormula._validate_brackets` runs
-    # — model_copy skips ``mode='after'`` validators in pydantic v2 and
+    # Ã¢â,¬â€ model_copy skips ``mode='after'`` validators in pydantic v2 and
     # we want a malformed shift to fail loudly at mutation time.
     new_brackets_node = BracketsFormula(operands=brackets_node.operands, brackets=tuple(new_brackets))
     new_formula = _replace_at_path(fd.formula, brackets_path, new_brackets_node)
@@ -601,7 +601,7 @@ def mutate_scalar_leaf(
     """Return a ruleset with one mul/div leaf scalar multiplied by ``factor``.
 
     ``leaf_path`` points at a :class:`Literal` that is a direct operand
-    of a :class:`MulFormula` or :class:`DivFormula` — every other
+    of a :class:`MulFormula` or :class:`DivFormula` Ã¢â,¬â€ every other
     literal is out of scope of this mutator and must be skipped by
     callers (e.g. the literal-rate :class:`PercentFormula` operand,
     which is owned by the percent-rate mutator).
@@ -647,20 +647,20 @@ SUB_OP_SWAP: Final[MutatorClass] = MutatorClass(
 )
 PERCENT_RATE: Final[MutatorClass] = MutatorClass(
     slug="percent_rate",
-    description="Shift a PercentFormula rate by ±1 percentage point.",
+    description="Shift a PercentFormula rate by Ã,Â±1 percentage point.",
 )
 BRACKETS_THRESHOLD: Final[MutatorClass] = MutatorClass(
     slug="brackets_threshold",
-    description="Shift a non-terminal Bracket upper_inclusive by ±1 €.",
+    description="Shift a non-terminal Bracket upper_inclusive by Ã,Â±1 Ã¢â€šÂ¬.",
 )
 MUL_DIV_SCALAR: Final[MutatorClass] = MutatorClass(
     slug="mul_div_scalar",
-    description="Multiply a Mul/Div Literal leaf by 1.01 or 0.99 (±1 %).",
+    description="Multiply a Mul/Div Literal leaf by 1.01 or 0.99 (Ã,Â±1 %).",
 )
 THRESHOLD_LITERAL: Final[MutatorClass] = MutatorClass(
     slug="threshold_literal",
     description=(
-        "Shift a non-Mul/Div Literal operand by ±1 € (bracket boundaries, "
+        "Shift a non-Mul/Div Literal operand by Ã,Â±1 Ã¢â€šÂ¬ (bracket boundaries, "
         "art. 20 thresholds, IVA-rate constants, additive padding, etc.)."
     ),
 )
@@ -675,7 +675,7 @@ ARITHMETIC_OP_SWAP: Final[MutatorClass] = MutatorClass(
 CASILLA_REF_TOPOLOGY: Final[MutatorClass] = MutatorClass(
     slug="casilla_ref_topology",
     description=(
-        "Re-target a CasillaRef to a different casilla_id with a "
+        "Re-target a FormulaCasillaRef to a different casilla_id with a "
         "differing fixture value to detect topology typos (ref('0431') "
         "vs ref('0432'))."
     ),
@@ -697,12 +697,12 @@ MUTATOR_REGISTRY: Final[dict[type, MutatorClass]] = {
     MulFormula: MUL_DIV_SCALAR,
     DivFormula: MUL_DIV_SCALAR,
     Literal: MUL_DIV_SCALAR,
-    CasillaRef: CASILLA_REF_TOPOLOGY,
+    FormulaCasillaRef: CASILLA_REF_TOPOLOGY,
 }
 
 
 # Concrete formula-node types that are intentionally not mutated by any
-# class. The reason for each entry must be defensible — a future author
+# class. The reason for each entry must be defensible Ã¢â,¬â€ a future author
 # who proposes adding a node type to this list must justify why a
 # mutation of it would not detect a meaningful regression.
 NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
@@ -743,14 +743,14 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
     # mutator class introduced in those positions.
     # Architectural identities (Max(0, X) / Min(0, X) lower/upper
     # bounds with X > 0) are filtered by :func:`is_additive_identity_literal`.
-    # NB: CasillaRef is intentionally absent from NOT_MUTABLE_NODE_TYPES
+    # NB: FormulaCasillaRef is intentionally absent from NOT_MUTABLE_NODE_TYPES
     # post-. The :data:`CASILLA_REF_TOPOLOGY` mutator class
     # introduced in re-targets every reference to a different
     # casilla_id with a differing fixture value. Topology typos
     # (``ref("0431")`` vs ``ref("0432")``) are detected via that
-    # harness; no MUTATOR_REGISTRY entry is needed because CasillaRef
+    # harness; no MUTATOR_REGISTRY entry is needed because FormulaCasillaRef
     # is a leaf operand type whose mutation is owned by the topology
-    # mutator class — but the exhaustiveness test still expects it in
+    # mutator class Ã¢â,¬â€ but the exhaustiveness test still expects it in
     # MUTATOR_REGISTRY.
     ParamRef: (
         "ParamRef is a runtime indirection; the value it resolves to "
@@ -763,7 +763,7 @@ NOT_MUTABLE_NODE_TYPES: Final[dict[type, str]] = {
 def all_concrete_formula_types() -> Iterable[type]:
     """Return every concrete model class accepted by :data:`Formula`.
 
-    The :data:`Formula` discriminated-union is composed via ``A | B | …``;
+    The :data:`Formula` discriminated-union is composed via ``A | B | Ã¢â,¬Â¦``;
     the union arms are accessible via ``__args__`` after the
     :class:`pydantic.fields.FieldInfo` annotation is unwrapped. A robust
     implementation re-derives the union from the explicit listing in
@@ -790,7 +790,7 @@ def all_concrete_operand_types() -> Iterable[type]:
     """
     return (
         Literal,
-        CasillaRef,
+        FormulaCasillaRef,
         ParamRef,
         AddFormula,
         SubFormula,
@@ -803,3 +803,4 @@ def all_concrete_operand_types() -> Iterable[type]:
         BracketsFormula,
         RoundFormula,
     )
+

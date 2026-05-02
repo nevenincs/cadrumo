@@ -15,7 +15,7 @@ from . import (
     BinaryOp,
     Casilla,
     CasillaDataType,
-    CasillaRef,
+    SchemaCasillaRef,
     CompareOp,
     CrossCasillaRule,
     EnumRule,
@@ -85,16 +85,16 @@ class TestFormulaAst:
     def test_discriminator_round_trip_all_variants(self) -> None:
         nodes: tuple[FormulaNode, ...] = (
             LiteralFormula(value=Decimal("1")),
-            CasillaRef(casilla_id="07"),
+            SchemaCasillaRef(casilla_id="07"),
             BinaryOp(
                 op=BinaryFormulaOp.SUB,
-                left=CasillaRef(casilla_id="01"),
-                right=CasillaRef(casilla_id="03"),
+                left=SchemaCasillaRef(casilla_id="01"),
+                right=SchemaCasillaRef(casilla_id="03"),
             ),
             SumFormula(
                 terms=(
-                    CasillaRef(casilla_id="01"),
-                    CasillaRef(casilla_id="03"),
+                    SchemaCasillaRef(casilla_id="01"),
+                    SchemaCasillaRef(casilla_id="03"),
                 ),
             ),
         )
@@ -105,7 +105,7 @@ class TestFormulaAst:
 
     def test_casilla_ref_rejects_bad_id(self) -> None:
         with pytest.raises(ValidationError):
-            CasillaRef(casilla_id="abc")
+            SchemaCasillaRef(casilla_id="abc")
 
 
 class TestEvaluate:
@@ -113,12 +113,12 @@ class TestEvaluate:
         assert evaluate(LiteralFormula(value=Decimal("7.50")), {}) == Decimal("7.50")
 
     def test_ref_lookup(self) -> None:
-        node = CasillaRef(casilla_id="01")
+        node = SchemaCasillaRef(casilla_id="01")
         assert evaluate(node, {"01": Decimal("100")}) == Decimal("100")
 
     def test_ref_missing_raises_evaluation_error(self) -> None:
         with pytest.raises(SchemaEvaluationError):
-            evaluate(CasillaRef(casilla_id="99"), {})
+            evaluate(SchemaCasillaRef(casilla_id="99"), {})
 
     def test_div_by_zero_includes_casilla_id(self) -> None:
         zero = BinaryOp(
@@ -133,20 +133,20 @@ class TestEvaluate:
         values = {"01": Decimal("200"), "03": Decimal("60")}
         sub = BinaryOp(
             op=BinaryFormulaOp.SUB,
-            left=CasillaRef(casilla_id="01"),
-            right=CasillaRef(casilla_id="03"),
+            left=SchemaCasillaRef(casilla_id="01"),
+            right=SchemaCasillaRef(casilla_id="03"),
         )
         assert evaluate(sub, values) == Decimal("140")
         mul = BinaryOp(
             op=BinaryFormulaOp.MUL,
-            left=CasillaRef(casilla_id="01"),
+            left=SchemaCasillaRef(casilla_id="01"),
             right=LiteralFormula(value=Decimal("0.2")),
         )
         assert evaluate(mul, values) == Decimal("40.0")
         add = BinaryOp(
             op=BinaryFormulaOp.ADD,
-            left=CasillaRef(casilla_id="01"),
-            right=CasillaRef(casilla_id="03"),
+            left=SchemaCasillaRef(casilla_id="01"),
+            right=SchemaCasillaRef(casilla_id="03"),
         )
         assert evaluate(add, values) == Decimal("260")
 
@@ -154,14 +154,14 @@ class TestEvaluate:
         values = {"10": Decimal("10"), "20": Decimal("3"), "30": Decimal("0")}
         div = BinaryOp(
             op=BinaryFormulaOp.DIV,
-            left=CasillaRef(casilla_id="10"),
-            right=CasillaRef(casilla_id="20"),
+            left=SchemaCasillaRef(casilla_id="10"),
+            right=SchemaCasillaRef(casilla_id="20"),
         )
         assert evaluate(div, values) == Decimal("3.33")
         zero = BinaryOp(
             op=BinaryFormulaOp.DIV,
-            left=CasillaRef(casilla_id="10"),
-            right=CasillaRef(casilla_id="30"),
+            left=SchemaCasillaRef(casilla_id="10"),
+            right=SchemaCasillaRef(casilla_id="30"),
         )
         with pytest.raises(SchemaEvaluationError):
             evaluate(zero, values)
@@ -170,9 +170,9 @@ class TestEvaluate:
         values = {"01": Decimal("10"), "03": Decimal("20"), "07": Decimal("5")}
         node = SumFormula(
             terms=(
-                CasillaRef(casilla_id="01"),
-                CasillaRef(casilla_id="03"),
-                CasillaRef(casilla_id="07"),
+                SchemaCasillaRef(casilla_id="01"),
+                SchemaCasillaRef(casilla_id="03"),
+                SchemaCasillaRef(casilla_id="07"),
             ),
         )
         assert evaluate(node, values) == Decimal("35")
@@ -208,7 +208,7 @@ class TestValidationRules:
 
     def test_cross_casilla_rule_round_trip(self) -> None:
         rule = CrossCasillaRule(
-            expression=CasillaRef(casilla_id="71"),
+            expression=SchemaCasillaRef(casilla_id="71"),
             compare=CompareOp.GTE,
             rhs=LiteralFormula(value=Decimal("0")),
         )
@@ -241,8 +241,8 @@ class TestCasillaValidators:
     def test_references_must_cover_formula_refs(self) -> None:
         formula = BinaryOp(
             op=BinaryFormulaOp.SUB,
-            left=CasillaRef(casilla_id="01"),
-            right=CasillaRef(casilla_id="03"),
+            left=SchemaCasillaRef(casilla_id="01"),
+            right=SchemaCasillaRef(casilla_id="03"),
         )
         with pytest.raises(ValidationError):
             Casilla(
@@ -314,7 +314,7 @@ class TestModeloValidators:
                 casillas=(
                     _minimal_casilla(
                         casilla_id="07",
-                        formula=CasillaRef(casilla_id="99"),
+                        formula=SchemaCasillaRef(casilla_id="99"),
                         refs=("99",),
                     ),
                 ),
@@ -324,12 +324,12 @@ class TestModeloValidators:
         casillas = (
             _minimal_casilla(
                 casilla_id="01",
-                formula=CasillaRef(casilla_id="03"),
+                formula=SchemaCasillaRef(casilla_id="03"),
                 refs=("03",),
             ),
             _minimal_casilla(
                 casilla_id="03",
-                formula=CasillaRef(casilla_id="01"),
+                formula=SchemaCasillaRef(casilla_id="01"),
                 refs=("01",),
             ),
         )
@@ -351,7 +351,7 @@ class TestModeloValidators:
 
 # Reserved-slot rejection test removed alongside the SchemaSource slots
 # themselves per restructure ADR Decision 6 (#476). Pydantic's StrEnum
-# validator now owns the gate — unknown source values raise on parse.
+# validator now owns the gate â€” unknown source values raise on parse.
 
 
 class TestValidatePeriodWhitespace:

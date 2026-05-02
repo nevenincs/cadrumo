@@ -44,6 +44,22 @@ def test_all_exports_importable() -> None:
         assert hasattr(package, name), f"missing export: {name}"
 
 
+def test_no_inbound_extractor_or_fetch_re_exports() -> None:
+    """BOE extraction and fetch stay behind the inbound adapter boundary."""
+    import importlib
+
+    package = importlib.import_module(_package_name)
+    forbidden = {
+        "BOE_ORDEN_SOURCES",
+        "BoeOrdenExtractor",
+        "BoeOrdenSource",
+        "FetchedSchemaSource",
+        "fetch_boe_pdf",
+    }
+    leaked = forbidden.intersection(dir(package))
+    assert not leaked
+
+
 def test_no_imports_of_aeat_casillas_from_schema() -> None:
     """AST-scan every .py file under ``src/aeat/schema`` for banned imports."""
     violations: list[str] = []

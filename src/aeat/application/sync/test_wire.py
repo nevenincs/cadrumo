@@ -1,4 +1,11 @@
-"""Unit tests for the strict wire payload schemas."""
+"""Unit tests for the strict wire payload schemas in :mod:`aeat.domain.sync`.
+
+Covers JSON round-tripping and validator rejection paths for
+:class:`aeat.domain.sync.WireModeloDefinition`,
+:class:`aeat.domain.sync.WireFilingHistory`, and
+:class:`aeat.domain.sync.WirePortalManifest`. Failures here usually mean
+the on-the-wire contract drifted from the domain pydantic models.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +13,7 @@ from datetime import datetime
 
 import pytest
 
-from . import (
+from ...domain.sync import (
     ModeloIdentifier,
     PortalIdentifier,
     WireCasilla,

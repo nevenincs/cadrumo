@@ -1,12 +1,13 @@
-"""The bounded auto-heal invariant test suite.
+"""Bounded auto-heal invariant suite for the sync healing dispatcher.
 
-This is the single most important correctness test in the feature.
-Every non-allowlisted divergence kind MUST escalate — even when the
-dispatcher is invoked with ``auto_heal=True`` — and every BREAKING
-and SUSPICIOUS kind MUST escalate regardless of classification.
-
-The test is parametrised across every ``DivergenceKind`` so that
-adding a new kind automatically picks up coverage.
+Encodes the safety invariant for
+:class:`aeat.application.sync.HealingDispatcher`: every non-allowlisted
+:class:`aeat.domain.sync.DivergenceKind` must escalate even when
+``auto_heal=True``, and every breaking or suspicious kind must escalate
+regardless of the allowlist. The suite is parametrised across the full
+:class:`aeat.domain.sync.DivergenceKind` enum so that adding a new kind
+automatically picks up coverage and a regression in either invariant
+fails the build.
 """
 
 from __future__ import annotations
@@ -19,6 +20,11 @@ import pytest
 from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
+    EscalateStrategy,
+    HealingDispatcher,
+    StrategyAction,
+)
+from ...domain.sync import (
     CasillaAddedWithDefault,
     CasillaRemoved,
     CasillaTypeChanged,
@@ -26,20 +32,17 @@ from . import (
     DivergenceKind,
     DivergencePayload,
     DivergenceRecord,
-    EscalateStrategy,
     FilingStatusChanged,
     FormulaChanged,
-    HealingDispatcher,
     LabelEsChanged,
     LabelTranslationAdded,
     ModeloIdentifier,
     PortalUrlChanged,
     ResolutionState,
-    StrategyAction,
     UnknownShape,
     VigenciaExtended,
+    classify_kind,
 )
-from ._divergence import classify_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -144,11 +147,13 @@ def _dispatcher(allowlist: frozenset[DivergenceKind]) -> HealingDispatcher:
 async def test_non_allowlisted_kind_always_escalates_even_with_auto_heal(
     kind: DivergenceKind,
 ) -> None:
-    """Any kind not in the allowlist MUST escalate even with auto_heal=True.
+    """Verify that any non-allowlisted kind never auto-heals.
 
-    Benign kinds (e.g. filing_status_changed) are ``RECORDED`` rather
-    than escalated — still not ``AUTO_HEALED``, which is what the
-    invariant protects.
+    Benign kinds (such as ``filing_status_changed``) are recorded rather
+    than escalated, but neither path produces an
+    :attr:`aeat.application.sync.StrategyAction.AUTO_HEALED` outcome — the
+    invariant protected here is that auto-healing requires explicit
+    operator opt-in via the allowlist.
     """
     record = _record_for(kind)
     dispatcher = _dispatcher(frozenset())  # empty allowlist
@@ -168,8 +173,13 @@ async def test_non_allowlisted_kind_always_escalates_even_with_auto_heal(
 async def test_breaking_and_suspicious_kinds_always_escalate_with_full_allowlist(
     kind: DivergenceKind,
 ) -> None:
-    """Even if the operator adds every kind to the allowlist, BREAKING
-    and SUSPICIOUS must still escalate.
+    """Verify breaking and suspicious kinds escalate against a full allowlist.
+
+    Even when the operator adds every
+    :class:`aeat.domain.sync.DivergenceKind` to the allowlist, kinds whose
+    classification is :attr:`aeat.domain.sync.DivergenceClassification.BREAKING`
+    or :attr:`aeat.domain.sync.DivergenceClassification.SUSPICIOUS` must
+    still escalate — the allowlist gates only additive kinds.
     """
     record = _record_for(kind)
     dispatcher = _dispatcher(frozenset(DivergenceKind))  # full allowlist
@@ -190,6 +200,7 @@ async def test_breaking_and_suspicious_kinds_always_escalate_with_full_allowlist
 
 @pytest.mark.asyncio
 async def test_default_allowlist_only_applies_to_additive_kinds() -> None:
+    """Verify the default allowlist auto-heals additive kinds only."""
     dispatcher = _dispatcher(DEFAULT_ALLOWLIST)
     for kind in DivergenceKind:
         record = _record_for(kind)

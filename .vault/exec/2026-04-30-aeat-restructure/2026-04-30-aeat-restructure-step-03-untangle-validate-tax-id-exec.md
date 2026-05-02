@@ -15,6 +15,10 @@ related:
 
 Step 3 PR 1 of N — resolves layered violations 4 + 5 in one move (`storage._master_key` NIF canary + `sanitizer._records` synthetic NIF check), per ADR Constraints / Audit-grounded action list and research-doc Layered-architecture violations consolidated.
 
+Historical execution note: the temporary back-compat shim mentioned
+below reflects the Step-3 migration state and was later removed by the
+hard-cutover continuation.
+
 ## scope
 
 - Promote `validate_spanish_tax_id` from `aeat.domain.financial.invoices._validators` (subpackage-private) to public `aeat.adapters.inbound.identity` (Shared Kernel staging — destination per ADR is `core/identity/`, but the old layout has no `core/`; `aeat.adapters.inbound.identity` is the closest cohesive home and Step 7's keystone PR will split `aeat.adapters.inbound.identity` into `core/identity/` (validation) + `adapters/inbound/identity/` (parsing) anyway).

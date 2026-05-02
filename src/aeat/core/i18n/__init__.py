@@ -1,7 +1,20 @@
-"""Trilingual i18n support.
+"""Quad-lingual i18n support.
 
-Provides primitives for managing translations across Spanish (es),
-English (en), and Hungarian (hu).
+Primitives for managing user-facing translations across the four
+languages of the project's i18n contract:
+
+- Spanish (``es``) — authoritative for every AEAT domain term
+  (modelos, casillas, BOE references, legal terminology). Default
+  output language for the CLI.
+- English (``en``) — authoritative for code, docstrings, and
+  developer-facing documentation.
+- Catalan (``ca``) — co-official across Catalunya, Illes Balears,
+  and the Comunitat Valenciana; required for any UX that targets
+  Catalan-speaking autónomos. Tax terminology grounded in the
+  Generalitat de Catalunya / Agència Tributària de Catalunya
+  glossary (see ``.vault/reference/2026-05-01-quadlingual-i18n-legal-glossary.md``).
+- Hungarian (``hu``) — Kent's first language; user-facing output
+  for the operator who runs the tool day-to-day.
 """
 
 from __future__ import annotations
@@ -16,30 +29,55 @@ from ..errors import AeatError
 
 _LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}$")
 
+# Hardcoded last-resort fallback order. Spanish first so AEAT
+# terminology stays legible when every other key is missing; English
+# next as the developer-facing lingua franca; Catalan and Hungarian
+# trail because both are optional under the authoritative-language
+# matrix and may be unpopulated on freshly seeded records.
+_HARDCODED_FALLBACK_ORDER: tuple[str, ...] = ("es", "en", "ca", "hu")
+
 
 class TranslationError(AeatError):
     """Raised when a required translation is missing or invalid."""
 
 
 class Language(StrEnum):
-    """Trilingual contract languages."""
+    """Quad-lingual contract languages.
+
+    ISO 639-1 codes. Values are lowercase to match the storage shape
+    used throughout the corpus and to round-trip cleanly through
+    :func:`normalize_language_code`.
+    """
 
     ES = "es"
     EN = "en"
+    CA = "ca"
     HU = "hu"
 
 
 class Translatable(TypedDict, total=False):
-    """A translatable string representation in the trilingual contract.
+    """A translatable string carrier in the quad-lingual contract.
 
-    Nested-dict shape:
-    - es: Authoritative for AEAT domain terms.
-    - en: Authoritative for code and technical docs.
-    - hu: User-facing output.
+    Nested-dict shape, keyed by ISO 639-1 code:
+
+    - ``es``: Authoritative for AEAT domain terms; the canonical
+      legal text. Always present on any AEAT-derived record.
+    - ``en``: Authoritative for code and technical documentation;
+      the working language of the project.
+    - ``ca``: Catalan rendering for UX that targets Catalan-speaking
+      autónomos. Tax acronyms (IVA, IRPF) are kept identical to
+      Spanish per Generalitat / ATC publication conventions.
+    - ``hu``: Hungarian rendering for Kent's day-to-day CLI use.
+
+    Every key is ``total=False`` so callers may seed records
+    incrementally, but the authoritative key for the record's domain
+    (``es`` for AEAT, ``en`` for project docs) is enforced by
+    :func:`require_authoritative`.
     """
 
     es: str
     en: str
+    ca: str
     hu: str
 
 
@@ -110,14 +148,16 @@ def get_translation(
 
     # Use configuration-defined fallbacks
     settings = load_settings()
-    fallback_chain = [lang.strip() for lang in settings.aeat_fallback_languages.split(",")]
+    fallback_chain = [lang.strip() for lang in settings.aeat_fallback_languages.split(",") if lang.strip()]
 
     for lang in fallback_chain:
         if lang in translatable and translatable.get(lang):  # type: ignore[misc]
             return _normalize_text(str(translatable.get(lang)))  # type: ignore[misc]
 
-    # Final hardcoded fallbacks as a last resort
-    for lang_code in ["en", "es", "hu"]:
+    # Final hardcoded fallback order as a last resort. Order is fixed
+    # at module level (es, en, ca, hu) so behaviour stays deterministic
+    # even when settings are unreadable.
+    for lang_code in _HARDCODED_FALLBACK_ORDER:
         if translatable.get(lang_code):  # type: ignore[misc]
             return _normalize_text(str(translatable.get(lang_code)))  # type: ignore[misc]
 

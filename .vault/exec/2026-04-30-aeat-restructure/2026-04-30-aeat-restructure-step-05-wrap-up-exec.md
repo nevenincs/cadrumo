@@ -15,6 +15,10 @@ related:
 
 Step 5 (Tooling prep) substantively complete after this PR lands. The `justfile` exposes the new tooling as named recipes for invocation by Step 5.5 (sandbox rehearsal), Step 7 (keystone), and Step 8 (acceptance gate).
 
+Historical execution note: this record captures the pre-hard-cutover
+tooling plan. The delivered rollout removed compatibility shims, and
+`verify-shims` is not part of the active post-cutover contract.
+
 ## tooling matrix
 
 | Artefact | PR | Recipe | Notes |
