@@ -10,14 +10,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Gross work income (Anexo B1) (Legal basis: ley, art. 17, BOE-A-2006-20764.)",
-        "es": "Suma de sueldos, salarios, pensiones, prestaciones de desempleo, retribuciones a administradores y demás rendimientos del trabajo definidos por LIRPF art. 17. (Base legal: ley, art. 17, BOE-A-2006-20764.)",
-        "hu": "Munkajövedelem bruttó (B1 melléklet) (Jogalap: ley, art. 17, BOE-A-2006-20764.)"
+        "en": "Gross work income (Anexo B1) (Legal basis: Ley, art. 17, BOE-A-2006-20764.)",
+        "es": "Suma de sueldos, salarios, pensiones, prestaciones de desempleo, retribuciones a administradores y demás rendimientos del trabajo definidos por LIRPF art. 17. (Base legal: Ley, art. 17, BOE-A-2006-20764.)",
+        "hu": "Munkajövedelem bruttó (B1 melléklet) (Jogalap: Ley, art. 17, BOE-A-2006-20764.)",
+        "ca": "Suma de sueldos, salarios, pensiones, prestaciones de desempleo, retribuciones a administradores y demás rendimientos del trabajo definidos por LIRPF art. 17. (Base legal: Ley, art. 17, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Gross work income (Anexo B1)",
         "es": "Ingresos íntegros rendimientos del trabajo",
-        "hu": "Munkajövedelem bruttó (B1 melléklet)"
+        "hu": "Munkajövedelem bruttó (B1 melléklet)",
+        "ca": "Ingresos íntegros rendimientos del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -40,14 +42,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Social Security contributions (deductible) (Legal basis: ley, art. 19, BOE-A-2006-20764.)",
-        "es": "Gasto deducible cotización Seguridad Social (Base legal: ley, art. 19, BOE-A-2006-20764.)",
-        "hu": "Társadalombiztosítási járulék (levonható) (Jogalap: ley, art. 19, BOE-A-2006-20764.)"
+        "en": "Social Security contributions (deductible) (Legal basis: Ley, art. 19, BOE-A-2006-20764.)",
+        "es": "Gasto deducible cotización Seguridad Social (Base legal: Ley, art. 19, BOE-A-2006-20764.)",
+        "hu": "Társadalombiztosítási járulék (levonható) (Jogalap: Ley, art. 19, BOE-A-2006-20764.)",
+        "ca": "Gasto deducible cotización Seguridad Social (Base legal: Ley, art. 19, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Social Security contributions (deductible)",
         "es": "Gasto deducible cotización Seguridad Social",
-        "hu": "Társadalombiztosítási járulék (levonható)"
+        "hu": "Társadalombiztosítási járulék (levonható)",
+        "ca": "Gasto deducible cotización Seguridad Social"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -70,14 +74,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Other deductible work expenses (Legal basis: ley, art. 19, BOE-A-2006-20764.)",
-        "es": "Cuotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF. (Base legal: ley, art. 19, BOE-A-2006-20764.)",
-        "hu": "Egyéb levonható munkajövedelem-költségek (Jogalap: ley, art. 19, BOE-A-2006-20764.)"
+        "en": "Other deductible work expenses (Legal basis: Ley, art. 19, BOE-A-2006-20764.)",
+        "es": "Cuotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF. (Base legal: Ley, art. 19, BOE-A-2006-20764.)",
+        "hu": "Egyéb levonható munkajövedelem-költségek (Jogalap: Ley, art. 19, BOE-A-2006-20764.)",
+        "ca": "Cuotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF. (Base legal: Ley, art. 19, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Other deductible work expenses",
         "es": "Otros gastos deducibles del trabajo",
-        "hu": "Egyéb levonható munkajövedelem-költségek"
+        "hu": "Egyéb levonható munkajövedelem-költségek",
+        "ca": "Otros gastos deducibles del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -100,14 +106,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Geographic mobility expense (Legal basis: ley, art. 19, BOE-A-2006-20764.)",
-        "es": "Gasto adicional movilidad geográfica (Base legal: ley, art. 19, BOE-A-2006-20764.)",
-        "hu": "Földrajzi mobilitási költség (Jogalap: ley, art. 19, BOE-A-2006-20764.)"
+        "en": "Geographic mobility expense (Legal basis: Ley, art. 19, BOE-A-2006-20764.)",
+        "es": "Gasto adicional movilidad geográfica (Base legal: Ley, art. 19, BOE-A-2006-20764.)",
+        "hu": "Földrajzi mobilitási költség (Jogalap: Ley, art. 19, BOE-A-2006-20764.)",
+        "ca": "Gasto adicional movilidad geográfica (Base legal: Ley, art. 19, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Geographic mobility expense",
         "es": "Gasto adicional movilidad geográfica",
-        "hu": "Földrajzi mobilitási költség"
+        "hu": "Földrajzi mobilitási költség",
+        "ca": "Gasto adicional movilidad geográfica"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -130,14 +138,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 18 reduction (irregular earnings) (Legal basis: ley, art. 18, BOE-A-2006-20764.)",
-        "es": "Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €. (Base legal: ley, art. 18, BOE-A-2006-20764.)",
-        "hu": "18. cikk csökkentés (rendszertelen jövedelem) (Jogalap: ley, art. 18, BOE-A-2006-20764.)"
+        "en": "Art. 18 reduction (irregular earnings) (Legal basis: Ley, art. 18, BOE-A-2006-20764.)",
+        "es": "Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €. (Base legal: Ley, art. 18, BOE-A-2006-20764.)",
+        "hu": "18. cikk csökkentés (rendszertelen jövedelem) (Jogalap: Ley, art. 18, BOE-A-2006-20764.)",
+        "ca": "Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €. (Base legal: Ley, art. 18, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 18 reduction (irregular earnings)",
         "es": "Reducción art. 18 — rendimientos irregulares",
-        "hu": "18. cikk csökkentés (rendszertelen jövedelem)"
+        "hu": "18. cikk csökkentés (rendszertelen jövedelem)",
+        "ca": "Reducción art. 18 — rendimientos irregulares"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -160,14 +170,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net work income before art. 20 reduction (Legal basis: ley, art. 17, BOE-A-2006-20764; ley, art. 18, BOE-A-2006-20764; ley, art. 19, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto previo del trabajo (Base legal: ley, art. 17, BOE-A-2006-20764; ley, art. 18, BOE-A-2006-20764; ley, art. 19, BOE-A-2006-20764.)",
-        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt (Jogalap: ley, art. 17, BOE-A-2006-20764; ley, art. 18, BOE-A-2006-20764; ley, art. 19, BOE-A-2006-20764.)"
+        "en": "Net work income before art. 20 reduction (Legal basis: Ley, art. 17, BOE-A-2006-20764; Ley, art. 18, BOE-A-2006-20764; Ley, art. 19, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto previo del trabajo (Base legal: Ley, art. 17, BOE-A-2006-20764; Ley, art. 18, BOE-A-2006-20764; Ley, art. 19, BOE-A-2006-20764.)",
+        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt (Jogalap: Ley, art. 17, BOE-A-2006-20764; Ley, art. 18, BOE-A-2006-20764; Ley, art. 19, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto previo del trabajo (Base legal: Ley, art. 17, BOE-A-2006-20764; Ley, art. 18, BOE-A-2006-20764; Ley, art. 19, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net work income before art. 20 reduction",
         "es": "Rendimiento neto previo del trabajo",
-        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt"
+        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt",
+        "ca": "Rendimiento neto previo del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -190,14 +202,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 20 reduction (work-income obtention) (Legal basis: ley, art. 20, BOE-A-2006-20764.)",
-        "es": "Reducción art. 20 rendimientos del trabajo (Base legal: ley, art. 20, BOE-A-2006-20764.)",
-        "hu": "20. cikk csökkentés (munkajövedelem szerzés) (Jogalap: ley, art. 20, BOE-A-2006-20764.)"
+        "en": "Art. 20 reduction (work-income obtention) (Legal basis: Ley, art. 20, BOE-A-2006-20764.)",
+        "es": "Reducción art. 20 rendimientos del trabajo (Base legal: Ley, art. 20, BOE-A-2006-20764.)",
+        "hu": "20. cikk csökkentés (munkajövedelem szerzés) (Jogalap: Ley, art. 20, BOE-A-2006-20764.)",
+        "ca": "Reducción art. 20 rendimientos del trabajo (Base legal: Ley, art. 20, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 20 reduction (work-income obtention)",
         "es": "Reducción art. 20 rendimientos del trabajo",
-        "hu": "20. cikk csökkentés (munkajövedelem szerzés)"
+        "hu": "20. cikk csökkentés (munkajövedelem szerzés)",
+        "ca": "Reducción art. 20 rendimientos del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -220,14 +234,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net work income (reduced) (Legal basis: ley, art. 17, BOE-A-2006-20764; ley, art. 20, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto reducido del trabajo (Base legal: ley, art. 17, BOE-A-2006-20764; ley, art. 20, BOE-A-2006-20764.)",
-        "hu": "Nettó munkajövedelem (csökkentett) (Jogalap: ley, art. 17, BOE-A-2006-20764; ley, art. 20, BOE-A-2006-20764.)"
+        "en": "Net work income (reduced) (Legal basis: Ley, art. 17, BOE-A-2006-20764; Ley, art. 20, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto reducido del trabajo (Base legal: Ley, art. 17, BOE-A-2006-20764; Ley, art. 20, BOE-A-2006-20764.)",
+        "hu": "Nettó munkajövedelem (csökkentett) (Jogalap: Ley, art. 17, BOE-A-2006-20764; Ley, art. 20, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto reducido del trabajo (Base legal: Ley, art. 17, BOE-A-2006-20764; Ley, art. 20, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net work income (reduced)",
         "es": "Rendimiento neto reducido del trabajo",
-        "hu": "Nettó munkajövedelem (csökkentett)"
+        "hu": "Nettó munkajövedelem (csökkentett)",
+        "ca": "Rendimiento neto reducido del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -250,14 +266,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Gross dividend income (Legal basis: ley, art. 25, BOE-A-2006-20764.)",
-        "es": "Dividendos íntegros (Base legal: ley, art. 25, BOE-A-2006-20764.)",
-        "hu": "Bruttó osztalékjövedelem (Jogalap: ley, art. 25, BOE-A-2006-20764.)"
+        "en": "Gross dividend income (Legal basis: Ley, art. 25, BOE-A-2006-20764.)",
+        "es": "Dividendos íntegros (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
+        "hu": "Bruttó osztalékjövedelem (Jogalap: Ley, art. 25, BOE-A-2006-20764.)",
+        "ca": "Dividendos íntegros (Base legal: Ley, art. 25, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Gross dividend income",
         "es": "Dividendos íntegros",
-        "hu": "Bruttó osztalékjövedelem"
+        "hu": "Bruttó osztalékjövedelem",
+        "ca": "Dividendos íntegros"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -280,14 +298,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Bank deposit interest income (Legal basis: ley, art. 25, BOE-A-2006-20764.)",
-        "es": "Intereses de cuentas y depósitos (Base legal: ley, art. 25, BOE-A-2006-20764.)",
-        "hu": "Banki betét kamatjövedelem (Jogalap: ley, art. 25, BOE-A-2006-20764.)"
+        "en": "Bank deposit interest income (Legal basis: Ley, art. 25, BOE-A-2006-20764.)",
+        "es": "Intereses de cuentas y depósitos (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
+        "hu": "Banki betét kamatjövedelem (Jogalap: Ley, art. 25, BOE-A-2006-20764.)",
+        "ca": "Intereses de cuentas y depósitos (Base legal: Ley, art. 25, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Bank deposit interest income",
         "es": "Intereses de cuentas y depósitos",
-        "hu": "Banki betét kamatjövedelem"
+        "hu": "Banki betét kamatjövedelem",
+        "ca": "Intereses de cuentas y depósitos"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -310,14 +330,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Securities interest income (public/private) (Legal basis: ley, art. 25, BOE-A-2006-20764.)",
-        "es": "Intereses de títulos (públicos / privados) (Base legal: ley, art. 25, BOE-A-2006-20764.)",
-        "hu": "Értékpapír kamatjövedelem (Jogalap: ley, art. 25, BOE-A-2006-20764.)"
+        "en": "Securities interest income (public/private) (Legal basis: Ley, art. 25, BOE-A-2006-20764.)",
+        "es": "Intereses de títulos (públicos / privados) (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
+        "hu": "Értékpapír kamatjövedelem (Jogalap: Ley, art. 25, BOE-A-2006-20764.)",
+        "ca": "Intereses de títulos (públicos / privados) (Base legal: Ley, art. 25, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Securities interest income (public/private)",
         "es": "Intereses de títulos (públicos / privados)",
-        "hu": "Értékpapír kamatjövedelem"
+        "hu": "Értékpapír kamatjövedelem",
+        "ca": "Intereses de títulos (públicos / privados)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -340,14 +362,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Other capital-income types (Legal basis: ley, art. 25, BOE-A-2006-20764.)",
-        "es": "Otros rendimientos del capital mobiliario (Base legal: ley, art. 25, BOE-A-2006-20764.)",
-        "hu": "Egyéb tőkejövedelem (Jogalap: ley, art. 25, BOE-A-2006-20764.)"
+        "en": "Other capital-income types (Legal basis: Ley, art. 25, BOE-A-2006-20764.)",
+        "es": "Otros rendimientos del capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764.)",
+        "hu": "Egyéb tőkejövedelem (Jogalap: Ley, art. 25, BOE-A-2006-20764.)",
+        "ca": "Otros rendimientos del capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Other capital-income types",
         "es": "Otros rendimientos del capital mobiliario",
-        "hu": "Egyéb tőkejövedelem"
+        "hu": "Egyéb tőkejövedelem",
+        "ca": "Otros rendimientos del capital mobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -370,14 +394,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 26.2 reduction (irregular capital income) (Legal basis: ley, art. 26, BOE-A-2006-20764.)",
-        "es": "Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €. (Base legal: ley, art. 26, BOE-A-2006-20764.)",
-        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem) (Jogalap: ley, art. 26, BOE-A-2006-20764.)"
+        "en": "Art. 26.2 reduction (irregular capital income) (Legal basis: Ley, art. 26, BOE-A-2006-20764.)",
+        "es": "Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €. (Base legal: Ley, art. 26, BOE-A-2006-20764.)",
+        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem) (Jogalap: Ley, art. 26, BOE-A-2006-20764.)",
+        "ca": "Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €. (Base legal: Ley, art. 26, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 26.2 reduction (irregular capital income)",
         "es": "Reducción art. 26.2 — irregularidad capital mobiliario",
-        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem)"
+        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem)",
+        "ca": "Reducción art. 26.2 — irregularidad capital mobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -400,14 +426,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Administration and custody expenses (Legal basis: ley, art. 26, BOE-A-2006-20764.)",
-        "es": "Gastos de administración y custodia (Base legal: ley, art. 26, BOE-A-2006-20764.)",
-        "hu": "Adminisztrációs és letétkezelési költségek (Jogalap: ley, art. 26, BOE-A-2006-20764.)"
+        "en": "Administration and custody expenses (Legal basis: Ley, art. 26, BOE-A-2006-20764.)",
+        "es": "Gastos de administración y custodia (Base legal: Ley, art. 26, BOE-A-2006-20764.)",
+        "hu": "Adminisztrációs és letétkezelési költségek (Jogalap: Ley, art. 26, BOE-A-2006-20764.)",
+        "ca": "Gastos de administración y custodia (Base legal: Ley, art. 26, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Administration and custody expenses",
         "es": "Gastos de administración y custodia",
-        "hu": "Adminisztrációs és letétkezelési költségek"
+        "hu": "Adminisztrációs és letétkezelési költségek",
+        "ca": "Gastos de administración y custodia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -430,14 +458,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net capital-income before art. 26.2 reduction (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto previo capital mobiliario (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)",
-        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)"
+        "en": "Net capital-income before art. 26.2 reduction (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto previo capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto previo capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net capital-income before art. 26.2 reduction",
         "es": "Rendimiento neto previo capital mobiliario",
-        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt"
+        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt",
+        "ca": "Rendimiento neto previo capital mobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -460,14 +490,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net capital-income (reduced) (Legal basis: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto reducido capital mobiliario (Base legal: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)",
-        "hu": "Nettó tőkejövedelem (csökkentett) (Jogalap: ley, art. 25, BOE-A-2006-20764; ley, art. 26, BOE-A-2006-20764.)"
+        "en": "Net capital-income (reduced) (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto reducido capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "hu": "Nettó tőkejövedelem (csökkentett) (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto reducido capital mobiliario (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 26, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net capital-income (reduced)",
         "es": "Rendimiento neto reducido capital mobiliario",
-        "hu": "Nettó tőkejövedelem (csökkentett)"
+        "hu": "Nettó tőkejövedelem (csökkentett)",
+        "ca": "Rendimiento neto reducido capital mobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -490,14 +522,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Gross rental income (urban properties) (Legal basis: ley, art. 22, BOE-A-2006-20764.)",
-        "es": "Ingresos íntegros arrendamiento inmuebles (Base legal: ley, art. 22, BOE-A-2006-20764.)",
-        "hu": "Bruttó bérleti díj bevétel (Jogalap: ley, art. 22, BOE-A-2006-20764.)"
+        "en": "Gross rental income (urban properties) (Legal basis: Ley, art. 22, BOE-A-2006-20764.)",
+        "es": "Ingresos íntegros arrendamiento inmuebles (Base legal: Ley, art. 22, BOE-A-2006-20764.)",
+        "hu": "Bruttó bérleti díj bevétel (Jogalap: Ley, art. 22, BOE-A-2006-20764.)",
+        "ca": "Ingresos íntegros arrendamiento inmuebles (Base legal: Ley, art. 22, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Gross rental income (urban properties)",
         "es": "Ingresos íntegros arrendamiento inmuebles",
-        "hu": "Bruttó bérleti díj bevétel"
+        "hu": "Bruttó bérleti díj bevétel",
+        "ca": "Ingresos íntegros arrendamiento inmuebles"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -520,14 +554,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Deductible rental expenses (Legal basis: ley, art. 23, BOE-A-2006-20764.)",
-        "es": "Suma de financiación, IBI, comunidad, reparación y conservación, seguros, suministros, gestión y otros gastos deducibles per LIRPF art. 23.1. (Base legal: ley, art. 23, BOE-A-2006-20764.)",
-        "hu": "Levonható bérleti költségek (Jogalap: ley, art. 23, BOE-A-2006-20764.)"
+        "en": "Deductible rental expenses (Legal basis: Ley, art. 23, BOE-A-2006-20764.)",
+        "es": "Suma de financiación, IBI, comunidad, reparación y conservación, seguros, suministros, gestión y otros gastos deducibles per LIRPF art. 23.1. (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
+        "hu": "Levonható bérleti költségek (Jogalap: Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "Suma de financiación, IBI, comunidad, reparación y conservación, seguros, suministros, gestión y otros gastos deducibles per LIRPF art. 23.1. (Base legal: Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Deductible rental expenses",
         "es": "Gastos deducibles arrendamiento",
-        "hu": "Levonható bérleti költségek"
+        "hu": "Levonható bérleti költségek",
+        "ca": "Gastos deducibles arrendamiento"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -550,14 +586,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Building amortization (3 %) (Legal basis: ley, art. 23, BOE-A-2006-20764.)",
-        "es": "3 % sobre el mayor del coste de adquisición o del valor catastral de la construcción (LIRPF art. 23.1, párr. f). (Base legal: ley, art. 23, BOE-A-2006-20764.)",
-        "hu": "Építmény-amortizáció (3 %) (Jogalap: ley, art. 23, BOE-A-2006-20764.)"
+        "en": "Building amortization (3 %) (Legal basis: Ley, art. 23, BOE-A-2006-20764.)",
+        "es": "3 % sobre el mayor del coste de adquisición o del valor catastral de la construcción (LIRPF art. 23.1, párr. f). (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
+        "hu": "Építmény-amortizáció (3 %) (Jogalap: Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "3 % sobre el mayor del coste de adquisición o del valor catastral de la construcción (LIRPF art. 23.1, párr. f). (Base legal: Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Building amortization (3 %)",
         "es": "Amortización 3 % construcción",
-        "hu": "Építmény-amortizáció (3 %)"
+        "hu": "Építmény-amortizáció (3 %)",
+        "ca": "Amortización 3 % construcción"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -580,14 +618,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 23.2 reduction (50/60/70/90 % tiered) (Legal basis: ley, art. 23, BOE-A-2006-20764.)",
-        "es": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción). (Base legal: ley, art. 23, BOE-A-2006-20764.)",
-        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű) (Jogalap: ley, art. 23, BOE-A-2006-20764.)"
+        "en": "Art. 23.2 reduction (50/60/70/90 % tiered) (Legal basis: Ley, art. 23, BOE-A-2006-20764.)",
+        "es": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción). (Base legal: Ley, art. 23, BOE-A-2006-20764.)",
+        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű) (Jogalap: Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción). (Base legal: Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 23.2 reduction (50/60/70/90 % tiered)",
         "es": "Reducción art. 23.2 — tramos 50/60/70/90 %",
-        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű)"
+        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű)",
+        "ca": "Reducción art. 23.2 — tramos 50/60/70/90 %"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -610,14 +650,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Imputed real-estate income (art. 85) (Legal basis: ley, art. 85, BOE-A-2006-20764.)",
-        "es": "El consumidor calcula 1,1 % o 2 % del valor catastral por cada inmueble no afecto. No alimenta las casillas 0106 / 0107 — es una línea de ingresos paralela consumida por el Anexo F. (Base legal: ley, art. 85, BOE-A-2006-20764.)",
-        "hu": "Ingatlan-betudott jövedelem (85. cikk) (Jogalap: ley, art. 85, BOE-A-2006-20764.)"
+        "en": "Imputed real-estate income (art. 85) (Legal basis: Ley, art. 85, BOE-A-2006-20764.)",
+        "es": "El consumidor calcula 1,1 % o 2 % del valor catastral por cada inmueble no afecto. No alimenta las casillas 0106 / 0107 — es una línea de ingresos paralela consumida por el Anexo F. (Base legal: Ley, art. 85, BOE-A-2006-20764.)",
+        "hu": "Ingatlan-betudott jövedelem (85. cikk) (Jogalap: Ley, art. 85, BOE-A-2006-20764.)",
+        "ca": "El consumidor calcula 1,1 % o 2 % del valor catastral por cada inmueble no afecto. No alimenta las casillas 0106 / 0107 — es una línea de ingresos paralela consumida por el Anexo F. (Base legal: Ley, art. 85, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Imputed real-estate income (art. 85)",
         "es": "Imputación rentas inmobiliarias",
-        "hu": "Ingatlan-betudott jövedelem (85. cikk)"
+        "hu": "Ingatlan-betudott jövedelem (85. cikk)",
+        "ca": "Imputación rentas inmobiliarias"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -640,14 +682,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net real-estate income before art. 23.2 reduction (Legal basis: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto previo capital inmobiliario (Base legal: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)",
-        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt (Jogalap: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)"
+        "en": "Net real-estate income before art. 23.2 reduction (Legal basis: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto previo capital inmobiliario (Base legal: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt (Jogalap: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto previo capital inmobiliario (Base legal: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net real-estate income before art. 23.2 reduction",
         "es": "Rendimiento neto previo capital inmobiliario",
-        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt"
+        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt",
+        "ca": "Rendimiento neto previo capital inmobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -670,14 +714,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net real-estate income (reduced) (Legal basis: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto reducido capital inmobiliario (Base legal: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)",
-        "hu": "Nettó ingatlanjövedelem (csökkentett) (Jogalap: ley, art. 22, BOE-A-2006-20764; ley, art. 23, BOE-A-2006-20764.)"
+        "en": "Net real-estate income (reduced) (Legal basis: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto reducido capital inmobiliario (Base legal: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "hu": "Nettó ingatlanjövedelem (csökkentett) (Jogalap: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto reducido capital inmobiliario (Base legal: Ley, art. 22, BOE-A-2006-20764; Ley, art. 23, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net real-estate income (reduced)",
         "es": "Rendimiento neto reducido capital inmobiliario",
-        "hu": "Nettó ingatlanjövedelem (csökkentett)"
+        "hu": "Nettó ingatlanjövedelem (csökkentett)",
+        "ca": "Rendimiento neto reducido capital inmobiliario"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -700,14 +746,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Operating income (E.D. normal) (Legal basis: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Ingresos de explotación (Base legal: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Üzemi bevétel (E.D. normál) (Jogalap: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)"
+        "en": "Operating income (E.D. normal) (Legal basis: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Ingresos de explotación (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Üzemi bevétel (E.D. normál) (Jogalap: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Ingresos de explotación (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Operating income (E.D. normal)",
         "es": "Ingresos de explotación",
-        "hu": "Üzemi bevétel (E.D. normál)"
+        "hu": "Üzemi bevétel (E.D. normál)",
+        "ca": "Ingresos de explotación"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -730,14 +778,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Purchases and consumption (E.D. normal) (Legal basis: ley, art. 28, BOE-A-2006-20764; ley, art. 17, BOE-A-2014-12328.)",
-        "es": "Compras y consumos del ejercicio (Base legal: ley, art. 28, BOE-A-2006-20764; ley, art. 17, BOE-A-2014-12328.)",
-        "hu": "Beszerzés és felhasználás (Jogalap: ley, art. 28, BOE-A-2006-20764; ley, art. 17, BOE-A-2014-12328.)"
+        "en": "Purchases and consumption (E.D. normal) (Legal basis: Ley, art. 28, BOE-A-2006-20764; Ley, art. 17, BOE-A-2014-12328.)",
+        "es": "Compras y consumos del ejercicio (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 17, BOE-A-2014-12328.)",
+        "hu": "Beszerzés és felhasználás (Jogalap: Ley, art. 28, BOE-A-2006-20764; Ley, art. 17, BOE-A-2014-12328.)",
+        "ca": "Compras y consumos del ejercicio (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 17, BOE-A-2014-12328.)"
       },
       "label": {
         "en": "Purchases and consumption (E.D. normal)",
         "es": "Compras y consumos del ejercicio",
-        "hu": "Beszerzés és felhasználás"
+        "hu": "Beszerzés és felhasználás",
+        "ca": "Compras y consumos del ejercicio"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -760,14 +810,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Inventory variation (final - initial) (Legal basis: ley, art. 17, BOE-A-2014-12328.)",
-        "es": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos. (Base legal: ley, art. 17, BOE-A-2014-12328.)",
-        "hu": "Keszletvaltozas (zaro - nyito) (Jogalap: ley, art. 17, BOE-A-2014-12328.)"
+        "en": "Inventory variation (final - initial) (Legal basis: Ley, art. 17, BOE-A-2014-12328.)",
+        "es": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos. (Base legal: Ley, art. 17, BOE-A-2014-12328.)",
+        "hu": "Keszletvaltozas (zaro - nyito) (Jogalap: Ley, art. 17, BOE-A-2014-12328.)",
+        "ca": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos. (Base legal: Ley, art. 17, BOE-A-2014-12328.)"
       },
       "label": {
         "en": "Inventory variation (final - initial)",
         "es": "Variación de existencias",
-        "hu": "Keszletvaltozas (zaro - nyito)"
+        "hu": "Keszletvaltozas (zaro - nyito)",
+        "ca": "Variación de existencias"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -790,14 +842,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Personnel expenses (Legal basis: ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Gastos de personal (Base legal: ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Személyi költségek (Jogalap: ley, art. 28, BOE-A-2006-20764.)"
+        "en": "Personnel expenses (Legal basis: Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Gastos de personal (Base legal: Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Személyi költségek (Jogalap: Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Gastos de personal (Base legal: Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Personnel expenses",
         "es": "Gastos de personal",
-        "hu": "Személyi költségek"
+        "hu": "Személyi költségek",
+        "ca": "Gastos de personal"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -820,14 +874,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "External services, taxes, other (Legal basis: ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Servicios exteriores, tributos y otros (Base legal: ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Külső szolgáltatások, adók, egyéb (Jogalap: ley, art. 28, BOE-A-2006-20764.)"
+        "en": "External services, taxes, other (Legal basis: Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Servicios exteriores, tributos y otros (Base legal: Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Külső szolgáltatások, adók, egyéb (Jogalap: Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Servicios exteriores, tributos y otros (Base legal: Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "External services, taxes, other",
         "es": "Servicios exteriores, tributos y otros",
-        "hu": "Külső szolgáltatások, adók, egyéb"
+        "hu": "Külső szolgáltatások, adók, egyéb",
+        "ca": "Servicios exteriores, tributos y otros"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -850,14 +906,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Tangible/intangible amortization (Legal basis: ley, art. 12, BOE-A-2014-12328.)",
-        "es": "Calculado por el consumidor según la tabla LIS art. 12 lineal (33 filas) o el régimen de libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024). (Base legal: ley, art. 12, BOE-A-2014-12328.)",
-        "hu": "Befektetett eszközök amortizációja (Jogalap: ley, art. 12, BOE-A-2014-12328.)"
+        "en": "Tangible/intangible amortization (Legal basis: Ley, art. 12, BOE-A-2014-12328.)",
+        "es": "Calculado por el consumidor según la tabla LIS art. 12 lineal (33 filas) o el régimen de libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024). (Base legal: Ley, art. 12, BOE-A-2014-12328.)",
+        "hu": "Befektetett eszközök amortizációja (Jogalap: Ley, art. 12, BOE-A-2014-12328.)",
+        "ca": "Calculado por el consumidor según la tabla LIS art. 12 lineal (33 filas) o el régimen de libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024). (Base legal: Ley, art. 12, BOE-A-2014-12328.)"
       },
       "label": {
         "en": "Tangible/intangible amortization",
         "es": "Amortización del inmovilizado",
-        "hu": "Befektetett eszközök amortizációja"
+        "hu": "Befektetett eszközök amortizációja",
+        "ca": "Amortización del inmovilizado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -880,14 +938,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Provisions and impairments (Legal basis: ley, art. 13, BOE-A-2014-12328.)",
-        "es": "Provisiones y deterioros (Base legal: ley, art. 13, BOE-A-2014-12328.)",
-        "hu": "Tartalékok és értékvesztés (Jogalap: ley, art. 13, BOE-A-2014-12328.)"
+        "en": "Provisions and impairments (Legal basis: Ley, art. 13, BOE-A-2014-12328.)",
+        "es": "Provisiones y deterioros (Base legal: Ley, art. 13, BOE-A-2014-12328.)",
+        "hu": "Tartalékok és értékvesztés (Jogalap: Ley, art. 13, BOE-A-2014-12328.)",
+        "ca": "Provisiones y deterioros (Base legal: Ley, art. 13, BOE-A-2014-12328.)"
       },
       "label": {
         "en": "Provisions and impairments",
         "es": "Provisiones y deterioros",
-        "hu": "Tartalékok és értékvesztés"
+        "hu": "Tartalékok és értékvesztés",
+        "ca": "Provisiones y deterioros"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -910,14 +970,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total deductible expenses (E.D. normal) (Legal basis: ley, art. 28, BOE-A-2006-20764; ley, art. 12, BOE-A-2014-12328; ley, art. 13, BOE-A-2014-12328.)",
-        "es": "Total gastos computables E.D. normal (Base legal: ley, art. 28, BOE-A-2006-20764; ley, art. 12, BOE-A-2014-12328; ley, art. 13, BOE-A-2014-12328.)",
-        "hu": "Összes levonható költség (E.D. normál) (Jogalap: ley, art. 28, BOE-A-2006-20764; ley, art. 12, BOE-A-2014-12328; ley, art. 13, BOE-A-2014-12328.)"
+        "en": "Total deductible expenses (E.D. normal) (Legal basis: Ley, art. 28, BOE-A-2006-20764; Ley, art. 12, BOE-A-2014-12328; Ley, art. 13, BOE-A-2014-12328.)",
+        "es": "Total gastos computables E.D. normal (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 12, BOE-A-2014-12328; Ley, art. 13, BOE-A-2014-12328.)",
+        "hu": "Összes levonható költség (E.D. normál) (Jogalap: Ley, art. 28, BOE-A-2006-20764; Ley, art. 12, BOE-A-2014-12328; Ley, art. 13, BOE-A-2014-12328.)",
+        "ca": "Total gastos computables E.D. normal (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 12, BOE-A-2014-12328; Ley, art. 13, BOE-A-2014-12328.)"
       },
       "label": {
         "en": "Total deductible expenses (E.D. normal)",
         "es": "Total gastos computables E.D. normal",
-        "hu": "Összes levonható költség (E.D. normál)"
+        "hu": "Összes levonható költség (E.D. normál)",
+        "ca": "Total gastos computables E.D. normal"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -940,14 +1002,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income before art. 32 reduction (Legal basis: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto previo E.D. normal (Base legal: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt (Jogalap: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764.)"
+        "en": "Net business income before art. 32 reduction (Legal basis: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto previo E.D. normal (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt (Jogalap: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto previo E.D. normal (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net business income before art. 32 reduction",
         "es": "Rendimiento neto previo E.D. normal",
-        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt"
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt",
+        "ca": "Rendimiento neto previo E.D. normal"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -970,14 +1034,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 32 reduction (irregular / startup) (Legal basis: ley, art. 32, BOE-A-2006-20764.)",
-        "es": "Reducción LIRPF art. 32 (Base legal: ley, art. 32, BOE-A-2006-20764.)",
-        "hu": "32. cikk csökkentés (rendszertelen / induló) (Jogalap: ley, art. 32, BOE-A-2006-20764.)"
+        "en": "Art. 32 reduction (irregular / startup) (Legal basis: Ley, art. 32, BOE-A-2006-20764.)",
+        "es": "Reducción LIRPF art. 32 (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
+        "hu": "32. cikk csökkentés (rendszertelen / induló) (Jogalap: Ley, art. 32, BOE-A-2006-20764.)",
+        "ca": "Reducción LIRPF art. 32 (Base legal: Ley, art. 32, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 32 reduction (irregular / startup)",
         "es": "Reducción LIRPF art. 32",
-        "hu": "32. cikk csökkentés (rendszertelen / induló)"
+        "hu": "32. cikk csökkentés (rendszertelen / induló)",
+        "ca": "Reducción LIRPF art. 32"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1000,14 +1066,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income (reduced, E.D. normal) (Legal basis: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto reducido E.D. normal (Base legal: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764.)",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál) (Jogalap: ley, art. 27, BOE-A-2006-20764; ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764.)"
+        "en": "Net business income (reduced, E.D. normal) (Legal basis: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto reducido E.D. normal (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764.)",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál) (Jogalap: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto reducido E.D. normal (Base legal: Ley, art. 27, BOE-A-2006-20764; Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net business income (reduced, E.D. normal)",
         "es": "Rendimiento neto reducido E.D. normal",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál)"
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál)",
+        "ca": "Rendimiento neto reducido E.D. normal"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1030,14 +1098,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Operating income (E.D. simplificada) (Legal basis: ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Ingresos de explotación E.D. simplificada (Base legal: ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Üzemi bevétel (E.D. egyszerűsített) (Jogalap: ley, art. 28, BOE-A-2006-20764.)"
+        "en": "Operating income (E.D. simplificada) (Legal basis: Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Ingresos de explotación E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Üzemi bevétel (E.D. egyszerűsített) (Jogalap: Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Ingresos de explotación E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Operating income (E.D. simplificada)",
         "es": "Ingresos de explotación E.D. simplificada",
-        "hu": "Üzemi bevétel (E.D. egyszerűsített)"
+        "hu": "Üzemi bevétel (E.D. egyszerűsített)",
+        "ca": "Ingresos de explotación E.D. simplificada"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1060,14 +1130,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Deductible general expenses (E.D. simplificada) (Legal basis: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "es": "Engloba gastos de personal, servicios exteriores, tributos, amortización per la tabla simplificada del Anexo de la Orden de 27/3/1998. Excluye los gastos de difícil justificación (computados aparte en 0225 al 5 %). (Base legal: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "hu": "Általános levonható költségek (egyszerűsített) (Jogalap: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)"
+        "en": "Deductible general expenses (E.D. simplificada) (Legal basis: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "es": "Engloba gastos de personal, servicios exteriores, tributos, amortización per la tabla simplificada del Anexo de la Orden de 27/3/1998. Excluye los gastos de difícil justificación (computados aparte en 0225 al 5 %). (Base legal: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "hu": "Általános levonható költségek (egyszerűsített) (Jogalap: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "ca": "Engloba gastos de personal, servicios exteriores, tributos, amortización per la tabla simplificada del Anexo de la Orden de 27/3/1998. Excluye los gastos de difícil justificación (computados aparte en 0225 al 5 %). (Base legal: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Deductible general expenses (E.D. simplificada)",
         "es": "Gastos generales deducibles E.D. simplificada",
-        "hu": "Általános levonható költségek (egyszerűsített)"
+        "hu": "Általános levonható költségek (egyszerűsített)",
+        "ca": "Gastos generales deducibles E.D. simplificada"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1090,14 +1162,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net income before 5 % unjustified-expenses cap (Legal basis: ley, art. 28, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto antes del 5 % difícil justificación (Base legal: ley, art. 28, BOE-A-2006-20764.)",
-        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt (Jogalap: ley, art. 28, BOE-A-2006-20764.)"
+        "en": "Net income before 5 % unjustified-expenses cap (Legal basis: Ley, art. 28, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto antes del 5 % difícil justificación (Base legal: Ley, art. 28, BOE-A-2006-20764.)",
+        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt (Jogalap: Ley, art. 28, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto antes del 5 % difícil justificación (Base legal: Ley, art. 28, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net income before 5 % unjustified-expenses cap",
         "es": "Rendimiento neto antes del 5 % difícil justificación",
-        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt"
+        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt",
+        "ca": "Rendimiento neto antes del 5 % difícil justificación"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1120,14 +1194,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Unjustified expenses (5 % capped at 2.000 €) (Legal basis: reglamento, art. 30, BOE-A-2007-6820.)",
-        "es": "Gastos de difícil justificación (5 % límite 2.000 €) (Base legal: reglamento, art. 30, BOE-A-2007-6820.)",
-        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső) (Jogalap: reglamento, art. 30, BOE-A-2007-6820.)"
+        "en": "Unjustified expenses (5 % capped at 2.000 €) (Legal basis: Reglamento, art. 30, BOE-A-2007-6820.)",
+        "es": "Gastos de difícil justificación (5 % límite 2.000 €) (Base legal: Reglamento, art. 30, BOE-A-2007-6820.)",
+        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső) (Jogalap: Reglamento, art. 30, BOE-A-2007-6820.)",
+        "ca": "Gastos de difícil justificación (5 % límite 2.000 €) (Base legal: Reglamento, art. 30, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Unjustified expenses (5 % capped at 2.000 €)",
         "es": "Gastos de difícil justificación (5 % límite 2.000 €)",
-        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső)"
+        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső)",
+        "ca": "Gastos de difícil justificación (5 % límite 2.000 €)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1150,14 +1226,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income before art. 32 reduction (simpl.) (Legal basis: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "es": "Rendimiento neto previo E.D. simplificada (Base legal: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített) (Jogalap: ley, art. 28, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)"
+        "en": "Net business income before art. 32 reduction (simpl.) (Legal basis: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "es": "Rendimiento neto previo E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített) (Jogalap: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "ca": "Rendimiento neto previo E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net business income before art. 32 reduction (simpl.)",
         "es": "Rendimiento neto previo E.D. simplificada",
-        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített)"
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített)",
+        "ca": "Rendimiento neto previo E.D. simplificada"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1180,14 +1258,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Art. 32 reduction (E.D. simplificada) (Legal basis: ley, art. 32, BOE-A-2006-20764.)",
-        "es": "Reducción LIRPF art. 32 — E.D. simplificada (Base legal: ley, art. 32, BOE-A-2006-20764.)",
-        "hu": "32. cikk csökkentés (egyszerűsített) (Jogalap: ley, art. 32, BOE-A-2006-20764.)"
+        "en": "Art. 32 reduction (E.D. simplificada) (Legal basis: Ley, art. 32, BOE-A-2006-20764.)",
+        "es": "Reducción LIRPF art. 32 — E.D. simplificada (Base legal: Ley, art. 32, BOE-A-2006-20764.)",
+        "hu": "32. cikk csökkentés (egyszerűsített) (Jogalap: Ley, art. 32, BOE-A-2006-20764.)",
+        "ca": "Reducción LIRPF art. 32 — E.D. simplificada (Base legal: Ley, art. 32, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Art. 32 reduction (E.D. simplificada)",
         "es": "Reducción LIRPF art. 32 — E.D. simplificada",
-        "hu": "32. cikk csökkentés (egyszerűsített)"
+        "hu": "32. cikk csökkentés (egyszerűsített)",
+        "ca": "Reducción LIRPF art. 32 — E.D. simplificada"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1210,14 +1290,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income (reduced, simpl.) (Legal basis: ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "es": "Rendimiento neto reducido E.D. simplificada (Base legal: ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített) (Jogalap: ley, art. 28, BOE-A-2006-20764; ley, art. 32, BOE-A-2006-20764; reglamento, art. 30, BOE-A-2007-6820.)"
+        "en": "Net business income (reduced, simpl.) (Legal basis: Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "es": "Rendimiento neto reducido E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített) (Jogalap: Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)",
+        "ca": "Rendimiento neto reducido E.D. simplificada (Base legal: Ley, art. 28, BOE-A-2006-20764; Ley, art. 32, BOE-A-2006-20764; Reglamento, art. 30, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Net business income (reduced, simpl.)",
         "es": "Rendimiento neto reducido E.D. simplificada",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített)"
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített)",
+        "ca": "Rendimiento neto reducido E.D. simplificada"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1240,14 +1322,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income before reduction (módulos) (Legal basis: ley, art. 31, BOE-A-2006-20764.)",
-        "es": "Caller-computed from the Orden HAC tabla anual: signos, índices y módulos por actividad. Para 2025 la Orden rectora es HAC/277/2026 (BOE-A-2026-7041); para 2026 es Orden HAC/1425/2025 (BOE-A-2025-25272). (Base legal: ley, art. 31, BOE-A-2006-20764.)",
-        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos) (Jogalap: ley, art. 31, BOE-A-2006-20764.)"
+        "en": "Net business income before reduction (módulos) (Legal basis: Ley, art. 31, BOE-A-2006-20764.)",
+        "es": "Caller-computed from the Orden HAC tabla anual: signos, índices y módulos por actividad. Para 2025 la Orden rectora es HAC/277/2026 (BOE-A-2026-7041); para 2026 es Orden HAC/1425/2025 (BOE-A-2025-25272). (Base legal: Ley, art. 31, BOE-A-2006-20764.)",
+        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos) (Jogalap: Ley, art. 31, BOE-A-2006-20764.)",
+        "ca": "Caller-computed from the Orden HAC tabla anual: signos, índices y módulos por actividad. Para 2025 la Orden rectora es HAC/277/2026 (BOE-A-2026-7041); para 2026 es Orden HAC/1425/2025 (BOE-A-2025-25272). (Base legal: Ley, art. 31, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net business income before reduction (módulos)",
         "es": "Rendimiento neto previo módulos",
-        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos)"
+        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos)",
+        "ca": "Rendimiento neto previo módulos"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1270,14 +1354,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Modulus regime reduction (Legal basis: ley, art. 31, BOE-A-2006-20764.)",
-        "es": "Reducción del 5 % o porcentaje específico vigente per Orden HAC del ejercicio (DA primera Orden HAC, en ocasiones reducciones extraordinarias por DANA, incendios, etc.). (Base legal: ley, art. 31, BOE-A-2006-20764.)",
-        "hu": "Modulus rendszer csökkentés (Jogalap: ley, art. 31, BOE-A-2006-20764.)"
+        "en": "Modulus regime reduction (Legal basis: Ley, art. 31, BOE-A-2006-20764.)",
+        "es": "Reducción del 5 % o porcentaje específico vigente per Orden HAC del ejercicio (DA primera Orden HAC, en ocasiones reducciones extraordinarias por DANA, incendios, etc.). (Base legal: Ley, art. 31, BOE-A-2006-20764.)",
+        "hu": "Modulus rendszer csökkentés (Jogalap: Ley, art. 31, BOE-A-2006-20764.)",
+        "ca": "Reducción del 5 % o porcentaje específico vigente per Orden HAC del ejercicio (DA primera Orden HAC, en ocasiones reducciones extraordinarias por DANA, incendios, etc.). (Base legal: Ley, art. 31, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Modulus regime reduction",
         "es": "Reducción rendimiento neto módulos",
-        "hu": "Modulus rendszer csökkentés"
+        "hu": "Modulus rendszer csökkentés",
+        "ca": "Reducción rendimiento neto módulos"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1300,14 +1386,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net business income (reduced, módulos) (Legal basis: ley, art. 31, BOE-A-2006-20764.)",
-        "es": "Rendimiento neto reducido módulos (Base legal: ley, art. 31, BOE-A-2006-20764.)",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos) (Jogalap: ley, art. 31, BOE-A-2006-20764.)"
+        "en": "Net business income (reduced, módulos) (Legal basis: Ley, art. 31, BOE-A-2006-20764.)",
+        "es": "Rendimiento neto reducido módulos (Base legal: Ley, art. 31, BOE-A-2006-20764.)",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos) (Jogalap: Ley, art. 31, BOE-A-2006-20764.)",
+        "ca": "Rendimiento neto reducido módulos (Base legal: Ley, art. 31, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net business income (reduced, módulos)",
         "es": "Rendimiento neto reducido módulos",
-        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos)"
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos)",
+        "ca": "Rendimiento neto reducido módulos"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1330,14 +1418,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Gross capital gains (Anexo E) (Legal basis: ley, art. 33, BOE-A-2006-20764.)",
-        "es": "Ganancias patrimoniales brutas (Base legal: ley, art. 33, BOE-A-2006-20764.)",
-        "hu": "Brutto vagyongyarapodas (Jogalap: ley, art. 33, BOE-A-2006-20764.)"
+        "en": "Gross capital gains (Anexo E) (Legal basis: Ley, art. 33, BOE-A-2006-20764.)",
+        "es": "Ganancias patrimoniales brutas (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
+        "hu": "Brutto vagyongyarapodas (Jogalap: Ley, art. 33, BOE-A-2006-20764.)",
+        "ca": "Ganancias patrimoniales brutas (Base legal: Ley, art. 33, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Gross capital gains (Anexo E)",
         "es": "Ganancias patrimoniales brutas",
-        "hu": "Brutto vagyongyarapodas"
+        "hu": "Brutto vagyongyarapodas",
+        "ca": "Ganancias patrimoniales brutas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1360,14 +1450,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Gross capital losses (Anexo E) (Legal basis: ley, art. 33, BOE-A-2006-20764.)",
-        "es": "Pérdidas patrimoniales brutas (Base legal: ley, art. 33, BOE-A-2006-20764.)",
-        "hu": "Brutto vagyonveszteseg (Jogalap: ley, art. 33, BOE-A-2006-20764.)"
+        "en": "Gross capital losses (Anexo E) (Legal basis: Ley, art. 33, BOE-A-2006-20764.)",
+        "es": "Pérdidas patrimoniales brutas (Base legal: Ley, art. 33, BOE-A-2006-20764.)",
+        "hu": "Brutto vagyonveszteseg (Jogalap: Ley, art. 33, BOE-A-2006-20764.)",
+        "ca": "Pérdidas patrimoniales brutas (Base legal: Ley, art. 33, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Gross capital losses (Anexo E)",
         "es": "Pérdidas patrimoniales brutas",
-        "hu": "Brutto vagyonveszteseg"
+        "hu": "Brutto vagyonveszteseg",
+        "ca": "Pérdidas patrimoniales brutas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1390,14 +1482,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net amount integrating into general base (held <= 1 yr) (Legal basis: ley, art. 49, BOE-A-2006-20764.)",
-        "es": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta). (Base legal: ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev) (Jogalap: ley, art. 49, BOE-A-2006-20764.)"
+        "en": "Net amount integrating into general base (held <= 1 yr) (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
+        "es": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta). (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
+        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev) (Jogalap: Ley, art. 49, BOE-A-2006-20764.)",
+        "ca": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta). (Base legal: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net amount integrating into general base (held <= 1 yr)",
         "es": "Saldo a integrar en base general (<= 1 año)",
-        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev)"
+        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev)",
+        "ca": "Saldo a integrar en base general (<= 1 año)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1420,14 +1514,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Net amount integrating into savings base (held > 1 yr) (Legal basis: ley, art. 49, BOE-A-2006-20764.)",
-        "es": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo. (Base legal: ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev) (Jogalap: ley, art. 49, BOE-A-2006-20764.)"
+        "en": "Net amount integrating into savings base (held > 1 yr) (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
+        "es": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo. (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
+        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev) (Jogalap: Ley, art. 49, BOE-A-2006-20764.)",
+        "ca": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo. (Base legal: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Net amount integrating into savings base (held > 1 yr)",
         "es": "Saldo a integrar en base ahorro (> 1 año)",
-        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)"
+        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)",
+        "ca": "Saldo a integrar en base ahorro (> 1 año)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1450,14 +1546,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total net capital gain/loss (Legal basis: ley, art. 33, BOE-A-2006-20764; ley, art. 37, BOE-A-2006-20764.)",
-        "es": "Saldo neto patrimonial total (Base legal: ley, art. 33, BOE-A-2006-20764; ley, art. 37, BOE-A-2006-20764.)",
-        "hu": "Teljes netto vagyon vagy veszteseg (Jogalap: ley, art. 33, BOE-A-2006-20764; ley, art. 37, BOE-A-2006-20764.)"
+        "en": "Total net capital gain/loss (Legal basis: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
+        "es": "Saldo neto patrimonial total (Base legal: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
+        "hu": "Teljes netto vagyon vagy veszteseg (Jogalap: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)",
+        "ca": "Saldo neto patrimonial total (Base legal: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total net capital gain/loss",
         "es": "Saldo neto patrimonial total",
-        "hu": "Teljes netto vagyon vagy veszteseg"
+        "hu": "Teljes netto vagyon vagy veszteseg",
+        "ca": "Saldo neto patrimonial total"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1480,14 +1578,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Pension-system contributions reduction (art. 51-52) (Legal basis: ley, art. 51, BOE-A-2006-20764; ley, art. 52, BOE-A-2006-20764.)",
-        "es": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52). (Base legal: ley, art. 51, BOE-A-2006-20764; ley, art. 52, BOE-A-2006-20764.)",
-        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes (Jogalap: ley, art. 51, BOE-A-2006-20764; ley, art. 52, BOE-A-2006-20764.)"
+        "en": "Pension-system contributions reduction (art. 51-52) (Legal basis: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
+        "es": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52). (Base legal: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
+        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes (Jogalap: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)",
+        "ca": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52). (Base legal: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Pension-system contributions reduction (art. 51-52)",
         "es": "Reducción por aportaciones a sistemas de previsión social",
-        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes"
+        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes",
+        "ca": "Reducción por aportaciones a sistemas de previsión social"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1510,14 +1610,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Joint-filing reduction (art. 84) (Legal basis: ley, art. 84, BOE-A-2006-20764.)",
-        "es": "Reducción por tributación conjunta (Base legal: ley, art. 84, BOE-A-2006-20764.)",
-        "hu": "Egyuttes ado-bevallasi csokkentes (Jogalap: ley, art. 84, BOE-A-2006-20764.)"
+        "en": "Joint-filing reduction (art. 84) (Legal basis: Ley, art. 84, BOE-A-2006-20764.)",
+        "es": "Reducción por tributación conjunta (Base legal: Ley, art. 84, BOE-A-2006-20764.)",
+        "hu": "Egyuttes ado-bevallasi csokkentes (Jogalap: Ley, art. 84, BOE-A-2006-20764.)",
+        "ca": "Reducción por tributación conjunta (Base legal: Ley, art. 84, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Joint-filing reduction (art. 84)",
         "es": "Reducción por tributación conjunta",
-        "hu": "Egyuttes ado-bevallasi csokkentes"
+        "hu": "Egyuttes ado-bevallasi csokkentes",
+        "ca": "Reducción por tributación conjunta"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1540,14 +1642,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Personal exemption (art. 57) (Legal basis: ley, art. 57, BOE-A-2006-20764.)",
-        "es": "Mínimo del contribuyente (Base legal: ley, art. 57, BOE-A-2006-20764.)",
-        "hu": "Adoalany szemelyi minimum (Jogalap: ley, art. 57, BOE-A-2006-20764.)"
+        "en": "Personal exemption (art. 57) (Legal basis: Ley, art. 57, BOE-A-2006-20764.)",
+        "es": "Mínimo del contribuyente (Base legal: Ley, art. 57, BOE-A-2006-20764.)",
+        "hu": "Adoalany szemelyi minimum (Jogalap: Ley, art. 57, BOE-A-2006-20764.)",
+        "ca": "Mínimo del contribuyente (Base legal: Ley, art. 57, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Personal exemption (art. 57)",
         "es": "Mínimo del contribuyente",
-        "hu": "Adoalany szemelyi minimum"
+        "hu": "Adoalany szemelyi minimum",
+        "ca": "Mínimo del contribuyente"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1570,14 +1674,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Dependents exemption (art. 58) (Legal basis: ley, art. 58, BOE-A-2006-20764.)",
-        "es": "Mínimo por descendientes (Base legal: ley, art. 58, BOE-A-2006-20764.)",
-        "hu": "Leszarmazok szerinti minimum (Jogalap: ley, art. 58, BOE-A-2006-20764.)"
+        "en": "Dependents exemption (art. 58) (Legal basis: Ley, art. 58, BOE-A-2006-20764.)",
+        "es": "Mínimo por descendientes (Base legal: Ley, art. 58, BOE-A-2006-20764.)",
+        "hu": "Leszarmazok szerinti minimum (Jogalap: Ley, art. 58, BOE-A-2006-20764.)",
+        "ca": "Mínimo por descendientes (Base legal: Ley, art. 58, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Dependents exemption (art. 58)",
         "es": "Mínimo por descendientes",
-        "hu": "Leszarmazok szerinti minimum"
+        "hu": "Leszarmazok szerinti minimum",
+        "ca": "Mínimo por descendientes"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1600,14 +1706,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Ascendants exemption (art. 59) (Legal basis: ley, art. 59, BOE-A-2006-20764.)",
-        "es": "Mínimo por ascendientes (Base legal: ley, art. 59, BOE-A-2006-20764.)",
-        "hu": "Felmenok szerinti minimum (Jogalap: ley, art. 59, BOE-A-2006-20764.)"
+        "en": "Ascendants exemption (art. 59) (Legal basis: Ley, art. 59, BOE-A-2006-20764.)",
+        "es": "Mínimo por ascendientes (Base legal: Ley, art. 59, BOE-A-2006-20764.)",
+        "hu": "Felmenok szerinti minimum (Jogalap: Ley, art. 59, BOE-A-2006-20764.)",
+        "ca": "Mínimo por ascendientes (Base legal: Ley, art. 59, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Ascendants exemption (art. 59)",
         "es": "Mínimo por ascendientes",
-        "hu": "Felmenok szerinti minimum"
+        "hu": "Felmenok szerinti minimum",
+        "ca": "Mínimo por ascendientes"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1630,14 +1738,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Disability exemption (art. 60) (Legal basis: ley, art. 60, BOE-A-2006-20764.)",
-        "es": "Mínimo por discapacidad (Base legal: ley, art. 60, BOE-A-2006-20764.)",
-        "hu": "Fogyatekossagi minimum (Jogalap: ley, art. 60, BOE-A-2006-20764.)"
+        "en": "Disability exemption (art. 60) (Legal basis: Ley, art. 60, BOE-A-2006-20764.)",
+        "es": "Mínimo por discapacidad (Base legal: Ley, art. 60, BOE-A-2006-20764.)",
+        "hu": "Fogyatekossagi minimum (Jogalap: Ley, art. 60, BOE-A-2006-20764.)",
+        "ca": "Mínimo por discapacidad (Base legal: Ley, art. 60, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Disability exemption (art. 60)",
         "es": "Mínimo por discapacidad",
-        "hu": "Fogyatekossagi minimum"
+        "hu": "Fogyatekossagi minimum",
+        "ca": "Mínimo por discapacidad"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1660,14 +1770,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "General taxable base (Legal basis: ley, art. 48, BOE-A-2006-20764.)",
-        "es": "Base imponible general (Base legal: ley, art. 48, BOE-A-2006-20764.)",
-        "hu": "Altalanos adoalap (Jogalap: ley, art. 48, BOE-A-2006-20764.)"
+        "en": "General taxable base (Legal basis: Ley, art. 48, BOE-A-2006-20764.)",
+        "es": "Base imponible general (Base legal: Ley, art. 48, BOE-A-2006-20764.)",
+        "hu": "Altalanos adoalap (Jogalap: Ley, art. 48, BOE-A-2006-20764.)",
+        "ca": "Base imponible general (Base legal: Ley, art. 48, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "General taxable base",
         "es": "Base imponible general",
-        "hu": "Altalanos adoalap"
+        "hu": "Altalanos adoalap",
+        "ca": "Base imponible general"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1690,14 +1802,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Savings taxable base (Legal basis: ley, art. 49, BOE-A-2006-20764.)",
-        "es": "Base imponible del ahorro (Base legal: ley, art. 49, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi adoalap (Jogalap: ley, art. 49, BOE-A-2006-20764.)"
+        "en": "Savings taxable base (Legal basis: Ley, art. 49, BOE-A-2006-20764.)",
+        "es": "Base imponible del ahorro (Base legal: Ley, art. 49, BOE-A-2006-20764.)",
+        "hu": "Megtakaritasi adoalap (Jogalap: Ley, art. 49, BOE-A-2006-20764.)",
+        "ca": "Base imponible del ahorro (Base legal: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Savings taxable base",
         "es": "Base imponible del ahorro",
-        "hu": "Megtakaritasi adoalap"
+        "hu": "Megtakaritasi adoalap",
+        "ca": "Base imponible del ahorro"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1720,14 +1834,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Personal + family exemption (total) (Legal basis: ley, art. 56, BOE-A-2006-20764.)",
-        "es": "Minimo personal y familiar total (Base legal: ley, art. 56, BOE-A-2006-20764.)",
-        "hu": "Szemelyi es csaladi minimum osszesen (Jogalap: ley, art. 56, BOE-A-2006-20764.)"
+        "en": "Personal + family exemption (total) (Legal basis: Ley, art. 56, BOE-A-2006-20764.)",
+        "es": "Minimo personal y familiar total (Base legal: Ley, art. 56, BOE-A-2006-20764.)",
+        "hu": "Szemelyi es csaladi minimum osszesen (Jogalap: Ley, art. 56, BOE-A-2006-20764.)",
+        "ca": "Minimo personal y familiar total (Base legal: Ley, art. 56, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Personal + family exemption (total)",
         "es": "Minimo personal y familiar total",
-        "hu": "Szemelyi es csaladi minimum osszesen"
+        "hu": "Szemelyi es csaladi minimum osszesen",
+        "ca": "Minimo personal y familiar total"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1750,14 +1866,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "General liquidable base (Legal basis: ley, art. 50, BOE-A-2006-20764.)",
-        "es": "Base liquidable general (Base legal: ley, art. 50, BOE-A-2006-20764.)",
-        "hu": "Altalanos likvidalt adoalap (Jogalap: ley, art. 50, BOE-A-2006-20764.)"
+        "en": "General liquidable base (Legal basis: Ley, art. 50, BOE-A-2006-20764.)",
+        "es": "Base liquidable general (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
+        "hu": "Altalanos likvidalt adoalap (Jogalap: Ley, art. 50, BOE-A-2006-20764.)",
+        "ca": "Base liquidable general (Base legal: Ley, art. 50, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "General liquidable base",
         "es": "Base liquidable general",
-        "hu": "Altalanos likvidalt adoalap"
+        "hu": "Altalanos likvidalt adoalap",
+        "ca": "Base liquidable general"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1780,14 +1898,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Savings liquidable base (Legal basis: ley, art. 50, BOE-A-2006-20764.)",
-        "es": "Base liquidable del ahorro (Base legal: ley, art. 50, BOE-A-2006-20764.)",
-        "hu": "Megtakaritasi likvidalt adoalap (Jogalap: ley, art. 50, BOE-A-2006-20764.)"
+        "en": "Savings liquidable base (Legal basis: Ley, art. 50, BOE-A-2006-20764.)",
+        "es": "Base liquidable del ahorro (Base legal: Ley, art. 50, BOE-A-2006-20764.)",
+        "hu": "Megtakaritasi likvidalt adoalap (Jogalap: Ley, art. 50, BOE-A-2006-20764.)",
+        "ca": "Base liquidable del ahorro (Base legal: Ley, art. 50, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Savings liquidable base",
         "es": "Base liquidable del ahorro",
-        "hu": "Megtakaritasi likvidalt adoalap"
+        "hu": "Megtakaritasi likvidalt adoalap",
+        "ca": "Base liquidable del ahorro"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1810,14 +1930,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "State general tarifa applied to BLG (Legal basis: ley, art. 63, BOE-A-2006-20764.)",
-        "es": "Cuota tarifa estatal general sobre base liquidable (Base legal: ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos tarifa BLG-re alkalmazva (Jogalap: ley, art. 63, BOE-A-2006-20764.)"
+        "en": "State general tarifa applied to BLG (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
+        "es": "Cuota tarifa estatal general sobre base liquidable (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
+        "hu": "Allami altalanos tarifa BLG-re alkalmazva (Jogalap: Ley, art. 63, BOE-A-2006-20764.)",
+        "ca": "Cuota tarifa estatal general sobre base liquidable (Base legal: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "State general tarifa applied to BLG",
         "es": "Cuota tarifa estatal general sobre base liquidable",
-        "hu": "Allami altalanos tarifa BLG-re alkalmazva"
+        "hu": "Allami altalanos tarifa BLG-re alkalmazva",
+        "ca": "Cuota tarifa estatal general sobre base liquidable"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1840,14 +1962,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "State general tarifa applied to mínimo (capped at BLG) (Legal basis: ley, art. 63, BOE-A-2006-20764.)",
-        "es": "Cuota tarifa estatal sobre mínimo personal y familiar (Base legal: ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva) (Jogalap: ley, art. 63, BOE-A-2006-20764.)"
+        "en": "State general tarifa applied to mínimo (capped at BLG) (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
+        "es": "Cuota tarifa estatal sobre mínimo personal y familiar (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
+        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva) (Jogalap: Ley, art. 63, BOE-A-2006-20764.)",
+        "ca": "Cuota tarifa estatal sobre mínimo personal y familiar (Base legal: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "State general tarifa applied to mínimo (capped at BLG)",
         "es": "Cuota tarifa estatal sobre mínimo personal y familiar",
-        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)"
+        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)",
+        "ca": "Cuota tarifa estatal sobre mínimo personal y familiar"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1870,14 +1994,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "State general gross tax (Legal basis: ley, art. 63, BOE-A-2006-20764.)",
-        "es": "Cuota íntegra estatal general (Base legal: ley, art. 63, BOE-A-2006-20764.)",
-        "hu": "Allami altalanos brutto ado (Jogalap: ley, art. 63, BOE-A-2006-20764.)"
+        "en": "State general gross tax (Legal basis: Ley, art. 63, BOE-A-2006-20764.)",
+        "es": "Cuota íntegra estatal general (Base legal: Ley, art. 63, BOE-A-2006-20764.)",
+        "hu": "Allami altalanos brutto ado (Jogalap: Ley, art. 63, BOE-A-2006-20764.)",
+        "ca": "Cuota íntegra estatal general (Base legal: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "State general gross tax",
         "es": "Cuota íntegra estatal general",
-        "hu": "Allami altalanos brutto ado"
+        "hu": "Allami altalanos brutto ado",
+        "ca": "Cuota íntegra estatal general"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1900,14 +2026,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Autonomic general gross tax (per-CCAA caller input) (Legal basis: ley, art. 73, BOE-A-2006-20764.)",
-        "es": "Cuota íntegra autonómica general (Base legal: ley, art. 73, BOE-A-2006-20764.)",
-        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja) (Jogalap: ley, art. 73, BOE-A-2006-20764.)"
+        "en": "Autonomic general gross tax (per-CCAA caller input) (Legal basis: Ley, art. 73, BOE-A-2006-20764.)",
+        "es": "Cuota íntegra autonómica general (Base legal: Ley, art. 73, BOE-A-2006-20764.)",
+        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja) (Jogalap: Ley, art. 73, BOE-A-2006-20764.)",
+        "ca": "Cuota íntegra autonómica general (Base legal: Ley, art. 73, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Autonomic general gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica general",
-        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)"
+        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)",
+        "ca": "Cuota íntegra autonómica general"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1930,14 +2058,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "State savings gross tax (Legal basis: ley, art. 66, BOE-A-2006-20764.)",
-        "es": "Cuota íntegra estatal del ahorro (Base legal: ley, art. 66, BOE-A-2006-20764.)",
-        "hu": "Allami megtakaritasi brutto ado (Jogalap: ley, art. 66, BOE-A-2006-20764.)"
+        "en": "State savings gross tax (Legal basis: Ley, art. 66, BOE-A-2006-20764.)",
+        "es": "Cuota íntegra estatal del ahorro (Base legal: Ley, art. 66, BOE-A-2006-20764.)",
+        "hu": "Allami megtakaritasi brutto ado (Jogalap: Ley, art. 66, BOE-A-2006-20764.)",
+        "ca": "Cuota íntegra estatal del ahorro (Base legal: Ley, art. 66, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "State savings gross tax",
         "es": "Cuota íntegra estatal del ahorro",
-        "hu": "Allami megtakaritasi brutto ado"
+        "hu": "Allami megtakaritasi brutto ado",
+        "ca": "Cuota íntegra estatal del ahorro"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1960,14 +2090,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Autonomic savings gross tax (per-CCAA caller input) (Legal basis: ley, art. 76, BOE-A-2006-20764.)",
-        "es": "Cuota íntegra autonómica del ahorro (Base legal: ley, art. 76, BOE-A-2006-20764.)",
-        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo) (Jogalap: ley, art. 76, BOE-A-2006-20764.)"
+        "en": "Autonomic savings gross tax (per-CCAA caller input) (Legal basis: Ley, art. 76, BOE-A-2006-20764.)",
+        "es": "Cuota íntegra autonómica del ahorro (Base legal: Ley, art. 76, BOE-A-2006-20764.)",
+        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo) (Jogalap: Ley, art. 76, BOE-A-2006-20764.)",
+        "ca": "Cuota íntegra autonómica del ahorro (Base legal: Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Autonomic savings gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica del ahorro",
-        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)"
+        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)",
+        "ca": "Cuota íntegra autonómica del ahorro"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -1990,14 +2122,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total gross tax (state + autonomic) (Legal basis: ley, art. 63, BOE-A-2006-20764; ley, art. 66, BOE-A-2006-20764; ley, art. 73, BOE-A-2006-20764; ley, art. 76, BOE-A-2006-20764.)",
-        "es": "Cuota íntegra total (estatal + autonómica) (Base legal: ley, art. 63, BOE-A-2006-20764; ley, art. 66, BOE-A-2006-20764; ley, art. 73, BOE-A-2006-20764; ley, art. 76, BOE-A-2006-20764.)",
-        "hu": "Teljes brutto ado (allami + autonom) (Jogalap: ley, art. 63, BOE-A-2006-20764; ley, art. 66, BOE-A-2006-20764; ley, art. 73, BOE-A-2006-20764; ley, art. 76, BOE-A-2006-20764.)"
+        "en": "Total gross tax (state + autonomic) (Legal basis: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
+        "es": "Cuota íntegra total (estatal + autonómica) (Base legal: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
+        "hu": "Teljes brutto ado (allami + autonom) (Jogalap: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)",
+        "ca": "Cuota íntegra total (estatal + autonómica) (Base legal: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total gross tax (state + autonomic)",
         "es": "Cuota íntegra total (estatal + autonómica)",
-        "hu": "Teljes brutto ado (allami + autonom)"
+        "hu": "Teljes brutto ado (allami + autonom)",
+        "ca": "Cuota íntegra total (estatal + autonómica)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2020,14 +2154,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4) (Legal basis: ley, art. 68, BOE-A-2006-20764.)",
-        "es": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total. (Base legal: ley, art. 68, BOE-A-2006-20764.)",
-        "hu": "Ceuta/Melilla bevetel 60 %-os levonas (Jogalap: ley, art. 68, BOE-A-2006-20764.)"
+        "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4) (Legal basis: Ley, art. 68, BOE-A-2006-20764.)",
+        "es": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total. (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonas (Jogalap: Ley, art. 68, BOE-A-2006-20764.)",
+        "ca": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total. (Base legal: Ley, art. 68, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4)",
         "es": "Deducción 60 % rentas Ceuta / Melilla",
-        "hu": "Ceuta/Melilla bevetel 60 %-os levonas"
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonas",
+        "ca": "Deducción 60 % rentas Ceuta / Melilla"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2050,14 +2186,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total state deductions (donativos / vivienda / etc.) (Legal basis: ley, art. 68, BOE-A-2006-20764.)",
-        "es": "Deducciones estatales total (Base legal: ley, art. 68, BOE-A-2006-20764.)",
-        "hu": "Allami levonasok osszesen (Jogalap: ley, art. 68, BOE-A-2006-20764.)"
+        "en": "Total state deductions (donativos / vivienda / etc.) (Legal basis: Ley, art. 68, BOE-A-2006-20764.)",
+        "es": "Deducciones estatales total (Base legal: Ley, art. 68, BOE-A-2006-20764.)",
+        "hu": "Allami levonasok osszesen (Jogalap: Ley, art. 68, BOE-A-2006-20764.)",
+        "ca": "Deducciones estatales total (Base legal: Ley, art. 68, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total state deductions (donativos / vivienda / etc.)",
         "es": "Deducciones estatales total",
-        "hu": "Allami levonasok osszesen"
+        "hu": "Allami levonasok osszesen",
+        "ca": "Deducciones estatales total"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2080,14 +2218,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total deductions (state + autonomic) (Legal basis: ley, art. 68, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)",
-        "es": "Total deducciones (estatales + autonómicas) (Base legal: ley, art. 68, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)",
-        "hu": "Teljes levonasok (Jogalap: ley, art. 68, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)"
+        "en": "Total deductions (state + autonomic) (Legal basis: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "es": "Total deducciones (estatales + autonómicas) (Base legal: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "hu": "Teljes levonasok (Jogalap: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "ca": "Total deducciones (estatales + autonómicas) (Base legal: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total deductions (state + autonomic)",
         "es": "Total deducciones (estatales + autonómicas)",
-        "hu": "Teljes levonasok"
+        "hu": "Teljes levonasok",
+        "ca": "Total deducciones (estatales + autonómicas)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2110,14 +2250,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla) (Legal basis: ley, art. 67, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)",
-        "es": "Cuota líquida total (Base legal: ley, art. 67, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)",
-        "hu": "Teljes netto ado (Jogalap: ley, art. 67, BOE-A-2006-20764; ley, art. 77, BOE-A-2006-20764.)"
+        "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla) (Legal basis: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "es": "Cuota líquida total (Base legal: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "hu": "Teljes netto ado (Jogalap: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)",
+        "ca": "Cuota líquida total (Base legal: Ley, art. 67, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla)",
         "es": "Cuota líquida total",
-        "hu": "Teljes netto ado"
+        "hu": "Teljes netto ado",
+        "ca": "Cuota líquida total"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2140,14 +2282,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Withholdings and prepayments (LIRPF arts. 99-101) (Legal basis: ley, art. 99, BOE-A-2006-20764.)",
-        "es": "Retenciones e ingresos a cuenta (Base legal: ley, art. 99, BOE-A-2006-20764.)",
-        "hu": "Levonasok es eloleg befizetesek (Jogalap: ley, art. 99, BOE-A-2006-20764.)"
+        "en": "Withholdings and prepayments (LIRPF arts. 99-101) (Legal basis: Ley, art. 99, BOE-A-2006-20764.)",
+        "es": "Retenciones e ingresos a cuenta (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
+        "hu": "Levonasok es eloleg befizetesek (Jogalap: Ley, art. 99, BOE-A-2006-20764.)",
+        "ca": "Retenciones e ingresos a cuenta (Base legal: Ley, art. 99, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Withholdings and prepayments (LIRPF arts. 99-101)",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonasok es eloleg befizetesek"
+        "hu": "Levonasok es eloleg befizetesek",
+        "ca": "Retenciones e ingresos a cuenta"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2170,14 +2314,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Fractional payments (Models 130 / 131) (Legal basis: ley, art. 99, BOE-A-2006-20764.)",
-        "es": "Pagos fraccionados (Modelos 130 / 131) (Base legal: ley, art. 99, BOE-A-2006-20764.)",
-        "hu": "Reszletfizetesek (130 / 131 modell) (Jogalap: ley, art. 99, BOE-A-2006-20764.)"
+        "en": "Fractional payments (Models 130 / 131) (Legal basis: Ley, art. 99, BOE-A-2006-20764.)",
+        "es": "Pagos fraccionados (Modelos 130 / 131) (Base legal: Ley, art. 99, BOE-A-2006-20764.)",
+        "hu": "Reszletfizetesek (130 / 131 modell) (Jogalap: Ley, art. 99, BOE-A-2006-20764.)",
+        "ca": "Pagos fraccionados (Modelos 130 / 131) (Base legal: Ley, art. 99, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Fractional payments (Models 130 / 131)",
         "es": "Pagos fraccionados (Modelos 130 / 131)",
-        "hu": "Reszletfizetesek (130 / 131 modell)"
+        "hu": "Reszletfizetesek (130 / 131 modell)",
+        "ca": "Pagos fraccionados (Modelos 130 / 131)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2200,14 +2346,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Differential cuota / autoliquidation result (art. 79) (Legal basis: ley, art. 79, BOE-A-2006-20764.)",
-        "es": "Cuota diferencial / resultado de la autoliquidación (Base legal: ley, art. 79, BOE-A-2006-20764.)",
-        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk) (Jogalap: ley, art. 79, BOE-A-2006-20764.)"
+        "en": "Differential cuota / autoliquidation result (art. 79) (Legal basis: Ley, art. 79, BOE-A-2006-20764.)",
+        "es": "Cuota diferencial / resultado de la autoliquidación (Base legal: Ley, art. 79, BOE-A-2006-20764.)",
+        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk) (Jogalap: Ley, art. 79, BOE-A-2006-20764.)",
+        "ca": "Cuota diferencial / resultado de la autoliquidación (Base legal: Ley, art. 79, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Differential cuota / autoliquidation result (art. 79)",
         "es": "Cuota diferencial / resultado de la autoliquidación",
-        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk)"
+        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk)",
+        "ca": "Cuota diferencial / resultado de la autoliquidación"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2230,14 +2378,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Andalusia (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Andaluzia (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Andalusia (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Andaluzia (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Andalusia",
         "es": "Total deducciones autonómicas — Andalucía",
-        "hu": "Autonom levonasok osszesen — Andaluzia"
+        "hu": "Autonom levonasok osszesen — Andaluzia",
+        "ca": "Total deducciones autonómicas — Andalucía"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2260,14 +2410,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Aragon (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Aragonia (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Aragon (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Aragonia (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Aragon",
         "es": "Total deducciones autonómicas — Aragón",
-        "hu": "Autonom levonasok osszesen — Aragonia"
+        "hu": "Autonom levonasok osszesen — Aragonia",
+        "ca": "Total deducciones autonómicas — Aragón"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2290,14 +2442,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Asturias (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Asztur Hercegseg (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Asturias (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Asztur Hercegseg (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Asturias",
         "es": "Total deducciones autonómicas — Principado de Asturias",
-        "hu": "Autonom levonasok osszesen — Asztur Hercegseg"
+        "hu": "Autonom levonasok osszesen — Asztur Hercegseg",
+        "ca": "Total deducciones autonómicas — Principado de Asturias"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2320,14 +2474,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Balearic Islands (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Baleari-szigetek (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Balearic Islands (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Baleari-szigetek (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Balearic Islands",
         "es": "Total deducciones autonómicas — Illes Balears",
-        "hu": "Autonom levonasok osszesen — Baleari-szigetek"
+        "hu": "Autonom levonasok osszesen — Baleari-szigetek",
+        "ca": "Total deducciones autonómicas — Illes Balears"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2350,14 +2506,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Canary Islands (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kanari-szigetek (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Canary Islands (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Kanari-szigetek (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Canary Islands",
         "es": "Total deducciones autonómicas — Canarias",
-        "hu": "Autonom levonasok osszesen — Kanari-szigetek"
+        "hu": "Autonom levonasok osszesen — Kanari-szigetek",
+        "ca": "Total deducciones autonómicas — Canarias"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2380,14 +2538,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Cantabria (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kantabria (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Cantabria (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Kantabria (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Cantabria",
         "es": "Total deducciones autonómicas — Cantabria",
-        "hu": "Autonom levonasok osszesen — Kantabria"
+        "hu": "Autonom levonasok osszesen — Kantabria",
+        "ca": "Total deducciones autonómicas — Cantabria"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2410,14 +2570,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Castile-La Mancha (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Castile-La Mancha (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Castile-La Mancha",
         "es": "Total deducciones autonómicas — Castilla-La Mancha",
-        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha"
+        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha",
+        "ca": "Total deducciones autonómicas — Castilla-La Mancha"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2440,14 +2602,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Castile and Leon (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Kasztilia es Leon (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Castile and Leon (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Kasztilia es Leon (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Castile and Leon",
         "es": "Total deducciones autonómicas — Castilla y León",
-        "hu": "Autonom levonasok osszesen — Kasztilia es Leon"
+        "hu": "Autonom levonasok osszesen — Kasztilia es Leon",
+        "ca": "Total deducciones autonómicas — Castilla y León"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2470,14 +2634,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Catalonia (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Katalonia (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Catalonia (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Katalonia (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Catalonia",
         "es": "Total deducciones autonómicas — Cataluña",
-        "hu": "Autonom levonasok osszesen — Katalonia"
+        "hu": "Autonom levonasok osszesen — Katalonia",
+        "ca": "Total deducciones autonómicas — Cataluña"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2500,14 +2666,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Valencian Community (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Valenciai kozosseg (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Valencian Community (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Valenciai kozosseg (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Valencian Community",
         "es": "Total deducciones autonómicas — Comunitat Valenciana",
-        "hu": "Autonom levonasok osszesen — Valenciai kozosseg"
+        "hu": "Autonom levonasok osszesen — Valenciai kozosseg",
+        "ca": "Total deducciones autonómicas — Comunitat Valenciana"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2530,14 +2698,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Extremadura (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Extremadura (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Extremadura (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Extremadura (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Extremadura",
         "es": "Total deducciones autonómicas — Extremadura",
-        "hu": "Autonom levonasok osszesen — Extremadura"
+        "hu": "Autonom levonasok osszesen — Extremadura",
+        "ca": "Total deducciones autonómicas — Extremadura"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2560,14 +2730,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Galicia (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Galicia (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Galicia (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Galicia (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Galicia",
         "es": "Total deducciones autonómicas — Galicia",
-        "hu": "Autonom levonasok osszesen — Galicia"
+        "hu": "Autonom levonasok osszesen — Galicia",
+        "ca": "Total deducciones autonómicas — Galicia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2590,14 +2762,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Madrid Community (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Madridi kozosseg (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Madrid Community (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Madridi kozosseg (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Madrid Community",
         "es": "Total deducciones autonómicas — Comunidad de Madrid",
-        "hu": "Autonom levonasok osszesen — Madridi kozosseg"
+        "hu": "Autonom levonasok osszesen — Madridi kozosseg",
+        "ca": "Total deducciones autonómicas — Comunidad de Madrid"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2620,14 +2794,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — Murcia Region (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — Murcia regio (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — Murcia Region (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — Murcia regio (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — Murcia Region",
         "es": "Total deducciones autonómicas — Región de Murcia",
-        "hu": "Autonom levonasok osszesen — Murcia regio"
+        "hu": "Autonom levonasok osszesen — Murcia regio",
+        "ca": "Total deducciones autonómicas — Región de Murcia"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2650,14 +2826,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions — La Rioja (Legal basis: manual practico, art. renta-2025-parte-2.)",
-        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: manual practico, art. renta-2025-parte-2.)",
-        "hu": "Autonom levonasok osszesen — La Rioja (Jogalap: manual practico, art. renta-2025-parte-2.)"
+        "en": "Total autonomic deductions — La Rioja (Legal basis: Manual práctico, art. renta-2025-parte-2.)",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)",
+        "hu": "Autonom levonasok osszesen — La Rioja (Jogalap: Manual práctico, art. renta-2025-parte-2.)",
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00. (Base legal: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
         "en": "Total autonomic deductions — La Rioja",
         "es": "Total deducciones autonómicas — La Rioja",
-        "hu": "Autonom levonasok osszesen — La Rioja"
+        "hu": "Autonom levonasok osszesen — La Rioja",
+        "ca": "Total deducciones autonómicas — La Rioja"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",
@@ -2680,14 +2858,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total autonomic deductions (sum across 15 CCAAs) (Legal basis: ley, art. 46-bis, BOE-A-2006-20764.)",
-        "es": "Total deducciones autonómicas (suma per-CCAA) (Base legal: ley, art. 46-bis, BOE-A-2006-20764.)",
-        "hu": "Osszes autonom levonas (15 CCAA osszege) (Jogalap: ley, art. 46-bis, BOE-A-2006-20764.)"
+        "en": "Total autonomic deductions (sum across 15 CCAAs) (Legal basis: Ley, art. 46-bis, BOE-A-2006-20764.)",
+        "es": "Total deducciones autonómicas (suma per-CCAA) (Base legal: Ley, art. 46-bis, BOE-A-2006-20764.)",
+        "hu": "Osszes autonom levonas (15 CCAA osszege) (Jogalap: Ley, art. 46-bis, BOE-A-2006-20764.)",
+        "ca": "Total deducciones autonómicas (suma per-CCAA) (Base legal: Ley, art. 46-bis, BOE-A-2006-20764.)"
       },
       "label": {
         "en": "Total autonomic deductions (sum across 15 CCAAs)",
         "es": "Total deducciones autonómicas (suma per-CCAA)",
-        "hu": "Osszes autonom levonas (15 CCAA osszege)"
+        "hu": "Osszes autonom levonas (15 CCAA osszege)",
+        "ca": "Total deducciones autonómicas (suma per-CCAA)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_100",

@@ -1012,8 +1012,22 @@ M840_CASILLAS: tuple[_Casilla, ...] = (
 # ---------------------------------------------------------------------
 
 
+_SOURCE_LABEL = {
+    "ley": "Ley",
+    "real_decreto": "RD",
+    "orden_ministerial": "Orden",
+    "reglamento": "Reglamento",
+    "manual_practico": "Manual práctico",
+    "boe": "BOE",
+}
+
+
 def _legal_hint(legal_basis: tuple) -> str:
-    """Render a compact ``(LIVA art. 91, BOE-A-1992-28740)``-style hint."""
+    """Render a compact ``(Ley art. 91, BOE-A-1992-28740)``-style hint.
+
+    Source words are capitalised (``Ley`` not ``ley``) and Spanish stays
+    canonical so the legal pointer reads correctly in any language.
+    """
     if not legal_basis:
         return ""
     parts: list[str] = []
@@ -1027,7 +1041,8 @@ def _legal_hint(legal_basis: tuple) -> str:
             boe_id = url_str.split("id=", 1)[-1].split("&", 1)[0]
         bits: list[str] = []
         if src is not None:
-            bits.append(getattr(src, "value", str(src)).replace("_", " "))
+            raw = getattr(src, "value", str(src))
+            bits.append(_SOURCE_LABEL.get(raw, raw.replace("_", " ").title()))
         if article:
             bits.append(f"art. {article}")
         if boe_id:

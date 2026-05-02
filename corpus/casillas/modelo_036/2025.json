@@ -12,12 +12,14 @@
       "help": {
         "en": "Tick this box to report the start of the economic activity.",
         "es": "Marque esta casilla para comunicar el inicio de la actividad económica.",
-        "hu": "Jelölje be a gazdasági tevékenység megkezdésének bejelentéséhez."
+        "hu": "Jelölje be a gazdasági tevékenység megkezdésének bejelentéséhez.",
+        "ca": "Marque esta casilla para comunicar el inicio de la actividad económica."
       },
       "label": {
         "en": "Request to enrol in the census of business operators",
         "es": "Solicitud de alta en el censo de empresarios",
-        "hu": "Bejelentkezés a vállalkozói nyilvántartásba"
+        "hu": "Bejelentkezés a vállalkozói nyilvántartásba",
+        "ca": "Solicitud de alta en el censo de empresarios"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -42,12 +44,14 @@
       "help": {
         "en": "Tick this box when changing the VAT regime data.",
         "es": "Marque para modificar los datos relativos al régimen de IVA.",
-        "hu": "Jelölje be az ÁFA-rendszer adatainak módosításához."
+        "hu": "Jelölje be az ÁFA-rendszer adatainak módosításához.",
+        "ca": "Marque para modificar los datos relativos al régimen de IVA."
       },
       "label": {
         "en": "Update of VAT-related data",
         "es": "Modificación de datos relativos al IVA",
-        "hu": "Az ÁFA-adatok módosítása"
+        "hu": "Az ÁFA-adatok módosítása",
+        "ca": "Modificación de datos relativos al IVA"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -72,12 +76,14 @@
       "help": {
         "en": "Tick this box to report the cessation of the economic activity.",
         "es": "Marque esta casilla para comunicar el cese de la actividad económica.",
-        "hu": "Jelölje be a gazdasági tevékenység megszüntetésének bejelentéséhez."
+        "hu": "Jelölje be a gazdasági tevékenység megszüntetésének bejelentéséhez.",
+        "ca": "Marque esta casilla para comunicar el cese de la actividad económica."
       },
       "label": {
         "en": "Removal from the census of business operators",
         "es": "Baja en el censo de empresarios",
-        "hu": "Kijelentkezés a vállalkozói nyilvántartásból"
+        "hu": "Kijelentkezés a vállalkozói nyilvántartásból",
+        "ca": "Baja en el censo de empresarios"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -102,12 +108,14 @@
       "help": {
         "en": "Tick if you fall under the general VAT regime (Spanish VAT Act art. 90/91).",
         "es": "Marque si tributa por el régimen general del IVA (LIVA art. 90/91).",
-        "hu": "Jelölje be, ha az általános ÁFA-rendszer alá tartozik (LIVA 90/91. cikk)."
+        "hu": "Jelölje be, ha az általános ÁFA-rendszer alá tartozik (LIVA 90/91. cikk).",
+        "ca": "Marque si tributa por el régimen general del IVA (LIVA art. 90/91)."
       },
       "label": {
         "en": "General VAT regime",
         "es": "Régimen general del IVA",
-        "hu": "Általános ÁFA-rendszer"
+        "hu": "Általános ÁFA-rendszer",
+        "ca": "Régimen general del IVA"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -132,12 +140,14 @@
       "help": {
         "en": "Tick if you fall under the simplified VAT regime.",
         "es": "Marque si tributa por el régimen simplificado del IVA.",
-        "hu": "Jelölje be, ha az egyszerűsített ÁFA-rendszer alá tartozik."
+        "hu": "Jelölje be, ha az egyszerűsített ÁFA-rendszer alá tartozik.",
+        "ca": "Marque si tributa por el régimen simplificado del IVA."
       },
       "label": {
         "en": "Simplified VAT regime",
         "es": "Régimen simplificado del IVA",
-        "hu": "Egyszerűsített ÁFA-rendszer"
+        "hu": "Egyszerűsített ÁFA-rendszer",
+        "ca": "Régimen simplificado del IVA"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -162,12 +172,14 @@
       "help": {
         "en": "Tick if you compute business income under the direct estimation regime (LIRPF art. 28).",
         "es": "Marque si tributa el rendimiento de la actividad por estimación directa (LIRPF art. 28).",
-        "hu": "Jelölje be, ha közvetlen becsléssel állapítja meg a jövedelmét (LIRPF 28. cikk)."
+        "hu": "Jelölje be, ha közvetlen becsléssel állapítja meg a jövedelmét (LIRPF 28. cikk).",
+        "ca": "Marque si tributa el rendimiento de la actividad por estimación directa (LIRPF art. 28)."
       },
       "label": {
         "en": "Direct estimation IRPF regime",
         "es": "Régimen de estimación directa del IRPF",
-        "hu": "Közvetlen becslésű IRPF-rendszer"
+        "hu": "Közvetlen becslésű IRPF-rendszer",
+        "ca": "Régimen de estimación directa del IRPF"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -192,12 +204,14 @@
       "help": {
         "en": "Tick if you fall under the objective-estimation (modules) regime.",
         "es": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos).",
-        "hu": "Jelölje be, ha objektív becsléssel adózik (modulok)."
+        "hu": "Jelölje be, ha objektív becsléssel adózik (modulok).",
+        "ca": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos)."
       },
       "label": {
         "en": "Objective estimation (modules) IRPF regime",
         "es": "Régimen de estimación objetiva del IRPF (módulos)",
-        "hu": "Objektív becslésű IRPF-rendszer (modulok)"
+        "hu": "Objektív becslésű IRPF-rendszer (modulok)",
+        "ca": "Régimen de estimación objetiva del IRPF (módulos)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -222,12 +236,14 @@
       "help": {
         "en": "Heading code of the Spanish economic-activities tax that classifies the activity.",
         "es": "Código de epígrafe del Impuesto sobre Actividades Económicas que clasifica la actividad.",
-        "hu": "A spanyol gazdasági-tevékenység-adó tevékenységi kódja."
+        "hu": "A spanyol gazdasági-tevékenység-adó tevékenységi kódja.",
+        "ca": "Código de epígrafe del Impuesto sobre Actividades Económicas que clasifica la actividad."
       },
       "label": {
         "en": "IAE heading (economic-activities tax)",
         "es": "Epígrafe IAE",
-        "hu": "IAE tevékenységi kód"
+        "hu": "IAE tevékenységi kód",
+        "ca": "Epígrafe IAE"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
@@ -252,12 +268,14 @@
       "help": {
         "en": "Date from which this census declaration takes effect.",
         "es": "Fecha desde la que produce efectos la presente declaración censal.",
-        "hu": "A bejelentés hatálybalépésének dátuma."
+        "hu": "A bejelentés hatálybalépésének dátuma.",
+        "ca": "Fecha desde la que produce efectos la presente declaración censal."
       },
       "label": {
         "en": "Effective date",
         "es": "Fecha de efectos",
-        "hu": "Hatálybalépés dátuma"
+        "hu": "Hatálybalépés dátuma",
+        "ca": "Fecha de efectos"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_036",
