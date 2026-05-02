@@ -25,8 +25,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
-from typing import Callable
 
 from aeat.core.config import PROJECT_ROOT
 from aeat.domain.casillas import CasillaDataType
@@ -68,8 +66,12 @@ YEARS = (2023, 2024, 2025, 2026)
 # Manual practical URLs per modelo / year — official AEAT Sede sources.
 # ---------------------------------------------------------------------
 
-IRPF_MANUAL_URL = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-{year}.html"
-IVA_MANUAL_URL = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-{year}.html"
+IRPF_MANUAL_URL = (
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-{year}.html"
+)
+IVA_MANUAL_URL = (
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-{year}.html"
+)
 SOCIEDADES_MANUAL_URL = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-{year}.html"
 BOE_036_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9659"
 BOE_840_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17472"
