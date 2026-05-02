@@ -6,17 +6,15 @@
       "casilla_id": "16",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base del pago fraccionado",
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
         "hu": "Részletfizetés alapja"
       },
       "label": {
-        "ca": "Base del pago fraccionado",
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
         "hu": "Részletfizetés alapja"
@@ -38,17 +36,15 @@
       "casilla_id": "17",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
       },
       "label": {
-        "ca": "Tipo de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
@@ -76,7 +72,7 @@
       "casilla_id": "18",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "((17 / 100) * 16)",
@@ -86,13 +82,11 @@
         ]
       },
       "help": {
-        "ca": "Quota integra. Se calcula como ((17 / 100) * 16).",
-        "en": "Gross tax amount. Computed as ((17 / 100) * 16).",
-        "es": "Cuota integra. Se calcula como ((17 / 100) * 16).",
-        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16)."
+        "en": "Gross tax amount. Computed as ((17 / 100) * 16). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Cuota integra. Se calcula como ((17 / 100) * 16). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
-        "ca": "Quota integra",
         "en": "Gross tax amount",
         "es": "Cuota integra",
         "hu": "Bruttó adóösszeg"
@@ -125,17 +119,15 @@
       "casilla_id": "27",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Bonificaciones",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
       },
       "label": {
-        "ca": "Bonificaciones",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
@@ -157,17 +149,15 @@
       "casilla_id": "28",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones e ingresos a cuenta",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
@@ -189,17 +179,15 @@
       "casilla_id": "30",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pagos fraccionados anteriores del ejercicio",
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
         "hu": "Korábbi részletek az időszakból"
       },
       "label": {
-        "ca": "Pagos fraccionados anteriores del ejercicio",
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
         "hu": "Korábbi részletek az időszakból"
@@ -221,7 +209,7 @@
       "casilla_id": "32",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(((18 - 27) - 28) - 30)",
@@ -233,13 +221,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado. Se calcula como (((18 - 27) - 28) - 30).",
-        "en": "Net result. Computed as (((18 - 27) - 28) - 30).",
-        "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30).",
-        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30)."
+        "en": "Net result. Computed as (((18 - 27) - 28) - 30). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
-        "ca": "Resultado",
         "en": "Net result",
         "es": "Resultado",
         "hu": "Nettó eredmény"
@@ -274,17 +260,15 @@
       "casilla_id": "33",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Minimo a ingresar",
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
         "hu": "Minimális fizetendő"
       },
       "label": {
-        "ca": "Minimo a ingresar",
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
         "hu": "Minimális fizetendő"
@@ -306,7 +290,7 @@
       "casilla_id": "34",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "max(32, 33)",
@@ -316,13 +300,11 @@
         ]
       },
       "help": {
-        "ca": "Cantidad a ingresar. Se calcula como max(32, 33).",
-        "en": "Amount payable. Computed as max(32, 33).",
-        "es": "Cantidad a ingresar. Se calcula como max(32, 33).",
-        "hu": "Fizetendő összeg. Számítás: max(32, 33)."
+        "en": "Amount payable. Computed as max(32, 33). (Legal basis: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "es": "Cantidad a ingresar. Se calcula como max(32, 33). (Base legal: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "hu": "Fizetendő összeg. Számítás: max(32, 33). (Jogalap: ley, art. 40, BOE-A-2014-12328; orden ministerial, art. HFP/227/2017, BOE-A-2017-2778; orden ministerial, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
-        "ca": "Cantidad a ingresar",
         "en": "Amount payable",
         "es": "Cantidad a ingresar",
         "hu": "Fizetendő összeg"

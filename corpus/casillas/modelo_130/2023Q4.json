@@ -6,17 +6,15 @@
       "casilla_id": "01",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre.",
-        "en": "Cumulative gross income (Apartado I)",
-        "es": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre.",
-        "hu": "Halmozott bruttó bevétel (I. szakasz)"
+        "en": "Cumulative gross income (Apartado I) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre. (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Halmozott bruttó bevétel (I. szakasz) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Ingresos",
         "en": "Cumulative gross income (Apartado I)",
         "es": "Ingresos",
         "hu": "Halmozott bruttó bevétel (I. szakasz)"
@@ -38,17 +36,15 @@
       "casilla_id": "02",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Gastos",
-        "en": "Cumulative deductible expenses (Apartado I)",
-        "es": "Gastos",
-        "hu": "Halmozott levonható költségek (I. szakasz)"
+        "en": "Cumulative deductible expenses (Apartado I) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Gastos (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Halmozott levonható költségek (I. szakasz) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Gastos",
         "en": "Cumulative deductible expenses (Apartado I)",
         "es": "Gastos",
         "hu": "Halmozott levonható költségek (I. szakasz)"
@@ -70,7 +66,7 @@
       "casilla_id": "03",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(01 - 02)",
@@ -80,13 +76,11 @@
         ]
       },
       "help": {
-        "ca": "Rendimiento neto. Se calcula como (01 - 02).",
-        "en": "Net return (01 - 02). Computed as (01 - 02).",
-        "es": "Rendimiento neto. Se calcula como (01 - 02).",
-        "hu": "Nettó eredmény (01 - 02). Számítás: (01 - 02)."
+        "en": "Net return (01 - 02). Computed as (01 - 02). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Rendimiento neto. Se calcula como (01 - 02). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Nettó eredmény (01 - 02). Számítás: (01 - 02). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Rendimiento neto",
         "en": "Net return (01 - 02)",
         "es": "Rendimiento neto",
         "hu": "Nettó eredmény (01 - 02)"
@@ -119,7 +113,7 @@
       "casilla_id": "04",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "max(0, (irpf.trimestral_rate * 03))",
@@ -128,13 +122,11 @@
         ]
       },
       "help": {
-        "ca": "Import del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)).",
-        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)).",
-        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)).",
-        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03))."
+        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Import del pago fraccionado (20%)",
         "en": "Fractional payment (20% of 03, clamped ≥ 0)",
         "es": "Importe del pago fraccionado (20%)",
         "hu": "Részletfizetés összege (03 x 20%, nem-negatív)"
@@ -171,17 +163,15 @@
       "casilla_id": "05",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores.",
-        "en": "Prior-quarter fractional payments (caller-maintained)",
-        "es": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores.",
-        "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
+        "en": "Prior-quarter fractional payments (caller-maintained) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores. (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Korábbi részletfizetések (hívó fél tartja karban) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Pagos fraccionados anteriores (Apartado I)",
         "en": "Prior-quarter fractional payments (caller-maintained)",
         "es": "Pagos fraccionados anteriores (Apartado I)",
         "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
@@ -203,17 +193,15 @@
       "casilla_id": "06",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones e ingresos a cuenta (Apartado I)",
-        "en": "YTD withholdings (Apartado I)",
-        "es": "Retenciones e ingresos a cuenta (Apartado I)",
-        "hu": "Éves halmozott levonások (I. szakasz)"
+        "en": "YTD withholdings (Apartado I) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Retenciones e ingresos a cuenta (Apartado I) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Éves halmozott levonások (I. szakasz) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta (Apartado I)",
         "en": "YTD withholdings (Apartado I)",
         "es": "Retenciones e ingresos a cuenta (Apartado I)",
         "hu": "Éves halmozott levonások (I. szakasz)"
@@ -235,7 +223,7 @@
       "casilla_id": "07",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "((04 - 05) - 06)",
@@ -246,13 +234,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06).",
-        "en": "Partial Apartado I result (04 - 05 - 06). Computed as ((04 - 05) - 06).",
-        "es": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06).",
-        "hu": "I. szakasz részösszeg (04 - 05 - 06). Számítás: ((04 - 05) - 06)."
+        "en": "Partial Apartado I result (04 - 05 - 06). Computed as ((04 - 05) - 06). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado parcial Apartado I. Se calcula como ((04 - 05) - 06). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "I. szakasz részösszeg (04 - 05 - 06). Számítás: ((04 - 05) - 06). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado I",
         "en": "Partial Apartado I result (04 - 05 - 06)",
         "es": "Resultado parcial Apartado I",
         "hu": "I. szakasz részösszeg (04 - 05 - 06)"
@@ -291,17 +277,15 @@
       "casilla_id": "08",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Volumen de ingresos del trimestre (Apartado II)",
-        "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
-        "es": "Volumen de ingresos del trimestre (Apartado II)",
-        "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
+        "en": "Quarterly income volume (Apartado II, per-quarter not YTD) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Volumen de ingresos del trimestre (Apartado II) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Negyedéves bevétel (II. szakasz, nem halmozott) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Volumen de ingresos del trimestre (Apartado II)",
         "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
         "es": "Volumen de ingresos del trimestre (Apartado II)",
         "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
@@ -323,7 +307,7 @@
       "casilla_id": "09",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(agraria.trimestral_rate * 08)",
@@ -332,13 +316,11 @@
         ]
       },
       "help": {
-        "ca": "Import del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08).",
-        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08).",
-        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08).",
-        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08)."
+        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Import del pago fraccionado (2%)",
         "en": "Fractional payment (2% of 08)",
         "es": "Importe del pago fraccionado (2%)",
         "hu": "Részletfizetés összege (08 x 2%)"
@@ -370,17 +352,15 @@
       "casilla_id": "10",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones e ingresos a cuenta (Apartado II)",
-        "en": "Quarterly withholdings (Apartado II)",
-        "es": "Retenciones e ingresos a cuenta (Apartado II)",
-        "hu": "Negyedéves levonások (II. szakasz)"
+        "en": "Quarterly withholdings (Apartado II) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Retenciones e ingresos a cuenta (Apartado II) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Negyedéves levonások (II. szakasz) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta (Apartado II)",
         "en": "Quarterly withholdings (Apartado II)",
         "es": "Retenciones e ingresos a cuenta (Apartado II)",
         "hu": "Negyedéves levonások (II. szakasz)"
@@ -402,7 +382,7 @@
       "casilla_id": "11",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(09 - 10)",
@@ -412,13 +392,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado parcial Apartado II. Se calcula como (09 - 10).",
-        "en": "Partial Apartado II result (09 - 10). Computed as (09 - 10).",
-        "es": "Resultado parcial Apartado II. Se calcula como (09 - 10).",
-        "hu": "II. szakasz részösszeg (09 - 10). Számítás: (09 - 10)."
+        "en": "Partial Apartado II result (09 - 10). Computed as (09 - 10). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado parcial Apartado II. Se calcula como (09 - 10). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "II. szakasz részösszeg (09 - 10). Számítás: (09 - 10). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado II",
         "en": "Partial Apartado II result (09 - 10)",
         "es": "Resultado parcial Apartado II",
         "hu": "II. szakasz részösszeg (09 - 10)"
@@ -456,7 +434,7 @@
       "casilla_id": "12",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "max(0, (07 + 11))",
@@ -466,13 +444,11 @@
         ]
       },
       "help": {
-        "ca": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)).",
-        "en": "Sum of Apartados I + II, clamped ≥ 0. Computed as max(0, (07 + 11)).",
-        "es": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)).",
-        "hu": "Részösszegek összege, nem-negatív. Számítás: max(0, (07 + 11))."
+        "en": "Sum of Apartados I + II, clamped ≥ 0. Computed as max(0, (07 + 11)). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Suma de resultados parciales (nunca negativa). Se calcula como max(0, (07 + 11)). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részösszegek összege, nem-negatív. Számítás: max(0, (07 + 11)). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Suma de resultados parciales (nunca negativa)",
         "en": "Sum of Apartados I + II, clamped ≥ 0",
         "es": "Suma de resultados parciales (nunca negativa)",
         "hu": "Részösszegek összege, nem-negatív"
@@ -510,17 +486,15 @@
       "casilla_id": "13",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €.",
-        "en": "Low-income minoration (art. 110.3.c step function)",
-        "es": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €.",
-        "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz)"
+        "en": "Low-income minoration (art. 110.3.c step function) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €. (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
         "en": "Low-income minoration (art. 110.3.c step function)",
         "es": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
         "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz)"
@@ -542,7 +516,7 @@
       "casilla_id": "14",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(12 - 13)",
@@ -552,13 +526,11 @@
         ]
       },
       "help": {
-        "ca": "Neto tras minoración. Se calcula como (12 - 13).",
-        "en": "Net after minoration (12 - 13, signed). Computed as (12 - 13).",
-        "es": "Neto tras minoración. Se calcula como (12 - 13).",
-        "hu": "Csökkentés utáni nettó (12 - 13, előjeles). Számítás: (12 - 13)."
+        "en": "Net after minoration (12 - 13, signed). Computed as (12 - 13). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Neto tras minoración. Se calcula como (12 - 13). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Csökkentés utáni nettó (12 - 13, előjeles). Számítás: (12 - 13). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Neto tras minoración",
         "en": "Net after minoration (12 - 13, signed)",
         "es": "Neto tras minoración",
         "hu": "Csökkentés utáni nettó (12 - 13, előjeles)"
@@ -596,17 +568,15 @@
       "casilla_id": "15",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral.",
-        "en": "Carry-forward of prior-quarter negatives (caller-maintained)",
-        "es": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral.",
-        "hu": "Korábbi negatívok átvitele (hívó fél tartja karban)"
+        "en": "Carry-forward of prior-quarter negatives (caller-maintained) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral. (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Korábbi negatívok átvitele (hívó fél tartja karban) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Arrastre de negativos (trimestres anteriores)",
         "en": "Carry-forward of prior-quarter negatives (caller-maintained)",
         "es": "Arrastre de negativos (trimestres anteriores)",
         "hu": "Korábbi negatívok átvitele (hívó fél tartja karban)"
@@ -628,17 +598,15 @@
       "casilla_id": "16",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes).",
-        "en": "Primary-residence deduction (2% capped at 660.14 €)",
-        "es": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes).",
-        "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
+        "en": "Primary-residence deduction (2% capped at 660.14 €) (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ) (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Deducció por inversión en vivienda habitual",
         "en": "Primary-residence deduction (2% capped at 660.14 €)",
         "es": "Deducción por inversión en vivienda habitual",
         "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
@@ -660,7 +628,7 @@
       "casilla_id": "17",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "((14 - 15) - 16)",
@@ -671,13 +639,11 @@
         ]
       },
       "help": {
-        "ca": "Diferencia. Se calcula como ((14 - 15) - 16).",
-        "en": "Difference (14 - 15 - 16, signed). Computed as ((14 - 15) - 16).",
-        "es": "Diferencia. Se calcula como ((14 - 15) - 16).",
-        "hu": "Különbség (14 - 15 - 16, előjeles). Számítás: ((14 - 15) - 16)."
+        "en": "Difference (14 - 15 - 16, signed). Computed as ((14 - 15) - 16). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Diferencia. Se calcula como ((14 - 15) - 16). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Különbség (14 - 15 - 16, előjeles). Számítás: ((14 - 15) - 16). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Diferencia",
         "en": "Difference (14 - 15 - 16, signed)",
         "es": "Diferencia",
         "hu": "Különbség (14 - 15 - 16, előjeles)"
@@ -716,17 +682,15 @@
       "casilla_id": "18",
       "computed": false,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
-        "en": "Amount paid in earlier complementarias for the same quarter",
-        "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
-        "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
+        "en": "Amount paid in earlier complementarias for the same quarter (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Korábbi kiegészítő bevallásban befizetett összeg (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "en": "Amount paid in earlier complementarias for the same quarter",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
@@ -748,7 +712,7 @@
       "casilla_id": "19",
       "computed": true,
       "data_type": "currency_eur",
-      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
         "expression": "(17 - 18)",
@@ -758,13 +722,11 @@
         ]
       },
       "help": {
-        "ca": "Resultado final. Se calcula como (17 - 18).",
-        "en": "Final result (17 - 18, signed). Computed as (17 - 18).",
-        "es": "Resultado final. Se calcula como (17 - 18).",
-        "hu": "Végeredmény (17 - 18, előjeles). Számítás: (17 - 18)."
+        "en": "Final result (17 - 18, signed). Computed as (17 - 18). (Legal basis: real decreto, art. 110, BOE-A-2007-6820.)",
+        "es": "Resultado final. Se calcula como (17 - 18). (Base legal: real decreto, art. 110, BOE-A-2007-6820.)",
+        "hu": "Végeredmény (17 - 18, előjeles). Számítás: (17 - 18). (Jogalap: real decreto, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado final",
         "en": "Final result (17 - 18, signed)",
         "es": "Resultado final",
         "hu": "Végeredmény (17 - 18, előjeles)"

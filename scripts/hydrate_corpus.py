@@ -40,7 +40,7 @@ from aeat.domain.formulas._casilla import CasillaDefinition
 from aeat.domain.formulas._formula import (
     AddFormula,
     BracketsFormula,
-    CasillaRef,
+    FormulaCasillaRef,
     ClampPositiveFormula,
     DivFormula,
     Literal,
@@ -90,7 +90,7 @@ BOE_193_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 
 
 def _render_operand(node: object) -> str:
-    if isinstance(node, CasillaRef):
+    if isinstance(node, FormulaCasillaRef):
         return node.casilla_id
     if isinstance(node, Literal):
         v = node.value
@@ -127,7 +127,7 @@ def _collect_casilla_refs(node: object) -> list[str]:
     seen: list[str] = []
 
     def walk(n: object) -> None:
-        if isinstance(n, CasillaRef):
+        if isinstance(n, FormulaCasillaRef):
             if n.casilla_id not in seen:
                 seen.append(n.casilla_id)
             return
@@ -976,11 +976,39 @@ M840_CASILLAS: tuple[_Casilla, ...] = (
 # ---------------------------------------------------------------------
 
 
+def _legal_hint(legal_basis: tuple) -> str:
+    """Render a compact ``(LIVA art. 91, BOE-A-1992-28740)``-style hint."""
+    if not legal_basis:
+        return ""
+    parts: list[str] = []
+    for c in legal_basis:
+        src = getattr(c, "source", None)
+        article = getattr(c, "article", None)
+        url = getattr(c, "url", None)
+        boe_id = ""
+        url_str = str(url) if url is not None else ""
+        if "BOE-A-" in url_str:
+            boe_id = url_str.split("id=", 1)[-1].split("&", 1)[0]
+        bits: list[str] = []
+        if src is not None:
+            bits.append(getattr(src, "value", str(src)).replace("_", " "))
+        if article:
+            bits.append(f"art. {article}")
+        if boe_id:
+            bits.append(boe_id)
+        if bits:
+            parts.append(", ".join(bits))
+    if not parts:
+        return ""
+    return " (Base legal: " + "; ".join(parts) + ".)"
+
+
 def _help_from_label(
     label: dict[str, str],
     notes_es: str | None,
     *,
     formula_expression: str | None = None,
+    legal_hint: str = "",
 ) -> dict[str, str]:
     """Return a trilingual help body distinct from the label.
 
@@ -990,19 +1018,36 @@ def _help_from_label(
       2. Computed casillas: append a formula reminder so the help
          carries calculation provenance.
       3. Otherwise: re-use the label trilingually as a stable fallback.
+
+    The ``legal_hint`` (``(Base legal: …)``) is appended to every variant
+    so the corpus carries the BOE / law / orden grounding inline,
+    matching what the rule engine's ``LegalCitation`` already encodes.
     """
     suffix_es = f" Se calcula como {formula_expression}." if formula_expression else ""
+    legal_es = legal_hint
+    legal_en = legal_hint.replace("Base legal:", "Legal basis:") if legal_hint else ""
+    legal_hu = legal_hint.replace("Base legal:", "Jogalap:") if legal_hint else ""
     if notes_es:
         return {
-            "es": notes_es + suffix_es,
-            "en": label.get("en", label["es"]) + (f" Computed as {formula_expression}." if formula_expression else ""),
-            "hu": label.get("hu", label["es"]) + (f" Számítás: {formula_expression}." if formula_expression else ""),
+            "es": notes_es + suffix_es + legal_es,
+            "en": label.get("en", label["es"])
+            + (f" Computed as {formula_expression}." if formula_expression else "")
+            + legal_en,
+            "hu": label.get("hu", label["es"])
+            + (f" Számítás: {formula_expression}." if formula_expression else "")
+            + legal_hu,
         }
     if formula_expression:
         return {
-            "es": f"{label['es']}. Se calcula como {formula_expression}.",
-            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.",
-            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.",
+            "es": f"{label['es']}. Se calcula como {formula_expression}.{legal_es}",
+            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{legal_en}",
+            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{legal_hu}",
+        }
+    if legal_hint:
+        return {
+            "es": label["es"] + legal_es,
+            "en": label.get("en", label["es"]) + legal_en,
+            "hu": label.get("hu", label["es"]) + legal_hu,
         }
     return {
         "es": label["es"],
@@ -1306,7 +1351,13 @@ def _record_from_ruleset_casilla(
     section: str,
 ) -> CasillaRecord:
     label = dict(cdef.label)
-    help_text = _help_from_label(label, cdef.notes_es, formula_expression=formula_expression)
+    legal_hint = _legal_hint(cdef.legal_basis)
+    help_text = _help_from_label(
+        label,
+        cdef.notes_es,
+        formula_expression=formula_expression,
+        legal_hint=legal_hint,
+    )
 
     formula_obj = (
         FormulaReference(expression=formula_expression, references_casillas=formula_refs)
