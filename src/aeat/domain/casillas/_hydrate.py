@@ -26,23 +26,14 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from aeat.core.config import PROJECT_ROOT
-from aeat.domain.casillas import CasillaDataType
-from aeat.domain.casillas.catalogue import save_casillas
-from aeat.domain.casillas.models import (
-    CasillaCatalogue,
-    CasillaRecord,
-    FormulaReference,
-    SelectOption,
-    ValidationRuleReference,
-)
-from aeat.domain.formulas._casilla import CasillaDefinition
-from aeat.domain.formulas._formula import (
+from ...core.config import PROJECT_ROOT
+from ..formulas._casilla import CasillaDefinition
+from ..formulas._formula import (
     AddFormula,
     BracketsFormula,
-    FormulaCasillaRef,
     ClampPositiveFormula,
     DivFormula,
+    FormulaCasillaRef,
     Literal,
     MaxFormula,
     MinFormula,
@@ -52,8 +43,17 @@ from aeat.domain.formulas._formula import (
     RoundFormula,
     SubFormula,
 )
-from aeat.domain.formulas._ruleset import Ruleset
-from aeat.domain.modelos import ModeloCadence, get_modelo
+from ..formulas._ruleset import Ruleset
+from ..modelos import ModeloCadence, get_modelo
+from . import CasillaDataType
+from .catalogue import save_casillas
+from .models import (
+    CasillaCatalogue,
+    CasillaRecord,
+    FormulaReference,
+    SelectOption,
+    ValidationRuleReference,
+)
 
 CORPUS_ROOT = PROJECT_ROOT / "corpus" / "casillas"
 REVIEWED_BY = "human-codex"
