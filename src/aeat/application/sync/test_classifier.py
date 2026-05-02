@@ -1,4 +1,10 @@
-"""Unit tests for the semantic divergence classifier."""
+"""Unit tests for :class:`aeat.domain.sync.DivergenceClassifier`.
+
+Exercises the per-payload semantic classification rules that map raw
+delta payloads to :class:`aeat.domain.sync.DivergenceClassification`
+levels (additive, breaking, suspicious, benign) consumed by the sync
+healing dispatcher in :mod:`aeat.application.sync`.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +12,7 @@ from datetime import date, datetime
 
 import pytest
 
-from . import (
+from ...domain.sync import (
     DivergenceClassification,
     DivergenceClassifier,
     DivergenceKind,

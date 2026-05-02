@@ -1,4 +1,4 @@
-"""BOE PDF fetcher for :mod:`aeat.domain.schema`.
+"""BOE PDF fetcher for :mod:`aeat.adapters.inbound.schema`.
 
 Mirrors the sha256-verified streaming-fetch pattern established by
 :mod:`aeat.domain.manuals._fetch`. The fetched bytes are written to the
@@ -7,25 +7,23 @@ record carries the on-disk path plus every provenance scalar a
 downstream extractor needs.
 
 No manifest sidecar is written: provenance is embedded in the
-extractor's output :class:`~aeat.domain.schema.Modelo`, which is itself
+extractor's output :class:`aeat.domain.schema.Modelo`, which is itself
 persisted as diff-friendly JSON.
 
-Safety posture (audit-driven):
-
-- Override URLs are constrained to ``https://`` on an allow-listed
-  host set (``boe.es`` / ``www.boe.es``) or to ``file://`` URLs that
-  resolve under the project tree — no arbitrary-filesystem reads.
-- ``boe_ref`` is re-validated at every path-composition site, not
-  just at the cache layer.
-- Downloads are capped at ``_MAX_PDF_BYTES``; oversized responses
-  abort with :class:`SchemaCacheError` before they exhaust disk.
-- HTTP redirects are rejected by default; a single-hop follow is
-  never implicit.
-- The override env var is capped at 64 KiB to prevent a hostile
-  ``/proc/PID/environ`` leak from stalling settings load.
-- Bytes land in a temporary sibling file and are atomically
-  ``os.replace``-d into place so concurrent refresh runs never
-  leave a half-written PDF on disk.
+The fetcher enforces a defence-in-depth safety posture: override URLs
+are constrained to ``https://`` on an allow-listed host set
+(``boe.es`` / ``www.boe.es``) or to ``file://`` URLs that resolve
+under the project tree (no arbitrary-filesystem reads); ``boe_ref`` is
+re-validated at every path-composition site, not just at the cache
+layer; downloads are capped at :data:`_MAX_PDF_BYTES` and oversized
+responses abort with
+:class:`aeat.domain.schema.SchemaCacheError` before they exhaust
+disk; HTTP redirects are rejected by default with no implicit
+single-hop follow; the override env var is capped at 64 KiB to
+prevent a hostile ``/proc/PID/environ`` leak from stalling settings
+load; and bytes land in a temporary sibling file and are atomically
+``os.replace``-d into place so concurrent refresh runs never leave a
+half-written PDF on disk.
 """
 
 from __future__ import annotations
@@ -43,11 +41,11 @@ from urllib.parse import unquote, urlparse
 import httpx
 from pydantic import AnyHttpUrl, AwareDatetime, ConfigDict, Field, TypeAdapter, field_validator
 
-from ...core.config import PROJECT_ROOT, Settings, load_settings
-from ...core.logging import get_logger
-from ..modelos import ModeloCode
-from ._errors import SchemaCacheError
-from ._models import _StrictFrozenModel
+from ....core.config import PROJECT_ROOT, Settings, load_settings
+from ....core.logging import get_logger
+from ....domain.modelos import ModeloCode
+from ....domain.schema._errors import SchemaCacheError
+from ....domain.schema._models import _SchemaStrictFrozenModel
 
 _logger = get_logger(__name__)
 
@@ -74,8 +72,14 @@ only after security review.
 """
 
 
-class BoeOrdenSource(_StrictFrozenModel):
-    """One entry in the canonical BOE Orden source table."""
+class BoeOrdenSource(_SchemaStrictFrozenModel):
+    """One entry in the canonical BOE Orden source table.
+
+    Attributes:
+        modelo_code: Target modelo identifier.
+        boe_ref: BOE-A reference (e.g. ``"BOE-A-2023-15412"``).
+        origin_url: Canonical https URL of the published BOE PDF.
+    """
 
     modelo_code: ModeloCode
     boe_ref: str = Field(min_length=1, max_length=64)
@@ -91,8 +95,20 @@ class BoeOrdenSource(_StrictFrozenModel):
         return value
 
 
-class FetchedSchemaSource(_StrictFrozenModel):
-    """Record of a schema source successfully fetched to disk."""
+class FetchedSchemaSource(_SchemaStrictFrozenModel):
+    """Record of a schema source successfully fetched to disk.
+
+    Attributes:
+        modelo_code: Target modelo identifier.
+        boe_ref: BOE-A reference of the fetched PDF.
+        origin_url: Canonical https origin URL (kept for provenance
+            even when the bytes were sourced from a ``file://``
+            override).
+        pdf_path: On-disk location of the cached PDF.
+        sha256: Hex-encoded SHA-256 of the fetched bytes.
+        content_length: Byte count of the fetched payload.
+        fetched_at: UTC timestamp of the successful fetch.
+    """
 
     model_config = ConfigDict(
         strict=True,
@@ -120,20 +136,18 @@ BOE_ORDEN_SOURCES: tuple[BoeOrdenSource, ...] = (
         ),
     ),
 )
-"""Canonical BOE sources covered by the v1 extractor.
+"""Canonical BOE sources covered by the extractor.
 
-**Verification status.** The ``BOE-A-2023-15412`` entry is a
-placeholder identifier pending hand-verification against BOE's
-legislation search (the correct BOE-A ID for *Orden HAC/665/2023*
-approving the current Modelo 130 layout must be confirmed by a
-human before the extractor is pointed at production data). The
-extractor pipeline wiring is verified end-to-end by unit tests
-against a reportlab-generated fixture; real-BOE round-trip is a
-follow-up issue. See ``TODO(#9-followup-live-boe-verification)``.
+The ``BOE-A-2023-15412`` entry is a placeholder identifier pending
+hand-verification against BOE's legislation search: the correct
+BOE-A ID for *Orden HAC/665/2023* approving the current Modelo 130
+layout must be confirmed by a human before the extractor is pointed
+at production data. Pipeline wiring is verified end-to-end by unit
+tests against a reportlab-generated fixture; real-BOE round-trip
+verification is deferred to a follow-up task.
 
-Follow-up issues extend this tuple with 303 / 390 entries.
 Runtime overrides (used by offline CI and unit tests) go through
-:attr:`Settings.aeat_schema_source_urls_override`.
+:attr:`aeat.core.config.Settings.aeat_schema_source_urls_override`.
 """
 
 

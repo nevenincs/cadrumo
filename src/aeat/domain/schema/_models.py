@@ -3,19 +3,19 @@
 The module declares the typed intermediate representation every
 extractor backend emits:
 
-- :class:`SchemaProvenance` / :class:`SchemaVersion` — where the
+- :class:`SchemaProvenance` / :class:`SchemaVersion` â€” where the
   record came from and which pydantic shape version it conforms to.
-- :class:`LiteralFormula`, :class:`CasillaRef`, :class:`BinaryOp`,
-  :class:`SumFormula` — the evaluable formula AST referenced by the
+- :class:`LiteralFormula`, :class:`SchemaCasillaRef`, :class:`BinaryOp`,
+  :class:`SumFormula` â€” the evaluable formula AST referenced by the
   ``FormulaNode`` discriminated union.
 - :class:`RangeRule`, :class:`RegexRule`, :class:`EnumRule`,
-  :class:`CrossCasillaRule` — validation rule variants forming the
+  :class:`CrossCasillaRule` â€” validation rule variants forming the
   ``ValidationRule`` discriminated union.
-- :class:`Casilla` and :class:`Modelo` — the public, round-trippable
+- :class:`Casilla` and :class:`Modelo` â€” the public, round-trippable
   extracted records.
-- :func:`evaluate` — walks a ``FormulaNode`` against a casilla-value
+- :func:`evaluate` â€” walks a ``FormulaNode`` against a casilla-value
   mapping and returns the resolved :class:`decimal.Decimal`.
-- :func:`validate_period_for_modelo` — derives the period-string
+- :func:`validate_period_for_modelo` â€” derives the period-string
   regex from the modelo's cadence metadata (no parallel cadence
   table lives here).
 """
@@ -62,7 +62,7 @@ _PERIOD_AD_HOC_RE = re.compile(r"^\d{4}$")
 _DIV_QUANT = Decimal("0.01")
 
 
-class _StrictFrozenModel(BaseModel):
+class _SchemaStrictFrozenModel(BaseModel):
     """Shared base config for strict immutable boundary records."""
 
     model_config = ConfigDict(
@@ -73,7 +73,7 @@ class _StrictFrozenModel(BaseModel):
     )
 
 
-class SchemaVersion(_StrictFrozenModel):
+class SchemaVersion(_SchemaStrictFrozenModel):
     """Schema-shape version carried alongside a :class:`Modelo`.
 
     Bumped when the :mod:`aeat.domain.schema` pydantic hierarchy gains a
@@ -85,7 +85,7 @@ class SchemaVersion(_StrictFrozenModel):
     boe_ref: str | None = Field(default=None, max_length=64)
 
 
-class SchemaProvenance(_StrictFrozenModel):
+class SchemaProvenance(_SchemaStrictFrozenModel):
     """Where a :class:`Modelo` record came from and how it was fetched."""
 
     source: SchemaSource
@@ -105,14 +105,14 @@ class SchemaProvenance(_StrictFrozenModel):
         return value
 
 
-class LiteralFormula(_StrictFrozenModel):
+class LiteralFormula(_SchemaStrictFrozenModel):
     """Numeric literal node in the formula AST."""
 
     kind: Literal["literal"] = "literal"
     value: Decimal
 
 
-class CasillaRef(_StrictFrozenModel):
+class SchemaCasillaRef(_SchemaStrictFrozenModel):
     """Reference to another casilla's runtime value."""
 
     kind: Literal["ref"] = "ref"
@@ -126,7 +126,7 @@ class CasillaRef(_StrictFrozenModel):
         return value
 
 
-class BinaryOp(_StrictFrozenModel):
+class BinaryOp(_SchemaStrictFrozenModel):
     """Binary arithmetic over two formula sub-trees."""
 
     kind: Literal["binop"] = "binop"
@@ -135,7 +135,7 @@ class BinaryOp(_StrictFrozenModel):
     right: FormulaNode
 
 
-class SumFormula(_StrictFrozenModel):
+class SumFormula(_SchemaStrictFrozenModel):
     """Variadic sum over a non-empty tuple of sub-terms."""
 
     kind: Literal["sum"] = "sum"
@@ -143,13 +143,13 @@ class SumFormula(_StrictFrozenModel):
 
 
 FormulaNode = Annotated[
-    LiteralFormula | CasillaRef | BinaryOp | SumFormula,
+    LiteralFormula | SchemaCasillaRef | BinaryOp | SumFormula,
     Field(discriminator="kind"),
 ]
 """Tagged union covering every formula AST node kind."""
 
 
-class RangeRule(_StrictFrozenModel):
+class RangeRule(_SchemaStrictFrozenModel):
     """Numeric range rule; at least one bound must be set."""
 
     kind: Literal["range"] = "range"
@@ -165,7 +165,7 @@ class RangeRule(_StrictFrozenModel):
         return self
 
 
-class RegexRule(_StrictFrozenModel):
+class RegexRule(_SchemaStrictFrozenModel):
     """Regex-pattern rule validated by :func:`re.compile` at parse time."""
 
     kind: Literal["regex"] = "regex"
@@ -181,7 +181,7 @@ class RegexRule(_StrictFrozenModel):
         return value
 
 
-class EnumRule(_StrictFrozenModel):
+class EnumRule(_SchemaStrictFrozenModel):
     """Enumeration rule whose ``values`` are a non-empty deduplicated tuple."""
 
     kind: Literal["enum"] = "enum"
@@ -196,7 +196,7 @@ class EnumRule(_StrictFrozenModel):
         return self
 
 
-class CrossCasillaRule(_StrictFrozenModel):
+class CrossCasillaRule(_SchemaStrictFrozenModel):
     """Cross-casilla comparison rule over two formula sub-trees."""
 
     kind: Literal["cross"] = "cross"
@@ -216,7 +216,7 @@ def _collect_refs(node: FormulaNode) -> frozenset[str]:
     """Return the set of casilla_ids referenced under a formula AST."""
     if isinstance(node, LiteralFormula):
         return frozenset()
-    if isinstance(node, CasillaRef):
+    if isinstance(node, SchemaCasillaRef):
         return frozenset({node.casilla_id})
     if isinstance(node, BinaryOp):
         return _collect_refs(node.left) | _collect_refs(node.right)
@@ -253,7 +253,7 @@ def evaluate(
     """
     if isinstance(node, LiteralFormula):
         return node.value
-    if isinstance(node, CasillaRef):
+    if isinstance(node, SchemaCasillaRef):
         try:
             return values[node.casilla_id]
         except KeyError as exc:
@@ -323,7 +323,7 @@ def validate_period_for_modelo(code: ModeloCode, period: str) -> None:
         )
 
 
-class Casilla(_StrictFrozenModel):
+class Casilla(_SchemaStrictFrozenModel):
     """A single numbered box inside an AEAT modelo.
 
     Attributes:
@@ -331,7 +331,7 @@ class Casilla(_StrictFrozenModel):
         block: Optional heading the casilla sits under in the source
             document (Spanish authoritative).
         label: Trilingual label; Spanish is required. English and
-            Hungarian MAY be absent in extracted records — they are
+            Hungarian MAY be absent in extracted records â€” they are
             filled downstream by the reviewer / translator workflow.
         data_type: Closed data-type enum.
         required: True when the AEAT form marks this casilla as
@@ -389,7 +389,7 @@ class Casilla(_StrictFrozenModel):
         return self
 
 
-class Modelo(_StrictFrozenModel):
+class Modelo(_SchemaStrictFrozenModel):
     """The typed, versioned schema extracted for one modelo + period."""
 
     modelo_code: ModeloCode

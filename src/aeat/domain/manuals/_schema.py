@@ -1,4 +1,4 @@
-"""Strict pydantic v2 schema for the AEAT *Manual práctico* corpus.
+"""Strict pydantic v2 schema for the AEAT *Manual prÃ¡ctico* corpus.
 
 Every boundary-crossing record the ``aeat.domain.manuals`` subpackage reads
 from disk, writes to disk, or exposes over its public API is defined
@@ -36,17 +36,17 @@ from ..modelos import ModeloCode
 # enum (each member's value is the three-character AEAT code string), so a
 # new modelo cannot be cited from the manuals corpus without first being
 # registered in `aeat.domain.modelos`. The optional ``:<casilla>`` suffix is a
-# validated string only — the casilla itself need not exist in the casilla
+# validated string only â€” the casilla itself need not exist in the casilla
 # catalogue at load time.
 _MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)
 _MODELO_CASILLA_PATTERN = rf"^MODELO_(?:{_MODELO_CODE_ALTERNATION})(?::[0-9A-Z_]+)?$"
 
 
 class ManualId(StrEnum):
-    """Identifier for a *Manual práctico* volume.
+    """Identifier for a *Manual prÃ¡ctico* volume.
 
     The enum is intentionally small in v1 (only the handbooks relevant
-    to an autónomo) and extensible by follow-ups.
+    to an autÃ³nomo) and extensible by follow-ups.
     """
 
     RENTA = "renta"
@@ -57,7 +57,7 @@ class ManualPart(StrEnum):
     """Volume split for a handbook within a single tax year.
 
     ``SINGLE`` covers IVA which is published as one volume. Renta from
-    2024 onward is split into a main ``PARTE_1`` and the autonómica
+    2024 onward is split into a main ``PARTE_1`` and the autonÃ³mica
     deductions ``PARTE_2_DEDUCCIONES_AUTONOMICAS``.
     """
 
@@ -106,7 +106,7 @@ def _require_spanish(translatable: Translatable, field_name: str) -> None:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
-class _StrictFrozen(BaseModel):
+class _ManualStrictFrozen(BaseModel):
     """Shared config: strict validation, immutable instances, no extras."""
 
     model_config = ConfigDict(
@@ -127,7 +127,7 @@ class _StrictLoose(BaseModel):
     )
 
 
-class LLMProvenance(_StrictFrozen):
+class LLMProvenance(_ManualStrictFrozen):
     """Record of which LLM call produced a draft extraction.
 
     Attached to every LLM-drafted ``Rule`` so reviewers can trace the
@@ -142,14 +142,14 @@ class LLMProvenance(_StrictFrozen):
     extracted_at: datetime = Field(description="UTC timestamp the draft was produced.")
 
 
-class SectionSource(_StrictFrozen):
+class SectionSource(_ManualStrictFrozen):
     """Provenance pointer for a ``Section`` back to the source handbook."""
 
     manual_url: AnyHttpUrl = Field(description="Canonical AEAT URL the section was extracted from.")
     page: int = Field(ge=1, description="1-indexed page number in the PDF.")
 
 
-class RuleSource(_StrictFrozen):
+class RuleSource(_ManualStrictFrozen):
     """Provenance pointer for a ``Rule`` back to the source handbook."""
 
     manual_url: AnyHttpUrl = Field(description="Canonical AEAT URL the rule was extracted from.")
@@ -157,7 +157,7 @@ class RuleSource(_StrictFrozen):
     paragraph: int | None = Field(default=None, ge=1, description="Optional paragraph index within the page.")
 
 
-class Paragraph(_StrictFrozen):
+class Paragraph(_ManualStrictFrozen):
     """A single Spanish source paragraph within a section."""
 
     paragraph_id: _StableId = Field(description="Stable identifier, unique within its section.")
@@ -165,8 +165,8 @@ class Paragraph(_StrictFrozen):
     page: int = Field(ge=1, description="1-indexed page number in the PDF.")
 
 
-class Rule(_StrictFrozen):
-    """A single extracted rule from the *Manual práctico*.
+class Rule(_ManualStrictFrozen):
+    """A single extracted rule from the *Manual prÃ¡ctico*.
 
     Every persisted rule carries reviewer metadata populated by a real
     human; the verify CLI rejects rules missing those fields when
@@ -208,7 +208,7 @@ class Rule(_StrictFrozen):
         return self
 
 
-class SectionRef(_StrictFrozen):
+class SectionRef(_ManualStrictFrozen):
     """Compact pointer from a ``Chapter`` to a ``Section`` on disk.
 
     Keeping the chapter tree small and file-based keeps the
@@ -234,7 +234,7 @@ class SectionRef(_StrictFrozen):
         return pure.as_posix()
 
 
-class Section(_StrictFrozen):
+class Section(_ManualStrictFrozen):
     """A structured section of a handbook chapter."""
 
     section_id: _StableId
@@ -256,7 +256,7 @@ class Section(_StrictFrozen):
         return self
 
 
-class Chapter(_StrictFrozen):
+class Chapter(_ManualStrictFrozen):
     """A handbook chapter: metadata plus ordered section references."""
 
     chapter_id: _StableId
@@ -271,7 +271,7 @@ class Chapter(_StrictFrozen):
         return self
 
 
-class Manual(_StrictFrozen):
+class Manual(_ManualStrictFrozen):
     """Root record for a single ``(manual_id, year, part)`` volume."""
 
     manual_id: ManualId
@@ -293,7 +293,7 @@ class Manual(_StrictFrozen):
         return self
 
 
-class FetchedManualPart(_StrictFrozen):
+class FetchedManualPart(_ManualStrictFrozen):
     """Manifest record for a fetched raw manual part.
 
     Committed to disk as ``manifest.json`` next to the raw ``source.pdf``

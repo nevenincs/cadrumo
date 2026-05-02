@@ -32,7 +32,7 @@ from types import MappingProxyType
 from pydantic import Field, model_validator
 
 from ._classification import InvoiceDirection
-from ._schema import VATCategory, VATRateKind, _StrictFrozen
+from ._schema import VATCategory, VATRateKind, _VatStrictFrozen
 
 
 class CasillaRole(StrEnum):
@@ -42,7 +42,7 @@ class CasillaRole(StrEnum):
     CUOTA = "cuota"
 
 
-class Modelo303Contribution(_StrictFrozen):
+class Modelo303Contribution(_VatStrictFrozen):
     """One bucket-level contribution from a classified transaction."""
 
     casilla_id: str = Field(min_length=2, max_length=4)

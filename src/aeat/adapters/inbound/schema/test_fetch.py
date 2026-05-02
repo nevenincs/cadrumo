@@ -1,8 +1,9 @@
-"""Unit tests for :mod:`aeat.domain.schema._fetch` hardening surface.
+"""Unit tests for :mod:`aeat.adapters.inbound.schema._fetch` hardening surface.
 
 Exercises the URL allow-list, size caps, ``boe_ref`` re-validation,
-atomic-write behaviour, and override-env-var bounds introduced by
-the security audit.
+atomic-write behaviour, and override-env-var bounds enforced by
+:func:`aeat.adapters.inbound.schema._fetch.fetch_boe_pdf` and its
+helpers.
 """
 
 from __future__ import annotations
@@ -13,9 +14,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...core.config import Settings
-from ..modelos import ModeloCode
-from ._errors import SchemaCacheError
+from ....core.config import Settings
+from ....domain.modelos import ModeloCode
+from ....domain.schema import SchemaCacheError
 from ._fetch import (
     _MAX_OVERRIDE_BYTES,
     _MAX_PDF_BYTES,
@@ -24,9 +25,9 @@ from ._fetch import (
     _validate_override_url,
     fetch_boe_pdf,
 )
-from .testing import build_fake_boe_pdf
+from .testing import build_synthetic_boe_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _settings_with(cache_dir: Path, override: str = "") -> Settings:
@@ -136,7 +137,7 @@ class TestFetchBoePdf:
 
     def test_file_override_happy_path(self, tmp_path: Path) -> None:
         pdf_path = tmp_path / "src.pdf"
-        build_fake_boe_pdf(pdf_path, annex_lines=("01 Example",))
+        build_synthetic_boe_pdf(pdf_path, annex_lines=("01 Example",))
         override = json.dumps({"130": {"BOE-A-2023-15412": pdf_path.resolve().as_uri()}})
         result = fetch_boe_pdf(
             ModeloCode.MODELO_130,
@@ -169,5 +170,5 @@ class TestFetchBoePdf:
             )
 
     def test_max_pdf_bytes_is_sane(self) -> None:
-        # Guards against an accidental downgrade; 64 MiB is the ADR cap.
+        # Guards against an accidental downgrade; 64 MiB is the agreed cap.
         assert _MAX_PDF_BYTES == 64 * 1024 * 1024

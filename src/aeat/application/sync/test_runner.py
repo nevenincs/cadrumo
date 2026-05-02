@@ -1,7 +1,7 @@
-"""Unit tests for :class:`LiveSyncRunner` using concrete Protocol doubles.
+"""Unit tests for :class:`LiveSyncRunner` using concrete Protocol collaborators.
 
-No mocks or patches. Every dependency is a real Python class that
-implements the stubbed Protocol with enough behaviour to drive the
+No mocks or monkeypatches. Every dependency is a real Python class that
+implements the narrow Protocol with enough behaviour to drive the
 runner.
 """
 
@@ -17,14 +17,16 @@ from ...adapters.outbound.aeat.browser import BrowserSession
 from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
-    DivergenceClassifier,
-    DivergenceKind,
     EscalateStrategy,
     HealingDispatcher,
     JsonFileDivergenceRepository,
     LiveSyncRunner,
-    ModeloIdentifier,
     StrategyAction,
+)
+from ...domain.sync import (
+    DivergenceClassifier,
+    DivergenceKind,
+    ModeloIdentifier,
     SyncError,
     WireCasilla,
     WireFilingHistory,
@@ -37,31 +39,12 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-class _FakeCert:
+class _ConcreteCert:
     async def preload_into_browser_context(self, session: Any) -> None:
         return None
 
 
-class _FakeSchema:
-    modelo = ModeloIdentifier("100")
-
-
-class _FakeSchemaLoader:
-    def load(self, modelo: ModeloIdentifier) -> Any:
-        return _FakeSchema()
-
-
-class _FakeManualRulesLoader:
-    def load(self, modelo: ModeloIdentifier) -> tuple[Any, ...]:
-        return ()
-
-
-class _FakeLLM:
-    async def complete(self, request: Any) -> str:
-        return ""
-
-
-class _FakeLocalCatalogue:
+class _ConcreteLocalCatalogue:
     def __init__(
         self,
         *,
@@ -143,7 +126,7 @@ def _modelo(
 
 
 def _manifest() -> WirePortalManifest:
-    from . import PortalIdentifier, WirePortalLink
+    from ...domain.sync import PortalIdentifier, WirePortalLink
 
     link = WirePortalLink.model_validate(
         {
@@ -179,17 +162,14 @@ def _dispatcher() -> HealingDispatcher:
 
 def _build_runner(
     *,
-    local: _FakeLocalCatalogue,
+    local: _ConcreteLocalCatalogue,
     fetcher: Any,
     repository_root: Path,
 ) -> LiveSyncRunner:
     return LiveSyncRunner(
         browser_session=cast(BrowserSession, object()),
-        certificate_backend=_FakeCert(),
+        certificate_backend=_ConcreteCert(),
         local_loader=local,
-        schema_loader=_FakeSchemaLoader(),
-        manual_rules_loader=_FakeManualRulesLoader(),
-        llm_client=_FakeLLM(),
         fetcher=fetcher,
         validator=WireValidator(),
         classifier=DivergenceClassifier(),
@@ -210,7 +190,7 @@ async def test_runner_happy_path_emits_additive_healing(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    local = _ConcreteLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
     runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
@@ -232,7 +212,7 @@ async def test_runner_bounded_policy_blocks_breaking_even_with_auto_heal(
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    local = _ConcreteLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
     runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
@@ -249,7 +229,7 @@ async def test_runner_wire_validation_failure_raises(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    local = _FakeLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
+    local = _ConcreteLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
     runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     with pytest.raises(WireValidationError):
@@ -266,7 +246,7 @@ async def test_runner_retries_transient_fetch_failures(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    local = _FakeLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
+    local = _ConcreteLocalCatalogue(modelo=local_modelo, manifest=_manifest(), history=_history())
     runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     result = await runner.run(modelo=ModeloIdentifier("100"), auto_heal=True)
@@ -281,7 +261,7 @@ async def test_runner_gives_up_after_retry_max(tmp_path: Path) -> None:
         manifest_raw=_manifest().model_dump_json().encode(),
         history_raw=_history().model_dump_json().encode(),
     )
-    local = _FakeLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
+    local = _ConcreteLocalCatalogue(modelo=_modelo(), manifest=_manifest(), history=_history())
     runner = _build_runner(local=local, fetcher=fetcher, repository_root=tmp_path)
 
     with pytest.raises(SyncError):

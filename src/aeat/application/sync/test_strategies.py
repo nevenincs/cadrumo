@@ -1,4 +1,11 @@
-"""Unit tests for individual healing strategies."""
+"""Unit tests for individual sync healing strategies.
+
+Exercises each concrete :class:`aeat.application.sync.HealingStrategy`
+implementation in isolation:
+:class:`aeat.application.sync.AdditiveAllowlistStrategy`,
+:class:`aeat.application.sync.BenignRecordStrategy`, and
+:class:`aeat.application.sync.EscalateStrategy`.
+"""
 
 from __future__ import annotations
 
@@ -10,18 +17,20 @@ import pytest
 from . import (
     AdditiveAllowlistStrategy,
     BenignRecordStrategy,
+    EscalateStrategy,
+    StrategyAction,
+)
+from ...domain.sync import (
     CasillaAddedWithDefault,
     DivergenceClassification,
     DivergenceKind,
     DivergenceRecord,
-    EscalateStrategy,
     FilingStatusChanged,
     FormulaChanged,
     ModeloIdentifier,
     ResolutionState,
-    StrategyAction,
+    classify_kind,
 )
-from ._divergence import classify_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

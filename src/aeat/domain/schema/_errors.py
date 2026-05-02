@@ -28,7 +28,7 @@ class SchemaCacheError(SchemaError):
     """Raised when on-disk schema persistence fails.
 
     Covers dirty cache filenames, missing parent directories, and
-    :mod:`httpx` transport failures surfaced by :func:`fetch_boe_pdf`.
+    :mod:`httpx` transport failures surfaced by the inbound schema fetcher.
     """
 
 

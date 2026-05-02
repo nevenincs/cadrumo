@@ -1,6 +1,6 @@
 """Test-only helpers for :mod:`aeat.adapters.inbound.schema`.
 
-Public surface: :func:`build_fake_boe_pdf` generates a synthetic
+Public surface: :func:`build_synthetic_boe_pdf` generates a synthetic
 BOE-style annex PDF that matches the line-based pattern library the
 :class:`~aeat.adapters.inbound.schema.BoeOrdenExtractor` consumes.
 The helper is imported only by colocated tests and MUST NOT be
@@ -16,7 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 
-def build_fake_boe_pdf(
+def build_synthetic_boe_pdf(
     path: Path,
     *,
     annex_lines: Sequence[str],

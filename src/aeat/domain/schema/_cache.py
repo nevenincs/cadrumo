@@ -22,7 +22,7 @@ from ._models import Modelo
 _logger = get_logger(__name__)
 
 _BOE_REF_RE = re.compile(r"^(?=.*[A-Z0-9])[A-Z0-9-]+$")
-"""Mirrors :data:`aeat.domain.schema._fetch._BOE_REF_RE` — kept local to
+"""Mirrors the inbound schema fetcher BOE reference rule — kept local to
 avoid cross-module coupling; both patterns MUST agree."""
 
 

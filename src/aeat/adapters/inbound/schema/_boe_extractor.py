@@ -1,20 +1,20 @@
-"""BOE-Orden extractor backend for :mod:`aeat.domain.schema`.
+﻿"""BOE-Orden extractor backend for AEAT modelo schemas.
 
-Implements the line-based extractor for the
-PDF form of an AEAT *Orden ministerial* published in the Boletín
-Oficial del Estado. The extractor uses :mod:`pdfplumber` to read
-text, skips every page up to and including the annex heading
-(``ANEXO``), then walks subsequent pages line-by-line and classifies
-each line as one of:
+This module owns the pipeline that reads primary AEAT sources
+(currently BOE-published *Ordenes ministeriales*) and emits the typed,
+versioned pydantic v2 records defined in :mod:`aeat.domain.schema`.
 
-- ``CASILLA`` — declares a numbered box and its Spanish label.
-- ``FORMULA`` — pins a casilla to an arithmetic expression referring
-  to other casilla numbers.
-- ``BLOCK`` — a heading line introducing a new section of the form.
-- ``OTHER`` — ignored.
+The public surface is :class:`BoeOrdenExtractor`, a line-based PDF
+extractor bound to a
+:class:`aeat.adapters.inbound.schema._fetch.FetchedSchemaSource`.
+Consumers MUST import from this module only; the implementation
+details are internal to this inbound adapter.
 
-Pattern library is deliberately narrow and targets Modelo 130. The
-2026-04-17 ADR §3 explains why.
+The intermediate-representation types (:class:`aeat.domain.schema.Modelo`,
+:class:`aeat.domain.schema.Casilla`, etc.) and cache helpers
+(:func:`aeat.domain.schema.save_modelo_to_cache`,
+:func:`aeat.domain.schema.load_modelo_from_cache`) live in
+:mod:`aeat.domain.schema`; this adapter imports from there.
 """
 
 from __future__ import annotations
@@ -24,30 +24,30 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from ...core.i18n import Translatable
-from ...core.logging import get_logger
-from ..modelos import ModeloCode
-from ._enums import BinaryFormulaOp, CasillaDataType, SchemaSource
-from ._errors import SchemaExtractionError
-from ._fetch import FetchedSchemaSource
-from ._models import (
+from ....core.i18n import Translatable
+from ....core.logging import get_logger
+from ....domain.modelos import ModeloCode
+from ....domain.schema._enums import BinaryFormulaOp, CasillaDataType, SchemaSource
+from ....domain.schema._errors import SchemaExtractionError
+from ....domain.schema._models import (
     BinaryOp,
     Casilla,
-    CasillaRef,
     FormulaNode,
     LiteralFormula,
     Modelo,
+    SchemaCasillaRef,
     SchemaProvenance,
     SchemaVersion,
     SumFormula,
     _collect_refs,
     validate_period_for_modelo,
 )
+from ._fetch import FetchedSchemaSource
 
 _logger = get_logger(__name__)
 
 _ANNEX_RE = re.compile(r"^\s*ANEXO(?:\s+[IVX]+)?(?:\W|$)", re.IGNORECASE)
-"""Matches ``ANEXO``, ``ANEXO I``, ``Anexo I — Modelo 130``, etc.
+"""Matches ``ANEXO``, ``ANEXO I``, ``Anexo I Ã¢â,¬â€ Modelo 130``, etc.
 
 Accepts a trailing word-boundary so inline headings (the shape real
 BOE PDFs typeset) are recognised; a standalone ``ANEXO`` line still
@@ -55,11 +55,11 @@ matches because ``$`` is in the alternation.
 """
 
 _CASILLA_DECL_RE = re.compile(
-    r"^\s*(?P<id>\d{2,4})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ¿\(].*?)\s*$",
+    r"^\s*(?P<id>\d{2,4})\s+(?P<label>[A-Za-zÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡ÃƒÅ“Ãƒâ€˜ÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ¼ÃƒÂ±Ã,Â¿\(].*?)\s*$",
 )
 """Matches ``NN <Spanish label>`` where the label starts with a letter,
-Spanish inverted question mark (``¿`` — interrogative casillas on
-Modelos 303 / 390), or an opening parenthesis (``(`` — qualified
+Spanish inverted question mark (``Ã,Â¿`` Ã¢â,¬â€ interrogative casillas on
+Modelos 303 / 390), or an opening parenthesis (``(`` Ã¢â,¬â€ qualified
 labels like ``"(Antes: Casilla 9a)"``).
 
 Constraining the leading character rules out page-footer lines that
@@ -81,7 +81,7 @@ _MINUS_CHARS = ("\u2212", "\u2013", "\u2014")
 _MUL_CHARS = ("x", "X", "\u00d7")
 """Characters normalised to ASCII ``*`` in formula bodies."""
 
-_WORD_BOUNDARY_ES_TEMPLATE = r"(?<![\wáéíóúñüÁÉÍÓÚÑÜ]){word}(?![\wáéíóúñüÁÉÍÓÚÑÜ])"
+_WORD_BOUNDARY_ES_TEMPLATE = r"(?<![\wÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ±ÃƒÂ¼ÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡Ãƒâ€˜ÃƒÅ“]){word}(?![\wÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ±ÃƒÂ¼ÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡Ãƒâ€˜ÃƒÅ“])"
 
 _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "cuota",
@@ -94,16 +94,16 @@ _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "gasto",
     "beneficio",
     "retencion",
-    "retención",
+    "retenciÃƒÂ³n",
 )
 _PERCENT_KEYWORDS: tuple[str, ...] = ("%", "porcentaje")
-"""Drop ``"tipo"`` — it collides with currency labels like
+"""Drop ``"tipo"`` Ã¢â,¬â€ it collides with currency labels like
 *"Base del tipo general"*. The word ``%`` remains as the canonical
 percent marker; ``"porcentaje"`` covers labels that spell it out.
 """
 
-_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "año", "ejercicios")
-"""Drop the accentless ``"ano"`` variant: it matched ``"año"`` as a
+_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "aÃƒÂ±o", "ejercicios")
+"""Drop the accentless ``"ano"`` variant: it matched ``"aÃƒÂ±o"`` as a
 substring and mis-classified currency labels containing ``"ano"``
 (frequent in gerund / plural forms).
 """
@@ -144,7 +144,7 @@ def _guess_data_type(label: str) -> CasillaDataType:
     (currency + integer keyword) resolves to ``CURRENCY_EUR``, not
     ``INTEGER``. Keyword matches use whole-word comparison with
     Spanish-diacritic-aware boundaries so ``"ano"`` does not match
-    ``"año"`` and ``"base"`` is not swallowed by the percent branch.
+    ``"aÃƒÂ±o"`` and ``"base"`` is not swallowed by the percent branch.
     """
     lowered = label.lower()
     for kw in _CURRENCY_KEYWORDS:
@@ -182,7 +182,7 @@ def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
     """Tokenise a normalised additive chain into ``((sign, casilla_id), ...)``.
 
     Returns an empty tuple if the body is not a pure
-    ``[+|-] Casilla N ( [+|-] Casilla M )*`` chain — the caller falls
+    ``[+|-] Casilla N ( [+|-] Casilla M )*`` chain Ã¢â,¬â€ the caller falls
     back to other shapes when this happens.
     """
     pattern = re.compile(
@@ -195,7 +195,7 @@ def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
     # Require the chain to cover the body (ignoring trailing whitespace).
     last = matches[-1]
     if last.end() != len(normalised.rstrip()):
-        # Trailing content we do not understand — refuse to guess.
+        # Trailing content we do not understand Ã¢â,¬â€ refuse to guess.
         return ()
     terms: list[tuple[str, str]] = []
     for match in matches:
@@ -212,13 +212,13 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
     - ``Casilla A + Casilla B`` and arbitrary ``+ / -`` chains (e.g.
       ``Casilla 01 + Casilla 02 - Casilla 03``). Unicode minus
       variants (``U+2212``, en-dash, em-dash) are normalised to ASCII.
-    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply — BOE glyph
+    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply Ã¢â,¬â€ BOE glyph
       U+00D7 MULTIPLICATION SIGN is normalised to ASCII ``*``).
     - A single ``Casilla A`` passthrough.
 
     Mixed ``+ / -`` chains are represented as a :class:`SumFormula`
     where the negative terms are wrapped in
-    ``BinaryOp(SUB, 0, CasillaRef(id))``. Two-term subtractions
+    ``BinaryOp(SUB, 0, SchemaCasillaRef(id))``. Two-term subtractions
     collapse to a single :class:`BinaryOp` for readability.
 
     Raises:
@@ -236,22 +236,22 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
         literal = Decimal("0." + percent_match.group(1))
         return BinaryOp(
             op=BinaryFormulaOp.MUL,
-            left=CasillaRef(casilla_id=refs[0]),
+            left=SchemaCasillaRef(casilla_id=refs[0]),
             right=LiteralFormula(value=literal),
         )
     terms = _parse_signed_terms(normalised)
     if terms:
         if len(terms) == 1 and terms[0][0] == "+":
-            return CasillaRef(casilla_id=terms[0][1])
+            return SchemaCasillaRef(casilla_id=terms[0][1])
         if len(terms) == 2 and terms[0][0] == "+" and terms[1][0] == "-":
             return BinaryOp(
                 op=BinaryFormulaOp.SUB,
-                left=CasillaRef(casilla_id=terms[0][1]),
-                right=CasillaRef(casilla_id=terms[1][1]),
+                left=SchemaCasillaRef(casilla_id=terms[0][1]),
+                right=SchemaCasillaRef(casilla_id=terms[1][1]),
             )
         sum_terms: list[FormulaNode] = []
         for sign, cid in terms:
-            ref = CasillaRef(casilla_id=cid)
+            ref = SchemaCasillaRef(casilla_id=cid)
             if sign == "+":
                 sum_terms.append(ref)
             else:
@@ -269,8 +269,6 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
 
 
 def _build_translatable(es_text: str) -> Translatable:
-    # ``Translatable`` is a TypedDict; constructing via dict keeps the
-    # shape declarative and avoids a helper layer.
     return Translatable(es=es_text)
 
 
@@ -278,8 +276,8 @@ class BoeOrdenExtractor:
     """Line-based extractor for BOE-Orden PDFs approving an AEAT modelo.
 
     The extractor is deliberately narrow and targets the Modelo 130
-    Orden layout. Follow-up PRs subclass / extend the pattern library
-    for 303, 390, and the remaining modelos covered by
+    Orden layout. Subclasses are expected to extend the pattern
+    library for 303, 390, and the remaining modelos covered by
     :class:`aeat.domain.modelos.ModeloCode`.
     """
 
@@ -411,7 +409,7 @@ class BoeOrdenExtractor:
 
         Duplicate declarations: if a second declaration is *identical*
         to the first (same label and block heading), it is silently
-        ignored — BOE Ordenes occasionally repeat the form layout
+        ignored Ã¢â,¬â€ BOE Ordenes occasionally repeat the form layout
         (e.g. multilingual annexes or summary pages). A conflicting
         duplicate (different label or different block) still raises
         so silent data loss is impossible.
@@ -419,7 +417,7 @@ class BoeOrdenExtractor:
         declarations: dict[str, _CasillaDraft] = {}
         pending_formulas: list[tuple[int, str, str]] = []
 
-        # Pass 1 — declarations and blocks.
+        # Pass 1 Ã¢â,¬â€ declarations and blocks.
         current_block: str | None = None
         for page_number, raw_line in annex_lines:
             line = raw_line.strip()
@@ -443,7 +441,7 @@ class BoeOrdenExtractor:
                 if casilla_id in declarations:
                     existing = declarations[casilla_id]
                     if existing.label_es == label_es and existing.block_es == incoming_block:
-                        # Benign duplicate (repeated layout) — ignore.
+                        # Benign duplicate (repeated layout) Ã¢â,¬â€ ignore.
                         continue
                     raise SchemaExtractionError(
                         f"conflicting duplicate declaration for casilla "
@@ -461,7 +459,7 @@ class BoeOrdenExtractor:
                 )
                 continue
 
-        # Pass 2 — bind formulas to already-declared casillas.
+        # Pass 2 Ã¢â,¬â€ bind formulas to already-declared casillas.
         for page_number, formula_id, formula_body in pending_formulas:
             if formula_id not in declarations:
                 raise SchemaExtractionError(
@@ -486,3 +484,7 @@ class BoeOrdenExtractor:
                 f"no casillas detected in BOE PDF {self._source.boe_ref!r}",
             )
         return list(declarations.values())
+
+
+__all__ = ("BoeOrdenExtractor",)
+

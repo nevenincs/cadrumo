@@ -1,8 +1,16 @@
-"""Enforce corpus coverage against all supported and implemented modelos.
+"""Enforce corpus coverage for every supported / implemented modelo.
 
-Ensures that every registered extractor has a corresponding casilla catalogue
-in the corpus for all defined periods, and that all casillas extracted by
-the code are actually defined in the corpus JSON.
+Locks two invariants:
+
+* Every registered declaración extractor has a corresponding casilla
+  catalogue committed under ``corpus/casillas/`` for every period
+  the modelo's cadence requires (mandated 2023–2026 at minimum).
+* Every casilla the extractor claims to read is actually defined
+  in that catalogue.
+
+These tests fail loud as soon as an extractor lands without the
+matching corpus rows, which prevents silent drift between the code
+and the canonical legal corpus.
 """
 
 from __future__ import annotations
@@ -54,9 +62,7 @@ def test_corpus_fully_covers_implemented_extractors() -> None:
                 periods = [f"{y}Q{q}" for q in range(1, 5)]
             elif metadata.cadence == ModeloCadence.MONTHLY:
                 periods = [f"{y}-{m:02d}" for m in range(1, 13)]
-            elif metadata.cadence == ModeloCadence.ANNUAL:
-                periods = [str(y)]
-            elif metadata.cadence == ModeloCadence.AD_HOC:
+            elif metadata.cadence == ModeloCadence.ANNUAL or metadata.cadence == ModeloCadence.AD_HOC:
                 periods = [str(y)]
             else:
                 periods = [str(y)]

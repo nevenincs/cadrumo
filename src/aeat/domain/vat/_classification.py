@@ -58,7 +58,7 @@ from ._schema import (
     VATCategory,
     VATRate,
     VATRateKind,
-    _StrictFrozen,
+    _VatStrictFrozen,
 )
 from .errors import VatRateNotFoundError
 
@@ -146,7 +146,7 @@ class InvoiceDirection(StrEnum):
 # -- Criteria and classification records ----------------------------------
 
 
-class VATClassificationCriteria(_StrictFrozen):
+class VATClassificationCriteria(_VatStrictFrozen):
     """Input record for :func:`classify_vat`.
 
     Carries every axis the closed decision table inspects. The
@@ -223,7 +223,7 @@ class VATClassificationCriteria(_StrictFrozen):
         return self
 
 
-class VATClassification(_StrictFrozen):
+class VATClassification(_VatStrictFrozen):
     """Output record returned by :func:`classify_vat`.
 
     Exposes the matched :class:`VATCategory`, the resolved
@@ -430,7 +430,7 @@ _CATEGORY_TO_RATE_TIER: dict[VATCategory, VATRateKind] = {
 }
 
 
-class _Rule(NamedTuple):
+class _VatClassificationRule(NamedTuple):
     """Module-private decision-table row."""
 
     rule_id: str
@@ -439,92 +439,92 @@ class _Rule(NamedTuple):
     category: VATCategory | None  # None ⇒ rule resolves to a derived category
 
 
-_RULES: tuple[_Rule, ...] = (
-    _Rule(
+_RULES: tuple[_VatClassificationRule, ...] = (
+    _VatClassificationRule(
         "R01_construction_reverse_charge",
         "ES-to-ES construction RC",
         _r01_construction_rc,
         VATCategory.DOMESTIC_REVERSE_CHARGE,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R02_waste_reverse_charge",
         "ES-to-ES waste RC",
         _r02_waste_rc,
         VATCategory.DOMESTIC_REVERSE_CHARGE,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R03_electronics_reverse_charge",
         "ES-to-ES B2B electronics RC",
         _r03_electronics_rc,
         VATCategory.DOMESTIC_REVERSE_CHARGE,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R04_immovable_property_exempt",
         "ES-to-ES immovable B2C exempt",
         _r04_immovable_b2c_exempt,
         VATCategory.DOMESTIC_EXEMPT,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R05_domestic_at_rate_tier",
         "ES-to-ES default by rate_tier",
         _r05_domestic_at_rate,
         None,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R10_intra_community_supply",
         "ES to EU_MEMBER B2B goods supply",
         _r10_ic_supply_goods,
         VATCategory.INTRA_COMMUNITY_SUPPLY,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R11_intra_community_acquisition",
         "EU_MEMBER to ES B2B goods acquisition",
         _r11_ic_acquisition_goods,
         VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R12_services_b2b_eu_outbound",
         "ES to EU_MEMBER B2B services",
         _r12_services_b2b_eu_outbound,
         VATCategory.DOMESTIC_NOT_SUBJECT,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R13_services_b2b_eu_inbound",
         "EU_MEMBER to ES B2B services",
         _r13_services_b2b_eu_inbound,
         VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R14_digital_b2c_oss",
         "ES to EU_MEMBER B2C digital OSS",
         _r14_digital_b2c_oss_outbound,
         VATCategory.DOMESTIC_NOT_SUBJECT,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R15_distance_sales_b2c",
         "ES to EU_MEMBER B2C distance sales",
         _r15_distance_sales_b2c_outbound,
         VATCategory.DOMESTIC_NOT_SUBJECT,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R20_export_goods",
         "ES to 3rd-country goods export",
         _r20_export_goods,
         VATCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R21_import_goods",
         "3rd-country to ES goods import",
         _r21_import_goods,
         VATCategory.IMPORT_THIRD_COUNTRY,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R22_services_outbound_third_country",
         "ES to 3rd-country services",
         _r22_services_outbound_third_country,
         VATCategory.OPERACION_NO_SUJETA,
     ),
-    _Rule(
+    _VatClassificationRule(
         "R30_canarias_ceuta_melilla",
         "Issuer outside TAI",
         _r30_canarias_ceuta_melilla,
