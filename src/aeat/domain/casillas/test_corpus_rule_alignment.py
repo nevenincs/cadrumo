@@ -160,9 +160,7 @@ def test_every_computed_record_has_at_least_one_rule_link() -> None:
                 # rows and have no engine-side formula; allow them by exception.
                 if modelo == "MODELO_190" and rec.casilla_id in {"19", "20", "21"}:
                     continue
-                failures.append(
-                    f"{modelo} {period} cas {rec.casilla_id}: computed=True but no references_rules"
-                )
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed=True but no references_rules")
     if failures:
         msg = "Computed corpus records missing rule links:\n" + "\n".join(f" - {f}" for f in failures)
         pytest.fail(msg)
