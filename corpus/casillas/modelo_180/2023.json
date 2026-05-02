@@ -10,9 +10,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total recipients",
-        "es": "Total perceptores",
-        "hu": "Összes bérbeadó"
+        "en": "Total recipients Annual summary that consolidates the quarterly data of form 115.",
+        "es": "Total perceptores Resumen anual que consolida los datos trimestrales del modelo 115.",
+        "hu": "Összes bérbeadó Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
       },
       "label": {
         "en": "Total recipients",
@@ -40,9 +40,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total withholding base",
-        "es": "Total base retencion",
-        "hu": "Teljes levonási alap"
+        "en": "Total withholding base Annual summary that consolidates the quarterly data of form 115.",
+        "es": "Total base retencion Resumen anual que consolida los datos trimestrales del modelo 115.",
+        "hu": "Teljes levonási alap Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
       },
       "label": {
         "en": "Total withholding base",
@@ -70,9 +70,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total withholdings (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "es": "Total retenciones (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "en": "Total withholdings Annual summary that consolidates the quarterly data of form 115. (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "es": "Total retenciones Resumen anual que consolida los datos trimestrales del modelo 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "hu": "Teljes levonás Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115. (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
@@ -106,9 +106,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "In-kind payments on account",
-        "es": "Total ingresos a cuenta por retribuciones en especie",
-        "hu": "Természetbeni előlegek"
+        "en": "In-kind payments on account Annual summary that consolidates the quarterly data of form 115.",
+        "es": "Total ingresos a cuenta por retribuciones en especie Resumen anual que consolida los datos trimestrales del modelo 115.",
+        "hu": "Természetbeni előlegek Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
       },
       "label": {
         "en": "In-kind payments on account",

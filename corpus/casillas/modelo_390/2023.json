@@ -10,9 +10,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "General regime Q1 base",
-        "es": "Régimen general 1T base",
-        "hu": "Általános rendszer 1T alap"
+        "en": "General regime Q1 base Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Régimen general 1T base Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Általános rendszer 1T alap Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "General regime Q1 base",
@@ -40,9 +40,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "General regime Q1 quota",
-        "es": "Régimen general 1T cuota",
-        "hu": "Általános rendszer 1T összeg"
+        "en": "General regime Q1 quota Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Régimen general 1T cuota Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Általános rendszer 1T összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "General regime Q1 quota",
@@ -70,9 +70,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total taxable bases",
-        "es": "Total bases imponibles",
-        "hu": "Összes adóalap"
+        "en": "Total taxable bases Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Total bases imponibles Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Összes adóalap Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Total taxable bases",
@@ -100,9 +100,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total output VAT",
-        "es": "Total cuotas repercutidas",
-        "hu": "Áthárított ÁFA összesen"
+        "en": "Total output VAT Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Total cuotas repercutidas Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Áthárított ÁFA összesen Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Total output VAT",
@@ -130,9 +130,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total deductible input VAT (domestic)",
-        "es": "Total IVA soportado deducible operaciones interiores",
-        "hu": "Levonható ÁFA belföld"
+        "en": "Total deductible input VAT (domestic) Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Total IVA soportado deducible operaciones interiores Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Levonható ÁFA belföld Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Total deductible input VAT (domestic)",
@@ -160,9 +160,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total deductible input VAT (imports)",
-        "es": "Total IVA soportado deducible importaciones",
-        "hu": "Levonható ÁFA import"
+        "en": "Total deductible input VAT (imports) Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Total IVA soportado deducible importaciones Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Levonható ÁFA import Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Total deductible input VAT (imports)",
@@ -190,9 +190,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total deductible input VAT (Legal basis: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
-        "es": "Total IVA soportado deducible (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
-        "hu": "Összes levonható ÁFA (Jogalap: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)"
+        "en": "Total deductible input VAT Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "es": "Total IVA soportado deducible Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "hu": "Összes levonható ÁFA Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Total deductible input VAT",
@@ -220,9 +220,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Result (general regime) (Legal basis: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Resultado régimen general (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Általános rendszer eredménye (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result (general regime) Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado régimen general Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Általános rendszer eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result (general regime)",
@@ -250,9 +250,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Result (simplified regime)",
-        "es": "Resultado régimen simplificado",
-        "hu": "Egyszerűsített rendszer eredménye"
+        "en": "Result (simplified regime) Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Resultado régimen simplificado Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Egyszerűsített rendszer eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Result (simplified regime)",
@@ -280,9 +280,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Result (other regimes)",
-        "es": "Resultado otros regímenes",
-        "hu": "Egyéb rendszerek eredménye"
+        "en": "Result (other regimes) Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Resultado otros regímenes Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Egyéb rendszerek eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Result (other regimes)",
@@ -310,9 +310,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Result sum (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Suma resultado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Eredmény összege (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result sum Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Suma resultado Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Eredmény összege Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result sum",
@@ -340,9 +340,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual result quota (Legal basis: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Cuota resultante anual (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Éves eredmény-összeg (Jogalap: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Annual result quota Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Cuota resultante anual Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Éves eredmény-összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Annual result quota",
@@ -370,9 +370,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total payable (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a ingresar (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Fizetendő összeg (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total payable Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a ingresar Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Fizetendő összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total payable",
@@ -406,9 +406,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total refundable (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a devolver (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Visszatérítendő összeg (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total refundable Annual summary that consolidates the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a devolver Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Visszatérítendő összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total refundable",
@@ -442,9 +442,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Capital-goods regularisation",
-        "es": "Regularización bienes de inversión",
-        "hu": "Tárgyi eszközök szabályozása"
+        "en": "Capital-goods regularisation Annual summary that consolidates the quarterly data of form 303.",
+        "es": "Regularización bienes de inversión Resumen anual que consolida los datos trimestrales del modelo 303.",
+        "hu": "Tárgyi eszközök szabályozása Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 303."
       },
       "label": {
         "en": "Capital-goods regularisation",

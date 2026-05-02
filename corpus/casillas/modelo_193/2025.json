@@ -10,9 +10,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual cumulative number of recipients of investment income subject to withholding (LIRPF art. 25).",
-        "es": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25).",
-        "hu": "Tőkejövedelemben részesülők éves száma."
+        "en": "Annual cumulative number of recipients of investment income subject to withholding (LIRPF art. 25). Annual summary that consolidates the quarterly data of form 123.",
+        "es": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25). Resumen anual que consolida los datos trimestrales del modelo 123.",
+        "hu": "Tőkejövedelemben részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 123."
       },
       "label": {
         "en": "Total recipients",
@@ -40,9 +40,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of bases subject to withholding on investment income.",
-        "es": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario.",
-        "hu": "A tőkejövedelmek éves levonási alapjának összege."
+        "en": "Annual sum of bases subject to withholding on investment income. Annual summary that consolidates the quarterly data of form 123.",
+        "es": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario. Resumen anual que consolida los datos trimestrales del modelo 123.",
+        "hu": "A tőkejövedelmek éves levonási alapjának összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 123."
       },
       "label": {
         "en": "Withholding base",
@@ -70,9 +70,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings and payments on account at the 19% rate (LIRPF art. 101.4).",
-        "es": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4).",
-        "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege."
+        "en": "Annual sum of withholdings and payments on account at the 19% rate (LIRPF art. 101.4). Annual summary that consolidates the quarterly data of form 123.",
+        "es": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4). Resumen anual que consolida los datos trimestrales del modelo 123.",
+        "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 123."
       },
       "label": {
         "en": "Withholdings and payments on account",
