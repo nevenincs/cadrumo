@@ -1,16 +1,20 @@
 """Healing dispatcher: the bounded-policy gatekeeper.
 
-Composes strategies in the order supplied and asks each whether it
-wants to handle the record. The **enforced invariant** (tested
-rigorously in ``test_bounded_policy.py``) is:
+Composes a chain of :class:`HealingStrategy` instances in the order
+supplied and asks each whether it wants to handle the record. The
+**enforced invariant** — tested rigorously in
+``test_bounded_policy.py`` — is::
 
     auto_heal_applied ⇔
         classification == DivergenceClassification.ADDITIVE
         AND payload.kind in auto_heal_allowlist
 
 Every other record (including every BREAKING and every SUSPICIOUS
-kind) is routed to :class:`StrategyAction.ESCALATED` regardless of
-the ``auto_heal`` flag.
+kind) is routed to :attr:`StrategyAction.ESCALATED` regardless of the
+``auto_heal`` flag. The invariant is double-enforced in
+:meth:`HealingDispatcher._enforce_bounded_policy`, which downgrades
+any erroneous AUTO_HEALED outcome to ESCALATED with
+:attr:`aeat.domain.sync.ResolutionState.PENDING`.
 """
 
 from __future__ import annotations
@@ -37,7 +41,14 @@ _LOGGER = get_logger(__name__)
 
 
 class HealingPlan(BaseModel):
-    """Bucketed healing plan for a single sync run."""
+    """Bucketed healing plan for a single sync run.
+
+    Attributes:
+        auto_heal: Records that pass the bounded-policy gate and will
+            be auto-healed.
+        escalate: Records routed to human review.
+        benign: Records recorded for traceability without action.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -47,7 +58,13 @@ class HealingPlan(BaseModel):
 
 
 class HealingDispatcher:
-    """Dispatch divergence records through the configured strategies."""
+    """Dispatch divergence records through the configured healing strategies.
+
+    Iterates the configured :class:`HealingStrategy` chain in order
+    and routes each :class:`aeat.domain.sync.DivergenceRecord` through
+    the first strategy whose :meth:`HealingStrategy.can_handle` returns
+    ``True``. Outcomes are bucketed into a :class:`HealingPlan`.
+    """
 
     def __init__(
         self,
@@ -55,6 +72,15 @@ class HealingDispatcher:
         strategies: tuple[HealingStrategy, ...],
         auto_heal_allowlist: frozenset[DivergenceKind],
     ) -> None:
+        """Configure the dispatcher.
+
+        Args:
+            strategies: Ordered chain of strategies; the first match
+                wins.
+            auto_heal_allowlist: Closed set of payload kinds that may
+                ever be auto-healed (in conjunction with the
+                ADDITIVE classification).
+        """
         self._strategies = strategies
         self._allowlist = auto_heal_allowlist
 
@@ -72,9 +98,21 @@ class HealingDispatcher:
         """Run every record through the strategy chain and bucket the outcomes.
 
         The bounded-policy invariant is double-enforced here: even if a
-        strategy were to return ``AUTO_HEALED`` for a record that is
-        not both ADDITIVE and allowlisted, this method downgrades the
-        outcome to ``ESCALATED`` with ``resolution_state=PENDING``.
+        strategy were to return :attr:`StrategyAction.AUTO_HEALED` for
+        a record that is not both ADDITIVE and allowlisted, this method
+        downgrades the outcome to :attr:`StrategyAction.ESCALATED` with
+        ``resolution_state=PENDING``.
+
+        Args:
+            records: Records to dispatch.
+            auto_heal: Whether automatic healing is permitted at all
+                for this run; individual records still must satisfy the
+                bounded-policy invariant.
+
+        Returns:
+            A pair ``(plan, outcomes)`` where ``plan`` buckets records
+            by terminal action and ``outcomes`` retains the per-record
+            :class:`StrategyOutcome` in input order.
         """
         outcomes: list[StrategyOutcome] = []
         auto_heal_bucket: list[DivergenceRecord] = []
@@ -106,6 +144,7 @@ class HealingDispatcher:
         *,
         auto_heal: bool,
     ) -> StrategyOutcome:
+        """Route ``record`` through the first matching strategy."""
         for strategy in self._strategies:
             if strategy.can_handle(record):
                 return await strategy.apply(record, auto_heal=auto_heal)
@@ -122,9 +161,17 @@ class HealingDispatcher:
     def _enforce_bounded_policy(self, outcome: StrategyOutcome) -> StrategyOutcome:
         """Second-line defence for the bounded auto-heal invariant.
 
-        If a strategy mistakenly returns AUTO_HEALED for a record that
-        is not both ADDITIVE and allowlisted, we downgrade it to
-        ESCALATED and log a WARNING.
+        If a strategy mistakenly returns :attr:`StrategyAction.AUTO_HEALED`
+        for a record that is not both ADDITIVE and allowlisted, this
+        method downgrades the outcome to :attr:`StrategyAction.ESCALATED`
+        and logs a WARNING.
+
+        Args:
+            outcome: Candidate outcome returned by a strategy.
+
+        Returns:
+            The original ``outcome`` if it satisfies the invariant; an
+            ESCALATED downgrade otherwise.
         """
         if outcome.action != StrategyAction.AUTO_HEALED:
             return outcome

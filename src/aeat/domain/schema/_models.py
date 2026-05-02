@@ -3,19 +3,19 @@
 The module declares the typed intermediate representation every
 extractor backend emits:
 
-- :class:`SchemaProvenance` / :class:`SchemaVersion` â€” where the
+- :class:`SchemaProvenance` / :class:`SchemaVersion` -- where the
   record came from and which pydantic shape version it conforms to.
 - :class:`LiteralFormula`, :class:`SchemaCasillaRef`, :class:`BinaryOp`,
-  :class:`SumFormula` â€” the evaluable formula AST referenced by the
+  :class:`SumFormula` -- the evaluable formula AST referenced by the
   ``FormulaNode`` discriminated union.
 - :class:`RangeRule`, :class:`RegexRule`, :class:`EnumRule`,
-  :class:`CrossCasillaRule` â€” validation rule variants forming the
+  :class:`CrossCasillaRule` -- validation rule variants forming the
   ``ValidationRule`` discriminated union.
-- :class:`Casilla` and :class:`Modelo` â€” the public, round-trippable
+- :class:`Casilla` and :class:`Modelo` -- the public, round-trippable
   extracted records.
-- :func:`evaluate` â€” walks a ``FormulaNode`` against a casilla-value
+- :func:`evaluate` -- walks a ``FormulaNode`` against a casilla-value
   mapping and returns the resolved :class:`decimal.Decimal`.
-- :func:`validate_period_for_modelo` â€” derives the period-string
+- :func:`validate_period_for_modelo` -- derives the period-string
   regex from the modelo's cadence metadata (no parallel cadence
   table lives here).
 """
@@ -331,7 +331,7 @@ class Casilla(_SchemaStrictFrozenModel):
         block: Optional heading the casilla sits under in the source
             document (Spanish authoritative).
         label: Trilingual label; Spanish is required. English and
-            Hungarian MAY be absent in extracted records â€” they are
+            Hungarian MAY be absent in extracted records -- they are
             filled downstream by the reviewer / translator workflow.
         data_type: Closed data-type enum.
         required: True when the AEAT form marks this casilla as
@@ -390,7 +390,24 @@ class Casilla(_SchemaStrictFrozenModel):
 
 
 class Modelo(_SchemaStrictFrozenModel):
-    """The typed, versioned schema extracted for one modelo + period."""
+    """The typed, versioned schema extracted for one modelo + period.
+
+    Attributes:
+        modelo_code: Closed :class:`aeat.domain.modelos.ModeloCode`
+            identifier for the AEAT form.
+        portal: Optional related portal; when set must reference a
+            portal whose ``related_modelo`` matches ``modelo_code``.
+        period: Filing period string consistent with the modelo's
+            cadence (validated against
+            :func:`validate_period_for_modelo`).
+        casillas: Non-empty tuple of :class:`Casilla` records.
+        provenance: Source provenance metadata.
+        extracted_at: UTC timestamp marking when the extraction ran.
+        schema_version: :class:`SchemaVersion` carried alongside the
+            payload; ``boe_ref`` is required for ``BOE_ORDEN``
+            provenance and must match
+            :attr:`SchemaProvenance.document_ref`.
+    """
 
     modelo_code: ModeloCode
     portal: Portal | None = None
