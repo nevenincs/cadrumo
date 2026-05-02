@@ -1,4 +1,9 @@
-"""Unit tests for the prompt registry."""
+"""Unit tests for the prompt registry.
+
+Verifies that :class:`aeat.adapters.outbound.llm.PromptRegistry` resolves the
+highest registered version by default, honours explicit version pins, and that
+the seeded registry contains the prompts that downstream callers depend on.
+"""
 
 import pytest
 

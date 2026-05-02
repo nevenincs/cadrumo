@@ -1,4 +1,4 @@
-"""CLI-local shim around root-private Click-context helpers."""
+"""CLI-local Click-context surface."""
 
 from __future__ import annotations
 

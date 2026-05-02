@@ -1,19 +1,11 @@
-"""Tier-2 security guardrail tests for the shared path helpers.
+"""Security-guardrail regression tests for the shared path helpers.
 
-These tests are the audit-grounded regression coverage for the
-path-handling boundary referenced by:
-
-- `.vault/audit/2026-04-17-path-handling-safety-review-audit.md`
-- `.vault/audit/2026-04-30-secure-persistence-foundation-final-security-audit.md`
-
-The ADR's restructure Tier-2 supersession gate (`Vault-corpus
-supersession` section) requires that every security-sensitive
-guardrail named in those audits has an explicit unit test that
-passes against the canonical path AND fails against bypass shapes.
-This module provides that coverage. It survives the keystone
-relocation: `aeat.core.paths` moves to `aeat.core.paths` in Step 7;
-this test file moves with it (`aeat._test_paths` →
-`aeat.core._test_paths`).
+Pinned regression coverage for the path-handling boundary exposed by
+:mod:`aeat.core.paths`. Each guardrail must pass against the canonical
+shapes (filename tokens, nested forward-slash subpaths) AND fail closed
+against every known bypass shape (parent traversal, shell
+metacharacters, absolute-looking inputs, dotfiles, overlong tokens,
+backslash-as-separator on Windows).
 """
 
 from __future__ import annotations

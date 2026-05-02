@@ -3,31 +3,27 @@
 Provides the typed schema, file-backed loader, query API, verification
 report, and raw-manual fetcher for the annual AEAT *Manual práctico de
 Renta* and *Manual práctico de IVA* handbooks. The handbook is the
-*de facto* rule book for every modelo the project files, and every
-downstream issue (casilla DB ``#23``, schema extractor ``#9``,
-self-healing sync ``#11``, future filing modules) consumes this
-schema.
+*de facto* rule book for every modelo the project files, and the
+casilla catalogue, schema extractor, and downstream filing modules all
+consume this schema.
 
-Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.domain.manuals`` and MUST NOT reach into private
-``_schema``, ``_loader``, ``_verify``, ``_fetch``, or ``_ids``
+Public surface: callers from outside this subpackage must import
+exclusively from :mod:`aeat.domain.manuals` and MUST NOT reach into the
+private :mod:`~aeat.domain.manuals._schema`,
+:mod:`~aeat.domain.manuals._loader`, :mod:`~aeat.domain.manuals._verify`,
+:mod:`~aeat.domain.manuals._fetch`, or :mod:`~aeat.domain.manuals._ids`
 modules.
 
-Example:
-    ```python
-    from . import ManualId, ManualPart, fetch_manual_part, load_manual
-
-    # Materialise the raw PDF + manifest (first run only):
-    result = fetch_manual_part(
-        manual_id=ManualId.RENTA,
-        year=2025,
-        part=ManualPart.PARTE_1,
-    )
-
-    # Load a manual after structure/ content has been populated
-    # by follow-up extraction/review workflows:
-    manual = load_manual(ManualId.RENTA, 2025, ManualPart.PARTE_1)
-    ```
+Examples:
+    >>> from aeat.domain.manuals import (
+    ...     ManualId, ManualPart, fetch_manual_part, load_manual,
+    ... )
+    >>> result = fetch_manual_part(
+    ...     manual_id=ManualId.RENTA,
+    ...     year=2025,
+    ...     part=ManualPart.PARTE_1,
+    ... )
+    >>> manual = load_manual(ManualId.RENTA, 2025, ManualPart.PARTE_1)
 """
 
 from __future__ import annotations
@@ -68,8 +64,8 @@ from ._schema import (
     SectionSource,
 )
 from ._verify import (
-    VerificationIssue,
-    VerificationReport,
+    ManualVerificationIssue,
+    ManualVerificationReport,
     raise_on_errors,
     verify_manual_dir,
 )
@@ -97,6 +93,8 @@ __all__ = [
     "ManualParseError",
     "ManualPart",
     "ManualReviewRequiredError",
+    "ManualVerificationIssue",
+    "ManualVerificationReport",
     "Paragraph",
     "PartSpec",
     "Rule",
@@ -106,8 +104,6 @@ __all__ = [
     "Section",
     "SectionRef",
     "SectionSource",
-    "VerificationIssue",
-    "VerificationReport",
     "fetch_manual_part",
     "find_rules",
     "generate_rule_id",

@@ -1,11 +1,12 @@
-"""Generic quarterly-declaración extractor (EPIC #305).
+"""Generic quarterly-declaración extractor base class.
 
 Every quarterly / monthly AEAT declaración the project supports shares
 the same shape: an NIF + ejercicio + período header, then each casilla
 as a line with its ID + label + a Spanish-formatted amount.
-:class:`GenericDeclaracionExtractor` lets new modelos land as a
-7-line subclass defining only the modelo, the template revision, and
-the list of casilla IDs.
+:class:`GenericDeclaracionExtractor` lets new modelos land as a small
+subclass that only declares the modelo's :class:`TemplateRevision`, the
+list of casilla IDs, and (optionally) the text-casilla / named-field
+primitives.
 """
 
 from __future__ import annotations
@@ -41,37 +42,63 @@ _PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]{1,8})", re.IGNORECASE
 class GenericDeclaracionExtractor(DeclaracionExtractor):
     """Line-anchored regex extractor shared across quarterly modelos.
 
-    Subclasses declare:
+    Subclasses pin the modelo identity and the casilla surface to scrape
+    by declaring class-level vars; the inherited :meth:`extract` walks
+    every primitive uniformly and returns a strict
+    :class:`DeclaracionFiling`.
 
-    - ``template_revision``: one :class:`TemplateRevision` ClassVar.
-    - ``casilla_ids``: ordered tuple of casilla IDs the modelo prints
-      with Spanish-decimal payloads.
-    - (optional) ``text_casilla_ids``: ordered tuple of casilla IDs
-      whose payloads are text (fechas, códigos, municipios, régimen,
-      S/N flags). Captured as ``str`` into
-      :class:`ExtractedCasilla.printed_value`.
-    - (optional) ``casilla_width``: width of the casilla-ID prefix
-      ``{int(casilla_id):02d}`` by default (Modelo 100 overrides to 4,
-      Modelo 200 to 5).
+    Three primitives are available, all optional:
+
+    - **decimal casillas** via :attr:`casilla_ids` — printed as
+      ``<ID> <label> <Spanish amount>`` on a single line.
+    - **text casillas** via :attr:`text_casilla_ids` — same shape, but
+      the trailing token is a free-form string (fecha, código, régimen,
+      etc.) captured into :class:`ExtractedCasilla.printed_value`.
+    - **named fields** via :attr:`named_field_patterns` — bespoke regexes
+      for modelos whose summary blocks print no numbered casilla ID
+      (e.g. 036, 037, 232, 369, 720).
+
+    Attributes:
+        template_revision: Per-subclass identifier (modelo + año + revision).
+        casilla_ids: Ordered tuple of casilla IDs printed with
+            Spanish-decimal payloads.
+        text_casilla_ids: Ordered tuple of casilla IDs whose payloads
+            are text. Captured into :class:`ExtractedCasilla.printed_value`
+            as ``str``.
+        text_labels: Map ``text_casilla_id → expected label text``.
+            Required when the label is multi-word so the truncation
+            detection pass can compute the expected value-token count;
+            omitting a label simply skips truncation detection for that
+            casilla.
+        casilla_width: Zero-pad width of the printed casilla-ID prefix.
+            Defaults to 2 (e.g. ``"01"``); Modelo 100 overrides to 4 and
+            Modelo 200 to 5.
+        named_field_patterns: Map ``field_id → raw regex pattern`` for
+            modelos whose summary blocks do NOT print numbered casilla
+            IDs. Each pattern must contain exactly one capture group for
+            the value.
     """
 
     template_revision: ClassVar[TemplateRevision]
     casilla_ids: ClassVar[tuple[str, ...]]
     text_casilla_ids: ClassVar[tuple[str, ...]] = ()
     text_labels: ClassVar[dict[str, str]] = {}
-    """Map ``text_casilla_id → expected label text``. Required when the
-    label is multi-word so the truncation-detection pass can calculate
-    the expected value-token count. Omitting a label means
-    truncation-detection is skipped for that casilla."""
     casilla_width: ClassVar[int] = 2
     named_field_patterns: ClassVar[dict[str, str]] = {}
-    """Map ``field_id → raw regex pattern`` for modelos whose summary
-    blocks do NOT print numbered casilla IDs (e.g. 036/037/232/369/720).
-    The pattern must include exactly one capture group for the value.
-    third primitive path complementing the decimal casilla_ids
-    and the text_casilla_ids primitives."""
 
     def __init_subclass__(cls, **kwargs: object) -> None:
+        """Validate primitive disjointness and pre-compile named-field regexes.
+
+        Ensures :attr:`casilla_ids`, :attr:`text_casilla_ids`, and
+        :attr:`named_field_patterns` are pair-wise disjoint (the
+        required-set must be unique), then compiles every named-field
+        pattern once at subclass-definition time so the per-PDF
+        :meth:`extract` call only re-uses cached :class:`re.Pattern`
+        objects.
+
+        Raises:
+            ValueError: When any two primitive sets share an ID.
+        """
         super().__init_subclass__(**kwargs)
         decimal_ids = getattr(cls, "casilla_ids", ())
         text_ids = getattr(cls, "text_casilla_ids", ())
@@ -150,6 +177,17 @@ class GenericDeclaracionExtractor(DeclaracionExtractor):
         }
 
     def extract(self, pdf_path: Path) -> DeclaracionFiling:
+        """Parse ``pdf_path`` and return a typed :class:`DeclaracionFiling` record.
+
+        Resolves the tax-id, ejercicio and período fields, then walks the
+        configured numeric and text casilla regexes to populate the
+        casillas tuple. Each missing casilla emits an
+        :class:`ExtractionWarning` rather than failing the parse.
+
+        Raises:
+            DeclaracionParseError: When a required header field cannot
+                be located on the page.
+        """
         pages = extract_pages_text(pdf_path)
         full_text = _normalise_pdf_text("\n".join(pages))
 

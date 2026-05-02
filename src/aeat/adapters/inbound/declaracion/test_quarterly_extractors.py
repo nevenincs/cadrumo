@@ -1,4 +1,11 @@
-"""Round-trip tests for the quarterly-modelo extractors (#305)."""
+"""Round-trip tests for the quarterly-cadence modelo extractors.
+
+Drives every shipped Modelo 111 / 115 / 123 / 131 / 200 / 202 / 232 / 369
+/ 720 / 840 extractor through the synthetic generator, asserts the
+declared casillas survive the PDF round-trip, and exercises the
+shared label-regex / text-value / named-field primitives that back
+those extractors.
+"""
 
 from __future__ import annotations
 
@@ -60,6 +67,7 @@ def _make_pdf(
     filename: str,
     thousands_sep: str = ".",
 ) -> Path:
+    """Render a synthetic quarterly modelo PDF and return its on-disk path."""
     from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
         QuarterlyGenParams,
         generate,
@@ -84,7 +92,10 @@ def _make_pdf(
 
 
 class TestModelo111V2025Extractor:
+    """Round-trip coverage for the Modelo 111 v2025 extractor."""
+
     def test_roundtrip_all_21_casillas(self, tmp_path: Path) -> None:
+        """Every Modelo 111 casilla survives the synthetic round-trip."""
         values = {k: f"{100 * i + 50}.00" for i, k in enumerate(_MODELO_111_LABELS, start=1)}
         pdf = _make_pdf(
             tmp_path,
@@ -102,6 +113,7 @@ class TestModelo111V2025Extractor:
             assert by_id[cid] == Decimal(raw)
 
     def test_partial_extraction_emits_warnings(self, tmp_path: Path) -> None:
+        """Dropping casillas degrades extraction status and emits warnings."""
         sparse = {k: "1.00" for k in list(_MODELO_111_LABELS)[:11]}
         pdf = _make_pdf(
             tmp_path,
@@ -116,7 +128,10 @@ class TestModelo111V2025Extractor:
 
 
 class TestModelo115V2025Extractor:
+    """Round-trip coverage for the Modelo 115 v2025 extractor."""
+
     def test_roundtrip_all_6_casillas(self, tmp_path: Path) -> None:
+        """All six Modelo 115 casillas round-trip end-to-end."""
         values = {
             "01": "2.00",
             "02": "12000.00",
@@ -141,7 +156,10 @@ class TestModelo115V2025Extractor:
 
 
 class TestRegistryKnowsNewExtractors:
+    """The extractor registry exposes every shipped modelo / year key."""
+
     def test_registry_lists_all_shipped_modelos(self) -> None:
+        """Every shipped (modelo, año, revision) key is registered."""
         from ._extractors import _REGISTRY
 
         keys = set(_REGISTRY.keys())
@@ -151,12 +169,12 @@ class TestRegistryKnowsNewExtractors:
         # Core quarterly-cadence modelos.
         assert ("111", 2025, "2025.01") in keys
         assert ("115", 2025, "2025.01") in keys
-        assert ("123", 2024, "2024.01") in keys  # issue #320
+        assert ("123", 2024, "2024.01") in keys
         assert ("123", 2025, "2025.01") in keys
-        assert ("123", 2026, "2026.01") in keys  # issue #320
-        assert ("130", 2024, "2024.01") in keys  # issue #321
+        assert ("123", 2026, "2026.01") in keys
+        assert ("130", 2024, "2024.01") in keys
         assert ("130", 2025, "2025.01") in keys
-        assert ("130", 2026, "2026.01") in keys  # issue #321
+        assert ("130", 2026, "2026.01") in keys
         assert ("131", 2025, "2025.01") in keys
         assert ("200", 2025, "2025.01") in keys
         assert ("202", 2025, "2025.01") in keys
@@ -223,6 +241,7 @@ def _make_annual_pdf(
     ejercicio: str = "2025",
     period_printed: str = "0A",
 ) -> Path:
+    """Render a synthetic annual modelo PDF and return its on-disk path."""
     from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
         QuarterlyGenParams,
         generate,
@@ -245,7 +264,10 @@ def _make_annual_pdf(
 
 
 class TestModelo180V2025Extractor:
+    """Round-trip coverage for the Modelo 180 v2025 extractor."""
+
     def test_roundtrip_annual_summary(self, tmp_path: Path) -> None:
+        """Modelo 180 annual summary casillas round-trip end-to-end."""
         values = {"01": "5.00", "02": "48000.00", "03": "9120.00", "04": "0.00"}
         pdf = _make_annual_pdf(
             tmp_path,
@@ -264,7 +286,10 @@ class TestModelo180V2025Extractor:
 
 
 class TestModelo190V2025Extractor:
+    """Round-trip coverage for the Modelo 190 v2025 extractor."""
+
     def test_roundtrip_21_casillas(self, tmp_path: Path) -> None:
+        """The 21 Modelo 190 casillas survive the synthetic round-trip."""
         values = {k: f"{100 * i}.00" for i, k in enumerate(_MODELO_190_LABELS, start=1)}
         pdf = _make_annual_pdf(
             tmp_path,
@@ -280,7 +305,10 @@ class TestModelo190V2025Extractor:
 
 
 class TestModelo347V2025Extractor:
+    """Round-trip coverage for the Modelo 347 v2025 extractor."""
+
     def test_roundtrip_summary(self, tmp_path: Path) -> None:
+        """Modelo 347 summary totals round-trip end-to-end."""
         values = {
             "01": "12.00",
             "02": "56000.00",
@@ -300,7 +328,10 @@ class TestModelo347V2025Extractor:
 
 
 class TestModelo390V2025Extractor:
+    """Round-trip coverage for the Modelo 390 v2025 extractor."""
+
     def test_roundtrip_annual_summary(self, tmp_path: Path) -> None:
+        """The 15 MVP Modelo 390 casillas survive the synthetic round-trip."""
         values = {k: f"{100 * (i + 1)}.00" for i, k in enumerate(_MODELO_390_LABELS)}
         pdf = _make_annual_pdf(
             tmp_path,
@@ -346,7 +377,10 @@ _MODELO_349_LABELS = {
 
 
 class TestModelo123V2025Extractor:
+    """Round-trip coverage for the Modelo 123 v2025 extractor."""
+
     def test_roundtrip_quarterly_summary(self, tmp_path: Path) -> None:
+        """Modelo 123 quarterly summary casillas round-trip end-to-end."""
         values = {
             "01": "1.00",
             "02": "4.00",
@@ -377,7 +411,10 @@ class TestModelo123V2025Extractor:
 
 
 class TestModelo193V2025Extractor:
+    """Round-trip coverage for the Modelo 193 v2025 extractor."""
+
     def test_roundtrip_annual_summary(self, tmp_path: Path) -> None:
+        """Modelo 193 annual summary casillas round-trip end-to-end."""
         values = {"01": "12.00", "02": "45000.00", "03": "8550.00"}
         pdf = _make_annual_pdf(
             tmp_path,
@@ -393,7 +430,10 @@ class TestModelo193V2025Extractor:
 
 
 class TestModelo349V2025Extractor:
+    """Round-trip coverage for the Modelo 349 v2025 extractor."""
+
     def test_roundtrip_monthly_summary(self, tmp_path: Path) -> None:
+        """Modelo 349 monthly summary casillas round-trip end-to-end."""
         values = {
             "01": "7.00",
             "02": "36000.00",
@@ -463,7 +503,10 @@ _MODELO_202_LABELS = {
 
 
 class TestModelo131V2025Extractor:
+    """Round-trip coverage for the Modelo 131 v2025 extractor."""
+
     def test_roundtrip_quarterly_modulos(self, tmp_path: Path) -> None:
+        """Modelo 131 (módulos) quarterly casillas round-trip end-to-end."""
         values = {k: f"{100 * i}.00" for i, k in enumerate(_MODELO_131_LABELS, start=1)}
         pdf = _make_pdf(
             tmp_path,
@@ -482,7 +525,10 @@ class TestModelo131V2025Extractor:
 
 
 class TestModelo200V2025Extractor:
+    """Round-trip coverage for the Modelo 200 (IS anual) v2025 extractor."""
+
     def test_roundtrip_liquidacion_page_14(self, tmp_path: Path) -> None:
+        """The five-digit Modelo 200 liquidación casillas round-trip end-to-end."""
         values = {k: f"{100 * (i + 1)}.00" for i, k in enumerate(_MODELO_200_LABELS)}
         pdf = _make_annual_pdf(
             tmp_path,
@@ -495,15 +541,18 @@ class TestModelo200V2025Extractor:
         assert filing.modelo == "200"
         assert filing.period == "2025A"
         assert filing.extraction_status is ExtractionStatus.COMPLETE
-        # MEDIUM-2 + 4: assert the full five-digit casilla dict —
-        # one spot-check is not enough to prove the casilla_width=5 path.
+        # Assert the full five-digit casilla dict — one spot-check is
+        # not enough to prove the casilla_width=5 path.
         by_id = {v.casilla_id: v.printed_value for v in filing.values}
         for cid, raw in values.items():
             assert by_id[cid] == Decimal(raw), f"Casilla {cid} did not round-trip"
 
 
 class TestModelo202V2025Extractor:
+    """Round-trip coverage for the Modelo 202 (pago fraccionado IS) extractor."""
+
     def test_roundtrip_installment(self, tmp_path: Path) -> None:
+        """A pago-fraccionado installment round-trips end-to-end."""
         values = {
             "16": "100000.00",
             "17": "25.00",
@@ -551,11 +600,16 @@ _MODELO_840_VALUES = {
 
 
 class TestSoftHyphenLineBreakNormalisation:
-    """`_normalise_pdf_text` stitches hyphenated labels."""
+    """``_normalise_pdf_text`` stitches hyphenated labels.
+
+    The normaliser must collapse letter-hyphen-newline-letter
+    sequences (which pdfplumber emits on narrow AEAT columns) so the
+    label-anchored regexes match, while leaving bullet-style and
+    digit-boundary hyphen-newline pairs intact.
+    """
 
     def test_hyphen_newline_stitched_before_regex(self) -> None:
-        """A label broken across a line by `-\\n` re-stitches so the
-        label-anchored regex still matches."""
+        """A ``-\\n``-broken label re-stitches into a single word."""
         from ._generic_extractor import _normalise_pdf_text
 
         # Input as pdfplumber would emit on a narrow AEAT column:
@@ -566,12 +620,10 @@ class TestSoftHyphenLineBreakNormalisation:
         assert "-\n" not in normalised
 
     def test_bullet_leading_dash_not_stitched(self) -> None:
-        """a line that starts with `-\\n` (bullet-style) must
-        NOT collapse into the following word.
+        """A bullet-style ``-\\n`` must not collapse into the next word.
 
-         `_normalise_pdf_text` used a blind
-        `.replace("-\\n", "")` which would eat the bullet dash and
-        merge it into whatever followed. The narrowed regex now
+        A blind ``.replace("-\\n", "")`` would eat the bullet dash
+        and merge it into whatever followed. The narrowed regex
         requires alphanumeric context on BOTH sides.
         """
         from ._generic_extractor import _normalise_pdf_text
@@ -592,10 +644,10 @@ class TestSoftHyphenLineBreakNormalisation:
         assert "-\n" in normalised
 
     def test_digit_boundary_not_stitched(self) -> None:
-        """digit-boundary hyphen-newline pairs MUST NOT stitch.
+        """Digit-boundary hyphen-newline pairs must not stitch.
 
         An adversarial wrap like ``9-\\n10`` would collapse to
-        ``910`` under the pre-59a `\\w`-based lookaround. The tightened
+        ``910`` under a ``\\w``-based lookaround. The tightened
         letters-only lookaround preserves the original boundary.
         """
         from ._generic_extractor import _normalise_pdf_text
@@ -609,7 +661,7 @@ class TestSoftHyphenLineBreakNormalisation:
         assert _normalise_pdf_text("foo_-\n_bar") == "foo_-\n_bar"
 
     def test_letter_boundary_still_stitches(self) -> None:
-        """letter-on-letter hyphen stitching still works."""
+        """Letter-on-letter hyphen stitching still works after the tightening."""
         from ._generic_extractor import _normalise_pdf_text
 
         # ASCII letter boundary — still stitches.
@@ -620,7 +672,10 @@ class TestSoftHyphenLineBreakNormalisation:
 
 
 class TestGenericExtractorInvariants:
+    """Subclassing invariants enforced by :class:`GenericDeclaracionExtractor`."""
+
     def test_casilla_and_text_casilla_overlap_rejected(self) -> None:
+        """A subclass that overlaps decimal and text casilla ids is rejected."""
         from typing import ClassVar
 
         from ._generic_extractor import GenericDeclaracionExtractor
@@ -636,7 +691,7 @@ class TestGenericExtractorInvariants:
                 text_casilla_ids: ClassVar[tuple[str, ...]] = ("01",)
 
     def test_ambiguous_text_label_primitive_match_count(self) -> None:
-        """Duplicate text-value lines surface match_count>1 from apply_label_regex."""
+        """Duplicate text-value lines surface ``match_count>1`` from ``apply_label_regex``."""
         import re as _re
 
         from ..pdf._label_regex import TEXT_VALUE_GROUP, apply_label_regex
@@ -656,18 +711,19 @@ class TestGenericExtractorInvariants:
 
 
 class TestModelo840TextCasillas:
-    """Modelo 840 uses the text-value primitive."""
+    """Modelo 840 uses the text-value primitive for non-numeric casillas."""
 
     def test_truncation_warning_emitted_for_multi_word_value(self, tmp_path: Path) -> None:
-        """multi-word values surface a truncation warning + confidence drop."""
+        """Multi-word values surface a truncation warning and confidence drop."""
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
             generate,
         )
 
         labels = {"38": "Municipio"}
-        # Simulate Kent filing for "Las Palmas" — the naive TEXT_VALUE_GROUP
-        # would capture "Palmas" and silently drop "Las"; it.
+        # Simulate a filing for "Las Palmas" — the naive
+        # TEXT_VALUE_GROUP would capture "Palmas" and silently drop
+        # "Las".
         values = {"38": "Las Palmas"}
         params = QuarterlyGenParams(
             modelo="840",
@@ -691,7 +747,7 @@ class TestModelo840TextCasillas:
         assert any(w.casilla_id == "38" and w.code == "text-value-possibly-truncated" for w in filing.warnings)
 
     def test_missing_text_casilla_emits_not_found_warning(self, tmp_path: Path) -> None:
-        """a text casilla absent from the PDF surfaces as `casilla-not-found`."""
+        """A text casilla absent from the PDF surfaces as ``casilla-not-found``."""
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
             generate,
@@ -721,6 +777,7 @@ class TestModelo840TextCasillas:
         assert filing.extraction_status is ExtractionStatus.FAILED
 
     def test_text_payload_roundtrip(self, tmp_path: Path) -> None:
+        """Every Modelo 840 text-value casilla round-trips end-to-end."""
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
             QuarterlyGenParams,
             generate,
@@ -755,7 +812,19 @@ def _draw_named_pdf(
     lines: list[str],
     filename: str,
 ) -> Path:
-    """Render a bespoke named-field PDF via the generator's shared primitives."""
+    """Render a bespoke named-field PDF via the generator's shared primitives.
+
+    Args:
+        tmp_path: Temporary directory pytest provides for the test.
+        modelo: Modelo code printed in the PDF header.
+        period_printed: Period token printed in the header
+            (e.g., ``0A`` or ``1T``).
+        lines: Free-form text lines to draw below the header.
+        filename: Target filename within ``tmp_path``.
+
+    Returns:
+        Filesystem path of the freshly written PDF.
+    """
     import io
 
     from reportlab.lib.units import mm
@@ -788,9 +857,10 @@ def _draw_named_pdf(
 
 
 class TestModelo036MultiWordValues:
-    """036 captures multi-word régimen values without truncation."""
+    """Modelo 036 captures multi-word régimen values without truncation."""
 
     def test_recargo_de_equivalencia_captured_fully(self, tmp_path: Path) -> None:
+        """Regimen-special values such as ``Recargo de equivalencia`` survive intact."""
         pdf = _draw_named_pdf(
             tmp_path,
             modelo="036",
@@ -812,9 +882,10 @@ class TestModelo036MultiWordValues:
 
 
 class TestModelo369SoportadoExclusion:
-    """IVA soportado line must NOT match total_cuota_iva (devengada)."""
+    """The IVA soportado line must not match ``total_cuota_iva`` (devengada)."""
 
     def test_soportado_line_rejected(self, tmp_path: Path) -> None:
+        """The devengada line wins over the soportado line in ``total_cuota_iva``."""
         pdf = _draw_named_pdf(
             tmp_path,
             modelo="369",
@@ -834,9 +905,10 @@ class TestModelo369SoportadoExclusion:
 
 
 class TestModelo369NamedFieldExtraction:
-    """Modelo 369 OSS/IOSS summary totals via named-field primitive."""
+    """Modelo 369 OSS/IOSS summary totals via the named-field primitive."""
 
     def test_roundtrip_summary_totals(self, tmp_path: Path) -> None:
+        """The Modelo 369 summary totals round-trip end-to-end."""
         pdf = _draw_named_pdf(
             tmp_path,
             modelo="369",
@@ -857,9 +929,10 @@ class TestModelo369NamedFieldExtraction:
 
 
 class TestModelo720NamedFieldExtraction:
-    """Modelo 720 per-clave counters via named-field primitive."""
+    """Modelo 720 per-clave counters via the named-field primitive."""
 
     def test_roundtrip_per_clave_counters(self, tmp_path: Path) -> None:
+        """The per-clave counters (cuentas / valores / inmuebles) round-trip end-to-end."""
         pdf = _draw_named_pdf(
             tmp_path,
             modelo="720",
@@ -879,9 +952,10 @@ class TestModelo720NamedFieldExtraction:
 
 
 class TestModelo036NamedFieldExtraction:
-    """Modelo 036 censal fields via named-field primitive."""
+    """Modelo 036 censal fields via the named-field primitive."""
 
     def test_roundtrip_censal_fields(self, tmp_path: Path) -> None:
+        """The Modelo 036 censal named fields round-trip end-to-end."""
         pdf = _draw_named_pdf(
             tmp_path,
             modelo="036",
@@ -905,10 +979,10 @@ class TestModelo036NamedFieldExtraction:
 
 
 class TestModelo232NamedFieldExtraction:
-    """Modelo 232 uses the named-field primitive."""
+    """Modelo 232 uses the named-field primitive for bloque counters."""
 
     def test_roundtrip_named_fields(self, tmp_path: Path) -> None:
-        """Render a 232 PDF with the three bloque counters in the synthetic text layer."""
+        """Render a 232 PDF with three bloque counters and assert the round-trip."""
         import io
 
         from reportlab.lib.units import mm
@@ -948,23 +1022,23 @@ class TestModelo232NamedFieldExtraction:
 
 
 class TestHeaderOnlyExtractors:
-    """Identity / error-branch coverage for extractors with no content primitive.
+    """Identity and error-branch coverage for header-only extractor families.
 
-    all modelos with no numbered-casilla summary
-    (036/037/232/369/720/840) onto the text-value or named-field
-    primitive, so no modelo remains unconditionally UNVERIFIABLE. This
-    class now hosts the missing-NIF error-branch test; the sentinel
-    below lets a future regression surface if anyone reintroduces a
-    header-only-only extractor.
+    Every modelo with no numbered-casilla summary (036 / 037 / 232 /
+    369 / 720 / 840) is wired onto either the text-value or
+    named-field primitive so no modelo remains unconditionally
+    ``UNVERIFIABLE``. This class hosts the missing-NIF error-branch
+    test plus a sentinel that fires if a contributor reintroduces a
+    header-only extractor.
     """
 
     def test_no_modelo_remains_unconditionally_header_only(self) -> None:
-        """Sentinel: every GenericDeclaracionExtractor subclass has a content primitive.
+        """Every :class:`GenericDeclaracionExtractor` subclass has a content primitive.
 
-        Modelo 130 and Modelo 303 (v2025) extend ``DeclaracionExtractor``
-        directly with their own bespoke casilla sets — this sentinel
-        targets the generic base only, which is the MVP pattern for
-        every other modelo.
+        Modelo 130 and Modelo 303 (v2025) extend
+        :class:`DeclaracionExtractor` directly with their own bespoke
+        casilla sets — this sentinel targets the generic base only,
+        which is the MVP pattern for every other modelo.
         """
         from ._extractors import _REGISTRY
         from ._generic_extractor import GenericDeclaracionExtractor
@@ -985,7 +1059,7 @@ class TestHeaderOnlyExtractors:
         )
 
     def test_header_only_missing_nif_raises(self, tmp_path: Path) -> None:
-        """A PDF with no NIF surfaces DeclaracionParseError even for header-only modelos."""
+        """A PDF with no NIF raises :exc:`DeclaracionParseError` even for header-only modelos."""
         # Render a Modelo 232 PDF with an empty tax_id — the _TAX_ID_RE regex
         # requires 8+ chars, so an empty id produces no header match.
         from tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
@@ -1013,8 +1087,10 @@ class TestHeaderOnlyExtractors:
 
 
 class TestModelo303PostHAC819Extractor:
+    """Routing for the Modelo 303 post-HAC/819/2024 revision."""
+
     def test_override_routes_to_2024_orden_819(self, tmp_path: Path) -> None:
-        """Explicit --template-revision override dispatches to the post-HAC extractor."""
+        """An explicit ``--template-revision`` override dispatches to the post-HAC extractor."""
         values = {
             k: "100.00"
             for k in (
@@ -1066,28 +1142,26 @@ class TestModelo303PostHAC819Extractor:
 
 
 class TestThousandsSeparatorThreading:
-    """thousands_sep plumbing through the synthetic generator.
+    """``thousands_sep`` plumbing through the synthetic generator.
 
-    claimed the ``format_amount(thousands_sep=...)``
-    opt-in was never threaded through ``draw_casilla_box`` /
-    ``QuarterlyGenParams``. it through, and this test
-    asserts the param reaches the rendered PDF text stream.
-
-    Scope clarification. A parametrized end-to-end
-    NBSP round-trip test was prototyped and found infeasible via the
-    reportlab synthetic-PDF pipeline: reportlab's Helvetica font lacks
-    a U+202F (narrow NBSP) glyph (substituted as literal ``"n"``), and
-    pdfplumber silently canonicalises U+00A0 (NBSP) to ASCII space in
-    its extracted text — which cannot be safely restitched at the
-    normaliser layer without false-positives on label-embedded casilla
+    Asserts that ``format_amount(thousands_sep=...)`` reaches the
+    rendered PDF text stream via ``draw_casilla_box`` /
+    ``QuarterlyGenParams``. A parametrised end-to-end NBSP
+    round-trip is infeasible through reportlab + pdfplumber:
+    reportlab's Helvetica font lacks a U+202F (narrow NBSP) glyph
+    (substituted as literal ``"n"``), and pdfplumber silently
+    canonicalises U+00A0 (NBSP) to ASCII space in its extracted
+    text — which cannot be safely restitched at the normaliser
+    layer without false-positives on label-embedded casilla
     references. Real Sede Electrónica PDFs render through proper
     Unicode-capable fonts and preserve NBSP through the
-    pdfplumber-equivalent extraction path, so the fix
-    remains load-bearing in production while this synthetic test is
-    limited to the dot-separator + string-layer coverage.
+    pdfplumber-equivalent extraction path, so the production fix
+    remains load-bearing while this synthetic test is limited to
+    dot-separator + string-layer coverage.
     """
 
     def test_dot_separator_is_the_canonical_default(self, tmp_path: Path) -> None:
+        """The dot thousands separator survives the synthetic round-trip."""
         values = {
             "01": "5.00",
             "02": "12500.00",
@@ -1115,13 +1189,12 @@ class TestThousandsSeparatorThreading:
             assert by_id[cid] == Decimal(raw), f"mismatch on casilla {cid}: expected {raw}, got {by_id[cid]}"
 
     def test_hyphenated_label_stitched_by_normaliser(self, tmp_path: Path) -> None:
-        """closure: end-to-end hyphenation at extractor layer.
+        """End-to-end hyphenation stitching at the extractor layer.
 
         AEAT multi-column templates wrap long labels as
-        ``Reten-\\nciones``. The / /
-        ``_normalise_pdf_text`` regex stitches letter-hyphen-newline-
-        letter boundaries back together. Prior coverage was string-
-        transform only; this test renders a synthetic PDF with a real
+        ``Reten-\\nciones``. The ``_normalise_pdf_text`` regex
+        stitches letter-hyphen-newline-letter boundaries back
+        together. This test renders a synthetic PDF with a real
         wrapped label, streams it through pdfplumber and the
         extractor, and asserts the casilla value is captured.
         """
@@ -1176,15 +1249,12 @@ class TestThousandsSeparatorThreading:
         )
 
     def test_format_amount_nbsp_matches_spanish_amount_regex(self) -> None:
-        """String-layer threading: ``format_amount(thousands_sep="\\xa0")``
-        MUST produce NBSP-separated output that ``SPANISH_AMOUNT_GROUP``
-        accepts, so the fix remains exercised at the
-        primitive level even though the full PDF round-trip is
-        infeasible through reportlab+pdfplumber.
+        """``format_amount(thousands_sep="\\xa0")`` produces text the regex accepts.
 
-        rename: previously named
-        ``test_thousands_sep_reaches_draw_casilla_box`` which implied
-        generator-level coverage it did not deliver.
+        String-layer guard: ``SPANISH_AMOUNT_GROUP`` must match
+        NBSP-separated output even though the full PDF round-trip is
+        infeasible through reportlab + pdfplumber. This keeps the
+        production fix exercised at the primitive level.
         """
         import re
 

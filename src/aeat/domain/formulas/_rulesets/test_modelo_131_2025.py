@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 131 2025 ruleset."""
+"""Unit tests for the Modelo 131 2025 ruleset.
+
+Exercises the formula-engine derivations and externally-anchored worked
+example for :data:`aeat.domain.formulas._rulesets.MODELO_131_2025`. Covers
+the 2 % rates on volumen ventas (módulos) and volumen ingresos agrícolas,
+plus the resultado-a-ingresar chain.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Consistent Q1 2025 fixture for estimación objetiva autónomo."""
+    """Consistent Q1 2025 fixture for an estimación-objetiva autónomo."""
     # 01: modules income (input, informativa).
     # 02: pago fraccionado del trimestre (input, user-computed).
     # 03: volumen ventas 10_000 ⇒ 04 = 200 (2%).
@@ -42,6 +48,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo131Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 131 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_131_2025,
@@ -51,14 +59,14 @@ class TestModelo131Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_two_percent_ventas(self) -> None:
-        """Casilla 04 must be exactly 2% of 03.
+        """Casilla 04 must be exactly 2 % of 03.
 
-        The engine derives computed casillas from NON-computed inputs
+        The engine derives computed casillas from non-computed inputs
         and uses the derived values downstream. When only 04 is
         corrupted, 07 is recomputed from user_02 + derived_04 +
         derived_06 = 500 + 200 + 100 = 800, matching the user's 800;
         downstream checks stay clean. Only 04 itself flags
-        (user=150 vs. derived=200). L1.
+        (user=150 vs. derived=200).
         """
         provided = _provided()
         provided["04"] = Decimal("150.00")  # wrong: engine derives 200 from 03=10000
@@ -72,7 +80,7 @@ class TestModelo131Ruleset:
         assert offenders == {"04"}
 
     def test_total_previo_sum_detection(self) -> None:
-        """Casilla 07 = 02 + 04 + 06; an off-by-50 typo surfaces."""
+        """Casilla 07 = 02 + 04 + 06; an off-by-50 € typo surfaces."""
         provided = _provided()
         provided["07"] = Decimal("750.00")  # should be 800
         report = Engine().audit_against(
@@ -100,18 +108,18 @@ class TestModelo131Ruleset:
         assert len(MODELO_131_2025.formulas) == 6
 
     def test_external_worked_example_rirpf_110(self) -> None:
-        """External-anchored worked example (closure).
+        """Externally-anchored worked example for RIRPF art. 110 módulos rates.
 
-        Provenance: RD 439/2007 (RIRPF) art. 110.1.c fixes the 2%
-        rate on volumen ingresos agricolas/ganaderas/forestales/
-        pesqueras; art. 110.1.b fixes the 4%/3%/2% rate (scaled by
-        employee count, 2% without employees) on the rendimiento
-        neto resultante for modulos activities — both rates apply
+        Provenance: RD 439/2007 (RIRPF) art. 110.1.c fixes the 2 %
+        rate on volumen ingresos agrícolas / ganaderas / forestales /
+        pesqueras; art. 110.1.b fixes the 4 % / 3 % / 2 % rate (scaled by
+        employee count, 2 % without employees) on the rendimiento
+        neto resultante for módulos activities — both rates apply
         to the volumen-ventas proxy used in Modelo 131 per Orden
         EHA/672/2007 instrucciones.
 
-        Scenario: Q3 2025 autonomo on modulos with 25 000 volumen
-        ventas (03) and 10 000 volumen ingresos agricolas (05):
+        Scenario: Q3 2025 autónomo on módulos with 25 000 € volumen
+        ventas (03) and 10 000 € volumen ingresos agrícolas (05):
         - casilla 04 = 25 000 x 2% = 500.00 per RIRPF art. 110.1.b
         - casilla 06 = 10 000 x 2% = 200.00 per RIRPF art. 110.1.c
         - casilla 07 = 02 + 04 + 06 = 150 + 500 + 200 = 850.

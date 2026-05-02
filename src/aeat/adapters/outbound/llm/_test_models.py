@@ -1,4 +1,10 @@
-"""Unit tests for public LLM models."""
+"""Unit tests for the public pydantic models exported by the LLM subpackage.
+
+Verifies JSON round-trip fidelity for
+:class:`aeat.adapters.outbound.llm.LLMRequest`,
+:class:`aeat.adapters.outbound.llm.LLMResponse`, and
+:class:`aeat.adapters.outbound.llm.Translation`.
+"""
 
 from __future__ import annotations
 

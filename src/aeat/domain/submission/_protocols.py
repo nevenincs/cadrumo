@@ -28,32 +28,53 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict
 
 from ...core.i18n import Translatable
-from .._identifiers import ModeloIdentifier
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 @runtime_checkable
 class AuthProviderDescriptionLike(Protocol):
-    """Submission-facing shape returned by an auth provider."""
+    """Submission-facing shape returned by an auth provider.
+
+    Attributes:
+        kind: Provider identifier (kept as ``object`` so the protocol does
+            not couple submission to the auth subpackage's enum).
+        label: Human-readable provider name.
+        configured: Whether the provider's required settings are present.
+        available: Whether a session can currently be established.
+        subject: Subject DN (or equivalent identity string), if known.
+        expires_on: Expiry date for the underlying credential, if known.
+    """
 
     @property
-    def kind(self) -> object: ...
+    def kind(self) -> object:
+        """Provider kind identifier."""
+        ...
 
     @property
-    def label(self) -> str: ...
+    def label(self) -> str:
+        """Human-readable provider name."""
+        ...
 
     @property
-    def configured(self) -> bool: ...
+    def configured(self) -> bool:
+        """Whether the provider's required settings are present."""
+        ...
 
     @property
-    def available(self) -> bool: ...
+    def available(self) -> bool:
+        """Whether a session can currently be established."""
+        ...
 
     @property
-    def subject(self) -> str | None: ...
+    def subject(self) -> str | None:
+        """Subject DN or identity string when known, else ``None``."""
+        ...
 
     @property
-    def expires_on(self) -> date | None: ...
+    def expires_on(self) -> date | None:
+        """Expiry date for the underlying credential, when known."""
+        ...
 
 
 @runtime_checkable
@@ -61,7 +82,9 @@ class AuthProviderProbe(Protocol):
     """Narrow submission-facing auth-provider surface."""
 
     @property
-    def kind(self) -> object: ...
+    def kind(self) -> object:
+        """Provider kind identifier consumed by the preflight gate."""
+        ...
 
     def describe(self) -> AuthProviderDescriptionLike:
         """Return a safe description of the active auth provider."""

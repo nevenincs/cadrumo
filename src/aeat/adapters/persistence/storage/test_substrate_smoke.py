@@ -1,11 +1,10 @@
-"""End-to-end smoke test for the persistence substrate.
+"""End-to-end smoke test for the encrypted-persistence substrate.
 
-The smoke runs the full chain: master-key provider (file backend) →
-encrypted blob store → secret store put/get/delete → envelope round-
-trip → redaction → file-lock contention. It is deliberately broader
-than the per-module unit tests so a regression in any layer trips
-this single test rather than going undetected until a downstream
-consumer fails.
+Runs the full chain: master-key provider (file backend) -> encrypted
+blob store -> secret store put/get/delete -> envelope round-trip ->
+redaction -> file-lock contention. Deliberately broader than the
+per-module unit tests so a regression in any layer trips this single
+test rather than going undetected until a downstream consumer fails.
 """
 
 from __future__ import annotations

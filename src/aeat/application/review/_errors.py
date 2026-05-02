@@ -1,8 +1,11 @@
 """Error hierarchy for the unified review queue.
 
-All review-layer errors inherit from :class:`ReviewError` which in
-turn inherits from :class:`aeat.core.errors.AeatError` per the project
-mandate.
+All review-layer errors inherit from :class:`ReviewError`, which in
+turn inherits from :class:`aeat.core.errors.AeatError` per the
+project's package-wide error-base mandate. Callers can therefore catch
+either :class:`ReviewError` for review-specific failures or the
+package-wide :exc:`aeat.core.errors.AeatError` to handle every aeat
+domain error uniformly.
 """
 
 from __future__ import annotations
@@ -23,6 +26,11 @@ class ReviewKindReservedError(ReviewError):
 
     Carries the blocking reason returned by
     :func:`aeat.application.review._enums.reserved_kind_reason`.
+
+    Attributes:
+        token: The ``--kind`` value supplied by the user.
+        reason: Human-readable explanation naming the blocking upstream
+            record type.
     """
 
     def __init__(self, token: str, reason: str) -> None:
@@ -31,7 +39,7 @@ class ReviewKindReservedError(ReviewError):
         Args:
             token: The ``--kind`` value supplied by the user.
             reason: Human-readable explanation naming the blocking
-                upstream issue or record type.
+                upstream record type.
         """
         super().__init__(f"--kind {token!r} is reserved but not yet emitted: {reason}")
         self.token = token

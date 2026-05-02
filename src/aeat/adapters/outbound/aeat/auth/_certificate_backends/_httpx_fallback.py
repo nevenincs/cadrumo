@@ -3,8 +3,10 @@
 Extracts PEM cert + key material from the in-memory PKCS#12, writes
 them to securely-permissioned temp files, runs an HTTPS GET via
 :mod:`httpx`, and unconditionally deletes the temp files in a
-``try/finally`` block. The backend is limited to
-:func:`verify_handshake` — it has no browser path.
+``try``/``finally`` block. The backend is limited to verify-only
+operation — it has no browser path; see
+:class:`aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+for interactive sessions.
 """
 
 from __future__ import annotations
@@ -34,9 +36,19 @@ log = get_logger(__name__)
 def _export_pem_material(cert: LoadedCertificate) -> tuple[bytes, bytes]:
     """Return ``(cert_pem, key_pem)`` bytes from ``cert``'s private key + x509.
 
-    Re-parses ``_pkcs12_bytes`` with the in-memory passphrase so we
-    never hand the raw PFX to httpx (which does not accept it) and
-    never write it unencrypted to disk.
+    Re-parses ``_pkcs12_bytes`` with the in-memory passphrase so the raw
+    PFX is never handed to :mod:`httpx` (which does not accept it) and
+    never written unencrypted to disk.
+
+    Args:
+        cert: Loaded certificate carrying the in-memory PKCS#12 bundle.
+
+    Returns:
+        A ``(cert_pem, key_pem)`` tuple of PEM-encoded bytes.
+
+    Raises:
+        ValueError: When the PKCS#12 bundle is missing the key or
+            certificate slot.
     """
     from cryptography.hazmat.primitives.serialization import pkcs12
 
@@ -55,7 +67,15 @@ def _export_pem_material(cert: LoadedCertificate) -> tuple[bytes, bytes]:
 
 
 def _write_secure_tempfile(suffix: str, payload: bytes) -> Path:
-    """Write ``payload`` to a 0600-permissioned temp file and return its Path."""
+    """Write ``payload`` to a 0600-permissioned temp file.
+
+    Args:
+        suffix: Filename suffix for the temp file.
+        payload: Bytes to write.
+
+    Returns:
+        The :class:`~pathlib.Path` of the created file.
+    """
     fd, tmp_path = tempfile.mkstemp(suffix=suffix)
     try:
         os.write(fd, payload)
@@ -69,18 +89,26 @@ def _write_secure_tempfile(suffix: str, payload: bytes) -> Path:
 
 
 class HttpxFallbackBackend(_CertBackend):
-    """mTLS handshake probe via :mod:`httpx`."""
+    """mTLS handshake probe via :mod:`httpx`.
+
+    Verify-only backend; rejects any attempt to preload a browser
+    context. See :class:`aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+    for the interactive counterpart.
+    """
 
     def preload(
         self,
         cert: LoadedCertificate,
         context: object,
     ) -> None:
-        """HTTPX_FALLBACK has no browser path.
+        """Reject the call — this backend cannot drive a browser context.
+
+        Args:
+            cert: Ignored.
+            context: Ignored.
 
         Raises:
-            NotImplementedError: Always. This backend can only verify
-                handshakes, never drive a Playwright context.
+            NotImplementedError: Always.
         """
         raise NotImplementedError(
             "HTTPX_FALLBACK has no browser path; use PLAYWRIGHT_CONTEXT "
@@ -90,9 +118,17 @@ class HttpxFallbackBackend(_CertBackend):
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
         """Perform a real mTLS GET against ``url``.
 
-        TLS and network errors are captured and returned as
-        :class:`HandshakeResult` with ``success=False``. The method
-        never logs the passphrase or any PEM byte.
+        TLS and network errors are captured and returned as a
+        :class:`aeat.adapters.outbound.aeat.auth.certificate.HandshakeResult`
+        with ``success=False``. The method never logs the passphrase
+        or any PEM byte.
+
+        Args:
+            cert: The loaded PKCS#12 certificate to present.
+            url: HTTPS endpoint to probe.
+
+        Returns:
+            A populated handshake result describing the outcome.
         """
         from ..certificate import HandshakeResult
 

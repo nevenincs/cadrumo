@@ -1,4 +1,17 @@
-"""Shared JSON-contract primitives that must not import ``aeat.entrypoints.cli``."""
+"""Shared primitives for the CLI's strict ``--json`` output contract.
+
+Defines the strict pydantic v2 base classes (:class:`OutputSchema`,
+:class:`OutputRootSchema`), the canonical envelope shape
+(:class:`SchemaEnvelope`), the schema registry
+(:data:`SCHEMA_REGISTRY`), and the streaming helpers
+(:func:`emit_json_document`, :func:`emit_json_success`) used by every
+``--json`` code path.
+
+Living in :mod:`aeat.core` keeps domain and adapter packages free of any
+dependency on :mod:`aeat.entrypoints.cli`: a wrapped command emits its
+strict-validated payload through :func:`emit_json_success` without
+having to know how the CLI itself wires Click options.
+"""
 
 from __future__ import annotations
 
@@ -26,23 +39,51 @@ _STRICT_ROOT_CONFIG = ConfigDict(
 
 
 class OutputSchemaError(AeatError):
-    """Raised when the CLI output-schema registry is misconfigured."""
+    """Raised when the CLI output-schema registry is misconfigured.
+
+    Triggered by :func:`register_schema` when a non-schema class is
+    decorated, when a command path is registered twice with different
+    schemas, or when the command path is blank.
+    """
 
 
 class OutputSchema(BaseModel):
-    """Base class for every command-specific ``--json`` output payload."""
+    """Strict, frozen base class for every command-specific ``--json`` payload.
+
+    Subclasses inherit ``extra="forbid"``, ``frozen=True``, ``strict=True``,
+    and ``validate_assignment=True`` so accidental field drift between
+    contract and implementation surfaces as a validation error rather
+    than a silently-extended payload.
+    """
 
     model_config = _STRICT_FROZEN_CONFIG
 
 
 class OutputRootSchema[RootT](RootModel[RootT]):
-    """Base class for strict root/list ``--json`` payloads."""
+    """Strict root/list base class for ``--json`` payloads with a non-mapping root.
+
+    Use this for commands whose top-level JSON value is a list or scalar
+    rather than an object. Carries the same strict / frozen / validate-on-
+    assignment configuration as :class:`OutputSchema`.
+    """
 
     model_config = _STRICT_ROOT_CONFIG
 
 
 class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
-    """Stable outer envelope for successful command output."""
+    """Stable outer envelope wrapping a successful command's payload.
+
+    Every successful ``--json`` response is rendered through this
+    envelope so consumers can rely on the same outer keys regardless of
+    the inner payload shape.
+
+    Attributes:
+        schema_version: Envelope version; bumped only on
+            backwards-incompatible changes.
+        command: Stable command path string (e.g. ``"workflow list"``).
+        result: The strict-validated command result.
+        warnings: Free-form non-fatal diagnostics surfaced to the caller.
+    """
 
     model_config = _STRICT_FROZEN_CONFIG
 
@@ -56,14 +97,25 @@ type RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]
 
 
 SCHEMA_REGISTRY: dict[str, RegisteredSchema] = {}
+"""Process-global registry mapping command-path strings to their result schema.
+
+Populated by the :func:`register_schema` decorator at import time.
+Consumers (notably the doc generator and the JSON-contract conformance
+tests) iterate over this mapping to enumerate every contract a release
+exposes."""
 
 
 @runtime_checkable
 class _ReconfigurableStream(Protocol):
-    """Text stream that supports runtime encoding reconfiguration."""
+    """Structural type for text streams that support runtime reconfiguration.
+
+    Matches :class:`io.TextIOWrapper` so :func:`emit_json_document` can
+    pin stdout to UTF-8 without a hard isinstance check on the concrete
+    class — useful for tests that pass in a :class:`io.StringIO`.
+    """
 
     def reconfigure(self, *, encoding: str, errors: str) -> None:
-        """Reconfigure the underlying text stream."""
+        """Reset the stream's encoding and error-handling mode."""
 
 
 def emit_json_document(
@@ -73,7 +125,22 @@ def emit_json_document(
     sort_keys: bool = False,
     stream: Any = None,
 ) -> None:
-    """Emit one UTF-8 JSON document to stdout."""
+    """Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
+
+    When ``stream`` exposes :meth:`_ReconfigurableStream.reconfigure`,
+    the helper pins it to ``encoding="utf-8", errors="strict"`` first so
+    downstream cp1252 consoles can not silently corrupt non-ASCII
+    characters in the rendered output.
+
+    Args:
+        payload: Any object reachable by :func:`_jsonable_payload`
+            (typically a :class:`pydantic.BaseModel`, a mapping, or a
+            collection thereof).
+        indent: Indent width passed to :func:`json.dumps`; ``None``
+            produces a single-line document.
+        sort_keys: Whether to render mapping keys in lexicographic order.
+        stream: Target text stream; defaults to :data:`sys.stdout`.
+    """
 
     target = sys.stdout if stream is None else stream
     if isinstance(target, _ReconfigurableStream):
@@ -99,7 +166,22 @@ def emit_json_success(
     sort_keys: bool = False,
     stream: Any = None,
 ) -> None:
-    """Emit one successful command result inside the shared schema envelope."""
+    """Wrap ``result`` in :class:`SchemaEnvelope` and emit it via :func:`emit_json_document`.
+
+    The envelope's ``schema_version`` is pinned to ``"1"``; bumping it
+    is a contract-breaking change handled by the JSON-contract test
+    suite, not a casual edit.
+
+    Args:
+        command: Stable command path string (e.g. ``"workflow list"``).
+        result: The strict-validated command payload to surface as
+            ``envelope.result``.
+        warnings: Optional non-fatal diagnostics; defaults to an empty
+            list when omitted.
+        indent: Indent width forwarded to :func:`emit_json_document`.
+        sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
+        stream: Target text stream; defaults to :data:`sys.stdout`.
+    """
 
     emit_json_document(
         {
@@ -115,7 +197,31 @@ def emit_json_success(
 
 
 def register_schema(command_path: str) -> Callable[[RegisteredSchema], RegisteredSchema]:
-    """Register a command-output schema under a stable command path."""
+    """Decorator that binds a strict schema to a stable ``command_path``.
+
+    Usage::
+
+        @register_schema("workflow list")
+        class WorkflowListResult(OutputSchema):
+            ...
+
+    The same schema may register the same path more than once
+    (idempotent re-import); registering a *different* schema under an
+    existing path raises :class:`OutputSchemaError`.
+
+    Args:
+        command_path: Stable command-path string used both as the
+            registry key and as the value emitted under
+            :attr:`SchemaEnvelope.command`.
+
+    Returns:
+        The decorator, returning the schema class unchanged.
+
+    Raises:
+        OutputSchemaError: When ``command_path`` is blank, when the
+            decorated class is not a strict schema subclass, or when the
+            path is already bound to a different schema.
+    """
 
     normalized_path = command_path.strip()
     if not normalized_path:
@@ -144,6 +250,14 @@ def register_schema(command_path: str) -> Callable[[RegisteredSchema], Registere
 
 
 def _jsonable_payload(payload: Any) -> Any:
+    """Recursively coerce ``payload`` to JSON-serialisable primitives.
+
+    :class:`pydantic.BaseModel` instances are dumped via ``model_dump``,
+    mappings are walked key-wise, sequences and sets are walked
+    element-wise, and every other value passes through unchanged (with
+    :func:`json.dumps` falling back to ``default=str`` for anything
+    unrecognised).
+    """
     if isinstance(payload, BaseModel):
         return payload.model_dump(mode="json")
     if isinstance(payload, dict):

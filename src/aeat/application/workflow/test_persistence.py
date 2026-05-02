@@ -1,4 +1,11 @@
-"""Unit tests for :mod:`aeat.application.workflow._persistence`."""
+"""Unit tests for the encrypted-envelope persistence layer.
+
+Covers :func:`aeat.application.workflow.save_run`,
+:func:`aeat.application.workflow.load_run`, and
+:func:`aeat.application.workflow.list_runs`, including round-tripping,
+traversal-safe id validation, and writer/rotation lock-target alignment
+with :class:`aeat.adapters.persistence.storage.RotationPlanEntry`.
+"""
 
 from __future__ import annotations
 
@@ -40,6 +47,8 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
 
 
 class TestPersistenceRoundTrip:
+    """End-to-end coverage of save/load/list and lock-target alignment."""
+
     def test_save_load_round_trip(self, tmp_path: Path) -> None:
         original = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC))
         save_run(original, runs_dir=tmp_path)

@@ -1,4 +1,10 @@
-"""Strict T6 aggregation boundary models."""
+"""Strict boundary models for the financial transaction aggregation service.
+
+Carries the :class:`Period` parser, the per-casilla
+:class:`CasillaProvenance` trace, and the aggregated
+:class:`CasillaAggregation` ledger consumed by
+:func:`aeat.application.aggregation.aggregate_catalogue`.
+"""
 
 from __future__ import annotations
 
@@ -28,7 +34,20 @@ _QUARTER_MONTHS: dict[Quarter, tuple[int, int]] = {
 
 
 class Period(BaseModel):
-    """Inclusive fiscal period used by T6 aggregation."""
+    """Inclusive fiscal period used by transaction aggregation.
+
+    Accepts ``YYYY``, ``YYYY-MM``, ``YYYY-Qn``, or ``YYYYQn`` strings
+    via the :meth:`_parse_raw_period` validator and exposes derived
+    bounds via :attr:`start`, :attr:`end`, and :attr:`period_type`.
+
+    Attributes:
+        raw: Original string token after normalisation.
+        year: Calendar year, inclusive [1990, 2100].
+        quarter: Optional :class:`aeat.domain.formulas._codes.Quarter`
+            for quarterly periods.
+        month: Optional 1-based month for monthly periods.
+        kind: The :class:`aeat.domain.deadlines.PeriodKind` discriminator.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -88,8 +107,6 @@ class Period(BaseModel):
             payload.pop("period_type", None)
             if isinstance(payload.get("quarter"), str):
                 payload["quarter"] = Quarter(payload["quarter"])
-            if isinstance(payload.get("kind"), str):
-                payload["kind"] = PeriodKind(payload["kind"].lower())
             return payload
         return data
 
@@ -108,7 +125,7 @@ class Period(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def start(self) -> date:
-        """Return the first included date."""
+        """Return the first :class:`~datetime.date` included in the period."""
 
         if self.kind is PeriodKind.QUARTERLY:
             assert self.quarter is not None
@@ -122,7 +139,7 @@ class Period(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def end(self) -> date:
-        """Return the last included date."""
+        """Return the last :class:`~datetime.date` included in the period."""
 
         if self.kind is PeriodKind.QUARTERLY:
             assert self.quarter is not None
@@ -136,20 +153,36 @@ class Period(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def period_type(self) -> PeriodType:
-        """Return the existing casilla-mapping period type where available."""
+        """Return the matching :class:`aeat.domain.casillas.PeriodType`."""
 
         if self.kind is PeriodKind.ANNUAL:
             return PeriodType.ANNUAL
         return PeriodType.QUARTERLY
 
     def contains(self, value: date) -> bool:
-        """Return whether ``value`` falls inside this inclusive period."""
+        """Return whether ``value`` falls inside this inclusive period.
+
+        Args:
+            value: A calendar date to test.
+
+        Returns:
+            ``True`` if :attr:`start` <= ``value`` <= :attr:`end`.
+        """
 
         return self.start <= value <= self.end
 
 
 class CasillaProvenance(BaseModel):
-    """Transaction trace for one casilla/category subtotal."""
+    """Transaction trace backing one (casilla, category) subtotal.
+
+    Attributes:
+        casilla: Target casilla code (e.g. ``"02"``).
+        transaction_ids: Sorted, frozen tuple of contributing
+            transaction IDs.
+        subtotal: Sum of contributions for this casilla/category pair.
+        category_id: Optional category identifier when the contribution
+            came from an expense bucket.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -161,11 +194,22 @@ class CasillaProvenance(BaseModel):
     @field_validator("transaction_ids")
     @classmethod
     def _freeze_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
+        """Freeze ``value`` into an immutable tuple."""
         return tuple(value)
 
 
 class CasillaAggregation(BaseModel):
-    """Aggregated casilla ledger for one modelo and period."""
+    """Aggregated casilla ledger for one modelo and period.
+
+    Attributes:
+        modelo: Modelo identifier (``ModeloCode.value``) the totals
+            belong to.
+        period: The :class:`Period` covered.
+        casilla_values: Mapping of casilla code to summed
+            :class:`~decimal.Decimal` value, sorted and frozen.
+        provenance: Tuple of :class:`CasillaProvenance` rows tracing
+            each contribution back to its source transactions.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -177,15 +221,18 @@ class CasillaAggregation(BaseModel):
     @field_validator("casilla_values")
     @classmethod
     def _freeze_casilla_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+        """Return ``value`` as a sorted, immutable :class:`MappingProxyType`."""
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_serializer("casilla_values")
     def _serialize_casilla_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+        """Serialise the immutable view back to a plain ``dict`` for JSON output."""
         return dict(value)
 
     @field_validator("provenance")
     @classmethod
     def _freeze_provenance(cls, value: Sequence[CasillaProvenance]) -> tuple[CasillaProvenance, ...]:
+        """Freeze ``value`` into an immutable tuple."""
         return tuple(value)
 
 

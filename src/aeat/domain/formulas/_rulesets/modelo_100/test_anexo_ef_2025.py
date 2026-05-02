@@ -1,6 +1,10 @@
-"""Unit tests for Modelo 100 Anexos E + F (2025).
+"""Unit tests for Modelo 100 Anexos E + F (ejercicio 2025).
 
-External-anchored to LIRPF arts. 33-39 (E), 47-61 (F), 84.
+Exercises ganancias y pérdidas patrimoniales (Anexo E) plus base
+imponible / liquidable, mínimo personal y familiar, and reducciones
+(Anexo F) of :data:`aeat.domain.formulas._rulesets.MODELO_100_2025`
+against worked inputs anchored to LIRPF arts. 33-39 (E), 47-61 (F),
+and 84.
 """
 
 from __future__ import annotations
@@ -16,8 +20,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _baseline() -> dict[str, Decimal]:
-    """Zero values for every casilla — Anexo E/F tests overwrite the
-    relevant subset; engine derives the computed casillas accordingly."""
+    """Return zero values for every casilla used in Anexo E/F tests.
+
+    Tests overwrite the relevant subset; the engine then derives the
+    computed casillas accordingly.
+
+    Returns:
+        Mapping of casilla id to ``Decimal("0.00")``.
+    """
     return {
         # B1.
         "0001": Decimal("0.00"),
@@ -89,6 +99,8 @@ def _baseline() -> dict[str, Decimal]:
 
 
 class TestModelo100AnexoE:
+    """Cover the saldo patrimonial derivation in Anexo E (LIRPF arts. 33-39)."""
+
     def test_consistent_saldo_patrimonial(self) -> None:
         """Ganancias 5.000, pérdidas 1.500 -> saldo neto 3.500."""
         provided = _baseline() | {
@@ -118,6 +130,7 @@ class TestModelo100AnexoE:
         assert report.is_clean()
 
     def test_drift_in_saldo_detected(self) -> None:
+        """Wrong saldo (3.000 vs expected 3.500) is reported as a discrepancy."""
         provided = _baseline() | {
             "0306": Decimal("5000.00"),
             "0307": Decimal("1500.00"),
@@ -133,6 +146,8 @@ class TestModelo100AnexoE:
 
 
 class TestModelo100AnexoF:
+    """Cover base imponible/liquidable + mínimo derivations in Anexo F."""
+
     def test_base_imponible_general_aggregates_per_anexo(self) -> None:
         """BIG = 0022 (B1) + 0107 (C) + 0085 (C) + 0205 (D normal) +
         0240 (D simpl.) + 0260 (D modulos) + 0399 (E general).
@@ -289,6 +304,7 @@ class TestModelo100AnexoF:
         assert report.is_clean()
 
     def test_drift_in_minimo_aggregation_detected(self) -> None:
+        """Wrong total mínimo (8.000 vs expected 7.950) is reported."""
         provided = _baseline() | {
             "0505": Decimal("5550.00"),
             "0510": Decimal("2400.00"),

@@ -1,10 +1,9 @@
 """Composition root for the end-user composite workflow engine.
 
-:class:`WorkflowEngine` walks the ten stages defined in
-[[2026-04-12-workflow-engine-adr]] in strict linear order. Every
-stage lives in its own small ``_stage_*`` method so the bailout
-matrix is trivially auditable — a reader drops into a single stage
-method to see exactly which abort reasons it can produce.
+:class:`WorkflowEngine` walks ten stages in strict linear order. Every
+stage lives in its own small ``_stage_*`` method so the bailout matrix
+is trivially auditable — a reader drops into a single stage method to
+see exactly which abort reasons it can produce.
 
 Safety invariants enforced by this module:
 
@@ -22,20 +21,20 @@ from ...adapters.outbound.aeat import sede as _sede
 from ...adapters.outbound.aeat.auth import (
     AeatSession,
     CertificateHealthSeverity,
-    describe_provider_operator_impact,
 )
 from ...adapters.outbound.aeat.export import (
     DraftStatus,
     FilingDraftLike,
     FilingFindingSeverity,
-    SubmissionPreflightError,
 )
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
+from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from ...domain.submission import SubmissionPreflightError
 from ._errors import WorkflowComponentError
 from ._models import (
     SiteHealthAlert,
@@ -170,8 +169,7 @@ class WorkflowEngine:
     Construction takes one Protocol handle per component. The
     authenticated AEAT session and the certificate bundle are
     optional: when ``None``, the stages that consume them run in skip
-    mode and surface a diagnostic instead of failing. See
-    [[2026-04-12-workflow-engine-plan]] for the degradation rules.
+    mode and surface a diagnostic instead of failing.
     """
 
     def __init__(
@@ -1079,7 +1077,7 @@ class WorkflowEngine:
         Invoked from the ``except SiteHealthError`` arm inserted
         strictly *before* the generic ``except Exception`` catch in
         every stage method that wraps a component call. The helper
-        composes a :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthAlert`
+        composes a :class:`aeat.application.workflow.SiteHealthAlert`
         around the caught error, appends a failed :class:`WorkflowStep`
         carrying the alert, and raises
         ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``

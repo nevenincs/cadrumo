@@ -11,7 +11,6 @@ import pytest
 
 from ...core.config import Settings
 from ...core.i18n import Translatable
-from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -21,7 +20,16 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.invoices._repository import InvoiceCatalogueRepository
+from ...domain.sync import (
+    CasillaRemoved,
+    DivergenceClassification,
+    DivergenceRecord,
+    ModeloIdentifier,
+)
 from ...domain.transactions import (
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
@@ -35,13 +43,7 @@ from ..filing import (
     FilingValue,
     FilingValueKind,
 )
-from ..sync import (
-    CasillaRemoved,
-    DivergenceClassification,
-    DivergenceRecord,
-    JsonFileDivergenceRepository,
-    ModeloIdentifier,
-)
+from ..sync import JsonFileDivergenceRepository
 from . import (
     ReviewItemKind,
     ReviewQueue,

@@ -1,10 +1,14 @@
 """Pure-function deadline computation engine.
 
-The engine takes an :class:`AutonomoProfile` and a year and produces a
-deterministic, typed :class:`Schedule`. It performs **no I/O** after
-construction, never mutates inputs, and never reaches for global
-state. The same ``(profile, year, today)`` always yields an equal
-schedule (modulo :attr:`Schedule.generated_at`).
+Takes an :class:`AutonomoProfile` and a year and produces a deterministic,
+typed :class:`Schedule`. The engine performs **no I/O** after construction,
+never mutates inputs, and never reaches for global state — the same
+``(profile, year, today)`` always yields an equal schedule (modulo
+:attr:`aeat.domain.deadlines.Schedule.generated_at`).
+
+Pairs with :mod:`aeat.domain.deadlines._applies` for modelo applicability,
+:mod:`aeat.domain.deadlines._calendar` for canonical filing windows, and
+:mod:`aeat.domain.deadlines._models` for the value types it returns.
 """
 
 from __future__ import annotations
@@ -61,15 +65,17 @@ def _windows_for_year(year: int) -> tuple[CanonicalWindow, ...]:
 class DeadlineEngine:
     """Pure-function engine that computes typed filing schedules.
 
-    The engine is stateless after construction. Modelo applicability
-    is closed over the in-code :data:`KNOWN_AUTONOMO_MODELOS` set
-    rather than a Protocol-injected catalogue: every modelo the v1
-    engine reasons about lives in that closed tuple, so an external
-    catalogue would only mirror the same data.
+    Stateless after construction. Modelo applicability is closed over the
+    in-code :data:`aeat.domain.deadlines._calendar.KNOWN_AUTONOMO_MODELOS`
+    set rather than a Protocol-injected catalogue: every modelo the engine
+    reasons about lives in that closed tuple, so an external catalogue
+    would only mirror the same data.
 
     Attributes:
-        due_soon_days: Window before ``closes_on`` that flags
-            ``DUE_SOON`` (default 14).
+        due_soon_days: Window before
+            :attr:`aeat.domain.deadlines.FilingObligation.closes_on` that
+            flags :attr:`aeat.domain.deadlines.ObligationStatus.DUE_SOON`
+            (default 14).
     """
 
     def __init__(
@@ -114,8 +120,8 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            ScheduleComputationError: If no canonical windows are
-                registered for ``year``.
+            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If no
+                canonical windows are registered for ``year``.
         """
         reference_today = today or date.today()
         windows = _windows_for_year(year)

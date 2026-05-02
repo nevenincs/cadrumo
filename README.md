@@ -7,13 +7,13 @@ The codebase has drifted significantly past what this README describes.
 Notably absent / stale:
   * Cl@ve Móvil auth (now the sanctioned live path; README still says
     "no Cl@ve / DNIe yet").
-  * aeat.sanitizer subpackage (PDF sanitiser pipeline that produces the
+  * aeat.adapters.inbound.sanitizer subpackage (PDF sanitiser pipeline that produces the
     fixture corpus, shipped as part of #239).
-  * aeat.filing.reconciliation (FilingDraft ↔ Justificante comparator
+  * aeat.application.filing.reconciliation (FilingDraft ↔ Justificante comparator
     with MATCH / DIVERGENT / NOT_YET_FOUND triad, shipped in #239).
-  * aeat.sede.walk_declarations_register (Consultar declaraciones
+  * aeat.adapters.outbound.aeat.sede.walk_declarations_register (Consultar declaraciones
     presentadas walker; the canonical filings register, shipped #239).
-  * aeat.testing.synthesize_filing_draft (test-fixture FilingDraft
+  * aeat.application.filing.testing.synthesize_filing_draft (test-fixture FilingDraft
     factory used by reconcile dry-runs).
   * The expanded justificante fixture corpus (40 sanitised PDFs across
     M100 2021-2023, M130 2021-2024, M303 2021-2024, M111 2024,
@@ -21,8 +21,8 @@ Notably absent / stale:
 
 Do not treat this README as the source of truth for shipped features.
 Until it is rewritten, consult `.vault/audit/`, the per-subpackage
-docstrings under `src/aeat/<name>/__init__.py`, and `docs/coverage/`
-for what is actually implemented.
+docstrings under the layered `src/aeat/{domain,adapters,application,entrypoints,core}/`
+tree, and `docs/coverage/` for what is actually implemented.
 
 Tracking: needs a separate PR with dedicated attention before the
 next operator-facing release.
@@ -98,30 +98,36 @@ classification appended at the end.
 
 ## Architecture
 
-The on-main subpackages under `src/aeat/`:
+The on-main package has hard-cut over to the ADR layout. The package
+root is only a package marker plus version/logging bootstrap; it does
+not keep compatibility re-export modules such as `aeat.auth`,
+`aeat.errors`, `aeat.formulas`, or `aeat.submission`.
+
+Primary subpackages under `src/aeat/`:
 
 | Subpackage             | Responsibility                                                            |
 | :--------------------- | :------------------------------------------------------------------------ |
-| `aeat.models`          | Closed catalogue of supported modelos (130, 303, 390).                    |
-| `aeat.portals`         | URL + form metadata for every AEAT portal the project touches.            |
-| `aeat.auth`            | PKCS#12 client-certificate authentication and credential resolution.      |
-| `aeat.browser`         | Controlled headless Playwright session against AEAT.                      |
-| `aeat.schema`          | Pydantic models for every wire and storage record.                        |
-| `aeat.normatives`      | Live normative corpus (BOE references, vigencia windows).                 |
-| `aeat.manuals`         | Manual práctico ingestion and structured extraction.                      |
-| `aeat.deadlines`       | Deadline engine — what's due, when, with what tolerance.                  |
-| `aeat.filing`          | Filing draft engine — assembles a typed draft from manuals + casillas.    |
-| `aeat.submission`      | Read-only preflight, export/verify helpers, and local filing records.     |
-| `aeat.status`          | *Mis expedientes* reader — the authoritative AEAT-side state.             |
-| `aeat.inbox`           | *Mis notificaciones* reader — pending notifications and acknowledgements. |
-| `aeat.sync`            | Self-healing reconciliation between AEAT-side state and local storage.    |
-| `aeat.storage`         | Local on-disk store for filings, receipts, and audit trail.               |
-| `aeat.i18n`            | Trilingual (es / en / hu) message catalogue with nested-dict shape.       |
-| `aeat.llm`             | Bounded LLM client for manual práctico extraction and explanations.      |
-| `aeat.testing`         | Shared fixtures and synthetic filing factories for the test suite.        |
-| `aeat.cli`             | Typer-based CLI surface (`aeat ...`).                                     |
-| `aeat.workflow`        | Orchestration engine that drives a filing through the pipeline.           |
-| `aeat.setup`           | Interactive first-run setup wizard (shipped via #61 / PR #66).            |
+| `aeat.domain.modelos`  | Closed catalogue of supported modelos (130, 303, 390).                    |
+| `aeat.domain.portals`  | URL + form metadata for every AEAT portal the project touches.            |
+| `aeat.adapters.outbound.aeat.auth` | AEAT certificate and Cl@ve Movil authentication providers.     |
+| `aeat.adapters.outbound.aeat.browser` | Controlled headless Playwright session against AEAT.          |
+| `aeat.domain.schema` | Canonical home for schema IR models, cache contracts, and evaluation rules. |
+| `aeat.adapters.inbound.schema` | BOE PDF extraction adapter that emits `aeat.domain.schema` IR. |
+| `aeat.domain.normatives` | Live normative corpus (BOE references, vigencia windows).               |
+| `aeat.domain.manuals`  | Manual práctico ingestion and structured extraction.                      |
+| `aeat.domain.deadlines` | Deadline engine — what's due, when, with what tolerance.                 |
+| `aeat.application.filing` | Filing draft orchestration from manuals + casillas.                   |
+| `aeat.domain.submission` | Read-only preflight contracts and local filing records.                 |
+| `aeat.adapters.outbound.aeat.sede` | *Mis expedientes* and notification readers.                  |
+| `aeat.domain.sync` | Divergence taxonomy, wire records, validation, and classification.        |
+| `aeat.application.sync` | Self-healing sync orchestration and divergence persistence.              |
+| `aeat.adapters.persistence.storage` | Local on-disk store for filings, receipts, and audit trail.   |
+| `aeat.core.i18n`       | Quadlingual (es / en / ca / hu) message catalogue with nested-dict shape. |
+| `aeat.adapters.outbound.llm` | Bounded LLM client for manual práctico extraction and explanations. |
+| `aeat.application.filing.testing` | Shared fixtures and synthetic filing factories for tests.       |
+| `aeat.entrypoints.cli` | Typer-based CLI surface (`aeat ...`).                                     |
+| `aeat.application.workflow` | Orchestration engine that drives a filing through the pipeline.      |
+| `aeat.application.setup` | Interactive first-run setup wizard.                                     |
 
 A data-flow diagram with one paragraph per arrow lives in
 [`docs/architecture.md`](docs/architecture.md). The contributor

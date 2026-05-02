@@ -313,11 +313,11 @@ def test_playwright_preload_rejects_unmarked_context(
     )
     loaded = load_certificate(bundle)
 
-    class _FakeContext:
+    class _UnmarkedContext:
         pass
 
     with pytest.raises(CertificateError):
-        preload_into_browser_context(loaded, _FakeContext())
+        preload_into_browser_context(loaded, _UnmarkedContext())
 
 
 def test_playwright_preload_accepts_marked_context(
@@ -367,7 +367,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
     ]
 
 
-# ── Stub backends ───────────────────────────────────────────────────────────
+# ── Browserless backends ────────────────────────────────────────────────────
 
 
 def test_httpx_fallback_preload_raises_not_implemented(
@@ -402,20 +402,20 @@ def test_settings_loads_cert_env_vars(
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)
 
-    fake_p12 = tmp_path / "op.p12"
-    fake_p12.write_bytes(b"placeholder")
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(fake_p12))
+    placeholder_p12 = tmp_path / "op.p12"
+    placeholder_p12.write_bytes(b"placeholder")
+    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(placeholder_p12))
     monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
     monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "op-cert")
-    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "HTTPX_FALLBACK")
+    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "httpx_fallback")
     monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", "https://example.test/")
 
     settings = IsolatedSettings()
-    assert settings.aeat_certificate_path == fake_p12
+    assert settings.aeat_certificate_path == placeholder_p12
     assert settings.aeat_certificate_password_secret is not None
     assert settings.aeat_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
     assert settings.aeat_certificate_friendly_name == "op-cert"
-    assert settings.aeat_certificate_backend is CertificateBackend.HTTPX_FALLBACK
+    assert settings.aeat_certificate_backend.name == CertificateBackend.HTTPX_FALLBACK.name
     assert settings.aeat_certificate_verify_url == "https://example.test/"
 
     # SecretStr must not leak via repr()

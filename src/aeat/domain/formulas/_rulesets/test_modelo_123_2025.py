@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 123 2025 ruleset."""
+"""Unit tests for the Modelo 123 2025 ruleset.
+
+Exercises the formula-engine derivations and the year-parametrised worked
+examples for :data:`aeat.domain.formulas._rulesets.MODELO_123_2025` plus
+the cross-year effective-range and arithmetic checks against the 2024 and
+2026 rulesets.
+"""
 
 from __future__ import annotations
 
@@ -34,6 +40,8 @@ def _provided(**overrides: str) -> dict[str, Decimal]:
 
 
 class TestModelo123Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 123 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_123_2025,
@@ -83,15 +91,15 @@ class TestModelo123Ruleset:
         assert computed == {"03", "06", "09", "11"}
 
     def test_external_worked_example_lirpf_art_25(self) -> None:
-        """External-anchored worked example (closure).
+        """Externally-anchored worked example for Modelo 123 aggregation.
 
         Provenance: Ley 35/2006 (LIRPF) art. 25 defines rendimientos
         del capital mobiliario (dividendos, intereses). Modelo 123 is
         a pure aggregation — 03=01+02, 06=04+05, 09=07+08, 11=09-10.
-        No rate is applied here; external anchor is the structural
+        No rate is applied here; the external anchor is the structural
         invariant from AEAT Instrucciones Modelo 123.
 
-        Scenario: Kent as retenedor with 2 dividend perceptores +
+        Scenario: a retenedor with 2 dividend perceptores +
         3 interest perceptores:
         - 01 perc. dividendos = 2. 02 perc. otras = 3. 03 total = 5.
         - 04 base div. = 5 000. 05 base otras = 12 000. 06 total = 17 000.

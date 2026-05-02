@@ -1,15 +1,14 @@
 """Golden-fixture byte-exactness tests for Modelo 303 2025.
 
-Mirrors the :mod:`test_golden_modelo_303` test suite for
-the 2025 ejercicio. Because :mod:`modelo_303_2025` re-exports the
-2024 schema verbatim (Orden HAC/819/2024 governs both ejercicios),
-the only per-year differences must be the three ejercicio stamps
-in the envelope header, DP30301 devengo block, and trailer.
+Mirrors :mod:`.test_golden_modelo_303` for the 2025 ejercicio.
+Because :mod:`.modelo_303_2025` re-exports the 2024 schema verbatim
+(Orden HAC/819/2024 governs both ejercicios), the only per-year
+differences must be the three ejercicio stamps in the envelope
+header, DP30301 devengo block, and trailer.
 
-Pinning a separate SHA256 for 2025 catches any accidental
-divergence between the two clones. The "delta only in ejercicio
-bytes" invariant adds structural proof that the clone is pure —
-no hidden offset drift.
+Pinning a separate SHA256 for 2025 catches any accidental divergence
+between the two clones. The "delta only in ejercicio bytes" invariant
+adds structural proof that the clone is pure — no hidden offset drift.
 """
 
 from __future__ import annotations
@@ -81,10 +80,12 @@ class TestModelo3032025GoldenKentQ1:
 
 
 class TestModelo3032024vs2025StructuralParity:
-    """2024 and 2025 clones differ only at the three
-    ejercicio-stamped byte positions when the same casilla values are
-    filed. A byte-level diff that falls outside those positions is a
-    schema drift the clone contract forbids."""
+    """2024 and 2025 clones differ only at the three ejercicio-stamped byte
+    positions when the same casilla values are filed.
+
+    A byte-level diff that falls outside those positions is a schema drift
+    the clone contract forbids.
+    """
 
     @staticmethod
     def _payload(segments: tuple[SegmentSpec, ...], required: frozenset[str], year: str) -> bytes:

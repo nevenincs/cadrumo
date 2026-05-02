@@ -1,9 +1,11 @@
-"""LLM cache + usage redaction discipline.
+"""Redaction discipline tests for the LLM cache and usage log.
 
-The LLM cache and usage log persist response text that may echo NIF /
-counterparty context from the prompt. both writers so the
-substrate's CACHE-class / DIAGNOSTIC-class redaction discipline applies
-before persistence.
+The LLM cache and usage log persist response text that may echo NIF or
+counterparty context from the original prompt. Both writers must apply the
+substrate's CACHE-class and DIAGNOSTIC-class redaction rules
+(:func:`aeat.core.redaction.redact_structured`) before any payload reaches
+disk; these tests exercise canary NIF and bearer-token strings to prove that
+discipline holds.
 """
 
 from __future__ import annotations
@@ -60,6 +62,8 @@ def _make_response(text: str) -> LLMResponse:
 
 
 class TestCacheRedaction:
+    """Verify CACHE-class redaction is applied before any cache write."""
+
     def test_nif_canary_does_not_land_plaintext_in_cache(self, tmp_path: Path) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
         request = _make_request()
@@ -114,6 +118,8 @@ class TestCacheRedaction:
 
 
 class TestUsageRedaction:
+    """Verify DIAGNOSTIC-class redaction is applied before any usage write."""
+
     def _make_record(self, text: str) -> UsageRecord:
         return UsageRecord(
             prompt_id="prompt-test",

@@ -1,4 +1,14 @@
-"""Modelo 100 (RENTA / IRPF anual) full-form ruleset — ejercicio 2024."""
+"""Modelo 100 (RENTA / IRPF anual) full-form ruleset — ejercicio 2024.
+
+Aggregates the per-anexo modules under
+:mod:`aeat.domain.formulas._rulesets.modelo_100` (B1, B2, C, D normal /
+simplificada / módulos, E, F, G, Ñ) into the single
+:data:`RULESET` exposed by this module. Mirrors
+:mod:`aeat.domain.formulas._rulesets.modelo_100_2025` and
+:mod:`aeat.domain.formulas._rulesets.modelo_100_2026` with year-scoped
+formula identifiers and an ``effective_from`` / ``effective_to``
+window covering the 2024 ejercicio.
+"""
 
 from __future__ import annotations
 
@@ -85,3 +95,9 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
+"""Aggregated Modelo 100 ruleset for ejercicio 2024.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` composed from the
+per-anexo modules of :mod:`aeat.domain.formulas._rulesets.modelo_100`,
+re-exported as :data:`aeat.domain.formulas._rulesets.MODELO_100_2024`.
+"""

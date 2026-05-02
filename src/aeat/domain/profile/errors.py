@@ -1,4 +1,10 @@
-"""Profile-ledger error hierarchy."""
+"""Profile-ledger error hierarchy.
+
+Errors for the asset ledger (:mod:`aeat.domain.profile.assets`) and
+inventory ledger (:mod:`aeat.domain.profile.inventory`). Every class
+ultimately derives from :class:`aeat.core.errors.AeatError` so the
+shared error-code registration hook applies.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,12 @@ class InventoryLedgerError(AeatError):
 
 
 class LIFOForbiddenError(InventoryLedgerError):
-    """Raised when a caller attempts LIFO inventory valuation."""
+    """Raised when a caller attempts LIFO inventory valuation.
+
+    LIS art. 17.1 does not admit LIFO for tax-purpose stock valuation
+    in this regime; the message routes the operator to FIFO, PMP, or
+    coste medio.
+    """
 
     def __init__(self, method: str = "lifo") -> None:
         """Construct a refusal citing the LIS art. 17 valuation boundary.
@@ -26,7 +37,6 @@ class LIFOForbiddenError(InventoryLedgerError):
         Args:
             method: User-supplied valuation method.
         """
-
         super().__init__(
             "LIFO valuation is not admitted for this tax ledger; use FIFO, PMP, or coste_medio per LIS art. 17.1.",
             context={"method": method, "legal_basis": "LIS art. 17.1"},

@@ -28,7 +28,12 @@ class UnknownModeloError(ModeloRegistryError):
     """
 
     def __init__(self, code: str) -> None:
-        """Initialise with the offending modelo code string."""
+        """Initialise with the offending modelo code string.
+
+        Args:
+            code: The unknown or unparseable modelo code string the
+                caller supplied to :func:`aeat.domain.modelos.get_modelo`.
+        """
         super().__init__(f"unknown modelo code: {code!r}")
         self.modelo_code = code
 

@@ -28,12 +28,14 @@ from rich.console import Console
 from rich.table import Table
 
 from ...adapters.outbound.aeat.auth import (
+    AeatAuthenticator,
+)
+from ...adapters.outbound.google import (
     CLOUD_PLATFORM_SCOPE,
     DOCS_SCOPE,
     DRIVE_SCOPE,
     REQUIRED_ADC_SCOPES,
     SHEETS_SCOPE,
-    AeatAuthenticator,
     GoogleAuthPath,
     adc_well_known_path,
     build_cloudfunctions_client,
@@ -43,11 +45,12 @@ from ...adapters.outbound.aeat.auth import (
     build_serviceusage_service,
     build_sheets_service,
     build_storage_client,
-    describe_provider_operator_impact,
     get_credentials_for_scopes,
     inspect_google_auth,
 )
+from ...application.auth import describe_provider_operator_impact
 from ...core.config import PROJECT_ROOT, Settings
+from ._i18n import t, tr
 
 # ── Row primitives ──────────────────────────────────────────────────────────
 
@@ -790,7 +793,7 @@ def check_oauth_desktop(settings: Settings) -> Row:
 
 
 def check_certificate_health(settings: Settings) -> Row:
-    """Report the AEAT certificate's pre-expiry health (#94).
+    """Report the AEAT certificate's pre-expiry health.
 
     Skips cleanly when no certificate is configured. On successful
     evaluation, maps the :class:`CertificateHealthSeverity` buckets to
@@ -830,7 +833,7 @@ def check_certificate_health(settings: Settings) -> Row:
 
 
 def check_auth_provider_path(settings: Settings) -> Row:
-    """Explain what the configured auth path means for Kent today."""
+    """Explain what the configured auth path means for the operator today."""
 
     description = AeatAuthenticator(settings).describe()
     if not description.configured:
@@ -858,7 +861,7 @@ def check_live_tests_flag(settings: Settings) -> Row:
 
 
 def check_live_access_gate(settings: Settings) -> Row:
-    """Report the :class:`aeat.adapters.outbound.aeat.auth.AeatAccessGate` env-var state (#167).
+    """Report the :class:`aeat.adapters.outbound.aeat.auth.AeatAccessGate` env-var state.
 
     The doctor row surfaces the remaining env vars that gate live AEAT
     reads without ever exposing a secret value. Live AEAT writes are
@@ -1135,6 +1138,29 @@ def doctor() -> None:
     console.print(render_table(rows))
     failing_required = [r for r in rows if r.required and r.state in (State.MISSING, State.PARTIAL, State.WARN)]
     if failing_required:
-        console.print(f"[red]doctor: {len(failing_required)} required check(s) failing[/]")
+        n = len(failing_required)
+        console.print(
+            "[red]doctor: "
+            + tr(
+                t(
+                    f"{n} comprobación(es) requerida(s) fallando",
+                    f"{n} required check(s) failing",
+                    f"{n} comprovació(ns) requerida(es) fallant",
+                    f"{n} kötelező ellenőrzés sikertelen",
+                )
+            )
+            + "[/]"
+        )
         raise typer.Exit(code=1)
-    console.print("[green]doctor: all required checks passing[/]")
+    console.print(
+        "[green]doctor: "
+        + tr(
+            t(
+                "todas las comprobaciones requeridas correctas",
+                "all required checks passing",
+                "totes les comprovacions requerides correctes",
+                "minden kötelező ellenőrzés sikeres",
+            )
+        )
+        + "[/]"
+    )

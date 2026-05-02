@@ -1,4 +1,10 @@
-"""Portal: Modelo 123 — retenciones capital mobiliario."""
+"""Catalogue entry for the *Modelo 123* movable-capital withholdings procedure.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
+:attr:`aeat.domain.modelos.ModeloCode.MODELO_123`. Backs the periodic
+self-assessment of withholdings on movable-capital income.
+"""
 
 from __future__ import annotations
 
@@ -31,3 +37,4 @@ ENTRY: PortalMetadata = build_entry(
         "Autoliquidación periódica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario."
     ),
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 123 procedure page."""

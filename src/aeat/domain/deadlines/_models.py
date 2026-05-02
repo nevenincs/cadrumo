@@ -1,8 +1,11 @@
-"""Pydantic v2 strict models for the deadline-engine subpackage.
+"""Pydantic v2 strict models for the :mod:`aeat.domain.deadlines` subpackage.
 
-Every type that crosses a public boundary lives here as a strict,
-frozen :class:`pydantic.BaseModel` (or :class:`enum.StrEnum` for closed
+Every type that crosses a public boundary lives here as a strict, frozen
+:class:`pydantic.BaseModel` (or :class:`enum.StrEnum` for closed
 enumerations). No dataclasses; no bare ``dict[str, Any]``.
+
+Consumed by :class:`aeat.domain.deadlines.DeadlineEngine` and re-exported
+from :mod:`aeat.domain.deadlines`.
 """
 
 from __future__ import annotations
@@ -18,6 +21,14 @@ class IVARegime(StrEnum):
 
     Drives the applicability of Modelo 303 and Modelo 390. The closed
     set tracks the four regimes the project supports for autónomos.
+
+    Attributes:
+        GENERAL: Régimen general — quarterly Modelo 303 plus annual 390.
+        SIMPLIFICADO: Régimen simplificado — quarterly Modelo 303 plus
+            annual 390 with módulos.
+        RECARGO_EQUIVALENCIA: Recargo de equivalencia — IVA settled by
+            the supplier; no 303/390 obligation.
+        EXENTO: IVA-exempt activity — no 303/390 obligation.
     """
 
     GENERAL = "GENERAL"
@@ -29,10 +40,21 @@ class IVARegime(StrEnum):
 class ObligationStatus(StrEnum):
     """Status of a single :class:`FilingObligation` against a reference date.
 
-    ``UPCOMING`` and ``DUE_SOON`` are differentiated by the
+    :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the
     ``AEAT_DEADLINE_DUE_SOON_DAYS`` setting (default 14 days).
-    ``FILED`` and ``NOT_APPLICABLE`` are reserved for downstream
-    consumers - the engine never produces them in v1.
+    :attr:`FILED` and :attr:`NOT_APPLICABLE` are reserved for downstream
+    consumers — the engine never produces them.
+
+    Attributes:
+        UPCOMING: Window opens in the future or is open but more than
+            ``due_soon_days`` ahead of close.
+        DUE_SOON: Window closes within ``due_soon_days`` of the
+            reference date.
+        DUE_TODAY: Reference date is the close date.
+        OVERDUE: Reference date is past the close date.
+        FILED: Downstream marker for filings already submitted.
+        NOT_APPLICABLE: Downstream marker for obligations the profile
+            no longer triggers.
     """
 
     UPCOMING = "UPCOMING"

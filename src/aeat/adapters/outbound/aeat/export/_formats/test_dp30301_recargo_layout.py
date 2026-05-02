@@ -1,27 +1,27 @@
 """DP30301 recargo-de-equivalencia rate-rows layout lock.
 
-Complements 's régimen-general rate-row lock with the
+Complements :mod:`.test_dp30301_rate_rows_layout` with the
 recargo-de-equivalencia rows — the second-order surcharge rates
-(1.40 %, 5.20 %, 1.75 %) applied when Kent's counterparty is in
-the recargo regime.
+(1.40 %, 5.20 %, 1.75 %) applied when the counterparty is in the
+recargo regime.
 
-Canonical rate-row offsets per DR303e24 (the recargo-equivalencia
+Canonical rate-row offsets per ``DR303e24`` (the recargo-equivalencia
 block starts at offset 427 after the casillas 10-15 rectification
-block):
+block)::
 
-  recargo 5% (alimentos temporal):
-    CAS156 base @ 427, CAS157 tipo="00175" @ 444, CAS158 cuota @ 449
-  recargo 10%:
-    CAS20 tipo="00140" @ 522, CAS21 base @ 527, CAS22 cuota @ 544
-  recargo 21%:
-    CAS23 tipo="00520" @ 561, CAS24 base @ 566, CAS25 cuota @ 583
+    recargo 5% (alimentos temporal):
+      CAS156 base @ 427, CAS157 tipo="00175" @ 444, CAS158 cuota @ 449
+    recargo 10%:
+      CAS20 tipo="00140" @ 522, CAS21 base @ 527, CAS22 cuota @ 544
+    recargo 21%:
+      CAS23 tipo="00520" @ 561, CAS24 base @ 566, CAS25 cuota @ 583
 
-Note: casilla 17 (offset 483, 5 bytes, RESERVED literal "00000")
+Note: casilla 17 (offset 483, 5 bytes, RESERVED literal ``"00000"``)
 appears in the rate-column position but carries a zero-percent
-literal. The exact semantics require DR303 cross-reference;
-the observed layout but doesn't claim to know
-what "00000" means — future contributors should consult the
-xlsx source before changing it.
+literal. The exact semantics require a DR303 cross-reference; the
+tests document the observed layout but do not claim to know what
+``"00000"`` means — future contributors should consult the xlsx
+source before changing it.
 """
 
 from __future__ import annotations
@@ -42,8 +42,10 @@ def _dp30301_by_casilla() -> dict[str, RecordFieldSpec]:
 
 
 class TestRecargoEquivalenciaRates:
+    """Lock the RESERVED rate-literal values for each recargo row."""
+
     def test_recargo_5_pct_rate_literal(self) -> None:
-        """Recargo 5%: tipo CAS157 = "00175" (1.75%) at offset 444."""
+        """Recargo 5 %: tipo CAS157 = ``"00175"`` (1.75 %) at offset 444."""
         casillas = _dp30301_by_casilla()
         tipo = casillas["157"]
         assert tipo.offset == 444
@@ -52,7 +54,7 @@ class TestRecargoEquivalenciaRates:
         assert tipo.literal_value == "00175"
 
     def test_recargo_10_pct_rate_literal(self) -> None:
-        """Recargo 10%: tipo CAS20 = "00140" (1.40%) at offset 522."""
+        """Recargo 10 %: tipo CAS20 = ``"00140"`` (1.40 %) at offset 522."""
         casillas = _dp30301_by_casilla()
         tipo = casillas["20"]
         assert tipo.offset == 522
@@ -61,7 +63,7 @@ class TestRecargoEquivalenciaRates:
         assert tipo.literal_value == "00140"
 
     def test_recargo_21_pct_rate_literal(self) -> None:
-        """Recargo 21%: tipo CAS23 = "00520" (5.20%) at offset 561."""
+        """Recargo 21 %: tipo CAS23 = ``"00520"`` (5.20 %) at offset 561."""
         casillas = _dp30301_by_casilla()
         tipo = casillas["23"]
         assert tipo.offset == 561
@@ -71,7 +73,7 @@ class TestRecargoEquivalenciaRates:
 
 
 class TestRecargo5PctRow:
-    """Recargo 5% row is the full 39-byte block CAS156 / CAS157 / CAS158."""
+    """The recargo 5 % row is the full 39-byte block CAS156 / CAS157 / CAS158."""
 
     def test_base_at_offset_427(self) -> None:
         casillas = _dp30301_by_casilla()
@@ -89,8 +91,9 @@ class TestRecargo5PctRow:
 
 
 class TestRecargo10PctAnd21PctRows:
-    """Recargo 10% and 21% rows use a {tipo / base / cuota} layout where the
-    tipo literal precedes the base (different from the 5% row's layout)."""
+    """The recargo 10 % and 21 % rows use a ``{tipo / base / cuota}`` layout
+    where the tipo literal precedes the base (different from the 5 % row's
+    layout)."""
 
     def test_recargo_10_base_at_offset_527(self) -> None:
         casillas = _dp30301_by_casilla()
@@ -119,11 +122,13 @@ class TestRecargo10PctAnd21PctRows:
 
 
 class TestSuspiciousZeroRateLiteral:
-    """Casilla 17 carries a RESERVED literal "00000" at offset 483 — 5 bytes
-    in the rate-column position but with a zero-percent value.
-    documents this as observed behaviour; it's not clear from the fixture
-    alone whether this is "tipo exento" or an xlsx-extraction artefact.
-    Future contributors should resolve with the DR303 PDF before changing.
+    """Casilla 17 carries a RESERVED literal ``"00000"`` at offset 483.
+
+    Five bytes in the rate-column position but with a zero-percent value.
+    The test documents this as observed behaviour; it is not clear from
+    the fixture alone whether this is "tipo exento" or an xlsx-extraction
+    artefact. Future contributors should resolve with the DR303 PDF
+    before changing it.
     """
 
     def test_casilla_17_is_reserved_zero_literal(self) -> None:

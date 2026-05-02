@@ -1,9 +1,8 @@
-"""Deterministic rule-id generation for ``aeat.domain.manuals``.
+"""Deterministic rule-id generation for :mod:`aeat.domain.manuals`.
 
-Rule identifiers are locked at the v1 schema layer even though v1
-does not yet produce real rule records, so follow-up extraction runs
-cannot collide with each other. The generator is pure and fully
-deterministic given its inputs.
+Rule identifiers are locked at the schema layer so subsequent
+extraction runs cannot collide with each other. The generator is pure
+and fully deterministic given its inputs.
 """
 
 from __future__ import annotations

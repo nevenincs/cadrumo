@@ -1,4 +1,11 @@
-"""Attachment service helpers."""
+"""Service-layer helpers over :class:`AttachmentStore`.
+
+Thin orchestration on top of the storage primitives in
+:mod:`aeat.domain.attachments._repository`: ingest a file from disk,
+build the corresponding :class:`~aeat.domain.attachments._models.Attachment`
+manifest, persist it, and expose simple read paths for callers that
+do not need the full repository API.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +32,37 @@ def add_attachment(
     metadata: Mapping[str, str] | None = None,
     notes: str = "",
 ) -> Attachment:
-    """Store attachment bytes and persist the corresponding manifest."""
+    """Store attachment bytes and persist the corresponding manifest.
+
+    The stored bytes' SHA-256 doubles as the attachment id so equal
+    files deduplicate naturally.
+
+    Args:
+        store: Backing :class:`AttachmentStore` for blob storage and
+            manifest persistence.
+        path: Local filesystem path to the bytes being ingested.
+        kind: Logical
+            :class:`~aeat.domain.attachments._enums.AttachmentKind`
+            for the attachment.
+        source: Originating
+            :class:`~aeat.domain.attachments._enums.AttachmentSource`
+            channel.
+        source_reference: Caller-supplied opaque reference into the
+            originating system (e.g. invoice number, e-mail UID).
+        mime_type: MIME type of the attachment bytes.
+        captured_at: Wall-clock timestamp when the bytes were
+            captured upstream.
+        link_transaction_ids: Optional tuple of transaction ids the
+            attachment evidences.
+        link_invoice_ids: Optional tuple of invoice ids the
+            attachment evidences.
+        metadata: Optional free-form key/value metadata.
+        notes: Free-form operator notes; defaults to empty.
+
+    Returns:
+        The persisted
+        :class:`~aeat.domain.attachments._models.Attachment` manifest.
+    """
     sha256, bytes_size = store.put_file(path)
     attachment = Attachment.model_validate(
         {
@@ -48,7 +85,16 @@ def add_attachment(
 
 
 def load_attachment(store: AttachmentStore, attachment_id: str) -> Attachment:
-    """Load one attachment manifest from ``store``."""
+    """Load one attachment manifest from the store.
+
+    Args:
+        store: Backing :class:`AttachmentStore`.
+        attachment_id: SHA-256 of the attachment bytes.
+
+    Returns:
+        The :class:`~aeat.domain.attachments._models.Attachment`
+        manifest for ``attachment_id``.
+    """
     return store.load_manifest(attachment_id)
 
 
@@ -58,7 +104,20 @@ def list_attachments(
     linked_to: str | None = None,
     kind: AttachmentKind | None = None,
 ) -> tuple[Attachment, ...]:
-    """List attachment manifests, optionally filtering by link or kind."""
+    """List attachment manifests, optionally filtered by link or kind.
+
+    Args:
+        store: Backing :class:`AttachmentStore`.
+        linked_to: When provided, return only attachments whose
+            ``linked_transaction_ids`` or ``linked_invoice_ids``
+            tuple contains this id.
+        kind: When provided, return only attachments of this
+            :class:`~aeat.domain.attachments._enums.AttachmentKind`.
+
+    Returns:
+        Filtered tuple of attachment manifests in store iteration
+        order.
+    """
     out: list[Attachment] = []
     for attachment in store.iter_manifests():
         if kind is not None and attachment.kind is not kind:

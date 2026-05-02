@@ -1,21 +1,21 @@
-"""Currency encoding edge-case matrix.
+"""Lock the currency-encoding edge-case matrix.
 
-The CURRENCY encoders in :mod:`._record_spec` must handle every
-value Kent's ruleset can emit across both the 13-byte (Modelo
-130) and 17-byte (Modelo 303) column widths, and under both the
-UNSIGNED and INLINE_SIGN conventions. Golden-SHA tests lock a
-single happy-path scenario per modelo; in the
-edge-case matrix:
+The CURRENCY encoders in
+:mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` must handle
+every value Kent's ruleset can emit across both the 13-byte (Modelo 130) and
+17-byte (Modelo 303) column widths, and under both the UNSIGNED and
+INLINE_SIGN conventions. Golden-SHA tests lock a single happy-path scenario
+per modelo; this matrix exercises:
 
-- Zero (Decimal("0.00"))
-- Smallest positive: 0.01 (1 cent)
-- Typical: 1234.56
-- Large within modelo capacity: 99 999 999.99 (under 13-byte limit)
-- Signed negative: -100.00 (INLINE_SIGN only)
-- Signed zero: -0.00 canonicalises to +0.00
+* Zero (``Decimal("0.00")``).
+* Smallest positive: 0.01 (1 cent).
+* Typical: 1234.56.
+* Large within modelo capacity: 99 999 999.99 (under the 13-byte limit).
+* Signed negative: -100.00 (INLINE_SIGN only).
+* Signed zero: -0.00 canonicalises to +0.00.
 
-A value that would overflow the field width must raise at encode
-time, not truncate silently.
+A value that would overflow the field width must raise at encode time, not
+truncate silently.
 """
 
 from __future__ import annotations

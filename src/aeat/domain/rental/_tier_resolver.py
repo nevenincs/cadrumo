@@ -1,11 +1,8 @@
-"""LIRPF art. 23.2 four-tier auto-resolver post Ley 12/2023 (#454).
+"""LIRPF art. 23.2 four-tier auto-resolver post Ley 12/2023.
 
 Implements the BOE priority order (90 → 70 → 60 → 50, highest
 applicable wins) per disposición final segunda apartado uno of
-Ley 12/2023, de 24 de mayo (BOE-A-2023-12203). Trigger conditions
-reproduced verbatim in
-``.vault/research/2026-04-29-rental-income-hardening-research.md``
-section §2.
+Ley 12/2023, de 24 de mayo (BOE-A-2023-12203).
 
 Effective-date dispatch:
 
@@ -19,8 +16,9 @@ Effective-date dispatch:
   - Otherwise → four-tier dispatch.
 
 LAU art. 17.6 non-compliance forfeits the reducción entirely
-(``FORFEIT_LAU_17_6``) — checked before any tier evaluation per
-the closing paragraph of the rewritten apartado 2.
+(:attr:`aeat.domain.rental.ReduccionTier.FORFEIT_LAU_17_6`) — checked
+before any tier evaluation per the closing paragraph of the rewritten
+apartado 2.
 
 Tier 70-b-1 (joven inquilino) carries a per-co-tenant qualifying
 share: BOE explicitly states "Cuando existan varios arrendatarios

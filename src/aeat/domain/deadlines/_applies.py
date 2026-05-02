@@ -1,14 +1,20 @@
-"""Pure-function applicability rules for autónomo modelos.
+"""Pure-function applicability rules for the autónomo modelo set.
 
-Each rule answers the question "must this profile file this modelo?".
-The decisions are derived from the BOE / Manual práctico citations
-recorded in the research note
-``[[2026-04-12-deadline-engine-research]]`` - they are not invented.
+Each rule answers a single question: "must this profile file this
+modelo?". The decisions are derived from the BOE order and Manual
+práctico citations attached to each rule, never invented.
 
-Adding a new modelo means: (a) cite the BOE order in the research
-note, (b) add an entry to :data:`_RULES`, (c) add the canonical window
-to :mod:`aeat.domain.deadlines._calendar`, (d) add a truth-table case to
-``test_applies.py``.
+Adding a new modelo means:
+
+* Cite the governing BOE order on the rule.
+* Add an entry to :data:`_RULES`.
+* Add the canonical window to
+  :mod:`aeat.domain.deadlines._calendar`.
+* Add a truth-table case to
+  :mod:`aeat.domain.deadlines.test_applies`.
+
+Public entry points are :func:`applies_to` (boolean predicate) and
+:func:`explain` (Spanish-language reason).
 """
 
 from __future__ import annotations
@@ -198,7 +204,7 @@ def applies_to(profile: AutonomoProfile, modelo: str) -> bool:
     """Return ``True`` iff ``profile`` is obliged to file ``modelo``.
 
     Pure function. The decision is derived from the rule table built
-    from the research note's BOE / Manual práctico citations.
+    from each rule's BOE order and Manual práctico citations.
 
     Args:
         profile: The autónomo profile to evaluate.
@@ -208,8 +214,8 @@ def applies_to(profile: AutonomoProfile, modelo: str) -> bool:
         ``True`` if the profile is obliged to file ``modelo``.
 
     Raises:
-        ScheduleComputationError: If ``modelo`` has no rule registered
-            in the v1 autónomo set.
+        ScheduleComputationError: If ``modelo`` has no rule
+            registered in the supported autónomo set.
     """
     rule = _RULES.get(modelo)
     if rule is None:

@@ -1,14 +1,11 @@
 """Unit tests for the Modelo 111 2026 ruleset.
 
-Issue `#318` (Tier-L per-modelo calc-verify-roundtrip): the 2026
-ruleset is a structural clone of the 2024 / 2025 rulesets because
-LIRPF arts. 99-101 + RIRPF arts. 99-100 were not amended for 2025 or
-2026 (see the rule-delta manifest at
-``.vault/reference/2026-111-rule-delta.md``). These tests assert the
-no-drift invariant against the 2025 ruleset and ship an external-
-anchored worked example whose expected values come from LIRPF / RIRPF
-verbatim — not from the 2026 ruleset's stored parameters. A typo in
-either the ruleset's parameters or the shared formulas would
+The 2026 ruleset is a structural clone of the 2024 / 2025 rulesets because
+LIRPF arts. 99-101 + RIRPF arts. 99-100 were not amended for 2025 or 2026.
+These tests assert the no-drift invariant against the 2025 ruleset and
+ship an externally-anchored worked example whose expected values come from
+LIRPF / RIRPF verbatim — not from the 2026 ruleset's stored parameters. A
+typo in either the ruleset's parameters or the shared formulas would
 therefore fail one of the cases below.
 """
 
@@ -28,12 +25,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _provided() -> dict[str, Decimal]:
     """Worked-example fixture for a 2T 2026 retenedor.
 
-    Distinct numerical scenario from the 2024 / 2025 fixtures (which
-    use 6 000 € premios / 500 € ganancias and 8 000 € premios / 1 000
-    € ganancias respectively) to avoid mirror-fixture coupling: a 2T
-    2026 employer with both rate buckets exercised plus a non-zero
-    complementaria deduction on casilla 29 so the resultado-a-ingresar
-    arithmetic exercises the full DAG.
+    The numerical scenario is intentionally distinct from the 2024 / 2025
+    fixtures (which use 6 000 € premios / 500 € ganancias and 8 000 €
+    premios / 1 000 € ganancias respectively) to avoid mirror-fixture
+    coupling: a 2T 2026 employer with both rate buckets exercised plus a
+    non-zero complementaria deduction on casilla 29 so the
+    resultado-a-ingresar arithmetic exercises the full DAG.
 
     Inputs (LIRPF arts. 99-101 + RIRPF arts. 99-100):
       - Casilla 03 (retenciones rendimientos del trabajo): 2 500,00
@@ -69,6 +66,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo111Ruleset2026:
+    """Formula-engine assertions for the 2026 Modelo 111 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_111_2026,
@@ -78,7 +77,7 @@ class TestModelo111Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_2026_no_drift_from_2025(self) -> None:
-        """Issue `#318` invariant: 2026 audit must equal 2025 audit on identical inputs.
+        """The 2026 audit must equal the 2025 audit on identical inputs.
 
         LIRPF arts. 99-101 + RIRPF arts. 99-100 are unchanged across
         2025 → 2026 per the rule-delta manifest. The casillas +
@@ -109,23 +108,21 @@ class TestModelo111Ruleset2026:
         assert MODELO_111_2026.effective_to == date(2026, 12, 31)
 
     def test_external_worked_example_lirpf_99_2026(self) -> None:
-        """External-anchored worked example for the 2026 ruleset.
+        """Externally-anchored worked example for the 2026 ruleset.
 
         Provenance: LIRPF (Ley 35/2006) arts. 99 + 101.7 fix the
         obligation + 19 % rate on premios en metálico; LIRPF art.
         101.2 fixes the 19 % rate on ganancias gravadas. RIRPF (RD
         439/2007) art. 99 implements the obligation hook for premios;
         RIRPF art. 100.1 fixes the 19 % rate on arrendamiento de
-        bienes inmuebles urbanos. Fixture values derived from those
+        bienes inmuebles urbanos. Fixture values are derived from those
         rates, NOT from the ruleset's ``ParameterTable``.
 
-        Citation: BOE-A-2006-20764 LIRPF arts. 99 + 101.2 + 101.7
-        (consolidated text last update 2026-03-21; no 2025 / 2026
-        amendment to these articles); BOE-A-2007-6820 RIRPF arts. 99
-        + 100 (consolidated text last update 2026-02-28; RD 253/2025
-        only modifies art. 69, not arts. 99-100).
+        Citation: BOE-A-2006-20764 LIRPF arts. 99 + 101.2 + 101.7;
+        BOE-A-2007-6820 RIRPF arts. 99 + 100 (RD 253/2025 only modifies
+        RIRPF art. 69, not arts. 99-100).
 
-        Scenario distinct from ``_provided()`` to avoid coupling: a
+        Scenario distinct from :func:`_provided` to avoid coupling: a
         3T 2026 retenedor with a focused arrendamiento scenario and
         no premios / contraprestaciones / cesión-imagen activity.
           - Casilla 03: 1 500,00 (trabajo, supplied)
@@ -235,9 +232,9 @@ class TestModelo111Ruleset2026:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_arrendamiento_retention_rate_mismatch_raises(self) -> None:
-        """Casilla 12 = 19 % x 11. Kent applies 17 % (50 € short on a 2 500 € base).
+        """Casilla 12 = 19 % x 11; user applies 17 % (50 € short on a 2 500 € base).
 
-        Negative-path test: confirm the 2026 audit surfaces a
+        Negative-path test: confirms the 2026 audit surfaces a
         casilla-12 discrepancy when the user-supplied value departs
         from the engine's re-derivation by more than the audit
         tolerance.

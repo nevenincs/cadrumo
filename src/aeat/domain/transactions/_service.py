@@ -1,4 +1,11 @@
-"""Service helpers for transaction catalogues."""
+"""Service helpers for transaction catalogues.
+
+Pure functions over :class:`aeat.domain.transactions.TransactionCatalogue`:
+each helper returns a fresh immutable catalogue rather than mutating
+the input. The module brokers the classification/percentage coupling
+rules and history-chain bookkeeping that callers must not implement
+ad-hoc.
+"""
 
 from __future__ import annotations
 
@@ -91,7 +98,7 @@ def set_classification(
         reason: Free-text override justification; embedded in the
             history entry, not on the top-level transaction.
         confidence: Caller-supplied decision confidence in the inclusive
-            0..1 range (#236). When omitted, manual decisions default
+            ``[0, 1]`` range. When omitted, manual decisions default
             to ``Decimal("1.0")`` and all other classifier paths default
             to ``None``.
 

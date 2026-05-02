@@ -1,9 +1,17 @@
-"""FilingDivergenceKind enum for FilingDraft ↔ Justificante compare.
+"""Divergence taxonomy for FilingDraft vs Justificante reconciliation.
 
-Disjoint from :class:`aeat.application.sync._divergence.DivergenceKind` (which is
-schema-level and baked into auto-heal decision tables). The variants
-here are instance-level: one per concrete reason a FilingDraft and
-its AEAT justificante can disagree.
+Defines :class:`FilingDivergenceKind`, the closed set of concrete
+instance-level reasons a local :class:`aeat.domain.filing.FilingDraft`
+and its parsed AEAT :class:`aeat.domain.justificante.Justificante` can
+disagree.
+
+This taxonomy is deliberately disjoint from the schema-level
+:class:`aeat.domain.sync.DivergenceKind`, which is consumed by the
+auto-heal decision tables in :mod:`aeat.application.sync`. The two
+enums must not be conflated: one classifies schema drift between
+versions of a modelo definition, the other classifies per-instance
+mismatches between the operator's local view of a filing and what
+AEAT has on file.
 """
 
 from __future__ import annotations
@@ -12,7 +20,12 @@ from enum import StrEnum
 
 
 class FilingDivergenceKind(StrEnum):
-    """Concrete divergence taxonomy for a FilingDraft ↔ Justificante compare.
+    """Concrete divergence variants for a FilingDraft vs Justificante compare.
+
+    Each member identifies a single, mutually-exclusive reason why a
+    local approved draft and the AEAT-side justificante can disagree.
+    The taxonomy is consumed by :class:`FieldMismatch` and surfaced in
+    :class:`ReconciliationReport`.
 
     Attributes:
         FILING_NOT_YET_FOUND: AEAT has no matching justificante at all

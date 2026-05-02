@@ -1,4 +1,8 @@
-"""Unit tests for the session_scope unit-of-work helper."""
+"""Unit tests for the :func:`aeat.adapters.persistence.storage.sql.session.session_scope` unit-of-work helper.
+
+Validates commit-on-success and rollback-on-exception semantics by
+running statements through real SQLAlchemy sessions backed by SQLite.
+"""
 
 from __future__ import annotations
 
@@ -22,7 +26,7 @@ def _engine(tmp_path: Path):
 
 
 def test_session_scope_commits_on_success(tmp_path: Path) -> None:
-    """A normal exit from session_scope must persist the unit of work."""
+    """A normal exit from :func:`session_scope` persists the unit of work."""
     engine = _engine(tmp_path)
     try:
         with session_scope(engine) as session:
@@ -38,7 +42,7 @@ def test_session_scope_commits_on_success(tmp_path: Path) -> None:
 
 
 def test_session_scope_rolls_back_on_exception(tmp_path: Path) -> None:
-    """An exception inside session_scope must roll back the unit of work."""
+    """An exception inside :func:`session_scope` rolls back the unit of work."""
     engine = _engine(tmp_path)
 
     class BoomError(RuntimeError):

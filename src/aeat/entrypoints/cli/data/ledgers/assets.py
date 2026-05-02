@@ -1,4 +1,13 @@
-"""`aeat data ledgers assets` commands."""
+"""``aeat data ledgers assets`` commands.
+
+Persists and inspects depreciable technical-kit assets in the encrypted
+local ledger backed by
+:mod:`aeat.adapters.persistence.profile.assets`. All amortization
+arithmetic delegates to
+:mod:`aeat.domain.profile.assets` (round-half-up to two decimals) and
+:mod:`aeat.domain.formulas._rulesets.modelo_100._amortization` for the
+LIS art. 12.1.a lineal table.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +35,7 @@ from .....domain.profile.assets import (
 )
 from .....domain.profile.errors import AssetRecordError
 from ..._context import json_output_requested
+from ..._i18n import t, tr
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 
 app = typer.Typer(name="assets", no_args_is_help=True, help="Depreciable technical kit ledger.")
@@ -144,12 +154,23 @@ def list_assets(
         emit_json_success("data ledgers assets list", payload)
         return
     if not payload:
-        typer.echo("No asset records.")
+        typer.echo(
+            tr(
+                t(
+                    "No hay registros de activos.",
+                    "No asset records.",
+                    "No hi ha registres d'actius.",
+                    "Nincs eszközök rekordja.",
+                )
+            )
+        )
         return
+    basis_label = tr(t("base", "basis", "base", "alap"))
+    acquired_label = tr(t("adquirido", "acquired", "adquirit", "beszerezve"))
     for item in payload:
         typer.echo(
-            f"{item['identifier']} | {item['asset_class']} | basis {item['cost_basis']} EUR | "
-            f"acquired {item['acquisition_date']}"
+            f"{item['identifier']} | {item['asset_class']} | {basis_label} {item['cost_basis']} EUR | "
+            f"{acquired_label} {item['acquisition_date']}"
         )
 
 
@@ -166,10 +187,12 @@ def show_asset(
         emit_json_success("data ledgers assets show", payload)
         return
     typer.echo(f"{asset.identifier}: {asset.description}")
-    typer.echo(f"class: {asset.asset_class.value}")
-    typer.echo(f"basis: {asset.cost_basis} EUR")
+    typer.echo(f"{tr(t('clase', 'class', 'classe', 'osztaly'))}: {asset.asset_class.value}")
+    typer.echo(f"{tr(t('base', 'basis', 'base', 'alap'))}: {asset.cost_basis} EUR")
     typer.echo(
-        f"invoice: base {asset.resolved_taxable_base} EUR, VAT {asset.vat_rate}% ({asset.resolved_vat_amount} EUR)"
+        f"{tr(t('factura', 'invoice', 'factura', 'szamla'))}: "
+        f"{tr(t('base', 'base', 'base', 'alap'))} {asset.resolved_taxable_base} EUR, "
+        f"IVA {asset.vat_rate}% ({asset.resolved_vat_amount} EUR)"
     )
 
 
@@ -238,7 +261,16 @@ def add_asset(
     if json_output_requested():
         emit_json_success("data ledgers assets add", payload)
         return
-    typer.echo(f"Asset recorded: {identifier} ({basis} EUR amortizable basis).")
+    typer.echo(
+        tr(
+            t(
+                f"Activo registrado: {identifier} ({basis} EUR base amortizable).",
+                f"Asset recorded: {identifier} ({basis} EUR amortizable basis).",
+                f"Actiu registrat: {identifier} ({basis} EUR base amortitzable).",
+                f"Eszkoz rogzitve: {identifier} ({basis} EUR amortizalhato alap).",
+            )
+        )
+    )
 
 
 @classes_app.command(name="list", help="List LIS art. 12.1.a asset classes and rates.")
@@ -256,8 +288,12 @@ def list_classes() -> None:
     if json_output_requested():
         emit_json_success("data ledgers assets classes list", payload)
         return
+    max_label = tr(t("máx", "max", "màx", "max"))
+    years_label = tr(t("años", "years", "anys", "ev"))
     for row in payload:
-        typer.echo(f"{row['asset_class']} | {row['coef_max_pct']}% | max {row['period_max_years']} years")
+        typer.echo(
+            f"{row['asset_class']} | {row['coef_max_pct']}% | {max_label} {row['period_max_years']} {years_label}"
+        )
 
 
 @amortization_app.command(name="preview", help="Preview amortization without writing the ledger.")
@@ -275,7 +311,8 @@ def preview_amortization(
     if json_output_requested():
         emit_json_success("data ledgers assets amortization preview", payload)
         return
-    typer.echo(f"{asset} {year}: {amount} EUR (preview)")
+    preview_label = tr(t("vista previa", "preview", "vista prèvia", "elonezet"))
+    typer.echo(f"{asset} {year}: {amount} EUR ({preview_label})")
 
 
 @amortization_app.command(name="apply", help="Compute and record one amortization amount.")
@@ -298,11 +335,16 @@ def apply_amortization(
     if json_output_requested():
         emit_json_success("data ledgers assets amortization apply", payload)
         return
-    status = "recorded" if result.stored else "already recorded"
-    typer.echo(f"Amortization {status}: {asset} {year} {result.amount} EUR.")
+    if result.stored:
+        status = tr(t("registrada", "recorded", "registrada", "rögzítve"))
+    else:
+        status = tr(t("ya registrada", "already recorded", "ja registrada", "mar rögzítve"))
+    label = tr(t("Amortización", "Amortization", "Amortització", "Amortizacio"))
+    typer.echo(f"{label} {status}: {asset} {year} {result.amount} EUR.")
 
 
 def _find_asset(identifier: str, *, storage_dir: Path | None) -> AssetRecord:
+    """Return the persisted asset with ``identifier`` or raise :exc:`AssetRecordError`."""
     for asset in load_assets(storage_dir=storage_dir):
         if asset.identifier == identifier:
             return asset
@@ -314,6 +356,7 @@ def _find_asset(identifier: str, *, storage_dir: Path | None) -> AssetRecord:
 
 
 def _asset_payload(asset: AssetRecord) -> dict[str, object]:
+    """Render an :class:`AssetRecord` as a JSON-safe mapping for ``--json`` output."""
     return {
         "identifier": asset.identifier,
         "description": asset.description,
@@ -333,20 +376,41 @@ def _asset_payload(asset: AssetRecord) -> dict[str, object]:
 
 
 def _decimal(raw: str) -> Decimal:
+    """Parse ``raw`` into a :class:`Decimal` or raise :exc:`typer.BadParameter`."""
     try:
         return Decimal(raw)
     except InvalidOperation as exc:
-        raise typer.BadParameter(f"invalid decimal: {raw}") from exc
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"decimal no válido: {raw}",
+                    f"invalid decimal: {raw}",
+                    f"decimal no vàlid: {raw}",
+                    f"ervenytelen tizedes szam: {raw}",
+                )
+            )
+        ) from exc
 
 
 def _date(raw: str) -> date:
+    """Parse an ISO-8601 ``YYYY-MM-DD`` string or raise :exc:`typer.BadParameter`."""
     try:
         return date.fromisoformat(raw)
     except ValueError as exc:
-        raise typer.BadParameter(f"invalid date: {raw}") from exc
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"fecha no válida: {raw}",
+                    f"invalid date: {raw}",
+                    f"data no vàlida: {raw}",
+                    f"ervenytelen datum: {raw}",
+                )
+            )
+        ) from exc
 
 
 def _money(value: Decimal) -> Decimal:
+    """Quantize ``value`` to two decimals using ``ROUND_HALF_UP``."""
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 

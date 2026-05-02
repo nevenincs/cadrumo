@@ -1,11 +1,14 @@
 """Shared review-package test fixtures.
 
-Every test in :mod:`aeat.application.review` that persists a draft via the
-ciphertext-at-rest :class:`FilingDraftRepository` needs an
-:class:`EphemeralMasterKeyProvider` installed via
-:func:`override_master_key_provider`. Putting the autouse fixture in a
-conftest keeps individual test modules free of crypto bootstrapping
-boilerplate.
+Every test in :mod:`aeat.application.review` that persists a draft
+through the ciphertext-at-rest
+:class:`aeat.domain.filing.FilingDraftRepository` needs an
+:class:`aeat.adapters.persistence.storage.EphemeralMasterKeyProvider`
+installed via
+:func:`aeat.adapters.persistence.storage.override_master_key_provider`.
+
+Hosting the autouse fixture in this conftest keeps individual test
+modules free of crypto-bootstrapping boilerplate.
 """
 
 from __future__ import annotations

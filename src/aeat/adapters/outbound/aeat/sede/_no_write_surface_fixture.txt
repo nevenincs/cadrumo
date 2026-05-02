@@ -1,5 +1,5 @@
 # Write-guard: tokens that must NEVER appear as a CALL-SITE verb in
-# aeat.sede public surface. One per line. Loaded by test_no_write_surface.py.
+# aeat.adapters.outbound.aeat.sede public surface. One per line. Loaded by test_no_write_surface.py.
 #
 # Covers English (submit/send/commit/etc.) and Spanish (enviar/presentar/etc.)
 # mutation verbs, plus modificar/anular/cancelar/rechazar captured from the

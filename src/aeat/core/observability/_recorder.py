@@ -1,4 +1,12 @@
-"""``record_event`` — the single emit primitive used by every call site."""
+"""The single :func:`record_event` emit primitive used by every call site.
+
+Routes structured :class:`aeat.core.observability._models.RunEvent`
+records through the standard :mod:`logging` machinery so any handler
+attached to the root logger — notably the per-run
+:class:`aeat.core.observability._sink.JsonlRunSink` — picks them up
+automatically while a :func:`aeat.core.observability.run_context` is
+active.
+"""
 
 from __future__ import annotations
 
@@ -42,21 +50,22 @@ def record_event(
 
     Context propagation note: the active ``run_id`` is carried via
     :class:`contextvars.ContextVar`. These propagate across
-    ``asyncio.create_task`` and ``asyncio.run`` automatically (PEP
-    567), but NOT across plain ``threading.Thread`` targets nor
-    ``asyncio.to_thread`` / ``loop.run_in_executor`` workers unless
-    the caller wraps the target with :func:`contextvars.copy_context`.
-    A call to ``record_event`` from a detached thread will therefore
-    raise :class:`RunContextMissingError`. Callers that need the
-    event recorded in such a thread must either re-enter
-    :func:`run_context` inside the worker or copy the context
-    explicitly.
+    :func:`asyncio.create_task` and :func:`asyncio.run` automatically
+    (PEP 567), but NOT across plain :class:`threading.Thread` targets
+    nor :func:`asyncio.to_thread` / :meth:`loop.run_in_executor` workers
+    unless the caller wraps the target with
+    :func:`contextvars.copy_context`. A call to :func:`record_event`
+    from a detached thread therefore raises
+    :exc:`aeat.core.observability.RunContextMissingError`. Callers that
+    need the event recorded in such a thread must either re-enter
+    :func:`aeat.core.observability.run_context` inside the worker or
+    copy the context explicitly.
 
     Args:
         kind: The event kind.
         payload: A :class:`RunEventPayload` with exactly one variant set.
         module: Optional explicit module string; defaults to the
-            caller's ``__name__``.
+            caller's ``__name__`` resolved by :func:`_caller_module`.
 
     Returns:
         The constructed :class:`RunEvent` (also forwarded to the JSONL
@@ -81,8 +90,8 @@ def record_event(
         module=module or _caller_module(),
     )
     # INFO level keeps the record flowing through both the JSONL sink
-    # AND any caller that has tightened their own handler levels. The
-    # stderr spam concern from audit finding S2 is addressed in
+    # AND any caller that has tightened their own handler levels.
+    # Stderr duplication is suppressed inside
     # :func:`aeat.core.logging.configure_logging`, where the default stderr
     # handler carries a filter that excludes records which already
     # went to the per-run sink (i.e. records with a ``run_event``

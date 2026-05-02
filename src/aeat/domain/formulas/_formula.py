@@ -1,10 +1,10 @@
 """Discriminated-union pydantic models for every formula node.
 
-The engine never evaluates strings. Every node is a pydantic v2
-model tagged by :class:`aeat.domain.formulas.FormulaOp`. The public
-:data:`Operand` alias covers the four possible operands of a
-formula: a decimal literal, a casilla reference, a parameter
-reference, or a nested formula.
+The :class:`aeat.domain.formulas.Engine` never evaluates strings. Every
+node is a pydantic v2 model tagged by
+:class:`aeat.domain.formulas.FormulaOp`. The public :data:`Operand` alias
+covers the four possible operands of a formula: a decimal literal, a
+casilla reference, a parameter reference, or a nested formula.
 """
 
 from __future__ import annotations
@@ -23,11 +23,23 @@ from pydantic import (
 
 
 def _coerce_decimal(value: Any) -> Any:
-    """Reject floats and coerce ints / strings to :class:`Decimal`.
+    """Reject floats and coerce ints / strings to :class:`decimal.Decimal`.
 
-    Floats are rejected because their binary representation is lossy
-    for monetary literals (e.g., ``0.1``). Callers must supply
-    ``"0.1"`` as a string or a ``Decimal`` instance.
+    Floats are rejected because their binary representation is lossy for
+    monetary literals (e.g. ``0.1``). Callers must supply ``"0.1"`` as a
+    string or a :class:`decimal.Decimal` instance.
+
+    Args:
+        value: Candidate value coming through pydantic validation.
+
+    Returns:
+        Either the original :class:`decimal.Decimal`, or a freshly
+        constructed one. Other types are returned untouched so the
+        downstream :class:`pydantic.ValidationError` carries a precise
+        message.
+
+    Raises:
+        ValueError: When ``value`` is a :class:`bool` or :class:`float`.
     """
     if isinstance(value, Decimal):
         return value
@@ -173,9 +185,9 @@ class BracketsFormula(_FormulaStrictFrozenModel):
 class RoundFormula(_FormulaStrictFrozenModel):
     """Terminal rounding to a declared precision.
 
-    The engine enforces that no ``RoundFormula`` contains another
-    ``RoundFormula`` anywhere in its operand tree â€” the
-    single-rounding invariant from the ADR.
+    The engine enforces that no :class:`RoundFormula` contains another
+    :class:`RoundFormula` anywhere in its operand tree — the
+    single-rounding invariant.
     """
 
     op: TLiteral["round"] = "round"

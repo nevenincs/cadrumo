@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 import shlex
-from importlib import import_module
+from collections.abc import Callable
 
 from ..config import PROJECT_ROOT, Settings
 from ._errors import AeatCorpusDriftError, AeatObservabilityError
@@ -74,8 +74,7 @@ def _argv_from_arguments(
       False, so replay simply not re-emitting them matches the
       original user intent. The tradeoff is that toggled-off
       flags like ``--no-sync`` on a ``typer.Option(True, "--sync/--no-sync")``
-      alias pair lose fidelity; this is documented as a known
-      limitation (audit finding NEW-1, 2026-04-21).
+      alias pair lose fidelity; this is a known limitation.
     - Any other value — emit the ``--<name>=<value>`` form; the
       ``=`` binding prevents values that start with ``-`` from being
       mis-parsed as another flag.
@@ -115,7 +114,11 @@ def _argv_from_arguments(
     return parts
 
 
-def replay_run(run_id: str) -> RunTrace:
+def replay_run(
+    run_id: str,
+    *,
+    invoke: Callable[[list[str]], object] | None = None,
+) -> RunTrace:
     """Replay a recorded run after gating on corpus drift.
 
     Args:
@@ -147,7 +150,8 @@ def replay_run(run_id: str) -> RunTrace:
             entrypoint=original.entrypoint,
         )
     argv = _argv_from_arguments(original.entrypoint, original.arguments)
-    app = import_module("aeat.entrypoints.cli").app
+    if invoke is None:
+        return original
 
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.
@@ -158,7 +162,7 @@ def replay_run(run_id: str) -> RunTrace:
     # traces from fresh runs and chain them back to their original.
     os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
     try:
-        app(argv, standalone_mode=False)
+        invoke(argv)
     finally:
         if previous is None:
             os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)

@@ -1,4 +1,13 @@
-"""N26 PDF statement provider backed by `pdfplumber`."""
+"""N26 PDF statement provider backed by ``pdfplumber``.
+
+Implements :class:`PdfN26Provider`, an
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+that parses German-language N26 monthly PDF statements. The parser
+is anchored on the ``Beschreibung Verbuchungsdatum Betrag`` table
+header and a regex matched against each line below it; continuation
+lines (value-date stamps, IBAN annotations, free-form remittance
+text) attach to the most recent header row.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +16,7 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TypedDict
 
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
@@ -49,6 +58,8 @@ _PERIOD_RE = re.compile(r"^\d{2}\.\d{2}\.\d{4} bis \d{2}\.\d{2}\.\d{4}$")
 
 
 class _InProgressRow(TypedDict):
+    """Mutable scratch row collected while iterating page lines."""
+
     base_line: str
     narrative: str
     booked_date: str
@@ -57,6 +68,8 @@ class _InProgressRow(TypedDict):
 
 
 class _ParsedRow(TypedDict):
+    """Frozen statement row produced by :func:`_finalize_row`."""
+
     base_line: str
     narrative: str
     booked_date: str
@@ -68,14 +81,24 @@ class _ParsedRow(TypedDict):
 
 
 class PdfN26Provider(FinancialProvider):
-    """Ingest raw transactions from N26 monthly PDF statements."""
+    """Ingest raw transactions from N26 monthly PDF statements.
+
+    The provider rejects any PDF that does not carry the N26 bank
+    marker, the ``Kontoauszug`` heading, and the canonical
+    transaction-table header line, so an arbitrary PDF cannot be
+    silently accepted as an N26 statement. Internal-flow narratives
+    (interest credits, savings transfers, withholding tax) are
+    flagged via :data:`_INTERNAL_NARRATIVES` so the
+    :func:`_derive_counterparty_and_description` helper drops the
+    counterparty for those rows.
+    """
 
     name = "n26-pdf"
     supported_extensions = frozenset({".pdf"})
     source_format = SourceFormat.PDF
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that `path` is an N26 PDF statement with at least one row."""
+        """Validate that ``path`` is an N26 PDF statement with at least one row."""
         try:
             pages = self._extract_pages(path)
             self._require_n26_statement(pages)

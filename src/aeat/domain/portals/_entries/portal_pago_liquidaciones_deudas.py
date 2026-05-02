@@ -1,4 +1,10 @@
-"""Portal: Pago de liquidaciones y deudas."""
+"""Registry entry for payment of AEAT-issued liquidations and debts.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Pago de liquidaciones tributarias y deudas notificadas por la AEAT.",
 )
+"""Portal entry for paying AEAT-notified tax liquidations and debts."""

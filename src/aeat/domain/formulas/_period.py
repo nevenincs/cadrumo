@@ -1,9 +1,10 @@
 """Fiscal-period primitives for the :mod:`aeat.domain.formulas` engine.
 
 A :class:`FiscalPeriod` is a closed, strict pydantic v2 model identifying
-either a calendar year or a specific quarter within a year. The
-engine uses the period's ``start``/``end`` date span to resolve the
-active ruleset in :class:`aeat.domain.formulas.RulesetRegistry`.
+either a calendar year or a specific quarter within a year.
+:class:`aeat.domain.formulas.RulesetRegistry` uses the period's
+:attr:`FiscalPeriod.start` / :attr:`FiscalPeriod.end` date span to resolve
+the active :class:`aeat.domain.formulas.Ruleset`.
 """
 
 from __future__ import annotations
@@ -28,7 +29,13 @@ _QUARTER_MONTH_RANGE: dict[Quarter, tuple[int, int]] = {
 
 
 class FiscalPeriod(BaseModel):
-    """A fiscal period keyed by year and optional quarter."""
+    """A fiscal period keyed by year and optional quarter.
+
+    Attributes:
+        year: Calendar year (1990-2100 inclusive).
+        quarter: Optional :class:`aeat.domain.formulas.Quarter`. ``None``
+            means the period spans the whole year.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 

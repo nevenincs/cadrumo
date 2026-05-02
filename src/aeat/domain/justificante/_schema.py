@@ -1,9 +1,10 @@
-"""Strict pydantic v2 schema for parsed AEAT justificantes (#44).
+"""Strict pydantic v2 schema for parsed AEAT justificantes.
 
-The :class:`Justificante` record is the boundary-crossing type consumed by
-downstream subpackages (submission engine #42, status reader #43). It is
-*frozen* and *strict* so callers can rely on deterministic field types, and
-so mutating it after parse requires an explicit ``model_copy``.
+The :class:`Justificante` record is the boundary-crossing type consumed
+by downstream subpackages (the submission engine and the status
+reader). It is *frozen* and *strict* so callers can rely on
+deterministic field types, and so mutating it after parse requires an
+explicit :meth:`pydantic.BaseModel.model_copy`.
 """
 
 from __future__ import annotations
@@ -19,8 +20,10 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 class JustificanteParserBackend(StrEnum):
     """Closed set of supported parser backends.
 
-    ``PDFPLUMBER`` is the fidelity-first default; ``PYMUPDF`` is reserved for
-    a future speed-optimised implementation and currently raises on use.
+    Attributes:
+        PDFPLUMBER: Fidelity-first default backend.
+        PYMUPDF: Reserved for a future speed-optimised implementation
+            and currently raises on use.
     """
 
     PDFPLUMBER = "PDFPLUMBER"
@@ -39,7 +42,8 @@ class Justificante(BaseModel):
         csv: Código Seguro de Verificación — the short AEAT-assigned hash
             used to verify the document on the Sede electrónica.
         modelo: String ID of the modelo the receipt belongs to (``"130"``,
-            ``"303"``, ``"100"``, ...). References the #6 model catalogue.
+            ``"303"``, ``"100"``, ...). References the modelo catalogue
+            in :mod:`aeat.domain.modelos`.
         period: Period identifier as printed on the receipt (``"1T"``,
             ``"0A"``, ``"2026Q1"`` depending on the modelo convention).
         ejercicio: Four-digit tax year as printed on the receipt, when

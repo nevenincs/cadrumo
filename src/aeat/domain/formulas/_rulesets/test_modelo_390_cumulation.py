@@ -1,17 +1,15 @@
 """Cumulation tests for Modelo 390 (annual IVA resumen).
 
 Modelo 390 is structurally an annual aggregator of the four quarterly
-Modelo 303 filings. The ADR
-``2026-04-27-modelo-390-calc-verify-adr.md`` chooses Approach C: the
-cumulated casillas (``95``, ``96``, ``100``, ``101``, ``108``,
-``109``, ``662``) stay user-supplied, and the M390 ruleset only
-encodes the algebraic relationships among them.
+Modelo 303 filings. The cumulated casillas (``95``, ``96``, ``100``,
+``101``, ``108``, ``109``, ``662``) stay user-supplied, and the M390
+ruleset only encodes the algebraic relationships among them.
 
-These tests assert cumulation correctness at the *test* level: a
+These tests assert cumulation correctness at the test level: a
 parametrised case configures four quarterly Modelo 303 inputs, runs
-the M303 engine for each quarter, sums the per-quarter results into
-the corresponding annual M390 casillas, and verifies that the M390
-ruleset audits cleanly against those sums.
+:class:`aeat.domain.formulas._engine.Engine` for each quarter, sums the
+per-quarter results into the corresponding annual M390 casillas, and
+verifies that the M390 ruleset audits cleanly against those sums.
 
 Cumulation rule encoded by these tests (per AEAT Modelo 390
 Instrucciones):
@@ -62,6 +60,14 @@ def _quarterly_inputs(*, base_general: Decimal, base_reducido: Decimal, base_sup
     Bases are taxpayer-supplied; the ruleset derives every cuota at
     the LIVA art. 90 / 91 rates plus the result chain. Casilla ``65``
     defaults to 100 (full attribution to Territorio Común).
+
+    Args:
+        base_general: Base imponible at the 21 % general rate (casilla 07).
+        base_reducido: Base imponible at the 10 % reduced rate (casilla 04).
+        base_super: Base imponible at the 4 % super-reduced rate (casilla 01).
+
+    Returns:
+        Casilla-id keyed inputs ready for the M303 engine.
     """
     return {
         "01": base_super,
@@ -72,7 +78,15 @@ def _quarterly_inputs(*, base_general: Decimal, base_reducido: Decimal, base_sup
 
 
 def _derive_quarter(ruleset: Ruleset, inputs: Mapping[str, Decimal]) -> dict[str, Decimal]:
-    """Run the M303 engine for one quarter and return the value map."""
+    """Run the M303 engine for one quarter and return the value map.
+
+    Args:
+        ruleset: The M303 ruleset variant for the relevant year.
+        inputs: Casilla-id keyed taxpayer inputs.
+
+    Returns:
+        Casilla-id keyed values combining inputs and engine-derived entries.
+    """
     ledger = Engine().derive(ruleset=ruleset, inputs=dict(inputs))
     derived: dict[str, Decimal] = dict(inputs)
     for entry in ledger.entries:
@@ -88,8 +102,16 @@ def _cumulate_to_annual(
     """Sum four M303 quarterly value maps into the M390 annual surface.
 
     Every M303 quarterly result map is normalised to the M390 annual
-    casilla layout per the cumulation rule documented at the top of
-    this module.
+    casilla layout per the cumulation rule documented in the module
+    docstring.
+
+    Args:
+        quarters: One M303 result map per quarter.
+        bienes_inversion_adjust: Annual ``662`` regularización adjustment
+            (LIVA art. 107) applied to derive ``191``.
+
+    Returns:
+        Casilla-id keyed annual surface ready to feed the M390 engine.
     """
 
     def _csum(casilla_id: str) -> Decimal:
@@ -262,7 +284,7 @@ class TestModelo390CumulationFromModelo303:
         self,
         year_pair: tuple[Ruleset, Ruleset],
     ) -> None:
-        """If Kent mistypes the annual aggregate, M390 surfaces a discrepancy."""
+        """If a taxpayer mistypes the annual aggregate, M390 surfaces a discrepancy."""
         m303, m390 = year_pair
         quarter_inputs = _quarterly_inputs(
             base_general=Decimal("10000.00"),

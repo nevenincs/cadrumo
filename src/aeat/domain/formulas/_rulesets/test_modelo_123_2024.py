@@ -1,4 +1,9 @@
-"""Focused tests for the Modelo 123 2024 ruleset."""
+"""Focused tests for the Modelo 123 2024 ruleset.
+
+Pins the no-drift invariant against
+:data:`aeat.domain.formulas._rulesets.MODELO_123_2025` and the
+casilla-09 retenciones-total rule.
+"""
 
 from __future__ import annotations
 

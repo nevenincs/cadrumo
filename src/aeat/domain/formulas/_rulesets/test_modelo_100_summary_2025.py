@@ -1,8 +1,10 @@
 """Unit tests for the Modelo 100 summary-block ruleset.
 
-H4 coverage gap: the Modelo 100 summary ruleset was
-the first ruleset shipped and had only borrador-integration
-coverage. Dedicated formula-engine unit tests live here.
+Covers the dedicated formula-engine surface for
+:data:`aeat.domain.formulas._rulesets.MODELO_100_SUMMARY_2025`. The summary
+ruleset is a pure aggregator — every assertion targets the cuota-íntegra,
+cuota-líquida, and cuota-diferencial summation arithmetic mandated by the
+Ley del IRPF (Ley 35/2006).
 """
 
 from __future__ import annotations
@@ -18,9 +20,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Worked example: Kent general base 20 000 €, savings base 5 000 €.
+    """Worked example with general base 20 000 € and savings base 5 000 €.
 
-    Values chosen so every formula output is independently derivable
+    Values are chosen so every formula output is independently derivable
     from the input arithmetic (no tautology with the ruleset's own
     formulas):
 
@@ -50,6 +52,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo100SummaryRuleset:
+    """Formula-engine assertions for the Modelo 100 summary block."""
+
     def test_ruleset_id_and_variant(self) -> None:
         """Modelo 100 summary uses the ``variant='summary'`` slot."""
         assert MODELO_100_SUMMARY_2025.ruleset_id == "modelo_100.summary.2025"
@@ -64,7 +68,7 @@ class TestModelo100SummaryRuleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_cuota_integra_sum_detects_typo(self) -> None:
-        """0595 = 0550 + 0551 + 0560 + 0561. Kent's sum off by 50€."""
+        """0595 = 0550 + 0551 + 0560 + 0561; user sum is off by 50 €."""
         provided = _provided()
         provided["0595"] = Decimal("4700.00")  # should be 4750
         report = Engine().audit_against(
@@ -110,8 +114,7 @@ class TestModelo100SummaryRuleset:
     def test_external_worked_example_lirpf_art_62_and_73(self) -> None:
         """External anchor per Ley IRPF (Ley 35/2006) arts. 62, 73, 67, 77, 79, 99.
 
-        Plain-text titles (BOE-A-2006-20764 consolidated text, retrieval
-        2026-04-22):
+        Plain-text titles (BOE-A-2006-20764 consolidated text):
           - art. 62 = "Cuota íntegra estatal" (tarifa general + tarifa
             ahorro, estatal half)
           - art. 73 = "Cuota íntegra autonómica" (mirror on the
@@ -127,27 +130,11 @@ class TestModelo100SummaryRuleset:
           - 0720 (cuota diferencial) = art. 79, with the art. 99
             pagos-a-cuenta subtraction
 
-        Citation-accuracy history (tracked for auditability):
-         - cited art. 103 for the cuota diferencial
-           — WRONG (art. 103 is "Liquidaciones provisionales"). Corrected
-           in to 79 + 99.
-         - art. 77 for cuota íntegra autonómica — WRONG
-           (art. 77 is "Cuota líquida autonómica total", post-deduction).
-           Corrected in art. 73.
-         - art. 67 for cuota íntegra estatal — WRONG
-           (art. 67 is "Cuota líquida estatal"). Corrected in
-           to art. 62. cited art. 79 for "cuota líquida
-           total" — WRONG (art. 79 is "Cuota diferencial"; cuota líquida
-           total splits across arts. 67 + 77). this.
-           Fixture arithmetic unchanged throughout; only statutory
-           pointers update.
-
         The summary ruleset is a pure aggregator (no rate-bearing formulas,
-        empty ParameterTable per the ADR §4 canonical pattern) so the
-        external anchor asserts the summation arithmetic mandated by LIRPF
-        is correctly reproduced.
+        empty ParameterTable) so the external anchor asserts the summation
+        arithmetic mandated by LIRPF is correctly reproduced.
 
-        Scenario: Kent 2025 renta — distinct numeric profile from ``_provided()``:
+        Scenario uses a distinct numeric profile from :func:`_provided`:
           - Base general: 0550 estatal 3 150, 0551 autonómica 3 150
             (cuota íntegra estatal + autonómica por base general).
           - Base del ahorro: 0560 estatal 190, 0561 autonómica 190

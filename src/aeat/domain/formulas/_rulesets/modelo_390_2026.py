@@ -1,24 +1,21 @@
 """Modelo 390 ruleset covering the full 2026 fiscal year.
 
-Structurally identical to :mod:`modelo_390_2024` and
-:mod:`modelo_390_2025`. The BOE-grounded algebraic chain encoded by
-Modelo 390 is unchanged across 2024, 2025, and 2026: LIVA arts. 90 /
-91 / 92 / 102 / 107 / 164 and RIVA art. 71.7 were not amended for
-2026, and Orden EHA/3111/2009 is amended only for non-substantive
-form metadata each year.
+Structurally identical to :mod:`aeat.domain.formulas._rulesets.modelo_390_2024`
+and :mod:`aeat.domain.formulas._rulesets.modelo_390_2025`. The BOE-grounded
+algebraic chain encoded by Modelo 390 is unchanged across 2024, 2025,
+and 2026: LIVA arts. 90 / 91 / 92 / 102 / 107 / 164 and RIVA art. 71.7
+were not amended for 2026, and Orden EHA/3111/2009 is amended only for
+non-substantive form metadata each year.
 
 The 2026 small-enterprise franquicia regime introduced by Directiva
 (UE) 2020/285 is an opt-in regime under which a participating
 taxpayer drops out of the standard Modelo 390 surface entirely. It is
 not a modification of the régimen-general result chain encoded here
-and is tracked by the IVA complexity sub-EPIC ``#345`` rather than
-this base ruleset. The rule-delta manifest at
-``.vault/reference/2026-04-27-modelo-390-rule-delta-reference.md``
-documents the deferral.
+and is tracked outside this base ruleset.
 
 This module re-imports ``_CASILLAS`` and ``_CITATIONS`` from the
 2024 master, declares its own year-stamped formula tuple plus an
-empty ``ParameterTable``, and binds to the 2026 effective range.
+empty :class:`ParameterTable`, and binds to the 2026 effective range.
 """
 
 from __future__ import annotations

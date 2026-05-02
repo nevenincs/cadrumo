@@ -1,12 +1,15 @@
-"""Protocol-level Cl@ve Movil tests for ``aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider``.
+"""Protocol-level tests for the Cl@ve Movil authentication provider.
 
-These tests use hand-written browser-session stand-ins and do not prove
-real AEAT authentication or operator Cl@ve approval.
-
-No mocks, patches, or cassettes are used. The tests drive the provider
+Exercises :class:`aeat.adapters.outbound.aeat.auth._clave_movil.ClaveMovilAuthProvider`
 against hand-written ``BrowserSessionLike`` stand-ins that record the
-navigation + form interactions. The stand-ins honour the same Protocol
-the real :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents.
+navigation and form interactions performed by the provider. The
+stand-ins satisfy the same Protocol the production
+:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` presents, so the
+provider's choreography (selector clicks, form fills, post-auth
+landing assertions) is verified without a real browser.
+
+These tests do not prove real AEAT authentication or operator Cl@ve
+approval; the live handshake is covered by gated probes elsewhere.
 """
 
 from __future__ import annotations
@@ -33,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 # ── Browser-session stand-ins ────────────────────────────────────────────────
 
 
-class _FakePage:
+class _RecordingPage:
     def __init__(
         self,
         *,
@@ -62,10 +65,10 @@ class _FakePage:
         else:
             self.url = url
 
-        class _FakeResponse:
+        class _RecordingResponse:
             status = 200
 
-        return _FakeResponse()
+        return _RecordingResponse()
 
     async def click(self, selector: str) -> None:
         self.clicks.append(selector)
@@ -104,7 +107,7 @@ class _FakePage:
         self.closed = True
 
 
-class _FakeContext:
+class _RecordingContext:
     def __init__(
         self,
         *,
@@ -115,15 +118,15 @@ class _FakeContext:
         self._target_path = target_path
         self._verification_code = verification_code
         self._authenticated = authenticated
-        self.pages: list[_FakePage] = []
+        self.pages: list[_RecordingPage] = []
         self.closed = False
         self._storage_state: dict[str, object] = {
             "cookies": [{"name": "AEAT_SESSION"}],
             "origins": [],
         }
 
-    async def new_page(self) -> _FakePage:
-        page = _FakePage(
+    async def new_page(self) -> _RecordingPage:
+        page = _RecordingPage(
             target_path=self._target_path,
             verification_code=self._verification_code,
             authenticated=self._authenticated,
@@ -138,17 +141,20 @@ class _FakeContext:
         self.closed = True
 
 
-class _FakeBrowserSession:
+class _RecordingBrowserSession:
     """Stand-in for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
-    Only the surface the Cl@ve provider uses —
-    ``create_context(...)`` + ``close()`` — is implemented.
+    Implements only the surface the Cl@ve Movil provider uses:
+    :meth:`create_context` and :meth:`close`. Resume contexts (those
+    constructed with a ``storage_state_path``) are simulated as
+    already-authenticated; fresh-login contexts land on the selector
+    page so the provider can drive the click-through.
     """
 
     def __init__(self, *, target_path: str, verification_code: str = "YLL") -> None:
         self._target_path = target_path
         self._verification_code = verification_code
-        self.contexts: list[_FakeContext] = []
+        self.contexts: list[_RecordingContext] = []
         self.closed = False
 
     async def create_context(
@@ -156,12 +162,12 @@ class _FakeBrowserSession:
         *,
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
-    ) -> _FakeContext:
+    ) -> _RecordingContext:
         del provisioner
         # Resume paths construct contexts with a storage-state path; those
         # get the authenticated simulation. Fresh-login contexts don't.
         authenticated = storage_state_path is not None
-        context = _FakeContext(
+        context = _RecordingContext(
             target_path=self._target_path,
             verification_code=self._verification_code,
             authenticated=authenticated,
@@ -256,10 +262,10 @@ class TestAuthenticateFresh:
         )
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
-        fake_session = _FakeBrowserSession(target_path=target_path, verification_code="YLL")
+        browser_session = _RecordingBrowserSession(target_path=target_path, verification_code="YLL")
 
         async def run() -> None:
-            session = await provider.authenticate(browser_session=fake_session)
+            session = await provider.authenticate(browser_session=browser_session)
             assert session.provider_kind == AuthProviderKind.CLAVE_MOVIL
             assert session.identity_nif == "12345678Z"
             assert session.storage_state_path is not None
@@ -274,8 +280,8 @@ class TestAuthenticateFresh:
             digest = hashlib.sha256(session.storage_state_path.read_bytes()).hexdigest()
             assert sidecar.storage_state_sha256 == digest
             # Page observed the expected click sequence.
-            assert fake_session.contexts, "a context must have been created"
-            page = fake_session.contexts[0].pages[0]
+            assert browser_session.contexts, "a context must have been created"
+            page = browser_session.contexts[0].pages[0]
             assert page.gotos[0].startswith(
                 "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/"
             )
@@ -301,14 +307,14 @@ class TestAuthenticateFresh:
             AEAT_CLAVE_PREFER_NON_QR="true",
         )
         provider = ClaveMovilAuthProvider(settings)
-        fake_session = _FakeBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            session = await provider.authenticate(browser_session=fake_session)
+            session = await provider.authenticate(browser_session=browser_session)
             detail = session.provider_detail
             assert isinstance(detail, ClaveMovilSessionDetail)
             assert detail.used_non_qr_fallback is True
-            page = fake_session.contexts[0].pages[0]
+            page = browser_session.contexts[0].pages[0]
             assert ("#NIF", "12345678Z") in page.fills
             assert ("#FECHA", "2030-01-01") in page.fills
             assert page.clicks.count('button[name="autoriza-P"]') == 1
@@ -328,11 +334,11 @@ class TestAuthenticateFresh:
             AEAT_CLAVE_PREFER_NON_QR="true",
         )
         provider = ClaveMovilAuthProvider(settings)
-        fake_session = _FakeBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
             with pytest.raises(ClaveMovilConfigurationError):
-                await provider.authenticate(browser_session=fake_session)
+                await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
 
@@ -343,11 +349,11 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(tmp_path, monkeypatch)
         provider = ClaveMovilAuthProvider(settings)
-        fake_session = _FakeBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
             with pytest.raises(ClaveMovilConfigurationError):
-                await provider.authenticate(browser_session=fake_session)
+                await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
 
@@ -362,7 +368,7 @@ class TestPostAuthLanding:
 
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
-        page = _FakePage(target_path=settings.aeat_sede_expedientes_path)
+        page = _RecordingPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = "https://www6.agenciatributaria.gob.es/wlpl/OVCT-CXEW/DialogoRepresentacion"
 
         async def run() -> None:
@@ -377,7 +383,7 @@ class TestPostAuthLanding:
 
 
 class TestProbePersistedSession:
-    """`probe_persisted_session` never touches the fresh-login path."""
+    """:meth:`ClaveMovilAuthProvider.probe_persisted_session` never touches the fresh-login path."""
 
     def test_probe_without_sidecar_raises(
         self,
@@ -386,13 +392,13 @@ class TestProbePersistedSession:
     ) -> None:
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
-        fake_session = _FakeBrowserSession(target_path=settings.aeat_sede_expedientes_path)
+        browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
             from ._authenticator import AeatLoginAssertionError
 
             with pytest.raises(AeatLoginAssertionError, match="no persisted"):
-                await provider.probe_persisted_session(browser_session=fake_session)
+                await provider.probe_persisted_session(browser_session=browser_session)
 
         asyncio.run(run())
 
@@ -405,10 +411,10 @@ class TestProbePersistedSession:
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
         # Seed a session via a fresh login.
-        fake_session_login = _FakeBrowserSession(target_path=target_path)
+        browser_session_login = _RecordingBrowserSession(target_path=target_path)
 
         async def seed() -> None:
-            await provider.authenticate(browser_session=fake_session_login)
+            await provider.authenticate(browser_session=browser_session_login)
             await provider.close()
 
         asyncio.run(seed())
@@ -419,10 +425,10 @@ class TestProbePersistedSession:
 
         # Probe against a fresh provider instance; session files must survive.
         probe_provider = ClaveMovilAuthProvider(settings)
-        fake_session_probe = _FakeBrowserSession(target_path=target_path)
+        browser_session_probe = _RecordingBrowserSession(target_path=target_path)
 
         async def probe() -> None:
-            session, assertion = await probe_provider.probe_persisted_session(browser_session=fake_session_probe)
+            session, assertion = await probe_provider.probe_persisted_session(browser_session=browser_session_probe)
             assert session.identity_nif == "12345678Z"
             assert assertion.target_url
             await probe_provider.close()
@@ -446,23 +452,23 @@ class TestResume:
         )
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
-        fake_session_a = _FakeBrowserSession(target_path=target_path)
+        browser_session_a = _RecordingBrowserSession(target_path=target_path)
 
         async def run_first() -> None:
-            await provider.authenticate(browser_session=fake_session_a)
+            await provider.authenticate(browser_session=browser_session_a)
             await provider.close()
 
         asyncio.run(run_first())
 
         # Fresh provider instance picks up the on-disk session.
         resumed_provider = ClaveMovilAuthProvider(settings)
-        fake_session_b = _FakeBrowserSession(target_path=target_path)
+        browser_session_b = _RecordingBrowserSession(target_path=target_path)
 
         async def run_resume() -> None:
-            session = await resumed_provider.authenticate(browser_session=fake_session_b)
+            session = await resumed_provider.authenticate(browser_session=browser_session_b)
             assert session.identity_nif == "12345678Z"
             # Verify() is called by the resume path; assertion should be valid.
-            assert fake_session_b.contexts, "resume must have opened a new context"
+            assert browser_session_b.contexts, "resume must have opened a new context"
             await resumed_provider.close()
 
         asyncio.run(run_resume())

@@ -1,4 +1,18 @@
-"""Static enforcement for the error-code registry."""
+"""Static enforcement of the :data:`aeat.core.errors.ERROR_REGISTRY` invariants.
+
+Walks every importable module under :mod:`aeat`, discovers each
+:class:`aeat.core.errors.AeatError` subclass, and asserts:
+
+* every subclass binds to a registered :class:`aeat.core.errors.ErrorCode`,
+* each registered code maps to exactly one subclass (no aliasing),
+* every :class:`aeat.core.errors.ErrorCategory` has at least one
+  registered code, and
+* no production raise site instantiates :class:`aeat.core.errors.AeatError`
+  directly or references an unregistered subclass.
+
+Runs at unit-test scope — failures here are CI-blocking so missing
+registrations cannot ship.
+"""
 
 from __future__ import annotations
 

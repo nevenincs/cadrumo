@@ -1,4 +1,13 @@
-"""Read-only submission record and preflight engine."""
+"""Read-only submission record loader and preflight engine.
+
+Exposes :class:`SubmissionEngine`, the only sanctioned surface for
+running preflight gates and reading historical
+:class:`aeat.domain.submission.SubmittedFiling` records persisted under
+:attr:`aeat.core.config.Settings.aeat_submissions_dir`.
+
+AEAT remote writes and write-shaped portal walks are permanently
+forbidden; the engine intentionally exposes no transport method.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +16,7 @@ from datetime import date
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_record_json_path
-from ._errors import LiveSubmitForbiddenError, SubmissionError
+from ._errors import SubmissionError
 from ._models import SubmissionStatus, SubmittedFiling
 from ._preflight import Preflight
 from ._protocols import AuthProviderProbe, DeadlineWindowChecker, FilingDraftLike
@@ -20,6 +29,13 @@ class SubmissionEngine:
 
     AEAT remote writes and write-shaped portal walks are permanently
     forbidden. This class intentionally exposes no transport method.
+
+    Attributes:
+        auth_provider: Narrow auth-provider probe used by preflight.
+        deadline_checker: Narrow window checker used by preflight.
+        settings: Resolved :class:`aeat.core.config.Settings` whose
+            ``aeat_submissions_dir`` backs :meth:`load_submission` and
+            :meth:`list_submissions`.
     """
 
     def __init__(
@@ -28,15 +44,15 @@ class SubmissionEngine:
         auth_provider: AuthProviderProbe,
         deadline_checker: DeadlineWindowChecker,
         settings: Settings,
-        **legacy_live_kwargs: object,
     ) -> None:
-        """Construct a read-only :class:`SubmissionEngine`."""
-        if legacy_live_kwargs:
-            raise LiveSubmitForbiddenError(
-                "SubmissionEngine no longer accepts transport compatibility "
-                "keywords; AEAT remote submission and portal walks are "
-                "permanently forbidden"
-            )
+        """Construct a read-only :class:`SubmissionEngine`.
+
+        Args:
+            auth_provider: Narrow probe over the active auth provider.
+            deadline_checker: Narrow window checker over
+                :mod:`aeat.domain.deadlines`.
+            settings: Resolved :class:`aeat.core.config.Settings`.
+        """
         self.auth_provider = auth_provider
         self.deadline_checker = deadline_checker
         self.settings = settings
@@ -46,11 +62,27 @@ class SubmissionEngine:
         )
 
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
-        """Run preflight gates without browser work or AEAT writes."""
+        """Run preflight gates without browser work or AEAT writes.
+
+        Args:
+            draft: Draft conforming to :class:`FilingDraftLike`.
+            today: Calendar date used to evaluate the AEAT filing window.
+        """
         self._preflight.check(draft, today=today)
 
     def load_submission(self, submission_id: str) -> SubmittedFiling:
-        """Load a historical :class:`SubmittedFiling` by id."""
+        """Load a historical :class:`SubmittedFiling` by id.
+
+        Args:
+            submission_id: Stable submission identifier.
+
+        Returns:
+            The persisted :class:`SubmittedFiling` record.
+
+        Raises:
+            SubmissionError: If ``submission_id`` is malformed or no
+                file exists at the resolved path.
+        """
         try:
             target = resolve_record_json_path(
                 self.settings.aeat_submissions_dir,
@@ -69,7 +101,18 @@ class SubmissionEngine:
         modelo: str | None = None,
         status: SubmissionStatus | None = None,
     ) -> tuple[SubmittedFiling, ...]:
-        """Return historical persisted records, optionally filtered."""
+        """Return historical persisted records, optionally filtered.
+
+        Args:
+            modelo: Optional AEAT modelo identifier to filter by
+                (``filing.modelo == modelo``).
+            status: Optional :class:`SubmissionStatus` to filter by.
+
+        Returns:
+            A chronologically reverse-sorted tuple of
+            :class:`SubmittedFiling` records. Returns an empty tuple
+            when the submissions directory does not yet exist.
+        """
         target_dir = self.settings.aeat_submissions_dir
         if not target_dir.exists():
             return ()

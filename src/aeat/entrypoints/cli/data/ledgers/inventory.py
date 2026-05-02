@@ -1,4 +1,11 @@
-"""`aeat data ledgers inventory` commands."""
+"""``aeat data ledgers inventory`` commands.
+
+Manages per-actividad inventory ledgers in the encrypted persistence
+layer (:mod:`aeat.adapters.persistence.profile.inventory`). Movement
+recording, valuation method parsing (FIFO / PMP / coste medio; LIFO is
+refused), and closing-stock arithmetic delegate to
+:mod:`aeat.domain.profile.inventory`.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +31,7 @@ from .....domain.profile.inventory import (
     parse_valuation_method,
 )
 from ..._context import json_output_requested
+from ..._i18n import t, tr
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 
 app = typer.Typer(name="inventory", no_args_is_help=True, help="Per-actividad inventory ledger.")
@@ -118,12 +126,22 @@ def list_inventory(
         emit_json_success("data ledgers inventory list", payload)
         return
     if not payload:
-        typer.echo("No inventory ledgers.")
+        typer.echo(
+            tr(
+                t(
+                    "No hay libros de inventario.",
+                    "No inventory ledgers.",
+                    "No hi ha llibres d'inventari.",
+                    "Nincsenek készletek könyvei.",
+                )
+            )
+        )
         return
+    opening_label = tr(t("apertura", "opening", "obertura", "nyitás"))
     for item in payload:
         typer.echo(
             f"{item['actividad_id']} | {item['year']} | {item['valuation_method']} | "
-            f"opening {item['opening_stock']} EUR"
+            f"{opening_label} {item['opening_stock']} EUR"
         )
 
 
@@ -164,7 +182,16 @@ def create_inventory(
     if json_output_requested():
         emit_json_success("data ledgers inventory create", payload)
         return
-    typer.echo(f"Inventory ledger created: {actividad} {year}.")
+    typer.echo(
+        tr(
+            t(
+                f"Libro de inventario creado: {actividad} {year}.",
+                f"Inventory ledger created: {actividad} {year}.",
+                f"Llibre d'inventari creat: {actividad} {year}.",
+                f"Keszlet konyv letrehozva: {actividad} {year}.",
+            )
+        )
+    )
 
 
 @movement_app.command(name="add", help="Add a purchase, COGS, opening, or count movement.")
@@ -205,7 +232,16 @@ def add_movement(
     if json_output_requested():
         emit_json_success("data ledgers inventory movement add", payload)
         return
-    typer.echo(f"Inventory movement recorded: {movement_id}.")
+    typer.echo(
+        tr(
+            t(
+                f"Movimiento de inventario registrado: {movement_id}.",
+                f"Inventory movement recorded: {movement_id}.",
+                f"Moviment d'inventari registrat: {movement_id}.",
+                f"Keszlet mozgas rogzitve: {movement_id}.",
+            )
+        )
+    )
 
 
 @valuation_app.command(name="preview", help="Preview closing stock and COGS without writing.")
@@ -232,10 +268,12 @@ def preview_valuation(
     if json_output_requested():
         emit_json_success("data ledgers inventory valuation preview", payload)
         return
-    typer.echo(f"{actividad} {year}: closing {result.closing_value} EUR, COGS {result.cogs_value} EUR.")
+    closing_label = tr(t("cierre", "closing", "tancament", "zárás"))
+    typer.echo(f"{actividad} {year}: {closing_label} {result.closing_value} EUR, COGS {result.cogs_value} EUR.")
 
 
 def _find_ledger(actividad: str, year: int, *, storage_dir: Path | None) -> InventoryLedger:
+    """Return the persisted ledger for ``(actividad, year)`` or raise :exc:`InventoryLedgerError`."""
     for ledger in load_inventory(storage_dir=storage_dir):
         if ledger.actividad_id == actividad and ledger.year == year:
             return ledger
@@ -247,6 +285,7 @@ def _find_ledger(actividad: str, year: int, *, storage_dir: Path | None) -> Inve
 
 
 def _ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
+    """Render an :class:`InventoryLedger` as a JSON-safe mapping for ``--json`` output."""
     return {
         "actividad_id": ledger.actividad_id,
         "year": ledger.year,
@@ -258,6 +297,7 @@ def _ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
 
 
 def _layer_payload(layer: StockLayer) -> dict[str, str]:
+    """Render a :class:`StockLayer` as a JSON-safe mapping."""
     return {
         "sku": layer.sku,
         "quantity": str(layer.quantity),
@@ -267,20 +307,41 @@ def _layer_payload(layer: StockLayer) -> dict[str, str]:
 
 
 def _decimal(raw: str) -> Decimal:
+    """Parse ``raw`` into a :class:`Decimal` or raise :exc:`typer.BadParameter`."""
     try:
         return Decimal(raw)
     except InvalidOperation as exc:
-        raise typer.BadParameter(f"invalid decimal: {raw}") from exc
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"decimal no válido: {raw}",
+                    f"invalid decimal: {raw}",
+                    f"decimal no vàlid: {raw}",
+                    f"ervenytelen tizedes szam: {raw}",
+                )
+            )
+        ) from exc
 
 
 def _date(raw: str) -> date:
+    """Parse an ISO-8601 ``YYYY-MM-DD`` string or raise :exc:`typer.BadParameter`."""
     try:
         return date.fromisoformat(raw)
     except ValueError as exc:
-        raise typer.BadParameter(f"invalid date: {raw}") from exc
+        raise typer.BadParameter(
+            tr(
+                t(
+                    f"fecha no válida: {raw}",
+                    f"invalid date: {raw}",
+                    f"data no vàlida: {raw}",
+                    f"ervenytelen datum: {raw}",
+                )
+            )
+        ) from exc
 
 
 def _money(value: Decimal) -> Decimal:
+    """Quantize ``value`` to two decimals using ``ROUND_HALF_UP``."""
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 

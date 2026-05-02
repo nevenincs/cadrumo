@@ -1,9 +1,8 @@
-"""Round-trip extractor test against the synthetic Modelo 130 generator.
+"""Round-trip extractor coverage for the synthetic Modelo 130 generator.
 
 Every parametrised case renders a synthetic PDF via the L3 generator,
-runs :func:`aeat.adapters.inbound.declaracion.parse_declaracion` against the bytes, and
-asserts the extracted casillas equal the ground truth. This is the
-scale primitive 's ADR (§9 exit criteria) mandates.
+runs :func:`aeat.adapters.inbound.declaracion.parse_declaracion` against
+the bytes, and asserts the extracted casillas equal the ground truth.
 """
 
 from __future__ import annotations
@@ -34,7 +33,16 @@ def _generate_pdf(
     *,
     año: int = 2025,
 ) -> Path:
-    """Render a synthetic Modelo 130 PDF and return its on-disk path."""
+    """Render a synthetic Modelo 130 PDF and return its on-disk path.
+
+    Args:
+        tmp_path: Temporary directory pytest provides for the test.
+        casilla_values: Map of casilla id to printed string amount.
+        año: Tax year to bind into the synthetic template.
+
+    Returns:
+        Filesystem path of the freshly written synthetic PDF.
+    """
     from tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_130_generator import (
         Modelo130GenParams,
         generate,
@@ -58,6 +66,7 @@ def _generate_pdf(
 
 
 def _values_by_id(filing: DeclaracionFiling) -> dict[str, ExtractedCasilla]:
+    """Index extracted casillas by their casilla id for direct lookup."""
     return {v.casilla_id: v for v in filing.values}
 
 
@@ -165,20 +174,15 @@ def test_partial_extraction_surfaces_warnings(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("año", [2024, 2025, 2026], ids=["2024", "2025", "2026"])
 def test_per_year_round_trip_resolves_to_correct_template(tmp_path: Path, año: int) -> None:
-    """Issue #321: 2024 / 2025 / 2026 declaraciones each resolve to a registered extractor.
+    """2024 / 2025 / 2026 declaraciones each resolve to a registered extractor.
 
-    Gemini PR-440 review surfaced that the extractor registry was
-    keyed only on `(modelo="130", año=2025, revision="2025.01")` —
-    so 2024 and 2026 PDFs raised `NoExtractorRegisteredError`. This
-    parametrised case asserts that a synthetic PDF for each of the
-    three Tier-L years parses cleanly, the resolved
-    ``template_revision.año`` matches the printed ejercicio, and
-    every supplied casilla round-trips to the printed value.
-
-    The form layout is identical across 2024 / 2025 / 2026 (RIRPF
-    art. 110 unchanged per the rule-delta manifest), so the same
-    seven-casilla MVP fixture suffices for all three years; a future
-    AEAT layout reshuffle would require a per-year fixture of its own.
+    Asserts that a synthetic PDF for each year parses cleanly, the
+    resolved ``template_revision.año`` matches the printed ejercicio,
+    and every supplied casilla round-trips to the printed value. The
+    form layout is identical across 2024 / 2025 / 2026 (RIRPF art. 110
+    unchanged), so the same seven-casilla fixture suffices for all
+    three years; a future AEAT layout reshuffle would require a
+    per-year fixture of its own.
     """
     casilla_values = {
         "01": "12500.00",
@@ -205,21 +209,16 @@ def test_per_year_round_trip_resolves_to_correct_template(tmp_path: Path, año: 
 
 
 def test_modelo_130_ruleset_extractor_year_symmetry() -> None:
-    """Issue #321: every Modelo 130 ruleset year has a matching extractor key.
+    """Every Modelo 130 ruleset year has a matching extractor key.
 
-    Locks in the Gemini PR-440 fix. Walks `ALL_RULESETS` for the
-    Modelo 130 modelo code and the extractor `_REGISTRY` for the
-    same modelo, then asserts the year-sets are equal. A future
-    contributor that adds a new M130 ruleset year (e.g., 2027) is
-    forced to also register the matching extractor; conversely, a
-    refactor that drops V2024 or V2026 from the extractor registry
-    fails this assertion before the gap can ship.
-
-    Scoped narrowly to Modelo 130 to avoid surfacing the pre-
-    existing cross-coverage gaps on other modelos (M111 2024,
-    M115 2024, etc.) that EPIC #316's per-modelo Tier-L issues
-    (#318, #319, #320, #322, #323, #324) will each close on their
-    own schedule.
+    Walks ``ALL_RULESETS`` for the Modelo 130 modelo code and the
+    extractor ``_REGISTRY`` for the same modelo, then asserts the
+    year-sets are equal. A future contributor that adds a new M130
+    ruleset year (e.g., 2027) is forced to also register the
+    matching extractor; conversely, a refactor that drops V2024 or
+    V2026 from the extractor registry fails this assertion before
+    the gap can ship. Scoped narrowly to Modelo 130 to avoid
+    surfacing pre-existing cross-coverage gaps on other modelos.
     """
     from ....domain.formulas._rulesets import ALL_RULESETS
     from ._extractors import _REGISTRY
@@ -237,17 +236,16 @@ def test_modelo_130_ruleset_extractor_year_symmetry() -> None:
 
 
 def test_full_19_casilla_liquidacion_round_trip(tmp_path: Path) -> None:
-    """Issue #321: full 19-casilla liquidación block round-trips end-to-end.
+    """Full 19-casilla liquidación block round-trips end-to-end.
 
-    Synthetic generator renders all 19 boxes with non-zero values in
-    every casilla; the extractor must recognise every label, parse
-    every Spanish-formatted amount, and surface zero warnings. The
-    resulting filing carries 19 ExtractedCasilla entries and an
-    extraction_status of COMPLETE.
-
-    The values below mirror the operand-swap rich fixture used by the
-    mutation harness (`_modelo_130_rich_fixture`); every casilla is
-    non-zero and asymmetric, so a regex collision (e.g. cas. 01 vs
+    The synthetic generator renders all 19 boxes with non-zero
+    values; the extractor must recognise every label, parse every
+    Spanish-formatted amount, and surface zero warnings. The
+    resulting filing carries 19 :class:`ExtractedCasilla` entries
+    and an ``extraction_status`` of ``COMPLETE``. The values below
+    mirror the operand-swap rich fixture used by the mutation
+    harness (``_modelo_130_rich_fixture``); every casilla is
+    non-zero and asymmetric, so a regex collision (e.g., cas. 01 vs
     cas. 11) would surface as a value mismatch instead of a missing
     warning.
     """

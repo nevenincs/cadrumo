@@ -1,4 +1,9 @@
-"""Unit tests for the period-keyed catalogue infrastructure (#183)."""
+"""Unit tests for the period-keyed catalogue infrastructure.
+
+Exercises :data:`aeat.domain.vat.VAT_CATALOGUES_BY_YEAR` and
+:func:`aeat.domain.vat.resolve_catalogue`, including the documented fallback
+to the 2025 entry for unpopulated years.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_catalogues_by_year_contains_2025() -> None:
-    """The ships the 2025 entry."""
+    """The mapping ships the 2025 entry pointing at :data:`VAT_CATALOGUE_2025`."""
     assert 2025 in VAT_CATALOGUES_BY_YEAR
     assert VAT_CATALOGUES_BY_YEAR[2025] is VAT_CATALOGUE_2025
 

@@ -1,6 +1,7 @@
-"""Unit tests for the env-file writer (#61).
+"""Unit tests for the setup-wizard env-file writer.
 
-The writer must satisfy three load-bearing invariants:
+The writer must satisfy three load-bearing invariants exercised by
+the tests in this module:
 
 * **never-write-secrets**: the PKCS#12 passphrase value never reaches
   the filesystem.
@@ -214,13 +215,13 @@ def test_write_profile_file_writes_ciphertext_envelope(tmp_path: Path) -> None:
 def test_write_profile_file_lock_target_aligns_with_rotation(
     tmp_path: Path,
 ) -> None:
-    # regression: the setup-profile writer must acquire
-    # the writer-canonical sidecar lock (target.with_suffix('.lock'))
-    # so concurrent rotate-master-key contends on the same OS-level
-    # lock-byte target. With ``aeat_default_profile_path`` set, the
-    # rotation plan emits a single-file entry with
-    # ``target_filename`` set, and ``RotationPlanEntry.lock_path_for``
-    # returns ``envelope_path.with_suffix('.lock')`` for that branch.
+    # The setup-profile writer must acquire the writer-canonical sidecar
+    # lock (``target.with_suffix('.lock')``) so a concurrent
+    # rotate-master-key contends on the same OS-level lock-byte target.
+    # With ``aeat_default_profile_path`` set, the rotation plan emits a
+    # single-file entry with ``target_filename`` set, and
+    # ``RotationPlanEntry.lock_path_for`` returns
+    # ``envelope_path.with_suffix('.lock')`` for that branch.
     from ...adapters.persistence.storage import LockAcquisitionError, RotationPlanEntry, exclusive_file_lock
 
     answers = _answers(tmp_path)

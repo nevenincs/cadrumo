@@ -3,21 +3,19 @@
 The gate consolidates the env-var preconditions that guard live AEAT
 read call-sites. Live AEAT writes are permanently forbidden, so the
 write-side helper always raises a typed refusal. The gate is consumed
-by:
+by the doctor CLI for surfacing a "Live access gate" row and by every
+live-read module (filing history, missing-filing detection, AEAT
+messages, VAT balance tracking) that needs a typed precondition
+rather than per-call-site ``if os.environ[...] != "1"`` boilerplate.
 
-* the doctor CLI, for surfacing a "Live access gate" row;
-* future live-read modules (filing history, missing-filing
-  detection, AEAT messages, VAT balance tracking - #168-#171)
-  that need a typed precondition rather than per-call-site
-  ``if os.environ[...] != "1"`` boilerplate.
-
-The gate is always constructed inline from a :class:`Settings`
-instance at the call site. It is never injected via a constructor,
-never stored as state on engines, and never passed as a kwarg that
-could make a write path substitutable. That anti-injection stance
-preserves R5's "no substitutable dependency on the write-gate"
-property: tests cannot swap the gate for a no-op because there is no
-seam to swap through.
+The gate is always constructed inline from a
+:class:`aeat.core.config.Settings` instance at the call site. It is
+never injected via a constructor, never stored as state on engines,
+and never passed as a kwarg that could make a write path
+substitutable. That anti-injection stance preserves the
+"no substitutable dependency on the write-gate" property: tests
+cannot swap the gate for a no-op because there is no seam to swap
+through.
 """
 
 from __future__ import annotations
@@ -29,10 +27,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ._errors import (
+    AccessGateSubmissionError,
+    AccessGateSubmissionPreflightError,
     AeatLiveReadNotEnabledError,
     LiveSubmitForbiddenError,
-    SubmissionError,
-    SubmissionPreflightError,
 )
 
 if TYPE_CHECKING:
@@ -63,7 +61,13 @@ class AeatGateEnvSnapshot(BaseModel):
     pytest_current_test: str
 
     def as_audit_dict(self) -> dict[str, str]:
-        """Return the historical audit-log JSONL shape."""
+        """Return the snapshot rendered as the audit-log JSONL mapping.
+
+        Returns:
+            Mapping keyed by the canonical environment variable names
+            (``AEAT_LIVE_TESTS_ENABLED`` / ``PYTEST_CURRENT_TEST``)
+            with their raw string values.
+        """
         return {
             _LIVE_TESTS_ENV: self.aeat_live_tests_enabled,
             _PYTEST_CURRENT_TEST_ENV: self.pytest_current_test,
@@ -72,7 +76,7 @@ class AeatGateEnvSnapshot(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class AeatAccessGate:
-    """Read+write precondition check for live AEAT operations.
+    """Pre-flight gate that authorises live AEAT reads and writes.
 
     The gate is stateless with respect to the process; every call
     reads ``os.environ`` afresh so the result reflects the live
@@ -85,12 +89,16 @@ class AeatAccessGate:
     settings: Settings
 
     def require_live_read(self) -> None:
-        """Raise :class:`AeatLiveReadNotEnabledError` if reads are off.
+        """Refuse live AEAT reads when the env-var precondition is off.
 
-        The gate checks ``AEAT_LIVE_TESTS_ENABLED`` directly against
-        ``os.environ`` rather than via ``Settings``, matching the
-        conventions of the existing per-test
+        Checks ``AEAT_LIVE_TESTS_ENABLED`` directly against
+        ``os.environ`` rather than via :class:`aeat.core.config.Settings`,
+        matching the per-test
         ``if os.environ[...] != "1": pytest.skip(...)`` sites.
+
+        Raises:
+            :exc:`aeat.core.access_gate._errors.AeatLiveReadNotEnabledError`:
+                When ``AEAT_LIVE_TESTS_ENABLED`` is not exactly ``"1"``.
         """
         value = os.environ.get(_LIVE_TESTS_ENV)
         if value != "1":
@@ -102,11 +110,20 @@ class AeatAccessGate:
         Live AEAT submission is permanently forbidden. This method
         exists so that any call-site attempting a write receives a
         typed, auditable refusal rather than a silent no-op.
+
+        Raises:
+            :exc:`aeat.core.access_gate._errors.LiveSubmitForbiddenError`:
+                Always.
         """
         raise LiveSubmitForbiddenError()
 
     def snapshot_env(self) -> AeatGateEnvSnapshot:
-        """Return a frozen snapshot of the remaining gate env vars."""
+        """Return a frozen snapshot of the gate environment variables.
+
+        Returns:
+            A :class:`AeatGateEnvSnapshot` capturing the current
+            ``os.environ`` values for the gate-relevant variables.
+        """
         return AeatGateEnvSnapshot(
             aeat_live_tests_enabled=os.environ.get(_LIVE_TESTS_ENV, ""),
             pytest_current_test=os.environ.get(_PYTEST_CURRENT_TEST_ENV, ""),
@@ -114,10 +131,10 @@ class AeatAccessGate:
 
 
 __all__ = [
+    "AccessGateSubmissionError",
+    "AccessGateSubmissionPreflightError",
     "AeatAccessGate",
     "AeatGateEnvSnapshot",
     "AeatLiveReadNotEnabledError",
     "LiveSubmitForbiddenError",
-    "SubmissionError",
-    "SubmissionPreflightError",
 ]

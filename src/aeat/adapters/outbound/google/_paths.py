@@ -1,4 +1,15 @@
-"""Shared Google-auth path inspection and deterministic selection logic."""
+"""Google-auth path inspection and deterministic selection.
+
+Resolves the operator's chosen Google authentication path (Desktop OAuth
+local-dev vs. Service-account automation), inspects the local material that
+backs each path, and reports whether the CLI and MCP transports are ready
+to use. Used by :mod:`aeat.adapters.outbound.google` and the operator-facing
+``aeat google ...`` commands to surface a single deterministic "active path"
+without ever triggering a browser flow.
+
+The two supported paths are encoded in :class:`GoogleAuthPath` and the full
+inspection result lives in :class:`GoogleAuthInspection`.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +26,17 @@ if TYPE_CHECKING:
 
 
 class GoogleAuthPath(StrEnum):
-    """Named operator-facing Google auth paths supported by the repo."""
+    """Named operator-facing Google auth paths supported by the repo.
+
+    Attributes:
+        DESKTOP_OAUTH_LOCAL_DEV: Interactive Desktop OAuth client flow
+            intended for local developer use; backed by
+            ``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET``
+            and a repo-local refresh-token cache.
+        SERVICE_ACCOUNT_AUTOMATION: Non-interactive service-account flow
+            intended for unattended automation; backed by
+            ``GOOGLE_APPLICATION_CREDENTIALS`` pointing at a JSON key file.
+    """
 
     DESKTOP_OAUTH_LOCAL_DEV = "desktop-oauth-local-dev"
     SERVICE_ACCOUNT_AUTOMATION = "service-account-automation"
@@ -29,10 +50,19 @@ DESKTOP_OAUTH_REQUIRED_SCOPES: tuple[str, ...] = (
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
 )
+"""OAuth scopes the Desktop OAuth local-dev token cache must carry to be usable."""
 
 
 def adc_well_known_path() -> Path:
-    """Return the well-known path where gcloud writes ADC JSON."""
+    """Return the well-known path where gcloud writes ADC JSON.
+
+    Honours the ``CLOUDSDK_CONFIG`` env var override; otherwise resolves to
+    ``%APPDATA%/gcloud/application_default_credentials.json`` on Windows and
+    ``~/.config/gcloud/application_default_credentials.json`` on POSIX.
+
+    Returns:
+        Filesystem path that gcloud's ``application-default login`` writes to.
+    """
 
     override = os.environ.get("CLOUDSDK_CONFIG")
     if override:
@@ -44,7 +74,19 @@ def adc_well_known_path() -> Path:
 
 
 def normalize_google_auth_path(raw_path: object) -> GoogleAuthPath | None:
-    """Normalize a config value into a supported Google auth path."""
+    """Normalize a config value into a supported Google auth path.
+
+    Accepts an existing :class:`GoogleAuthPath` member, a string matching one
+    of the enum values (case-insensitive, surrounding whitespace tolerated),
+    or any other value; returns ``None`` when the input cannot be resolved.
+
+    Args:
+        raw_path: Untrusted config value sourced from settings or env vars.
+
+    Returns:
+        The matching :class:`GoogleAuthPath` member, or ``None`` when the
+        value is missing, blank, or unrecognised.
+    """
 
     if isinstance(raw_path, GoogleAuthPath):
         return raw_path
@@ -60,7 +102,15 @@ def normalize_google_auth_path(raw_path: object) -> GoogleAuthPath | None:
 
 
 def resolve_project_relative_path(raw_path: str) -> Path:
-    """Resolve a potentially repo-relative path against the current cwd."""
+    """Resolve a potentially repo-relative path against the current cwd.
+
+    Args:
+        raw_path: Raw filesystem path string; ``~`` is expanded.
+
+    Returns:
+        Absolute :class:`pathlib.Path` — the input unchanged if already
+        absolute, or resolved against the current working directory.
+    """
 
     candidate = Path(raw_path).expanduser()
     if candidate.is_absolute():
@@ -70,7 +120,36 @@ def resolve_project_relative_path(raw_path: str) -> Path:
 
 @dataclass(frozen=True)
 class GoogleAuthInspection:
-    """Resolved Google-auth path plus the local material that backs it."""
+    """Resolved Google-auth path plus the local material that backs it.
+
+    Frozen snapshot returned by :func:`inspect_google_auth`. Carries the
+    operator-configured path, the deterministically-resolved active path,
+    and every input the resolver consulted; downstream consumers inspect
+    specific attributes to render diagnostics or gate command execution.
+
+    Attributes:
+        configured_path: The :class:`GoogleAuthPath` declared via
+            ``GOOGLE_AUTH_PATH``, or ``None`` when nothing was configured.
+        active_path: The path the resolver actually selected. ``None`` when
+            no path can be activated (see :attr:`blocking_reason`).
+        desktop_oauth_complete: ``True`` when both the OAuth client id and
+            secret are configured.
+        desktop_oauth_partial: ``True`` when at least one Desktop OAuth
+            client field is set but the pair is incomplete.
+        desktop_oauth_json_path: Path to the optional Desktop OAuth client
+            JSON file when configured.
+        service_account_configured_path: Path declared via
+            ``GOOGLE_APPLICATION_CREDENTIALS``.
+        service_account_existing_path: The configured service-account path
+            when the file actually exists on disk; otherwise ``None``.
+        oauth_token_path: Repo-local Desktop OAuth refresh-token cache path.
+        mcp_credentials_dir: Workspace MCP credentials directory.
+        adc_path: Well-known gcloud ADC path; see :func:`adc_well_known_path`.
+        oauth_token_issue: Human-readable issue describing why the cached
+            OAuth token cannot be used; ``None`` when usable.
+        blocking_reason: Human-readable reason why no path could be
+            activated; ``None`` when :attr:`active_path` is set.
+    """
 
     configured_path: GoogleAuthPath | None
     active_path: GoogleAuthPath | None
@@ -87,26 +166,37 @@ class GoogleAuthInspection:
 
     @property
     def is_ambiguous(self) -> bool:
+        """Whether both auth families are configured without an explicit pick."""
         return self.active_path is None and self.blocking_reason is not None and "Both" in self.blocking_reason
 
     @property
     def oauth_token_exists(self) -> bool:
+        """Whether the repo-local OAuth refresh-token file exists on disk."""
         return self.oauth_token_path.exists()
 
     @property
     def mcp_credentials_exist(self) -> bool:
+        """Whether the MCP credentials directory exists and contains material."""
         return self.mcp_credentials_dir.exists() and any(self.mcp_credentials_dir.iterdir())
 
     @property
     def mcp_credentials_dir_exists(self) -> bool:
+        """Whether the MCP credentials directory itself exists, even if empty."""
         return self.mcp_credentials_dir.exists()
 
     @property
     def adc_exists(self) -> bool:
+        """Whether gcloud's well-known ADC file exists on disk."""
         return self.adc_path.exists()
 
     @property
     def inactive_path_drift(self) -> str | None:
+        """Human-readable note when the inactive path is partially configured.
+
+        Returns a short label describing which inactive-path config was
+        ignored (so operators can clean it up), or ``None`` when the
+        inactive path leaves no detectable trace.
+        """
         if self.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV and self.service_account_configured_path:
             if self.service_account_existing_path is None:
                 return f"ignored stale service-account path: {self.service_account_configured_path}"
@@ -119,6 +209,7 @@ class GoogleAuthInspection:
 
     @property
     def cli_ready(self) -> bool:
+        """Whether the active path can serve CLI requests without further setup."""
         if self.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
             return self.desktop_oauth_complete and self.oauth_token_issue is None
         if self.active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION:
@@ -127,6 +218,7 @@ class GoogleAuthInspection:
 
     @property
     def mcp_ready(self) -> bool:
+        """Whether the active path can serve MCP requests with current credentials."""
         if self.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
             return self.desktop_oauth_complete and self.mcp_credentials_exist
         if self.active_path == GoogleAuthPath.SERVICE_ACCOUNT_AUTOMATION:
@@ -135,7 +227,20 @@ class GoogleAuthInspection:
 
 
 def inspect_oauth_token_cache(token_path: Path) -> str | None:
-    """Return ``None`` when the Desktop OAuth token cache looks usable."""
+    """Return ``None`` when the Desktop OAuth token cache looks usable.
+
+    Inspects the JSON shape, refresh-token presence, and granted scopes
+    against :data:`DESKTOP_OAUTH_REQUIRED_SCOPES`; never performs network
+    I/O and never attempts a refresh.
+
+    Args:
+        token_path: Path to the repo-local Desktop OAuth token JSON file.
+
+    Returns:
+        A human-readable issue string when the cache is unusable
+        (missing, malformed, or missing required scopes), or ``None``
+        when the cache is well-formed.
+    """
 
     if not token_path.exists():
         return "repo-local CLI OAuth token missing"
@@ -160,7 +265,27 @@ def inspect_oauth_token_cache(token_path: Path) -> str | None:
 
 
 def inspect_google_auth(settings: Settings, *, project_root: Path) -> GoogleAuthInspection:
-    """Inspect local Google-auth state without triggering browser auth flows."""
+    """Inspect local Google-auth state without triggering browser auth flows.
+
+    Resolves the active :class:`GoogleAuthPath` deterministically from
+    ``settings`` plus on-disk material. When ``settings.google_auth_path``
+    is set, that explicit selection is honoured even if the backing
+    material is incomplete (the failure is reported via
+    :attr:`GoogleAuthInspection.blocking_reason`); when nothing is
+    configured, the resolver picks whichever path is fully provisioned
+    and reports ambiguity when both families are present.
+
+    Args:
+        settings: The active :class:`aeat.core.config.Settings` snapshot
+            providing OAuth client material, service-account paths, and
+            the token-cache directory.
+        project_root: Repository root used to resolve the workspace MCP
+            credentials directory.
+
+    Returns:
+        A frozen :class:`GoogleAuthInspection` describing the resolved
+        active path, every consulted input, and any blocking issues.
+    """
 
     configured_path = normalize_google_auth_path(settings.google_auth_path)
     desktop_oauth_complete = bool(settings.google_oauth_client_id and settings.google_oauth_client_secret)

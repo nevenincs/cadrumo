@@ -1,10 +1,11 @@
 """Modelo 100 Anexo C — rendimientos del capital inmobiliario (ejercicio 2024).
 
-Ejercicio 2024 is the first year on which Ley 12/2023 (BOE-A-2023-12203)
-applies for contracts celebrados desde 26/5/2023 — the tiered 50/60/70/
-90 % art. 23.2 reducción supersedes the prior flat 60 % regime. CASILLAS
-and CITATIONS imported from the 2025 reference; year-scoped FORMULAS +
-effective dates declared here.
+Ejercicio 2024 is the first year on which Ley 12/2023
+(BOE-A-2023-12203) applies for contracts celebrados desde 26/5/2023 —
+the tiered 50/60/70/90 % art. 23.2 reducción supersedes the prior flat
+60 % régime. ``CASILLAS`` and ``CITATIONS`` are re-exported from
+:mod:`.anexo_c_2025`; year-scoped ``FORMULAS`` and effective dates are
+declared here.
 """
 
 from __future__ import annotations

@@ -91,8 +91,8 @@ class AeatLiveReadNotEnabledError(AeatError):
 
 
 __all__ = [
-    "AeatLiveReadNotEnabledError",
     "AccessGateSubmissionError",
     "AccessGateSubmissionPreflightError",
+    "AeatLiveReadNotEnabledError",
     "LiveSubmitForbiddenError",
 ]

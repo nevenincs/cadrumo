@@ -1,4 +1,11 @@
-"""`aeat financial invoices` / `aeat invoices` command group (#75)."""
+"""Implement the ``aeat financial invoices`` Typer group.
+
+Surfaces the :mod:`aeat.application.invoices` and
+:mod:`aeat.domain.invoices` services as CLI verbs (``list``, ``show``,
+``link``, ``reconcile``, ``verify``, ``unmatched``) so operators can
+inspect the invoice catalogue, link invoices to transactions
+bidirectionally, and reconcile unmatched records.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +14,6 @@ from pathlib import Path
 
 import typer
 
-from ....core.config import load_settings
 from ....application.invoices import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -18,6 +24,7 @@ from ....application.invoices import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ....core.config import load_settings
 from ....domain.invoices import (
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
@@ -29,13 +36,14 @@ from ....domain.transactions import (
     TransactionError,
     link_invoice,
 )
+from .._i18n import t, tr
 from ._catalogue import catalogue_dir as _transaction_catalogue_dir
 from ._catalogue import catalogue_repository as _transaction_catalogue_repository
 
 app = typer.Typer(
     name="invoices",
     no_args_is_help=True,
-    help="Invoice catalogue helpers (#75).",
+    help="Invoice catalogue helpers.",
 )
 
 
@@ -48,11 +56,30 @@ def list_cmd(
         help="Filter by invoice kind: issued or received.",
     ),
 ) -> None:
-    """List invoices from the configured catalogue file."""
+    """List invoices from the configured catalogue file.
+
+    Loads the catalogue via
+    :class:`aeat.domain.invoices.InvoiceCatalogueRepository` and prints
+    one tab-separated row per invoice, optionally filtered by
+    :class:`aeat.domain.invoices.InvoiceKind`.
+
+    Args:
+        kind: Optional filter restricting output to issued or received
+            invoices.
+    """
     catalogue = _load_invoice_catalogue_or_empty()
     invoices = tuple(invoice for invoice in catalogue.values() if kind is None or invoice.kind is kind)
     if not invoices:
-        typer.echo("No invoices found.")
+        typer.echo(
+            tr(
+                t(
+                    "No se encontraron facturas.",
+                    "No invoices found.",
+                    "No s'han trobat factures.",
+                    "Nincs talált szamla.",
+                )
+            )
+        )
         return
     typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency\tpayment_status")
     for invoice in sorted(invoices, key=lambda item: (item.issued_at, item.invoice_id)):
@@ -75,11 +102,30 @@ def list_cmd(
 def show_cmd(
     invoice_id: str = typer.Argument(..., help="Stable invoice identifier."),
 ) -> None:
-    """Show one invoice from the configured catalogue file."""
+    """Show one invoice from the configured catalogue file.
+
+    Args:
+        invoice_id: Stable invoice identifier to look up via
+            :func:`aeat.application.invoices.find_invoice`.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when no invoice matches
+            ``invoice_id``.
+    """
     catalogue = _load_invoice_catalogue_required()
     invoice = find_invoice(catalogue, invoice_id)
     if invoice is None:
-        typer.echo(f"invoice not found: {invoice_id}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"factura no encontrada: {invoice_id}",
+                    f"invoice not found: {invoice_id}",
+                    f"factura no trobada: {invoice_id}",
+                    f"szamla nem talalhato: {invoice_id}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     typer.echo(invoice.model_dump_json(indent=2))
 
@@ -92,7 +138,22 @@ def link_cmd(
     invoice_id: str = typer.Argument(..., help="Stable invoice identifier."),
     transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
 ) -> None:
-    """Perform a bidirectional link and print the updated invoice."""
+    """Perform a bidirectional link and print the updated invoice.
+
+    Delegates to
+    :func:`aeat.application.invoices.link_transaction_bidirectional`
+    so the link is recorded in both the invoice and transaction
+    catalogues atomically.
+
+    Args:
+        invoice_id: Invoice that should reference ``transaction_id``.
+        transaction_id: Transaction that should reference ``invoice_id``.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when either catalogue
+            rejects the link or when the updated invoice cannot be
+            located after the save.
+    """
     invoices_dir = _invoice_catalogue_dir()
     transactions_dir = _transaction_catalogue_dir()
     try:
@@ -102,7 +163,17 @@ def link_cmd(
         raise typer.Exit(code=2) from exc
     updated_invoice = find_invoice(updated_invoices, invoice_id)
     if updated_invoice is None:
-        typer.echo(f"invoice not found after update: {invoice_id}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"factura no encontrada tras actualizar: {invoice_id}",
+                    f"invoice not found after update: {invoice_id}",
+                    f"factura no trobada després d'actualitzar: {invoice_id}",
+                    f"szamla nem talalhato a frissites utan: {invoice_id}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     typer.echo(updated_invoice.model_dump_json(indent=2))
 
@@ -120,17 +191,37 @@ def reconcile_cmd(
 ) -> None:
     """Print reconciliation suggestions and optionally apply them.
 
-    When ``--apply`` is set, every accepted suggestion is folded into
-    in-memory copies of both catalogues; the two catalogues are then
-    saved once at the end via their respective repositories. This
-    mirrors the canonical atomic-save pattern used elsewhere in the
-    repository (vs. one round-trip per suggestion).
+    Runs :func:`aeat.application.invoices.suggest_reconciliations` over
+    the invoice and transaction catalogues. When ``--apply`` is set,
+    every accepted suggestion is folded into in-memory copies of both
+    catalogues; the two catalogues are then saved once at the end via
+    their respective repositories. This mirrors the canonical atomic-save
+    pattern used elsewhere in the repository (vs. one round-trip per
+    suggestion).
+
+    Args:
+        apply: When ``True``, persist each accepted suggestion via
+            :func:`aeat.application.invoices.link_transaction` and
+            :func:`aeat.domain.transactions.link_invoice` before saving.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when the final
+            atomic save fails.
     """
     invoices = _load_invoice_catalogue_or_empty()
     transactions = _load_transaction_catalogue_or_empty()
     suggestions = suggest_reconciliations(invoices, transactions)
     if not suggestions:
-        typer.echo("No reconciliation suggestions.")
+        typer.echo(
+            tr(
+                t(
+                    "Sin sugerencias de conciliación.",
+                    "No reconciliation suggestions.",
+                    "Sense suggeriments de conciliació.",
+                    "Nincsenek egyeztető javaslatok.",
+                )
+            )
+        )
         return
     _print_suggestions(suggestions)
     if not apply:
@@ -153,7 +244,14 @@ def reconcile_cmd(
             )
         except (InvoiceError, TransactionError) as exc:
             typer.echo(
-                f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
+                tr(
+                    t(
+                        f"omitido {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
+                        f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
+                        f"omès {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
+                        f"kihagyva {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
+                    )
+                ),
                 err=True,
             )
             continue
@@ -167,9 +265,28 @@ def reconcile_cmd(
             _invoice_catalogue_repository().save(pending_invoices)
             _transaction_catalogue_repository().save(pending_transactions)
         except (InvoiceError, TransactionError) as exc:
-            typer.echo(f"final save failed; no changes persisted: {exc}", err=True)
+            typer.echo(
+                tr(
+                    t(
+                        f"falló el guardado final; no se persistieron cambios: {exc}",
+                        f"final save failed; no changes persisted: {exc}",
+                        f"el desament final ha fallat; no s'han persistit canvis: {exc}",
+                        f"a vegso mentes sikertelen; nincsenek mentett valtoztatasok: {exc}",
+                    )
+                ),
+                err=True,
+            )
             raise typer.Exit(code=2) from exc
-    typer.echo(f"applied {applied} of {len(suggestions)} suggestions.")
+    typer.echo(
+        tr(
+            t(
+                f"aplicadas {applied} de {len(suggestions)} sugerencias.",
+                f"applied {applied} of {len(suggestions)} suggestions.",
+                f"aplicades {applied} de {len(suggestions)} suggeriments.",
+                f"alkalmazva {applied} / {len(suggestions)} javaslat.",
+            )
+        )
+    )
 
 
 @app.command(
@@ -177,12 +294,30 @@ def reconcile_cmd(
     help="Report one-sided links between the invoice and transaction catalogues.",
 )
 def verify_cmd() -> None:
-    """Print any inconsistencies and exit non-zero when present."""
+    """Print any inconsistencies and exit non-zero when present.
+
+    Runs :func:`aeat.application.invoices.verify_link_consistency`
+    against both catalogues and exits with code ``2`` when any
+    one-sided link is detected.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when inconsistencies
+            are reported.
+    """
     invoices = _load_invoice_catalogue_or_empty()
     transactions = _load_transaction_catalogue_or_empty()
     inconsistencies = verify_link_consistency(invoices, transactions)
     if not inconsistencies:
-        typer.echo("Invoice and transaction catalogues are consistent.")
+        typer.echo(
+            tr(
+                t(
+                    "Los catálogos de facturas y transacciones son consistentes.",
+                    "Invoice and transaction catalogues are consistent.",
+                    "Els catàlegs de factures i transaccions són coherents.",
+                    "A szamla- es tranzakciókatalógusok konzisztensek.",
+                )
+            )
+        )
         return
     _print_inconsistencies(inconsistencies)
     raise typer.Exit(code=2)
@@ -200,11 +335,25 @@ def unmatched_cmd(
         help="Filter by invoice kind: issued or received.",
     ),
 ) -> None:
-    """Print invoices that no transaction cites yet."""
+    """Print invoices that no transaction cites yet.
+
+    Args:
+        kind: Optional :class:`aeat.domain.invoices.InvoiceKind` filter
+            restricting the unmatched listing.
+    """
     invoices = _load_invoice_catalogue_or_empty()
     unmatched = find_unmatched(invoices, kind=kind)
     if not unmatched:
-        typer.echo("No unmatched invoices.")
+        typer.echo(
+            tr(
+                t(
+                    "No hay facturas sin emparejar.",
+                    "No unmatched invoices.",
+                    "No hi ha factures sense aparellar.",
+                    "Nincs párosítatlan szamla.",
+                )
+            )
+        )
         return
     typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency")
     for invoice in unmatched:
@@ -228,15 +377,31 @@ def _invoice_catalogue_dir() -> Path:
 
 
 def _invoice_catalogue_repository() -> InvoiceCatalogueRepository:
-    """Return an :class:`InvoiceCatalogueRepository` bound to the configured store dir."""
+    """Return an :class:`~aeat.domain.invoices.InvoiceCatalogueRepository` for the configured store."""
     return InvoiceCatalogueRepository(store_dir=_invoice_catalogue_dir())
 
 
 def _load_invoice_catalogue_required() -> InvoiceCatalogue:
-    """Load the configured invoice catalogue or exit cleanly on failure."""
+    """Load the configured invoice catalogue or exit cleanly on failure.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when the envelope file
+            is missing or when
+            :exc:`aeat.domain.invoices.InvoiceError` surfaces during load.
+    """
     repository = _invoice_catalogue_repository()
     if not repository.envelope_path.exists():
-        typer.echo(f"invoice catalogue not found at {repository.envelope_path}", err=True)
+        typer.echo(
+            tr(
+                t(
+                    f"catálogo de facturas no encontrado en {repository.envelope_path}",
+                    f"invoice catalogue not found at {repository.envelope_path}",
+                    f"catàleg de factures no trobat a {repository.envelope_path}",
+                    f"szamlakatalogus nem talalhato itt: {repository.envelope_path}",
+                )
+            ),
+            err=True,
+        )
         raise typer.Exit(code=2)
     try:
         return repository.load()
@@ -246,7 +411,12 @@ def _load_invoice_catalogue_required() -> InvoiceCatalogue:
 
 
 def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
-    """Load the configured invoice catalogue, returning an empty one when absent."""
+    """Load the configured invoice catalogue, returning an empty one when absent.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when
+            :exc:`aeat.domain.invoices.InvoiceError` surfaces during load.
+    """
     repository = _invoice_catalogue_repository()
     try:
         return repository.load()
@@ -256,7 +426,12 @@ def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
 
 
 def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
-    """Load the configured transaction catalogue, returning an empty one when absent."""
+    """Load the configured transaction catalogue, returning an empty one when absent.
+
+    Raises:
+        :exc:`typer.Exit`: With exit code ``2`` when
+            :exc:`aeat.domain.transactions.TransactionError` surfaces during load.
+    """
     from ....domain.transactions import TransactionCatalogueRepository
 
     repository = TransactionCatalogueRepository(store_dir=_transaction_catalogue_dir())
@@ -268,6 +443,7 @@ def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
 
 
 def _print_suggestions(suggestions: tuple[ReconciliationSuggestion, ...]) -> None:
+    """Print one tab-separated row per :class:`~aeat.application.invoices.ReconciliationSuggestion`."""
     typer.echo("invoice_id\ttransaction_id\tamount_match\tcounterparty_match\tscore")
     for suggestion in suggestions:
         typer.echo(
@@ -284,13 +460,14 @@ def _print_suggestions(suggestions: tuple[ReconciliationSuggestion, ...]) -> Non
 
 
 def _print_inconsistencies(items: tuple[LinkInconsistency, ...]) -> None:
+    """Print one tab-separated row per :class:`~aeat.application.invoices.LinkInconsistency`."""
     typer.echo("invoice_id\ttransaction_id\tdirection")
     for item in items:
         typer.echo("\t".join([item.invoice_id, item.transaction_id, item.direction]))
 
 
 def _format_decimal(value: object) -> str:
-    """Render a ``Decimal`` (or passthrough string) without exponent notation."""
+    """Render a :class:`decimal.Decimal` (or passthrough string) without exponent notation."""
     if isinstance(value, Decimal):
         return "0" if value.is_zero() else format(value.normalize(), "f")
     return str(value)

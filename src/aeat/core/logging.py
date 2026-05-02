@@ -223,8 +223,7 @@ class _DropRunEventFilter(logging.Filter):
     :class:`aeat.core.observability.JsonlRunSink`. Echoing them on stderr as
     well would spam the console with one ``run.event NAVIGATION`` line
     per step; suppressing them here removes the noise while leaving
-    the record intact for any other handler (including the JSONL
-    sink). See audit finding S2 (vaultspec-code-reviewer, 2026-04-21).
+    the record intact for any other handler (including the JSONL sink).
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -259,6 +258,12 @@ def configure_logging() -> None:
             "root": {
                 "handlers": ["default"],
                 "level": "INFO",
+            },
+            "loggers": {
+                "alembic.runtime.plugins": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
             },
         }
     )

@@ -1,4 +1,9 @@
-"""Unit tests for the Modelo 200 (ejercicio 2024) ruleset."""
+"""Unit tests for the Modelo 200 (ejercicio 2024) ruleset.
+
+Exercises the cuota-íntegra, cuota-diferencial, and líquido-a-ingresar
+derivations of :data:`aeat.domain.formulas._rulesets.MODELO_200_2024`
+against externally-anchored LIS arts. 29 + 30 worked examples.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """A simple ejercicio-2024 filing with base 500_000, tipo 25%."""
+    """Simple ejercicio-2024 filing with base 500 000 €, tipo 25 %."""
     return {
         "00547": Decimal("0.00"),  # no BIN compensation
         "00550": Decimal("500000.00"),  # base pre-reserva
@@ -37,6 +42,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo200Ruleset2024:
+    """Formula-engine assertions for the 2024 Modelo 200 ruleset."""
+
     def test_consistent_filing_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_200_2024,
@@ -46,7 +53,7 @@ class TestModelo200Ruleset2024:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_cuota_integra_from_whole_percent_tipo(self) -> None:
-        """Casilla 00558 is whole-percent; 00562 = 00552 * (00558/100)."""
+        """Casilla 00558 is whole-percent; 00562 = 00552 * (00558 / 100)."""
         provided = _provided()
         provided["00562"] = Decimal("130000.00")  # should be 125_000
         report = Engine().audit_against(
@@ -88,18 +95,17 @@ class TestModelo200Ruleset2024:
         assert len(MODELO_200_2024.formulas) == 3
 
     def test_external_worked_example_lis_art_29(self) -> None:
-        """External-anchored worked example for LIS arts. 29 and 30.
+        """Externally-anchored worked example for LIS arts. 29 and 30.
 
-        Provenance (BOE-A-2014-12328 Ley 27/2014 LIS, consolidated
-        retrieval 2026-04-22):
-          - art. 29.1 = general tipo de gravamen 25% ("tipo general
+        Provenance (BOE-A-2014-12328 Ley 27/2014 LIS):
+          - art. 29.1 = general tipo de gravamen 25 % ("tipo general
             del Impuesto ... será el 25 por ciento")
           - art. 30 = "Cuota íntegra" / cuota líquida definition
             (the cuota líquida = cuota íntegra - deducciones +
             incrementos - abonos arithmetic Modelo 200 casilla
             00621 implements via 00611 + 00619 - 00615)
 
-        Scenario: 2024 IS filing, base 1 000 000 at 25%.
+        Scenario: 2024 IS filing, base 1 000 000 € at 25 %.
         Citation: BOE-A-2014-12328 arts. 29.1 + 30.
         """
         provided = {

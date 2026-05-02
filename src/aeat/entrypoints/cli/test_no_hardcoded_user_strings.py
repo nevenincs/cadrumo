@@ -116,7 +116,7 @@ def _is_pure_markup_or_punctuation(text: str) -> bool:
     if all(ch in _PUNCT_CHARS for ch in stripped):
         return True
     # Identifier-label patterns: "id:", "boe_id:", "boe_url:", "CSV:".
-    if stripped.endswith(":") and "_" in stripped or stripped in {"id:", "CSV:", "URL:", "ID:"}:
+    if (stripped.endswith(":") and "_" in stripped) or stripped in {"id:", "CSV:", "URL:", "ID:"}:
         return True
     if stripped.endswith(":"):
         head = stripped[:-1]
@@ -126,10 +126,7 @@ def _is_pure_markup_or_punctuation(text: str) -> bool:
     # Literal CLI command hints (``aeat <cmd>`` / ``--option-flag``).
     cleaned = re.sub(r"<[^>]+>", "", stripped)
     if cleaned.startswith("aeat ") or cleaned.startswith("--"):
-        if all(
-            ch in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_/"
-            for ch in cleaned
-        ):
+        if all(ch in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_/" for ch in cleaned):
             return True
     # Tokenise on whitespace AND punctuation; accept iff every
     # non-empty token is a domain acronym (uppercase, ≤12 chars), a

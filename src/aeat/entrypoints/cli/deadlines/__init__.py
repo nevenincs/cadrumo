@@ -1,7 +1,6 @@
-"""``aeat deadlines`` sub-app - filing-deadline computation engine CLI.
+"""``aeat deadlines`` sub-app — filing-deadline computation engine CLI.
 
-Wires three subcommands under ``aeat deadlines`` per the deadline
-engine ADR [[2026-04-12-deadline-engine-adr]]:
+Wires three subcommands under ``aeat deadlines``:
 
 - ``aeat deadlines list --year YYYY [--profile PATH]``
 - ``aeat deadlines next [--year YYYY] [--profile PATH]``
@@ -9,8 +8,8 @@ engine ADR [[2026-04-12-deadline-engine-adr]]:
 
 The commands are pure typer glue: they parse arguments, load the
 profile from disk (or from the optional ``AEAT_DEFAULT_PROFILE_PATH``
-setting), construct an in-process catalogue stub, and delegate every
-domain decision to :mod:`aeat.domain.deadlines`.
+setting), construct an in-process catalogue implementation, and delegate
+every domain decision to :mod:`aeat.domain.deadlines`.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ from .next import next_obligation
 app = typer.Typer(
     name="deadlines",
     no_args_is_help=True,
-    help="Filing-deadline computation engine (#38).",
+    help="Filing-deadline computation engine.",
 )
 
 app.command(name="list", help="List the full filing schedule for a year.")(list_schedule)

@@ -1,8 +1,16 @@
-"""Structured error-code registry and rendering helpers.
+"""Structured error-code registry and CLI rendering helpers.
 
-This module centralises AEAT's stable CLI error taxonomy. Error classes
-bind to predeclared :class:`ErrorCode` rows so the public contract stays
-explicit and reviewable.
+Centralises AEAT's stable CLI error taxonomy. Every
+:class:`aeat.core.errors.AeatError` subclass binds to a predeclared
+:class:`ErrorCode` row through :func:`bind_error_code`, so the public
+contract stays explicit, reviewable, and grep-stable. Rendering helpers
+:func:`render_error_text` and :func:`render_error_json` produce the
+human-readable and machine-readable stderr payloads that downstream tools
+consume; :func:`build_error_envelope` constructs the underlying
+:class:`ErrorEnvelope`.
+
+Secret-looking context keys (matching :data:`_SECRET_FIELD_PATTERN`) are
+redacted before they ever reach stderr — see :func:`scrub_error_context`.
 """
 
 from __future__ import annotations
@@ -31,8 +39,6 @@ class ErrorCategory(StrEnum):
     FAIL = "FAIL"
     INTERNAL = "INTERNAL"
     LOCKED = "LOCKED"
-    DEPRECATED = "[deprecated]"
-    MOVED = "[moved]"
 
 
 class ErrorCode(BaseModel):
@@ -146,7 +152,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
             default_message_es="La aprobacion de Clave Movil agoto el tiempo de espera.",
-            default_message_en="Raised when Kent does not approve the Cl@ve push within the time window.",
+            default_message_en="Raised when the operator does not approve the Cl@ve push within the time window.",
             default_message_hu="Clave movil jovahagyas idotullepessel vegzodott.",
             default_suggestion=None,
             retryable=False,
@@ -161,19 +167,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_es="Clave movil no esta configurado correctamente.",
             default_message_en="Raised when required Cl@ve M\xf3vil settings are missing or malformed.",
             default_message_hu="Clave movil nincs megfeleloen beallitva.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.aeat.auth.certificate.AeatLiveReadNotEnabledError",
-        ErrorCode(
-            code="AUTH_AUTH_CERTIFICATE_AEAT_LIVE_READ_NOT_ENABLED",
-            category=ErrorCategory.AUTH,
-            default_message_es="La lectura en vivo de AEAT no esta habilitada.",
-            default_message_en="Raised when live-read access is required but the gate is shut.",
-            default_message_hu="Az AEAT elo olvasasi mod nincs engedelyezve.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -627,7 +620,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_AEAT_OBSERVABILITY",
             category=ErrorCategory.ERROR,
             default_message_es="Error de aeat observabilidad.",
-            default_message_en="Base class for observability-layer errors (#99).",
+            default_message_en="Base class for observability-layer errors.",
             default_message_hu="Aeat megfigyelhetoseg hiba.",
             default_suggestion=None,
             retryable=False,
@@ -669,19 +662,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_en="Raised when a formula references a casilla that the ruleset does not declare.",
             default_message_hu="A hivatkozott casilla nincs meghatarozva.",
             default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.core.errors.DeprecatedAliasError",
-        ErrorCode(
-            code="DEPRECATED_DEPRECATED_ALIAS",
-            category=ErrorCategory.DEPRECATED,
-            default_message_es="Se utiliz\xf3 un alias obsoleto de la CLI.",
-            default_message_en="A deprecated CLI alias was used.",
-            default_message_hu="Egy elavult CLI alias haszn\xe1lata t\xf6rt\xe9nt.",
-            default_suggestion="aeat --help",
             retryable=False,
             runbook_id=None,
         ),
@@ -778,19 +758,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.errors.MovedAliasError",
-        ErrorCode(
-            code="MOVED_MOVED_ALIAS",
-            category=ErrorCategory.MOVED,
-            default_message_es="Se utiliz\xf3 un alias movido de la CLI.",
-            default_message_en="A moved CLI alias was used.",
-            default_message_hu="\xc1thelyezett CLI alias haszn\xe1lata t\xf6rt\xe9nt.",
-            default_suggestion="aeat --help",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.core.errors.RulesetValidationError",
         ErrorCode(
             code="INTEGRITY_RULESET_VALIDATION",
@@ -812,19 +779,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             default_message_en="Raised when AEAT site-health detection classifies a non-OK state.",
             default_message_hu="Az AEAT oldalallapota hibas.",
             default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.core.errors.WorkspaceLockedError",
-        ErrorCode(
-            code="LOCKED_WORKSPACE_LOCKED",
-            category=ErrorCategory.LOCKED,
-            default_message_es="El espacio de trabajo est\xe1 bloqueado por otra operaci\xf3n.",
-            default_message_en="The workspace is locked by another operation.",
-            default_message_hu="A munkater\xfcletet egy m\xe1sik m\u0171velet z\xe1rolja.",
-            default_suggestion="aeat workflow list",
             retryable=False,
             runbook_id=None,
         ),
@@ -1147,7 +1101,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_FINANCIAL_AGGREGATION",
             category=ErrorCategory.ERROR,
             default_message_es="Error de agregacion financiera.",
-            default_message_en="Base class for financial T6 aggregation failures.",
+            default_message_en="Base class for financial aggregation failures.",
             default_message_hu="Penzugyi osszesitesi hiba.",
             default_suggestion=None,
             retryable=False,
@@ -1952,9 +1906,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_PROFILE_FORAL_REGIME",
             category=ErrorCategory.REFUSED,
-            default_message_es="El regimen foral solicitado se gestiona en #424.",
-            default_message_en="The requested foral regime is handled in #424.",
-            default_message_hu="A kert foralis rendszert a #424 kezeli.",
+            default_message_es="El regimen foral solicitado queda fuera del alcance de este perfil.",
+            default_message_en="The requested foral regime is outside the scope of this profile.",
+            default_message_hu="A kert foralis rendszer e profil hatokoren kivul esik.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -2188,7 +2142,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.LockAcquisitionError",
+        "aeat.core.locks_errors.LockAcquisitionError",
         ErrorCode(
             code="LOCKED_STORAGE_LOCK_ACQUISITION",
             category=ErrorCategory.LOCKED,
@@ -2380,7 +2334,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -2393,7 +2347,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestTamperError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestTamperError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER",
             category=ErrorCategory.INTEGRITY,
@@ -2408,7 +2362,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.persistence.storage.errors.CorpusManifestDriftError",
+        "aeat.core.corpus_manifest._errors.CorpusManifestDriftError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -2473,7 +2427,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.SubmissionError",
+        "aeat.core.access_gate._errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",
             category=ErrorCategory.ERROR,
@@ -2486,7 +2440,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.SubmissionPreflightError",
+        "aeat.core.access_gate._errors.AccessGateSubmissionPreflightError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION_PREFLIGHT",
             category=ErrorCategory.ERROR,
@@ -2512,25 +2466,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.access_gate._errors.AeatLiveReadNotEnabledError",
-        ErrorCode(
-            code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
-            category=ErrorCategory.REFUSED,
-            default_message_es="La lectura en vivo de AEAT no está habilitada.",
-            default_message_en="Live AEAT read access is not enabled.",
-            default_message_hu="Az élő AEAT olvasás nincs engedélyezve.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.submission._errors.SubmissionError",
         ErrorCode(
             code="ERROR_DOMAIN_SUBMISSION",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de envío de dominio.",
-            default_message_en="Base class for domain submission errors.",
+            default_message_es="Error de dominio de envío.",
+            default_message_en="Base class for submission-domain failures.",
             default_message_hu="Domain beküldési hiba.",
             default_suggestion=None,
             retryable=False,
@@ -2542,87 +2483,22 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_DOMAIN_SUBMISSION_PREFLIGHT",
             category=ErrorCategory.ERROR,
-            default_message_es="La validación previa del envío de dominio rechazó el borrador.",
-            default_message_en="Raised when domain submission preflight rejects a draft.",
-            default_message_hu="A domain beküldés előzetes ellenőrzése elutasította a tervezetet.",
+            default_message_es="La validación previa de envío falló.",
+            default_message_en="Raised when a draft cannot pass local submission preflight.",
+            default_message_hu="A domain beküldési előellenőrzés sikertelen.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.submission._errors.LiveSubmitForbiddenError",
+        "aeat.core.access_gate._errors.AeatLiveReadNotEnabledError",
         ErrorCode(
-            code="LOCKED_DOMAIN_LIVE_SUBMIT_FORBIDDEN",
-            category=ErrorCategory.LOCKED,
-            default_message_es="El envío en vivo a AEAT está permanentemente prohibido.",
-            default_message_en="Live AEAT submission is permanently forbidden in the domain submission engine.",
-            default_message_hu="Az élő AEAT beküldés véglegesen tiltott a domain beküldési motorban.",
-            default_suggestion="aeat submission export",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.sync._errors.DivergenceClassificationError",
-        ErrorCode(
-            code="ERROR_SYNC_DIVERGENCE_CLASSIFICATION",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de divergencia clasificacion.",
-            default_message_en="Raised when the classifier cannot decide the shape of a divergence.",
-            default_message_hu="Elteres besorolas hiba.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.sync._errors.DivergenceRepositoryError",
-        ErrorCode(
-            code="ERROR_SYNC_DIVERGENCE_REPOSITORY",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de divergencia repositorio.",
-            default_message_en="Raised when the divergence repository cannot persist or load a record.",
-            default_message_hu="Elteres tarolo hiba.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.sync._errors.HealingError",
-        ErrorCode(
-            code="ERROR_SYNC_HEALING",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de reparacion.",
-            default_message_en="Raised when a healing strategy cannot apply a divergence record.",
-            default_message_hu="Helyreallitas hiba.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.sync._errors.SyncError",
-        ErrorCode(
-            code="ERROR_SYNC",
-            category=ErrorCategory.ERROR,
-            default_message_es="Error de sincronizacion.",
-            default_message_en="Base class for sync-related errors.",
-            default_message_hu="Szinkron hiba.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.sync._errors.WireValidationError",
-        ErrorCode(
-            code="INTEGRITY_SYNC_WIRE_VALIDATION",
-            category=ErrorCategory.INTEGRITY,
-            default_message_es="La validacion de wire fallo.",
-            default_message_en="Raised when a live AEAT payload fails strict pydantic validation.",
-            default_message_hu="Wire ervenyesitese sikertelen.",
+            code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
+            category=ErrorCategory.REFUSED,
+            default_message_es="La lectura en vivo de AEAT no está habilitada.",
+            default_message_en="Live AEAT read access is not enabled.",
+            default_message_hu="Az élő AEAT olvasás nincs engedélyezve.",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -2751,7 +2627,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_RENTAL_REGISTER",
             category=ErrorCategory.ERROR,
             default_message_es="Error del registro de alquileres.",
-            default_message_en="Base class for rental-register errors (#454).",
+            default_message_en="Base class for rental-register errors.",
             default_message_hu="Bérleti nyilvántartás hiba.",
             default_suggestion=None,
             retryable=False,
@@ -2966,8 +2842,6 @@ def get_error_exit_code(category: ErrorCategory) -> int:
         ErrorCategory.FAIL: 5,
         ErrorCategory.INTERNAL: 6,
         ErrorCategory.LOCKED: 7,
-        ErrorCategory.DEPRECATED: 4,
-        ErrorCategory.MOVED: 4,
     }[category]
 
 

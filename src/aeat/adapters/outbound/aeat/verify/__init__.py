@@ -1,17 +1,24 @@
-"""Playwright CSV verification against AEAT's Sede electrónica (#44).
+"""Playwright CSV verification against AEAT's Sede electrónica.
 
-The ``verify_csv`` helper is **opt-in**: it only runs when the caller
-supplies or constructs a :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`,
-and it never mutates AEAT-side state. Our contract is:
+The :func:`verify_csv` helper is opt-in: it only runs when the
+caller supplies or constructs a
+:class:`aeat.adapters.outbound.aeat.browser.BrowserSession`, and it
+never mutates AEAT-side state. The contract is:
 
 * open the Sede verification page,
 * enter the CSV,
 * read back the server response,
 * return ``True`` iff AEAT confirms the document as valid.
 
-Because the live bot-detection probe in :mod:`aeat.adapters.outbound.aeat.browser`
-is a known flaky path (see issue #41), the function degrades gracefully when a
-browser cannot be constructed and surfaces the underlying error to the caller.
+The function degrades gracefully when a browser cannot be
+constructed and surfaces the underlying error to the caller via
+:exc:`aeat.domain.justificante._errors.JustificanteVerificationError`.
+
+Public surface: :func:`verify_csv` plus the Playwright protocol
+types (:class:`VerifyBrowserKeyboardLike`, :class:`VerifyBrowserPageLike`,
+:class:`VerifyBrowserContextLike`, :class:`VerifyBrowserSessionLike`,
+:class:`VerifyPlaywrightOwnerLike`) that let the helper be unit-tested
+without spinning up a real browser.
 """
 
 from __future__ import annotations
@@ -30,13 +37,17 @@ _VERIFY_URL = (
 )
 
 
-class BrowserKeyboardLike(Protocol):
+class VerifyBrowserKeyboardLike(Protocol):
+    """Subset of Playwright's ``Keyboard`` API used by :func:`verify_csv`."""
+
     async def type(self, value: str) -> None: ...
     async def press(self, key: str) -> None: ...
 
 
-class BrowserPageLike(Protocol):
-    keyboard: BrowserKeyboardLike
+class VerifyBrowserPageLike(Protocol):
+    """Subset of Playwright's ``Page`` API used by :func:`verify_csv`."""
+
+    keyboard: VerifyBrowserKeyboardLike
 
     async def goto(self, url: str) -> object | None: ...
     async def fill(self, selector: str, value: str) -> None: ...
@@ -44,25 +55,38 @@ class BrowserPageLike(Protocol):
     async def content(self) -> str: ...
 
 
-class BrowserContextLike(Protocol):
-    async def new_page(self) -> BrowserPageLike: ...
+class VerifyBrowserContextLike(Protocol):
+    """Subset of Playwright's ``BrowserContext`` API used by :func:`verify_csv`."""
+
+    async def new_page(self) -> VerifyBrowserPageLike: ...
     async def close(self) -> None: ...
 
 
-class BrowserSessionLike(Protocol):
-    async def create_context(self) -> BrowserContextLike: ...
+class VerifyBrowserSessionLike(Protocol):
+    """Subset of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` consumed by :func:`verify_csv`."""
+
+    async def create_context(self) -> VerifyBrowserContextLike: ...
     async def close(self) -> None: ...
 
 
-class PlaywrightOwnerLike(Protocol):
+class VerifyPlaywrightOwnerLike(Protocol):
+    """Subset of the Playwright async owner used to tear down a self-owned session."""
+
     async def stop(self) -> None: ...
 
 
-BrowserSessionFactory = Callable[[], Awaitable[tuple[BrowserSessionLike, PlaywrightOwnerLike]]]
+VerifyBrowserSessionFactory = Callable[[], Awaitable[tuple[VerifyBrowserSessionLike, VerifyPlaywrightOwnerLike]]]
+"""Callable that builds a (session, playwright owner) pair for the self-owned browser path."""
 
 
-async def _build_default_browser_session() -> tuple[BrowserSessionLike, PlaywrightOwnerLike]:
-    """Construct the default browser session and its Playwright owner."""
+async def _build_default_browser_session() -> tuple[VerifyBrowserSessionLike, VerifyPlaywrightOwnerLike]:
+    """Construct the default :class:`VerifyBrowserSessionLike` and its Playwright owner.
+
+    Loads :func:`aeat.core.config.load_settings`, materialises the
+    default :class:`aeat.adapters.outbound.aeat.browser.profile.Profile`,
+    starts the async Playwright runtime, and wraps both into a session
+    pair the caller is responsible for closing.
+    """
     from playwright.async_api import async_playwright
 
     from .....core.config import load_settings
@@ -78,17 +102,17 @@ async def _build_default_browser_session() -> tuple[BrowserSessionLike, Playwrig
     profile.ensure_storage_dir()
     playwright = await async_playwright().start()
     session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
-    return cast(BrowserSessionLike, session), cast(PlaywrightOwnerLike, playwright)
+    return cast(VerifyBrowserSessionLike, session), cast(VerifyPlaywrightOwnerLike, playwright)
 
 
-DEFAULT_BROWSER_SESSION_FACTORY: BrowserSessionFactory = _build_default_browser_session
+DEFAULT_BROWSER_SESSION_FACTORY: VerifyBrowserSessionFactory = _build_default_browser_session
 """Module-level factory seam for the self-owned browser path."""
 
 
 async def verify_csv(
     csv: str,
     *,
-    browser: BrowserSessionLike | None = None,
+    browser: VerifyBrowserSessionLike | None = None,
 ) -> bool:
     """Verify a justificante CSV against AEAT's Sede electrónica.
 
@@ -111,7 +135,7 @@ async def verify_csv(
 
     own_browser = False
     session = browser
-    playwright_owner: PlaywrightOwnerLike | None = None
+    playwright_owner: VerifyPlaywrightOwnerLike | None = None
     if session is None:
         try:
             session, playwright_owner = await DEFAULT_BROWSER_SESSION_FACTORY()
@@ -157,11 +181,11 @@ async def verify_csv(
 
 __all__ = [
     "DEFAULT_BROWSER_SESSION_FACTORY",
-    "BrowserContextLike",
-    "BrowserKeyboardLike",
-    "BrowserPageLike",
-    "BrowserSessionFactory",
-    "BrowserSessionLike",
-    "PlaywrightOwnerLike",
+    "VerifyBrowserContextLike",
+    "VerifyBrowserKeyboardLike",
+    "VerifyBrowserPageLike",
+    "VerifyBrowserSessionFactory",
+    "VerifyBrowserSessionLike",
+    "VerifyPlaywrightOwnerLike",
     "verify_csv",
 ]

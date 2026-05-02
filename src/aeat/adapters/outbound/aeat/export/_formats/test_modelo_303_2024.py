@@ -1,4 +1,4 @@
-"""Smoke tests for the auto-generated Modelo 303 2024 schema (+89+90)."""
+"""Smoke tests for the auto-generated Modelo 303 2024 envelope schema."""
 
 from __future__ import annotations
 
@@ -14,19 +14,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 class TestModelo3032024Envelope:
+    """Coarse-grained shape checks on the Modelo 303 2024 envelope."""
+
     def test_envelope_total_bytes(self) -> None:
-        """DP30300 (328) + 6 page segments (7648) + TRAILER (18) = 7994."""
+        """Assert the envelope sums to 7994 bytes (DP30300 328 + 6 page segments 7648 + TRAILER 18)."""
         total = sum(s.total_length for s in ENVELOPE)
         assert total == 7994
 
     def test_eight_segments(self) -> None:
+        """Assert the envelope contains exactly 8 segments."""
         assert len(ENVELOPE) == 8
 
     def test_required_fields_include_dp30301_page_identification(self) -> None:
-        """DP30301 page-identification fields to the required
-        set via the fixture's ``extra_required_fields`` override so filings
-        without TIPO_DECLARACION / NIF / APELLIDOS+NOMBRE / DEVENGO_EJERCICIO
-        / DEVENGO_PERIODO are rejected at serialisation."""
+        """Assert the DP30301 page-identification fields are required at serialisation.
+
+        Filings without ``TIPO_DECLARACION`` / ``NIF`` /
+        ``APELLIDOS+NOMBRE`` / ``DEVENGO_EJERCICIO`` /
+        ``DEVENGO_PERIODO`` must be rejected by the serialiser.
+        """
         expected = {
             "DP30301_F006_TIPO_DECLARACI_N",
             "DP30301_F007_IDENTIFICACI_N_NIF",
@@ -37,8 +42,7 @@ class TestModelo3032024Envelope:
         assert expected.issubset(REQUIRED_HEADER_FIELDS)
 
     def test_serialise_empty_filing_well_formed(self) -> None:
-        """A zero-casilla filing must still produce a valid 7996-byte envelope
-        (7994 content + CRLF)."""
+        """Assert a zero-casilla filing still produces a valid 7996-byte envelope (7994 content + CRLF)."""
         headers: dict[str, str] = {hdr: "" for hdr in REQUIRED_HEADER_FIELDS}
         # Supply required headers with dummy single-character values.
         # The serialiser will zero/space-pad to field length.
@@ -69,7 +73,7 @@ class TestModelo3032024Envelope:
         assert payload[7976:7982] == b"</T303"
 
     def test_round_trip_signed_currency(self) -> None:
-        """Casilla 86 is a CURRENCY + INLINE_SIGN field in DP30304."""
+        """Assert casilla 86 (CURRENCY + INLINE_SIGN in DP30304) round-trips through serialise/deserialise."""
         headers: dict[str, str] = {hdr: "A" for hdr in REQUIRED_HEADER_FIELDS}
         headers["DP30300_F004_EJERCICIO_DE_DEVENGO"] = "2024"
 
@@ -83,10 +87,10 @@ class TestModelo3032024Envelope:
         assert parsed.merged_casilla_values["86"] == Decimal("2500.50")
 
     def test_round_trip_unsigned_currency(self) -> None:
-        """Casilla 01 (base imponible al 4 %) is an unsigned CURRENCY field.
+        """Assert casilla 01 (unsigned CURRENCY base imponible al 4 %) round-trips.
 
-        every 17-byte casilla-bearing NUMERIC field
-        as CURRENCY so ordinary base-imponible values round-trip.
+        Every 17-byte casilla-bearing NUMERIC field is treated as
+        CURRENCY so ordinary base-imponible values round-trip cleanly.
         """
         headers: dict[str, str] = {hdr: "A" for hdr in REQUIRED_HEADER_FIELDS}
         headers["DP30300_F004_EJERCICIO_DE_DEVENGO"] = "2024"

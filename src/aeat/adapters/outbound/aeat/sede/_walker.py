@@ -302,12 +302,11 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
 
     * When ``modelo`` is set (e.g. ``"100"``), target the leaf
       ``mostrarListado`` anchor whose visible text contains
-      ``Modelo <N>``. Captured live on 2026-04-24: clicking that
-      anchor lazy-loads the full expediente subtree beneath it in one
-      AJAX round-trip.
-    * When ``modelo`` is None, click every ``mostrarListado`` anchor
-      in document order — this expands the whole corpus. The JS dedup
-      guards against clicking a category header twice.
+      ``Modelo <N>``. Clicking that anchor lazy-loads the full
+      expediente subtree beneath it in one AJAX round-trip.
+    * When ``modelo`` is ``None``, click every ``mostrarListado``
+      anchor in document order — this expands the whole corpus. The
+      JS dedup guards against clicking a category header twice.
     """
     import asyncio as _asyncio
 

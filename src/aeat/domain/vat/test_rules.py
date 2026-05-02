@@ -15,9 +15,9 @@ from pydantic import ValidationError
 from ...core.i18n import Translatable
 from . import (
     VAT_CATALOGUE_2025,
+    VATCategory,
     VatCitation,
     VatCitationSource,
-    VATCategory,
     VATRegulation,
     cite,
 )

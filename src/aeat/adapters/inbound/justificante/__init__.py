@@ -10,7 +10,7 @@ from ....domain.justificante import (
     JustificanteParserBackend,
     JustificanteVerificationError,
 )
-from ....domain.justificante._parser import parse_justificante
+from ._parser import parse_justificante
 
 __all__ = [
     "Justificante",

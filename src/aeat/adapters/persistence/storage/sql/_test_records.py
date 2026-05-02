@@ -1,4 +1,10 @@
-"""Unit tests for the public pydantic record models."""
+"""Unit tests for the public pydantic record models.
+
+Asserts the strict-mode validation, frozen-mutation refusal, enum
+coercion, and length invariants on the SQL-layer record types
+(:class:`ModeloRecord`, :class:`PortalRecord`,
+:class:`CorpusArtifactRecord`).
+"""
 
 from __future__ import annotations
 

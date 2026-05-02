@@ -1,23 +1,24 @@
 """Modelo 123 ruleset covering the full 2025 fiscal year.
 
-Modelo 123 is the quarterly (monthly for grandes empresas) withholdings
-form for rendimientos del capital mobiliario — dividends, interest on
-deposits/loans/securities — under IRPF / IS / IRNR.
+Modelo 123 is the quarterly (monthly for grandes empresas)
+withholdings form for rendimientos del capital mobiliario — dividends,
+interest on deposits / loans / securities — under IRPF / IS / IRNR.
 
-The liquidación block is fully algebraic. Every row is a total (dividends
-+ otras rentas). Formula coverage:
+The liquidación block is fully algebraic. Every row is a total
+(dividends + otras rentas). Formula coverage:
 
-- casilla 03 = 01 + 02 (total perceptores).
-- casilla 06 = 04 + 05 (total base retenciones).
-- casilla 09 = 07 + 08 (total retenciones).
-- casilla 11 = 09 - 10 (resultado a ingresar — total retenciones menos
+- ``03 = 01 + 02`` (total perceptores).
+- ``06 = 04 + 05`` (total base retenciones).
+- ``09 = 07 + 08`` (total retenciones).
+- ``11 = 09 - 10`` (resultado a ingresar — total retenciones menos
   resultado declaración anterior en complementaria).
 
-For Kent's IRPF autónomo path, LIRPF art. 101.4 and RIRPF art. 90
-anchor the ordinary capital-income retention rate at 19%. The Modelo
-123 form also covers IS and IRNR rents, so the per-row withholding
-amounts remain user-supplied in this cross-tax ruleset; Kent verifies
-the declared aggregates and complementaria offset.
+For the operator's IRPF autónomo path, LIRPF art. 101.4 and RIRPF
+art. 90 anchor the ordinary capital-income retention rate at 19 %.
+The Modelo 123 form also covers IS and IRNR rents, so the per-row
+withholding amounts remain user-supplied in this cross-tax ruleset;
+the operator verifies the declared aggregates and complementaria
+offset.
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` for ES/EN/HU labels."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -176,3 +178,11 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
+"""Modelo 123 ruleset for ejercicio 2025.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` carrying the eleven
+capital-mobiliario casillas, the four algebraic aggregation formulas
+(``03``, ``06``, ``09``, ``11``), and an empty ``ParameterTable``
+because every withholding amount is user-supplied. Re-exported as
+:data:`aeat.domain.formulas._rulesets.MODELO_123_2025`.
+"""

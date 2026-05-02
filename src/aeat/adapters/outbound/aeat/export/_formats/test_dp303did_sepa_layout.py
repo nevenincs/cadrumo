@@ -1,17 +1,16 @@
 """DP303DID SEPA devolución page layout lock.
 
-The DP303DID page carries Kent's refund-routing block: SWIFT/BIC,
-IBAN, bank name + address, country code, and the SEPA marker.
-When Kent files a devolución (tipo=D), his ``--iban`` and
+The DP303DID page carries the refund-routing block: SWIFT / BIC,
+IBAN, bank name + address, country code, and the SEPA marker. When
+the filer chooses a devolución (``tipo=D``), the CLI's ``--iban`` and
 ``--swift`` flag values land here. Every byte offset in the
-devolución export test and the IBAN
-normalisation E2E test depends on these offsets being stable.
+devolución export test and the IBAN normalisation E2E test depends on
+these offsets being stable.
 
-'s DP30301 lock for this Kent-critical
-SEPA page. A fixture regeneration that shifts SWIFT or IBAN by
-even one byte ships a malformed SEPA block to AEAT — the refund
-would land in a wrong account or silently drop. This test fails
-loud first with a targeted message naming the offending field.
+A fixture regeneration that shifts SWIFT or IBAN by even one byte
+would ship a malformed SEPA block to AEAT — the refund would land in
+a wrong account or silently drop. This test fails loud first with a
+targeted message naming the offending field.
 """
 
 from __future__ import annotations
@@ -49,6 +48,8 @@ _EXPECTED_DP303DID_LAYOUT: list[tuple[str, int, int, str]] = [
 
 
 class TestDp303didSepaLayout:
+    """Lock the per-field offsets of the DP303DID SEPA devolución page."""
+
     def test_layout_matches_canonical(self) -> None:
         segment = _dp303did()
         by_field_id = {s.field_id: s for s in segment.specs}
@@ -70,7 +71,7 @@ class TestDp303didSepaLayout:
             )
 
     def test_swift_slot_is_11_bytes_at_offset_12(self) -> None:
-        """SWIFT/BIC (ISO-9362) is 8 or 11 chars; the slot is sized for the
+        """SWIFT / BIC (ISO 9362) is 8 or 11 chars; the slot is sized for the
         longer 11-char form. Starts immediately after the 11-byte identifier
         header ``<T303DID00>``."""
         segment = _dp303did()
@@ -80,9 +81,9 @@ class TestDp303didSepaLayout:
         assert swift.length == 11
 
     def test_iban_slot_is_34_bytes_at_offset_23(self) -> None:
-        """IBAN (ISO-13616) is up to 34 chars; the slot starts immediately
-        after the 11-byte SWIFT. 's normalisation E2E test depends
-        on this offset and length being stable."""
+        """IBAN (ISO 13616) is up to 34 chars; the slot starts immediately
+        after the 11-byte SWIFT. The IBAN-normalisation E2E test depends on
+        this offset and length being stable."""
         segment = _dp303did()
         by_field_id = {s.field_id: s for s in segment.specs}
         iban = by_field_id["DP303DID_F006_DOMICILIACI_N_DEVOLUCI_N_IBA"]
@@ -90,9 +91,9 @@ class TestDp303didSepaLayout:
         assert iban.length == 34
 
     def test_sepa_marker_is_1_byte_numeric_at_offset_194(self) -> None:
-        """The SEPA marker is a 1-byte flag set to '1' when Kent supplies
-        an IBAN (logic). Its NUMERIC kind means it pads
-        with '0' by default — no IBAN → no SEPA declaration."""
+        """The SEPA marker is a 1-byte flag set to ``"1"`` when an IBAN is
+        supplied. Its NUMERIC kind means it pads with ``"0"`` by default —
+        no IBAN means no SEPA declaration."""
         segment = _dp303did()
         by_field_id = {s.field_id: s for s in segment.specs}
         marker = by_field_id["DP303DID_F011_DEVOLUCI_N_MARCA_SEPA"]
@@ -101,9 +102,9 @@ class TestDp303didSepaLayout:
         assert marker.kind.name == "NUMERIC"
 
     def test_dp303did_segment_starts_at_absolute_byte_7153(self) -> None:
-        """Sanity: DP303DID is the 7th segment in ENVELOPE, starting at
-        cumulative byte 7153 per . An absolute-offset reader (like
-        the test) uses 7153 + intra-segment offset."""
+        """Sanity check: DP303DID is the 7th segment in ``ENVELOPE``,
+        starting at cumulative byte 7153. An absolute-offset reader uses
+        ``7153 + intra-segment offset``."""
         cumulative = 0
         for seg in ENVELOPE:
             if seg.segment_id == "DP303DID":

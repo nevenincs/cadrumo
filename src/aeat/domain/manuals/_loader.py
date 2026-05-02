@@ -1,11 +1,11 @@
-"""File-backed loader and query API for ``aeat.domain.manuals``.
+"""File-backed loader and query API for :mod:`aeat.domain.manuals`.
 
 The loader walks the ``corpus/manuals/`` directory hierarchy and
-produces strictly-validated :class:`Manual`, :class:`Chapter`, and
-:class:`Section` records. The v1 PR ships the loader without
-populated structured content; tests exercise it against hand-crafted
-temporary-directory fixtures so the contract is locked for the
-follow-up issues that land real chapter trees.
+produces strictly-validated :class:`~aeat.domain.manuals.Manual`,
+:class:`~aeat.domain.manuals.Chapter`, and
+:class:`~aeat.domain.manuals.Section` records. Tests exercise it
+against hand-crafted temporary-directory fixtures so the contract is
+locked for downstream extraction work that lands real chapter trees.
 
 Directory shape per part root::
 
@@ -52,7 +52,7 @@ _logger = get_logger(__name__)
 
 
 def _root_from_settings(settings: Settings | None) -> Path:
-    """Resolve the manuals root directory from settings or default."""
+    """Resolve the manuals root directory from ``settings`` or the project default."""
     return (settings or load_settings()).aeat_manuals_root
 
 
@@ -85,7 +85,7 @@ _CHAPTERS_ADAPTER: TypeAdapter[tuple[Chapter, ...]] = TypeAdapter(tuple[Chapter,
 
 
 def _read_text(path: Path) -> str:
-    """Read a UTF-8 text file, raising :class:`ManualNotFoundError` on miss."""
+    """Read a UTF-8 text file, raising :exc:`ManualNotFoundError` on miss."""
     try:
         return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
@@ -93,7 +93,7 @@ def _read_text(path: Path) -> str:
 
 
 def _load_json(path: Path) -> Any:
-    """Read and parse a JSON file, raising :class:`ManualParseError` on failure."""
+    """Read and parse a JSON file, raising :exc:`ManualParseError` on failure."""
     raw = _read_text(path)
     try:
         return json.loads(raw)
@@ -102,11 +102,12 @@ def _load_json(path: Path) -> Any:
 
 
 def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
-    """Parse ``chapters.json`` into a tuple of :class:`Chapter`.
+    """Parse ``chapters.json`` into a tuple of :class:`~aeat.domain.manuals.Chapter`.
 
-    Uses :meth:`TypeAdapter.validate_json` so strict-mode pydantic
-    models accept JSON arrays as tuples (list→tuple is permitted in
-    JSON mode even when strict validation is enabled).
+    Uses :meth:`pydantic.TypeAdapter.validate_json` so strict-mode
+    pydantic models accept JSON arrays as tuples (the list-to-tuple
+    coercion is permitted in JSON mode even when strict validation is
+    enabled).
     """
     raw = _read_text(chapters_path)
     try:
@@ -116,12 +117,13 @@ def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
 
 
 def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> Manual:
-    """Parse ``manual.json`` plus chapters into a :class:`Manual`.
+    """Parse ``manual.json`` plus chapters into a :class:`~aeat.domain.manuals.Manual`.
 
     The ``manual.json`` file is loaded via JSON mode and the chapters
-    loaded separately are serialised back through ``model_dump`` and
-    spliced in before final validation. JSON mode allows the
-    list→tuple coercion that strict Python mode refuses.
+    loaded separately are serialised back through
+    :meth:`pydantic.BaseModel.model_dump` and spliced in before final
+    validation. JSON mode allows the list-to-tuple coercion that
+    strict Python mode refuses.
     """
     raw = _read_text(manual_path)
     try:
@@ -292,8 +294,9 @@ def find_rules(
 def _rule_renders_in_language(rule: Rule, lang: Language) -> bool:
     """Return ``True`` when the rule statement resolves in ``lang``.
 
-    Wrapping the fallback-aware ``get_translation`` lookup in a helper
-    keeps the ``find_rules`` loop free of bare ``except Exception``
+    Wrapping the fallback-aware
+    :func:`~aeat.core.i18n.get_translation` lookup in a helper keeps
+    the :func:`find_rules` loop free of bare ``except Exception``
     handlers; translation failures are a recognised skip signal, not
     a programming error.
     """

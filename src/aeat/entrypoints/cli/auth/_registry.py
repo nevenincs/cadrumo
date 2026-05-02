@@ -2,9 +2,13 @@
 
 The registry is the single source of truth for provider ordering,
 default resolution, and user-facing rendering. Only providers with a
-concrete ``AuthProvider`` implementation are listed here; unsupported
-kinds can still exist in lower-level contracts for compatibility, but
-the CLI must not advertise them as selectable auth paths.
+concrete :class:`aeat.application.auth.AuthProvider` implementation are
+listed here; unsupported kinds can still exist in lower-level contracts
+for compatibility, but the CLI must not advertise them as selectable
+auth paths.
+
+See :func:`build_provider`, :func:`describe`, and :func:`default_kind`
+for the three operations the registry mediates.
 """
 
 from __future__ import annotations
@@ -18,7 +22,6 @@ from ....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,
-    select_provider,
 )
 from ....core.errors import AeatError
 
@@ -39,7 +42,14 @@ class ProviderNotImplementedError(AeatError):
 
 
 class ProviderRegistryEntry(BaseModel):
-    """One row of the auth-provider registry."""
+    """One row of the auth-provider registry.
+
+    Attributes:
+        kind: The :class:`aeat.application.auth.AuthProviderKind` enum
+            member this row covers.
+        label: User-facing label rendered by ``aeat auth`` listings.
+        implemented: ``True`` when a concrete provider factory exists.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -70,18 +80,37 @@ INTERACTIVE_KINDS: frozenset[AuthProviderKind] = frozenset(
 
 
 def iter_entries() -> Sequence[ProviderRegistryEntry]:
-    """Return the canonical provider order."""
+    """Return the canonical provider order.
+
+    Returns:
+        The registry tuple in display order.
+    """
     return REGISTRY
 
 
 def iter_kinds() -> tuple[AuthProviderKind, ...]:
-    """Return provider kinds accepted by the user-facing CLI."""
+    """Return provider kinds accepted by the user-facing CLI.
+
+    Returns:
+        Tuple of every :class:`aeat.application.auth.AuthProviderKind`
+        the CLI exposes, in display order.
+    """
 
     return tuple(entry.kind for entry in REGISTRY)
 
 
 def get_entry(kind: AuthProviderKind) -> ProviderRegistryEntry:
-    """Look up a registry entry by kind."""
+    """Look up a registry entry by kind.
+
+    Args:
+        kind: The provider kind to resolve.
+
+    Returns:
+        The matching :class:`ProviderRegistryEntry`.
+
+    Raises:
+        UnknownProviderError: When ``kind`` is not registered.
+    """
     for entry in REGISTRY:
         if entry.kind == kind:
             return entry
@@ -89,16 +118,30 @@ def get_entry(kind: AuthProviderKind) -> ProviderRegistryEntry:
 
 
 def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
-    """Instantiate the concrete ``AuthProvider`` for a kind.
+    """Instantiate the concrete :class:`aeat.application.auth.AuthProvider` for a kind.
 
-    Passes the shared production :func:`default_browser_session_factory`
+    Passes the shared production
+    :func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`
     so the returned provider can drive Playwright without the caller
-    having to wire one itself. Raises :class:`ProviderNotImplementedError`
-    if a registry entry and the application-layer provider factory ever
-    drift apart; the CLI layer catches that and maps it to an
-    actionable exit-code-2 message.
+    having to wire one itself.
+
+    Args:
+        kind: Which provider to construct.
+        settings: Loaded :class:`aeat.core.config.Settings` used by the
+            provider for credential discovery.
+
+    Returns:
+        A ready-to-use :class:`aeat.application.auth.AuthProvider`.
+
+    Raises:
+        UnknownProviderError: When ``kind`` is not registered.
+        ProviderNotImplementedError: When a registry entry and the
+            outbound provider factory drift apart; the CLI
+            layer catches this and maps it to an actionable
+            exit-code-2 message.
     """
     kind = get_entry(kind).kind
+    from ....adapters.outbound.aeat.auth import select_provider
     from ....adapters.outbound.aeat.browser import default_browser_session_factory
 
     try:
@@ -112,15 +155,23 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
 
 
 def describe(kind: AuthProviderKind, settings: Settings) -> AuthProviderDescription:
-    """Produce an ``AuthProviderDescription`` for a registry kind.
+    """Produce an :class:`aeat.application.auth.AuthProviderDescription` for a registry kind.
 
     Providers delegate to their own ``describe()`` (which fails soft
     for missing configuration). The browser-session factory is passed
     through even for describe-only calls so providers that grow
-    optional I/O in their describe() do not silently see ``None`` and
-    break.
+    optional I/O in their ``describe()`` do not silently see ``None``
+    and break.
+
+    Args:
+        kind: Provider kind to inspect.
+        settings: Loaded :class:`aeat.core.config.Settings`.
+
+    Returns:
+        The provider's self-description.
     """
     entry = get_entry(kind)
+    from ....adapters.outbound.aeat.auth import select_provider
     from ....adapters.outbound.aeat.browser import default_browser_session_factory
 
     provider = select_provider(
@@ -135,9 +186,22 @@ def default_kind(settings: Settings) -> AuthProviderKind:
     """Pick the default provider kind for login/status when ``--provider`` is absent.
 
     Resolution order:
-    1. ``settings.aeat_auth_provider`` (env var ``AEAT_AUTH_PROVIDER``).
-    2. The first registry kind whose ``describe()`` is ``configured=True``.
-    3. Raise :class:`NoConfiguredProviderError`.
+
+    - ``settings.aeat_auth_provider`` (env var ``AEAT_AUTH_PROVIDER``).
+    - The first registry kind whose ``describe()`` reports
+      ``configured=True``.
+    - Otherwise raise :exc:`NoConfiguredProviderError`.
+
+    Args:
+        settings: Loaded :class:`aeat.core.config.Settings`.
+
+    Returns:
+        The selected default :class:`aeat.application.auth.AuthProviderKind`.
+
+    Raises:
+        NoConfiguredProviderError: When no provider is configured.
+        UnknownProviderError: When ``settings.aeat_auth_provider``
+            points at an unregistered kind.
     """
     if settings.aeat_auth_provider is not None:
         configured = AuthProviderKind(settings.aeat_auth_provider.value)

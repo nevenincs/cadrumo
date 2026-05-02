@@ -1,10 +1,14 @@
 """Unit tests for the Modelo 303 2026 ruleset.
 
-The 2026 ruleset is a scoped régimen-general clone of the 2024 / 2025
-rulesets because the BOE-grounded rates used by this ruleset remain
-21 %, 10 %, and 4 % under LIVA arts. 90 and 91. Expected values below
-are derived from those articles and the Modelo 303 form arithmetic,
-not from the ruleset's parameter table.
+The 2026 ruleset is a scoped régimen-general clone of the 2024 and
+2025 rulesets because the BOE-grounded rates used by this ruleset
+remain 21 %, 10 %, and 4 % under LIVA arts. 90 and 91. Expected values
+in this module are derived from those articles and the Modelo 303 form
+arithmetic, never from the ruleset's parameter table.
+
+Exercises :data:`aeat.domain.formulas._rulesets.MODELO_303_2026` against
+:class:`aeat.domain.formulas._engine.Engine` for both ``derive`` and
+``audit_against`` paths.
 """
 
 from __future__ import annotations
@@ -21,13 +25,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Externally anchored Q1 2026 IVA fixture for régimen general.
+    """Return the externally anchored Q1 2026 IVA fixture for régimen general.
 
     LIVA art. 90 fixes the 21 % general rate; LIVA art. 91 fixes the
     reduced 10 % and super-reduced 4 % rates represented here. The
     remaining arithmetic follows the Modelo 303 liquidación structure:
     total devengado less total deductible VAT, then state attribution
     and prior-period compensation.
+
+    Returns:
+        A casilla-id keyed mapping suitable for
+        :meth:`aeat.domain.formulas._engine.Engine.audit_against`.
     """
     return {
         "01": Decimal("1000.00"),
@@ -67,6 +75,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo303Ruleset2026:
+    """Behavioural tests for the 2026 Modelo 303 ruleset variant."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_303_2026,

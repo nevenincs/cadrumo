@@ -1,1 +1,5 @@
-"""Layered package marker — see core/."""
+"""Core cross-cutting package namespace."""
+
+from __future__ import annotations
+
+__all__: list[str] = []

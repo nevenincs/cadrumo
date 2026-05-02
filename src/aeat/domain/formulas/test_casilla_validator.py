@@ -1,10 +1,9 @@
-"""Mandatory-citation validator tests for :class:`CasillaDefinition` (#339).
+"""Mandatory-citation validator tests for :class:`CasillaDefinition`.
 
-EPIC #316 audit finding: a ``computed=True`` casilla without a non-empty
-``legal_basis`` ships unverifiable tax math. The validator under test
-locks this convention as a hard import-time invariant. The 18 landed
-rulesets already honour the convention; these tests are the unit-level
-proof that the rule is enforced and the regression guard for any future
+A ``computed=True`` casilla without a non-empty ``legal_basis`` ships
+unverifiable tax math. The validator under test locks this convention
+as a hard import-time invariant. These tests are the unit-level proof
+that the rule is enforced and the regression guard for any future
 ruleset that bypasses the convention.
 """
 

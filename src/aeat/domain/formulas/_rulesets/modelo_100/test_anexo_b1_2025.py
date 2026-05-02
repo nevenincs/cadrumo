@@ -1,10 +1,10 @@
-"""Unit tests for Modelo 100 Anexo B1 — rendimientos del trabajo (2025).
+"""Cover Modelo 100 Anexo B1 (rendimientos del trabajo) for the 2025 ejercicio.
 
-Worked examples are external-anchored to LIRPF arts. 17-20 (post Real
-Decreto-Ley 4/2024 with effects 1/1/2024). Every expected value is
-derived directly from the statutory text — NOT from the ruleset's own
-formulas — so a mis-implementation of the piecewise reducción would
-fail the tests.
+Worked examples are externally anchored to LIRPF arts. 17-20 (post
+Real Decreto-Ley 4/2024 with effects 1/1/2024). Every expected value
+is derived directly from the statutory text rather than the ruleset's
+own formulas, so a mis-implementation of the piecewise reducción
+would fail the suite.
 """
 
 from __future__ import annotations
@@ -40,6 +40,8 @@ def _provided(rendimiento: Decimal, *, reduccion_art_20: Decimal) -> dict[str, D
 
 
 class TestModelo100AnexoB1:
+    """Audit Anexo B1 against the 2025 ruleset using LIRPF-derived anchors."""
+
     def test_ruleset_id_and_default_variant(self) -> None:
         """Full-form ruleset uses the default variant slot."""
         assert MODELO_100_2025.ruleset_id == "modelo_100.2025"
@@ -209,7 +211,7 @@ class TestModelo100AnexoB1:
         """External anchor — LIRPF art. 20 post RD-Ley 4/2024.
 
         Provenance (BOE-A-2024-13066 RD-Ley 4/2024 + BOE-A-2006-20764
-        consolidated text retrieval 2026-04-27): art. 20 fixes reducción
+        consolidated LIRPF text): art. 20 fixes reducción
         rendimientos del trabajo at 7.302 € for rendimientos previos
         ≤ 14.852 €, decreasing linearly with slope 1,75 to 17.673,52 €
         (where reducción = 2.364,34 €) and then linearly with slope 1,14

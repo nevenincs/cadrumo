@@ -1,4 +1,21 @@
-"""AEAT spending-category taxonomy and proportionality substrate."""
+"""AEAT spending-category taxonomy and proportionality substrate.
+
+Owns the closed taxonomy of deductible autónomo spending categories
+(:class:`SpendingCategory`, :class:`SpendingCategoryFamily`), their
+explainable proportionality rules (:class:`ProportionalityRule`,
+:class:`ProportionalityKind`, :class:`StatutoryCapPeriod`), and the
+mapping from each category to the AEAT casillas it feeds
+(:class:`CasillaMapping`, :class:`CasillaMappingSign`).
+
+The :data:`CATEGORY_PROFILES_2025` registry is the curated
+hand-checked source of truth; :func:`load_category_profiles_from_manual`
+is the bridge to a future manual-derived loader and currently falls
+back to the curated registry.
+
+Every profile must carry at least one
+:class:`CategoryCitation` so the explainability chain back to
+BOE / Manual práctico stays intact.
+"""
 
 from __future__ import annotations
 
@@ -6,8 +23,8 @@ from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._corpus import load_category_profiles_from_manual
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
-    Citation,
-    CitationSource,
+    CategoryCitation,
+    CategoryCitationSource,
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
@@ -27,9 +44,9 @@ __all__ = [
     "CATEGORY_PROFILES_2025",
     "CasillaMapping",
     "CasillaMappingSign",
+    "CategoryCitation",
+    "CategoryCitationSource",
     "CategoryProfile",
-    "Citation",
-    "CitationSource",
     "ProportionalityKind",
     "ProportionalityRule",
     "SpendingCategory",

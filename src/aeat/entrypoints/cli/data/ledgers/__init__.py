@@ -1,4 +1,13 @@
-"""`aeat data ledgers` command group."""
+"""``aeat data ledgers`` command group.
+
+Aggregates the three encrypted ledger sub-apps:
+
+- :mod:`aeat.entrypoints.cli.data.ledgers.assets` — depreciable kit.
+- :mod:`aeat.entrypoints.cli.data.ledgers.inventory` — stock movements
+  and valuation by actividad.
+- :mod:`aeat.entrypoints.cli.data.ledgers.anexo_d` — Modelo 100 Anexo D
+  ledger preview.
+"""
 
 from __future__ import annotations
 

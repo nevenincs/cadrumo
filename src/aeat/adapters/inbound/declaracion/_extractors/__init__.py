@@ -1,4 +1,18 @@
-"""Concrete per-modelo per-template-revision extractor registry."""
+"""Per-modelo, per-template-revision extractor registry.
+
+Maps every supported ``(modelo, año, revision)`` triple to its concrete
+:class:`aeat.adapters.inbound.declaracion._extractor.DeclaracionExtractor`
+subclass. :func:`get_extractor` is the only public entry point — the
+high-level :func:`aeat.adapters.inbound.declaracion.parse_declaracion`
+routes the detected :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
+through it to obtain a fresh extractor instance.
+
+Adding a new modelo or template revision is mechanical: implement a
+:class:`DeclaracionExtractor` subclass with its own ``template_revision``
+ClassVar, import it into this module, and append the class to
+``_REGISTERED_CLASSES``. Duplicate keys raise at import time via the
+dict comprehension.
+"""
 
 from __future__ import annotations
 
@@ -106,11 +120,26 @@ _REGISTRY: dict[tuple[str, int, str], type[DeclaracionExtractor]] = {_key_for(cl
 
 
 def get_extractor(tr: TemplateRevision) -> DeclaracionExtractor:
-    """Return a fresh extractor for the given template revision.
+    """Return a fresh extractor instance for the given template revision.
+
+    Looks up the ``(modelo, año, revision)`` tuple in the internal
+    registry and instantiates the matching
+    :class:`aeat.adapters.inbound.declaracion._extractor.DeclaracionExtractor`
+    subclass. Each call returns a new object, so extractor state never
+    leaks between filings.
+
+    Args:
+        tr: The :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
+            triple identifying the template.
+
+    Returns:
+        A fresh :class:`DeclaracionExtractor` ready to consume one PDF.
 
     Raises:
-        NoExtractorRegisteredError: When no extractor is registered for
-            the ``(modelo, año, revision)`` tuple.
+        :exc:`aeat.adapters.inbound.declaracion._errors.NoExtractorRegisteredError`:
+            When no extractor is registered for the
+            ``(modelo, año, revision)`` tuple. The message lists every
+            supported triple to ease debugging.
     """
     cls = _REGISTRY.get((tr.modelo, tr.año, tr.revision))
     if cls is None:

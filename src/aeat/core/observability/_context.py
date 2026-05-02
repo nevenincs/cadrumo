@@ -2,12 +2,13 @@
 
 Entering :func:`run_context` at the outermost CLI entry point mints a
 fresh ``run_id``, fingerprints the corpus / db / cert state, attaches a
-:class:`JsonlRunSink` to the root logger for the duration of the
-block, emits a ``STEP_START`` event, and persists the final
-:class:`RunTrace` on exit. Nesting is idempotent: an inner enter
-reuses the outer ``run_id`` and only pushes a new step.
-
-See [[2026-04-14-run-trace-adr]] decision D2.
+:class:`aeat.core.observability._sink.JsonlRunSink` to the root logger
+for the duration of the block, emits a
+:attr:`aeat.core.observability._models.RunEventKind.STEP_START` event,
+and persists the final
+:class:`aeat.core.observability._models.RunTrace` on exit. Nesting is
+idempotent: an inner enter reuses the outer ``run_id`` and only pushes
+a new step identifier.
 """
 
 from __future__ import annotations
@@ -52,7 +53,28 @@ _REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
 
 class RunContextInfo(BaseModel):
-    """Immutable bag of run-level metadata exposed to call sites."""
+    """Immutable bag of run-level metadata exposed to call sites.
+
+    Yielded by :func:`run_context` so callers can stamp recorded events
+    with the active ``run_id`` or surface it in user-facing output.
+
+    Attributes:
+        run_id: 16-char lowercase hex identifier for this run.
+        entrypoint: Stable string identifying the CLI entry point
+            (e.g. ``"aeat workflow run"``).
+        started_at: Wall-clock UTC timestamp captured at run-context
+            enter.
+        arguments: Tuple of :class:`ArgumentRecord` capturing the CLI
+            flags / positional values for replay.
+        corpus_sha256: Fingerprint of ``.vault/`` plus :class:`Settings`
+            plus ``env/.env`` at enter time.
+        db_sha256: Fingerprint of the local ``var/`` state tree at
+            enter time, excluding cache subdirectories.
+        cert_fingerprint: SHA-256 of the configured PKCS#12 certificate,
+            or ``""`` when no cert path is configured.
+        initial_step_id: Step identifier emitted with the first
+            ``STEP_START`` boundary event.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -70,19 +92,22 @@ RUN_CONTEXT_VAR: ContextVar[RunContextInfo | None] = ContextVar(
     "_aeat_run_ctx",
     default=None,
 )
+"""Active :class:`RunContextInfo` for the current task / thread, or ``None``."""
+
 STEP_CONTEXT_VAR: ContextVar[str | None] = ContextVar(
     "_aeat_step_ctx",
     default=None,
 )
+"""Active step identifier within the current run context, or ``None``."""
 
 
 def current_run_context() -> RunContextInfo | None:
-    """Return the active :class:`RunContextInfo` if one is bound, else ``None``."""
+    """Return the :class:`RunContextInfo` bound to the current task, if any."""
     return RUN_CONTEXT_VAR.get(None)
 
 
 def _mint_run_id() -> str:
-    """Mint a fresh 16-character hex identifier."""
+    """Return a fresh 16-character lowercase hex run identifier."""
     return uuid.uuid4().hex[:16]
 
 
@@ -96,9 +121,11 @@ def _build_initial_context(
     """Construct the :class:`RunContextInfo` for an outermost enter.
 
     A caller-supplied ``run_id`` is validated against the canonical
-    shape (16 lowercase hex) before anything touches the filesystem —
-    this prevents a malicious or buggy caller from escaping the
-    configured runs directory through e.g. ``"../etc"``.
+    shape (16 lowercase hex) by
+    :func:`aeat.core.observability._store._validate_run_id` before
+    anything touches the filesystem — this prevents a malicious or
+    buggy caller from escaping the configured runs directory through
+    inputs like ``"../etc"``.
     """
     settings = Settings()
     started_at = datetime.now(UTC)
@@ -116,7 +143,7 @@ def _build_initial_context(
 
 
 def _step_payload(step_id: str, label: str) -> RunEventPayload:
-    """Build a :class:`RunEventPayload` carrying a step boundary."""
+    """Build a :class:`RunEventPayload` carrying a :class:`StepBoundaryPayload`."""
     return RunEventPayload(step=StepBoundaryPayload(step_id=step_id, label=label))
 
 
@@ -128,25 +155,30 @@ def run_context(
     run_id: str | None = None,
     step_id: str | None = None,
 ) -> Iterator[RunContextInfo]:
-    """Enter a run context, emitting STEP_START / STEP_END boundary events.
+    """Enter a run context, emitting ``STEP_START`` / ``STEP_END`` boundary events.
 
-    Outermost enter mints a ``run_id``, fingerprints the corpus / db /
-    cert state, attaches a JSONL sink to the root logger, emits a
-    ``STEP_START`` event, and on exit emits a ``STEP_END`` plus
-    persists the finalised :class:`RunTrace` (even on exception, with
-    ``outcome=FAILED``).
+    The outermost enter mints a ``run_id``, fingerprints the corpus /
+    db / cert state, attaches a
+    :class:`aeat.core.observability._sink.JsonlRunSink` to the root
+    logger, emits a ``STEP_START`` event, and on exit emits a
+    ``STEP_END`` plus persists the finalised
+    :class:`aeat.core.observability._models.RunTrace` (even on
+    exception, with :attr:`RunOutcome.FAILED`).
 
     Inner enters reuse the outer ``run_id`` and only push a new
-    step_id, so callers can wrap higher-level commands without every
-    callee knowing whether a run is already active.
+    ``step_id``, so callers can wrap higher-level commands without
+    every callee knowing whether a run is already active.
 
     Args:
         entrypoint: Stable string identifying the CLI entry point
             (e.g. ``"aeat workflow run"``).
         arguments: Sequence of :class:`ArgumentRecord` capturing the
             CLI flags / values for replay.
-        run_id: Optional caller-supplied ``run_id`` (used by replay).
-        step_id: Optional initial step identifier.
+        run_id: Optional caller-supplied ``run_id`` (used by
+            :func:`aeat.core.observability.replay_run`).
+        step_id: Optional initial step identifier; defaults to
+            ``"step-0"`` for the outermost enter and a derived nested
+            id for inner enters.
 
     Yields:
         The active :class:`RunContextInfo` for the block.
@@ -167,10 +199,7 @@ def run_context(
             try:
                 yield outer
             finally:
-                # STEP_END is always emitted exactly once here; the
-                # prior ``step_end_emitted`` flag was never read in a
-                # way that could differ from its write and has been
-                # removed (audit nit N5).
+                # STEP_END is always emitted exactly once here.
                 try:
                     record_event(
                         RunEventKind.STEP_END,
@@ -206,8 +235,7 @@ def run_context(
     # between addHandler and set() would land on this sink but carry the
     # previous context's run_id (or an empty one) — the sink's run_id
     # filter drops them, but the semantics are cleaner when the var is
-    # bound first. See audit finding S1 (vaultspec-code-reviewer,
-    # 2026-04-21).
+    # bound first.
     run_token: Token[RunContextInfo | None] = RUN_CONTEXT_VAR.set(info)
     step_token: Token[str | None] = STEP_CONTEXT_VAR.set(info.initial_step_id)
     root_logger.addHandler(sink)
@@ -273,7 +301,7 @@ def run_context(
             # Detach the sink BEFORE resetting the contextvars so a
             # trailing log record from another thread can't land on
             # this sink with a stale run_id. Mirror of the attach
-            # ordering above; see audit finding S1.
+            # ordering above.
             try:
                 root_logger.removeHandler(sink)
             except Exception as exc:  # pragma: no cover - logging lock is infallible in practice

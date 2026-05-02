@@ -1,9 +1,10 @@
-"""Unit tests for Modelo 100 Anexo B1 — rendimientos del trabajo (2024).
+"""Cover Modelo 100 Anexo B1 (rendimientos del trabajo) for the 2024 ejercicio.
 
-Ejercicio 2024 is the first year RD-Ley 4/2024 applied. The ruleset is
-a structural clone of 2025 with year-scoped formula IDs and 2024
-effective dates. Verifies the same piecewise reducción art. 20 anchors
-and ruleset shape against the 2024 ruleset constant.
+Ejercicio 2024 is the first year RD-Ley 4/2024 applied. The 2024
+ruleset is a structural clone of the 2025 surface with year-scoped
+formula IDs and 2024 effective dates, so this suite exercises the
+same piecewise reducción art. 20 anchors and ruleset shape against
+:data:`aeat.domain.formulas._rulesets.modelo_100.MODELO_100_2024`.
 """
 
 from __future__ import annotations
@@ -19,7 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo100AnexoB1:
+    """Audit Anexo B1 against the 2024 ruleset using LIRPF-derived anchors."""
+
     def test_ruleset_id_and_default_variant(self) -> None:
+        """The 2024 full-form ruleset uses the default variant slot."""
         assert MODELO_100_2024.ruleset_id == "modelo_100.2024"
         assert MODELO_100_2024.variant == "default"
 

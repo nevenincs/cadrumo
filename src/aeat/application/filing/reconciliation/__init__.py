@@ -1,27 +1,17 @@
-"""FilingDraft ↔ Justificante reconciliation (#239).
+"""Reconcile a local :class:`FilingDraft` against an AEAT :class:`Justificante`.
 
-Takes Kent's locally-approved :class:`aeat.application.filing.FilingDraft` and the
-:class:`aeat.domain.justificante.Justificante` parsed from AEAT's
-authoritative PDF record, and emits a :class:`ReconciliationReport`
-with a single Kent-observable verdict: MATCH / DIVERGENT /
-NOT_YET_FOUND.
+Takes a locally-approved :class:`aeat.domain.filing.FilingDraft` and
+the :class:`aeat.domain.justificante.Justificante` parsed from AEAT's
+authoritative PDF record, then emits a
+:class:`ReconciliationReport` with a single user-observable verdict:
+``MATCH`` / ``DIVERGENT`` / ``NOT_YET_FOUND``.
 
-This module replaces the pre-discovery speculative reconciliation
-against an invented ``RemoteFiling`` record. Every field compared
-here is one AEAT actually prints on its justificante PDFs, verified
-against live captures on 2026-04-24.
+Every field compared here is one AEAT actually prints on its
+justificante PDFs, so the reconciliation surface stays tight to
+ground truth rather than to a speculative remote-filing schema.
 
-Public API:
-
-    from aeat.application.filing.reconciliation import (
-        FieldMismatch,
-        FilingDivergenceKind,
-        FilingDraftRef,
-        JustificanteRefSummary,
-        ReconciliationReport,
-        ReconciliationStatus,
-        reconcile,
-    )
+Examples:
+    >>> from aeat.application.filing.reconciliation import reconcile
 """
 
 from __future__ import annotations

@@ -31,8 +31,8 @@ from ._schema import (
     NormativeCatalogue,
     NormativeKind,
     NormativeReference,
-    VerificationIssue,
-    VerificationReport,
+    NormativeVerificationIssue,
+    NormativeVerificationReport,
 )
 from ._verify import raise_on_errors, verify_catalogue
 from .errors import (
@@ -81,8 +81,6 @@ class _LazyCatalogue:
         return self._ensure().get(ref_id)
 
 
-
-
 __all__ = [
     "Articulo",
     "NormativeCatalogue",
@@ -91,8 +89,8 @@ __all__ = [
     "NormativeNotFoundError",
     "NormativeParseError",
     "NormativeReference",
-    "VerificationIssue",
-    "VerificationReport",
+    "NormativeVerificationIssue",
+    "NormativeVerificationReport",
     "cite",
     "find_articulo",
     "find_reference",

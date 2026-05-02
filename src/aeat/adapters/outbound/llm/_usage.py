@@ -1,4 +1,11 @@
-"""Append-only usage recorder for LLM calls."""
+"""Append-only usage recorder for LLM calls.
+
+Persists :class:`aeat.adapters.outbound.llm.UsageRecord` payloads to
+day-partitioned JSONL files under a configured root directory and exposes
+load and aggregate helpers. Records are routed through
+:func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC sensitivity
+class before they reach disk.
+"""
 
 from __future__ import annotations
 
@@ -13,26 +20,38 @@ from ._models import LLMResponse, UsageRecord, UsageSummary
 
 
 class UsageRecorder:
-    """Append LLM usage records to daily JSONL files.
+    """Append LLM usage records to day-partitioned JSONL files.
 
-    TODO #10: replace the file-backed implementation with the storage-layer
-    persistence once issue ``#10`` lands on this branch.
+    Each call to :meth:`record` appends a single redacted JSON line to
+    ``usage-YYYY-MM-DD.jsonl`` under :attr:`root_dir`, guarded by an
+    exclusive file lock so concurrent writers cannot interleave bytes
+    inside a line.
+
+    Attributes:
+        root_dir: Directory in which the daily JSONL files live.
     """
 
     def __init__(self, root_dir: Path | None = None) -> None:
+        """Initialize the recorder.
+
+        Args:
+            root_dir: Directory for JSONL files; defaults to
+                ``<PROJECT_ROOT>/var/llm-usage``.
+        """
         self.root_dir = root_dir or (PROJECT_ROOT / "var" / "llm-usage")
         self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
-        """Create a usage record from a public response.
+        """Build a :class:`UsageRecord` from a public LLM response.
 
         Args:
             response: Public LLM response model.
-            prompt_id: Stable prompt identifier.
-            caller: Stable caller identifier.
+            prompt_id: Stable prompt identifier (e.g. ``"translation_v1"``).
+            caller: Stable caller identifier used for cost attribution.
 
         Returns:
-            Persistable usage record.
+            Persistable usage record carrying the response text and accounting
+            metadata.
         """
 
         return UsageRecord(
@@ -50,21 +69,25 @@ class UsageRecorder:
         )
 
     def record(self, record: UsageRecord) -> Path:
-        """Append a record to the daily JSONL file.
+        """Append a redacted ``record`` to the day-partitioned JSONL file.
 
-        The record is routed through the substrate's
-        :func:`redact_structured` helper at DIAGNOSTIC class before
-        encoding (NIF SHA-256-prefixed, URL host-only, bearer-shape
-        fingerprinted). Storage imports are deferred inside this
-        method body so the LLM package's import chain does not pull
-        Alembic plugin discovery into CLI commands that never touch
-        the recorder.
+        The record is routed through
+        :func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC class
+        before encoding so NIFs are SHA-256 prefixed, URLs are reduced to
+        host-only, and bearer-shaped tokens are fingerprinted. Storage-layer
+        imports are deferred to the method body so that CLI commands which
+        never touch the recorder do not pull Alembic plugin discovery into
+        their import graph.
 
         Args:
             record: Usage record to append.
 
         Returns:
             Path to the JSONL file that received the record.
+
+        Raises:
+            :exc:`aeat.adapters.outbound.llm.LLMCacheError`: When the JSONL
+                file cannot be appended to.
         """
         from ....core.classification import SensitivityClass
         from ....core.locks import exclusive_file_lock
@@ -92,14 +115,14 @@ class UsageRecorder:
         return path
 
     def load_records(self, since: date | None = None, until: date | None = None) -> tuple[UsageRecord, ...]:
-        """Load usage records within an optional inclusive date range.
+        """Load usage records, optionally filtered by an inclusive date range.
 
         Args:
-            since: Optional inclusive lower date bound.
-            until: Optional inclusive upper date bound.
+            since: Inclusive lower date bound, or ``None`` for no lower bound.
+            until: Inclusive upper date bound, or ``None`` for no upper bound.
 
         Returns:
-            Loaded usage records.
+            Loaded usage records in file-iteration order.
         """
 
         records: list[UsageRecord] = []
@@ -117,14 +140,15 @@ class UsageRecorder:
         return tuple(records)
 
     def summarize(self, since: date | None = None, until: date | None = None) -> UsageSummary:
-        """Summarize usage within an optional inclusive date range.
+        """Aggregate usage records into a :class:`UsageSummary`.
 
         Args:
-            since: Optional inclusive lower date bound.
-            until: Optional inclusive upper date bound.
+            since: Inclusive lower date bound, or ``None`` for no lower bound.
+            until: Inclusive upper date bound, or ``None`` for no upper bound.
 
         Returns:
-            Aggregate usage summary.
+            Aggregate usage summary covering entries, total tokens, and
+            estimated cost.
         """
 
         records = self.load_records(since=since, until=until)

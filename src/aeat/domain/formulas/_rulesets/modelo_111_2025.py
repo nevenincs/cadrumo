@@ -8,10 +8,10 @@ retained by any employer / pagador.
 The form groups casillas in triples — ``(perceptores, percepciones,
 retenciones)`` — for each of the six rubros above. Formula coverage:
 
-- ``09 = 19% x 08`` — retención fija sobre premios en metálico
+- ``09 = 19 % x 08`` — retención fija sobre premios en metálico
   (LIRPF art. 101.7 implementado vía RIRPF art. 99; el Reglamento
-  art. 105 cubre transmisiones de IIC — NO premios).
-- ``12 = 19% x 11`` — retención fija sobre ganancias patrimoniales
+  art. 105 cubre transmisiones de IIC, NO premios).
+- ``12 = 19 % x 11`` — retención fija sobre ganancias patrimoniales
   gravadas (LIRPF art. 101.2 + RIRPF art. 100 — el artículo tiene
   solo dos apartados, sin sub-letras).
 - ``28 = 03 + 06 + 09 + 12 + 15 + 18`` — total retenciones e ingresos a
@@ -21,10 +21,10 @@ retenciones)`` — for each of the six rubros above. Formula coverage:
 
 Per-rubro retention rates for rendimientos del trabajo (tabla
 trabajadores) and actividades económicas (tipo variable) depend on
-tabla inputs + categoría-profesional mapping and land in sub-EPIC
-#305-Modelo-111-full. The above fixed-rate + sum relationships are
-the minimum set that must hold on every 111 filing regardless of
-rubro mix.
+tabla inputs + categoría-profesional mapping and are out of scope of
+this ruleset. The above fixed-rate + sum relationships are the
+minimum set that must hold on every 111 filing regardless of rubro
+mix.
 """
 
 from __future__ import annotations
@@ -51,6 +51,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` for ES/EN/HU labels."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -222,3 +223,11 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS,
 )
+"""Modelo 111 ruleset for ejercicio 2025.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` carrying the canonical
+six-rubro retention casillas, the four algebraic formulas, and the 19 %
+``irpf.premios_rate`` / ``irpf.ganancias_arrendamiento_rate``
+parameters. Re-exported as
+:data:`aeat.domain.formulas._rulesets.MODELO_111_2025`.
+"""

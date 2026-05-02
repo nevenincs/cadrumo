@@ -1,4 +1,9 @@
-"""Structural tests for the Modelo 303 rulesets (#183)."""
+"""Structural tests for the Modelo 303 rulesets.
+
+Verifies casilla coverage, formula counts, evaluation determinism, and
+substrate-rate consistency for the 2024 and 2025
+:class:`aeat.domain.formulas._ruleset.Ruleset` variants.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +12,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...vat import EUMemberState, VATRateKind, lookup_rate
 from ...modelos import ModeloCode
+from ...vat import EUMemberState, VATRateKind, lookup_rate
 from .._codes import Quarter
 from .._period import FiscalPeriod
 from .._registry import RulesetRegistry

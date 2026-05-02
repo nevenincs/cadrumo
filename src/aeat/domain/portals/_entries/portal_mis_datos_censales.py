@@ -1,4 +1,10 @@
-"""Portal: Mis datos censales."""
+"""Registry entry for the taxpayer's census-data consultation portal.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Consulta y modificación ligera de los datos censales registrados por la AEAT.",
 )
+"""Portal entry for census-data consultation and light modification."""

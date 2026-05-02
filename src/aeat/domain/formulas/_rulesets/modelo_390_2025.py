@@ -1,17 +1,15 @@
 """Modelo 390 ruleset covering the full 2025 fiscal year.
 
-Structurally identical to :mod:`modelo_390_2024`. The BOE-grounded
-algebraic chain encoded by Modelo 390 is unchanged across 2024 and
-2025: LIVA arts. 90 / 91 / 92 / 102 / 107 / 164 and RIVA art. 71.7
-were not amended for 2025, and Orden EHA/3111/2009 (the form-approval
-order) is amended only for non-substantive metadata each year. The
-rule-delta manifest at
-``.vault/reference/2026-04-27-modelo-390-rule-delta-reference.md``
-documents the per-year sameness with BOE evidence.
+Structurally identical to :mod:`aeat.domain.formulas._rulesets.modelo_390_2024`.
+The BOE-grounded algebraic chain encoded by Modelo 390 is unchanged
+across 2024 and 2025: LIVA arts. 90 / 91 / 92 / 102 / 107 / 164 and
+RIVA art. 71.7 were not amended for 2025, and Orden EHA/3111/2009
+(the form-approval order) is amended only for non-substantive
+metadata each year.
 
 This module re-imports ``_CASILLAS`` and ``_CITATIONS`` from the
 2024 sibling, declares its own year-stamped formula tuple plus an
-empty ``ParameterTable``, and binds to the 2025 effective range.
+empty :class:`ParameterTable`, and binds to the 2025 effective range.
 """
 
 from __future__ import annotations

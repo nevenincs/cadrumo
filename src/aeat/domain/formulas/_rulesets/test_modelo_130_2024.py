@@ -1,9 +1,9 @@
 """Unit tests for the Modelo 130 2024 ruleset.
 
-H4 / H3: close the coverage gap
-where Modelos 130_2024 and 130_2025 had no colocated test file
-(only referenced via smoke tests in test_engine.py /
-test_ruleset.py / test_registry.py).
+Exercises the formula-engine derivations and the externally-anchored
+worked example for :data:`aeat.domain.formulas._rulesets.MODELO_130_2024`,
+plus the threshold-edge cases of
+:func:`aeat.domain.formulas._rulesets.modelo_130_2024.compute_casilla_13_minoracion`.
 """
 
 from __future__ import annotations
@@ -20,10 +20,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Worked example: simple Q1 2024 estimación directa autónomo.
+    """Worked example for a simple Q1 2024 estimación-directa autónomo.
 
     Inputs + outputs are arithmetic-only (no rate mirroring from the
-    ruleset) — the 20% IRPF trimestral rate is applied once and the
+    ruleset) — the 20 % IRPF trimestral rate is applied once and the
     result cross-checked against the expected cuota. A formula bug
     in the ruleset would require the fixture to be edited in
     lockstep.
@@ -66,6 +66,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo130Ruleset2024:
+    """Formula-engine assertions for the 2024 Modelo 130 ruleset."""
+
     def test_consistent_quarter_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_130_2024,
@@ -75,7 +77,7 @@ class TestModelo130Ruleset2024:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_rendimiento_neto_mismatch(self) -> None:
-        """Casilla 03 = 01 - 02. Kent off by 100€."""
+        """Casilla 03 = 01 - 02; user value off by 100 €."""
         provided = _provided()
         provided["03"] = Decimal("14900.00")  # should be 15000
         report = Engine().audit_against(
@@ -87,7 +89,7 @@ class TestModelo130Ruleset2024:
         assert "03" in {d.casilla_id for d in report.discrepancies}
 
     def test_pago_fraccionado_rate_mismatch(self) -> None:
-        """Casilla 04 = 20% x 03. Kent applies 18% (1800 short)."""
+        """Casilla 04 = 20 % x 03; user applies 18 % (1 800 € short)."""
         provided = _provided()
         provided["04"] = Decimal("2700.00")  # should be 3000
         report = Engine().audit_against(
@@ -152,13 +154,13 @@ class TestModelo130Ruleset2024:
         assert len(MODELO_130_2024.formulas) >= 8
 
     def test_external_worked_example_rirpf_110(self) -> None:
-        """External-anchored worked example (closure).
+        """Externally-anchored worked example for RIRPF art. 110 IRPF rates.
 
-        Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20%
-        rate on IRPF pagos fraccionados (estimacion directa);
-        art. 110.1.c fixes the 2% rate on agricola/ganadera/forestal/
-        pesquera. Fixture values derived from those rates, NOT from
-        the ruleset parameters.
+        Provenance: RD 439/2007 (RIRPF) art. 110.1.a fixes the 20 %
+        rate on IRPF pagos fraccionados (estimación directa);
+        art. 110.1.c fixes the 2 % rate on agrícola / ganadera /
+        forestal / pesquera. Fixture values are derived from those
+        rates, NOT from the ruleset parameters.
 
         Citation: BOE-A-2007-6820 RD 439/2007 art. 110.
         """
@@ -191,7 +193,7 @@ class TestModelo130Ruleset2024:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_zero_boundary_is_clean(self) -> None:
-        """zero-quarter boundary — no ingresos, no pago."""
+        """Zero-quarter boundary — no ingresos, no pago."""
         provided = {
             k: Decimal("0.00")
             for k in [
@@ -224,12 +226,12 @@ class TestModelo130Ruleset2024:
         assert report.is_clean()
 
 
-# Issue #321: external-anchored threshold-edge cases for the casilla-13
-# minoración helper. RIRPF art. 110.3.c (BOE-A-2007-6820 → consolidated
-# via RD 1003/2014) sets four bracket boundaries at 9 000 / 10 000 /
+# Externally-anchored threshold-edge cases for the casilla-13 minoración
+# helper. RIRPF art. 110.3.c (BOE-A-2007-6820 → consolidated via
+# RD 1003/2014) sets four bracket boundaries at 9 000 / 10 000 /
 # 11 000 / 12 000 € of *prior-year* rendimiento neto with values
 # 100 / 75 / 50 / 25 / 0 €. The expected values below are taken from
-# the statute, NOT from `_CASILLA_13_BRACKETS`. A typo in the helper's
+# the statute, NOT from ``_CASILLA_13_BRACKETS``. A typo in the helper's
 # bracket boundary or value would therefore fail one of these cases.
 @pytest.mark.parametrize(
     ("previous_year_rn", "expected_minoracion"),

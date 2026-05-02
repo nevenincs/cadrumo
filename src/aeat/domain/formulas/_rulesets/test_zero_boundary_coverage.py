@@ -1,21 +1,19 @@
-"""Zero-boundary regression tests across every ruleset (EPIC #305).
+"""Zero-boundary regression tests across every ruleset.
 
-H4: 13 of 18 rulesets lacked a zero-input clean-path
-test. A regression that misroutes a zero to a division-by-something
-or NaN would ship silently. This module parametrizes the zero-input
-audit across every ruleset so a single file covers the whole fleet.
+A regression that misroutes a zero to a division-by-something or NaN
+would ship silently. This module parametrises the zero-input audit
+across every ruleset so a single file covers the whole fleet.
 
 Each ruleset's casilla list is drawn from the ruleset itself (via
-`ruleset.casillas`), ensuring no rate-mirroring or ruleset-
-specific arithmetic. The test asserts that feeding every casilla as
-``Decimal("0.00")`` yields a clean audit — the engine derives every
-computed casilla as zero too.
+:attr:`aeat.domain.formulas._ruleset.Ruleset.casillas`), ensuring no
+rate-mirroring or ruleset-specific arithmetic. The test asserts that
+feeding every casilla as ``Decimal("0.00")`` yields a clean audit —
+the engine derives every computed casilla as zero too.
 
-Skipped: rulesets whose casilla IDs include the Modelo 202 casilla
-17 (tipo de gravamen), where 0 would be a division-by-zero
-semantically meaningful only as "no tax rate applied". The test
-skips those slots with an explicit note; they get rulset-specific
-tests elsewhere.
+Excluded: rulesets whose casilla IDs include the Modelo 202 casilla 17
+(tipo de gravamen), where 0 would be a division-by-zero semantically
+meaningful only as "no tax rate applied". Those slots get
+ruleset-specific tests elsewhere.
 """
 
 from __future__ import annotations

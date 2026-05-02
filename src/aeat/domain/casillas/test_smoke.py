@@ -10,9 +10,9 @@ from __future__ import annotations
 import pytest
 
 from ...core import errors, logging
+from . import CasillaError, UnreviewedRecordError, VerifyError
 from . import __all__ as casillas_all
 from . import __doc__ as casillas_doc
-from . import CasillaError, UnreviewedRecordError, VerifyError
 from . import __name__ as _package_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

@@ -1,4 +1,10 @@
-"""Unit tests for CSV financial ingestion."""
+"""Unit tests for CSV financial ingestion.
+
+Covers per-bank layout detection and ingestion, synthetic
+transaction-id generation when the source row has no native id,
+header-rejection behaviour, and the configured-encoding fallback
+in :class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`.
+"""
 
 from __future__ import annotations
 

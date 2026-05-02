@@ -1,15 +1,13 @@
 """Hand-curated synthetic casilla schema for the Modelo 130 PoC.
 
-This module exists because the real casilla DB (#23) and the
-formula AST extractor (#9) are not on ``main`` yet. The shape
-defined here matches the :class:`aeat.application.filing._protocols.CasillaSchema`
-Protocol so that swapping in the real upstream subpackages later
-is a search-replace on the import lines, not a rewrite of the
-builder.
+The shape defined here matches the
+:class:`aeat.domain.filing._protocols.CasillaSchema` Protocol so the
+runtime casilla provider can be swapped in by changing imports rather
+than rewriting the builder.
 
-The casilla numbering is illustrative and intentionally
-simplified — the production builder will read its schema from
-the casilla DB once that subpackage lands.
+The casilla numbering is illustrative and intentionally simplified —
+the production builder reads its schema from the canonical casilla
+corpus.
 """
 
 from __future__ import annotations
@@ -25,13 +23,13 @@ from .._schema import SCHEMA_VERSION_DEFAULT
 
 
 class CasillaSource(BaseModel):
-    """Provenance citation for one casilla (#305).
+    """Provenance citation for one casilla.
 
     Every casilla SHOULD carry at least one source citation so the
-    legal authority behind the schema is auditable. Phase-1 introduces
-    the field as optional (``tuple[CasillaSource, ...] = ()``) to
-    preserve backwards compatibility; phase-2 tightens the
-    invariant to ``≥1 entry`` per casilla.
+    legal authority behind the schema is auditable. The field is
+    currently optional (``tuple[CasillaSource, ...] = ()``) to
+    preserve backwards compatibility; the long-term invariant is
+    ``≥1 entry`` per casilla.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -47,9 +45,9 @@ class StaticCasillaSchema(BaseModel):
     """A frozen, strict pydantic record describing one casilla.
 
     Conforms structurally to
-    :class:`aeat.application.filing._protocols.CasillaSchema`. Provenance fields
+    :class:`aeat.domain.filing._protocols.CasillaSchema`. Provenance fields
     (``sources``, ``valid_from``, ``valid_to``) are optional today and
-    tighten in cluster-B phase-2 as the corpus completes.
+    tighten as the corpus completes.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -71,7 +69,7 @@ class StaticCasillaCollection(BaseModel):
     """A frozen collection of :class:`StaticCasillaSchema` records.
 
     Conforms structurally to
-    :class:`aeat.application.filing._protocols.CasillaCollection`.
+    :class:`aeat.domain.filing._protocols.CasillaCollection`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -148,8 +146,8 @@ MODELO_130_SCHEMA = StaticCasillaCollection(
             description="Resultado a ingresar = max(0, 04 - 05 - 06)",
         ),
         # Apartado II — actividad agrícola / ganadera / forestal / pesquera.
-        # Added in #305 to close the schema/ruleset gap
-        # that silently orphaned computed casillas 09 / 11 / 12 / 14 / 17 / 19.
+        # Closes the schema/ruleset gap that would otherwise orphan
+        # computed casillas 09 / 11 / 12 / 14 / 17 / 19.
         StaticCasillaSchema(
             id="08",
             value_type="decimal",

@@ -1,12 +1,14 @@
-"""Modelo 100 (IRPF / Renta) summary-block extractor — año 2025.
+"""Modelo 100 (IRPF / Renta) summary-block extractor for año 2025.
 
-The MVP targets the ~30 casillas every Renta artefact prints in its
-summary block (ingresos totales, deducciones, base imponible, cuota
-líquida, cuota diferencial). Full anexo coverage (A, B, C, D, H, Ñ)
-is out of scope; tracked for sub-EPIC #305-F-full.
+Targets the ~30 casillas every Renta artefact prints in its summary
+block (ingresos totales, deducciones, base imponible, cuota líquida,
+cuota diferencial). Full anexo coverage (A, B, C, D, H, Ñ) is out of
+scope.
 
-Casilla IDs are the AEAT-published Modelo 100 identifiers; the MVP
-uses a narrow slice that every life shape encounters.
+Casilla IDs are the AEAT-published Modelo 100 identifiers; the
+extractor uses a narrow slice that every life shape encounters. The
+concrete extractor is :class:`Modelo100SummaryV2025Extractor` and is
+registered by :mod:`aeat.adapters.inbound.borrador._extractors`.
 """
 
 from __future__ import annotations
@@ -18,9 +20,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
+from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, apply_label_regex
 from ...pdf._shared import ExtractedCasilla
 from .._errors import BorradorParseError
-from .._extract import _SPANISH_AMOUNT_GROUP, apply_label_regex
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorFiling
 
@@ -68,7 +70,7 @@ _SUMMARY_CASILLAS: tuple[str, ...] = (
 
 _LABEL_REGEX_MAP: dict[str, re.Pattern[str]] = {
     casilla_id: re.compile(
-        rf"(?m)^\s*{casilla_id}\s[^\n]{{0,120}}?{_SPANISH_AMOUNT_GROUP}",
+        rf"(?m)^\s*{casilla_id}\s[^\n]{{0,120}}?{SPANISH_AMOUNT_GROUP}",
         re.IGNORECASE,
     )
     for casilla_id in _SUMMARY_CASILLAS
@@ -83,11 +85,36 @@ _CSV_RE = re.compile(
 
 
 class Modelo100SummaryV2025Extractor:
-    """Concrete Modelo 100 summary-block extractor for año 2025."""
+    """Concrete Modelo 100 summary-block extractor for año 2025.
+
+    Reads the printed text via :func:`extract_pages_text`, locates the
+    summary-block casillas with :func:`apply_label_regex`, and returns a
+    strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`.
+
+    Attributes:
+        año: The tax year this extractor targets.
+    """
 
     año: ClassVar[int] = 2025
 
     def extract(self, pdf_path: Path, artefact_kind: ArtefactKind) -> BorradorFiling:
+        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`.
+
+        Args:
+            pdf_path: Path to the Modelo 100 PDF.
+            artefact_kind: The artefact kind discovered by
+                :func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
+                (or supplied by the caller as an override).
+
+        Returns:
+            The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`
+            with summary-block casillas extracted.
+
+        Raises:
+            :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
+                When required header fields are missing, or when a
+                ``DECLARACION`` artefact lacks a CSV stamp.
+        """
         pages = extract_pages_text(pdf_path)
         text = "\n".join(pages)
 
@@ -107,16 +134,15 @@ class Modelo100SummaryV2025Extractor:
             hit = hits.get(casilla_id)
             if hit is None:
                 continue
-            raw, parsed = hit
-            if not isinstance(parsed, Decimal):
+            if not isinstance(hit.decimal_value, Decimal):
                 # Audit M2: surface unparseable values as warnings instead
                 # of silently dropping them, matching the Modelo 303 path.
-                warnings.append(f"casilla {casilla_id}: value {raw!r} is not a number")
+                warnings.append(f"casilla {casilla_id}: value {hit.raw_value!r} is not a number")
                 continue
             values.append(
                 ExtractedCasilla(
                     casilla_id=casilla_id,
-                    printed_value=parsed,
+                    printed_value=hit.decimal_value,
                     source_page=1,
                     source_bbox=None,
                     extraction_confidence=1.0,
@@ -138,6 +164,7 @@ class Modelo100SummaryV2025Extractor:
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
+    """Return the first capturing-group match or raise a parse error."""
     match = pattern.search(text)
     if match is None:
         raise BorradorParseError(f"could not locate required field: {field}")
@@ -145,6 +172,7 @@ def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
 
 
 def _sha256_file(path: Path) -> str:
+    """Return the lowercase hex SHA-256 of the file at ``path``."""
     h = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(65536), b""):

@@ -1,8 +1,9 @@
 """Modelo 100 Anexo B2 — rendimientos del capital mobiliario (ejercicio 2024).
 
-LIRPF arts. 25-26 + 101.4 stable across 2024 → 2025 → 2026; this
-module imports CASILLAS + CITATIONS from the 2025 reference and
-declares year-scoped FORMULAS + effective-date constants.
+LIRPF arts. 25-26 and 101.4 are stable across 2024, 2025 and 2026.
+This module re-exports ``CASILLAS`` and ``CITATIONS`` from
+:mod:`.anexo_b2_2025` and declares year-scoped ``FORMULAS`` and
+effective-date constants.
 """
 
 from __future__ import annotations

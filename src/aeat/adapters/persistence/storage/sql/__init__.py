@@ -1,7 +1,15 @@
-"""SQL substrate: ORM, engine, session, repositories, records, migrations.
+"""SQL substrate: ORM, engine, session, repositories, records, and migrations.
 
 Public surface for the SQLAlchemy-backed relational storage cluster.
-Bucket boundary established by audit-4 in the aeat-restructure ADR.
+Re-exports the engine factory (:func:`create_engine_from_settings`,
+:func:`get_engine`, :func:`dispose_engine`), session helpers
+(:func:`get_sessionmaker`, :func:`session_scope`), Alembic migration
+entry points (:func:`upgrade_to_head`, :func:`downgrade_to_base`,
+:func:`round_trip_migrations`), public pydantic record models
+(:class:`ModeloRecord`, :class:`PortalRecord`, :class:`PortalAuthMethod`,
+:class:`CorpusArtifactRecord`), and the per-domain repositories
+(:class:`Repository`, :class:`ModeloRepository`, :class:`PortalRepository`,
+:class:`CorpusArtifactRepository`).
 """
 
 from __future__ import annotations

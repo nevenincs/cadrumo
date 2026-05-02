@@ -4,13 +4,12 @@ Orden HAC/819/2024 (published 2024-08-05) renumbered several Modelo
 303 casillas and introduced new tipos impositivos (autoliquidación
 rectificativa). Filings from period 2024-09 onward use this layout.
 
-The MVP covers the same 33 casillas as v2025 — HAC/819 added tipos
-impositivos casillas but did not repackage the liquidación block, so
-the extractor set is IDENTICAL to v2025's. corrects the
-earlier "superset" claim: the set is equal, not proper-superset.
-Drift between v2024.09 and v2025 (new rectificativa casillas, etc.)
-is captured by the separate ``revision`` key so a phase-3 widening
-lands without a template reshuffle.
+Covers the same 33 casillas as v2025 — HAC/819 added tipos impositivos
+casillas but did not repackage the liquidación block, so the casilla
+set is identical to v2025's. Future drift between v2024.09 and v2025
+(new rectificativa casillas, etc.) is captured by the separate
+``revision`` key so a future widening lands without a template
+reshuffle.
 """
 
 from __future__ import annotations
@@ -22,7 +21,18 @@ from .._schema import TemplateRevision
 
 
 class Modelo303V2024Orden819Extractor(GenericDeclaracionExtractor):
-    """Concrete extractor for Modelo 303 post-HAC/819/2024 (tax year 2024)."""
+    """Concrete extractor for Modelo 303 post-HAC/819/2024 (tax year 2024).
+
+    Routes filings whose printed period is ≥ 2024-09 to the
+    Orden HAC/819/2024 layout. The casilla set mirrors the canonical
+    Modelo 303 v2025 set; the distinct ``revision`` key
+    (``"2024.orden-819"``) keeps room for future drift.
+
+    Attributes:
+        template_revision: Pinned to ``("303", 2024, "2024.orden-819")``.
+        casilla_ids: Tuple of 33 casillas covering the IVA liquidación
+            block.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="303",
@@ -30,7 +40,7 @@ class Modelo303V2024Orden819Extractor(GenericDeclaracionExtractor):
         revision="2024.orden-819",
     )
     # Same 33 casillas as v2025 — HAC/819 added tipos impositivos but did
-    # not repackage the liquidación block. A phase-3 audit against real
+    # not repackage the liquidación block. A future audit against real
     # anchors will widen this if needed.
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",

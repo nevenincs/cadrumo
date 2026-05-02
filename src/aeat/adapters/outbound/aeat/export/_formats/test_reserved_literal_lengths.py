@@ -13,9 +13,6 @@ This test guards both the hand-authored schemas (Modelo 130
 DR303e24, mini_303) as a single family invariant. Any future
 fixture edit or schema extension that drifts this invariant
 fails here before it reaches a golden SHA test.
-
-Stream B (rule adherence, perpetual) per the project's
-continuous-cycle mandate.
 """
 
 from __future__ import annotations

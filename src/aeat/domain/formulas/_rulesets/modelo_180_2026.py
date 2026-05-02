@@ -5,9 +5,10 @@ on rendimientos from urban property leases. The computed summary
 surface is unchanged from 2024 and 2025: casilla 03 remains the 19 %
 retention on casilla 02 under RIRPF art. 100.1.
 
-The 2026 file keeps a separate effective window and formula id so
-registry resolution and discrepancy provenance do not leak 2025
-metadata into 2026 filings.
+The 2026 file keeps a separate effective window and formula identifier
+so registry resolution and discrepancy provenance do not leak 2025
+metadata into 2026 filings. The casilla and citation tuples are
+re-imported from :mod:`aeat.domain.formulas._rulesets.modelo_180_2025`.
 """
 
 from __future__ import annotations

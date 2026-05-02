@@ -1,4 +1,11 @@
-"""Unit tests for the CLI-private family-alias mapping (#259)."""
+"""Unit tests for the CLI-private family-alias mapping.
+
+Pins the contract of
+:data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`:
+membership, immutability, eligibility against
+:data:`aeat.domain.usage_ratios.ELIGIBLE_USAGE_RATIO_CATEGORIES`, and
+that the Typer help text stays in sync with the mapping.
+"""
 
 from __future__ import annotations
 
@@ -40,9 +47,10 @@ def test_mileage_business_covers_five_vehicle_categories() -> None:
 def test_no_alias_overlap_across_the_mapping() -> None:
     """Alias expansions must be disjoint.
 
-    Overlapping aliases would silently clobber prior ``set-ratio`` values when
-    Kent sets two aliases in sequence. ``phone_fixed_business`` was removed
-    for this exact reason; this test guards against a future regression.
+    Overlapping aliases would silently clobber prior ``set-ratio``
+    values when two aliases are set in sequence. ``phone_fixed_business``
+    was removed for this exact reason; this test guards against a
+    future regression.
     """
     seen: set[SpendingCategory] = set()
     for members in FAMILY_ALIASES.values():
@@ -77,9 +85,10 @@ def test_aliases_are_mapping_proxy() -> None:
 def test_set_ratio_help_lists_only_current_aliases() -> None:
     """Regression guard: Typer argument help must not advertise removed aliases.
 
-    Round 2 dropped ``phone_fixed_business`` but initially left the help
-    string hard-coded; Kent following ``--help`` would then hit an
-    ``unknown key`` error. The help text now derives from ``FAMILY_ALIASES``
+    The help string previously hard-coded the alias list; following
+    ``--help`` for a removed alias would then surface an
+    ``unknown key`` error. The help text now derives from
+    :data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`
     and this test pins the guarantee.
     """
     from typer.testing import CliRunner

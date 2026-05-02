@@ -1,15 +1,19 @@
 """Read and rewrite simple ``KEY=VALUE`` ``.env`` files in place.
 
-The bootstrap workflow needs to persist resource IDs (Drive folder,
+The bootstrap workflow persists resource identifiers (Drive folder,
 Sheets ID, Docs ID) back into ``env/.env`` after authenticated API
-calls create them. This module provides a tiny, dependency-free reader
-and writer that preserves comments, blank lines, and key ordering so
+calls create them. This module provides a dependency-free reader and
+writer that preserves comments, blank lines, and key ordering so
 hand-edited annotations survive automated rewrites.
 
 The implementation is intentionally minimal: it does not interpret
 quoting, variable expansion, or multi-line values. ``env/.env`` is a
 flat key/value file in this project and any deviation from that shape
 is treated as an error.
+
+See :func:`read_env_file` and :func:`write_env_vars` for the public
+surface; :func:`_atomic_write_text` is the durability helper that backs
+both writers.
 """
 
 from __future__ import annotations
@@ -20,29 +24,34 @@ from pathlib import Path
 
 
 def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
-    """Atomically write ``text`` to ``path`` via tempfile + os.replace.
+    """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
 
     Mirrors the substrate's atomic-write discipline at
-    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`. The
-    plaintext ``env/.env`` payload is operator-controlled
+    :func:`aeat.adapters.persistence.storage.master_key._master_key.atomic_write_secure_bytes`.
+    The plaintext ``env/.env`` payload is operator-controlled
     configuration, not a secret — but the durability story matters:
-    a ``path.write_text`` call truncates the existing inode in-place
-    before writing, and a power-loss / SIGKILL between the truncate
-    and the write completion leaves ``env/.env`` zero-length. The
-    operator's certificate path / database URL / live-tests-flag /
+    :meth:`pathlib.Path.write_text` truncates the existing inode in
+    place before writing, so a power-loss or ``SIGKILL`` between the
+    truncate and the write completion leaves ``env/.env`` zero-length.
+    The operator's certificate path / database URL / live-tests flag /
     storage roots silently revert to defaults, surfacing as an
-    apparently-unprovisioned installation. Use tempfile +
-    ``os.replace`` so a crash leaves either the old or the new file
-    on disk, never a torn write.
+    apparently-unprovisioned installation. Writing to a sibling tempfile
+    and then calling :func:`os.replace` guarantees the dirent transition
+    is atomic — a crash leaves either the old or the new file on disk,
+    never a torn write.
+
+    Args:
+        path: Destination file path.
+        text: Full file contents to write.
+        encoding: Text encoding (defaults to UTF-8).
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     # Initialise tmp_path to None BEFORE the try so the finally
     # cleanup never hits an UnboundLocalError if NamedTemporaryFile
     # itself raises. Use try/finally (not try/except OSError) so a
     # KeyboardInterrupt or any other BaseException mid-write also
-    # unlinks the orphan tempfile. Issue #469 gemini-review MEDIUM
-    # on PR #470: the previous narrow ``except OSError`` arm leaked
-    # the tempfile on non-OSError exceptions.
+    # unlinks the orphan tempfile — a narrow ``except OSError`` arm
+    # would leak the tempfile on non-OSError exceptions.
     tmp_path: Path | None = None
     try:
         handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below

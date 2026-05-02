@@ -1,4 +1,9 @@
-"""Typer app exposing the ``aeat formulas`` subcommand surface (#173)."""
+"""Typer app exposing the ``aeat formulas`` subcommand surface.
+
+Provides ``list``, ``show``, ``compute``, and ``audit`` subcommands that
+front the :class:`aeat.domain.formulas.Engine` and
+:class:`aeat.domain.formulas.RulesetRegistry` for operators and CI scripts.
+"""
 
 from __future__ import annotations
 
@@ -22,14 +27,16 @@ from ._engine import Engine
 from ._period import FiscalPeriod
 from ._registry import get_registry
 
-app = typer.Typer(help="Per-modelo calculation formula engine (#173).", no_args_is_help=True)
+app = typer.Typer(help="Per-modelo calculation formula engine.", no_args_is_help=True)
 
 
 def _format_json(payload: object) -> str:
+    """Serialize ``payload`` as deterministic, indented JSON."""
     return json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False, default=str)
 
 
 def _parse_kv_pairs(pairs: tuple[str, ...]) -> dict[str, Decimal]:
+    """Parse ``KEY=VALUE`` pairs into a ``{casilla_id: Decimal}`` mapping."""
     mapping: dict[str, Decimal] = {}
     for raw in pairs:
         if "=" not in raw:
@@ -43,6 +50,7 @@ def _parse_kv_pairs(pairs: tuple[str, ...]) -> dict[str, Decimal]:
 
 
 def _parse_period(value: str) -> FiscalPeriod:
+    """Parse ``YYYY`` or ``YYYYQ{1..4}`` into a :class:`FiscalPeriod`."""
     text = value.strip().upper()
     if len(text) == 4 and text.isdigit():
         return FiscalPeriod(year=int(text))
@@ -52,6 +60,7 @@ def _parse_period(value: str) -> FiscalPeriod:
 
 
 def _parse_modelo(value: str) -> ModeloCode:
+    """Resolve ``value`` to a :class:`aeat.domain.modelos.ModeloCode` by name or code."""
     text = value.strip().upper()
     for candidate in ModeloCode:
         if candidate.name == text or candidate.value.upper() == text:

@@ -1,4 +1,15 @@
-"""Service helpers for invoice catalogues and bidirectional transaction linking."""
+"""Service helpers for invoice catalogues and bidirectional transaction linking.
+
+Exposes pure-function service operations over an
+:class:`~aeat.domain.invoices.InvoiceCatalogue`: lookup
+(:func:`find_invoice`, :func:`find_unmatched`), in-memory linking
+(:func:`link_transaction`), reconciliation suggestions
+(:func:`suggest_reconciliations`), bidirectional consistency checks
+(:func:`verify_link_consistency`), and the persistence-level
+bidirectional linker :func:`link_transaction_bidirectional` that
+coordinates writes across the invoice and
+:mod:`aeat.domain.transactions` catalogues with rollback semantics.
+"""
 
 from __future__ import annotations
 
@@ -33,7 +44,16 @@ _HEX_TRANSACTION_ID_LENGTH = 64
 
 
 class ReconciliationSuggestion(BaseModel):
-    """Immutable suggestion emitted by the reconciliation heuristic."""
+    """Immutable suggestion emitted by the reconciliation heuristic.
+
+    Attributes:
+        invoice_id: Stable invoice identifier.
+        transaction_id: Candidate transaction identifier.
+        amount_match: Whether the sign-aware amount matches within tolerance.
+        counterparty_match: Whether the counterparty name overlaps
+            (case-insensitive substring match either direction).
+        score: Confidence in the inclusive ``0..1`` range.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -52,7 +72,13 @@ class ReconciliationSuggestion(BaseModel):
 
 
 class LinkInconsistency(BaseModel):
-    """Immutable record describing a one-sided link between the two catalogues."""
+    """Immutable record describing a one-sided link between the two catalogues.
+
+    Attributes:
+        invoice_id: Identifier of the invoice involved in the bad link.
+        transaction_id: Identifier of the transaction involved.
+        direction: Which side cites the other without being cited back.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -62,7 +88,16 @@ class LinkInconsistency(BaseModel):
 
 
 def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
-    """Return one invoice from a catalogue if present."""
+    """Return one invoice from a catalogue if present.
+
+    Args:
+        catalogue: Source :class:`~aeat.domain.invoices.InvoiceCatalogue`.
+        invoice_id: Stable invoice identifier to look up.
+
+    Returns:
+        The matching :class:`~aeat.domain.invoices.Invoice`, or ``None``
+        when absent.
+    """
     return catalogue.get(invoice_id)
 
 
@@ -108,9 +143,9 @@ def link_transaction(
         transaction returns a value-equal catalogue rather than raising.
 
     Raises:
-        InvoiceNotFoundError: If ``invoice_id`` is missing.
-        InvoiceLinkError: If ``transaction_id`` is not a 64-character
-            lowercase hex digest.
+        :exc:`InvoiceNotFoundError`: If ``invoice_id`` is missing.
+        :exc:`InvoiceLinkError`: If ``transaction_id`` is not a
+            64-character lowercase hex digest.
     """
     invoice = _require_invoice(catalogue, invoice_id)
     normalized_tx = transaction_id.strip().lower()
@@ -239,6 +274,7 @@ def verify_link_consistency(
 
 
 def _write_bytes(path: Path, payload: bytes) -> None:
+    """Default rollback writer: write ``payload`` to ``path`` verbatim."""
     path.write_bytes(payload)
 
 
@@ -271,11 +307,12 @@ def link_transaction_bidirectional(
         The freshly written pair of catalogues.
 
     Raises:
-        InvoiceNotFoundError: If ``invoice_id`` is missing.
-        InvoiceLinkError: If linking fails on either side for a typed reason.
-        InvoiceLinkInconsistencyError: If both the transaction write and
-            the invoice rollback fail; the two files are left in drifted
-            state for manual repair.
+        :exc:`InvoiceNotFoundError`: If ``invoice_id`` is missing.
+        :exc:`InvoiceLinkError`: If linking fails on either side for a
+            typed reason.
+        :exc:`InvoiceLinkInconsistencyError`: If both the transaction
+            write and the invoice rollback fail; the two files are left
+            in drifted state for manual repair.
     """
     from ..transactions._repository import TransactionCatalogueRepository
     from ._repository import InvoiceCatalogueRepository

@@ -1,4 +1,16 @@
-"""Unit tests for the 2025 category registry."""
+"""Unit tests for :data:`~aeat.domain.categories.CATEGORY_PROFILES_2025`.
+
+Verifies the curated 2025 registry covers every
+:class:`~aeat.domain.categories.SpendingCategory`, that every profile
+carries at least one citation, that every casilla mapping resolves
+against the committed corpus, and that the manual-loader entry point
+returns the curated registry surface.
+
+Locks the conservative encodings for known edge categories
+(hardware as full-deductible, vehicle fuel without a default ratio,
+health insurance as a statutory annual cap) so a future cleanup pass
+cannot silently relax them.
+"""
 
 from __future__ import annotations
 

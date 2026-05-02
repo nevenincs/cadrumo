@@ -1,4 +1,4 @@
-"""Marker-based parsers for AEAT site-health classification (#95).
+"""Marker-based parsers for AEAT site-health classification.
 
 Three pure functions inspect the HTTP status, headers, and body of a
 response and decide whether it looks like an AEAT maintenance page, a
@@ -8,10 +8,9 @@ and returns the first non-``None`` classification.
 
 All parsers are deliberately synchronous, side-effect free, and free
 of any Playwright dependency so they can be driven from plain strings
-loaded from disk in unit tests. See
-[[2026-04-13-aeat-mantenimiento-detection-adr]] for the marker corpus
-rationale and [[2026-04-13-aeat-mantenimiento-detection-research]]
-§5 for the observed markers on AEAT Sede Electrónica.
+loaded from disk in unit tests. The marker corpora reflect the
+observed set of mantenimiento, WAF, and rate-limit responses on AEAT
+Sede Electrónica.
 """
 
 from __future__ import annotations
@@ -173,9 +172,9 @@ def parse_mantenimiento_banner(
     when two or more curated body markers match, or when exactly one
     body marker matches alongside a title containing ``mantenimiento``
     or ``interrupcion``. A title-only match with zero body markers
-    **never** classifies: the ADR (Decision 2.1,
-    [[2026-04-13-aeat-mantenimiento-detection-adr]]) requires at least
-    one body-marker hit as corroborating evidence.
+    **never** classifies: at least one body-marker hit is required as
+    corroborating evidence to suppress false positives from
+    unrelated pages whose ``<title>`` happens to mention maintenance.
 
     Args:
         url: The probe URL.
@@ -364,8 +363,7 @@ def evaluate_response(
 ) -> SiteHealthStatus | None:
     """Run the full parser suite and return the first non-OK hit.
 
-    Parsers are evaluated in the order documented in
-    [[2026-04-13-aeat-mantenimiento-detection-adr]]:
+    Parsers are evaluated in cost-then-specificity order:
 
     1. :func:`parse_rate_limit_response` (cheapest, header-first
        short-circuit; yields to mantenimiento when a 503 carries

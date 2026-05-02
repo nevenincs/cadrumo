@@ -1,34 +1,38 @@
 """Persistence layer and migrations entry point.
 
-Public API of the storage subpackage. Callers outside :mod:`aeat.adapters.persistence.storage` MUST
-import only from here — internal modules (``_orm``, ``engine``, ``session``,
-``repository``, ``migrations_api``) are implementation details.
+Public API of the storage subpackage. Callers outside
+:mod:`aeat.adapters.persistence.storage` must import only from here; internal
+modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
+``sql.migrations_api``, and the encryption substrate under ``crypto``,
+``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
+implementation details.
+
+The phrase **encryption substrate** denotes the layered crypto stack
+(master-key provider → envelope wrapper → encrypted blob store →
+typed column helpers) that every persisted record passes through.
+Throughout the package, "substrate" without a qualifier refers to
+this stack.
 
 The public surface is intentionally narrow:
 
-- Pydantic v2 record models: :class:`ModeloRecord`, :class:`PortalRecord`,
+- Pydantic v2 record models — :class:`ModeloRecord`, :class:`PortalRecord`,
   :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors: :class:`StorageError`, :class:`MigrationError`,
+- Errors — :class:`StorageError`, :class:`MigrationError`,
   :class:`RepositoryError`.
-- Engine + session helpers: :func:`get_engine`, :func:`dispose_engine`,
+- Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
   :func:`session_scope`.
-- Typed repositories: :class:`ModeloRepository`, :class:`PortalRepository`,
+- Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
   :class:`CorpusArtifactRepository`.
-- Migration helpers: :func:`upgrade_to_head`, :func:`downgrade_to_base`,
+- Migration helpers — :func:`upgrade_to_head`, :func:`downgrade_to_base`,
   :func:`round_trip_migrations`.
-
-See the evolution workflow section of the data-storage ADR
-(``.vault/adr/2026-04-12-data-storage-adr.md``) for how to add columns and
-write migrations.
+- Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
+  :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
+  helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
+  :class:`EncryptedJSON`, and :class:`HashedLookup`.
 """
 
 from __future__ import annotations
 
-from .blob_store._blob_store import (
-    BlobManifest,
-    BlobReference,
-    EncryptedBlobStore,
-)
 from ....core.classification import (
     AtRestTreatment,
     ClassificationPolicy,
@@ -49,6 +53,29 @@ from ....core.corpus_manifest import (
     manifest_path_for,
     save_corpus_manifest,
     verify_corpus_manifest,
+)
+from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.redaction import (
+    default_rules,
+    default_rules_for,
+    default_rules_for_class,
+    redact,
+    redact_for_log,
+    redact_structured,
+)
+from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
+from ._rotation import (
+    RotationPlanEntry,
+    RotationSummary,
+    default_blob_store_roots,
+    default_rotation_plan,
+    rotate_blob_stores,
+    rotate_master_key,
+)
+from .blob_store._blob_store import (
+    BlobManifest,
+    BlobReference,
+    EncryptedBlobStore,
 )
 from .blob_store._materialisation import (
     export_to_temp_path,
@@ -84,50 +111,6 @@ from .envelope._envelope import (
     save_encrypted_envelope,
     save_envelope,
 )
-from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
-from .master_key._master_key import (
-    EphemeralMasterKeyProvider,
-    FileFallbackMasterKeyProvider,
-    KeyringMasterKeyProvider,
-    MasterKeyProvider,
-    MigrationResult,
-    UnsecuredMasterKeyProvider,
-    atomic_write_secure_bytes,
-    get_master_key_provider,
-    looks_like_real_tax_id,
-    migrate_master_key_kdf,
-    refuse_unsecured_with_real_nif,
-)
-from .master_key._recovery import (
-    RecoveryKey,
-    WrappedMasterKey,
-    decode_mnemonic,
-    encode_mnemonic,
-    generate_recovery_key,
-    load_wrapped_master_key,
-    save_wrapped_master_key,
-    unwrap_master_key,
-    wrap_master_key,
-)
-from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
-from ....core.redaction import (
-    default_rules,
-    default_rules_for,
-    default_rules_for_class,
-    redact,
-    redact_for_log,
-    redact_structured,
-)
-from ._rotation import (
-    RotationPlanEntry,
-    RotationSummary,
-    default_blob_store_roots,
-    default_rotation_plan,
-    rotate_blob_stores,
-    rotate_master_key,
-)
-from .secret_store._secret_store import SecretRecord, SecretStore
-from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -158,6 +141,32 @@ from .errors import (
     StorageError,
     UnsecuredModeRefusedError,
 )
+from .master_key._master_key import (
+    EphemeralMasterKeyProvider,
+    FileFallbackMasterKeyProvider,
+    KeyringMasterKeyProvider,
+    MasterKeyProvider,
+    MigrationResult,
+    UnsecuredMasterKeyProvider,
+    atomic_write_secure_bytes,
+    get_master_key_provider,
+    looks_like_real_tax_id,
+    migrate_master_key_kdf,
+    refuse_unsecured_with_real_nif,
+)
+from .master_key._recovery import (
+    RecoveryKey,
+    WrappedMasterKey,
+    decode_mnemonic,
+    encode_mnemonic,
+    generate_recovery_key,
+    load_wrapped_master_key,
+    save_wrapped_master_key,
+    unwrap_master_key,
+    wrap_master_key,
+)
+from .secret_store._secret_store import SecretRecord, SecretStore
+from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
 from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository

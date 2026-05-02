@@ -1,4 +1,11 @@
-"""Modelo 100 Anexo D — módulos (2024). Per-actividad tabla per Orden HAC anual."""
+"""Modelo 100 Anexo D — módulos (ejercicio 2024).
+
+Re-exports ``CASILLAS`` and ``CITATIONS`` from
+:mod:`.anexo_d_modulos_2025`; only ``FORMULAS`` (year-scoped formula
+IDs) and the effective-date constants are year-specific. The
+per-actividad tabla is governed by the Orden HAC anual and is supplied
+externally by the caller via ``0250``.
+"""
 
 from __future__ import annotations
 

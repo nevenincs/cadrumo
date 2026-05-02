@@ -1,4 +1,10 @@
-"""Portal: Cl@ve whole-of-government IdP root."""
+"""Catalogue entry for the Cl@ve whole-of-government identity provider root.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Hosted on
+:attr:`aeat.domain.portals.Subdomain.CLAVE_GOB`; sits adjacent to AEAT but
+is in scope because the scraper hands off to it during Cl@ve flows.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +27,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Página raíz del proveedor de identidad Cl@ve (clave.gob.es).",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve IdP root page."""

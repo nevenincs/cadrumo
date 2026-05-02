@@ -6,8 +6,7 @@ name lowercased (e.g. ``"portal_m303_iva_autoliquidacion"``), which
 gives callers a stable, machine-predictable identifier safe to emit
 over CLI / JSON without further mapping.
 
-Membership is fixed at 42 entries grouped as follows (see the
-portal-catalogue research doc §6 for the enumeration):
+Membership is fixed at 42 entries grouped as follows:
 
 - 8 AUTH entry points (Sede root, Mi área personal, Cl@ve + cert + DNIe
   gateways).

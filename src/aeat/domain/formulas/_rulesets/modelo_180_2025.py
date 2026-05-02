@@ -1,37 +1,37 @@
 """Modelo 180 ruleset covering the full 2025 fiscal year.
 
 Modelo 180 is the annual informativa that rolls up the four quarterly
-Modelo 115 filings (retenciones sobre arrendamientos urbanos). MVP
-targets the 4-casilla summary block:
+Modelo 115 filings (retenciones sobre arrendamientos urbanos). The
+ruleset targets the 4-casilla summary block:
 
 - casilla 01 (total perceptores — arrendadores).
 - casilla 02 (total base retencion).
-- casilla 03 (total retenciones e ingresos a cuenta; 19% x 02 per
+- casilla 03 (total retenciones e ingresos a cuenta; 19 % x 02 per
   art. 100.1 RIRPF).
 - casilla 04 (total ingresos a cuenta por retribuciones en especie).
 
 Only one algebraic formula holds at aggregation level:
 
-- casilla 03 = 19% x casilla 02 (same rate as the quarterly Modelo 115
+- casilla 03 = 19 % x casilla 02 (same rate as the quarterly Modelo 115
   because 180 is the annual aggregation of 115 filings).
 
-**Scope limitations (M1):**
+Scope limitations:
 
-This MVP assumes a single-rate filing — every arrendamiento on the
-180 pays 19% IRPF. Real-world 180 filings may mix:
+The ruleset assumes a single-rate filing — every arrendamiento on the
+180 pays 19 % IRPF. Real-world 180 filings may mix:
 
-- IRPF 19% on arrendamientos of urbanos used as domicilio.
-- IRNR 24% on arrendamientos made by no residentes (Ley 36/2006).
+- IRPF 19 % on arrendamientos of urbanos used as domicilio.
+- IRNR 24 % on arrendamientos made by no residentes (Ley 36/2006).
 - Special regional rates for Canarias (IGIC) or País Vasco / Navarra
   foral norms.
 
-A mixed-rate filing will surface as a 03 discrepancy because the
-engine computes 03 at a single 19% rate. Multi-rate / IRNR support
-lands in sub-EPIC #305-Modelo-180-full.
+A mixed-rate filing will surface as a casilla-03 discrepancy because
+the engine computes 03 at a single 19 % rate. Multi-rate / IRNR support
+is tracked outside this base ruleset.
 
 Legal base: Ley 35/2006 (LIRPF) art. 101.8, RD 439/2007 (Reglamento)
-art. 100.1 (the 19% fixed rate on rendimientos de arrendamientos
-urbanos; art. 100.2 applies the 60% reduction for Ceuta/Melilla).
+art. 100.1 (the 19 % fixed rate on rendimientos de arrendamientos
+urbanos; art. 100.2 applies the 60 % reduction for Ceuta/Melilla).
 """
 
 from __future__ import annotations
@@ -56,6 +56,7 @@ _EFFECTIVE_TO = date(2025, 12, 31)
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Build a :class:`aeat.core.i18n.Translatable` mapping for the three locales."""
     return {"es": es, "en": en, "hu": hu}
 
 

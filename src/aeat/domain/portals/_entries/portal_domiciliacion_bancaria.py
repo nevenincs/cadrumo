@@ -1,4 +1,10 @@
-"""Portal: Domiciliación bancaria."""
+"""Catalogue entry for the AEAT *Domiciliación bancaria* procedure page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.PAYMENT`. Used to set up,
+inspect, and revoke direct-debit instructions on the AEAT autoliquidación
+flow.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Alta, consulta y revocación de domiciliaciones bancarias de autoliquidaciones.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""

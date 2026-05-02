@@ -1,11 +1,14 @@
 """Modelo 111 ruleset covering the full 2024 fiscal year.
 
-Structural clone of :mod:`modelo_111_2025`. Ejercicio-2024 retention
-rates are identical to 2025 under LIRPF arts. 99-101 (obligation +
-rates) and RIRPF arts. 99 (pago-a-cuenta obligation hook) + 100
-(retention-on-rendimientos rates — the 19% on arrendamientos is
-art. 100.1, not a sub-lettered subsection). Kent uses this ruleset
-for 2024-period complementaria filings.
+Structural clone of
+:mod:`aeat.domain.formulas._rulesets.modelo_111_2025`. Ejercicio-2024
+retention rates are identical to 2025 under LIRPF arts. 99-101
+(obligation + rates) and RIRPF arts. 99 (pago-a-cuenta obligation
+hook) + 100 (retention-on-rendimientos rates — the 19% on arrendamientos
+is art. 100.1, not a sub-lettered subsection). The operator uses this
+ruleset for 2024-period complementaria filings of withholdings on rendimientos
+del trabajo, actividades económicas, premios, ganancias patrimoniales,
+and contraprestaciones en especie.
 """
 
 from __future__ import annotations
@@ -59,3 +62,11 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS_2025,
 )
+"""Modelo 111 ruleset for ejercicio 2024.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` re-using the casillas,
+formulas and citations from
+:mod:`aeat.domain.formulas._rulesets.modelo_111_2025` with a 2024
+``ParameterTable`` and ``effective_from`` / ``effective_to`` window.
+Re-exported as :data:`aeat.domain.formulas._rulesets.MODELO_111_2024`.
+"""

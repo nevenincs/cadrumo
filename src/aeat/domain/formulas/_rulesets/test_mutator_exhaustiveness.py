@@ -1,17 +1,20 @@
-"""Orphan-node defense for the mutation harness (#338).
+"""Orphan-node defense for the mutation harness.
 
-Every concrete subclass of :data:`aeat.domain.formulas.Formula` and every
-concrete operand subclass of :data:`aeat.domain.formulas.Operand` must
-appear in **exactly one** of:
+Every concrete subclass of :class:`aeat.domain.formulas._formula.Formula`
+and every concrete operand subclass of
+:class:`aeat.domain.formulas._formula.Operand` must appear in exactly
+one of:
 
-- :data:`MUTATOR_REGISTRY` — the type owns a mutator class.
-- :data:`NOT_MUTABLE_NODE_TYPES` — the type is documented as
-  intentionally not mutable, with a justifying reason.
+- :data:`aeat.domain.formulas._rulesets._mutators.MUTATOR_REGISTRY` —
+  the type owns a mutator class.
+- :data:`aeat.domain.formulas._rulesets._mutators.NOT_MUTABLE_NODE_TYPES`
+  — the type is documented as intentionally not mutable, with a
+  justifying reason.
 
 If a future contributor adds a new ``Formula`` subclass to
-``aeat.domain.formulas`` without updating one of the two sets, the
-exhaustiveness test fails loudly. This is the only mechanism
-preventing silent gaps in the harness's coverage of the AST.
+:mod:`aeat.domain.formulas` without updating one of the two sets, the
+exhaustiveness test fails loudly. This is the only mechanism preventing
+silent gaps in the harness's coverage of the AST.
 """
 
 from __future__ import annotations
@@ -21,9 +24,9 @@ import pytest
 from .. import (
     AddFormula,
     BracketsFormula,
-    CasillaRef,
     ClampPositiveFormula,
     DivFormula,
+    FormulaCasillaRef,
     Literal,
     MaxFormula,
     MinFormula,
@@ -59,7 +62,7 @@ _PUBLIC_FORMULA_TYPES: frozenset[type] = frozenset(
 )
 
 
-_PUBLIC_OPERAND_TYPES: frozenset[type] = _PUBLIC_FORMULA_TYPES | frozenset({Literal, CasillaRef, ParamRef})
+_PUBLIC_OPERAND_TYPES: frozenset[type] = _PUBLIC_FORMULA_TYPES | frozenset({Literal, FormulaCasillaRef, ParamRef})
 
 
 def test_concrete_formula_types_match_public_export() -> None:

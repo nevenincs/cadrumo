@@ -18,11 +18,9 @@ The heavy imports (``_metadata``, ``_registry``) load lazily via
 ``models → portals → models``. The first access to any registry name
 materialises the full catalogue.
 
-Architectural context: see the 2026-04-17 portal-catalogue ADR and
-research documents for the provenance of each portal entry. Modelo
-cross-reference is tied to :class:`aeat.domain.modelos.ModeloCode` — every
-``ModeloCode`` member has at least one FILING or CENSUS portal backing
-it (``ModeloCode.MODELO_037`` is the sole retired carve-out).
+Modelo cross-reference is tied to :class:`aeat.domain.modelos.ModeloCode` —
+every ``ModeloCode`` member has at least one FILING or CENSUS portal
+backing it (``ModeloCode.MODELO_037`` is the sole retired carve-out).
 """
 
 from __future__ import annotations

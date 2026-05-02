@@ -1,4 +1,9 @@
-"""Kent-facing local data commands."""
+"""Operator-facing local data commands.
+
+Hosts the :mod:`aeat.entrypoints.cli.data.ledgers` sub-app, which
+exposes the encrypted local ledgers that back AEAT amortization,
+inventory, and Anexo D inputs.
+"""
 
 from __future__ import annotations
 

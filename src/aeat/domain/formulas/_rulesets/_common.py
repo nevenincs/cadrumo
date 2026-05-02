@@ -3,7 +3,8 @@
 Every concrete ruleset module under :mod:`aeat.domain.formulas._rulesets`
 imports from here. The helpers keep the ruleset files short and
 declarative: ``casilla("03", label=...)`` is easier to review than
-manually instantiating :class:`CasillaDefinition`.
+manually instantiating
+:class:`aeat.domain.formulas._casilla.CasillaDefinition`.
 """
 
 from __future__ import annotations
@@ -19,9 +20,9 @@ from .._formula import (
     AddFormula,
     Bracket,
     BracketsFormula,
-    CasillaRef,
     ClampPositiveFormula,
     DivFormula,
+    FormulaCasillaRef,
     FormulaDefinition,
     Literal,
     MaxFormula,
@@ -92,9 +93,9 @@ def formula(*, casilla_id: str, formula_id: str, body: Operand) -> FormulaDefini
     )
 
 
-def ref(casilla_id: str) -> CasillaRef:
-    """Build a :class:`CasillaRef`."""
-    return CasillaRef(casilla_id=casilla_id)
+def ref(casilla_id: str) -> FormulaCasillaRef:
+    """Build a :class:`FormulaCasillaRef`."""
+    return FormulaCasillaRef(casilla_id=casilla_id)
 
 
 def lit(value: str | int) -> Literal:
@@ -153,13 +154,13 @@ def percent_from_whole(rate_ref: Operand, base: Operand) -> PercentFormula:
     """Apply a whole-percent rate (e.g. ``17,00`` for 17%) to a base.
 
     AEAT forms print the rate as a whole-percent value (``Decimal("17.00")``
-    ⇒ 17%); this helper normalises it to a fraction via ``rate / 100`` and
+    => 17%); this helper normalises it to a fraction via ``rate / 100`` and
     applies ``rate * base``. Use this when the rate is read from an
     extracted casilla rather than stored in a :class:`ParameterTable`.
 
     Consistent quantisation ``Decimal("0.0001")`` keeps post-division
     precision at four decimals — exactly enough for any 2-decimal
-    whole-percent rate (``17,00`` ⇒ 0.1700, ``24,50`` ⇒ 0.2450).
+    whole-percent rate (``17,00`` => 0.1700, ``24,50`` => 0.2450).
     AEAT never prints rates below 2 decimal places, so truncation
     does not arise in practice.
     """

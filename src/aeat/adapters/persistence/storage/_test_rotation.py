@@ -42,7 +42,7 @@ from .errors import DecryptionError
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _NIF_CANARY = "12345678Z"
-_HKDF_CONTEXT_TX = b"aeat.domain.financial.transactions.catalogue.v1"
+_HKDF_CONTEXT_TX = b"aeat.domain.transactions.catalogue.v1"
 _HKDF_CONTEXT_DRAFT = b"aeat.application.filing.draft.v1"
 
 
@@ -619,7 +619,7 @@ class TestRotationLockTargetAlignment:
         # plan entry must produce the same path.
         entry = RotationPlanEntry(
             store_dir=Path("/store"),
-            hkdf_context=b"aeat.domain.financial.usage_ratios.profile.v1",
+            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
             target_filename="usage-ratios.json",
         )
         envelope_path = Path("/store/usage-ratios.json")
@@ -690,7 +690,7 @@ class TestRotationLockTargetAlignment:
         writer_lock_target = envelope_path.with_suffix(".lock")
         entry = RotationPlanEntry(
             store_dir=store,
-            hkdf_context=b"aeat.domain.financial.usage_ratios.profile.v1",
+            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
             target_filename="usage-ratios.json",
         )
         rotation_lock_target = entry.lock_path_for(envelope_path)

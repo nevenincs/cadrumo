@@ -1,4 +1,17 @@
-"""Strict-validation tests for the observability pydantic records."""
+"""Strict-validation tests for the :mod:`aeat.core.observability._models` records.
+
+Covers:
+
+* :class:`ArgumentRecord` round-trip and ``extra="forbid"`` enforcement.
+* :class:`RunEventPayload` exactly-one-variant invariant across each
+  variant (zero-variant and two-variant payloads must raise).
+* Timezone-awareness rejection on naive datetimes for both
+  :class:`RunEvent` and :class:`RunTrace`.
+* :attr:`RunTrace.replay_of` default + round-trip.
+* End-to-end pydantic round-trip through ``model_dump_json`` /
+  ``model_validate_json`` for both :class:`RunEvent` and
+  :class:`RunTrace`.
+"""
 
 from __future__ import annotations
 
@@ -85,7 +98,7 @@ class TestRunEventPayload:
 
 
 class TestTimezoneAwareness:
-    """Naive datetimes must be rejected at the pydantic boundary (S5)."""
+    """Naive datetimes must be rejected at the pydantic boundary."""
 
     def test_run_event_rejects_naive_timestamp(self) -> None:
         with pytest.raises(ValidationError, match="timezone-aware"):
@@ -128,7 +141,7 @@ class TestTimezoneAwareness:
 
 
 class TestReplayOfField:
-    """``replay_of`` defaults to None and accepts valid run ids (S7)."""
+    """``replay_of`` defaults to ``None`` and round-trips valid run ids."""
 
     def test_default_none(self) -> None:
         trace = RunTrace(

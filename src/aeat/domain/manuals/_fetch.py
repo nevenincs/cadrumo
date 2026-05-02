@@ -1,11 +1,12 @@
 """Raw manual-part downloader and manifest writer.
 
-The fetcher speaks ``httpx`` directly: the :class:`PartSpec` table
+The fetcher speaks :mod:`httpx` directly: the :class:`PartSpec` table
 below hard-codes the verified canonical AEAT URLs for every
-``(manual_id, year, part)`` triple the subpackage supports; the
+``(manual_id, year, part)`` triple the subpackage supports. The
 ``fetch`` CLI looks up a triple in the table, streams the PDF to
 disk, computes its sha256 on the fly, and writes a
-:class:`FetchedManualPart` manifest next to the raw binary.
+:class:`~aeat.domain.manuals.FetchedManualPart` manifest next to the
+raw binary.
 """
 
 from __future__ import annotations
@@ -35,9 +36,15 @@ _MANIFEST_FILENAME = "manifest.json"
 class PartSpec(BaseModel):
     """Canonical source URL for a ``(manual_id, year, part)`` triple.
 
-    Strict + frozen so the public surface stays on pydantic v2 per the
-    project mandate; held as a static tuple in :data:`PART_SPECS` and
-    never constructed from untrusted input.
+    Strict and frozen so the public surface stays on pydantic v2 per
+    the project mandate; held as a static tuple in :data:`PART_SPECS`
+    and never constructed from untrusted input.
+
+    Attributes:
+        manual_id: Handbook identifier.
+        year: Tax year.
+        part: Volume split within the year.
+        source_pdf_url: Canonical AEAT URL the PDF is fetched from.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -81,7 +88,15 @@ PART_SPECS: tuple[PartSpec, ...] = (
 
 
 class FetchResult(BaseModel):
-    """Thin wrapper returned by :func:`fetch_manual_part` to the CLI."""
+    """Thin wrapper returned by :func:`fetch_manual_part` to the CLI.
+
+    Attributes:
+        manifest: The :class:`~aeat.domain.manuals.FetchedManualPart`
+            record written next to the raw PDF.
+        part_root: Resolved directory root for the manual part.
+        pdf_path: Absolute path to the freshly downloaded PDF.
+        manifest_path: Absolute path to the JSON manifest on disk.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -115,7 +130,12 @@ def lookup_spec(manual_id: ManualId, year: int, part: ManualPart) -> PartSpec:
 
 
 def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
-    """Download ``url`` to ``destination`` and return ``(sha256, length)``."""
+    """Download ``url`` to ``destination`` and return ``(sha256, length)``.
+
+    Streams the response body in 64 KiB chunks while updating the
+    sha256 hash in flight so the caller never needs to re-read the
+    file from disk to verify it.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
     sha = hashlib.sha256()
     length = 0
@@ -132,7 +152,12 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
 
 
 def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
-    """Serialise a :class:`FetchedManualPart` as indented JSON on disk."""
+    """Serialise a :class:`~aeat.domain.manuals.FetchedManualPart` as indented JSON on disk.
+
+    Args:
+        manifest_path: Destination path for the JSON manifest.
+        manifest: Manifest record to serialise.
+    """
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump(mode="json")
     manifest_path.write_text(

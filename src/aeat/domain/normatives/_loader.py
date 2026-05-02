@@ -18,7 +18,12 @@ _logger = get_logger(__name__)
 
 
 def _root_from_settings(settings: Settings | None) -> Path:
-    """Resolve the normatives corpus root directory."""
+    """Resolve the normatives corpus root directory.
+
+    Uses ``settings`` when supplied, otherwise loads a fresh
+    :class:`aeat.core.config.Settings` via
+    :func:`aeat.core.config.load_settings`.
+    """
     return (settings or load_settings()).aeat_normatives_root
 
 

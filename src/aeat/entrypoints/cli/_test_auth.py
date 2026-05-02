@@ -1,4 +1,10 @@
-"""CLI tests for the Kent-facing Google auth entrypoint."""
+"""Unit tests for :mod:`aeat.entrypoints.cli.auth`.
+
+Covers the operator-facing ``aeat auth init`` flow for both the
+desktop-OAuth path and the service-account path, and verifies that a
+failed switch never persists a half-applied ``GOOGLE_AUTH_PATH`` to
+``env/.env``.
+"""
 
 from __future__ import annotations
 

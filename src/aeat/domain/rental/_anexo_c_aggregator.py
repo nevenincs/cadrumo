@@ -1,4 +1,4 @@
-"""M100 Anexo C aggregator — derives 0061/0066/0072/0078/0085 from the rental register (#454).
+"""M100 Anexo C aggregator — derives 0061/0066/0072/0078/0085 from the rental register.
 
 The aggregator pulls per-finca + per-contract data from the rental
 register repositories for a given ejercicio and produces the five

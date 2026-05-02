@@ -13,8 +13,7 @@ Token lifecycle
 - Expired tokens are refreshed automatically using the stored refresh token.
 - Service-account credentials manage their own token lifecycle.
 
-ADC remains a subordinate compatibility surface for legacy ``gcloud``-
-managed wrapper flows, but it is not a peer auth path in the resolver.
+ADC is not a peer auth path in the resolver.
 
 Required API scopes
 -------------------
@@ -26,6 +25,7 @@ Narrower scope constants are provided for least-privilege scenarios.
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -39,6 +39,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from ....core.file_permissions import restrict_file_permissions
 from ._paths import (
     GoogleAuthInspection,
     GoogleAuthPath,
@@ -52,16 +53,14 @@ if TYPE_CHECKING:
     from ....core.config import Settings
 
 __all__ = [
-    "ADC_LOGIN_SCOPE_CSV",
     "ADC_LOGIN_SCOPES",
+    "ADC_LOGIN_SCOPE_CSV",
     "CLOUD_PLATFORM_SCOPE",
     "DOCS_READONLY_SCOPES",
     "DOCS_SCOPE",
     "DRIVE_FILE_SCOPES",
     "DRIVE_READONLY_SCOPES",
     "DRIVE_SCOPE",
-    "GoogleAuthInspection",
-    "GoogleAuthPath",
     "OPENID_SCOPE",
     "REQUIRED_ADC_SCOPES",
     "SCOPES",
@@ -70,6 +69,8 @@ __all__ = [
     "STORAGE_FULL_CONTROL_SCOPE",
     "STORAGE_READ_ONLY_SCOPE",
     "USERINFO_EMAIL_SCOPE",
+    "GoogleAuthInspection",
+    "GoogleAuthPath",
     "adc_well_known_path",
     "assert_credentials_have_scopes",
     "build_cloudfunctions_client",
@@ -145,6 +146,19 @@ ADC_LOGIN_SCOPE_CSV = format_scope_csv(ADC_LOGIN_SCOPES)
 # ── OAuth 2.0 ───────────────────────────────────────────────────────────────
 
 
+def _write_oauth_token_cache(token_path: Path, payload: str) -> None:
+    """Persist OAuth token JSON with operator-only permissions."""
+
+    token_path.parent.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix":
+        try:
+            os.chmod(token_path.parent, 0o700)
+        except OSError:
+            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent)
+    token_path.write_text(payload, encoding="utf-8")
+    restrict_file_permissions(token_path)
+
+
 def get_oauth_credentials(
     client_id: str,
     client_secret: str,
@@ -194,8 +208,7 @@ def get_oauth_credentials(
         creds = flow.run_local_server(port=8080)
 
     # 3. Persist the token for next time
-    token_path.parent.mkdir(parents=True, exist_ok=True)
-    token_path.write_text(creds.to_json())
+    _write_oauth_token_cache(token_path, creds.to_json())
 
     return creds
 
@@ -403,8 +416,7 @@ def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentia
        set in the environment.
     The unified resolver is the entry point every CLI command should use,
     so the active auth path is decided in one place and Settings edits
-    propagate without per-call wiring. ADC are not a third fallback path
-    here; they are only used by legacy wrapper flows outside the resolver.
+    propagate without per-call wiring. ADC are not a third fallback path.
 
     Args:
         scopes: Scopes to request. Defaults to the full :data:`SCOPES`

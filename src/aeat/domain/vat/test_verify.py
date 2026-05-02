@@ -1,4 +1,10 @@
-"""Unit tests for :func:`aeat.domain.vat.verify_catalogue`."""
+"""Unit tests for :func:`aeat.domain.vat.verify_catalogue`.
+
+Asserts the shipped :data:`aeat.domain.vat.VAT_CATALOGUE_2025` verifies
+clean, an empty catalogue raises one ``missing_category`` per
+:class:`aeat.domain.vat.VATCategory`, and partial catalogues report only the
+gaps.
+"""
 
 from __future__ import annotations
 
@@ -15,13 +21,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_shipped_catalogue_is_clean() -> None:
-    """The shipped VAT_CATALOGUE_2025 must verify without errors."""
+    """The shipped :data:`VAT_CATALOGUE_2025` must verify without errors."""
     report = verify_catalogue(VAT_CATALOGUE_2025)
     assert report.clean, [issue.model_dump() for issue in report.errors]
 
 
 def test_empty_catalogue_reports_missing_categories() -> None:
-    """An empty catalogue flags every VATCategory as missing."""
+    """An empty catalogue flags every :class:`VATCategory` as missing."""
     empty = VATCatalogue()
     report = verify_catalogue(empty)
     codes = {issue.code for issue in report.errors}

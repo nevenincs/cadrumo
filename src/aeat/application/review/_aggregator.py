@@ -1,7 +1,8 @@
 """Cross-source review-queue aggregator.
 
-Combines the five per-source adapters into one deterministically
-sorted tuple of review items.
+Provides :class:`ReviewQueue`, which combines the per-source adapters
+in :mod:`aeat.application.review._adapters` into one deterministically
+sorted tuple of :class:`aeat.application.review.ReviewItem` values.
 """
 
 from __future__ import annotations
@@ -21,7 +22,14 @@ from ._models import ReviewItem
 
 
 class ReviewQueue:
-    """Static collector that aggregates pending review items across sources."""
+    """Static collector that aggregates pending review items across sources.
+
+    Combines the per-source adapters
+    (:func:`transactions_pending`, :func:`invoices_pending`,
+    :func:`divergences_pending`, :func:`drafts_pending`) into one
+    deterministically sorted tuple. Severity is the primary sort key;
+    ``since`` and ``item_id`` provide stable tiebreakers.
+    """
 
     @staticmethod
     def collect(
@@ -41,18 +49,19 @@ class ReviewQueue:
                 ``frozenset`` so callers cannot mutate it after passing.
             modelo: Optional modelo filter. When set, items whose
                 wrapped record has no modelo concept are excluded.
-            state: ``ReviewState.PENDING`` (default) or ``ReviewState.ALL``.
-                ``ALL`` is reserved for a future "show resolved too"
-                mode and currently returns the same set as ``PENDING``
-                because every adapter only emits pending items today.
-            confidence_below: Optional decision-confidence threshold
-                (#236). When set, the queue replaces the default
+            state: ``ReviewState.PENDING`` (default) or
+                ``ReviewState.ALL``. ``ALL`` is reserved for a future
+                "show resolved too" mode and currently returns the same
+                set as ``PENDING`` because every adapter only emits
+                pending items today.
+            confidence_below: Optional decision-confidence threshold.
+                When set, the queue replaces the default
                 transactions-pending source with
                 :func:`transactions_low_confidence`: classified
                 transactions whose ``classification_confidence`` is
                 non-None and strictly less than the threshold. Other
-                review kinds (invoices, divergences, findings)
-                cannot satisfy a decision-confidence predicate and are
+                review kinds (invoices, divergences, findings) cannot
+                satisfy a decision-confidence predicate and are
                 excluded while this filter is active.
 
         Returns:

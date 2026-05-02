@@ -1,4 +1,18 @@
-"""`aeat financial` sub-app for ingest, transaction, and invoice catalogues."""
+"""``aeat financial`` sub-app for ingest, transaction, and invoice catalogues.
+
+Aggregates the financial-input pipeline command surface:
+
+- ``ingest`` validates and loads CSV/XLSX/OFX/PDF sources into
+  :class:`aeat.domain.transactions.RawTransaction` records.
+- ``aggregate`` rolls classified transactions up into AEAT casilla
+  inputs.
+- :mod:`aeat.entrypoints.cli.financial.txs` manages the transaction
+  catalogue.
+- :mod:`aeat.entrypoints.cli.financial.invoices` manages the invoice
+  catalogue.
+- :mod:`aeat.entrypoints.cli.financial.profile` edits the operator's
+  per-category usage-ratio profile.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +27,7 @@ from .txs import app as txs_app
 app = typer.Typer(
     name="financial",
     no_args_is_help=True,
-    help="Financial ingest providers, transaction catalogue, and invoice catalogue (#73, #74, #75).",
+    help="Financial ingest providers, transaction catalogue, and invoice catalogue.",
 )
 
 app.command(
@@ -22,23 +36,23 @@ app.command(
 )(ingest_cmd)
 app.command(
     name="aggregate",
-    help="Aggregate classified transactions into AEAT casilla inputs (T6).",
+    help="Aggregate classified transactions into AEAT casilla inputs.",
 )(aggregate_cmd)
 app.add_typer(
     txs_app,
     name="txs",
-    help="Transaction catalogue helpers (#74).",
+    help="Transaction catalogue helpers.",
 )
 app.add_typer(
     invoices_app,
     name="invoices",
-    help="Invoice catalogue helpers (#75).",
+    help="Invoice catalogue helpers.",
 )
 app.add_typer(
     profile_app,
     name="profile",
-    help="Kent's financial profile: per-category usage ratios (#259).",
+    help="Operator financial profile: per-category usage ratios.",
 )
 
 
-__all__ = ["app", "invoices_app"]
+__all__ = ["app"]

@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 200 2025 ruleset."""
+"""Unit tests for the Modelo 200 2025 ruleset.
+
+Pins :data:`aeat.domain.formulas._rulesets.MODELO_200_2025` against the
+LIS art. 29 rate table, asserts no-drift against the 2024 ruleset on
+the page-14 arithmetic, and exercises parametrised cent-exact
+derivations of the computed casillas (00562, 00611, 00621).
+"""
 
 from __future__ import annotations
 
@@ -25,6 +31,7 @@ def _provided(
     abono: Decimal = Decimal("0.00"),
     incremento: Decimal = Decimal("0.00"),
 ) -> dict[str, Decimal]:
+    """Build a Modelo 200 2025 fixture from the given LIS art. 29 inputs."""
     cuota_integra = (base * rate / Decimal("100")).quantize(Decimal("0.01"))
     cuota_diferencial = cuota_liquida - retenciones - p1 - p2 - p3
     liquido = cuota_diferencial + incremento - abono
@@ -49,6 +56,8 @@ def _provided(
 
 
 class TestModelo200Ruleset2025:
+    """Formula-engine assertions for the 2025 Modelo 200 ruleset."""
+
     def test_ruleset_id_and_effective_range(self) -> None:
         assert MODELO_200_2025.ruleset_id == "modelo_200.2025"
         assert MODELO_200_2025.effective_from == date(2025, 1, 1)
@@ -92,7 +101,7 @@ class TestModelo200Ruleset2025:
     ],
 )
 def test_tax_rate_split_examples_2025(base: Decimal, rate: Decimal, label: str) -> None:
-    """LIS art. 29 rate examples are verified through casilla 00558."""
+    """Verify LIS art. 29 rate examples through casilla 00558."""
     del label
     provided = _provided(
         base=base,
@@ -142,7 +151,7 @@ def test_computed_casillas_are_cent_exact_2025(
     provided: dict[str, Decimal],
     expected: dict[str, Decimal],
 ) -> None:
-    """Three anchored cases exercise every computed M200 casilla."""
+    """Exercise every computed M200 2025 casilla with three anchored cases."""
     report = Engine().audit_against(ruleset=MODELO_200_2025, provided=provided, tolerance=Decimal("0.01"))
     assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
     ledger = {entry.casilla_id: entry.value for entry in report.ledger.entries}

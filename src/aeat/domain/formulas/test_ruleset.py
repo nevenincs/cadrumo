@@ -1,4 +1,9 @@
-"""Tests for :class:`Ruleset` structural invariants."""
+"""Tests for :class:`aeat.domain.formulas._ruleset.Ruleset` structural invariants.
+
+Covers casilla-reference validation, evaluation-order acyclicity,
+parameter-table resolution, and end-to-end loading of a shipped
+ruleset.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +21,7 @@ from ..casillas import CasillaDataType
 from ..modelos import LegalCitation, LegalCitationSource, ModeloCode
 from ._casilla import CasillaDefinition
 from ._formula import (
-    CasillaRef,
+    FormulaCasillaRef,
     FormulaDefinition,
     Literal,
     ParamRef,
@@ -65,8 +70,8 @@ def test_dangling_casilla_ref_raises() -> None:
     """A formula referencing an undeclared casilla raises CasillaNotDefinedError."""
     body = SubFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="01"),
-            CasillaRef(casilla_id="99"),
+            FormulaCasillaRef(casilla_id="01"),
+            FormulaCasillaRef(casilla_id="99"),
         )
     )
     with pytest.raises(CasillaNotDefinedError):
@@ -93,7 +98,7 @@ def test_cycle_raises_formula_cycle_error() -> None:
     """A self-referential formula raises FormulaCycleError."""
     body = SubFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="03"),
+            FormulaCasillaRef(casilla_id="03"),
             Literal(value=Decimal("1")),
         )
     )
@@ -119,7 +124,7 @@ def test_formula_bound_to_non_computed_casilla_raises() -> None:
     """Formulas must target a casilla flagged ``computed=True``."""
     body = SubFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="01"),
+            FormulaCasillaRef(casilla_id="01"),
             Literal(value=Decimal("1")),
         )
     )

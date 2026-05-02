@@ -1,9 +1,10 @@
 """Modelo 115 ruleset covering the full 2026 fiscal year.
 
-Structurally identical to :mod:`modelo_115_2024` and
-:mod:`modelo_115_2025` — RIRPF art. 100 (RD 439/2007) was not
-amended for 2025 or 2026. The BOE consolidated text last update
-2026-02-28 carries the verbatim statute:
+Structurally identical to
+:mod:`aeat.domain.formulas._rulesets.modelo_115_2024` and
+:mod:`aeat.domain.formulas._rulesets.modelo_115_2025`: RIRPF art. 100
+(RD 439/2007) was not amended for 2025 or 2026. The BOE consolidated
+text carries the verbatim statute:
 
     Artículo 100. Importe de las retenciones sobre arrendamientos
     y subarrendamientos de inmuebles.
@@ -15,16 +16,13 @@ amended for 2025 or 2026. The BOE consolidated text last update
     conceptos que se satisfagan al arrendador, excluido el
     Impuesto sobre el Valor Añadido.
 
-The 19 % retention rate has been fixed since 2016. RD 253/2025
-(the only 2025 modification of RIRPF) touched art. 69
-(information obligations), not art. 100. The rule-delta manifest
-at ``.vault/reference/2026-115-rule-delta.md`` documents the
-2024 → 2025 → 2026 trail with BOE citations.
+The 19 % retention rate has been fixed since 2016. RD 253/2025 (the
+only 2025 modification of RIRPF) touched art. 69 (information
+obligations), not art. 100.
 
-Re-imports ``_CASILLAS``, ``_FORMULAS``, and ``_CITATIONS`` from
-the 2025 module — same convention as the 2024 ruleset — and
-declares only its own ``ParameterTable`` bound to the 2026
-effective range.
+Re-imports ``_CASILLAS``, ``_FORMULAS``, and ``_CITATIONS`` from the
+2025 module — same convention as the 2024 ruleset — and declares only
+its own ``ParameterTable`` bound to the 2026 effective range.
 """
 
 from __future__ import annotations
@@ -71,3 +69,11 @@ RULESET: Ruleset = Ruleset(
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS_2025,
 )
+"""Modelo 115 ruleset for ejercicio 2026.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` re-using the casillas,
+formulas and citations from
+:mod:`aeat.domain.formulas._rulesets.modelo_115_2025` with a 2026
+``ParameterTable`` and ``effective_from`` / ``effective_to`` window.
+Re-exported as :data:`aeat.domain.formulas._rulesets.MODELO_115_2026`.
+"""

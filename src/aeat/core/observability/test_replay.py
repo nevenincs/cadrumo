@@ -1,4 +1,24 @@
-"""Tests for deterministic read-only replay and its refusal modes."""
+"""Tests for :func:`aeat.core.observability.replay_run` and its refusal modes.
+
+Covers:
+
+* Clean round-trip replay against an unchanged corpus.
+* Refusal on corpus drift via :exc:`AeatCorpusDriftError` (with an
+  ASCII-ellipsis assertion so Windows cp1252 consoles can render the
+  diagnostic).
+* Refusal on traces captured with a removed live-write flag.
+* End-to-end ``replay_of`` propagation via the
+  ``AEAT_REPLAY_ACTIVE`` env var, and the matching
+  non-canonical-value sanitisation.
+* End-to-end CLI replay of a wrapped command with a boolean ``--json``
+  flag (the recorded argv must round-trip without the bare flag form
+  causing Typer to choke on ``=True``).
+* :func:`compute_corpus_sha256` env-file sensitivity (post-startup
+  ``env/.env`` edits must change the corpus fingerprint even when the
+  loaded :class:`Settings` snapshot is unchanged).
+* argv reconstruction edge cases for positional, boolean, leading-dash,
+  cli-flag-override, and ENV/DEFAULT-source arguments.
+"""
 
 from __future__ import annotations
 
@@ -65,8 +85,8 @@ class TestReplayRun:
         assert excinfo.value.run_id == trace.run_id
         assert excinfo.value.recorded == "0" * 64
         assert excinfo.value.observed != "0" * 64
-        # S4: error message uses ASCII ellipsis so Windows cp1252
-        # consoles can encode it without errors="replace".
+        # ASCII ellipsis only — Windows cp1252 consoles can encode it
+        # without errors="replace".
         message = str(excinfo.value)
         assert "…" not in message, "error message must not use unicode ellipsis"
         assert "..." in message
@@ -102,7 +122,7 @@ class TestReplayRun:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """S7: the re-entered run_context must label its trace with replay_of."""
+        """The re-entered run context must label its trace with ``replay_of``."""
         import os
 
         from ..config import PROJECT_ROOT as _PROJECT_ROOT
@@ -184,10 +204,12 @@ class TestReplayRun:
 
 
 class TestReplayEndToEndBooleanFlag:
-    """NEW-1: end-to-end replay of a wrapped command with a bool flag.
+    """End-to-end replay of a wrapped command with a boolean flag.
 
     A replay that reconstructs argv from a recorded trace must not
-    blow up when the trace contains a ``--json=True``-style boolean.
+    blow up when the trace contains a ``--json=True``-style boolean —
+    Typer rejects ``=value`` for value-less flags, so the argv builder
+    has to emit the bare ``--json`` form instead.
     """
 
     def test_replay_of_workflow_list_json(
@@ -226,11 +248,11 @@ class TestReplayEndToEndBooleanFlag:
 
 
 class TestEnvFileFingerprint:
-    """B1: corpus_sha256 must fold the on-disk ``env/.env`` bytes.
+    """``corpus_sha256`` must fold the on-disk ``env/.env`` bytes.
 
-    Without this, operator edits to ``.env`` between record and
-    replay that aren't yet reflected in the loaded ``Settings()``
-    silently evade the drift gate.
+    Without this, operator edits to ``.env`` between record and replay
+    that are not yet reflected in the loaded :class:`Settings`
+    snapshot would silently evade the drift gate.
     """
 
     def test_env_file_change_changes_corpus_hash(
@@ -293,7 +315,7 @@ class TestArgvReconstruction:
             ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
         )
         argv = _argv_from_arguments("aeat filing submit", args)
-        # NEW-1: boolean True → bare flag (no =True), because value-less
+        # Boolean True renders as a bare flag (no =True); value-less
         # Typer Option flags reject the =value form.
         assert argv == ["filing", "submit", "130", "2026Q1", "--force"]
 
@@ -304,10 +326,10 @@ class TestArgvReconstruction:
         assert argv == ["workflow", "list", "--as-json"]
 
     def test_boolean_false_flag_is_skipped(self) -> None:
-        """NEW-1: boolean False flags must not be re-emitted.
+        """Boolean ``False`` flags must not be re-emitted on replay.
 
         Replaying ``--unread=False`` as a literal would both fail to
-        parse (Typer options don't take ``=False``) and contradict the
+        parse (Typer options don't take ``=False``) and contradict
         user intent — the user did not pass the flag.
         """
         args = (
@@ -318,19 +340,19 @@ class TestArgvReconstruction:
         assert argv == ["inbox", "list", "--modelo=130"], f"False bool must be skipped; got {argv}"
 
     def test_boolean_true_flag_uses_bare_form(self) -> None:
-        """NEW-1: bare flag form required for value-less boolean options."""
+        """Bare-flag form is required when the option is a value-less boolean."""
         args = (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),)
         argv = _argv_from_arguments("aeat workflow show", args)
         assert argv == ["workflow", "show", "--json"]
 
     def test_cli_flag_override_wins_over_name_derivation(self) -> None:
-        """NEW-1: ``cli_flag`` on ArgumentRecord overrides the name-derived flag.
+        """:attr:`ArgumentRecord.cli_flag` overrides the name-derived flag.
 
         When a wrapped command's Python parameter name differs from
         the Typer flag (``as_json: bool = typer.Option(False, "--json")``)
         the caller sets ``flag_map={"as_json": "--json"}`` at record
         time; the replay must use the override, not the
-        ``--as-json`` that underscore→dash conversion would produce.
+        ``--as-json`` that underscore-to-dash conversion would produce.
         """
         args = (
             ArgumentRecord(

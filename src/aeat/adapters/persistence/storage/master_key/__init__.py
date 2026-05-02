@@ -1,6 +1,20 @@
-"""Master-key substrate: providers, KDF migration, BIP-39 recovery.
+"""Master-key substrate: providers, KDF migration, and BIP-39 recovery.
 
-Bucket boundary established by audit-4 in the aeat-restructure ADR.
+Public surface for the at-rest master-key plumbing. Re-exports the
+provider hierarchy (:class:`MasterKeyProvider`,
+:class:`KeyringMasterKeyProvider`, :class:`FileFallbackMasterKeyProvider`,
+:class:`UnsecuredMasterKeyProvider`, :class:`EphemeralMasterKeyProvider`),
+the :func:`get_master_key_provider` resolver, the KDF
+migration entry points (:func:`migrate_master_key_kdf`,
+:class:`MigrationResult`), the unsecured-provider safety guard
+(:func:`refuse_unsecured_with_real_nif`,
+:func:`looks_like_real_tax_id`), the :func:`atomic_write_secure_bytes`
+helper, and the BIP-39 recovery primitives
+(:class:`RecoveryKey`, :class:`WrappedMasterKey`,
+:func:`generate_recovery_key`, :func:`encode_mnemonic`,
+:func:`decode_mnemonic`, :func:`wrap_master_key`,
+:func:`unwrap_master_key`, :func:`save_wrapped_master_key`,
+:func:`load_wrapped_master_key`).
 """
 
 from __future__ import annotations

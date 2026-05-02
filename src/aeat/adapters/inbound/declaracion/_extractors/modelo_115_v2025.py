@@ -1,19 +1,16 @@
-"""Modelo 115 declaración extractor (v2024 / v2025 / v2026 layouts).
+"""Modelo 115 declaración extractor for the v2024, v2025, and v2026 layouts.
 
-Modelo 115 is the quarterly withholdings form for rent paid on
-urban real estate (typically office or commercial premises).
-Small form — six casillas covering nº de arrendadores, base de
-retención, retención (19 % of base per RIRPF art. 100 ¶ 1),
-ingresos a cuenta, pérdidas anteriores, resultado.
+Modelo 115 is the quarterly withholdings form for rent paid on urban real
+estate (typically office or commercial premises). Six casillas cover nº de
+arrendadores, base de retención, retención (19 % of base per RIRPF art. 100 ¶
+1), ingresos a cuenta, pérdidas anteriores, and resultado.
 
-Issue #319 (Tier-L per-modelo calc-verify-roundtrip): the AEAT
-Modelo 115 form layout is unchanged across 2024 → 2025 → 2026
-(RIRPF art. 100 not amended; consolidated text last update
-2026-02-28). A single extraction implementation backs three thin
-per-year subclasses pinning their own ``template_revision``
-ClassVar — the same pattern issue #321 established for Modelo 130.
-The extraction logic lives on :class:`Modelo115V2025Extractor`'s
-inherited :meth:`GenericDeclaracionExtractor.extract` method.
+The AEAT form layout is unchanged across 2024, 2025, and 2026 because RIRPF
+art. 100 has not been amended. A single extraction implementation therefore
+backs three thin per-year subclasses that each pin their own
+``template_revision`` ClassVar. The extraction logic lives on
+:meth:`GenericDeclaracionExtractor.extract`, inherited by
+:class:`Modelo115V2025Extractor` and its 2024 / 2026 siblings.
 """
 
 from __future__ import annotations
@@ -32,7 +29,7 @@ class Modelo115V2025Extractor(GenericDeclaracionExtractor):
         año=2025,
         revision="2025.01",
     )
-    # Labels verified vs AEAT Instrucciones Modelo 115 (/49 H5).
+    # Labels verified vs AEAT Instrucciones Modelo 115.
     casilla_ids: ClassVar[tuple[str, ...]] = (
         "01",  # nº de arrendadores
         "02",  # base de retención
@@ -46,13 +43,11 @@ class Modelo115V2025Extractor(GenericDeclaracionExtractor):
 class Modelo115V2024Extractor(Modelo115V2025Extractor):
     """Modelo 115 v2024 extractor — same layout as v2025 / v2026.
 
-    Issue #319: the AEAT Modelo 115 form layout is unchanged
-    across 2024 → 2025 → 2026 (RIRPF art. 100 not amended;
-    consolidated text last update 2026-02-28). This subclass
-    inherits the full
-    :meth:`GenericDeclaracionExtractor.extract` implementation
-    via :class:`Modelo115V2025Extractor` and pins only the
-    ``template_revision`` ClassVar so the registry resolves
+    The AEAT Modelo 115 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 100 not amended). This subclass
+    inherits the full :meth:`GenericDeclaracionExtractor.extract`
+    implementation via :class:`Modelo115V2025Extractor` and pins
+    only the ``template_revision`` ClassVar so the registry resolves
     ``(modelo="115", año=2024, revision="2024.01")`` to a working
     extractor.
     """
@@ -67,13 +62,11 @@ class Modelo115V2024Extractor(Modelo115V2025Extractor):
 class Modelo115V2026Extractor(Modelo115V2025Extractor):
     """Modelo 115 v2026 extractor — same layout as v2024 / v2025.
 
-    Issue #319: the AEAT Modelo 115 form layout is unchanged
-    across 2024 → 2025 → 2026 (RIRPF art. 100 not amended;
-    consolidated text last update 2026-02-28). This subclass
-    inherits the full
-    :meth:`GenericDeclaracionExtractor.extract` implementation
-    via :class:`Modelo115V2025Extractor` and pins only the
-    ``template_revision`` ClassVar so the registry resolves
+    The AEAT Modelo 115 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 100 not amended). This subclass
+    inherits the full :meth:`GenericDeclaracionExtractor.extract`
+    implementation via :class:`Modelo115V2025Extractor` and pins
+    only the ``template_revision`` ClassVar so the registry resolves
     ``(modelo="115", año=2026, revision="2026.01")`` to a working
     extractor.
     """

@@ -1,9 +1,9 @@
 """Modelo 100 (IRPF / Renta) summary-block ruleset — año 2025 MVP.
 
-Scope: the ~5 top-level derivations every Renta artefact's summary
+Covers the five top-level derivations every Renta artefact's summary
 prints. Full anexo coverage (A-N conditional sections, transitorias,
-deducciones autonómicas by comunidad) is tracked for sub-EPIC
-#305-F-full.
+deducciones autonómicas by comunidad) lives in the canonical
+:mod:`aeat.domain.formulas._rulesets.modelo_100_2025` ruleset.
 
 Derivations:
 
@@ -14,19 +14,15 @@ Derivations:
   (autonómicas).
 - ``0698`` (cuota líquida) = ``0595`` - ``0630``, clamped ≥ 0.
 - ``0720`` (cuota resultante) = ``0698`` - ``0699`` - ``0700``.
-- ``0721`` (resultado a ingresar / a devolver) = ``0720`` (MVP
-  equivalence — full ruleset later factors in ingresos / devoluciones
-  indebidas from previous autoliquidaciones complementarias).
 
-Parameters: no tax-rate parameters in MVP — the cuota íntegra is taken
-as input from the PDF (AEAT's tarifa progresiva applies at the
+Parameters: no tax-rate parameters in this MVP — the cuota íntegra is
+taken as input from the PDF (AEAT's tarifa progresiva applies at the
 base-liquidable level, out of summary-block scope).
 
-Citations: Ley 35/2006 (IRPF) — base norma (liquidación is in
-LIRPF arts. 62-80); RD 439/2007 (RIRPF) covers retenciones
-(arts. 74-101) and pagos fraccionados (arts. 109-112) — NOT
-liquidación. Cluster-F-full will back every derivation with a
-specific article.
+Citations: Ley 35/2006 (IRPF) is the base norma; liquidación is in
+LIRPF arts. 62-80. RD 439/2007 (RIRPF) covers retenciones
+(arts. 74-101) and pagos fraccionados (arts. 109-112), NOT
+liquidación.
 """
 
 from __future__ import annotations
@@ -242,3 +238,10 @@ RULESET: Ruleset = Ruleset(
     parameters=ParameterTable(entries={}),
     legal_citations=_CITATIONS,
 )
+"""Summary-block Modelo 100 ruleset for ejercicio 2025.
+
+A :class:`aeat.domain.formulas._ruleset.Ruleset` carrying the cuota
+íntegra / deducciones / cuota líquida / cuota resultante chain only.
+Re-exported as
+:data:`aeat.domain.formulas._rulesets.MODELO_100_SUMMARY_2025`.
+"""

@@ -1,4 +1,10 @@
-"""Portal: Documentos pendientes de firma."""
+"""Registry entry for the documents-awaiting-signature portfolio (portafirmas).
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -25,3 +31,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Portafirmas: documentos en espera de firma electrónica del contribuyente.",
 )
+"""Portal entry for the portafirmas (documents awaiting electronic signature)."""

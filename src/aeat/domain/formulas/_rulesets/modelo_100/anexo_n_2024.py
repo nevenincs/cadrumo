@@ -1,8 +1,11 @@
-"""Modelo 100 Anexo N — deducciones autonómicas (ejercicio 2024).
+"""Define the Modelo 100 Anexo N ruleset for the 2024 ejercicio.
 
-Per LIRPF art. 46 bis + Ley 22/2009 (cesión de tributos), each CCAA
-sets its own deductions. Inherits CASILLAS + CITATIONS from the 2025
-reference; year-scoped FORMULAS + effective dates declared here.
+Per LIRPF art. 46 bis and Ley 22/2009 (cesión de tributos) each CCAA
+sets its own deductions. The structural surface is inherited from
+:mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_n_2025` — that
+module defines :data:`CASILLAS` and :data:`CITATIONS`. Only the
+year-scoped :data:`FORMULAS` and effective-date constants are
+redeclared here.
 """
 
 from __future__ import annotations
@@ -14,7 +17,10 @@ from .._common import add_op, formula, ref
 from .anexo_n_2025 import CASILLAS, CITATIONS
 
 EFFECTIVE_FROM = date(2024, 1, 1)
+"""First day of the ejercicio in which this Anexo N ruleset applies."""
+
 EFFECTIVE_TO = date(2024, 12, 31)
+"""Last day of the ejercicio in which this Anexo N ruleset applies."""
 
 
 _CCAA_REFS = tuple(
@@ -46,9 +52,11 @@ FORMULAS = (
         body=add_op(*_CCAA_REFS),
     ),
 )
+"""Engine formula bindings for the 2024 Anexo N computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo N declares no parametric tables."""
 
 
 __all__ = [

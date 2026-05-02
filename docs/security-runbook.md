@@ -243,12 +243,12 @@ but at the cost of wall-clock latency. For a clean operator
 experience, stop the substrate before running any of these
 commands.
 
-## Trilingual error surfaces
+## Quadlingual error surfaces
 
-Every error raised by these commands carries an `aeat.errors`
+Every error raised by these commands carries an `aeat.core.errors`
 registry code (e.g. `AUTH_STORAGE_MASTER_KEY_KDF_VERSION`,
-`INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER`) with es / en / hu
-messages. The CLI's error envelope renders the message in the
+`INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER`) with es / en / ca / hu
+messages through the project language contract. The CLI's error envelope renders the message in the
 configured language (`AEAT_OUTPUT_LANGUAGE`).
 
 ## See also

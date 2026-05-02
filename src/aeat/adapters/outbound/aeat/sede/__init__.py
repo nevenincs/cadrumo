@@ -1,7 +1,7 @@
-"""Read-only driver for the authenticated AEAT sede electrónica (#239).
+"""Read-only driver for the authenticated AEAT sede electrónica.
 
 This subpackage models the real post-auth AEAT surface as observed
-live on 2026-04-24 against Kent's production sede. Every record shape,
+live against the operator's production sede. Every record shape,
 URL template, and selector is derived from captured ground truth —
 there is no speculative scaffolding.
 
@@ -60,7 +60,7 @@ Navigation flow, captured live:
 4. The raw PDF body is served at
    ``/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=<csv>`` and must be
    fetched via :class:`APIRequestContext` — browser ``goto`` wraps
-   the response in Chrome's PDF viewer stub.
+   the response in Chrome's PDF viewer shell.
 """
 
 from __future__ import annotations

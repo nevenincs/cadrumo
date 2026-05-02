@@ -1,24 +1,23 @@
-"""Cross-artifact consistency: the 303 casilla-gap story.
+"""Cross-artifact consistency: the Modelo 303 casilla-gap story.
 
-The "Modelo 303 2024 ruleset declares casillas that have no
-schema field" gap is recorded in three places:
+The "Modelo 303 2024 ruleset declares casillas that have no schema
+field" gap is recorded in three places:
 
-1. ``_EXPECTED_GAPS["303.2024"]`` in
+#. ``_EXPECTED_GAPS["303.2024"]`` in
    :mod:`.test_ruleset_schema_coverage` — the authoritative set.
-2. Provenance notes at
-   ``tests/fixtures/dr_specs/dr303e24.json`` ``source.notes`` —
-   the fixture-level explanation a reader reaches from the
-   generator output.
-3. The docstring + assertion-error messages of
+#. Provenance notes at
+   ``tests/fixtures/dr_specs/dr303e24.json`` (``source.notes``) — the
+   fixture-level explanation a reader reaches from the generator
+   output.
+#. The docstring and assertion-error messages of
    :mod:`.test_integration_kent_303_e2e` — the developer-facing
    description surfaced whenever the E2E test fails.
 
-When any one drifts (the authoritative set shrinks because a
-fixture regeneration closed a gap, or expands because a new
-ruleset casilla was added without schema backing), the other two
-can fall out of sync silently. all three as a
-single invariant so any consistent update has to touch the whole
-story.
+When any one drifts (the authoritative set shrinks because a fixture
+regeneration closed a gap, or expands because a new ruleset casilla
+was added without schema backing), the other two can fall out of sync
+silently. The tests here lock all three together so any consistent
+update has to touch the whole story.
 """
 
 from __future__ import annotations
@@ -44,6 +43,8 @@ _FIXTURE_PATH = (
 
 
 class TestGapStoryConsistency:
+    """Lock the three documented surfaces of the 303 gap-casilla story together."""
+
     def test_fixture_notes_mention_every_missing_casilla(self) -> None:
         """Every casilla in ``_EXPECTED_GAPS["303.2024"]`` must be named in
         the dr303e24.json source.notes field — the fixture is the surface
@@ -58,8 +59,8 @@ class TestGapStoryConsistency:
             )
 
     def test_fixture_notes_cite_sibling_tests(self) -> None:
-        """The fixture notes must mention / 114 and the coverage
-        test filename so a reader lands on the authoritative lock."""
+        """The fixture notes must mention the coverage test filename so a
+        reader lands on the authoritative lock."""
         doc = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
         notes = doc["source"].get("notes", "")
         # Must cite the coverage test by filename (or close match).
@@ -83,10 +84,11 @@ class TestGapStoryConsistency:
             )
 
     def test_generated_module_docstring_mirrors_fixture_notes(self) -> None:
-        """the generator embeds ``source.notes`` into the module
-        docstring. If someone updates the fixture without regenerating, the
-        module's docstring goes stale. Lock every gap casilla to also appear
-        in the generated module's docstring.
+        """The generator embeds ``source.notes`` into the module docstring.
+
+        If someone updates the fixture without regenerating, the module's
+        docstring goes stale. Lock every gap casilla to also appear in the
+        generated module's docstring.
         """
         from . import modelo_303_2024
 
@@ -112,10 +114,10 @@ class TestGapStoryConsistency:
         )
 
     def test_fixture_notes_include_suspect_slot_pointers(self) -> None:
-        """The fixture note's mislabeled-slot theory names three
-        _2-suffix CURRENCY slots as the suspected carriers of the missing
-        casillas. Lock those pointers so a future regeneration can't erase
-        the closure path without replacing the theory."""
+        """The fixture note's mislabeled-slot theory names three ``_2``-suffix
+        CURRENCY slots as the suspected carriers of the missing casillas. Lock
+        those pointers so a future regeneration cannot erase the closure path
+        without replacing the theory."""
         doc = json.loads(_FIXTURE_PATH.read_text(encoding="utf-8"))
         notes = doc["source"].get("notes", "")
         expected_pointers = re.findall(r"DP\d+_CAS\d+_2", notes)

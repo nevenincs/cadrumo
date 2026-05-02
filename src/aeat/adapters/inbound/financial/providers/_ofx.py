@@ -1,4 +1,14 @@
-"""OFX financial provider backed by `ofxparse`."""
+"""OFX financial provider backed by ``ofxparse``.
+
+Provides :class:`OfxProvider`, an
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+implementation that wraps ``ofxparse`` to ingest every account and
+statement block exposed by an OFX or QFX file. The
+:class:`_OfxAccountLike`, :class:`_OfxStatementLike` and
+:class:`_OfxTransactionLike` Protocol surfaces let the adapter type-
+check against the duck-typed objects ``ofxparse`` returns without
+introducing an extra dependency.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +19,7 @@ from typing import Protocol, cast
 
 from ofxparse import OfxParser
 
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
@@ -48,14 +58,21 @@ class _OfxAccountLike(Protocol):
 
 
 class OfxProvider(FinancialProvider):
-    """Ingest raw transactions from OFX and QFX files."""
+    """Ingest raw transactions from OFX and QFX files.
+
+    Multi-account OFX files emit transactions from every statement
+    block; the provider names the account in the synthetic
+    transaction id and copies the OFX-native fields
+    (``ACCTID``, ``TRNTYPE``, ``DTPOSTED``, ``TRNAMT``, ``FITID``,
+    ``NAME``, ``MEMO``) into ``raw_fields`` for downstream auditing.
+    """
 
     name = "OFX provider"
     supported_extensions = frozenset({".ofx", ".qfx"})
     source_format = SourceFormat.OFX
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that the OFX file can be parsed and contains transactions."""
+        """Validate that the OFX file can be parsed and carries at least one transaction."""
         try:
             accounts = self._load_accounts(path)
         except InvalidFinancialSourceError as exc:

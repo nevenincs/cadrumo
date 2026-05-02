@@ -46,7 +46,7 @@ def test_registry_closure_over_portal_enum() -> None:
 
 
 def test_registry_count_is_42() -> None:
-    """ADR §2: exactly 42 entries."""
+    """The registry holds exactly 42 entries."""
     assert len(PORTAL_REGISTRY) == 42
 
 
@@ -104,7 +104,7 @@ def test_get_portal_unknown_string_raises() -> None:
 
 
 def test_portals_for_modelo_scope_is_filing_and_borrador() -> None:
-    """``portals_for_modelo`` returns FILING / BORRADOR only (ADR §6)."""
+    """``portals_for_modelo`` returns FILING / BORRADOR only — CENSUS is excluded."""
     entries = portals_for_modelo(ModeloCode.MODELO_303)
     categories = {e.category for e in entries}
     assert categories == {PortalCategory.FILING, PortalCategory.BORRADOR}
@@ -143,7 +143,7 @@ def test_portals_by_category_auth_is_sorted() -> None:
 
 
 def test_portals_by_category_counts_match_adr() -> None:
-    """Per-category counts match the ADR §2 breakdown."""
+    """Per-category counts match the canonical breakdown."""
     assert len(portals_by_category(PortalCategory.AUTH)) == 8
     assert len(portals_by_category(PortalCategory.FILING)) == 19
     assert len(portals_by_category(PortalCategory.CENSUS)) == 2

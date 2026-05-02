@@ -1,4 +1,10 @@
-"""Unit tests for :func:`aeat.domain.vat.classify_vat` (#183)."""
+"""Unit tests for :func:`aeat.domain.vat.classify_vat`.
+
+Walks every closed-table rule (R01 through R30) plus the R99 fallthrough,
+verifies the cross-field ``rate_tier`` requirements on
+:class:`aeat.domain.vat.VATClassificationCriteria`, and checks that rate
+resolution honours the transaction date.
+"""
 
 from __future__ import annotations
 
@@ -24,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _criteria(**overrides: object) -> VATClassificationCriteria:
-    """Build a baseline ES-to-ES B2B goods ISSUED criteria with overrides."""
+    """Build a baseline ES-to-ES B2B goods ISSUED criteria with ``overrides`` applied."""
     base: dict[str, object] = {
         "transaction_date": date(2025, 6, 15),
         "issuer_residency": IssuerResidency.ES_MAINLAND,

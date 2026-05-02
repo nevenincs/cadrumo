@@ -5,10 +5,9 @@ from __future__ import annotations
 import pytest
 
 from .....core.errors import AeatError
+from .....domain.submission import SubmissionError, SubmissionPreflightError
 from . import (
     LiveSubmitForbiddenError,
-    SubmissionError,
-    SubmissionPreflightError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
@@ -21,6 +20,22 @@ def test_every_error_inherits_aeat_error() -> None:
         SubmissionPreflightError,
     ):
         assert issubclass(exc_cls, AeatError)
+
+
+def test_export_errors_are_canonical_access_gate_errors() -> None:
+    from .....core.access_gate import (
+        LiveSubmitForbiddenError as CoreLiveSubmitForbiddenError,
+    )
+    from .....domain.submission import (
+        SubmissionError as DomainSubmissionError,
+    )
+    from .....domain.submission import (
+        SubmissionPreflightError as DomainSubmissionPreflightError,
+    )
+
+    assert LiveSubmitForbiddenError is CoreLiveSubmitForbiddenError
+    assert SubmissionError is DomainSubmissionError
+    assert SubmissionPreflightError is DomainSubmissionPreflightError
 
 
 def test_translatable_message_preserved() -> None:
@@ -36,6 +51,6 @@ def test_translatable_message_preserved() -> None:
     assert str(exc) == "draft not ready"
 
 
-def test_subclasses_catchable_as_submission_error() -> None:
+def test_preflight_catchable_as_submission_error() -> None:
     with pytest.raises(SubmissionError):
-        raise LiveSubmitForbiddenError()
+        raise SubmissionPreflightError("draft not ready")

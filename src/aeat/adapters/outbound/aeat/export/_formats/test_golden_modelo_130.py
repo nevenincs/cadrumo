@@ -1,14 +1,14 @@
 """Golden-fixture byte-exactness tests for Modelo 130.
 
-These tests pin the full 880-byte serialiser output for a known-good
-Kent filing scenario. Any future change to the schema, encoder, or
-serialiser that alters a single byte will fail this test immediately.
+Pin the full 880-byte serialiser output for a known-good Kent filing
+scenario. Any future change to the schema, encoder, or serialiser
+that alters a single byte fails this test immediately.
 
-The SHA256 digest is the audit-trail anchor: a future wave that
-genuinely needs to change the byte layout (e.g., + offset
-correction after a manual AEAT portal-upload test) must update
-this file AND document the reason in the commit message. A stray
-byte shift should NEVER pass silently.
+The SHA256 digest is the audit-trail anchor: a change that genuinely
+needs to alter the byte layout (for example an offset correction
+after a manual AEAT portal-upload test) must update this file AND
+document the reason in the commit message. A stray byte shift must
+never pass silently.
 """
 
 from __future__ import annotations
@@ -52,8 +52,8 @@ class TestModelo1302024GoldenKentQ1:
         """Golden digest — DO NOT change without documented intent.
 
         A byte-layout change that alters this digest is a decision,
-        not an accident. The commit message must name which offset /
-        encoder / field changed and why.
+        not an accident. The commit message must name which offset,
+        encoder, or field changed and why.
         """
         payload = self._serialise_kent_q1()
         expected = "fb5fd7955a2265d0cf6b1bcb31b8ceee52aeea75297d8de98d8b649cbd479494"
@@ -62,7 +62,7 @@ class TestModelo1302024GoldenKentQ1:
             f"byte-layout drift detected!\n"
             f"  expected SHA256: {expected}\n"
             f"  actual   SHA256: {actual}\n"
-            f"If the change is intentional (wave-Nx offset correction),\n"
+            f"If the change is intentional (offset correction),\n"
             f"update the `expected` literal above AND document the\n"
             f"reason in the commit message."
         )

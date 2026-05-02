@@ -1,4 +1,10 @@
-"""Persistence tests for encrypted asset ledgers."""
+"""Persistence tests for the encrypted asset and amortization ledgers.
+
+Verifies that :mod:`aeat.adapters.persistence.profile.assets` round-trips
+records through encrypted FINANCIAL-class envelopes (no plaintext leakage),
+that amortization is persisted to a real ledger, and that recording is
+idempotent for an already-amortized year.
+"""
 
 from __future__ import annotations
 

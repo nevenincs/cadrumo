@@ -1,4 +1,10 @@
-"""Portal: Pago de autoliquidaciones en cuenta corriente."""
+"""Registry entry for self-assessment payment via bank-account direct debit (NRC).
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Pago de autoliquidaciones con cargo en cuenta bancaria generando NRC.",
 )
+"""Portal entry for self-assessment payment via bank account (NRC issuance)."""

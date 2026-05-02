@@ -5,10 +5,10 @@ leave off: validates ADC + scope set + API enablement, then idempotently
 creates the ``aeat-scratch`` Drive folder, Sheet, and Doc (if they do
 not already exist), and writes their IDs back into ``env/.env``.
 
-The command is safe to re-run. The first run creates the resources; the
-second discovers them by name and rewrites the same IDs. The
-name-based dedup uses ``trashed=false`` so a deleted scratch folder is
-re-created cleanly on next run.
+The :func:`bootstrap` command is safe to re-run. The first run creates
+the resources; the second discovers them by name and rewrites the same
+IDs. The name-based dedup uses ``trashed=false`` so a deleted scratch
+folder is re-created cleanly on next run.
 """
 
 from __future__ import annotations
@@ -20,18 +20,36 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from ._i18n import t, tr
+
 SCRATCH_FOLDER_NAME = "aeat-scratch"
+"""Drive folder name used as the parent for all scratch resources."""
+
 SCRATCH_SHEET_NAME = "aeat-scratch-sheet"
+"""Spreadsheet name created inside :data:`SCRATCH_FOLDER_NAME`."""
+
 SCRATCH_DOC_NAME = "aeat-scratch-doc"
+"""Document name created inside :data:`SCRATCH_FOLDER_NAME`."""
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
+"""Drive MIME type for a regular folder."""
+
 SHEET_MIME = "application/vnd.google-apps.spreadsheet"
+"""Drive MIME type for a Google Sheets spreadsheet."""
+
 DOC_MIME = "application/vnd.google-apps.document"
+"""Drive MIME type for a Google Docs document."""
 
 
 @dataclass(frozen=True)
 class ScratchResources:
-    """The IDs of the three scratch resources after bootstrap."""
+    """The IDs of the three scratch resources after bootstrap.
+
+    Attributes:
+        folder_id: Drive ID of the parent ``aeat-scratch`` folder.
+        sheet_id: Drive ID of the scratch spreadsheet.
+        doc_id: Drive ID of the scratch document.
+    """
 
     folder_id: str
     sheet_id: str
@@ -136,7 +154,19 @@ def _persist_ids(resources: ScratchResources) -> None:
 
 
 def bootstrap() -> None:
-    """Provision the scratch resource set, persist IDs, print a summary."""
+    """Provision the scratch resource set, persist IDs, print a summary.
+
+    Walks the full bootstrap path: validate ADC + scopes, locate or
+    create the scratch folder, then create the matching Sheet and Doc
+    inside it. Persisted IDs land in ``env/.env`` via
+    :func:`aeat.core.env_io.write_env_vars`.
+
+    Raises:
+        typer.Exit: With code ``1`` when ``GOOGLE_CLOUD_PROJECT`` is
+            unset or ADC is unavailable; with code ``2`` when the
+            backing credentials cannot own Drive files (typical for
+            consumer-tenant service accounts without storage quota).
+    """
     # Local imports keep the CLI startup path light when only --help is used.
     from ...adapters.outbound.google import (
         REQUIRED_ADC_SCOPES,
@@ -149,14 +179,45 @@ def bootstrap() -> None:
     settings = Settings()
 
     if not settings.google_cloud_project:
-        console.print("[red]bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env[/]")
+        console.print(
+            "[red]"
+            + tr(
+                t(
+                    "bootstrap: GOOGLE_CLOUD_PROJECT está vacío en env/.env",
+                    "bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env",
+                    "bootstrap: GOOGLE_CLOUD_PROJECT és buit a env/.env",
+                    "bootstrap: GOOGLE_CLOUD_PROJECT üres a env/.env-ben",
+                )
+            )
+            + "[/]"
+        )
         raise typer.Exit(code=1)
 
     try:
         creds = get_credentials_for_scopes(REQUIRED_ADC_SCOPES)
     except Exception as exc:
-        console.print(f"[red]bootstrap: credentials unavailable: {exc}[/]")
-        console.print("Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.")
+        console.print(
+            "[red]"
+            + tr(
+                t(
+                    f"bootstrap: credenciales no disponibles: {exc}",
+                    f"bootstrap: credentials unavailable: {exc}",
+                    f"bootstrap: credencials no disponibles: {exc}",
+                    f"bootstrap: hitelesito adatok nem elerhetok: {exc}",
+                )
+            )
+            + "[/]"
+        )
+        console.print(
+            tr(
+                t(
+                    "Configura GOOGLE_APPLICATION_CREDENTIALS o ejecuta `just gcloud-auth`.",
+                    "Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.",
+                    "Configura GOOGLE_APPLICATION_CREDENTIALS o executa `just gcloud-auth`.",
+                    "Állítsd be a GOOGLE_APPLICATION_CREDENTIALS-t vagy futtasd: `just gcloud-auth`.",
+                )
+            )
+        )
         raise typer.Exit(code=1) from exc
 
     drive = build_drive_service(creds)
@@ -168,15 +229,46 @@ def bootstrap() -> None:
     except Exception as exc:
         text = repr(exc).lower()
         if "storagequotaexceeded" in text or "storage quota" in text:
-            console.print("[yellow]bootstrap: cannot create Drive resources under the active credentials.[/]")
             console.print(
-                "Service accounts on consumer (non-Workspace) Google accounts have zero "
-                "Drive storage quota and cannot own Drive files."
+                "[yellow]"
+                + tr(
+                    t(
+                        "bootstrap: no se pueden crear recursos de Drive con las credenciales activas.",
+                        "bootstrap: cannot create Drive resources under the active credentials.",
+                        "bootstrap: no es poden crear recursos de Drive amb les credencials actives.",
+                        "bootstrap: nem lehet Drive erőforrásokat létrehozni az aktív hitelesito adatokkal.",
+                    )
+                )
+                + "[/]"
             )
             console.print(
-                "Run `aeat oauth-client init` to create an OAuth Desktop client + "
-                "`just gcloud-auth`, or operate from a Google Workspace tenant where "
-                "the SA can own files in a Shared Drive."
+                tr(
+                    t(
+                        "Las cuentas de servicio en cuentas Google de consumo (no Workspace) tienen cuota cero "
+                        "de almacenamiento en Drive y no pueden ser propietarias de archivos.",
+                        "Service accounts on consumer (non-Workspace) Google accounts have zero "
+                        "Drive storage quota and cannot own Drive files.",
+                        "Els comptes de servei en comptes Google de consum (no Workspace) tenen quota zero "
+                        "d'emmagatzematge a Drive i no poden ser propietaris de fitxers.",
+                        "A fogyasztoi (nem Workspace) Google fiokokon a szolgaltatasi fiokoknak nulla a Drive tárhelykvótája, es nem birtokolhatnak Drive fajlokat.",
+                    )
+                )
+            )
+            console.print(
+                tr(
+                    t(
+                        "Ejecuta `aeat oauth-client init` para crear un cliente OAuth Desktop + "
+                        "`just gcloud-auth`, u opera desde un tenant Google Workspace donde "
+                        "la SA pueda ser propietaria en una unidad compartida.",
+                        "Run `aeat oauth-client init` to create an OAuth Desktop client + "
+                        "`just gcloud-auth`, or operate from a Google Workspace tenant where "
+                        "the SA can own files in a Shared Drive.",
+                        "Executa `aeat oauth-client init` per crear un client OAuth Desktop + "
+                        "`just gcloud-auth`, o opera des d'un tenant Google Workspace on "
+                        "el SA pugui ser propietari en una unitat compartida.",
+                        "Futtasd: `aeat oauth-client init` egy OAuth Desktop kliens letrehozasahoz + `just gcloud-auth`, vagy használj Google Workspace tenantot, ahol az SA tulajdonolhat fajlokat egy megosztott meghajtón.",
+                    )
+                )
             )
             raise typer.Exit(code=2) from exc
         raise
@@ -185,10 +277,33 @@ def bootstrap() -> None:
     _persist_ids(resources)
 
     table = Table(title="aeat bootstrap", show_lines=False, header_style="bold")
-    table.add_column("Resource", style="cyan")
-    table.add_column("ID", style="white", overflow="fold")
-    table.add_row("scratch folder", folder_id)
-    table.add_row("scratch sheet", sheet_id)
-    table.add_row("scratch doc", doc_id)
+    table.add_column(
+        tr(t("Recurso", "Resource", "Recurs", "Erőforrás")),
+        style="cyan",
+    )
+    table.add_column(tr(t("ID", "ID", "ID", "Azonosító")), style="white", overflow="fold")
+    table.add_row(
+        tr(t("carpeta scratch", "scratch folder", "carpeta scratch", "scratch mappa")),
+        folder_id,
+    )
+    table.add_row(
+        tr(t("hoja scratch", "scratch sheet", "full scratch", "scratch táblázat")),
+        sheet_id,
+    )
+    table.add_row(
+        tr(t("documento scratch", "scratch doc", "document scratch", "scratch dokumentum")),
+        doc_id,
+    )
     console.print(table)
-    console.print("[green]bootstrap: env/.env updated. Re-run `aeat doctor` to verify.[/]")
+    console.print(
+        "[green]"
+        + tr(
+            t(
+                "bootstrap: env/.env actualizado. Vuelve a ejecutar `aeat doctor` para verificar.",
+                "bootstrap: env/.env updated. Re-run `aeat doctor` to verify.",
+                "bootstrap: env/.env actualitzat. Torna a executar `aeat doctor` per verificar.",
+                "bootstrap: env/.env frissítve. Futtasd újra: `aeat doctor` az ellenorzeshez.",
+            )
+        )
+        + "[/]"
+    )

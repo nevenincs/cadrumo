@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.classification import SensitivityClass
+from ..errors import SecretNotFoundError
 from ..master_key import EphemeralMasterKeyProvider
 from ..secret_store import SecretRecord, SecretStore
 from . import EncryptedBlobStore
@@ -18,7 +19,6 @@ from ._materialisation import (
     materialise_secret,
     override_secret_store,
 )
-from ..errors import SecretNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

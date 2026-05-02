@@ -1,4 +1,11 @@
-"""End-to-end derivation tests for the Modelo 303 2025 ruleset (#183)."""
+"""End-to-end derivation tests for the Modelo 303 2025 ruleset.
+
+Exercises the full IVA derivation DAG of
+:data:`aeat.domain.formulas._rulesets.modelo_303_2025.RULESET`, including
+the LIVA arts. 90 / 91 rates, intra-Community + import contributions,
+state-attribution arithmetic on casilla 65, and the carry-over compensation
+through casilla 67.
+"""
 
 from __future__ import annotations
 
@@ -27,7 +34,7 @@ def test_all_zero_quarter() -> None:
 
 
 def test_general_only_quarter_missing_65_yields_zero_attribution() -> None:
-    """Base 07 = 10000 with 65 omitted => 66/69/71 collapse to 0.
+    """Base 07 = 10 000 with 65 omitted => 66 / 69 / 71 collapse to 0.
 
     The missing-input contract defaults 65 to ``Decimal('0')``;
     casilla 66 = 64 x 65 / 100 then resolves to 0. Downstream
@@ -180,10 +187,10 @@ def test_constant_rates_emerge_from_engine() -> None:
 
 
 def test_engine_round_trip_is_deterministic() -> None:
-    """M3 rename: this test proves engine determinism,
-    not formula correctness. Feeding derived values back in yields zero
-    discrepancies regardless of whether the formulas are right. See
-    ``test_external_worked_example_aeat_livA_rates`` below for the
+    """Engine determinism — feeding derived values back yields zero discrepancies.
+
+    Determinism is independent of whether the formulas are correct;
+    see :func:`test_external_worked_example_aeat_liva_rates` for the
     correctness test anchored to AEAT-published rates.
     """
     inputs = {
@@ -200,28 +207,31 @@ def test_engine_round_trip_is_deterministic() -> None:
 
 
 def test_external_worked_example_aeat_liva_rates() -> None:
-    """External-anchored worked example (closure).
+    """Externally-anchored worked example for AEAT LIVA arts. 90 / 91 rates.
 
     Provenance: Ley 37/1992 (LIVA) artículos 90 y 91 fix the IVA
-    rates at 21% general, 10% reducido, 4% superreducido. This
+    rates at 21 % general, 10 % reducido, 4 % superreducido. This
     fixture derives expected values from those rates independently
-    of the ruleset's `iva.rate_*` parameters — a rate-swap bug in
+    of the ruleset's ``iva.rate_*`` parameters — a rate-swap bug in
     the ruleset would surface as a Decimal mismatch.
 
-    Scenario: Kent's Q1 2025 autónomo filing with:
+    Scenario: a Q1 2025 autónomo filing with:
+
     - Base general (casilla 07): 20 000 €
     - Base reducido (casilla 04): 5 000 €
     - Base superreducido (casilla 01): 1 000 €
 
-    Per LIVA art. 90/91 (AEAT legal baseline, NOT the ruleset):
-    - Cuota general: 20 000 x 21% = 4 200 € (casilla 09).
-    - Cuota reducido: 5 000 x 10% = 500 € (casilla 06).
-    - Cuota superreducido: 1 000 x 4% = 40 € (casilla 03).
+    Per LIVA art. 90 / 91 (AEAT legal baseline, NOT the ruleset):
+
+    - Cuota general: 20 000 x 21 % = 4 200 € (casilla 09).
+    - Cuota reducido: 5 000 x 10 % = 500 € (casilla 06).
+    - Cuota superreducido: 1 000 x 4 % = 40 € (casilla 03).
 
     Citations:
-    - BOE-A-1992-28740 Ley 37/1992 art. 90 (tipo general 21%)
+
+    - BOE-A-1992-28740 Ley 37/1992 art. 90 (tipo general 21 %)
       https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90
-    - BOE-A-1992-28740 Ley 37/1992 art. 91 (reducido 10%, superreducido 4%)
+    - BOE-A-1992-28740 Ley 37/1992 art. 91 (reducido 10 %, superreducido 4 %)
       https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a91
     """
     engine = Engine()

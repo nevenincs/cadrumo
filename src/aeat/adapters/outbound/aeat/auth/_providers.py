@@ -2,7 +2,7 @@
 
 Provider-agnostic abstractions (``AuthProviderKind``, ``AuthProviderDescription``,
 ``AuthProvider`` protocol, ``describe_provider_operator_impact``)
-live in ``aeat.domain.auth``; this module holds concrete
+live in ``aeat.application.auth``; this module holds concrete
 per-provider detail models and the certificate browser-context provisioner.
 """
 
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....domain.auth import (
+from .....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,
@@ -46,14 +46,6 @@ class CertificateSessionDetail(BaseModel):
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
     handshake: HandshakeResult
-
-
-class ClavePermanenteSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve Permanente sessions."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
 
 
 class ClaveMovilSessionDetail(BaseModel):
@@ -89,14 +81,6 @@ class ClaveMovilSessionDetail(BaseModel):
     )
 
 
-class ClavePinSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve PIN sessions."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PIN] = AuthProviderKind.CLAVE_PIN
-
-
 class CertificateLoginAssertionDetail(BaseModel):
     """Certificate-backed verification details."""
 
@@ -106,14 +90,6 @@ class CertificateLoginAssertionDetail(BaseModel):
     handshake_success: bool
     certificate_recognised: bool
     parsed_subject: str | None = None
-
-
-class ClavePermanenteLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve Permanente."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
 
 
 class ClaveMovilLoginAssertionDetail(BaseModel):
@@ -141,24 +117,9 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
     )
 
 
-class ClavePinLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve PIN."""
+AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail
 
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PIN] = AuthProviderKind.CLAVE_PIN
-
-
-AuthSessionDetail = (
-    CertificateSessionDetail | ClavePermanenteSessionDetail | ClaveMovilSessionDetail | ClavePinSessionDetail
-)
-
-AuthLoginAssertionDetail = (
-    CertificateLoginAssertionDetail
-    | ClavePermanenteLoginAssertionDetail
-    | ClaveMovilLoginAssertionDetail
-    | ClavePinLoginAssertionDetail
-)
+AuthLoginAssertionDetail = CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail
 
 
 @runtime_checkable
@@ -233,10 +194,6 @@ __all__ = [
     "CertificateSessionDetail",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
-    "ClavePermanenteLoginAssertionDetail",
-    "ClavePermanenteSessionDetail",
-    "ClavePinLoginAssertionDetail",
-    "ClavePinSessionDetail",
     "describe_certificate_provider",
     "describe_provider_operator_impact",
 ]

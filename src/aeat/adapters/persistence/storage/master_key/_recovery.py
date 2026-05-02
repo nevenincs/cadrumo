@@ -15,13 +15,13 @@ fold:
    key, and the wrapped ciphertext is persisted as
    ``master.recovery.key``. When the active master-key provider
    becomes unavailable (forgotten passphrase, locked keychain,
-   broken keyring), the operator runs ``aeat security recover
-   --recovery-key "<24 words>"`` and the substrate uses the
-   wrapping to mint a fresh ``master.key`` + ``master.kdf`` +
-   ``salt`` triplet under their chosen new backend.
+   broken keyring), operator key-management code supplies the
+   recovery mnemonic and the substrate uses the wrapping to mint a
+   fresh ``master.key`` + ``master.kdf`` + ``salt`` triplet under the
+   chosen new backend.
 
-This module exports the cryptographic primitives only. The CLI
-glue lives in :mod:`aeat.entrypoints.cli.security`.
+This module exports the cryptographic primitives only; command wiring
+must remain outside the storage substrate.
 
 The encoding follows BIP-39 (Bitcoin Improvement Proposal 0039)
 exactly — 256-bit entropy → 8-bit checksum → 24 11-bit words drawn

@@ -1,9 +1,10 @@
-"""Unit tests for :class:`SetupWizard` (#61).
+"""Unit tests for :class:`aeat.application.setup.SetupWizard`.
 
-Tests cover non-interactive happy path, verify-failure path, interactive
-collection through :class:`QueuedPrompter`, that every reachable
-:class:`SetupStep` lands in ``steps_completed``, and that the optional
-first-run runner is wired correctly.
+Tests cover the non-interactive happy path, the verify-failure path,
+interactive collection through :class:`QueuedPrompter`, that every
+reachable :class:`SetupStep` lands in
+:attr:`SetupResult.steps_completed`, and that the optional first-run
+runner is wired correctly.
 """
 
 from __future__ import annotations

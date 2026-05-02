@@ -1,6 +1,8 @@
-"""Unit tests for Modelo 100 Anexo B2 — capital mobiliario (2024).
+"""Cover Modelo 100 Anexo B2 (capital mobiliario) for the 2024 ejercicio.
 
-External-anchored to LIRPF arts. 25-26 + 101.4 + RIRPF art. 90.
+Worked examples are externally anchored to LIRPF arts. 25-26 and 101.4
+plus RIRPF art. 90 so the suite remains independent of the ruleset's
+own arithmetic.
 """
 
 from __future__ import annotations
@@ -16,6 +18,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo100AnexoB2:
+    """Audit Anexo B2 against the 2024 ruleset using LIRPF-derived anchors."""
+
     def test_consistent_filing_is_clean(self) -> None:
         """Worked example: dividendos 2.000 + intereses 800 = 2.800 ingresos
         íntegros; gastos administración 50; rendimiento neto previo 2.750;

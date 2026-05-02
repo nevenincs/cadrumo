@@ -1,8 +1,9 @@
-"""Unit tests for Modelo 100 Anexo D — actividades económicas (2024).
+"""Cover Modelo 100 Anexo D (actividades económicas) for the 2024 ejercicio.
 
-Covers the three régimenes (E.D. normal / E.D. simplificada / módulos)
-against the 2024 ruleset. External-anchored to LIRPF arts. 27-32 +
-LIS arts. 12-14 + 17 + RIRPF arts. 28 + 30 + 32.
+Exercises the three régimenes — E.D. normal, E.D. simplificada, and
+módulos — against the 2024 ruleset. Worked examples are externally
+anchored to LIRPF arts. 27-32, LIS arts. 12-14 and 17, and RIRPF arts.
+28, 30, and 32.
 """
 
 from __future__ import annotations
@@ -18,11 +19,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _baseline_zero_other_anexos() -> dict[str, Decimal]:
-    """Zero values for B1 / B2 / C plus all D casillas not under test.
+    """Return zero values for B1, B2, C, and every D casilla not under test.
 
     Casilla 0021 (LIRPF art. 20 reducción del trabajo) defaults to
-    0.00 € (post M-1 cap fix) since the engine derives it as zero
-    when 0001-0019 are all zero.
+    ``Decimal('0.00')`` because the engine, applying the cap
+    ``min(0020, max(piece_a, piece_b))``, derives zero when casillas
+    0001-0019 are all zero.
     """
     return {
         # Anexo B1.
@@ -79,6 +81,8 @@ def _baseline_zero_other_anexos() -> dict[str, Decimal]:
 
 
 class TestModelo100AnexoDNormal:
+    """Audit Anexo D régimen E.D. normal against the 2024 ruleset."""
+
     def test_consistent_p_and_l_is_clean(self) -> None:
         """Worked example E.D. normal: ingresos 80.000 - compras 20.000 -
         personal 25.000 - servicios 8.000 - amortización 3.000 -
@@ -151,6 +155,8 @@ class TestModelo100AnexoDNormal:
 
 
 class TestModelo100AnexoDSimplificada:
+    """Audit Anexo D régimen E.D. simplificada against the 2024 ruleset."""
+
     @pytest.mark.parametrize(
         ("ingresos", "gastos", "expected_pre_cap", "expected_dificil", "expected_neto"),
         [
@@ -215,6 +221,8 @@ class TestModelo100AnexoDSimplificada:
 
 
 class TestModelo100AnexoDModulos:
+    """Audit Anexo D régimen módulos against the 2024 ruleset."""
+
     def test_consistent_modulos_is_clean(self) -> None:
         """Caller supplies rendimiento neto previo módulos (0250) from the
         Orden HAC tabla per actividad. The ruleset only verifies the

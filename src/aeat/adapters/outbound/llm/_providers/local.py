@@ -1,4 +1,11 @@
-"""Local provider adapter for Ollama-compatible runtimes."""
+"""Local provider adapter for Ollama-compatible runtimes.
+
+Speaks the Ollama ``/api/chat`` endpoint exposed at
+:data:`_OLLAMA_API_URL` and adapts its response into the
+:class:`aeat.adapters.outbound.llm._providers.base.ProviderCompletion` shape.
+The adapter assumes the runtime is reachable on localhost; remote Ollama
+deployments are out of scope.
+"""
 
 from __future__ import annotations
 
@@ -10,15 +17,27 @@ from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 _OLLAMA_API_URL = "http://127.0.0.1:11434/api/chat"
+"""Ollama ``/api/chat`` endpoint targeted by :class:`LocalAdapter`."""
 
 
 class _LocalMessage(BaseModel):
+    """Single message returned in an Ollama chat response."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     content: str
 
 
 class _LocalResponse(BaseModel):
+    """Top-level Ollama chat response envelope.
+
+    Attributes:
+        model: Model identifier reported by the runtime.
+        message: Generated message payload.
+        prompt_eval_count: Tokens evaluated for the prompt.
+        eval_count: Tokens evaluated for the generated output.
+    """
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     model: str
@@ -28,15 +47,34 @@ class _LocalResponse(BaseModel):
 
 
 class LocalAdapter(_ProviderAdapter):
-    """Execute requests against a local Ollama-compatible endpoint."""
+    """Provider adapter that invokes a local Ollama-compatible HTTP endpoint."""
 
     provider = LLMProvider.LOCAL
 
     def __init__(self, timeout_s: int) -> None:
+        """Initialize the adapter.
+
+        Args:
+            timeout_s: Per-request HTTP timeout in seconds.
+        """
         self._timeout_s = timeout_s
 
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
-        """Execute a completion request."""
+        """Execute a chat completion request against the local endpoint.
+
+        Args:
+            request: Normalized provider request.
+
+        Returns:
+            Normalized completion containing the trimmed assistant message
+            and reported token counts.
+
+        Raises:
+            :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: When the
+                runtime returns HTTP 429.
+            :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When the
+                runtime returns any other HTTP error status.
+        """
 
         messages: list[dict[str, str]] = []
         if request.system is not None:

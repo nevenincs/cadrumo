@@ -1,4 +1,10 @@
-"""Tests for the governed-persistence SubmissionRepository."""
+"""Tests for the governed-persistence :class:`SubmissionRepository`.
+
+Exercises :class:`aeat.domain.submission.SubmissionRepository`'s save,
+load, list, iter, and delete API; the per-submission lock isolation;
+the classification gate enforcement on the audit envelope; and the
+legacy-store migration helper.
+"""
 
 from __future__ import annotations
 
@@ -8,15 +14,6 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    LockAcquisitionError,
-    SecretStore,
-    override_master_key_provider,
-    override_secret_store,
-)
-from .errors import ClassificationError
 from ....domain.submission._models import (
     SubmissionAttempt,
     SubmissionStatus,
@@ -28,6 +25,15 @@ from ....domain.submission._repository import (
     SubmissionRepository,
     migrate_legacy_submissions_to_repository,
 )
+from . import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    LockAcquisitionError,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
+from .errors import ClassificationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

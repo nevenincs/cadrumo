@@ -1,4 +1,10 @@
-"""Unit tests for the shared canonical_decimal helper."""
+"""Unit tests for :func:`aeat.adapters.inbound.financial._decimal.canonical_decimal`.
+
+Asserts the helper renders :class:`decimal.Decimal` values in the canonical
+fixed-point form expected by the financial-ingest layer: zeros collapse to
+``"0"``, trailing zeros are stripped, and exponent notation is never used —
+so JSON round-trips remain byte-stable across precision-equivalent inputs.
+"""
 
 from __future__ import annotations
 

@@ -1,20 +1,20 @@
-"""End-user composite workflow engine (issue #59).
+"""End-user composite workflow engine.
 
 The :mod:`aeat.application.workflow` subpackage owns the project's first
 *composite* end-user command: a single entry point that orchestrates
-the deadline engine (#38), the self-healing sync runner (#11), the
-filing draft engine (#39), the submission engine (#42), and the
-in-flight status / inbox / certificate surfaces into one ordered
-pipeline. The workflow is **read-only** because live AEAT submission
-is permanently forbidden; it stops after preflight.
+the deadline engine, the self-healing sync runner, the filing draft
+builder, the submission engine, and the in-flight status / inbox /
+certificate surfaces into one ordered pipeline. The workflow is
+**read-only**: live AEAT submission is permanently forbidden, so the
+pipeline stops after preflight and never executes a real filing.
 
-Public API discipline: callers outside this subpackage must import
-only from :mod:`aeat.application.workflow`. The underscored modules are
-implementation detail.
+Public API discipline: callers outside this subpackage must import only
+from :mod:`aeat.application.workflow`. The underscored modules are
+implementation detail and may change without notice.
 
-See [[2026-04-12-workflow-engine-research]],
-[[2026-04-12-workflow-engine-adr]], and
-[[2026-04-12-workflow-engine-plan]] for the full context.
+Examples:
+    >>> from aeat.application.workflow import default_engine
+    >>> engine = default_engine(submission_engine=..., deadline_engine=...)
 """
 
 from __future__ import annotations
@@ -62,12 +62,12 @@ __all__ = [
     "FilingInputsProviderProtocol",
     "FinancialThenJsonInputsProvider",
     "JsonFileInputsProvider",
+    "SiteHealthAlert",
     "SubmissionEngineAdapter",
     "SubmissionEngineProtocol",
     "SyncRunSummary",
     "SyncRunnerAdapter",
     "SyncRunnerProtocol",
-    "SiteHealthAlert",
     "WorkflowAbortReason",
     "WorkflowAbortedError",
     "WorkflowComponentError",

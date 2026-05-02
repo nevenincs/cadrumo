@@ -12,6 +12,7 @@ import pytest
 
 from .....core.config import SecretStoreBackend, Settings
 from ..crypto import KEY_SIZE
+from ..crypto._crypto import encrypt_record
 from ..errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
@@ -30,7 +31,6 @@ from . import (
     migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
-from ..crypto._crypto import encrypt_record
 from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _b64decode,
@@ -306,8 +306,8 @@ class TestTornStateGate:
         # Crash after master.key, before master.kdf and salt.
         (store_dir / "master.key").write_bytes(b"orphan-master-key")
 
-        from . import FileFallbackMasterKeyProvider
         from ..errors import MasterKeyMaterialMissingError
+        from . import FileFallbackMasterKeyProvider
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -329,8 +329,8 @@ class TestTornStateGate:
             encoding="utf-8",
         )
 
-        from . import FileFallbackMasterKeyProvider
         from ..errors import MasterKeyMaterialMissingError
+        from . import FileFallbackMasterKeyProvider
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -349,8 +349,8 @@ class TestTornStateGate:
         )
         (store_dir / "salt").write_bytes(b"\x00" * 16)
 
-        from . import FileFallbackMasterKeyProvider
         from ..errors import MasterKeyMaterialMissingError
+        from . import FileFallbackMasterKeyProvider
 
         FileFallbackMasterKeyProvider._reset_for_tests()
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
@@ -375,7 +375,7 @@ class TestTornStateGate:
 
 
 class TestSecurityHardening:
-    """Audit-driven hardening fixes (sec H-1 / H-2, vaultspec H-1 / H-2)."""
+    """Audit-driven hardening fixes."""
 
     def test_passphrase_env_var_persists_across_callbacks(
         self,
@@ -384,8 +384,7 @@ class TestSecurityHardening:
     ) -> None:
         """The callback must NOT pop the env var.
 
-        the earlier "pop on first read" policy. The
-        cache in ``FileFallbackMasterKeyProvider`` is reset under
+        The cache in ``FileFallbackMasterKeyProvider`` is reset under
         legitimate flows (recover re-mints, test sessions cycle the
         cache between sub-tests), and a popped env var blocks the
         second cache-miss read on ``getpass`` in non-TTY contexts.
@@ -444,7 +443,7 @@ class TestSecurityHardening:
         """Two providers bound to distinct services do NOT share cached keys."""
         keyring = pytest.importorskip("keyring")
 
-        # Stub the live backend so the test does not depend on the host's keychain.
+        # Replace the live backend so the test does not depend on the host's keychain.
         store: dict[tuple[str, str], str] = {}
 
         def _get(service: str, username: str) -> str | None:
@@ -453,7 +452,7 @@ class TestSecurityHardening:
         def _set(service: str, username: str, password: str) -> None:
             store[(service, username)] = password
 
-        # Stub the backend probe so it does not trip on the host's
+        # Replace the backend probe so it does not trip on the host's
         # actual fail.Keyring detection.
         monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
         monkeypatch.setattr(keyring, "get_password", _get)
@@ -535,13 +534,13 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # when the keyring backend is genuinely
-        # unusable (no usable backend, package missing,
-        # ``fail.Keyring`` no-op installed), auto falls back to
-        # file unconditionally — there is no keychain-backed
-        # master key that a file-fallback could diverge from.
-        from . import KeyringMasterKeyProvider
+        # When the keyring backend is genuinely unusable (no usable
+        # backend, package missing, ``fail.Keyring`` no-op installed),
+        # auto falls back to file unconditionally — there is no
+        # keychain-backed master key that a file-fallback could
+        # diverge from.
         from ..errors import KeyringUnavailableError
+        from . import KeyringMasterKeyProvider
 
         def _probe_fail() -> None:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
@@ -561,16 +560,15 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # regression: when the keychain is LOCKED
-        # (backend works, get_password refused — Touch ID
-        # cancelled, libsecret locked, etc.) AND no file-fallback
-        # artefacts exist, auto must NOT silently mint a fresh
-        # file-fallback master key that would diverge from
+        # When the keychain is LOCKED (backend works, get_password
+        # refused — Touch ID cancelled, libsecret locked, etc.) AND no
+        # file-fallback artefacts exist, auto must NOT silently mint a
+        # fresh file-fallback master key that would diverge from
         # whatever the keychain holds. Refuse and surface the lock
         # state so the operator unlocks-and-retries OR explicitly
         # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
-        from . import KeyringMasterKeyProvider
         from ..errors import MasterKeyKeychainLockedError
+        from . import KeyringMasterKeyProvider
 
         keyring = pytest.importorskip("keyring")
         from keyring.errors import KeyringError
@@ -595,10 +593,10 @@ class TestFactory:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # when the keychain is LOCKED AND
-        # file-fallback artefacts already exist, auto routes
-        # through file safely — the operator has previously
-        # chosen the file backend (or already provisioned both).
+        # When the keychain is LOCKED AND file-fallback artefacts
+        # already exist, auto routes through file safely — the
+        # operator has previously chosen the file backend (or
+        # already provisioned both).
         from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
 
         keyring = pytest.importorskip("keyring")
@@ -755,7 +753,7 @@ class TestWave12KdfMigration:
         assert second.get_master_key() == first_key
 
     def test_migration_acquires_master_lock(self, tmp_path: Path) -> None:
-        """Issue #465 HIGH-2: migrate_master_key_kdf must hold master.lock.
+        """migrate_master_key_kdf must hold master.lock.
 
         Without the lock, a concurrent ``get_master_key`` reader
         could observe a torn state (master.key rewritten under
@@ -804,7 +802,7 @@ class TestWave12KdfMigration:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Issue #465 HIGH-1: master.key writes must survive a mid-rename crash.
+        """master.key writes must survive a mid-rename crash.
 
         Simulates a crash during the ``os.replace`` swap of the new
         ``master.key`` ciphertext. Under the fixed code path
@@ -816,8 +814,8 @@ class TestWave12KdfMigration:
         original v1 bytes survive on disk.
 
         Under the LEGACY ``_write_bytes_secure`` path that the
-        used to call, ``master.key`` was opened
-        with ``O_TRUNC`` directly — the inode was zeroed before the
+        migration used to call, ``master.key`` was opened with
+        ``O_TRUNC`` directly — the inode was zeroed before the
         write completed. A mid-write crash left ``master.key``
         partially-written or empty with no recovery path. Patching
         ``os.replace`` would have had NO effect because the legacy
@@ -841,7 +839,6 @@ class TestWave12KdfMigration:
         real_replace = _os.replace
         # Track whether we've already raised once via ``nonlocal``
         # — more idiomatic than the list-of-bool closure pattern.
-        # Issue #469 gemini-review MEDIUM on PR #468.
         already_raised = False
 
         def _replace_raising_first_then_real(*args: Any, **kwargs: Any) -> None:

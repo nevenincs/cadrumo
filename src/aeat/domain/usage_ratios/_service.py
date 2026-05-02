@@ -1,10 +1,11 @@
-"""Atomic load/save helpers for :class:`UsageRatioProfile` (issue #259).
+"""Atomic load / save helpers for :class:`UsageRatioProfile`.
 
-The profile carries business / personal split percentages — FINANCIAL
-class per the default policy table. Both helpers route through the
-substrate's encrypted-envelope writers so the on-disk record is always
-AES-256-GCM ciphertext under HKDF context
-``aeat.domain.usage_ratios.profile.v1``.
+The profile carries business / personal split percentages — classified
+``FINANCIAL`` per the default policy table — so both helpers route through the
+encrypted-envelope writers in :mod:`aeat.adapters.persistence.storage`. The
+on-disk record is always AES-256-GCM ciphertext keyed under HKDF context
+``aeat.domain.usage_ratios.profile.v1``; no plaintext split percentage ever
+lands on disk.
 """
 
 from __future__ import annotations
@@ -26,12 +27,14 @@ _USAGE_RATIO_VERSION = 1
 
 
 def load_usage_ratios(path: Path) -> UsageRatioProfile:
-    """Load Kent's persisted usage-ratio profile, or return an empty one.
+    """Load the operator's persisted usage-ratio profile, or return an empty one.
 
     A missing file is not an error — it is the virgin state — so this helper
     returns an empty :class:`UsageRatioProfile` in that case. The on-disk
-    record is a :class:`CipherEnvelope` written under HKDF context
-    ``aeat.domain.usage_ratios.profile.v1`` at FINANCIAL class.
+    record is an :class:`aeat.adapters.persistence.storage.Envelope` carrying
+    a ciphertext payload classified
+    :class:`aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL` and
+    keyed under HKDF context ``aeat.domain.usage_ratios.profile.v1``.
 
     Args:
         path: Filesystem path of the usage-ratio envelope file.
@@ -40,8 +43,8 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
         The validated profile, or an empty one when ``path`` does not exist.
 
     Raises:
-        UsageRatioPersistenceError: If the file cannot be read or its
-            payload is invalid.
+        :exc:`aeat.domain.usage_ratios.UsageRatioPersistenceError`: If the
+            file cannot be read or its payload fails validation.
     """
     from ...adapters.persistence.storage import (
         Envelope,
@@ -77,18 +80,27 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
 
 
 def _summarise_validation_errors(exc: ValidationError) -> str:
-    """Render a short, Kent-legible summary of a pydantic validation failure.
+    """Render a short, operator-legible summary of a pydantic validation failure.
 
     The default ``str(ValidationError)`` is verbose and includes pydantic doc
     URLs; this helper extracts one human-readable line per error with the
     offending path (e.g. ``ratios.suministros_home_office_luz``) and the
-    message. Two specific rewrites are applied for Kent's benefit:
+    message. Two specific rewrites are applied:
 
-    * Unknown dict-key enum errors for ``ratios`` are replaced with a
-      tailored list of the twelve eligible categories (instead of pydantic's
-      default dump of all 38 ``SpendingCategory`` values).
-    * The pydantic ``"Value error, "`` / ``"Input should be "`` prefixes
-      are stripped where they add noise.
+    * Unknown dict-key enum errors for ``ratios`` are replaced with a tailored
+      list of the eligible categories taken from
+      :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES`, sparing the operator pydantic's
+      default dump of every :class:`aeat.domain.categories.SpendingCategory`
+      member.
+    * The pydantic ``"Value error, "`` prefix is stripped where it adds noise.
+
+    Args:
+        exc: The :class:`pydantic.ValidationError` raised while loading the
+            envelope payload.
+
+    Returns:
+        A multi-line summary suitable for embedding in a
+        :class:`UsageRatioPersistenceError` message.
     """
     lines: list[str] = []
     for error in exc.errors():
@@ -110,18 +122,23 @@ def _summarise_validation_errors(exc: ValidationError) -> str:
 
 
 def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
-    """Persist Kent's usage-ratio profile atomically through the substrate.
+    """Persist the operator's usage-ratio profile atomically through the substrate.
 
-    The on-disk record is a :class:`CipherEnvelope` at FINANCIAL class
-    written via :func:`save_encrypted_envelope`; no plaintext business /
-    personal split percentage lands on disk.
+    The on-disk record is an
+    :class:`aeat.adapters.persistence.storage.Envelope` at
+    :class:`aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
+    class, written via
+    :func:`aeat.adapters.persistence.storage.save_encrypted_envelope` under an
+    exclusive file lock; no plaintext business / personal split percentage
+    lands on disk.
 
     Args:
         profile: The profile to persist.
         path: Destination envelope file.
 
     Raises:
-        UsageRatioPersistenceError: If the write cannot be completed.
+        :exc:`aeat.domain.usage_ratios.UsageRatioPersistenceError`: If the
+            write cannot be completed.
     """
     from ...adapters.persistence.storage import (
         Envelope,

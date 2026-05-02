@@ -2,11 +2,17 @@
 
 The formulas below encode the AEAT Instrucciones Modelo 130 and the
 reglamentary text of Real Decreto 439/2007 article 110 for tax year
-2024. Mid-year rule changes are absent for 2024→2025 (see the
-research doc); the 2025 ruleset is therefore structurally identical.
-Casillas that depend on prior-quarter state (05 pagos fraccionados
-anteriores, 15 arrastre de negativos) are user-input in this wave —
-the caller maintains the cross-quarter pool.
+2024. Mid-year rule changes are absent across 2024 → 2025; the 2025
+ruleset is therefore structurally identical and re-imports this module's
+casilla and citation tuples.
+
+Casillas that depend on prior-quarter state (``05`` pagos fraccionados
+anteriores, ``15`` arrastre de negativos) are user-input — the caller
+maintains the cross-quarter pool.
+
+The module also exposes :func:`compute_casilla_13_minoracion`, a helper
+that resolves the RIRPF art. 110.3.c sliding-scale step function so the
+caller can pre-compute the casilla-13 input before invoking the engine.
 """
 
 from __future__ import annotations
@@ -357,9 +363,23 @@ _CASILLA_13_BRACKETS: tuple[Bracket, ...] = (
 def compute_casilla_13_minoracion(previous_year_rendimiento_neto: Decimal) -> Decimal:
     """Return the casilla-13 minoración for the supplied previous-year RN.
 
-    Implements the sliding-scale step function from RIRPF art. 110.3.c.
-    The caller can then pass the result as the ``13`` user-input to
+    Implements the sliding-scale step function from RIRPF art. 110.3.c. The
+    caller passes the result as the ``13`` user-input to
     :meth:`aeat.domain.formulas.Engine.derive`.
+
+    Args:
+        previous_year_rendimiento_neto: Net income (rendimiento neto) of the
+            preceding fiscal year, used as the bracket-lookup key.
+
+    Returns:
+        The applicable minoración amount in euros, drawn from
+        :data:`_CASILLA_13_BRACKETS` (100, 75, 50, 25, or 0).
+
+    Raises:
+        TypeError: If ``previous_year_rendimiento_neto`` is not a
+            :class:`decimal.Decimal`.
+        RuntimeError: If the bracket table is exhausted without a match
+            (indicates an inconsistent :data:`_CASILLA_13_BRACKETS`).
     """
     if not isinstance(previous_year_rendimiento_neto, Decimal):
         raise TypeError("previous_year_rendimiento_neto must be a Decimal")

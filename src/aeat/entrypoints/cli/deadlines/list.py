@@ -1,4 +1,9 @@
-"""``aeat deadlines list`` - print the full filing schedule for a year."""
+"""``aeat deadlines list`` — print the full filing schedule for a year.
+
+Renders every :class:`aeat.domain.deadlines.FilingObligation` for the
+requested year as a Rich table, in the order produced by
+:meth:`aeat.domain.deadlines.DeadlineEngine.compute`.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from .._i18n import t, tr
 from ._helpers import build_engine, load_profile, resolve_profile_path
 
 _CONSOLE = Console()
@@ -42,4 +48,13 @@ def list_schedule(
             obligation.status.value,
         )
     _CONSOLE.print(table)
-    _CONSOLE.print(f"[dim]{len(schedule.obligations)} obligation(s)[/dim]")
+    n = len(schedule.obligations)
+    label = tr(
+        t(
+            f"{n} obligación(es)",
+            f"{n} obligation(s)",
+            f"{n} obligació/-ns",
+            f"{n} kötelezettség",
+        )
+    )
+    _CONSOLE.print(f"[dim]{label}[/dim]")

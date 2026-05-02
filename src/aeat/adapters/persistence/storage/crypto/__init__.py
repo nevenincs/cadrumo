@@ -1,6 +1,13 @@
-"""Crypto substrate: AEAD primitives + EncryptedString/Bytes/JSON columns.
+"""Crypto substrate: AEAD primitives plus encrypted SQLAlchemy column types.
 
-Bucket boundary established by audit-4 in the aeat-restructure ADR.
+Public surface for the at-rest crypto stack. Re-exports the AEAD
+primitives (:func:`encrypt_record`, :func:`decrypt_record`,
+:func:`derive_key`, :class:`EncryptedBlob`, and the
+:data:`KEY_SIZE` / :data:`NONCE_SIZE` / :data:`GCM_TAG_SIZE`
+constants) alongside the SQLAlchemy ``TypeDecorator`` set
+(:class:`EncryptedString`, :class:`EncryptedBytes`,
+:class:`EncryptedJSON`, :class:`HashedLookup`) and the
+:func:`override_master_key_provider` test helper.
 """
 
 from __future__ import annotations

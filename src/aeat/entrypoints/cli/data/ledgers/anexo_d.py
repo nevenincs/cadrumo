@@ -1,4 +1,10 @@
-"""`aeat data ledgers anexo-d` commands."""
+"""``aeat data ledgers anexo-d`` commands.
+
+Previews ledger-derived inputs for Modelo 100 Anexo D. Reads only:
+asset, amortization, and inventory ledgers are loaded from the
+encrypted persistence layer and folded through
+:func:`aeat.domain.formulas._rulesets.modelo_100.anexo_d_ledgers.derive_anexo_d_normal_inputs`.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,7 @@ from .....adapters.persistence.profile.assets import load_amortization_ledger, l
 from .....adapters.persistence.profile.inventory import load_inventory
 from .....domain.formulas._rulesets.modelo_100.anexo_d_ledgers import derive_anexo_d_normal_inputs
 from ..._context import json_output_requested
+from ..._i18n import t, tr
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 
 app = typer.Typer(name="anexo-d", no_args_is_help=True, help="Preview Modelo 100 Anexo D ledger-derived inputs.")
@@ -48,7 +55,16 @@ def preview(
     """Preview Anexo D inputs derived from encrypted local ledgers."""
 
     if modelo != "100":
-        raise typer.BadParameter("only Modelo 100 supports Anexo D ledger preview")
+        raise typer.BadParameter(
+            tr(
+                t(
+                    "solo el Modelo 100 admite la vista previa del libro Anexo D",
+                    "only Modelo 100 supports Anexo D ledger preview",
+                    "només el Modelo 100 admet la vista prèvia del llibre Annex D",
+                    "csak a Modelo 100 támogatja az Anexo D könyv előnézetét",
+                )
+            )
+        )
     resolved = derive_anexo_d_normal_inputs(
         {},
         year=year,

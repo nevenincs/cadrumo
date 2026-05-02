@@ -1,4 +1,10 @@
-"""Portal: Certificate selection entry point on the WebLogic shell."""
+"""Catalogue entry for the AEAT certificate-selection WebLogic gateway.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH` covering the
+``/wlpl/BUCV-JDIT/SelectorCertificado`` certificate picker. URL stability
+is :attr:`aeat.domain.portals.UrlStability.VOLATILE_APP_PATH`.
+"""
 
 from __future__ import annotations
 
@@ -22,3 +28,4 @@ ENTRY: PortalMetadata = build_entry(
     purpose_es="Punto de selección de certificado digital en la pasarela autenticada de la AEAT.",
     notes_es=("Ruta volátil: puede rotar entre campañas sin aviso previo.",),
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-selection gateway."""

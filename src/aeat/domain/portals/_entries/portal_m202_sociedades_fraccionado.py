@@ -1,4 +1,10 @@
-"""Portal: Modelo 202 — IS pago fraccionado."""
+"""Registry entry for Modelo 202 — corporate-tax instalment payment.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -26,3 +32,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Pago fraccionado a cuenta del Impuesto sobre Sociedades.",
 )
+"""Portal entry for Modelo 202 (corporate-tax instalment payment)."""

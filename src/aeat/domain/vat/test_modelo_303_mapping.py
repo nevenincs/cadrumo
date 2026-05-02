@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 303 casilla bridge (#183)."""
+"""Unit tests for the Modelo 303 casilla bridge.
+
+Pins the :data:`aeat.domain.vat.MODELO_303_CASILLA_MAPPING` shape, the
+out-of-scope partition, and the :func:`aeat.domain.vat.lookup_modelo_303_contribution`
+behaviour for both the simple categories and the rate-tier-aware
+``DOMESTIC_REVERSE_CHARGE`` cases.
+"""
 
 from __future__ import annotations
 

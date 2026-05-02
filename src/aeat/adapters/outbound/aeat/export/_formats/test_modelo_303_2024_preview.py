@@ -1,17 +1,16 @@
-"""Proof-of-concept tests for Modelo 303 preview.
+"""Proof-of-concept tests for the Modelo 303 envelope preview module.
 
-The preview module is explicitly NOT wired into the CLI schema
-registry — it exists to exercise the envelope +
-inline_sign architecture against the only three Modelo 303 offsets
-that could verify with high confidence:
+The preview module is intentionally NOT wired into the CLI schema
+registry; it exists to exercise the envelope + ``inline_sign``
+architecture against the only three Modelo 303 offsets that could
+be verified with high confidence:
 
-- DP30300 envelope opener/closer + ejercicio + período.
-- DP30301 NIF at offset 14 (the only offset stream-D got right).
-- DP30303 casilla 69 at offset 323 (audit-verified; type N signed
-  inline).
+* DP30300 envelope opener/closer + ejercicio + período.
+* DP30301 ``NIF_DECLARANTE`` at offset 14.
+* DP30303 casilla 69 at offset 323 (signed inline, type N).
 
-A full Modelo 303 schema requires xlsx-ingestion tooling (deferred
-to +).
+A complete Modelo 303 schema requires xlsx-ingestion tooling and is
+covered separately by the auto-generated full schema tests.
 """
 
 from __future__ import annotations
@@ -32,6 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 def _headers() -> dict[str, str]:
+    """Return the minimal header dict for the preview envelope."""
     return {
         "EJERCICIO": "2024",
         "PERIODO": "1T",
@@ -43,8 +43,10 @@ def _headers() -> dict[str, str]:
 
 
 class TestModelo3032024Preview:
+    """Smoke coverage for the preview envelope's segment + offset arithmetic."""
+
     def test_envelope_length(self) -> None:
-        """12 (DP30300) + 22 (DP30301) + 339 (DP30303) + 2 (CRLF) = 375."""
+        """Assert the preview envelope sums to 375 bytes (DP30300 12 + DP30301 22 + DP30303 339 + CRLF 2)."""
         payload = serialise_envelope(
             casilla_values={"69": Decimal("1234.56")},
             headers=_headers(),
@@ -56,6 +58,7 @@ class TestModelo3032024Preview:
         assert payload.endswith(b"\r\n")
 
     def test_envelope_opener_bytes(self) -> None:
+        """Assert the DP30300 12-byte envelope opener bytes."""
         payload = serialise_envelope(
             casilla_values={"69": Decimal("0.00")},
             headers=_headers(),
@@ -71,7 +74,7 @@ class TestModelo3032024Preview:
         assert payload[10:12] == b"1T"
 
     def test_dp30301_nif_at_verified_offset_14(self) -> None:
-        """The one offset stream-D got right: NIF at segment-local 14."""
+        """Assert ``NIF_DECLARANTE`` lands at DP30301 segment-local offset 14."""
         payload = serialise_envelope(
             casilla_values={"69": Decimal("0.00")},
             headers=_headers(),
@@ -84,7 +87,7 @@ class TestModelo3032024Preview:
         assert payload[25:34] == b"X1234567L"
 
     def test_casilla_69_inline_sign_positive(self) -> None:
-        """Casilla 69 positive value → leading space + zero-padded magnitude."""
+        """Assert a positive casilla 69 encodes as leading space + zero-padded magnitude."""
         payload = serialise_envelope(
             casilla_values={"69": Decimal("1000.00")},
             headers=_headers(),
@@ -98,11 +101,12 @@ class TestModelo3032024Preview:
         assert payload[356:373] == b" 0000000000100000"
 
     def test_casilla_69_inline_sign_negative(self) -> None:
-        """Casilla 69 negative value → leading 'N' + zero-padded |value|.
+        """Assert a negative casilla 69 encodes as leading ``'N'`` + zero-padded magnitude.
 
-        RecordFieldSpec.signed_mode=INLINE_SIGN now routes
-        negative casilla_values through encode_currency(inline_sign=True)
-        automatically — no caller intervention needed.
+        :attr:`aeat.adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec.signed_mode`
+        equal to ``INLINE_SIGN`` routes negative casilla values through
+        ``encode_currency(inline_sign=True)`` automatically; callers
+        do not need to flip a sign flag themselves.
         """
         payload = serialise_envelope(
             casilla_values={"69": Decimal("-750.00")},
@@ -116,6 +120,7 @@ class TestModelo3032024Preview:
         assert payload[356:373] == b"N0000000000075000"
 
     def test_round_trip_preserves_casilla_69(self) -> None:
+        """Assert serialise/deserialise round-trips casilla 69 and its preview headers."""
         payload = serialise_envelope(
             casilla_values={"69": Decimal("500.00")},
             headers=_headers(),

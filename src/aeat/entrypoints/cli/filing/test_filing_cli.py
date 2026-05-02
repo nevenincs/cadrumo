@@ -1,8 +1,11 @@
 """Smoke tests for ``aeat filing`` CLI commands.
 
-These tests use Typer's :class:`CliRunner` against the root
-``aeat`` Typer app and a temporary drafts directory configured
-via ``AEAT_DRAFTS_DIR``.
+Drives the root ``aeat`` Typer app via :class:`typer.testing.CliRunner`
+against per-test ``tmp_path`` directories wired through
+``AEAT_DRAFTS_DIR``, ``AEAT_SUBMISSIONS_DIR``,
+``AEAT_FINANCIAL_TXS_DIR``, and ``AEAT_DEFAULT_PROFILE_PATH``. Profile
+and submission fixtures round-trip through the real encrypted
+persistence layer rather than the production master key.
 """
 
 from __future__ import annotations
@@ -105,9 +108,9 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
     from datetime import UTC, datetime
 
-    from ....adapters.outbound.aeat.export._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling
-    from ....domain.submission._repository import SubmissionRepository
     from ....domain.filing import FilingDraftRepository
+    from ....domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+    from ....domain.submission._repository import SubmissionRepository
 
     draft = build_draft(
         modelo="130",
@@ -146,6 +149,8 @@ def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
 
 
 class TestFilingCLI:
+    """Smoke coverage for ``aeat filing`` build, show, validate, list, import paths."""
+
     def test_build_uses_configured_profile_file(
         self,
         tmp_path: Path,
@@ -335,9 +340,9 @@ class TestFilingCLI:
     ) -> None:
         """``aeat filing complementaria submit`` must not exist.
 
-        The complementaria submit transport was removed when main's PR
-        #446 deleted every live-submit code path (no-live-submit
-        charter). This canary fails closed if anyone re-introduces the
+        The complementaria submit transport was removed when every
+        live-submit code path was deleted under the no-live-submit
+        charter. This canary fails closed if anyone re-introduces the
         subcommand.
         """
         del runner_disabled

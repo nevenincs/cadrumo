@@ -47,7 +47,7 @@ from ._fetch import FetchedSchemaSource
 _logger = get_logger(__name__)
 
 _ANNEX_RE = re.compile(r"^\s*ANEXO(?:\s+[IVX]+)?(?:\W|$)", re.IGNORECASE)
-"""Matches ``ANEXO``, ``ANEXO I``, ``Anexo I Ã¢â,¬â€ Modelo 130``, etc.
+"""Matches ``ANEXO``, ``ANEXO I``, ``Anexo I — Modelo 130``, etc.
 
 Accepts a trailing word-boundary so inline headings (the shape real
 BOE PDFs typeset) are recognised; a standalone ``ANEXO`` line still
@@ -55,11 +55,11 @@ matches because ``$`` is in the alternation.
 """
 
 _CASILLA_DECL_RE = re.compile(
-    r"^\s*(?P<id>\d{2,4})\s+(?P<label>[A-Za-zÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡ÃƒÅ“Ãƒâ€˜ÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ¼ÃƒÂ±Ã,Â¿\(].*?)\s*$",
+    r"^\s*(?P<id>\d{2,4})\s+(?P<label>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ¿\(].*?)\s*$",
 )
 """Matches ``NN <Spanish label>`` where the label starts with a letter,
-Spanish inverted question mark (``Ã,Â¿`` Ã¢â,¬â€ interrogative casillas on
-Modelos 303 / 390), or an opening parenthesis (``(`` Ã¢â,¬â€ qualified
+Spanish inverted question mark (``¿`` — interrogative casillas on
+Modelos 303 / 390), or an opening parenthesis (``(`` — qualified
 labels like ``"(Antes: Casilla 9a)"``).
 
 Constraining the leading character rules out page-footer lines that
@@ -81,7 +81,7 @@ _MINUS_CHARS = ("\u2212", "\u2013", "\u2014")
 _MUL_CHARS = ("x", "X", "\u00d7")
 """Characters normalised to ASCII ``*`` in formula bodies."""
 
-_WORD_BOUNDARY_ES_TEMPLATE = r"(?<![\wÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ±ÃƒÂ¼ÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡Ãƒâ€˜ÃƒÅ“]){word}(?![\wÃƒÂ¡ÃƒÂ©ÃƒÂ­ÃƒÂ³ÃƒÂºÃƒÂ±ÃƒÂ¼ÃƒÂÃƒâ€°ÃƒÂÃƒâ€œÃƒÅ¡Ãƒâ€˜ÃƒÅ“])"
+_WORD_BOUNDARY_ES_TEMPLATE = r"(?<![\w¡éíóúñüÁÉÍÓÚÑÜ]){word}(?![\w¡éíóúñüÁÉÍÓÚÑÜ])"
 
 _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "cuota",
@@ -94,16 +94,16 @@ _CURRENCY_KEYWORDS: tuple[str, ...] = (
     "gasto",
     "beneficio",
     "retencion",
-    "retenciÃƒÂ³n",
+    "retención",
 )
 _PERCENT_KEYWORDS: tuple[str, ...] = ("%", "porcentaje")
-"""Drop ``"tipo"`` Ã¢â,¬â€ it collides with currency labels like
+"""Drop ``"tipo"`` — it collides with currency labels like
 *"Base del tipo general"*. The word ``%`` remains as the canonical
 percent marker; ``"porcentaje"`` covers labels that spell it out.
 """
 
-_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "aÃƒÂ±o", "ejercicios")
-"""Drop the accentless ``"ano"`` variant: it matched ``"aÃƒÂ±o"`` as a
+_INTEGER_KEYWORDS: tuple[str, ...] = ("ejercicio", "año", "ejercicios")
+"""Drop the accentless ``"ano"`` variant: it matched ``"año"`` as a
 substring and mis-classified currency labels containing ``"ano"``
 (frequent in gerund / plural forms).
 """
@@ -144,7 +144,7 @@ def _guess_data_type(label: str) -> CasillaDataType:
     (currency + integer keyword) resolves to ``CURRENCY_EUR``, not
     ``INTEGER``. Keyword matches use whole-word comparison with
     Spanish-diacritic-aware boundaries so ``"ano"`` does not match
-    ``"aÃƒÂ±o"`` and ``"base"`` is not swallowed by the percent branch.
+    ``"año"`` and ``"base"`` is not swallowed by the percent branch.
     """
     lowered = label.lower()
     for kw in _CURRENCY_KEYWORDS:
@@ -182,7 +182,7 @@ def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
     """Tokenise a normalised additive chain into ``((sign, casilla_id), ...)``.
 
     Returns an empty tuple if the body is not a pure
-    ``[+|-] Casilla N ( [+|-] Casilla M )*`` chain Ã¢â,¬â€ the caller falls
+    ``[+|-] Casilla N ( [+|-] Casilla M )*`` chain — the caller falls
     back to other shapes when this happens.
     """
     pattern = re.compile(
@@ -195,7 +195,7 @@ def _parse_signed_terms(normalised: str) -> tuple[tuple[str, str], ...]:
     # Require the chain to cover the body (ignoring trailing whitespace).
     last = matches[-1]
     if last.end() != len(normalised.rstrip()):
-        # Trailing content we do not understand Ã¢â,¬â€ refuse to guess.
+        # Trailing content we do not understand — refuse to guess.
         return ()
     terms: list[tuple[str, str]] = []
     for match in matches:
@@ -212,7 +212,7 @@ def _parse_formula_prose(casilla_id: str, body: str) -> FormulaNode:
     - ``Casilla A + Casilla B`` and arbitrary ``+ / -`` chains (e.g.
       ``Casilla 01 + Casilla 02 - Casilla 03``). Unicode minus
       variants (``U+2212``, en-dash, em-dash) are normalised to ASCII.
-    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply Ã¢â,¬â€ BOE glyph
+    - ``Casilla A x 0,20`` / ``* 0,20`` (percent multiply — BOE glyph
       U+00D7 MULTIPLICATION SIGN is normalised to ASCII ``*``).
     - A single ``Casilla A`` passthrough.
 
@@ -409,7 +409,7 @@ class BoeOrdenExtractor:
 
         Duplicate declarations: if a second declaration is *identical*
         to the first (same label and block heading), it is silently
-        ignored Ã¢â,¬â€ BOE Ordenes occasionally repeat the form layout
+        ignored — BOE Ordenes occasionally repeat the form layout
         (e.g. multilingual annexes or summary pages). A conflicting
         duplicate (different label or different block) still raises
         so silent data loss is impossible.
@@ -417,7 +417,7 @@ class BoeOrdenExtractor:
         declarations: dict[str, _CasillaDraft] = {}
         pending_formulas: list[tuple[int, str, str]] = []
 
-        # Pass 1 Ã¢â,¬â€ declarations and blocks.
+        # Pass 1 — declarations and blocks.
         current_block: str | None = None
         for page_number, raw_line in annex_lines:
             line = raw_line.strip()
@@ -441,7 +441,7 @@ class BoeOrdenExtractor:
                 if casilla_id in declarations:
                     existing = declarations[casilla_id]
                     if existing.label_es == label_es and existing.block_es == incoming_block:
-                        # Benign duplicate (repeated layout) Ã¢â,¬â€ ignore.
+                        # Benign duplicate (repeated layout) — ignore.
                         continue
                     raise SchemaExtractionError(
                         f"conflicting duplicate declaration for casilla "
@@ -459,7 +459,7 @@ class BoeOrdenExtractor:
                 )
                 continue
 
-        # Pass 2 Ã¢â,¬â€ bind formulas to already-declared casillas.
+        # Pass 2 — bind formulas to already-declared casillas.
         for page_number, formula_id, formula_body in pending_formulas:
             if formula_id not in declarations:
                 raise SchemaExtractionError(
@@ -487,5 +487,3 @@ class BoeOrdenExtractor:
 
 
 __all__ = ("BoeOrdenExtractor",)
-
-

@@ -1,4 +1,11 @@
-"""Unit tests for the PII scrub library (#305)."""
+"""Unit tests for the PII scrub library.
+
+Covers per-field redaction (NIF, NIE, IBAN, CSV, email, phone,
+postal code, monetary amounts, prefixed names), the determinism
+guarantees the regression-fixture pipeline relies on, the
+strict + frozen :class:`ScrubSidecar` boundary, and the
+"no leakage" invariant that no real PII may survive a scrub.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +26,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestNifRedaction:
+    """Individual and entity NIFs are redacted to the synthetic placeholder."""
+
     def test_individual_nif_replaced(self) -> None:
+        """An individual NIF is rewritten to the synthetic ``00000000T`` placeholder."""
         scrubbed, fields = scrub_text(
             "NIF: 12345678Z Kent Filing",
             filename="kent_130_2024Q1.pdf",
@@ -29,6 +39,7 @@ class TestNifRedaction:
         assert "nif" in fields
 
     def test_empresa_nif_replaced(self) -> None:
+        """An entity NIF (leading letter + 8 digits) is rewritten to ``B00000000``."""
         scrubbed, fields = scrub_text(
             "NIF: B12345678 Empresa",
             filename="empresa_303_2024Q1.pdf",
@@ -39,7 +50,10 @@ class TestNifRedaction:
 
 
 class TestAmountRedaction:
+    """Monetary amounts are scrubbed while keeping their digit structure intact."""
+
     def test_aeat_amount_replaced_with_same_digit_structure(self) -> None:
+        """The replacement preserves the original ``digits.thousands,decimals`` shape."""
         scrubbed, fields = scrub_text("Total: 1.234,56 eur", filename="kent_130.pdf")
         assert "1.234,56" not in scrubbed
         assert "amounts" in fields
@@ -49,12 +63,14 @@ class TestAmountRedaction:
         assert _re.search(r"\d{1,3}(?:\.\d{3})*,\d{2}", scrubbed) is not None
 
     def test_determinism_same_filename_same_output(self) -> None:
+        """The same filename + text produce identical scrubbed output."""
         text = "Ingresos: 10.000,00 Gastos: 3.500,00"
         a, _ = scrub_text(text, filename="kent_130_2024Q1.pdf")
         b, _ = scrub_text(text, filename="kent_130_2024Q1.pdf")
         assert a == b
 
     def test_different_filename_different_output(self) -> None:
+        """Different filenames seed independent scrubbed outputs."""
         text = "Ingresos: 10.000,00"
         a, _ = scrub_text(text, filename="kent_130_2024Q1.pdf")
         b, _ = scrub_text(text, filename="kent_130_2024Q2.pdf")
@@ -62,7 +78,10 @@ class TestAmountRedaction:
 
 
 class TestCsvRedaction:
+    """The Código Seguro de Verificación is scrubbed deterministically."""
+
     def test_csv_replaced_with_16_char_synthetic(self) -> None:
+        """A 16-character CSV is rewritten to a synthetic equivalent of the same shape."""
         scrubbed, fields = scrub_text(
             "CSV: ABCD1234EFGH5678 ",
             filename="kent.pdf",
@@ -71,6 +90,7 @@ class TestCsvRedaction:
         assert "csv" in fields
 
     def test_csv_replacement_is_deterministic(self) -> None:
+        """Re-scrubbing the same payload twice returns identical output."""
         text = "CSV: ABCD1234EFGH5678"
         a, _ = scrub_text(text, filename="kent.pdf")
         b, _ = scrub_text(text, filename="kent.pdf")
@@ -78,7 +98,10 @@ class TestCsvRedaction:
 
 
 class TestIbanRedaction:
+    """IBANs are scrubbed to the canonical synthetic ``ES00 …`` form."""
+
     def test_iban_replaced(self) -> None:
+        """A live IBAN is rewritten to the canonical synthetic placeholder."""
         scrubbed, fields = scrub_text(
             "IBAN: ES91 2100 0418 45 0200051332",
             filename="kent.pdf",
@@ -89,14 +112,20 @@ class TestIbanRedaction:
 
 
 class TestNieRedaction:
+    """NIE identifiers are scrubbed."""
+
     def test_nie_replaced(self) -> None:
+        """A NIE identifier is scrubbed and reported under the ``nie`` family."""
         scrubbed, fields = scrub_text("NIE: X1234567Z", filename="kent.pdf")
         assert "X1234567Z" not in scrubbed
         assert "nie" in fields
 
 
 class TestPhoneRedaction:
+    """Compact and international Spanish phone numbers are scrubbed."""
+
     def test_spanish_phone_replaced(self) -> None:
+        """A 9-digit Spanish phone number is scrubbed."""
         scrubbed, fields = scrub_text(
             "Telefono: 612345678  Email: kent@example.com",
             filename="kent.pdf",
@@ -105,6 +134,7 @@ class TestPhoneRedaction:
         assert "phone" in fields
 
     def test_international_format_replaced(self) -> None:
+        """At least one canonical form of the international phone number is scrubbed."""
         scrubbed, _fields = scrub_text("Contacto +34 612 345 678", filename="kent.pdf")
         # Either the international or compact form — at least one should scrub.
         assert "612345678" not in scrubbed or "+34 612 345 678" not in scrubbed
@@ -112,7 +142,10 @@ class TestPhoneRedaction:
 
 
 class TestEmailRedaction:
+    """Email addresses are scrubbed."""
+
     def test_email_replaced(self) -> None:
+        """An email address is scrubbed and reported under the ``email`` family."""
         scrubbed, fields = scrub_text(
             "Email del declarante: kent.wootsch@example.com",
             filename="kent.pdf",
@@ -122,15 +155,20 @@ class TestEmailRedaction:
 
 
 class TestPostalCodeRedaction:
+    """Spanish postal codes are scrubbed when prefixed with ``CP``."""
+
     def test_cp_replaced(self) -> None:
+        """A ``CP <postcode>`` token is scrubbed and reported as ``postal_code``."""
         scrubbed, fields = scrub_text("Direccion: Calle Mayor 1 CP 28001 Madrid", filename="kent.pdf")
         assert "CP 28001" not in scrubbed
         assert "postal_code" in fields
 
 
 class TestNamePrefixGuard:
+    """Names are only scrubbed when preceded by a recognised label."""
+
     def test_name_only_replaced_when_prefixed(self) -> None:
-        """M1: section headings like 'RESULTADO A INGRESAR' must survive scrub."""
+        """Section headings such as ``RESULTADO A INGRESAR`` must survive scrub."""
         text = "RESULTADO A INGRESAR 1.234,56\nAGENCIA TRIBUTARIA"
         scrubbed, fields = scrub_text(text, filename="kent.pdf")
         assert "RESULTADO A INGRESAR" in scrubbed
@@ -138,6 +176,7 @@ class TestNamePrefixGuard:
         assert "names" not in fields
 
     def test_name_replaced_when_prefixed(self) -> None:
+        """Names are replaced when an ``Apellidos y nombre:`` label precedes them."""
         text = "Apellidos y nombre: KENT WOOTSCH PEREZ"
         scrubbed, fields = scrub_text(text, filename="kent.pdf")
         assert "KENT WOOTSCH" not in scrubbed
@@ -146,8 +185,10 @@ class TestNamePrefixGuard:
 
 
 class TestNoLeakageGuard:
+    """No real PII may survive a scrub — the contract that protects the corpus."""
+
     def test_real_nif_never_present_after_scrub(self) -> None:
-        """The real NIF MUST NOT appear anywhere in the scrubbed output."""
+        """The real NIF must not appear anywhere in the scrubbed output."""
         text = "NIF: 12345678Z Total: 99.999,99 IBAN: ES91 2100 0418 45 0200051332"
         scrubbed, _ = scrub_text(text, filename="kent.pdf")
         assert "12345678Z" not in scrubbed
@@ -155,13 +196,17 @@ class TestNoLeakageGuard:
         assert "0200051332" not in scrubbed
 
     def test_combined_fields_all_touched(self) -> None:
+        """A composite payload reports every triggered field family."""
         text = "NIF: 12345678Z  Ingresos: 10.000,00  CSV: ABCD1234EFGH5678  IBAN: ES91 2100 0418 45 0200051332"
         _, fields = scrub_text(text, filename="kent.pdf")
         assert set(fields) >= {"nif", "amounts", "csv", "iban"}
 
 
 class TestScrubSidecar:
+    """Strict + frozen invariants of the scrub sidecar boundary record."""
+
     def test_sidecar_is_strict_and_frozen(self, tmp_path: Path) -> None:
+        """A computed sidecar carries the canonical fixture tier and is immutable."""
         original = tmp_path / "source.pdf"
         original.write_bytes(b"%PDF-1.4\nsource\n%%EOF")
         scrubbed = tmp_path / "scrubbed.pdf"
@@ -177,6 +222,7 @@ class TestScrubSidecar:
             sidecar.scrub_version = "0.0.0"  # type: ignore[misc]
 
     def test_sidecar_rejects_non_hex_sha(self, tmp_path: Path) -> None:
+        """A sidecar with a non-hex SHA fails pydantic validation."""
         with pytest.raises(ValidationError):
             ScrubSidecar(
                 original_sha256="not-a-hash",
@@ -188,6 +234,7 @@ class TestScrubSidecar:
             )
 
     def test_sidecar_json_roundtrip(self, tmp_path: Path) -> None:
+        """A sidecar survives a JSON dump / reload cycle bit-for-bit."""
         original = tmp_path / "source.pdf"
         original.write_bytes(b"%PDF-1.4\n%%EOF")
         scrubbed = tmp_path / "scrubbed.pdf"

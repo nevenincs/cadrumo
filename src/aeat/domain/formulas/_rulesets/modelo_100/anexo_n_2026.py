@@ -1,9 +1,13 @@
-"""Modelo 100 Anexo N — deducciones autonómicas (ejercicio 2026).
+"""Define the Modelo 100 Anexo N ruleset for the 2026 ejercicio.
 
 For 2026 only Andalucía has published its 2026 Ley de Presupuestos
-(Ley 8/2025) at retrieval 2026-04-27. The other 14 ordinary CCAAs use
-2025 amounts as the conservative baseline; per-CCAA refresh follow-up
-issues open post-merge as each Comunidad publishes its 2026 Ley.
+(Ley 8/2025); the other fourteen ordinary CCAAs use 2025 amounts as
+the conservative baseline pending each Comunidad's 2026 publication.
+The structural surface is inherited from
+:mod:`aeat.domain.formulas._rulesets.modelo_100.anexo_n_2025` — that
+module defines :data:`CASILLAS` and :data:`CITATIONS`. Only the
+year-scoped :data:`FORMULAS` and effective-date constants are
+redeclared here.
 """
 
 from __future__ import annotations
@@ -15,7 +19,10 @@ from .._common import add_op, formula, ref
 from .anexo_n_2025 import CASILLAS, CITATIONS
 
 EFFECTIVE_FROM = date(2026, 1, 1)
+"""First day of the ejercicio in which this Anexo N ruleset applies."""
+
 EFFECTIVE_TO = date(2026, 12, 31)
+"""Last day of the ejercicio in which this Anexo N ruleset applies."""
 
 
 _CCAA_REFS = tuple(
@@ -47,9 +54,11 @@ FORMULAS = (
         body=add_op(*_CCAA_REFS),
     ),
 )
+"""Engine formula bindings for the 2026 Anexo N computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo N declares no parametric tables."""
 
 
 __all__ = [

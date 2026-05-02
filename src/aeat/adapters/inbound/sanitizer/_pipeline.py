@@ -1,22 +1,23 @@
 """Top-level orchestrator for :mod:`aeat.adapters.inbound.sanitizer`.
 
-Implements the 8-step order of operations from the sanitiser ADR:
+Implements the canonical sanitiser pipeline:
 
 1. Open source bytes; refuse if signed; refuse if already sanitised.
 2. Strip dynamic surfaces (attachments, JS, OpenAction/AA,
    annotations, OCG, AcroForm).
 3. Drop page thumbnails.
 4. Drop outlines + page labels.
-5. Drop StructTreeRoot (lossy).
-6. Rewrite content streams against the TokenMap.
+5. Drop ``Root.StructTreeRoot`` (lossy).
+6. Rewrite content streams against the :class:`TokenMap`.
 7. Scrub static metadata (DocInfo + XMP).
 8. Save with deterministic flags.
 
-Order matters: dynamic surfaces (step 2) before content rewrite
-(step 6) so a JS action cannot re-inject PII the rewriter just
-stripped. Content rewrite before metadata scrub (step 7) because
-some XMP-write paths in pikepdf re-stamp metadata if they detect a
-content change. Save last with the named flags (step 8).
+Order matters: dynamic surfaces precede the content rewrite so a
+JS action cannot re-inject PII the rewriter just stripped. The
+content rewrite precedes the metadata scrub because some XMP-write
+paths in :mod:`pikepdf` re-stamp metadata if they detect a content
+change. The deterministic save runs last so byte-stable output
+captures every prior mutation.
 """
 
 from __future__ import annotations

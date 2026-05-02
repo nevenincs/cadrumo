@@ -1,22 +1,19 @@
 """Authoritative AEAT modelo catalogue and metadata.
 
 This subpackage exposes the closed, strict, pydantic v2 registry of
-every AEAT modelo the project tracks in v1 (twenty-one codes: 036, 037,
-100, 111, 115, 123, 130, 131, 180, 190, 193, 200, 202, 232, 303, 347,
-349, 369, 390, 720, 840). The registry is built at import time from the
+every AEAT modelo the project tracks (twenty-one codes: 036, 037, 100,
+111, 115, 123, 130, 131, 180, 190, 193, 200, 202, 232, 303, 347, 349,
+369, 390, 720, 840). The registry is built at import time from the
 per-modelo entries under the private ``_entries`` package and is
 frozen as a :class:`types.MappingProxyType`.
 
-Consumers outside :mod:`aeat.domain.modelos` MUST import from this module
-only; the underscore-prefixed submodules are internal and unstable.
-The public surface is the :data:`__all__` tuple below.
+Consumers outside :mod:`aeat.domain.modelos` MUST import from this
+module only; the underscore-prefixed submodules are internal and
+unstable. The public surface is the :data:`__all__` tuple below.
 
-Architectural context: see the 2026-04-13 modelo-inventory ADR and
-the accompanying research document for the provenance of each
-modelo's data. Deadlines are resolved at query time through the
-:func:`year_plan` helper, which delegates to
-:mod:`aeat.domain.deadlines` — the catalogue itself is import-time free
-of any deadline dependency.
+Deadlines are resolved at query time through the :func:`year_plan`
+helper, which delegates to :mod:`aeat.domain.deadlines` — the
+catalogue itself is import-time free of any deadline dependency.
 """
 
 from __future__ import annotations

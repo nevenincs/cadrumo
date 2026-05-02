@@ -1,4 +1,11 @@
-"""Unit tests for the shared label-regex primitive (#305 refactor)."""
+"""Unit tests for the shared label-regex primitive.
+
+Covers the Spanish-decimal parser, the ``SPANISH_AMOUNT_GROUP``
+regex (including its NBSP-thousands acceptance and the column-
+separator rejection guard), the :func:`apply_label_regex`
+first-match-wins / ``match_count`` semantics, and the
+strict + frozen :class:`LabelHit` shape.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 class TestParseSpanishDecimal:
+    """:func:`parse_spanish_decimal` round-trip and tolerance coverage."""
+
     @pytest.mark.parametrize(
         ("raw", "expected"),
         [
@@ -27,6 +36,7 @@ class TestParseSpanishDecimal:
         ],
     )
     def test_parses(self, raw: str, expected: Decimal | None) -> None:
+        """Each canonical Spanish-decimal shape decodes to the expected Decimal."""
         assert parse_spanish_decimal(raw) == expected
 
     @pytest.mark.parametrize(
@@ -44,11 +54,12 @@ class TestParseSpanishDecimal:
         ids=["nbsp", "ascii-space", "tab"],
     )
     def test_parses_whitespace_thousands_separator(self, raw: str, expected: Decimal) -> None:
+        """Whitespace-thousands forms decode at the parse layer."""
         assert parse_spanish_decimal(raw) == expected
 
 
 class TestSpanishAmountGroupRegex:
-    """the regex must capture NBSP-separated thousands."""
+    """Capture-group behaviour of :data:`SPANISH_AMOUNT_GROUP`."""
 
     @pytest.mark.parametrize(
         ("line", "expected"),
@@ -59,16 +70,17 @@ class TestSpanishAmountGroupRegex:
         ids=["dot-sep", "nbsp"],
     )
     def test_regex_captures_nbsp_thousands(self, line: str, expected: Decimal) -> None:
+        """The regex captures both dot-separated and NBSP-separated thousands."""
         pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
         hits = apply_label_regex(line, {"01": pattern})
         assert "01" in hits, f"regex failed to match {line!r}"
         assert hits["01"].decimal_value == expected
 
     def test_regex_does_not_cross_column_ascii_space(self) -> None:
-        """Regression guard: the regex must NOT treat ASCII
-        column-separator whitespace as a thousands separator — that
-        would collapse `03 400,00` (casilla ref + value on one line)
-        into `3400,00`.
+        """ASCII column-separator whitespace must not act as a thousands separator.
+
+        Otherwise ``03 400,00`` (casilla ref + value on one line)
+        would collapse into ``3400,00``.
         """
         pattern = re.compile(rf"(?m)^\s*04\s.*?{SPANISH_AMOUNT_GROUP}")
         text = "04 2 por ciento s/casilla 03 400,00"
@@ -77,7 +89,10 @@ class TestSpanishAmountGroupRegex:
 
 
 class TestApplyLabelRegex:
+    """Dispatch semantics of :func:`apply_label_regex`."""
+
     def test_first_match_wins(self) -> None:
+        """When a label matches twice, the first hit wins."""
         pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
         text = "01 Ingresos 10.000,00\n01 Ingresos duplicados 99,99"
         hits = apply_label_regex(text, {"01": pattern})
@@ -86,19 +101,24 @@ class TestApplyLabelRegex:
         assert hits["01"].decimal_value == Decimal("10000.00")
 
     def test_match_count_reports_ambiguity(self) -> None:
+        """``match_count`` reports the number of regex hits for a label."""
         pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
         text = "01 Ingresos 10.000,00\n01 Duplicado 99,99"
         hits = apply_label_regex(text, {"01": pattern})
         assert hits["01"].match_count == 2
 
     def test_missing_pattern_absent_from_output(self) -> None:
+        """A label whose pattern matches nothing is absent from the output."""
         pattern = re.compile(rf"(?m)^\s*02\s.*?{SPANISH_AMOUNT_GROUP}")
         hits = apply_label_regex("01 Ingresos 10,00", {"02": pattern})
         assert hits == {}
 
 
 class TestLabelHitShape:
+    """Strict + frozen invariants of :class:`LabelHit`."""
+
     def test_frozen_dataclass(self) -> None:
+        """Mutating an attribute on a frozen :class:`LabelHit` raises."""
         hit = LabelHit(
             casilla_id="01",
             raw_value="10,00",

@@ -1,7 +1,7 @@
-"""Stream B invariant: REQUIRED_HEADER_FIELDS must reference real fields.
+"""Invariant: REQUIRED_HEADER_FIELDS must reference real fields.
 
 Every field_id listed in a schema's ``REQUIRED_HEADER_FIELDS`` must
-exist as a :class:`RecordFieldSpec.field_id` in at least one segment
+exist as a :attr:`RecordFieldSpec.field_id` in at least one segment
 (for envelopes) or in the top-level ``RECORD_SPECS`` tuple (for
 record-style schemas). Otherwise the serialiser's required-header
 check is unsatisfiable — every call fails at the boundary with a

@@ -1,4 +1,4 @@
-"""LIRPF art. 23.1 expense rollup with art. 23.1.a) cap (#454).
+"""LIRPF art. 23.1 expense rollup with art. 23.1.a) cap.
 
 Per-finca per-year aggregation of categorised gastos. Implements the
 art. 23.1.a) párrafo segundo cap: ``intereses de los capitales

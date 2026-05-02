@@ -1,4 +1,11 @@
-"""Modelo 840 — Impuesto sobre Actividades Económicas (IAE)."""
+"""Registry entry for Modelo 840 — Impuesto sobre Actividades Económicas.
+
+Defines the curated :class:`aeat.domain.modelos._metadata.ModeloMetadata`
+``ENTRY`` for the IAE census declaration. Most autónomos are
+default-exempt because their net turnover sits below the EUR 1 000 000
+threshold; the entry encodes that default and binds the modelo to its
+submission portal in :mod:`aeat.domain.portals`.
+"""
 
 from __future__ import annotations
 

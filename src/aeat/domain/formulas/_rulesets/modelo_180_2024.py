@@ -1,9 +1,10 @@
 """Modelo 180 ruleset covering the full 2024 fiscal year.
 
-Structural clone of :mod:`modelo_180_2025` — 19% retention on
-arrendamientos unchanged since 2016. This ruleset exists so Kent can
-self-audit a 2024 annual 180 summary (or a sustitutiva filed in 2025
-for ejercicio 2024) without leaking through 2025's effective range.
+Structural clone of :mod:`aeat.domain.formulas._rulesets.modelo_180_2025` —
+the 19 % retention on arrendamientos has been unchanged since 2016. The
+2024 ruleset exists so the engine can self-audit a 2024 annual 180
+summary (or a sustitutiva filed in 2025 for ejercicio 2024) without
+leaking through the 2025 effective range.
 """
 
 from __future__ import annotations

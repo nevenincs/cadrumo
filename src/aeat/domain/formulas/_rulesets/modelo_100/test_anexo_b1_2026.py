@@ -1,9 +1,11 @@
-"""Unit tests for Modelo 100 Anexo B1 — rendimientos del trabajo (2026).
+"""Cover Modelo 100 Anexo B1 (rendimientos del trabajo) for the 2026 ejercicio.
 
-Ejercicio 2026 inherits the 2025 numerical surface for arts. 17-20 (no
-posterior law modification at BOE consolidated-text consult 2026-02-28).
-The ruleset is a structural clone with year-scoped formula IDs and
-2026 effective dates. Verifies same anchors against the 2026 ruleset.
+Ejercicio 2026 inherits the 2025 numerical surface for arts. 17-20
+because no posterior law modification has been published in the
+consolidated BOE text. The 2026 ruleset is a structural clone with
+year-scoped formula IDs and 2026 effective dates, so this suite
+verifies the same anchors against
+:data:`aeat.domain.formulas._rulesets.modelo_100.MODELO_100_2026`.
 """
 
 from __future__ import annotations
@@ -19,7 +21,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo100AnexoB1:
+    """Audit Anexo B1 against the 2026 ruleset using LIRPF-derived anchors."""
+
     def test_ruleset_id_and_default_variant(self) -> None:
+        """The 2026 full-form ruleset uses the default variant slot."""
         assert MODELO_100_2026.ruleset_id == "modelo_100.2026"
         assert MODELO_100_2026.variant == "default"
 

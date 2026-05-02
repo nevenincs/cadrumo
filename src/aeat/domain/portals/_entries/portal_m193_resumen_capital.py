@@ -1,4 +1,10 @@
-"""Portal: Modelo 193 — resumen anual retenciones capital mobiliario."""
+"""Registry entry for Modelo 193 — annual summary of movable-capital withholdings.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -31,3 +37,4 @@ ENTRY: PortalMetadata = build_entry(
         "del capital mobiliario (complementa al Modelo 123)."
     ),
 )
+"""Portal entry for Modelo 193 (annual summary of movable-capital withholdings)."""

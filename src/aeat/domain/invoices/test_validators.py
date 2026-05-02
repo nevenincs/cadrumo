@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ._validators import validate_country_code, validate_spanish_tax_id, validate_vat_number
+from ...core.identity import validate_spanish_tax_id
+from ._validators import validate_country_code, validate_vat_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

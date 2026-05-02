@@ -1,6 +1,6 @@
 """End-to-end tests for :class:`aeat.adapters.inbound.schema.BoeOrdenExtractor`.
 
-The synthetic fixture PDF is generated with :mod:`reportlab` â€” the
+The synthetic fixture PDF is generated with :mod:`reportlab` — the
 same pattern as :mod:`aeat.justificante.test_parser`. It mimics the
 BOE Orden annex layout the extractor pattern library targets; it is
 NOT a real BOE document, and a live probe against the real
@@ -297,7 +297,7 @@ def test_extractor_handles_four_digit_casilla_ids(tmp_path: Path) -> None:
 
 
 def test_extractor_handles_compact_anexo_same_line(tmp_path: Path) -> None:
-    """``ANEXO I 01 Base imponible`` on one line â€” the post-heading content is kept."""
+    """``ANEXO I 01 Base imponible`` on one line — the post-heading content is kept."""
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
 
@@ -368,7 +368,7 @@ def test_extractor_accepts_formula_before_declaration(tmp_path: Path) -> None:
     build_synthetic_boe_pdf(
         path,
         annex_lines=(
-            # Formula appears first â€” column-layout PDFs sometimes do this.
+            # Formula appears first — column-layout PDFs sometimes do this.
             "Casilla 07 = Casilla 01 - Casilla 03",
             "01 Base imponible 1T",
             "03 Ingresos computables 1T",

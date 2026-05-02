@@ -1,4 +1,4 @@
-"""Adversarial absence tests for committed sanitised fixtures (#239).
+"""Adversarial absence tests for committed sanitised fixtures.
 
 This is the load-bearing security gate the sanitiser exists to
 satisfy. For every committed fixture under
@@ -17,16 +17,16 @@ The adversarial test does NOT have the cleartext (the cleartext
 mapping YAML stays gitignored under ``scratch/``). Instead, it
 asserts:
 
-1. The fixture is structurally a PDF that opens through pikepdf
-   without warnings.
+1. The fixture is structurally a PDF that opens through
+   :mod:`pikepdf` without warnings.
 2. The fixture's content streams contain every synthetic value
    listed in ``replacements_applied``.
 3. The fixture's raw bytes do not contain any leak-marker string
    from the synthetic mapping (e.g. ``REPLACE_WITH_REAL``).
 
-Until lands the first fixtures, the test parametrise is
-empty and pytest reports zero collected items — that is the
-intended skip-clean state for CI runs that lack scratch captures.
+When no fixtures are committed yet the parametrise is empty and
+pytest reports zero collected items — that is the intended
+skip-clean state for CI runs that lack scratch captures.
 """
 
 from __future__ import annotations
@@ -48,8 +48,8 @@ def _project_root() -> Path:
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
     """Return ``(pdf_path, sidecar_json_path)`` for every committed fixture.
 
-    Returns an empty list when no fixtures have landed yet —
-    of the plan populates the directory.
+    Returns an empty list when no fixtures have landed yet, so a
+    fresh checkout collects zero parametrised cases.
     """
     fixture_root = _project_root() / "tests" / "fixtures" / "justificantes"
     if not fixture_root.is_dir():
@@ -151,8 +151,7 @@ def test_fixture_root_is_skip_clean_when_empty() -> None:
     state observable in CI summaries.
     """
     if not _FIXTURE_PAIRS:
-        # No fixtures committed yet. of the plan lands the
-        # first three; until then this file is structurally green.
+        # No fixtures committed yet; this file stays structurally green.
         return
     # Otherwise the parametrised tests above are the real work.
     assert len(_FIXTURE_PAIRS) > 0

@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 100 tarifa progresiva post-validator."""
+"""Unit tests for the Modelo 100 tarifa progresiva post-validator.
+
+Covers :func:`aeat.adapters.inbound.borrador._tarifa.apply_tarifa` (the
+piecewise-linear tarifa application) and
+:func:`aeat.adapters.inbound.borrador._tarifa.validate_tarifa_estatal`
+(the cuota integrity check).
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""CLI-local shim around root-private JSON-contract primitives."""
+"""CLI-local JSON-contract surface."""
 
 from __future__ import annotations
 

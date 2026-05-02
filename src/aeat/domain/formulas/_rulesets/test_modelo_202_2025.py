@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 202 2025 ruleset."""
+"""Unit tests for the Modelo 202 2025 ruleset.
+
+Exercises the cuota-íntegra, resultado, and cantidad-a-ingresar
+derivations of :data:`aeat.domain.formulas._rulesets.MODELO_202_2025`,
+including the LIS art. 40.3 modalidad pago-fraccionado worked example
+and a regression for the whole-percent casilla 17 normalisation.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo202Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 202 ruleset."""
+
     def test_consistent_instalment_is_clean(self) -> None:
         # Base 100_000 x tipo 17% = 17_000 cuota.
         # AEAT prints casilla 17 as whole-percent value:
@@ -85,43 +93,42 @@ class TestModelo202Ruleset:
         assert len(MODELO_202_2025.formulas) == 3
 
     def test_external_worked_example_lis_art_40_3_modalidad(self) -> None:
-        """External-anchored worked example (closure,
-        correction).
+        """Externally-anchored worked example for LIS art. 40.3 modalidad.
 
         Provenance: Ley 27/2014 (LIS) art. 40.3 párrafo 1 fixes the
         tipo de gravamen aplicable al pago fraccionado modalidad
         base-del-período-corriente at **5/7 del tipo general
-        redondeado por defecto**, which resolves to **17%** for the
-        general 25% tipo de gravamen (LIS art. 29.1: ``25 por ciento
-        con carácter general``). For micropymes with the Ley 31/2022
-        transitional 23% tipo, 5/7 x 23 rounds to 16%. The general-
-        tipo 17% applies to Modelo 202 filings by sociedades not
+        redondeado por defecto**, which resolves to **17 %** for the
+        general 25 % tipo de gravamen (LIS art. 29.1: "25 por ciento
+        con carácter general"). For micropymes with the Ley 31/2022
+        transitional 23 % tipo, 5/7 x 23 rounds to 16 %. The general-
+        tipo 17 % applies to Modelo 202 filings by sociedades not
         claiming the micropyme / new-entity régimen.
 
-        This fixture uses the 17% general-tipo modalidad 40.3 rate
+        This fixture uses the 17 % general-tipo modalidad 40.3 rate
         — NOT the rate from the ruleset's param table (there is
         none: casilla 17 is a user-supplied PDF extraction). A
         rate-swap bug in the ruleset would surface as a Decimal
         mismatch.
 
-        (audit corrected an earlier 23%-as-tipo
-        miscitation: LIS art. 40.3 párrafo 2 does mention 23% as an
-        **importe mínimo** threshold — minimum of 23% of positive
-        P&L — for large entities > EUR 10M net turnover, but this
+        Note: LIS art. 40.3 párrafo 2 does mention 23 % as an
+        **importe mínimo** threshold — minimum of 23 % of positive
+        P&L — for large entities > 10 M € net turnover, but this
         is a floor on the pago fraccionado, not a tipo de gravamen.
-        The 17% rate here is the derived modalidad-rate for
-        ordinary sociedades under LIS 29.1 + 40.3.)
+        The 17 % rate here is the derived modalidad-rate for
+        ordinary sociedades under LIS 29.1 + 40.3.
 
         Scenario: Q2 2025 (2P) sociedad ordinaria with base 200 000
-        at 17% modalidad 40.3 rate:
+        at 17 % modalidad 40.3 rate:
+
         - casilla 16 (base) = 200 000.
-        - casilla 17 (tipo) = 17.00 per LIS art. 40.3 (5/7 of 25%).
-        - casilla 18 (cuota integra) = 200 000 x 17% = 34 000.
+        - casilla 17 (tipo) = 17.00 per LIS art. 40.3 (5/7 of 25 %).
+        - casilla 18 (cuota íntegra) = 200 000 x 17 % = 34 000.
         - casilla 27 bonificaciones = 0.
         - casilla 28 retenciones = 2 000.
         - casilla 30 pago fraccionado anterior = 10 000 (1P).
         - casilla 32 resultado = 34 000 - 0 - 2 000 - 10 000 = 22 000.
-        - casilla 33 minimo = 20 000.
+        - casilla 33 mínimo = 20 000.
         - casilla 34 cantidad = max(32, 33) = max(22 000, 20 000) = 22 000.
 
         Citation: BOE-A-2014-12328 art. 40.3 párr. 1.
@@ -141,10 +148,10 @@ class TestModelo202Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_whole_percent_casilla_17_not_treated_as_fraction(self) -> None:
-        """regression: casilla 17 = 17.00 (whole percent) must NOT yield 1.7M.
+        """Regression: casilla 17 = 17.00 (whole percent) must NOT yield 1.7 M €.
 
-        Pre-fix the formula was ``percent(ref("17"), ref("16"))`` which
-        multiplied whole-percent * base = 100x wrong. The post-fix formula
+        The original formula was ``percent(ref("17"), ref("16"))`` which
+        multiplied whole-percent * base = 100x wrong. The current formula
         ``percent(div_op(ref("17"), lit("100")), ref("16"))`` normalises
         the whole-percent value to a fraction at audit time.
         """

@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 111 2025 ruleset."""
+"""Unit tests for the Modelo 111 2025 ruleset.
+
+Exercises the formula-engine derivations and the externally-anchored worked
+example for :data:`aeat.domain.formulas._rulesets.MODELO_111_2025`. Covers
+the fixed-rate retentions on premios (casilla 09) and ganancias /
+arrendamientos (casilla 12), plus the resultado-a-ingresar chain.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo111Ruleset:
+    """Formula-engine assertions for the 2025 Modelo 111 ruleset."""
+
     def test_consistent_sum_and_resultado_is_clean(self) -> None:
         provided = {
             "03": Decimal("5000.00"),  # trabajo
@@ -109,31 +117,22 @@ class TestModelo111Ruleset:
         assert report.is_clean()
 
     def test_external_worked_example_rirpf_99(self) -> None:
-        """External-anchored worked example (closure;
-        citations corrected ).
+        """Externally-anchored worked example for the 19 % pago-a-cuenta rate.
 
-        Provenance (BOE-A-2007-6820 RD 439/2007 consolidated
-        retrieval 2026-04-22): RIRPF art. 99 ("Obligación de practicar
-        pagos a cuenta") carries the 19% pago-a-cuenta rate on both
-        premios en metálico (LIRPF art. 101.7 rate, implemented at
-        RIRPF art. 99 + threshold at art. 75.2.c/75.3.f) and
-        rendimientos del capital mobiliario / arrendamientos
-        (implemented at RIRPF art. 100). The fixture derives the
-        retention amounts from the 19% statutory rate directly
-        (NOT from the ruleset's ParameterTable).
+        Provenance (BOE-A-2007-6820 RD 439/2007): RIRPF art. 99
+        ("Obligación de practicar pagos a cuenta") carries the 19 %
+        pago-a-cuenta rate on both premios en metálico (LIRPF art.
+        101.7 rate, implemented at RIRPF art. 99 + threshold at
+        art. 75.2.c / 75.3.f) and rendimientos del capital mobiliario /
+        arrendamientos (implemented at RIRPF art. 100). The fixture
+        derives the retention amounts from the 19 % statutory rate
+        directly, NOT from the ruleset's ``ParameterTable``.
 
-        Prior-wave miscites (tracked): RIRPF art.
-        105.1 for premios — WRONG (art. 105 is IIC transmisiones).
-        cited RIRPF art. 100.3.c for arrendamientos —
-        WRONG (art. 100 has no subsections in the consolidated text;
-        the single-rate 19% rule lives in art. 100 para. 1 /
-        art. 75.2.c). Corrected in .
-
-        Scenario: Q2 2025 Kent with a 2 500 premio en metálico
-        (casilla 08) and 1 000 in rendimientos capital mobiliario
-        reported here as casilla 11 (note: Modelo 111 casilla 12
-        captures ingresos a cuenta de retribuciones en especie per
-        Orden EHA/586/2011 — the test scenario simplifies):
+        Scenario: Q2 2025 with a 2 500 € premio en metálico
+        (casilla 08) and 1 000 € in rendimientos capital mobiliario
+        reported here as casilla 11 (Modelo 111 casilla 12 captures
+        ingresos a cuenta de retribuciones en especie per Orden
+        EHA/586/2011 — the test scenario simplifies):
         - casilla 09 = 2 500 x 19% = 475.00 per LIRPF art. 101.7
           via RIRPF art. 99.
         - casilla 12 = 1 000 x 19% = 190.00 per RIRPF art. 100 +
@@ -166,7 +165,7 @@ class TestModelo111Ruleset:
         assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
 
     def test_zero_boundary_is_clean(self) -> None:
-        """zero-quarter boundary (no retenciones)."""
+        """Zero-quarter boundary case with no retenciones."""
         provided = {
             "03": Decimal("0.00"),
             "06": Decimal("0.00"),

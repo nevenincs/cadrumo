@@ -1,12 +1,15 @@
 """Strict pydantic records for the authenticated AEAT sede surface.
 
 Every record is derived from HTML / URL shapes captured live against
-Kent's production sede on 2026-04-24. No field is speculative; each
-one has at least one real observation backing its shape and bounds.
+a production sede. No field is speculative; each has at least one
+real observation backing its shape and bounds.
 
 Every boundary-crossing record carries ``mode: Literal["read"]`` as
-part of the five-layer write-guard — the sede module is structurally
-incapable of mutating AEAT state.
+part of the structural write-guard — the sede module is incapable
+of mutating AEAT state.
+
+Public surface: :class:`Expediente`, :class:`JustificanteRef`,
+:class:`SedeCapture`.
 """
 
 from __future__ import annotations
@@ -37,7 +40,7 @@ _CSV_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[A-Z0-9]{8,32}$")
 class Expediente(BaseModel):
     """One AEAT expediente as listed under *Mis Expedientes*.
 
-    Captured live: the sede renders an AJAX-expanded category tree at
+    The sede renders an AJAX-expanded category tree at
     ``/wlpl/TEWV-CORE/ResumenVlt``; leaf rows carry the expediente id
     as the link text and the detail URL on the ``<a>`` ``href``.
 
@@ -52,7 +55,7 @@ class Expediente(BaseModel):
         ejercicio: Tax year inferred from the expediente id's leading
             four digits. Captured against 2021 / 2022 / 2023 IRPF.
         category_path: Breadcrumb through the sede's tree, from
-            root to leaf. Captured live:
+            root to leaf. Example shape:
             ``("Agencia Estatal de Administración Tributaria",
                "Impuestos, tasas y prestaciones patrimoniales",
                "Impuesto sobre la Renta de las Personas Físicas",
@@ -76,6 +79,7 @@ class Expediente(BaseModel):
     @field_validator("expediente_id")
     @classmethod
     def _expediente_id_shape(cls, value: str) -> str:
+        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
         if not _EXPEDIENTE_ID_PATTERN.match(value):
             raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
         return value
@@ -83,6 +87,7 @@ class Expediente(BaseModel):
     @field_validator("category_path")
     @classmethod
     def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Reject empty / whitespace entries inside ``category_path``."""
         for entry in value:
             if not entry.strip():
                 raise ValueError("category_path entries must be non-empty")
@@ -92,10 +97,10 @@ class Expediente(BaseModel):
 class JustificanteRef(BaseModel):
     """CSV-keyed handle for AEAT's document verifier.
 
-    Captured live: on every expediente detail page, the
-    *Grabación de la declaración* link carries the document's CSV in
-    its ``href``. The same CSV unlocks both the HTML cotejo viewer
-    (``CotejoIdSv``) and the raw PDF (``CotejoDocIdSv``).
+    On every expediente detail page, the *Grabación de la declaración*
+    link carries the document's CSV in its ``href``. The same CSV
+    unlocks both the HTML cotejo viewer (``CotejoIdSv``) and the raw
+    PDF (``CotejoDocIdSv``).
 
     Attributes:
         csv: Código Seguro de Verificación — AEAT's per-document hash.
@@ -120,6 +125,7 @@ class JustificanteRef(BaseModel):
     @field_validator("csv")
     @classmethod
     def _csv_shape(cls, value: str) -> str:
+        """Reject CSV values that do not match the AEAT uppercase alphanumeric pattern."""
         if not _CSV_PATTERN.match(value):
             raise ValueError(f"csv does not match AEAT shape: {value!r}")
         return value

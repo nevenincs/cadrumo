@@ -1,16 +1,15 @@
-"""Modelo 303 ruleset covering the full 2025 fiscal year (#183).
+"""Modelo 303 ruleset covering the full 2025 fiscal year.
 
 The 2024 and 2025 rulesets are mechanically identical because the
 LIVA arts. 90 / 91 régimen general rates were not amended between
-the two years (see the doc §"Mid-year rule
-changes"). The shared casilla and citation tuples are imported
-from the 2024 sibling; the formulas mirror the 2024 set with
-year-stamped ``formula_id`` strings so audit ledgers can
-distinguish the fiscal year of derivation.
+the two years. The shared casilla and citation tuples are re-imported
+from :mod:`aeat.domain.formulas._rulesets.modelo_303_2024`; the
+formulas mirror the 2024 set with year-stamped ``formula_id`` strings
+so audit ledgers can distinguish the fiscal year of derivation.
 
-The separate file simplifies any future divergence (e.g., a
-hypothetical mid-year rate change effective 2025-Q3 would land
-here without touching the 2024 ruleset).
+The separate file simplifies any future divergence (for example, a
+hypothetical mid-year rate change effective 2025-Q3 would land here
+without touching the 2024 ruleset).
 """
 
 from __future__ import annotations

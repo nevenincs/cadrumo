@@ -1,4 +1,9 @@
-"""Per-año Modelo 100 summary-block extractor registry."""
+"""Per-año Modelo 100 summary-block extractor registry.
+
+Registers the concrete extractor classes (one per tax year) and exposes
+:func:`get_extractor` for the public
+:func:`aeat.adapters.inbound.borrador.parse_borrador` entry point.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +17,18 @@ _REGISTRY_BY_AÑO: dict[int, type] = {
 
 
 def get_extractor(año: int) -> Modelo100SummaryV2025Extractor:
-    """Return a fresh Modelo 100 summary extractor for the given tax year."""
+    """Return a fresh Modelo 100 summary extractor for the given tax year.
+
+    Args:
+        año: The four-digit tax year for which an extractor is required.
+
+    Returns:
+        A freshly-instantiated extractor matching the requested ``año``.
+
+    Raises:
+        :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
+            When no extractor is registered for ``año``.
+    """
     cls = _REGISTRY_BY_AÑO.get(año)
     if cls is None:
         known = sorted(_REGISTRY_BY_AÑO.keys())

@@ -1,4 +1,13 @@
-"""Manual-backed loader for category profiles."""
+"""Manual-backed loader for category profiles.
+
+Bridges the curated in-code registry
+:data:`~aeat.domain.categories.CATEGORY_PROFILES_2025` and the
+structured manual corpus exposed by :mod:`aeat.domain.manuals`. The
+public entry point :func:`load_category_profiles_from_manual`
+returns a manual-backed mapping when the structured manual is
+available, and otherwise falls back to the curated registry so
+downstream code sees a stable surface.
+"""
 
 from __future__ import annotations
 

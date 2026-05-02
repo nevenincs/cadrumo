@@ -1,4 +1,13 @@
-"""Strict raw transaction boundary models for ingest."""
+"""Strict raw transaction boundary models for ingest.
+
+Defines the upstream-immutable records every transaction parser must
+emit, before they are wrapped in
+:class:`aeat.domain.transactions.Transaction`:
+
+- :class:`RawTransaction` -- the verbatim per-row record.
+- :class:`RawProvenance` -- the source-file metadata pinned to each row.
+- :class:`SourceFormat` -- closed taxonomy of supported input formats.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +24,16 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SourceFormat(StrEnum):
+    """Closed taxonomy of supported raw-transaction input formats.
+
+    Attributes:
+        CSV: Bank statement CSV export.
+        XLSX: Bank statement Excel workbook.
+        OFX: Open Financial Exchange feed.
+        PDF: PDF statement (parsed text layer).
+        MANUAL: Hand-entered transaction.
+    """
+
     CSV = "csv"
     XLSX = "xlsx"
     OFX = "ofx"
@@ -23,6 +42,19 @@ class SourceFormat(StrEnum):
 
 
 class RawProvenance(BaseModel):
+    """Per-row provenance pinned to one :class:`RawTransaction`.
+
+    Attributes:
+        source_path: Resolved absolute path to the source file.
+        source_sha256: 64-character lowercase hex SHA-256 digest of the
+            source file.
+        source_row_index: One-based row index within the source file.
+        source_format: Closed :class:`SourceFormat` discriminator.
+        ingested_at: Timezone-aware UTC timestamp of the ingest run.
+        provider_name: Non-blank logical name of the upstream
+            financial provider.
+    """
+
     model_config = _STRICT_FROZEN
 
     source_path: Path
@@ -35,11 +67,13 @@ class RawProvenance(BaseModel):
     @field_validator("source_path")
     @classmethod
     def _resolve_source_path(cls, value: Path) -> Path:
+        """Return the absolute resolved path for ``source_path``."""
         return value.resolve()
 
     @field_validator("source_sha256")
     @classmethod
     def _normalize_sha256(cls, value: str) -> str:
+        """Lowercase, strip, and assert ``source_sha256`` is 64 hex chars."""
         normalized = value.strip().lower()
         if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
             raise ValueError("source_sha256 must be a 64-character lowercase hex digest")
@@ -48,6 +82,7 @@ class RawProvenance(BaseModel):
     @field_validator("ingested_at")
     @classmethod
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
+        """Reject naive timestamps; ingest must record UTC offsets."""
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("ingested_at must be timezone-aware")
         return value
@@ -55,6 +90,7 @@ class RawProvenance(BaseModel):
     @field_validator("provider_name")
     @classmethod
     def _trim_provider_name(cls, value: str) -> str:
+        """Trim ``provider_name``; reject the empty string."""
         trimmed = value.strip()
         if not trimmed:
             raise ValueError("provider_name must not be blank")
@@ -62,6 +98,25 @@ class RawProvenance(BaseModel):
 
 
 class RawTransaction(BaseModel):
+    """Verbatim per-row transaction record emitted by an ingest parser.
+
+    Attributes:
+        transaction_id: Provider-assigned identifier; never normalised
+            beyond a strip + non-blank check.
+        booked_date: Date the transaction posted to the account.
+        value_date: Optional value date; falls back to ``booked_date``
+            when ``None``.
+        amount: Signed :class:`decimal.Decimal` amount in
+            :attr:`currency`.
+        currency: Three-letter ISO 4217 currency code, uppercase.
+        counterparty: Optional counterparty descriptor; trimmed and
+            collapsed to ``None`` when blank.
+        description: Non-blank narrative.
+        provenance: Per-row :class:`RawProvenance` metadata.
+        raw_fields: Frozen mapping of original source columns to
+            stringified values, preserved verbatim for audit.
+    """
+
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
@@ -77,6 +132,7 @@ class RawTransaction(BaseModel):
     @field_validator("transaction_id", "description")
     @classmethod
     def _reject_blank_strings(cls, value: str) -> str:
+        """Trim and reject blank strings on identifier / narrative fields."""
         trimmed = value.strip()
         if not trimmed:
             raise ValueError("field must not be blank")
@@ -85,6 +141,7 @@ class RawTransaction(BaseModel):
     @field_validator("currency")
     @classmethod
     def _normalize_currency(cls, value: str) -> str:
+        """Uppercase and assert ``currency`` is a three-letter ISO 4217 code."""
         normalized = value.strip().upper()
         if len(normalized) != 3 or not normalized.isalpha():
             raise ValueError("currency must be a three-letter ISO 4217 code")
@@ -93,6 +150,7 @@ class RawTransaction(BaseModel):
     @field_validator("counterparty")
     @classmethod
     def _normalize_counterparty(cls, value: str | None) -> str | None:
+        """Trim ``counterparty`` and collapse blank strings to ``None``."""
         if value is None:
             return None
         trimmed = value.strip()
@@ -101,9 +159,10 @@ class RawTransaction(BaseModel):
     @field_validator("raw_fields")
     @classmethod
     def _freeze_raw_fields(cls, value: Mapping[str, str]) -> Mapping[str, str]:
+        """Freeze ``raw_fields`` into an immutable mapping with stringified entries."""
         return MappingProxyType({str(key): str(raw) for key, raw in value.items()})
 
     @field_serializer("raw_fields")
     def _serialize_raw_fields(self, value: Mapping[str, str]) -> dict[str, str]:
+        """Serialise the immutable mapping back to a JSON-friendly dict."""
         return dict(value)
-

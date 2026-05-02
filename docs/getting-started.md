@@ -1,9 +1,27 @@
 # Getting started
 
-This walkthrough takes a brand-new autónomo from a fresh workstation
-to a first read-only filing package. It assumes you can read English but does
-not assume any Python experience. Every command can be copy-pasted
-verbatim.
+This walkthrough takes a brand-new self-employed operator (*autónomo*)
+from a fresh workstation to a first read-only filing package. It
+assumes you can read English but does not assume any Python
+experience. Every command can be copy-pasted verbatim.
+
+## Acronyms used in this guide
+
+- **AEAT** — *Agencia Estatal de Administración Tributaria*, the
+  Spanish tax authority.
+- **NIF / NIE / CIF** — *Número de Identificación Fiscal* (and its
+  variants for foreign residents and legal entities), the
+  national-tax-ID format every filing surfaces.
+- **IRPF** — *Impuesto sobre la Renta de las Personas Físicas*,
+  Spanish personal income tax.
+- **IVA** — *Impuesto sobre el Valor Añadido*, Spanish VAT.
+- **BOE** — *Boletín Oficial del Estado*, the official state gazette
+  carrying every legal citation the project links to.
+- **CCAA** — *Comunidad Autónoma*, an autonomous community of Spain.
+- **PKCS#12** — public-key cryptographic standard #12, the wrapper
+  format used by the FNMT-RCM client certificate (`.p12` / `.pfx`).
+- **Sede Electrónica** — AEAT's online filing portal at
+  ``sede.agenciatributaria.gob.es``.
 
 ## 1. Prerequisites
 
@@ -30,10 +48,10 @@ You will need:
 
 ## Authentication today
 
-The current Kent-facing login path is certificate-only. You need a
-working FNMT-compatible certificate setup for live AEAT access.
+The current operator-facing login path is certificate-only. You need
+a working FNMT-compatible certificate setup for live AEAT access.
 
-Internally, the auth layer now hangs off a provider-generic seam so
+Internally, the auth layer hangs off a provider-generic seam so
 future login providers can plug into the same workflow. Those future
 providers are not shipped as usable CLI login options today.
 
@@ -64,7 +82,7 @@ just bootstrap
 ## 3. Configure
 
 ```sh
-aeat setup            # shipped via #61 / PR #66
+aeat setup
 ```
 
 The setup wizard is a guided pass through the same fields you would
@@ -116,8 +134,8 @@ storage:
 aeat security key-export --out backup/master-key.json
 ```
 
-The full operator runbook for these commands lives in
-[`docs/security-runbook.md`](security-runbook.md).
+The full operator runbook for these commands lives alongside the
+project's other contributor docs.
 
 For testing / throwaway environments the substrate also offers an
 `unsecured` backend (published deterministic master key, zero
@@ -153,9 +171,9 @@ builds a typed draft against the manual práctico and the casilla
 catalogue, runs read-only preflight, and prints the draft diagnostics
 and diff against the last successful filing for the same modelo.
 
-**Nothing is sent to AEAT.** The CLI has no live-submit path. Kent's
-normal command-line flow remains produce -> verify -> export, then
-upload through AEAT's portal himself.
+**Nothing is sent to AEAT.** The CLI has no live-submit path. The
+operator's normal command-line flow remains produce → verify →
+export, followed by a manual upload through AEAT's own portal.
 
 If the engine encounters a captcha, an unexpected modal, or any AEAT
 response it does not recognise, it pauses, takes a screenshot into

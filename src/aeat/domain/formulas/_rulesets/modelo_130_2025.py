@@ -1,11 +1,14 @@
 """Modelo 130 ruleset covering the full 2025 fiscal year.
 
-The 2024 and 2025 rulesets are mechanically identical — AEAT RD
-439/2007 art. 110 was not amended between the two years (see the
-research doc §Mid-year rule changes). The separate ruleset file
-simplifies future divergence (e.g., the La Palma 60% reduction from
-4T 2025 onwards, which lands in a dedicated territorial
-overlay).
+The 2024 and 2025 rulesets are mechanically identical — RD 439/2007
+art. 110 was not amended between the two years. The separate file
+simplifies future divergence (for example, the La Palma 60 % reduction
+effective from 4T 2025 onwards, which lands as a dedicated territorial
+overlay rather than a base-ruleset amendment).
+
+The casilla and citation tuples are re-imported from
+:mod:`aeat.domain.formulas._rulesets.modelo_130_2024`; only the formula
+identifiers and parameter effective range are bound to 2025.
 """
 
 from __future__ import annotations

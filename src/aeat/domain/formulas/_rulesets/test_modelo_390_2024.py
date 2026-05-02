@@ -4,9 +4,12 @@ The 2024 ruleset is the year-master that owns ``_CASILLAS`` and
 ``_CITATIONS``; the 2025 and 2026 siblings re-import them. The
 algebraic chain is identical across the three years because LIVA
 arts. 90 / 91 / 92 / 102 / 107 / 164 and RIVA art. 71.7 were not
-amended for 2024-2026. Expected values below are derived from those
-articles and the AEAT Modelo 390 Instrucciones, not from the
-ruleset's parameter table.
+amended for 2024-2026. Expected values in this module are derived
+from those articles and the AEAT Modelo 390 Instrucciones, never
+from the ruleset's parameter table.
+
+Exercises :data:`aeat.domain.formulas._rulesets.MODELO_390_2024` against
+:class:`aeat.domain.formulas._engine.Engine`.
 """
 
 from __future__ import annotations
@@ -23,7 +26,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """Externally anchored 2024 fixture for régimen general."""
+    """Return the externally anchored 2024 régimen-general fixture.
+
+    Returns:
+        A casilla-id keyed mapping suitable for
+        :meth:`aeat.domain.formulas._engine.Engine.audit_against`.
+    """
     return {
         "01": Decimal("12500.00"),
         "04": Decimal("2625.00"),
@@ -44,6 +52,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo390Ruleset2024:
+    """Behavioural tests for the 2024 Modelo 390 ruleset variant."""
+
     def test_ruleset_id_and_effective_range(self) -> None:
         assert MODELO_390_2024.ruleset_id == "modelo_390.2024"
         assert MODELO_390_2024.effective_from == date(2024, 1, 1)

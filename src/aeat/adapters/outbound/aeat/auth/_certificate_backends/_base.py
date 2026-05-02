@@ -1,4 +1,10 @@
-"""Abstract base class for certificate backends."""
+"""Abstract contract for certificate backends.
+
+Defines :class:`_CertBackend`, the interface every concrete backend
+under :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends`
+must implement. Backends are dispatched by
+:func:`aeat.adapters.outbound.aeat.auth.certificate._select_backend`.
+"""
 
 from __future__ import annotations
 
@@ -33,4 +39,14 @@ class _CertBackend(ABC):
 
     @abstractmethod
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
-        """Perform an mTLS handshake smoke test against ``url``."""
+        """Perform an mTLS handshake smoke test against ``url``.
+
+        Args:
+            cert: The loaded PKCS#12 certificate to present.
+            url: HTTPS endpoint to probe with the client certificate.
+
+        Returns:
+            A :class:`aeat.adapters.outbound.aeat.auth.certificate.HandshakeResult`
+            describing whether the handshake succeeded along with the
+            observed status code, elapsed time, and any error message.
+        """

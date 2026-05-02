@@ -1,4 +1,10 @@
-"""Tests for the governed-persistence FilingHistoryRepository."""
+"""Tests for the governed-persistence :class:`FilingHistoryRepository`.
+
+Exercises round-trip save/load, list/iter, deletion, the AUDIT
+classification gate, unsafe-modelo rejection, the migration helper
+(including the ``pages/`` sub-directory skip), and the per-modelo
+lock isolation guarantees.
+"""
 
 from __future__ import annotations
 
@@ -17,8 +23,7 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from ..sync import WireFilingEntry, WireFilingHistory
-from ..sync._protocols import ModeloIdentifier
+from ...domain.sync import ModeloIdentifier, WireFilingEntry, WireFilingHistory
 from ._history_repository import (
     FilingHistoryRepository,
     HistoryMigrationSummary,

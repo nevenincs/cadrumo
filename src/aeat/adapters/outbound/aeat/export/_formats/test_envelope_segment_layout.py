@@ -1,15 +1,15 @@
-"""303 envelope per-segment cumulative layout lock.
+"""Modelo 303 envelope per-segment cumulative layout lock.
 
-A complementary guard to the "total envelope = 7994" check.
-The total alone doesn't catch a segment reordering — swapping
-DP30301 and DP30302 in the ENVELOPE tuple still sums to 7994 but
-shifts where every casilla after the reshuffle lands, breaking
-byte-exact compatibility with AEAT.
+A complementary guard to the "total envelope = 7994" check. The total
+alone does not catch a segment reordering — swapping DP30301 and
+DP30302 in the ENVELOPE tuple still sums to 7994 but shifts where
+every casilla after the reshuffle lands, breaking byte-exact
+compatibility with AEAT.
 
-the exact (segment_id, cumulative_start_offset,
-segment_length) triple for every segment in the 303 2024 envelope.
-Any reordering, insertion, deletion, or segment-length change
-fails here.
+The tests pin the exact ``(segment_id, cumulative_start_offset,
+segment_length)`` triple for every segment in the Modelo 303 2024
+envelope. Any reordering, insertion, deletion, or segment-length
+change fails here.
 """
 
 from __future__ import annotations
@@ -38,6 +38,8 @@ _EXPECTED_303_2024_LAYOUT: list[tuple[str, int, int]] = [
 
 
 class TestEnvelopeSegmentLayout:
+    """Lock the segment ordering and per-segment lengths in ``ENVELOPE``."""
+
     def test_segment_count_locked(self) -> None:
         assert len(ENVELOPE) == len(_EXPECTED_303_2024_LAYOUT), (
             f"303 2024 envelope has {len(ENVELOPE)} segment(s); expected "
@@ -62,14 +64,14 @@ class TestEnvelopeSegmentLayout:
 
     def test_cumulative_sum_is_7994(self) -> None:
         """Sanity: the per-segment lengths sum to the envelope total (defence
-        in depth — the already locks this, but a broken layout
-        lock should fail BOTH together rather than diverge."""
+        in depth — the golden test already locks this, but a broken layout
+        lock should fail BOTH together rather than diverge)."""
         assert sum(s.total_length for s in ENVELOPE) == 7994
 
     def test_trailer_is_the_final_segment(self) -> None:
         """The ``</T303...>`` closing marker must be the last thing on the
-        wire. A future insertion that puts something after DP30300_TRAILER
-        would still satisfy "length = 7994" if compensating truncation
+        wire. A future insertion that puts something after ``DP30300_TRAILER``
+        would still satisfy ``length = 7994`` if compensating truncation
         happened elsewhere, but would break AEAT's parser expectations."""
         final = ENVELOPE[-1]
         assert final.segment_id == "DP30300_TRAILER", (

@@ -1,4 +1,4 @@
-"""Unit tests for :class:`aeat.adapters.outbound.aeat.export._preflight.Preflight`."""
+"""Unit tests for :class:`aeat.domain.submission.Preflight`."""
 
 from __future__ import annotations
 
@@ -8,16 +8,15 @@ from typing import Any
 
 import pytest
 
+from .....application.auth import AuthProviderDescription, AuthProviderKind
+from .....domain.submission import SubmissionPreflightError
 from .....domain.submission._protocols import FilingFindingSeverity as DomainSubmissionFindingSeverity
 from . import (
-    AuthProviderDescription,
-    AuthProviderKind,
     DraftStatus,
     FilingDraftLike,
     FilingFinding,
     FilingFindingSeverity,
     Preflight,
-    SubmissionPreflightError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
@@ -25,11 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 @dataclass
 class _Draft(FilingDraftLike):
-    """Protocol-conforming test double for :class:`FilingDraftLike`.
-
-    Written by hand per the project rule: real Protocol implementation,
-    not a mock.
-    """
+    """Protocol-conforming test double for :class:`FilingDraftLike`."""
 
     draft_id: str = "draft-1"
     modelo: str = "130"

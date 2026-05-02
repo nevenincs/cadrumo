@@ -1,7 +1,9 @@
-"""Unit tests for Modelo 100 Anexo N — deducciones autonómicas (2026).
+"""Unit tests for Modelo 100 Anexo N — deducciones autonómicas (ejercicio 2026).
 
-External-anchored to LIRPF art. 46 bis + AEAT manual práctico Renta
-2025 Parte 2 deducciones autonómicas.
+Exercises the per-CCAA deducción aggregation chain feeding casilla
+``0622`` of :data:`aeat.domain.formulas._rulesets.MODELO_100_2026`,
+anchored to LIRPF art. 46 bis and the AEAT manual práctico Renta 2025
+Parte 2 deducciones autonómicas.
 """
 
 from __future__ import annotations
@@ -17,8 +19,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _baseline() -> dict[str, Decimal]:
-    """Zero values for every casilla — Anexo N tests overwrite per-CCAA
-    aggregate inputs (1101..1115)."""
+    """Return zero values for every casilla used in Anexo N tests.
+
+    Tests overwrite per-CCAA aggregate inputs (``1101..1115``) and the
+    aggregate target (``0622``).
+
+    Returns:
+        Mapping of casilla id to ``Decimal("0.00")``.
+    """
     return {
         "0001": Decimal("0.00"),
         "0008": Decimal("0.00"),
@@ -114,6 +122,8 @@ def _baseline() -> dict[str, Decimal]:
 
 
 class TestModelo100AnexoN:
+    """Cover the per-CCAA deducción aggregation feeding casilla ``0622``."""
+
     def test_zero_baseline_yields_zero_aggregate(self) -> None:
         """All 15 CCAA casillas zero -> 0622 = 0."""
         report = Engine().audit_against(
@@ -189,6 +199,7 @@ class TestModelo100AnexoN:
         assert "0622" not in offenders
 
     def test_drift_in_aggregate_detected(self) -> None:
+        """A wrong ``0622`` total (2.000 vs expected 2.500) is reported."""
         provided = _baseline() | {
             "1113": Decimal("2500.00"),  # Madrid
             "0622": Decimal("2000.00"),  # WRONG -- should be 2500

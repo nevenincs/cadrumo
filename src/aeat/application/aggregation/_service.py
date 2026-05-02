@@ -1,11 +1,20 @@
-"""Aggregation service from classified transactions to casilla inputs."""
+"""Aggregate classified transactions into modelo casilla totals.
+
+Provides :func:`aggregate_catalogue`, which folds a
+:class:`aeat.domain.transactions.TransactionCatalogue` for a single
+:class:`aeat.application.aggregation.Period` into a
+:class:`aeat.application.aggregation.CasillaAggregation` keyed by the
+target :class:`aeat.domain.modelos.ModeloCode`. Currently scoped to
+quarterly Modelo 130; raises
+:exc:`aeat.application.aggregation._errors.AggregationUnsupportedModeloError`
+for other modelos until additional contracts land.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...domain.modelos import ModeloCode
 from ...domain.categories import (
     CasillaMapping,
     CategoryProfile,
@@ -13,6 +22,7 @@ from ...domain.categories import (
     SpendingCategory,
     load_category_profiles_from_manual,
 )
+from ...domain.modelos import ModeloCode
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -43,15 +53,47 @@ def aggregate_catalogue(
     period: str | Period,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> CasillaAggregation:
-    """Aggregate a classified transaction catalogue into casilla totals."""
+    """Aggregate a classified transaction catalogue into casilla totals.
+
+    Walks every :class:`aeat.domain.transactions.Transaction` in
+    ``catalogue`` whose value or booked date falls inside ``period``,
+    enforces the classification and category-coverage invariants, and
+    accumulates contributions into casilla buckets per the active
+    :class:`aeat.domain.categories.CategoryProfile` mappings.
+
+    Args:
+        catalogue: Classified transaction catalogue.
+        modelo: Target modelo as a string or :class:`ModeloCode`. Must
+            currently resolve to :attr:`ModeloCode.MODELO_130`.
+        period: Period as a string or :class:`Period`. Must be
+            quarterly.
+        category_profiles: Optional override of the category profile
+            map. Defaults to the year-specific profiles loaded via
+            :func:`aeat.domain.categories.load_category_profiles_from_manual`.
+
+    Returns:
+        A :class:`CasillaAggregation` carrying summed casilla values
+        and per-casilla provenance.
+
+    Raises:
+        :exc:`AggregationUnsupportedModeloError`: When ``modelo`` does
+            not currently have an aggregation contract.
+        :exc:`AggregationPeriodError`: When ``period`` is not quarterly.
+        :exc:`AggregationMissingClassificationError`: When in-period
+            transactions are missing business classification.
+        :exc:`AggregationCategoryCoverageError`: When a business
+            transaction has no category or its category is unknown.
+        :exc:`AggregationCasillaMappingError`: When a category has no
+            usable casilla mapping for the modelo and period.
+    """
 
     modelo_code = _parse_modelo(modelo)
     if modelo_code not in _SUPPORTED_MODELOS:
         raise AggregationUnsupportedModeloError(
             translated_message=t(
-                "La agregacion T6 solo esta implementada para Modelo 130.",
-                "T6 aggregation is currently implemented only for Modelo 130.",
-                "A T6 osszesites jelenleg csak a 130-as nyomtatvanyhoz elerheto.",
+                "La agregacion solo esta implementada para Modelo 130.",
+                "Aggregation is currently implemented only for Modelo 130.",
+                "Az osszesites jelenleg csak a 130-as nyomtatvanyhoz elerheto.",
             ),
             context={"modelo": modelo_code.value},
         )

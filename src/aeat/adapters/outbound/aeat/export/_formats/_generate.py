@@ -1,34 +1,34 @@
-"""DR spec → Python module generator (EPIC #305).
+"""DR spec to Python module generator.
 
-Given an :class:`IngestedSpec` from the JSON ingestion pipeline,
-emit a Python source module that declares the per-modelo envelope
-as Python constants. The generated module is committed to git
-alongside a "generated from" header that pins the provenance
-(Orden / BOE-ID / xlsx / retrieval date) so the audit trail is
-self-contained.
+Given an :class:`aeat.adapters.outbound.aeat.export._formats._ingest.IngestedSpec`
+from the JSON ingestion pipeline, emit a Python source module that
+declares the per-modelo envelope as Python constants. The generated
+module is committed to git alongside a "generated from" header that
+pins the provenance (Orden, BOE id, xlsx filename, retrieval date) so
+the audit trail is self-contained.
 
-## Round-trip contract
+The generator is byte-deterministic so a human reviewer's diff is
+limited to whatever changed in the underlying JSON spec.
 
-::
+Round-trip contract::
 
     DR*.xlsx (agent download)
-      → JSON fixture (tests/fixtures/dr_specs/*.json, committed)
-      → IngestedSpec (parsed via _ingest)
-      → Python module (generated via _generate, committed)
+      -> JSON fixture (tests/fixtures/dr_specs/*.json, committed)
+      -> IngestedSpec (parsed via _ingest)
+      -> Python module (generated via _generate, committed)
 
-The generated Python module is byte-identical to what a human
-would hand-author but without the transcription errors that hit
-.
+The generated Python module is byte-identical to what a human would
+hand-author, without the transcription errors that the manual route
+would introduce.
 
-## Regeneration discipline
+Regeneration discipline:
+AEAT publishes DR*.xlsx updates annually. The regeneration flow is:
 
-AEAT publishes DR*.xlsx updates annually. The regeneration flow:
-
-1. Agent downloads DR303eNN.xlsx, emits new JSON.
-2. Human reviews JSON diff vs prior year's JSON.
-3. ``python -m aeat.adapters.outbound.aeat.export._formats._generate <json> <out.py>``
+#. An agent downloads ``DR303eNN.xlsx`` and emits new JSON.
+#. A human reviews the JSON diff against the prior year's JSON.
+#. ``python -m aeat.adapters.outbound.aeat.export._formats._generate <json> <out.py>``
    regenerates the module.
-4. ``pytest`` guards the shape + round-trip + golden fixture.
+#. ``pytest`` guards the shape, round-trip, and golden fixture.
 
 Step 2 is the critical review gate — JSON diffs are human-readable.
 """
@@ -49,7 +49,12 @@ from ._record_spec import (
 
 
 def _field_to_source(field: RecordFieldSpec) -> str:
-    """Render one :class:`RecordFieldSpec` as a ``record_field(...)`` call."""
+    """Render one :class:`RecordFieldSpec` as a :func:`record_field` call.
+
+    Only non-default ``justification`` and ``pad_char`` arguments are
+    emitted so the generated source mirrors what a human would hand-write
+    when leaning on the kind-aware defaults of :func:`record_field`.
+    """
     parts: list[str] = [
         f"offset={field.offset}",
         f"length={field.length}",
@@ -78,7 +83,13 @@ def _field_to_source(field: RecordFieldSpec) -> str:
 
 
 def _segment_to_source(segment: SegmentSpec, *, var_name: str) -> str:
-    """Render one :class:`SegmentSpec` as a Python constant assignment."""
+    """Render one :class:`SegmentSpec` as a Python constant assignment.
+
+    Args:
+        segment: Segment specification to serialise.
+        var_name: Name to use for the constant binding in the generated
+            module.
+    """
     lines = [
         f"{var_name} = SegmentSpec(",
         f"    segment_id={segment.segment_id!r},",
@@ -98,15 +109,17 @@ def generate_module_source(
     module_identifier: str,
     generator_iso_date: str | None = None,
 ) -> str:
-    """Render a full Python module source from an :class:`IngestedSpec`.
+    """Render a full Python module source from an
+    :class:`aeat.adapters.outbound.aeat.export._formats._ingest.IngestedSpec`.
 
     Args:
-        ingested: parsed spec document (see :mod:`_ingest`).
-        module_identifier: human-readable identifier for the generated
-            module (e.g., ``"Modelo 303 ejercicio 2024"``). Inserted
-            into the module docstring and ``__all__`` block.
+        ingested: Parsed spec document — see
+            :mod:`aeat.adapters.outbound.aeat.export._formats._ingest`.
+        module_identifier: Human-readable identifier for the generated
+            module (for example ``"Modelo 303 ejercicio 2024"``).
+            Inserted into the module docstring and ``__all__`` block.
         generator_iso_date: ISO-format date stamp to embed in the
-            provenance header. Defaults to today (UTC).
+            provenance header. Defaults to today's date.
 
     Returns:
         Fully-formed Python source ready to write to ``.py``.
@@ -187,13 +200,15 @@ def generate_module_source(
 
 
 def _collect_required_field_ids(ingested: IngestedSpec) -> frozenset[str]:
-    """Heuristic: treat header-level ALPHANUMERIC/NUMERIC fields that
-    are neither RESERVED nor DATE as required header inputs.
+    """Compute the set of required header fields for a generated modelo module.
 
-    The spec's ``source.extra_required_fields`` list is unioned in
-    to capture per-modelo header fields that live outside segment 0
-    (e.g., Modelo 303's DP30301 page-identification fields like
-    TIPO_DECLARACION, NIF, APELLIDOS_Y_NOMBRE, DEVENGO_PERIODO).
+    Heuristic: header-level ALPHANUMERIC / NUMERIC fields that are
+    neither RESERVED nor DATE are treated as required header inputs.
+    The spec's ``source.extra_required_fields`` list is unioned in to
+    capture per-modelo header fields that live outside segment 0 (for
+    example Modelo 303's DP30301 page-identification fields like
+    ``TIPO_DECLARACION``, ``NIF``, ``APELLIDOS_Y_NOMBRE``,
+    ``DEVENGO_PERIODO``).
     """
     required: set[str] = set()
     # Interpret the first segment as the envelope header + mark its
@@ -217,7 +232,12 @@ def _collect_required_field_ids(ingested: IngestedSpec) -> frozenset[str]:
 
 
 def _main() -> None:
-    """CLI: ``python -m aeat.adapters.outbound.aeat.export._formats._generate <json> <out.py>``."""
+    """CLI entrypoint for ``python -m ..._generate <json> <out.py>``.
+
+    Parses the JSON spec at ``json_path`` via
+    :func:`aeat.adapters.outbound.aeat.export._formats._ingest.ingest_dr_spec_path`
+    and writes the rendered module source to ``out_path``.
+    """
     import argparse
     from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for AEAT site-health detection (#95).
+"""Strict pydantic v2 records for AEAT site-health detection.
 
 The site-health layer classifies AEAT Sede Electrónica responses into a
 closed set of states (:class:`SiteHealthState`) so that a planned
@@ -9,9 +9,7 @@ error collapsing into ``UNHANDLED_EXCEPTION`` somewhere downstream.
 Every record in this module is frozen, strict, ``extra="forbid"``
 pydantic v2. The closed state catalogue is an :class:`enum.StrEnum`.
 Collections are ``tuple[str, ...]`` — list containers are forbidden on
-frozen models per project convention. See
-[[2026-04-13-aeat-mantenimiento-detection-adr]] for the design
-rationale and placement decisions.
+frozen models per project convention.
 """
 
 from __future__ import annotations
@@ -60,7 +58,7 @@ class SiteHealthState(StrEnum):
 class _SiteHealthRecord(BaseModel):
     """Common config base for every site-health wire record.
 
-    Mirrors the ``_StatusRecord`` convention in :mod:`aeat.status`:
+    Mirrors the status-record convention used by AEAT status readers:
     strict typing, frozen instances, and ``extra="forbid"`` so any
     unexpected field is a parse error rather than a silent
     pass-through.

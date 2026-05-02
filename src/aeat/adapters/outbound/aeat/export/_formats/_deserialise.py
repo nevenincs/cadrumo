@@ -1,15 +1,17 @@
-"""Fichero-BOE deserialiser (EPIC #201 C3d,).
+"""Fichero-BOE deserialiser.
 
-Round-trip inverse of :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
-Takes a fichero-BOE byte payload + a `RECORD_SPECS` tuple and yields
-a ``ParsedRecord`` carrying the per-field values (as strings or
-:class:`Decimal` for currency) plus metadata.
+Round-trip inverse of
+:func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
+Takes a fichero-BOE byte payload plus a ``RECORD_SPECS`` tuple and
+yields a :class:`ParsedRecord` carrying the per-field values (as
+strings, :class:`datetime.date` for date fields, or
+:class:`decimal.Decimal` for currency) plus metadata.
 
-This is the primary verification hook for issue #239 (Kent can
-prove his exported numbers match AEAT's record): the serialiser
-produces bytes, the deserialiser parses bytes back, and a diff
-over casilla values is a one-line operation. Round-trip fidelity
-is the / C3d acceptance test.
+This is the primary verification hook for the
+"prove exported numbers match AEAT's record" workflow: the serialiser
+produces bytes, the deserialiser parses bytes back, and a diff over
+casilla values is a one-line operation. Round-trip fidelity is the
+acceptance criterion.
 """
 
 from __future__ import annotations
@@ -34,9 +36,20 @@ from ._record_spec import (
 class ParsedRecord(BaseModel):
     """Typed result of parsing a fichero-BOE record.
 
-    Each field value is keyed by ``field_id``; currency fields also
-    appear in :attr:`casilla_values` keyed by ``casilla_id`` for
-    easy cross-reference against :class:`aeat.application.filing.FilingDraft`.
+    Strict / frozen / ``extra="forbid"`` per the boundary-record mandate.
+    Each field value is keyed by ``field_id``; currency fields also appear
+    in :attr:`casilla_values` keyed by ``casilla_id`` for easy
+    cross-reference against
+    :class:`aeat.application.filing.FilingDraft`.
+
+    Attributes:
+        field_values: Every ``field_id`` mapped to its parsed value
+            (strings, :class:`datetime.date`, or :class:`decimal.Decimal`).
+        casilla_values: Casilla-keyed currency values; a subset of
+            :attr:`field_values` filtered to fields with a non-``None``
+            ``casilla_id``.
+        raw_length: Byte length of the parsed content, excluding the
+            optional CRLF terminator.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -55,13 +68,13 @@ _CRLF = b"\r\n"
 
 
 def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
-    """Decode a zero-padded cents string into a 2-decimal Decimal.
+    """Decode a zero-padded cents string into a 2-decimal :class:`Decimal`.
 
-    Inverse of :func:`encode_currency`.
-
-    when ``inline_sign=True``, byte 0 is the sign marker
-    (``"N"`` for negatives / ``" "`` for non-negatives) and the
-    remaining bytes carry the zero-padded absolute magnitude.
+    Inverse of
+    :func:`aeat.adapters.outbound.aeat.export._formats._record_spec.encode_currency`.
+    With ``inline_sign=True``, byte 0 is the sign marker (``"N"`` for
+    negatives, ``" "`` for non-negatives) and the remaining bytes carry
+    the zero-padded absolute magnitude.
     """
     if inline_sign:
         if not raw:
@@ -82,6 +95,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
 
 
 def _decode_date(raw: bytes, fmt: DateFmt) -> date:
+    """Decode a fixed-width ASCII date payload per ``fmt``."""
     text = raw.decode("ascii").strip()
     match fmt:
         case DateFmt.YYYYMMDD:
@@ -100,16 +114,17 @@ def deserialise(
     """Parse a fichero-BOE byte payload into a :class:`ParsedRecord`.
 
     Args:
-        payload: full on-wire byte sequence (content + optional CRLF).
-        specs: the ordered :class:`RecordFieldSpec` tuple.
-        encoding: wire encoding matching the serialiser's choice.
-        total_length: expected content-byte count (excludes CRLF).
+        payload: Full on-wire byte sequence (content + optional CRLF).
+        specs: The ordered :class:`RecordFieldSpec` tuple describing the
+            fixed-width layout.
+        encoding: Wire encoding matching the serialiser's choice.
+        total_length: Expected content-byte count (excludes CRLF).
 
     Returns:
-        :class:`ParsedRecord` with field and casilla values.
+        A :class:`ParsedRecord` carrying field and casilla values.
 
     Raises:
-        ValueError: on length mismatch, literal mismatch, or decode
+        ValueError: On length mismatch, literal mismatch, or decode
             errors (unparseable date, non-ASCII currency, etc.).
     """
     # Strip any trailing CRLF so we can parse either an on-wire
@@ -179,10 +194,26 @@ def deserialise(
 class ParsedEnvelope(BaseModel):
     """Result of parsing a multi-segment fichero-BOE envelope.
 
-    to :class:`ParsedRecord`. Each segment's
-    :class:`ParsedRecord` is addressable by ``segment_id`` so callers
-    can diff a specific page (e.g., Modelo 303 page 3 rectificativa
-    block) without walking every segment.
+    The envelope-level analogue of :class:`ParsedRecord`. Each
+    segment's :class:`ParsedRecord` is addressable by ``segment_id`` so
+    callers can diff a specific page (e.g., Modelo 303 page 3
+    rectificativa block) without walking every segment.
+
+    Attributes:
+        segments: Per-segment parsed records keyed by ``segment_id``.
+        merged_casilla_values: Flat view of every casilla across every
+            segment. Convenient for verification paths that compare a
+            filing against AEAT's record per ``casilla_id`` without
+            caring which envelope segment the value lived in.
+        merged_field_values: Flat view of every ``field_id`` across
+            every segment. Envelope-level headers like
+            ``DP30301_F007_IDENTIFICACI_N_NIF`` surface here so CLI
+            consumers (verify, diff) can present them without walking
+            :attr:`segments`. Field IDs that collide across segments
+            (for example the ``DP30300_F005_PER_ODO`` envelope marker
+            repeated in header and trailer) must carry the same value;
+            divergent collisions raise at deserialisation time,
+            mirroring the casilla-level contract.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -191,24 +222,10 @@ class ParsedEnvelope(BaseModel):
     """Per-segment parsed records keyed by ``segment_id``."""
 
     merged_casilla_values: Mapping[str, Decimal]
-    """Flat view of every casilla across every segment.
-
-    Convenient for verification paths (#239) that compare a filing
-    against AEAT's record per casilla_id without caring which
-    envelope segment the value lived in.
-    """
+    """Flat view of every casilla across every segment."""
 
     merged_field_values: Mapping[str, str | Decimal | date]
-    """Flat view of every field_id across every segment.
-
-    Envelope-level headers like ``DP30301_F007_IDENTIFICACI_N_NIF``
-    surface here so CLI consumers (verify, diff) can present them
-    without walking :attr:`segments`. Field IDs that collide across
-    segments (e.g., the ``DP30300_F005_PER_ODO`` envelope marker
-    repeated in header + trailer) must carry the same value;
-    divergent collisions raise at deserialisation time, mirroring
-    the casilla-level contract.
-    """
+    """Flat view of every field_id across every segment."""
 
 
 def deserialise_envelope(
@@ -220,12 +237,25 @@ def deserialise_envelope(
     """Parse a multi-segment fichero-BOE envelope.
 
     Consumes the payload in segment order, slicing ``total_length``
-    bytes per segment. The final CRLF is optional (caller may have
+    bytes per segment. The final CRLF is optional (the caller may have
     stripped it before hashing).
 
+    Args:
+        payload: Concatenated segment bytes with an optional trailing
+            CRLF.
+        segments: Ordered tuple of :class:`SegmentSpec` describing each
+            segment's layout.
+        encoding: Wire encoding shared across the envelope.
+
+    Returns:
+        A :class:`ParsedEnvelope` with per-segment records plus merged
+        casilla and field views.
+
     Raises:
-        ValueError: if the payload length does not match the sum of
-            segment lengths, or any segment fails its shape check.
+        ValueError: If the payload length does not match the sum of
+            segment lengths, any segment fails its shape check, or a
+            casilla / field id collides with a divergent value across
+            segments.
     """
     if not segments:
         raise ValueError("segments must not be empty")

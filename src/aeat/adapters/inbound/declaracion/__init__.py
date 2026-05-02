@@ -1,4 +1,4 @@
-"""Casilla-complete declaración PDF parsing (EPIC #305).
+"""Casilla-complete declaración PDF parsing.
 
 The module turns a *copia de la declaración* PDF into a strict
 :class:`DeclaracionFiling` record carrying every casilla ID + printed
@@ -22,6 +22,8 @@ Public API:
 from __future__ import annotations
 
 from ._errors import DeclaracionParseError
+from ._extractor import DeclaracionExtractor
+from ._generic_extractor import GenericDeclaracionExtractor
 from ._parser import parse_declaracion
 from ._schema import (
     DeclaracionFiling,
@@ -30,11 +32,22 @@ from ._schema import (
     TemplateRevision,
 )
 
+
+def registered_extractors() -> tuple[type[DeclaracionExtractor], ...]:
+    """Return all concrete declaración extractor classes registered for dispatch."""
+    from ._extractors import _REGISTERED_CLASSES
+
+    return _REGISTERED_CLASSES
+
+
 __all__ = [
+    "DeclaracionExtractor",
     "DeclaracionFiling",
     "DeclaracionParseError",
     "ExtractionStatus",
     "ExtractionWarning",
+    "GenericDeclaracionExtractor",
     "TemplateRevision",
     "parse_declaracion",
+    "registered_extractors",
 ]

@@ -1,13 +1,14 @@
 """Live AEAT authenticator verification — gated on env vars.
 
-This is the only live test introduced by issue #167. It asserts
-end-to-end that the operator's configured PKCS#12 bundle, when
-fed through :class:`AeatAuthenticator`, produces a valid
-:class:`AeatSession` and that :meth:`AeatAuthenticator.verify_login`
+Asserts end-to-end that the operator's configured PKCS#12 bundle, when
+fed through :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`,
+produces a valid :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
+and that
+:meth:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
 returns ``is_valid=True`` against the configured verify URL.
 
 The module carries zero mocks, patches, fakes, or monkey-patched
-attributes — both the global `TID251` ruff ban and the extended
+attributes — both the global ``TID251`` ruff ban and the extended
 live-test banned-import set in ``tests/conftest.py`` forbid them.
 The test skips cleanly when the cert env is not fully configured.
 """
@@ -46,8 +47,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")
 
-    # Bridge the passphrase into the process environment for the
-    # cert loader (same pattern as aeat.adapters.outbound.aeat.auth.test_certificate_live).
+    # Bridge the passphrase into the process environment for the cert loader.
     os.environ.setdefault(
         "AEAT_CERTIFICATE_PASSWORD_SECRET",
         settings.aeat_certificate_password_secret.get_secret_value(),
@@ -121,10 +121,10 @@ async def test_aeat_authenticator_full_live_flow() -> None:
             aeat_session = await auth.authenticate()
             assert isinstance(aeat_session, AeatSession)
             assert aeat_session.is_stale() is False
-            assert aeat_session.certificate_nif
+            assert aeat_session.identity_nif
             assertion = await auth.verify_login(aeat_session)
             assert isinstance(assertion, AeatLoginAssertion)
             assert assertion.is_valid is True, (
                 f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
             )
-            assert assertion.parsed_nif == aeat_session.certificate_nif
+            assert assertion.parsed_nif == aeat_session.identity_nif

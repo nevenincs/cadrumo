@@ -3,29 +3,32 @@
 One base class + three concrete registry entries, one per supported
 template revision:
 
-- ``Modelo100V2021LegacyExtractor`` — tax year 2021 column-split layout.
-- ``Modelo100V2022ModernExtractor`` — tax year 2022 modern layout.
-- ``Modelo100V2023ModernExtractor`` — tax year 2023 modern layout
+- :class:`Modelo100V2021LegacyExtractor` — tax year 2021 column-split layout.
+- :class:`Modelo100V2022ModernExtractor` — tax year 2022 modern layout.
+- :class:`Modelo100V2023ModernExtractor` — tax year 2023 modern layout
   (identical rendering shape to 2022; distinct revision so future
   AEAT redesigns land without reshuffling the registry keys).
 
-The base class runs :func:`scan_pages` over the pdfplumber-extracted
-text of every page, reduces the hits to strict
-:class:`ExtractedCasilla` records, and derives the header fields
-(NIF, ejercicio, period) directly from known header-casilla captures.
-Modelo 100 is annual so the canonical period is always ``YYYYA``.
+The base class runs
+:func:`aeat.adapters.inbound.declaracion._parsers.modelo_100._scanner.scan_pages`
+over the pdfplumber-extracted text of every page, reduces the hits to
+strict :class:`aeat.adapters.inbound.pdf._shared.ExtractedCasilla`
+records, and derives the header fields (NIF, ejercicio, period)
+directly from known header-casilla captures. Modelo 100 is annual so
+the canonical period is always ``YYYYA``.
 
-Coverage for the MVP corpus:
+Coverage on the live IRPF corpus:
 
-- 2021: 84 casillas (header + all income + liquidación + resultado)
-- 2022: 83 casillas
-- 2023: 86 casillas
+- 2021: 84 casillas (header + income + liquidación + resultado).
+- 2022: 83 casillas.
+- 2023: 86 casillas.
 
-:class:`ExtractionStatus` resolves to ``UNVERIFIABLE`` because this
-MVP declares an empty required-set — casilla coverage varies with the
-filer's declared income sources (property rentals, capital gains,
-deductions). A stricter required-set lands once sub-EPIC #305 ships a
-Modelo 100 schema snapshot per-revision.
+:attr:`aeat.adapters.inbound.declaracion._schema.ExtractionStatus.UNVERIFIABLE`
+is the resolved status because the required-set is intentionally empty
+— casilla coverage varies with the filer's declared income sources
+(property rentals, capital gains, deductions), and a stricter
+required-set requires a per-revision Modelo 100 schema snapshot that is
+not yet captured.
 """
 
 from __future__ import annotations
@@ -51,15 +54,37 @@ from ._scanner import ScannedCasilla, scan_pages
 class _Modelo100BaseExtractor(DeclaracionExtractor):
     """Shared driver for all Modelo 100 template revisions.
 
-    Subclasses only pin the ``template_revision`` ClassVar; the scan
-    logic is layout-agnostic because ``scan_pages`` runs every pass
-    and the overlapping captures are disambiguated by the first-wins
-    merge rule.
+    Subclasses only pin :attr:`template_revision`; the scan logic is
+    layout-agnostic because
+    :func:`aeat.adapters.inbound.declaracion._parsers.modelo_100._scanner.scan_pages`
+    runs every pass and the overlapping captures are disambiguated by
+    the first-wins merge rule.
+
+    Attributes:
+        template_revision: Pinned by each concrete subclass.
     """
 
     template_revision: ClassVar[TemplateRevision]
 
     def extract(self, pdf_path: Path) -> DeclaracionFiling:
+        """Parse a Modelo 100 IRPF justificante into a :class:`DeclaracionFiling`.
+
+        Args:
+            pdf_path: Filesystem path of the source PDF.
+
+        Returns:
+            A :class:`DeclaracionFiling` with the resolved casillas
+            (each with confidence 1.0 for ``tail_cid`` captures and 0.7
+            for the legacy column-split / forward-scan captures), the
+            canonical ``YYYYA`` period, and
+            :attr:`~aeat.adapters.inbound.declaracion._schema.ExtractionStatus.UNVERIFIABLE`
+            as the extraction status.
+
+        Raises:
+            :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+                When neither casilla 01 nor the regex fallback can locate
+                the declarant NIF.
+        """
         pages = extract_pages_text(pdf_path)
         scanned = scan_pages(pages)
 
@@ -99,7 +124,11 @@ class _Modelo100BaseExtractor(DeclaracionExtractor):
 
 
 class Modelo100V2021LegacyExtractor(_Modelo100BaseExtractor):
-    """Modelo 100 tax year 2021 — column-split legacy layout."""
+    """Modelo 100 tax year 2021 — column-split legacy layout.
+
+    Attributes:
+        template_revision: Pinned to ``("100", 2021, "2021.legacy")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="100",
@@ -109,7 +138,11 @@ class Modelo100V2021LegacyExtractor(_Modelo100BaseExtractor):
 
 
 class Modelo100V2022ModernExtractor(_Modelo100BaseExtractor):
-    """Modelo 100 tax year 2022 — Renta Web modern layout."""
+    """Modelo 100 tax year 2022 — Renta Web modern layout.
+
+    Attributes:
+        template_revision: Pinned to ``("100", 2022, "2022.modern")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="100",
@@ -119,7 +152,11 @@ class Modelo100V2022ModernExtractor(_Modelo100BaseExtractor):
 
 
 class Modelo100V2023ModernExtractor(_Modelo100BaseExtractor):
-    """Modelo 100 tax year 2023 — Renta Web modern layout (shape parity with 2022)."""
+    """Modelo 100 tax year 2023 — Renta Web modern layout (shape parity with 2022).
+
+    Attributes:
+        template_revision: Pinned to ``("100", 2023, "2023.modern")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="100",
@@ -129,7 +166,20 @@ class Modelo100V2023ModernExtractor(_Modelo100BaseExtractor):
 
 
 def _resolve_tax_id(by_id: dict[str, ScannedCasilla], pages: tuple[str, ...]) -> str:
-    """Return the declarant NIF, with a regex fallback if casilla 01 missed."""
+    """Return the declarant NIF, with a regex fallback if casilla 01 missed.
+
+    Args:
+        by_id: Scanned casillas keyed by id.
+        pages: Per-page text of the source PDF (1-based ordering).
+
+    Returns:
+        The declarant NIF as printed.
+
+    Raises:
+        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+            When neither casilla 01 nor the regex fallback locate the
+            NIF.
+    """
     hit = by_id.get("01")
     if hit is not None and isinstance(hit.typed_value, str):
         return hit.typed_value
@@ -151,10 +201,19 @@ def _resolve_ejercicio(
     """Return the 4-digit ejercicio string.
 
     Prefers the explicit printed ``Ejercicio YYYY`` stamp (scanned from
-    the pdf text) and falls back to the template-revision's own
-    ``año`` when the stamp is absent. Modelo 100 justificantes always
-    print the stamp on page 1 or page 2 but we mirror detection's
+    the PDF text) and falls back to the template-revision's own ``año``
+    when the stamp is absent. Modelo 100 justificantes always print the
+    stamp on page 1 or page 2 but the function mirrors detection's
     two-page header span for robustness.
+
+    Args:
+        template: Template revision; supplies the fallback ``año``.
+        by_id: Scanned casillas keyed by id (currently unused; reserved
+            for future header-casilla heuristics).
+        pages: Per-page text of the source PDF.
+
+    Returns:
+        The four-digit ejercicio string.
     """
     import re
 

@@ -1,4 +1,22 @@
-"""JSONL store round-trip and corruption-detection tests."""
+"""Tests for the JSONL store and the per-run sink's run-id filter.
+
+Covers:
+
+* Append-then-load round-trip through
+  :func:`aeat.core.observability.save_events_append` /
+  :func:`aeat.core.observability.load_events`, including the
+  DIAGNOSTIC-class URL host-only redaction property.
+* :exc:`aeat.core.observability.RunTraceValidationError` on a corrupted
+  JSONL line.
+* :class:`aeat.core.observability._sink.JsonlRunSink` rejecting events
+  whose ``run_id`` does not match its bound id, and skipping records
+  that carry no ``run_event`` extra (without creating the file).
+* Strict ``run_id`` validation across :func:`load_trace`,
+  :func:`load_events`, and :func:`iter_events` — eager rejection at
+  call time and no on-disk pollution from rejected ids.
+* Lazy iteration semantics for :func:`iter_events` plus mid-stream
+  validation failure on a corrupted line.
+"""
 
 from __future__ import annotations
 
@@ -197,7 +215,7 @@ class TestStoreRunIdValidation:
 
 
 class TestIterEvents:
-    """Ensure ``iter_events`` streams correctly with eager arg validation."""
+    """Verify :func:`iter_events` streams lazily with eager arg validation."""
 
     def _event(self, run_id: str, ordinal: int) -> RunEvent:
         return RunEvent(

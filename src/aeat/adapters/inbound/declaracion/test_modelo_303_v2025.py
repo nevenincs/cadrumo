@@ -1,4 +1,10 @@
-"""Round-trip extractor test against the synthetic Modelo 303 generator."""
+"""Round-trip extractor coverage for the synthetic Modelo 303 generator.
+
+Renders synthetic Modelo 303 PDFs across the apartado-1, apartado-2 and
+apartado-3 casillas, runs them through
+:func:`aeat.adapters.inbound.declaracion.parse_declaracion`, and asserts
+the ``DeclaracionFiling`` round-trips back to the printed values.
+"""
 
 from __future__ import annotations
 
@@ -69,6 +75,7 @@ def _generate_pdf(
     ejercicio: str = "2025",
     template_revision: str = "2025.01",
 ) -> Path:
+    """Render a synthetic Modelo 303 PDF and return its on-disk path."""
     from tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_303_generator import (
         Modelo303GenParams,
         generate,
@@ -92,10 +99,12 @@ def _generate_pdf(
 
 
 def _values_by_id(filing: DeclaracionFiling) -> dict[str, ExtractedCasilla]:
+    """Index extracted casillas by their casilla id for direct lookup."""
     return {v.casilla_id: v for v in filing.values}
 
 
 def test_roundtrip_extract_all_33_casillas(tmp_path: Path) -> None:
+    """All 33 happy-path casillas survive the synthetic round-trip."""
     pdf_path = _generate_pdf(tmp_path)
     filing = parse_declaracion(pdf_path)
 
@@ -112,6 +121,7 @@ def test_roundtrip_extract_all_33_casillas(tmp_path: Path) -> None:
 
 
 def test_roundtrip_template_detected_as_303_2025(tmp_path: Path) -> None:
+    """The 2025 template is auto-detected without explicit overrides."""
     pdf_path = _generate_pdf(tmp_path)
     filing = parse_declaracion(pdf_path)
     assert filing.template_revision.modelo == "303"
@@ -120,6 +130,7 @@ def test_roundtrip_template_detected_as_303_2025(tmp_path: Path) -> None:
 
 
 def test_roundtrip_template_detected_as_303_2026(tmp_path: Path) -> None:
+    """The 2026 template is auto-detected from the printed ejercicio."""
     pdf_path = _generate_pdf(
         tmp_path,
         año=2026,

@@ -1,4 +1,10 @@
-"""Unit tests for the `aeat financial profile` command group (#259)."""
+"""Unit tests for the ``aeat financial profile`` command group.
+
+Exercises :mod:`aeat.entrypoints.cli.financial.profile` end-to-end via
+:class:`typer.testing.CliRunner`, covering ratio set/unset round-trips,
+family-alias expansion, decimal validation, and error-message
+ergonomics.
+"""
 
 from __future__ import annotations
 
@@ -45,9 +51,12 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def _isolate_usage_ratios_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Point every test at a fresh tmp-path-backed usage-ratios file."""
+    """Point every test at a fresh tmp-path-backed usage-ratios JSON file."""
     target = tmp_path / "usage-ratios.json"
     monkeypatch.setenv("AEAT_USAGE_RATIOS_PATH", str(target))
+    # Pin the CLI output language to English so the assertions below
+    # remain English-readable; the production default is `es`.
+    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
     yield target
 
 
@@ -145,8 +154,7 @@ def test_set_ratio_non_numeric_rejected() -> None:
 
 
 def test_set_ratio_unknown_key_hint_lists_aliases_and_categories() -> None:
-    """Kent's typo error hint must name both the family aliases and the
-    twelve eligible category ids, plus any close-match suggestion."""
+    """The unknown-key hint names every family alias, every eligible category, and any close-match suggestion."""
     result = _invoke("set-ratio", "foo", "0.5")
     assert result.exit_code == 2
     assert "unknown key" in result.output
@@ -166,8 +174,7 @@ def test_set_ratio_near_match_suggested_for_typo() -> None:
 
 
 def test_set_ratio_tolerates_trailing_whitespace() -> None:
-    """A trailing space in the key must not derail the command — common
-    when Kent copy-pastes from a doc."""
+    """A trailing space in the key must not derail the command (copy-paste tolerance)."""
     result = _invoke("set-ratio", "suministros_home_office_luz ", "0.21")
     assert result.exit_code == 0, result.output
     assert "set suministros_home_office_luz = 0.21" in result.output
@@ -176,13 +183,12 @@ def test_set_ratio_tolerates_trailing_whitespace() -> None:
 def test_corrupt_file_surfaces_error_not_silent_empty(
     _isolate_usage_ratios_path: Path,
 ) -> None:
-    """A hand-edited corrupt file must surface an error, not silently reset
-    Kent's profile to empty and accept a fresh ``set-ratio``.
+    """A hand-edited corrupt file surfaces an error rather than silently resetting the profile.
 
-    This is a defense-in-depth pin: if ``_load_profile`` ever started
-    swallowing ``UsageRatioError``, Kent's prior ratios could be silently
-    wiped by a subsequent save. Both ``ratios list`` and ``set-ratio`` on a
-    corrupt file must exit non-zero.
+    Defense-in-depth pin: if ``_load_profile`` ever started swallowing
+    :exc:`aeat.domain.usage_ratios.UsageRatioError`, prior ratios could
+    be silently wiped by a subsequent save. Both ``ratios list`` and
+    ``set-ratio`` on a corrupt file must exit non-zero.
     """
     _isolate_usage_ratios_path.write_text("{ not json", encoding="utf-8")
     list_result = _invoke("ratios", "list")
@@ -199,11 +205,12 @@ def test_corrupt_file_surfaces_error_not_silent_empty(
 def test_format_decimal_zero_is_exact_not_substring_match(
     _isolate_usage_ratios_path: Path,
 ) -> None:
-    """Pin ``_format_decimal(Decimal("0")) == "0"`` via exact-line matching.
+    """Pin ``_format_decimal(Decimal("0")) == "0"`` via exact-token matching.
 
-    A loose substring assertion (``"= 0" in output``) would silently accept
-    a regression that rendered zero as ``"0.000000"`` or similar. This test
-    splits the output on whitespace and asserts the token is exactly ``"0"``.
+    A loose substring assertion (``"= 0" in output``) would silently
+    accept a regression that rendered zero as ``"0.000000"`` or
+    similar. This test splits the output on whitespace and asserts the
+    last token is exactly ``"0"``.
     """
     result = _invoke("set-ratio", "suministros_home_office_luz", "0")
     assert result.exit_code == 0, result.output
@@ -220,17 +227,14 @@ def test_format_decimal_zero_is_exact_not_substring_match(
 def test_unknown_key_no_near_match_for_unrelated_input(
     _isolate_usage_ratios_path: Path,
 ) -> None:
-    """The difflib cutoff must remain restrictive enough that a wildly
-    unrelated key produces no ``did you mean`` suggestion."""
+    """The difflib cutoff stays restrictive enough that wildly unrelated keys produce no ``did you mean`` suggestion."""
     result = _invoke("set-ratio", "zzzzzzzzzzzz", "0.5")
     assert result.exit_code == 2
     assert "did you mean" not in result.output
 
 
 def test_set_ratio_ineligible_hint_wraps_and_stays_consistent() -> None:
-    """The ineligible-category branch must use the same wrapped
-    ``eligible categories:`` layout as the unknown-key branch, so Kent
-    never faces a 350-char single line on an 80-col terminal."""
+    """The ineligible-category branch reuses the wrapped 80-column ``eligible categories:`` layout."""
     result = _invoke("set-ratio", "material_oficina", "0.5")
     assert result.exit_code == 2
     assert "does not accept a usage ratio" in result.output
@@ -295,17 +299,14 @@ def test_set_ratio_accepts_lower_bound_zero() -> None:
 
 
 def test_set_ratio_rejects_spanish_locale_comma_decimal() -> None:
-    """Kent in Málaga may type ``0,21`` out of habit; the CLI must refuse
-    with a clear error rather than silently mis-parse."""
+    """Spanish-locale ``0,21`` input is refused with a clear error rather than silently mis-parsed."""
     result = _invoke("set-ratio", "suministros_home_office_luz", "0,21")
     assert result.exit_code == 2
     assert "invalid ratio" in result.output
 
 
 def test_kent_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> None:
-    """Replay Kent's issue-body narrative: set home-office ratio to 0.21,
-    list, and confirm every home-office category now reports 0.21 beside
-    the statutory default 0.3."""
+    """End-to-end: setting the home-office alias to 0.21 lists every member with 0.21 beside the statutory 0.3."""
     set_result = _invoke("set-ratio", "home_office_area", "0.21")
     assert set_result.exit_code == 0, set_result.output
     assert _isolate_usage_ratios_path.exists()
@@ -326,8 +327,7 @@ def test_kent_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> Non
 
 
 def test_successive_set_ratios_accumulate() -> None:
-    """Two ``set-ratio`` calls for different categories must both persist;
-    the second must not clobber the first."""
+    """Two ``set-ratio`` calls for different categories both persist without clobbering each other."""
     first = _invoke("set-ratio", "suministros_home_office_luz", "0.21")
     assert first.exit_code == 0, first.output
     second = _invoke("set-ratio", "telefonia_movil", "0.6")
@@ -340,8 +340,7 @@ def test_successive_set_ratios_accumulate() -> None:
 
 
 def test_set_ratio_same_category_twice_replaces_value() -> None:
-    """Setting the same category twice replaces the value rather than
-    appending or erroring out."""
+    """Setting the same category twice replaces the value rather than appending or erroring out."""
     _invoke("set-ratio", "suministros_home_office_luz", "0.21")
     second = _invoke("set-ratio", "suministros_home_office_luz", "0.5")
     assert second.exit_code == 0, second.output

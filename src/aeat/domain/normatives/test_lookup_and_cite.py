@@ -46,6 +46,8 @@ def _catalogue() -> NormativeCatalogue:
 
 
 class TestLookup:
+    """Coverage for :func:`aeat.domain.normatives.find_reference` and :func:`aeat.domain.normatives.find_articulo`."""
+
     def test_find_reference_hit(self) -> None:
         catalogue = _catalogue()
         assert find_reference(catalogue, "ley-35-2006").id == "ley-35-2006"
@@ -72,6 +74,8 @@ class TestLookup:
 
 
 class TestCite:
+    """Coverage for :func:`aeat.domain.normatives.short_title` and :func:`aeat.domain.normatives.cite`."""
+
     def test_short_title_ley(self) -> None:
         reference = find_reference(_catalogue(), "ley-35-2006")
         assert short_title(reference) == "Ley 35/2006"

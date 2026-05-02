@@ -10,9 +10,9 @@ protocol:
   persists it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
   derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt. the KDF from
-  scrypt to Argon2id; the historical (v1, scrypt) format is no longer
-  loadable and must be migrated via :func:`migrate_master_key_kdf`.
+  alongside a per-store random salt. The historical (v1, scrypt) format
+  is no longer loadable and must be migrated via
+  :func:`migrate_master_key_kdf`.
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
   exclusively by tests; the key vanishes when the provider object is
   garbage-collected.
@@ -62,9 +62,9 @@ from pydantic import BaseModel, ConfigDict, Field
 if TYPE_CHECKING:
     from .....core.config import Settings
 
+from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from ..errors import (
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
@@ -102,12 +102,12 @@ _SALT_SIZE: Final[int] = 16
 _KDF_PARAMS_VERSION: Final[int] = 2
 """Bumped when the on-disk KDF parameter shape changes.
 
-* v1: scrypt (N=2**17, r=8, p=1). .
-* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1). .
+* v1: scrypt (N=2**17, r=8, p=1).
+* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
 
 _LEGACY_KDF_PARAMS_VERSION: Final[int] = 1
-"""..11 KDF parameter version. Read-only — only the migration helper consumes it."""
+"""Legacy KDF parameter version. Read-only — only the migration helper consumes it."""
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -487,7 +487,7 @@ class FileFallbackMasterKeyProvider:
             passphrase_callback: Optional override for passphrase
                 resolution. Defaults to
                 :func:`_default_passphrase_callback`. Tests inject a
-                stub that returns a deterministic value.
+                callback that returns a deterministic value.
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
@@ -521,8 +521,7 @@ class FileFallbackMasterKeyProvider:
 
     def get_master_key(self) -> bytes:
         # Normalise the path so casing / relative-vs-absolute differences
-        # do not produce two cache entries for the same logical store
-        # (vs-M-1).
+        # do not produce two cache entries for the same logical store.
         self._store_dir.mkdir(parents=True, exist_ok=True)
         cache_key = self._store_dir.resolve()
         with FileFallbackMasterKeyProvider._lock:
@@ -798,9 +797,9 @@ class FileFallbackMasterKeyProvider:
 def _purge_caches_at_exit() -> None:
     """atexit hook: zeroise every cached key buffer at process shutdown.
 
-    sec-M-1 hardening — a memory-disclosure bug elsewhere in the
-    process (or a post-mortem core dump) cannot surface key bytes
-    that have been overwritten with zeros.
+    A memory-disclosure bug elsewhere in the process (or a post-mortem
+    core dump) cannot surface key bytes that have been overwritten with
+    zeros.
     """
     KeyringMasterKeyProvider._reset_for_tests()
     FileFallbackMasterKeyProvider._reset_for_tests()
@@ -959,7 +958,7 @@ def get_master_key_provider(
             ``keyring`` / ``file``). Overrides the value resolved from
             settings.
         settings_override: Optional pre-built settings instance. Tests
-            inject a settings stub bound to ``tmp_path`` so the file
+            inject a settings object bound to ``tmp_path`` so the file
             backend writes inside the test sandbox.
         passphrase_callback: Optional override for passphrase
             resolution; only consulted by the file backend.
@@ -1172,8 +1171,7 @@ def migrate_master_key_kdf(
         # only) must propagate cleanly rather than fall through to the
         # legacy-decrypt path — falling through would surface the I/O
         # failure as the misleading "passphrase wrong / file tampered"
-        # error message that the legacy branch raises. Issue #469
-        # gemini-review HIGH on PR #466.
+        # error message that the legacy branch raises.
         master_key: bytes
         try:
             master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")

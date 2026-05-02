@@ -1,20 +1,23 @@
-"""Modelo 100 Anexo E — ganancias y pérdidas patrimoniales (ejercicio 2025).
+"""Define the Modelo 100 Anexo E ruleset for 2025 capital gains and losses.
 
 LIRPF arts. 33-39 cover ganancias y pérdidas patrimoniales (capital
 gains and losses). The integration split per LIRPF art. 49:
 
 - Held <= 1 year -> base imponible general (Anexo F casilla 0399).
-- Held > 1 year   -> base imponible ahorro (Anexo F casilla 0400).
+- Held > 1 year  -> base imponible ahorro (Anexo F casilla 0400).
 
-This ruleset verifies the aggregate saldo (0405 = ganancias - pérdidas).
-The general/ahorro split is caller-supplied via 0399 + 0400 since the
-holding-period classification is per-transacción metadata that lives
-outside the formula layer (caller iterates transmisiones, applies
-LIRPF art. 37 FIFO regla on acciones, computes the per-transaction
-holding period, and aggregates into the two integration buckets).
+This ruleset verifies only the aggregate saldo (``0405 = ganancias -
+pérdidas``). The general/ahorro split is caller-supplied via casillas
+0399 and 0400 because the holding-period classification is
+per-transacción metadata that lives outside the formula layer: the
+caller iterates transmisiones, applies the LIRPF art. 37 FIFO rule on
+acciones, computes the per-transaction holding period, and aggregates
+into the two integration buckets.
 
-Stable across 2024 / 2025 / 2026 (LIRPF arts. 33-39 unchanged at BOE
-consolidated text consult 2026-02-28).
+Stable across the 2024, 2025, and 2026 ejercicios — LIRPF arts. 33-39
+are unchanged in the consolidated BOE text. Sibling rulesets re-export
+the 2025 :data:`CASILLAS` and :data:`CITATIONS` to inherit the same
+casilla surface.
 """
 
 from __future__ import annotations
@@ -32,10 +35,14 @@ from .._common import (
 from ._common import cite_lirpf
 
 EFFECTIVE_FROM = date(2025, 1, 1)
+"""First day of the ejercicio in which this Anexo E ruleset applies."""
+
 EFFECTIVE_TO = date(2025, 12, 31)
+"""Last day of the ejercicio in which this Anexo E ruleset applies."""
 
 
 def _label(es: str, en: str, hu: str) -> Translatable:
+    """Return a :class:`aeat.core.i18n.Translatable` mapping for label texts."""
     return {"es": es, "en": en, "hu": hu}
 
 
@@ -63,6 +70,7 @@ CITATIONS = (
         "año se integran en base ahorro; las restantes en base general.",
     ),
 )
+"""LIRPF citations underpinning the Anexo E saldo neto patrimonial."""
 
 
 CASILLAS = (
@@ -124,6 +132,7 @@ CASILLAS = (
         legal_basis=(CITATIONS[0], CITATIONS[1]),
     ),
 )
+"""Casilla declarations exposed by the Anexo E ruleset."""
 
 
 FORMULAS = (
@@ -133,9 +142,11 @@ FORMULAS = (
         body=sub_op(ref("0306"), ref("0307")),
     ),
 )
+"""Engine formula bindings for the Anexo E computed casillas."""
 
 
 PARAMETERS = ParameterTable(entries={})
+"""Anexo E declares no parametric tables."""
 
 
 __all__ = [

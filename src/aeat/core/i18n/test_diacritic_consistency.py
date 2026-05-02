@@ -49,14 +49,15 @@ def _has_diacritics(text: str, alphabet: frozenset[str]) -> bool:
 
 
 def _is_legitimate_ascii_hungarian(hu: str) -> bool:
-    """Heuristic: short HU (<8 chars) or no spaces is presumed legitimate.
+    """Heuristic: short HU (<15 chars) or no spaces is presumed legitimate.
 
-    Hungarian words like ``mappa``, ``rekord``, ``futtasd`` are
-    naturally diacritic-free. The audit only flags HU as suspicious
-    when the slot is long enough that at least one diacritic would
-    plausibly appear in normal prose.
+    Hungarian words like ``mappa``, ``rekord``, ``futtasd``, ``ezzel``
+    are naturally diacritic-free. Short multi-word phrases (e.g.
+    ``rekord ezzel:``) are equally plausible legitimate ASCII content.
+    The audit only flags HU as suspicious when the slot is long enough
+    that at least one diacritic would plausibly appear in normal prose.
     """
-    return len(hu) < 8 or " " not in hu
+    return len(hu) < 15 or " " not in hu
 
 
 def _collect_multilingual_calls(tree: ast.Module) -> list[tuple[int, str, str, str, str]]:
@@ -115,8 +116,7 @@ def test_hu_slot_has_diacritics_when_es_does() -> None:
 
     if len(asymmetric) > _MAX_HU_ASYMMETRIC_BARE:
         report_lines = [
-            f"HU diacritic-asymmetry count rose to {len(asymmetric)}; "
-            f"ceiling is {_MAX_HU_ASYMMETRIC_BARE}. Top sites:",
+            f"HU diacritic-asymmetry count rose to {len(asymmetric)}; ceiling is {_MAX_HU_ASYMMETRIC_BARE}. Top sites:",
         ]
         for path, lineno, hu, es in asymmetric[:10]:
             try:

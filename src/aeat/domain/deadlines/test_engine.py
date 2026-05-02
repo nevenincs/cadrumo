@@ -1,4 +1,11 @@
-"""Unit tests for :class:`aeat.domain.deadlines.DeadlineEngine` and ``next_deadline``."""
+"""Unit tests for :class:`aeat.domain.deadlines.DeadlineEngine` and :func:`aeat.domain.deadlines.next_deadline`.
+
+Covers profile-driven obligation membership, per-modelo window
+materialisation, status transitions across
+:class:`aeat.domain.deadlines.ObligationStatus`, the next-deadline
+selector, engine purity, failure modes, and JSON round-trip of the
+computed :class:`aeat.domain.deadlines.Schedule`.
+"""
 
 from __future__ import annotations
 

@@ -1,31 +1,29 @@
-"""Aggregate kill-rate enforcement for the mutation harness (#338, #457).
+"""Aggregate kill-rate enforcement for the mutation harness.
 
 Walks every landed ruleset variant, counts the mutable nodes per
 mutator class, and asserts the per-class harness covers them. The
 test exists to:
 
-1. **Fail loudly when a future ruleset adds a mutable node that no
-   per-class harness exercises.** The walker enumerates every mutable
+1. Fail loudly when a future ruleset adds a mutable node that no
+   per-class harness exercises. The walker enumerates every mutable
    node from the registry; the per-class harnesses must enumerate the
    same set. A divergence means a node escaped coverage.
 
-2. **Compute the kill-rate floor empirically.** Issue #457 surfaced
-   a structural tautology in the prior ``killed = populated`` line:
-   nodes that lived in :data:`EXPECTED_COUNTS` but were not
-   enumerated by any per-class harness sailed past every assertion.
-   The aggregator now imports the per-class harness coverage
-   generators (``_iter_scalar_targets``, ``_iter_percent_targets``)
+2. Compute the kill-rate floor empirically. The aggregator imports the
+   per-class harness coverage generators (e.g.
+   :func:`aeat.domain.formulas._rulesets.test_scalar_mutation._iter_scalar_targets`
+   and
+   :func:`aeat.domain.formulas._rulesets.test_percent_rate_mutation._iter_percent_targets`)
    and counts unique mutated targets. The 90 % kill-rate floor is
-   computed against the **claimed-covered surface** — populated minus
-   the deliberately-deferred subset — so a future ruleset PR that
-   bumps populated counts without extending the per-class harness
-   AND without bumping the matching ``_deferred`` column fails
-   loudly. See [[2026-04-29-mutation-harness-fix-adr]].
+   computed against the claimed-covered surface — populated minus the
+   deliberately-deferred subset — so a future change that bumps
+   populated counts without extending the per-class harness and
+   without bumping the matching ``_deferred`` column fails loudly.
 
-3. **Emit the catalogue markdown table.** :func:`build_catalogue_markdown`
-   produces the markdown table consumed by the exec summary, now
-   surfacing the deferred columns explicitly so readers see the
-   coverage gap rather than seeing inflated 100 % numbers.
+3. Emit the catalogue markdown table.
+   :func:`build_catalogue_markdown` produces the markdown table consumed
+   downstream, surfacing the deferred columns explicitly so readers see
+   the coverage gap rather than inflated 100 % numbers.
 """
 
 from __future__ import annotations
@@ -103,7 +101,7 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
         # Mul/Div literal-leaf count.
         leaves = list(iter_scalar_leaf_paths(fd.formula))
         counts["mul_div_scalar"] += len(leaves)
-        # Threshold-literal positions (issue #457 closure).
+        # Threshold-literal positions .
         # Split into "covered by harness" (ε-shift detectable) vs
         # "identity-excluded" (additive/multiplicative identity:
         # Max(0, X) / Min(0, X)).
@@ -124,11 +122,11 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 
 
 # Hard-coded expected counts per ruleset, derived from the audit grep
-# at the time of authoring issue #338. A future ruleset addition that
+# at the time of authoring . A future ruleset addition that
 # changes these counts will fail the test until the contributor
 # explicitly bumps the expected counts here AND extends the per-class
 # harness to cover the new nodes — a deliberate friction point.
-# Per-mutator-class deferred-coverage convention (issue #457):
+# Per-mutator-class deferred-coverage convention :
 #
 # Each ruleset row carries a ``<class>_deferred`` column for every
 # mutator class whose populated surface has nodes whose per-class
@@ -146,7 +144,7 @@ def _count_per_ruleset(ruleset: Ruleset) -> dict[str, int]:
 # covers that class for that ruleset (or the populated count is 0).
 EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     "modelo_100.2024": {
-        # Issue #317 (M100 megaproject — Anexos B1, B2, C, D normal/
+        # (M100 megaproject — Anexos B1, B2, C, D normal/
         # simplificada/modulos, E, F, G, N composed):
         # - sub_op: 71 — fanout across all anexo chains: 4 in B1 rendimiento
         #   previo chain + 4 in B1 art. 20 piecewise + 1 in B1 reducido + 2
@@ -161,7 +159,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         # tarifa autonomica progressive scales for Madrid / Cataluna /
         # Andalucia / Comunitat Valenciana / Castilla y Leon are deferred
         # to a follow-up issue.
-        # Issue #457: 2 sub_op chains covered (0720 cuota_diferencial +
+        # 2 sub_op chains covered (0720 cuota_diferencial +
         # 0545 base_liquidable_general clamp-wrapped) → 69 deferred.
         # 3 mul_div_scalar archetypes covered (0540 bracket-5 / 0560
         # bracket-5 / 0021 art. 20 slope) → 17 deferred.
@@ -183,7 +181,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 3,
     },
     "modelo_100.2025": {
-        # Issue #317: structural baseline for the year that anchors the 2024
+        # structural baseline for the year that anchors the 2024
         # and 2026 clones; node fingerprint identical (LIRPF arts. 17-20 stable
         # 2024 → 2025 → 2026 per BOE consolidated text consult 2026-02-28).
         "sub_op": 71,
@@ -204,7 +202,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 3,
     },
     "modelo_100.2026": {
-        # Issue #317: 2026 ruleset inherits 2025 numerical surface; mutable-node
+        # 2026 ruleset inherits 2025 numerical surface; mutable-node
         # fingerprint matches verbatim. Any 2026-specific delta lands as a
         # follow-up issue when the 2026 Orden HAC publishes (precedent feb-mar 2027).
         "sub_op": 71,
@@ -246,9 +244,9 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 0,
     },
     "modelo_111.2024": {
-        # Issue #457: M111 2024 has 1 sub_op (casilla 30); the
+        # M111 2024 has 1 sub_op (casilla 30); the
         # operand-swap harness only imports M111 2025 / 2026 → 1
-        # deferred. Pre-existing pre-#457 behaviour, surfaced honestly.
+        # deferred. Pre-existing existing behaviour, surfaced honestly.
         "sub_op": 1,
         "sub_op_deferred": 0,
         "percent_rate_literal": 0,
@@ -285,7 +283,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 0,
     },
     "modelo_111.2026": {
-        # Issue #318: 2026 ruleset is a structural clone of 2024 / 2025
+        # 2026 ruleset is a structural clone of 2024 / 2025
         # (LIRPF arts. 99-101 + RIRPF arts. 99-100 unchanged across all
         # three years per the rule-delta manifest), so the mutable-node
         # fingerprint matches the 2024 / 2025 rows verbatim.
@@ -307,7 +305,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 0,
     },
     "modelo_115.2024": {
-        # Issue #457: M115 2024 sub_op (casilla 06) not covered by
+        # M115 2024 sub_op (casilla 06) not covered by
         # operand-swap harness (only 2025 / 2026 imported) → 1 deferred.
         "sub_op": 1,
         "sub_op_deferred": 0,
@@ -345,7 +343,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 1,
     },
     "modelo_115.2026": {
-        # Issue #319: 2026 ruleset is a structural clone of 2024 / 2025
+        # 2026 ruleset is a structural clone of 2024 / 2025
         # (RIRPF art. 100 unchanged across all three years per the
         # rule-delta manifest), so the mutable-node fingerprint matches
         # the 2024 / 2025 rows verbatim.
@@ -461,7 +459,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 0,
     },
     "modelo_130.2026": {
-        # Issue #321: 2026 ruleset is a structural clone of 2024 / 2025
+        # 2026 ruleset is a structural clone of 2024 / 2025
         # (RIRPF art. 110 unchanged across all three years per the
         # rule-delta manifest), so the mutable-node fingerprint matches
         # the 2024 / 2025 rows verbatim.
@@ -483,7 +481,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
         "casilla_ref_topology_deferred": 0,
     },
     "modelo_131.2024": {
-        # Issue #457: M131 2024 not imported by operand-swap harness
+        # M131 2024 not imported by operand-swap harness
         # (only 2025 / 2026 are) → all 5 deferred.
         "sub_op": 5,
         "sub_op_deferred": 0,
@@ -727,7 +725,7 @@ EXPECTED_COUNTS: dict[str, dict[str, int]] = {
     },
     "modelo_390.2024": {
         # 2 outer sub_ops covered (105, 191); casilla 193 (clamp-wrapped
-        # sub_op(0, 191)) is deferred — newly mutable post-#457 helper
+        # sub_op(0, 191)) is deferred — newly mutable helper
         # generalisation, fixture follow-up tracked separately.
         "sub_op": 3,
         "sub_op_deferred": 0,
@@ -858,9 +856,9 @@ def test_per_ruleset_node_counts_match_expected(ruleset: Ruleset) -> None:
 def test_expected_counts_rows_carry_required_columns() -> None:
     """Every ``EXPECTED_COUNTS`` row carries the populated and deferred keys.
 
-    Issue #457: the deferred catalogue is the regression-defense
-    mechanism; a row missing a ``_deferred`` column would silently
-    skip the gap-equality invariant in
+    The deferred catalogue is the regression-defense mechanism; a row
+    missing a ``_deferred`` column would silently skip the gap-equality
+    invariant in
     :func:`test_deferred_count_matches_empirical_coverage_gap`.
     """
     required = _POPULATED_KEYS | _DEFERRED_KEYS
@@ -875,15 +873,15 @@ def test_expected_counts_rows_carry_required_columns() -> None:
 
 
 def test_deferred_count_matches_empirical_coverage_gap() -> None:
-    """Issue #457 regression defense: ``populated - empirical == declared_deferred``.
+    """Assert ``populated - empirical == declared_deferred`` for every class.
 
     For every (ruleset, mutator class) the declared ``<class>_deferred``
     column must equal the gap between the walker-reported populated
     count and the per-class harness's empirical coverage. If a future
-    PR bumps a populated count without either extending the per-class
-    harness OR bumping the matching deferred count, this assertion
-    fails — exactly the failure mode the prior ``killed = populated``
-    tautology hid.
+    change bumps a populated count without either extending the
+    per-class harness or bumping the matching deferred count, this
+    assertion fails — exactly the failure mode the prior
+    ``killed = populated`` tautology hid.
     """
     scalar_coverage = _empirical_scalar_coverage()
     # The sub_op surface is not yet plumbed via a per-class harness
@@ -1053,26 +1051,24 @@ def _empirical_sub_op_coverage() -> dict[str, int]:
 
 
 def test_aggregate_kill_rate_floor_is_satisfied() -> None:
-    """Aggregate kill-rate across the **claimed-covered** mutator surface is ≥ 90 %.
+    """Assert aggregate kill-rate across the claimed-covered surface is >= 90 %.
 
-    Issue #457 replaces the prior ``killed = populated`` tautology
-    with empirical coverage computed from the per-class harness
-    parameter generators. The floor is evaluated against
+    Empirical coverage is computed from the per-class harness parameter
+    generators. The floor is evaluated against
     ``populated - declared_deferred`` so it reflects the surface the
     per-class harnesses actually claim to cover. The
     :func:`test_deferred_count_matches_empirical_coverage_gap`
     assertion above guarantees that the deferred declaration is in
     sync with the per-class harness empirical coverage.
 
-    **Co-enforcement note** (re: gemini-code-assist review on PR #459):
-    this 90 % floor is intentionally the looser of two layered
-    checks. The strict-equality invariant in
-    :func:`test_aggregator_killed_equals_populated_under_test` (next)
-    is the authoritative gate; the floor is preserved as the
-    historical issue-#338 DoD anchor and as a soft fallback if a
-    future PR relaxes the equality (e.g. to admit a documented
-    "no-observable-effect mutant" set). Removing the floor would
-    erase that traceability without adding behavioral safety.
+    Co-enforcement: this 90 % floor is intentionally the looser of two
+    layered checks. The strict-equality invariant in
+    :func:`test_aggregator_killed_equals_populated_under_test` is the
+    authoritative gate; the floor is preserved as a historical
+    definition-of-done anchor and as a soft fallback if a future change
+    relaxes the equality (e.g. to admit a documented
+    "no-observable-effect mutant" set). Removing the floor would erase
+    that traceability without adding behavioural safety.
     """
     populated = 0
     deferred = 0
@@ -1172,7 +1168,7 @@ def test_aggregator_killed_equals_populated_under_test() -> None:
 
 
 def build_catalogue_markdown() -> str:
-    """Return the markdown table consumed by the issue-#338 / #457 exec summary.
+    """Return the catalogue markdown table for the mutation harness.
 
     Columns: ``sub_op`` populated, ``sub_op_deferred``, ``percent_rate``
     populated (literal+param), ``brackets_threshold``, ``mul_div_scalar``

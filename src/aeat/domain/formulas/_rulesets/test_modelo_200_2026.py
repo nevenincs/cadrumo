@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 200 2026 ruleset."""
+"""Unit tests for the Modelo 200 2026 ruleset.
+
+Pins :data:`aeat.domain.formulas._rulesets.MODELO_200_2026` against the
+LIS art. 29 rate table, asserts no-drift against the 2025 ruleset, and
+exercises parametrised cent-exact derivations of the computed casillas
+(00562, 00611, 00621).
+"""
 
 from __future__ import annotations
 
@@ -15,6 +21,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 class TestModelo200Ruleset2026:
+    """Formula-engine assertions for the 2026 Modelo 200 ruleset."""
+
     def test_ruleset_id_and_effective_range(self) -> None:
         assert MODELO_200_2026.ruleset_id == "modelo_200.2026"
         assert MODELO_200_2026.effective_from == date(2026, 1, 1)
@@ -58,7 +66,7 @@ class TestModelo200Ruleset2026:
     ],
 )
 def test_tax_rate_split_examples_2026(base: Decimal, rate: Decimal, label: str) -> None:
-    """LIS art. 29 rate examples are verified through casilla 00558."""
+    """Verify LIS art. 29 rate examples through casilla 00558."""
     del label
     provided = _provided(
         base=base,
@@ -108,7 +116,7 @@ def test_computed_casillas_are_cent_exact_2026(
     provided: dict[str, Decimal],
     expected: dict[str, Decimal],
 ) -> None:
-    """Three anchored cases exercise every computed M200 casilla."""
+    """Exercise every computed M200 2026 casilla with three anchored cases."""
     report = Engine().audit_against(ruleset=MODELO_200_2026, provided=provided, tolerance=Decimal("0.01"))
     assert report.is_clean(), [(d.casilla_id, d.computed_value, d.user_value) for d in report.discrepancies]
     ledger = {entry.casilla_id: entry.value for entry in report.ledger.entries}

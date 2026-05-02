@@ -1,4 +1,4 @@
-"""Sensitivity classification primitive for persisted state.
+"""Sensitivity classification primitives for persisted state.
 
 Every persisted record (SQL row, file-backed envelope, blob, secret-store
 entry, audit-log entry) declares a :class:`SensitivityClass`. Each class
@@ -10,7 +10,9 @@ honour.
 The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.
 when an operator tags a corpus blob as identity-bearing), but the
-default is always available via :func:`default_policy_for`.
+default is always available via :func:`default_policy_for`. Redaction
+rule references stored as names are resolved to live
+:class:`RedactionRule` instances by :mod:`aeat.core.redaction`.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class SensitivityClass(StrEnum):
     """Closed catalogue of sensitivity classes for persisted state.
 
-    Members:
+    Attributes:
         SECRET: Long-lived authentication material — OAuth client
             secrets, service-account private keys, certificate
             passphrases, refresh tokens. Treatment: ciphertext at rest;
@@ -77,7 +79,7 @@ class SensitivityClass(StrEnum):
 class AtRestTreatment(StrEnum):
     """Closed catalogue of at-rest data-protection treatments.
 
-    Members:
+    Attributes:
         PLAINTEXT: The record is stored as-is, with integrity tracking
             but without confidentiality protection. Acceptable for
             CORPUS and OPERATIONAL classes.
@@ -120,7 +122,7 @@ class RetentionPolicy(BaseModel):
 class RedactionStrategy(StrEnum):
     """Closed catalogue of redaction strategies applied at write time.
 
-    Members:
+    Attributes:
         SHA256_PREFIX: Replace the matched value with the first eight
             hex characters of its SHA-256 digest.
         HOST_ONLY: For URL-shaped values, retain only the host

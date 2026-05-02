@@ -1,11 +1,12 @@
 """Cross-reference casilla catalogue directories against the registry.
 
-Enforces the direction called out in #108's acceptance brief: every
-modelo the on-disk casilla catalogue knows about must resolve to a
-:class:`aeat.domain.modelos.ModeloMetadata` entry. The reverse direction
-(every registry entry references only known casilla codes) lands in a
-later iteration once :class:`ModeloMetadata` carries structured
-casilla references.
+Enforces a one-way invariant: every modelo the on-disk casilla
+catalogue under ``corpus/casillas/`` knows about must resolve to a
+:class:`aeat.domain.modelos._metadata.ModeloMetadata` entry via
+:func:`aeat.domain.modelos.get_modelo`. The reverse direction (every
+registry entry references only known casilla codes) is deferred until
+:class:`aeat.domain.modelos._metadata.ModeloMetadata` carries
+structured casilla references.
 """
 
 from __future__ import annotations

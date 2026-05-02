@@ -1,4 +1,10 @@
-"""Portal: certificate validation endpoint."""
+"""Catalogue entry for the AEAT certificate-validation information page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.AUTH` describing the
+``/Sede/certificados.html`` page that lists admissible electronic
+certificates.
+"""
 
 from __future__ import annotations
 
@@ -21,3 +27,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Información y validación de certificados electrónicos admitidos por la AEAT.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-validation page."""

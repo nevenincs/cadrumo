@@ -1,4 +1,10 @@
-"""Pure helpers for the Sheets CLI sub-app."""
+"""Pure helpers for Google Sheets value input handling.
+
+Hosts the side-effect-free helpers that translate operator inputs (JSON
+strings, ``--raw`` flags) into the shapes expected by the Sheets
+``values`` API. Anything that requires a live Sheets service belongs in
+an outbound Google adapter.
+"""
 
 from __future__ import annotations
 

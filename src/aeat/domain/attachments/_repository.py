@@ -1,16 +1,18 @@
 """Content-addressed byte and manifest repository for the attachment service.
 
-The store separates write-once byte blobs from encrypted JSON manifests under a
-shared configured root:
+The :class:`AttachmentStore` separates write-once byte blobs from encrypted
+JSON manifests under a shared configured root:
 
-* ``<root>/blobs/<sha256>``                   — raw bytes, write-once.
+* ``<root>/blobs/<sha256>`` — raw bytes, write-once.
 * ``<root>/manifests/<sha256>.envelope.json`` — encrypted manifest envelope at
-  FINANCIAL class via :func:`save_encrypted_envelope`.
+  ``FINANCIAL`` sensitivity via
+  :func:`aeat.adapters.persistence.storage.save_encrypted_envelope`.
 
 Every public method that composes a path from an ``attachment_id`` / ``sha256``
 input first validates the token is a 64-character lowercase hex digest, so
 untrusted CLI inputs cannot traverse out of the store root or exploit NTFS
-case-insensitivity to alias blobs.
+case-insensitivity to alias blobs across ``<digest>`` and ``<DIGEST>`` on
+case-preserving filesystems.
 """
 
 from __future__ import annotations
@@ -53,10 +55,11 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
         The validated digest, lowercase.
 
     Raises:
-        AttachmentValidationError: When the input is not a 64-char lowercase
-            hex digest. The validation deliberately rejects uppercase digests
-            so NTFS case-insensitivity cannot be used to alias blobs across
-            `<digest>` and `<DIGEST>` on case-preserving filesystems.
+        :exc:`aeat.domain.attachments.AttachmentValidationError`: When the
+            input is not a 64-character lowercase hex digest. The validation
+            deliberately rejects uppercase digests so NTFS case-insensitivity
+            cannot be used to alias blobs across ``<digest>`` and ``<DIGEST>``
+            on case-preserving filesystems.
     """
     if not isinstance(value, str):
         raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
@@ -66,7 +69,17 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 
 
 class AttachmentStore(BaseModel):
-    """Filesystem-backed content-addressed attachment store."""
+    """Filesystem-backed content-addressed attachment store.
+
+    Combines write-once byte storage under :attr:`blobs_dir` with encrypted
+    JSON manifests under :attr:`manifests_dir`. The store is itself a frozen
+    pydantic model so it can be shared across threads without aliasing risk;
+    instances are constructed via :meth:`at`.
+
+    Attributes:
+        root: Absolute, resolved root directory hosting ``blobs/`` and
+            ``manifests/``.
+    """
 
     model_config = _STRICT_FROZEN
 

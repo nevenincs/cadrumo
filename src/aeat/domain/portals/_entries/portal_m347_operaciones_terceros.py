@@ -1,4 +1,10 @@
-"""Portal: Modelo 347 — declaración anual operaciones con terceros."""
+"""Registry entry for Modelo 347 — annual third-party transactions return.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -28,3 +34,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Declaración informativa anual de operaciones con terceras personas por encima del umbral legal.",
 )
+"""Portal entry for Modelo 347 (annual third-party transactions return)."""

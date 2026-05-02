@@ -1,15 +1,25 @@
-"""Unified review queue across the produce → verify → export pipeline.
+"""Unified review queue across the produce -> verify -> export pipeline.
 
 Public surface — callers must import review enums, models, adapters,
-and the aggregator exclusively from ``aeat.application.review`` and must not
-reach into the private underscore modules inside this package. See
-[[2026-04-18-unified-review-queue-adr]] for the architectural
-contract.
+and the aggregator exclusively from :mod:`aeat.application.review` and
+must not reach into the private underscore modules inside this package.
 
 The queue is read-only: every adapter loads from disk and emits a
-typed :class:`ReviewItem` without mutating the source. New review
-kinds land as additional adapters; existing adapters are not
-re-touched (see ADR D7).
+typed :class:`ReviewItem` without mutating the source. Severity is
+derived per-source by the adapter, not stored on the underlying record.
+New review kinds land as additional adapters; existing adapters are
+not re-touched.
+
+Key exports:
+
+* :class:`ReviewQueue` — cross-source aggregator.
+* :class:`ReviewItem` — discriminated union over the four per-source
+  shapes (:class:`TransactionReviewItem`, :class:`InvoiceReviewItem`,
+  :class:`DivergenceReviewItem`, :class:`FindingReviewItem`).
+* :class:`ReviewItemKind`, :class:`ReviewSeverity`, :class:`ReviewState`,
+  :class:`ReviewFormat` — closed enumerations.
+* :class:`ReviewError`, :class:`ReviewSourceLoadError`,
+  :class:`ReviewKindReservedError` — error hierarchy.
 """
 
 from __future__ import annotations

@@ -1,6 +1,8 @@
-"""T6 aggregation from classified transactions to AEAT casilla inputs."""
+"""Aggregation of classified transactions into AEAT casilla inputs."""
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from ._errors import (
     AggregationCasillaMappingError,
@@ -12,6 +14,9 @@ from ._errors import (
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 from ._service import aggregate_catalogue
+
+if TYPE_CHECKING:
+    from ._provider import FinancialFilingInputsProvider
 
 __all__ = [
     "AggregationCasillaMappingError",

@@ -1,4 +1,8 @@
-"""Tests for :class:`FiscalPeriod`."""
+"""Tests for :class:`aeat.domain.formulas._period.FiscalPeriod`.
+
+Covers annual and quarterly span derivation, inclusive-boundary
+``contains`` semantics, and out-of-range year rejection.
+"""
 
 from __future__ import annotations
 

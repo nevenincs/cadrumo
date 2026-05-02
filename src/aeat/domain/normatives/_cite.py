@@ -1,4 +1,13 @@
-"""Canonical citation renderer for :class:`NormativeReference`."""
+"""Canonical citation renderer for :class:`NormativeReference`.
+
+Provides :func:`short_title` for the prefix-and-number form
+(``"Ley 35/2006"``) and :func:`cite` for the full citation including
+the cited :class:`aeat.domain.normatives._schema.Articulo` and the
+parent :attr:`aeat.domain.normatives._schema.NormativeReference.boe_id`.
+The output strings are stable across releases and are the only
+project-sanctioned form for embedding normative references in error
+messages, reports, and audit logs.
+"""
 
 from __future__ import annotations
 
@@ -15,10 +24,17 @@ _KIND_PREFIX: dict[NormativeKind, str] = {
 def short_title(reference: NormativeReference) -> str:
     """Return the canonical short title for a reference.
 
-    The short title is formed as ``"{prefix} {number}"`` for the
+    The short title is formed as ``"{prefix} {number}"`` per the
     Spanish-authoritative naming convention, e.g. ``"Ley 35/2006"`` or
     ``"Orden HAC/242/2025"``. It is the citation-ready form the rest
     of the project emits into error messages and reports.
+
+    Args:
+        reference: The :class:`aeat.domain.normatives._schema.NormativeReference`
+            whose short title is wanted.
+
+    Returns:
+        A short citation string, e.g. ``"Ley 35/2006"``.
     """
     prefix = _KIND_PREFIX[reference.kind]
     return f"{prefix} {reference.number}"

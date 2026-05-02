@@ -1,15 +1,17 @@
-"""Adapter classes wiring on-main components to the workflow Protocols.
+"""Adapter classes wiring concrete components to the workflow protocols.
 
-Each adapter is a thin translation layer: no domain decisions live
-here, only the minimal surface normalisation required by the narrow
-Protocols in :mod:`aeat.application.workflow._protocols`. The :func:`default_engine`
-factory composes the adapters into a :class:`WorkflowEngine` and is
-the entry point production call sites (e.g. the CLI) use to obtain a
-fully-wired workflow engine.
+Each adapter is a thin translation layer: no domain decisions live here,
+only the minimal surface normalisation required by the narrow Protocols
+in :mod:`aeat.application.workflow._protocols`. The
+:func:`default_engine` factory composes the adapters into a
+:class:`aeat.application.workflow.WorkflowEngine` and is the entry point
+production call sites (notably the CLI) use to obtain a fully-wired
+workflow engine.
 
 The session and certificate-bundle slots remain ``None`` by default:
-the workflow engine tolerates ``None`` for each and records the
-skipped stages as "not wired" diagnostics rather than failing.
+:class:`aeat.application.workflow.WorkflowEngine` tolerates ``None`` for
+each and records the skipped stages as "not wired" diagnostics rather
+than failing.
 """
 
 from __future__ import annotations
@@ -21,17 +23,15 @@ from pathlib import Path
 from typing import Protocol, cast
 
 from ...adapters.outbound.aeat.auth import AeatSession
-from ...adapters.outbound.aeat.export import (
-    FilingDraftLike,
-    SubmissionEngine,
-    SubmissionPreflightError,
-)
+from ...adapters.outbound.aeat.export import FilingDraftLike
 from ...core.config import Settings, load_settings
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     Schedule,
 )
+from ...domain.submission import SubmissionEngine, SubmissionPreflightError
+from ...domain.sync import ModeloIdentifier as SyncModeloIdentifier
 from ..aggregation._errors import AggregationUnsupportedModeloError
 from ..filing import (
     CasillaSchemaProvider,
@@ -40,7 +40,6 @@ from ..filing import (
     build_draft,
 )
 from ..sync import LiveSyncRunner
-from ..sync import ModeloIdentifier as SyncModeloIdentifier
 from ._engine import WorkflowEngine
 from ._errors import WorkflowError
 from ._protocols import (
@@ -55,7 +54,11 @@ from ._protocols import (
 
 
 class _FinancialInputsProvider(Protocol):
-    def has_catalogue(self) -> bool: ...
+    """Narrow surface used by :class:`_AggregatedFinancialInputsProvider`."""
+
+    def has_catalogue(self) -> bool:
+        """Return ``True`` when a transaction catalogue is reachable on disk."""
+        ...
 
     def load_inputs(
         self,
@@ -63,7 +66,9 @@ class _FinancialInputsProvider(Protocol):
         modelo: str,
         period: str,
         profile: AutonomoProfile,
-    ) -> Mapping[str, object]: ...
+    ) -> Mapping[str, object]:
+        """Aggregate the catalogue into casilla inputs for ``modelo`` / ``period``."""
+        ...
 
 
 class DeadlineEngineAdapter:
@@ -213,7 +218,15 @@ class JsonFileInputsProvider:
 
 
 class FinancialThenJsonInputsProvider:
-    """Use T6 financial aggregation when supported, otherwise fall back to JSON inputs."""
+    """Prefer financial-aggregation inputs and fall back to a JSON file.
+
+    Wraps an optional ``_FinancialInputsProvider`` (typically
+    :class:`aeat.application.aggregation._provider.FinancialFilingInputsProvider`)
+    and a :class:`JsonFileInputsProvider` fallback. The financial path is
+    skipped silently when no catalogue exists or when the requested
+    modelo is not supported by the aggregator (signalled by
+    :exc:`aeat.application.aggregation.AggregationUnsupportedModeloError`).
+    """
 
     def __init__(
         self,
@@ -221,6 +234,7 @@ class FinancialThenJsonInputsProvider:
         financial_provider: _FinancialInputsProvider | None,
         fallback_provider: JsonFileInputsProvider,
     ) -> None:
+        """Store the financial provider and the JSON fallback."""
         self._financial_provider = financial_provider
         self._fallback_provider = fallback_provider
 
@@ -231,7 +245,16 @@ class FinancialThenJsonInputsProvider:
         period: str,
         profile: AutonomoProfile,
     ) -> Mapping[str, object]:
-        """Load inputs from financial aggregation for supported modelos."""
+        """Return casilla inputs, preferring the financial aggregator.
+
+        Args:
+            modelo: AEAT modelo identifier (e.g. ``"130"``).
+            period: Period identifier (e.g. ``"2026Q1"``).
+            profile: The autónomo profile passed through to providers.
+
+        Returns:
+            A mapping of casilla id to raw casilla input.
+        """
 
         if self._financial_provider is None:
             return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
@@ -254,14 +277,13 @@ def default_engine(
     inputs_provider: FilingInputsProviderProtocol | None = None,
     settings: Settings | None = None,
 ) -> WorkflowEngine:
-    """Build a :class:`WorkflowEngine` wired to the on-main components.
+    """Build a :class:`WorkflowEngine` wired to the production components.
 
     Args:
         submission_engine: Required submission Protocol. The caller
             must build the real :class:`SubmissionEngine` themselves
-            (the composition is complex and already owned by
-            :mod:`aeat.entrypoints.cli.submission`) and pass it wrapped or
-            pre-adapted.
+            (the composition is complex and owned by the CLI root
+            command wiring) and pass it wrapped or pre-adapted.
         deadline_engine: Optional deadline Protocol. ``None`` triggers
             a :class:`WorkflowError`; deadlines are mandatory for the
             workflow to have any obligation to work on.
@@ -310,8 +332,8 @@ def _default_financial_inputs_provider(cfg: Settings) -> _FinancialInputsProvide
     catalogue_dir = cfg.aeat_financial_txs_dir.resolve()
     if not (catalogue_dir / "transactions.envelope.json").exists():
         return None
-    from ..aggregation._provider import FinancialFilingInputsProvider
     from ...domain.transactions._repository import TransactionCatalogueRepository
+    from ..aggregation._provider import FinancialFilingInputsProvider
 
     return FinancialFilingInputsProvider(repository=TransactionCatalogueRepository(store_dir=catalogue_dir))
 

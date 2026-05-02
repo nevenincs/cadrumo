@@ -1,15 +1,14 @@
-"""DR Diseño-de-Registros ingestion library (EPIC #305).
+"""DR *Diseño de Registros* ingestion library.
 
 Converts a JSON representation of an AEAT *Diseño de Registros*
-specification into a tuple of :class:`SegmentSpec` objects ready
-for the multi-segment envelope serialiser. Isolates the xlsx-parsing
-work (which agents perform externally with ``openpyxl``) from the
-schema-generation work (which is pure pydantic construction).
+specification into a tuple of
+:class:`aeat.adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
+objects ready for the multi-segment envelope serialiser. Isolates the
+xlsx-parsing work (which agents perform externally with ``openpyxl``)
+from the schema-generation work (which is pure pydantic construction).
 
-## Spec document format
-
-A DR spec document is a JSON object keyed by segment_id. Each
-segment carries its ``total_length`` + an ordered list of fields:
+A DR spec document is a JSON object keyed by ``segment_id``. Each
+segment carries its ``total_length`` plus an ordered list of fields:
 
 .. code-block:: json
 
@@ -37,14 +36,13 @@ segment carries its ``total_length`` + an ordered list of fields:
     }
 
 This format is hand-authored (or research-agent-authored from the
-xlsx) and committed to ``tests/fixtures/dr_specs/`` for
-auditability + deterministic schema regeneration.
+xlsx) and committed to ``tests/fixtures/dr_specs/`` for auditability
+and deterministic schema regeneration.
 
-## Security note
-
-This library parses JSON only — no binary xlsx parsing lives here.
-Agents that download xlsx files and translate to JSON are out of the
-production codebase; their output is committed as plain text.
+Security note: this library parses JSON only — no binary xlsx parsing
+lives here. Agents that download xlsx files and translate to JSON are
+out of the production codebase; their output is committed as plain
+text.
 """
 
 from __future__ import annotations
@@ -70,10 +68,14 @@ from ._record_spec import (
 class IngestSourceMeta(TypedDict, total=False):
     """Provenance metadata written into the generated module docstring.
 
-    ``extra_required_fields`` is an optional list of field IDs to
-    force-merge into ``REQUIRED_HEADER_FIELDS`` so the heuristic
+    Every key is optional; only the fields that the underlying JSON
+    spec carries are surfaced. ``extra_required_fields`` is an optional
+    list of field IDs to force-merge into ``REQUIRED_HEADER_FIELDS`` so
+    the heuristic in
+    :func:`aeat.adapters.outbound.aeat.export._formats._generate._collect_required_field_ids`
     can be extended for modelos whose header spans multiple segments
-    (e.g., Modelo 303's per-page identification fields in DP30301).
+    (for example Modelo 303's per-page identification fields in
+    DP30301).
     """
 
     modelo: str
@@ -87,7 +89,17 @@ class IngestSourceMeta(TypedDict, total=False):
 
 
 class IngestedSpec(TypedDict):
-    """Parsed output of :func:`ingest_dr_spec_document`."""
+    """Parsed output of :func:`ingest_dr_spec_document`.
+
+    Attributes:
+        source: Provenance metadata copied from the JSON document's
+            ``source`` block.
+        encoding: Validated wire encoding for the modelo (one of the
+            allowed values in
+            :data:`aeat.adapters.outbound.aeat.export._formats._record_spec.FicheroBoeEncoding`).
+        segments: Ordered tuple of segment specifications ready for the
+            envelope serialiser.
+    """
 
     source: IngestSourceMeta
     encoding: FicheroBoeEncoding
@@ -120,6 +132,7 @@ _SIGNED_MODE_MAP: Mapping[str, SignedMode] = {
 
 
 def _parse_field(entry: Mapping[str, Any]) -> RecordFieldSpec:
+    """Construct a :class:`RecordFieldSpec` from a single JSON field entry."""
     kind_raw = str(entry["kind"]).upper()
     kind = _KIND_MAP.get(kind_raw)
     if kind is None:
@@ -151,13 +164,22 @@ def _parse_field(entry: Mapping[str, Any]) -> RecordFieldSpec:
 def ingest_dr_spec_document(document: Mapping[str, Any]) -> IngestedSpec:
     """Parse a DR JSON spec document into an :class:`IngestedSpec`.
 
-    Runs :func:`validate_segment_specs` on the assembled tuple so any
-    offset / contiguity / duplication error in the source JSON surfaces
-    at ingestion time with the offending segment_id named.
+    Runs
+    :func:`aeat.adapters.outbound.aeat.export._formats._record_spec.validate_segment_specs`
+    on the assembled tuple so any offset, contiguity, or duplication
+    error in the source JSON surfaces at ingestion time with the
+    offending ``segment_id`` named.
+
+    Args:
+        document: Decoded JSON object loaded from a DR spec fixture.
+
+    Returns:
+        An :class:`IngestedSpec` ready for the serialiser or generator.
 
     Raises:
-        KeyError: on missing required top-level keys.
-        ValueError: on unknown enum values or spec invariant violations.
+        KeyError: On missing required top-level keys.
+        ValueError: On unknown enum values, unsupported encoding, or
+            spec-invariant violations.
     """
     source_raw = document.get("source", {})
     source_dict: dict[str, Any] = dict(source_raw) if isinstance(source_raw, Mapping) else {}
@@ -196,7 +218,16 @@ def ingest_dr_spec_document(document: Mapping[str, Any]) -> IngestedSpec:
 
 
 def ingest_dr_spec_path(path: Path | str) -> IngestedSpec:
-    """Load and ingest a DR spec document from a JSON file."""
+    """Load and ingest a DR spec document from a JSON file.
+
+    Thin convenience wrapper over :func:`ingest_dr_spec_document` that
+    handles file IO and JSON decoding.
+
+    Raises:
+        ValueError: If the file does not contain a JSON object at the
+            top level, or any error raised by
+            :func:`ingest_dr_spec_document`.
+    """
     payload = Path(path).read_text(encoding="utf-8")
     document = json.loads(payload)
     if not isinstance(document, Mapping):

@@ -360,8 +360,8 @@ class TestModeloValidators:
 
 
 # Reserved-slot rejection test removed alongside the SchemaSource slots
-# themselves per restructure ADR Decision 6 (#476). Pydantic's StrEnum
-# validator now owns the gate â€” unknown source values raise on parse.
+# themselves. Pydantic's StrEnum validator now owns the gate — unknown
+# source values raise on parse.
 
 
 class TestValidatePeriodWhitespace:

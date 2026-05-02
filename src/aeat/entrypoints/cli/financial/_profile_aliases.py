@@ -1,13 +1,14 @@
-"""Family-alias mapping for the ``aeat financial profile`` CLI (#259).
+"""Family-alias mapping for the ``aeat financial profile`` CLI.
 
-Aliases expand a single user-facing key (e.g. ``home_office_area``) into a
-tuple of concrete :class:`SpendingCategory` values at CLI parse time. They
-are **CLI-only sugar**: :class:`UsageRatioProfile` only persists
+Aliases expand a single user-facing key (e.g. ``home_office_area``) into
+a tuple of concrete :class:`aeat.domain.categories.SpendingCategory`
+values at CLI parse time. They are **CLI-only sugar**:
+:class:`aeat.domain.categories.UsageRatioProfile` only persists
 category-keyed entries, and the library never stores alias names.
 
-This module is private to the CLI layer so that future non-CLI consumers
-(the setup wizard #214, the deductibility compute #257) cannot cargo-cult
-the alias taxonomy into onboarding prompts or compute paths.
+This module is intentionally private to the CLI layer so that non-CLI
+consumers (the setup wizard, the deductibility compute) cannot
+cargo-cult the alias taxonomy into onboarding prompts or compute paths.
 """
 
 from __future__ import annotations
@@ -53,8 +54,13 @@ FAMILY_ALIASES: Mapping[str, tuple[SpendingCategory, ...]] = MappingProxyType(
         "mileage_business": _mileage_business_members(),
     }
 )
-# ``phone_fixed_business`` was removed: ``TELEFONIA_FIJA`` already belongs to
-# ``home_office_area`` (it is a ``USAGE_RATIO_HOME_AREA`` category), so the
-# two aliases overlapped. Sequential ``set-ratio home_office_area`` and
-# ``set-ratio phone_fixed_business`` would silently clobber the earlier
-# value. Kent can type ``telefonia_fija`` directly for single-category edits.
+"""Read-only mapping from CLI alias names to concrete spending categories.
+
+``phone_fixed_business`` is deliberately absent: ``TELEFONIA_FIJA``
+already belongs to ``home_office_area`` (it is a
+``USAGE_RATIO_HOME_AREA`` category), so the two aliases would overlap
+and a sequential ``set-ratio home_office_area`` followed by
+``set-ratio phone_fixed_business`` would silently clobber the earlier
+value. The operator can type ``telefonia_fija`` directly for
+single-category edits.
+"""

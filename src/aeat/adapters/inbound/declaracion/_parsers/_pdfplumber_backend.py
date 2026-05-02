@@ -1,4 +1,11 @@
-"""Pdfplumber-backed page text extraction for declaración PDFs."""
+"""Pdfplumber-backed page text extraction for declaración PDFs.
+
+Wraps :mod:`pdfplumber` behind a single
+:func:`extract_pages_text` function that returns the per-page text as a
+tuple. Errors from the underlying library and pathological inputs
+(missing file, scan-only PDF without an OCR layer) are translated into
+:exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`.
+"""
 
 from __future__ import annotations
 
@@ -12,9 +19,18 @@ from .._errors import DeclaracionParseError
 def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
     """Extract the text of each page in order.
 
+    Args:
+        pdf_path: Filesystem path of the PDF to read.
+
+    Returns:
+        Tuple with one stripped string per page in the source order.
+        Empty pages preserve their slot as the empty string.
+
     Raises:
-        DeclaracionParseError: When pdfplumber cannot open the file
-            or every page is empty (suggesting a scan-only PDF).
+        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+            When ``pdf_path`` does not exist, when pdfplumber cannot open
+            the file, or when every page is empty (suggesting a
+            scan-only / XFA PDF without an embedded text layer).
     """
     if not pdf_path.is_file():
         raise DeclaracionParseError(f"declaración PDF not found: {pdf_path}")

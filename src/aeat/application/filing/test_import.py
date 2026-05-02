@@ -1,8 +1,9 @@
-"""Unit tests for :mod:`aeat.application.filing._import` (issue #271).
+"""Unit tests for :mod:`aeat.application.filing._import`.
 
-The suite exercises :func:`import_filing_from_justificante` against the
-committed synthetic fixture PDFs under ``tests/fixtures/justificantes/``
-— no mocks, no patches, no fakes.
+Exercises :func:`aeat.application.filing.import_filing_from_justificante`
+end-to-end against the committed synthetic justificante fixture PDFs
+under ``tests/fixtures/justificantes/`` — no mocks, no patches, no
+fakes. Also covers the :func:`_normalise_period` canonicaliser.
 """
 
 from __future__ import annotations

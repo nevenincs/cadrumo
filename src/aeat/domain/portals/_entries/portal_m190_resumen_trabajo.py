@@ -1,4 +1,10 @@
-"""Portal: Modelo 190 — resumen anual retenciones trabajo."""
+"""Registry entry for Modelo 190 — annual summary of labour withholdings.
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -30,3 +36,4 @@ ENTRY: PortalMetadata = build_entry(
         "Resumen anual de retenciones e ingresos a cuenta sobre trabajo y actividades (complementa al Modelo 111)."
     ),
 )
+"""Portal entry for Modelo 190 (annual summary of labour withholdings)."""

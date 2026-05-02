@@ -1,6 +1,8 @@
-"""Unit tests for Modelo 100 Anexo E (2026).
+"""Unit tests for Modelo 100 Anexo E (ejercicio 2026).
 
-External-anchored to LIRPF arts. 33-39.
+Exercises ganancias y pérdidas patrimoniales derivations of
+:data:`aeat.domain.formulas._rulesets.MODELO_100_2026` against worked
+inputs anchored to LIRPF arts. 33-39.
 """
 
 from __future__ import annotations
@@ -16,8 +18,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _baseline() -> dict[str, Decimal]:
-    """Zero values for every casilla — Anexo E tests overwrite the
-    relevant subset; engine derives the computed casillas accordingly."""
+    """Return zero values for every casilla used in Anexo E tests.
+
+    Tests overwrite the relevant subset; the engine then derives the
+    computed casillas accordingly.
+
+    Returns:
+        Mapping of casilla id to ``Decimal("0.00")``.
+    """
     return {
         # B1.
         "0001": Decimal("0.00"),
@@ -89,6 +97,8 @@ def _baseline() -> dict[str, Decimal]:
 
 
 class TestModelo100AnexoE:
+    """Cover the saldo patrimonial derivation in Anexo E (LIRPF arts. 33-39)."""
+
     def test_consistent_saldo_patrimonial(self) -> None:
         """Ganancias 5.000, pérdidas 1.500 -> saldo neto 3.500."""
         provided = _baseline() | {
@@ -118,6 +128,7 @@ class TestModelo100AnexoE:
         assert report.is_clean()
 
     def test_drift_in_saldo_detected(self) -> None:
+        """Wrong saldo (3.000 vs expected 3.500) is reported as a discrepancy."""
         provided = _baseline() | {
             "0306": Decimal("5000.00"),
             "0307": Decimal("1500.00"),

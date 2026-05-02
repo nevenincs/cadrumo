@@ -1,4 +1,9 @@
-"""Smoke tests for the llm subpackage."""
+"""Smoke tests for the :mod:`aeat.adapters.outbound.llm` subpackage.
+
+Asserts that the package is importable, exposes a module docstring, and
+remains wired into the substrate's :mod:`aeat.core.errors` and
+:mod:`aeat.core.logging` conventions.
+"""
 
 import pytest
 

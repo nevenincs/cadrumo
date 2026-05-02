@@ -2,33 +2,30 @@
 
 Parses the AEAT-produced *copia de la declaración* for Modelo 130
 across tax years 2024, 2025, and 2026. The form layout is identical
-across the three years (RIRPF art. 110 unchanged per the
-``.vault/reference/2026-130-rule-delta.md`` rule-delta manifest), so a
-single extraction implementation backs three thin per-year subclasses:
+across the three years (RIRPF art. 110 unchanged), so a single
+extraction implementation backs three thin per-year subclasses:
 :class:`Modelo130V2024Extractor`, :class:`Modelo130V2025Extractor`,
 and :class:`Modelo130V2026Extractor`. Each pins its own
 ``template_revision`` ClassVar so the registry under
 :mod:`aeat.adapters.inbound.declaracion._extractors` resolves the right
 ``(modelo, año, revision)`` triple for every supported year. The
-shared extraction logic lives on :class:`Modelo130V2025Extractor`'s
-``extract`` method and is inherited verbatim.
+shared extraction logic lives on
+:meth:`Modelo130V2025Extractor.extract` and is inherited verbatim.
 
-Issue #321 (Tier-L per-modelo calc-verify-roundtrip): the regex map
-covers all 19 casillas (01..19). The MVP-7 set (01..07) remains in
-``_REQUIRED_FOR_COMPLETE`` — that is the *must-extract* invariant the
-verification status uses to surface ``COMPLETE`` vs ``PARTIAL``.
-Casillas 08..19 are *parseable* (the regex map matches them when the
-PDF prints non-blank values) but not *required*. This split avoids
-false-negative ``casilla-not-found`` warnings on real Modelo 130
-declaraciones where many of the 12 supplementary casillas are
-optional or zero-by-default for a given filing.
+The regex map covers all 19 casillas (01..19). The 7-casilla core set
+(01..07) is the ``_REQUIRED_FOR_COMPLETE`` invariant the verification
+status uses to surface ``COMPLETE`` vs ``PARTIAL``. Casillas 08..19
+are *parseable* (the regex map matches them when the PDF prints
+non-blank values) but not *required*. This split avoids false-negative
+``casilla-not-found`` warnings on real Modelo 130 declaraciones where
+many of the 12 supplementary casillas are optional or zero-by-default
+for a given filing.
 
-The regex map below is curated to match both the AEAT's official
-layout (Spanish labels printed in the form's left column) and the
-synthetic-generator rendering under
-``tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_130_generator.py``.
-Every label regex captures a single Spanish-formatted amount
-(``1.234,56``) as group 1.
+The regex map is curated to match both the AEAT's official layout
+(Spanish labels printed in the form's left column) and the
+synthetic-generator rendering used by the PDF corpus tests. Every
+label regex captures a single Spanish-formatted amount (``1.234,56``)
+as group 1.
 """
 
 from __future__ import annotations
@@ -39,8 +36,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
+from ...pdf._label_regex import apply_label_regex, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
-from .._extract import apply_label_regex, parse_spanish_decimal
 from .._extractor import DeclaracionExtractor
 from .._parsers import extract_pages_text
 from .._schema import (
@@ -54,12 +51,9 @@ _SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})"
 
 # Every casilla the Modelo 130 2025 schema enumerates. Order matters —
 # the extractor attaches `source_page=1` to all hits and the validator
-# presents them in this order.
-#
-# Issue #321: the full 19-casilla liquidación block. The required-
-# for-COMPLETE subset (``_REQUIRED_FOR_COMPLETE`` below) stays at the
-# MVP-7 set so the existing ``Tier-L`` happy-path tests preserve
-# their semantics; casillas 08..19 are *parseable* but not *required*.
+# presents them in this order. The required-for-COMPLETE subset
+# (``_REQUIRED_FOR_COMPLETE`` below) stays at the seven-casilla core
+# set; casillas 08..19 are *parseable* but not *required*.
 _MODELO_130_CASILLAS: tuple[str, ...] = (
     "01",
     "02",
@@ -90,7 +84,7 @@ _LABEL_REGEX_MAP: dict[str, re.Pattern[str]] = {
     for casilla_id in _MODELO_130_CASILLAS
 }
 
-# Issue #321 — keep `_REQUIRED_FOR_COMPLETE` at the MVP-7 set. Casillas
+# Keep `_REQUIRED_FOR_COMPLETE` at the seven-casilla core set. Casillas
 # 08..19 are intentionally optional: many real Modelo 130 filings carry
 # only the Apartado I block (estimación directa, no agraria activity,
 # no minoración, no vivienda-habitual deduction). Treating 08..19 as
@@ -105,7 +99,15 @@ _PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]{1,8})", re.IGNORECASE
 
 
 class Modelo130V2025Extractor(DeclaracionExtractor):
-    """Concrete extractor for Modelo 130 tax year 2025."""
+    """Concrete extractor for Modelo 130 tax year 2025.
+
+    Owns the per-page text scan, the label-regex application, and the
+    structural-integrity check on casilla 03 = 01 - 02. Subclasses for
+    other supported years inherit :meth:`extract` verbatim.
+
+    Attributes:
+        template_revision: Pinned to ``("130", 2025, "2025.01")``.
+    """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
         modelo="130",
@@ -114,6 +116,26 @@ class Modelo130V2025Extractor(DeclaracionExtractor):
     )
 
     def extract(self, pdf_path: Path) -> DeclaracionFiling:
+        """Parse ``pdf_path`` into a :class:`DeclaracionFiling`.
+
+        Extracts the per-page text, runs the curated label regex map
+        over the joined text, derives the
+        :class:`~aeat.adapters.inbound.pdf._shared.ExtractedCasilla`
+        records (assigning ``source_page=1`` to every hit), and applies
+        the casilla 03 = 01 - 02 structural-integrity downgrade.
+
+        Args:
+            pdf_path: Filesystem path of the source Modelo 130 PDF.
+
+        Returns:
+            A strict :class:`DeclaracionFiling` whose ``values`` follow
+            the canonical 01..19 casilla order.
+
+        Raises:
+            :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+                When the NIF, ejercicio, or período header field cannot
+                be located.
+        """
         pages = extract_pages_text(pdf_path)
         full_text = "\n".join(pages)
 
@@ -162,7 +184,7 @@ class Modelo130V2025Extractor(DeclaracionExtractor):
             # Multi-match guard: if the label pattern hits > 1 time in
             # the text, extraction is ambiguous — first hit wins but we
             # drop confidence + emit a warning so the verification
-            # classifier flags EXTRACTION_UNRELIABLE (audit H1).
+            # classifier flags EXTRACTION_UNRELIABLE.
             all_hits = _LABEL_REGEX_MAP[casilla_id].findall(full_text)
             confidence = 1.0
             if len(all_hits) > 1:
@@ -200,7 +222,7 @@ class Modelo130V2025Extractor(DeclaracionExtractor):
 
         # Structural integrity: casilla 03 = 01 - 02 (by Modelo 130 law).
         # Mismatch > 0.02 € → one of (01, 02, 03) was mis-extracted;
-        # downgrade 03's confidence + emit ambiguous-label (audit H1).
+        # downgrade 03's confidence + emit ambiguous-label.
         _structural_integrity_check_01_minus_02(values, warnings)
 
         status = _derive_status(values, warnings)
@@ -224,7 +246,18 @@ def _structural_integrity_check_01_minus_02(
     values: list[ExtractedCasilla],
     warnings: list[ExtractionWarning],
 ) -> None:
-    """Cross-check the 03 = 01 - 02 invariant; downgrade + warn on drift."""
+    """Cross-check the casilla 03 = 01 - 02 invariant.
+
+    When ``|（01 - 02）- 03|`` exceeds 0.02 €, mutates ``values`` to
+    downgrade casilla 03's :attr:`~aeat.adapters.inbound.pdf._shared.ExtractedCasilla.extraction_confidence`
+    and appends an ``ambiguous-label`` :class:`ExtractionWarning` so the
+    verification classifier flags the filing as
+    :attr:`~aeat.adapters.inbound.declaracion._schema.ExtractionStatus.PARTIAL`.
+
+    Args:
+        values: Mutable list of resolved casillas; modified in place.
+        warnings: Mutable warnings list; modified in place.
+    """
     from decimal import Decimal
 
     by_id = {v.casilla_id: v for v in values}
@@ -266,7 +299,20 @@ def _structural_integrity_check_01_minus_02(
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
-    """Return the first capturing-group match or raise a parse error."""
+    """Return the first capturing-group match or raise a parse error.
+
+    Args:
+        pattern: Compiled regex with at least one capturing group.
+        text: Source text to search.
+        field: Human-readable field name used in the error message.
+
+    Returns:
+        The stripped first capturing group of the first match.
+
+    Raises:
+        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
+            When ``pattern`` does not match anywhere in ``text``.
+    """
     from .._errors import DeclaracionParseError
 
     match = pattern.search(text)
@@ -276,7 +322,18 @@ def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
 
 
 def _canonical_period(ejercicio: str, raw_period: str) -> str:
-    """Canonicalise the raw period token to ``YYYYQN`` where possible."""
+    """Canonicalise the raw period token to ``YYYYQN`` / ``YYYY-MM`` / ``YYYYA``.
+
+    Args:
+        ejercicio: Four-digit tax year as printed on the receipt.
+        raw_period: Raw period token from the PDF (``"1T"``, ``"01"``,
+            ``"0A"``, etc.).
+
+    Returns:
+        Canonical period string (``"2025Q1"`` / ``"2025-01"`` /
+        ``"2025A"``) or the input unchanged when no canonical form
+        applies.
+    """
     if re.fullmatch(r"[1-4]T", raw_period, re.IGNORECASE):
         return f"{ejercicio}Q{raw_period[0]}"
     if re.fullmatch(r"(0[1-9]|1[0-2])", raw_period):
@@ -290,8 +347,8 @@ def _derive_status(
     values: list[ExtractedCasilla],
     warnings: list[ExtractionWarning],
 ) -> ExtractionStatus:
-    # Aligned with GenericDeclaracionExtractor (#305 H2): multi-hit
-    # or structurally-downgraded casillas (confidence < 1.0) do NOT count
+    # Aligned with GenericDeclaracionExtractor: multi-hit or
+    # structurally-downgraded casillas (confidence < 1.0) do NOT count
     # toward COMPLETE; they stay resolved for PARTIAL-coverage math only.
     resolved_ids = {v.casilla_id for v in values}
     reliable_ids = {v.casilla_id for v in values if v.extraction_confidence >= 1.0}
@@ -315,13 +372,15 @@ def _sha256_file(path: Path) -> str:
 class Modelo130V2024Extractor(Modelo130V2025Extractor):
     """Modelo 130 v2024 extractor — same layout as v2025 / v2026.
 
-    Issue #321: the AEAT Modelo 130 form layout is unchanged across
-    2024 → 2025 → 2026 (RIRPF art. 110 not amended; consolidated text
-    last update 2026-02-28). This subclass inherits the full
-    :meth:`Modelo130V2025Extractor.extract` implementation and pins
-    only the ``template_revision`` ClassVar so the registry resolves
-    ``(modelo="130", año=2024, revision="2024.01")`` to a working
+    The AEAT Modelo 130 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 110 not amended). This subclass
+    inherits the full :meth:`Modelo130V2025Extractor.extract`
+    implementation and pins only :attr:`template_revision` so the
+    registry resolves ``("130", 2024, "2024.01")`` to a working
     extractor.
+
+    Attributes:
+        template_revision: Pinned to ``("130", 2024, "2024.01")``.
     """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(
@@ -334,13 +393,15 @@ class Modelo130V2024Extractor(Modelo130V2025Extractor):
 class Modelo130V2026Extractor(Modelo130V2025Extractor):
     """Modelo 130 v2026 extractor — same layout as v2024 / v2025.
 
-    Issue #321: the AEAT Modelo 130 form layout is unchanged across
-    2024 → 2025 → 2026 (RIRPF art. 110 not amended; consolidated text
-    last update 2026-02-28). This subclass inherits the full
-    :meth:`Modelo130V2025Extractor.extract` implementation and pins
-    only the ``template_revision`` ClassVar so the registry resolves
-    ``(modelo="130", año=2026, revision="2026.01")`` to a working
+    The AEAT Modelo 130 form layout is unchanged across
+    2024 → 2025 → 2026 (RIRPF art. 110 not amended). This subclass
+    inherits the full :meth:`Modelo130V2025Extractor.extract`
+    implementation and pins only :attr:`template_revision` so the
+    registry resolves ``("130", 2026, "2026.01")`` to a working
     extractor.
+
+    Attributes:
+        template_revision: Pinned to ``("130", 2026, "2026.01")``.
     """
 
     template_revision: ClassVar[TemplateRevision] = TemplateRevision(

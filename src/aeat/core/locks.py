@@ -29,10 +29,10 @@ import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
-from importlib import import_module
 from pathlib import Path
 from typing import Final
 
+from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
 _log = get_logger(__name__)
@@ -166,8 +166,6 @@ def exclusive_file_lock(
         the lock as advisory across the whole file regardless of the
         underlying primitive.
     """
-    LockAcquisitionError = import_module("aeat.adapters.persistence.storage.errors").LockAcquisitionError
-
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
     lock_path = _lock_path_for(target)

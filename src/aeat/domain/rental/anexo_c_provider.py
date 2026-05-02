@@ -1,4 +1,4 @@
-"""M100 Anexo C backwards-compat shim (#454).
+"""M100 Anexo C rental-register merge provider.
 
 The existing M100 ruleset (`anexo_c_2024.py / 2025.py / 2026.py`)
 treats casillas 0061/0066/0072/0078/0085 as caller-supplied. This
@@ -7,7 +7,7 @@ module bridges the rental register to that ruleset:
   - When the rental register has no fincas registered for the
     period (or the ``store`` argument is ``None``), the supplied
     casilla mapping is returned unchanged. This preserves the
-    pre-#454 behaviour for callers that maintain their own
+    legacy behaviour for callers that maintain their own
     aggregates.
 
   - When the rental register has fincas, derived aggregates take
@@ -41,7 +41,7 @@ from ._repository import (
 _log = get_logger(__name__)
 
 ANEXO_C_CASILLAS: tuple[str, ...] = ("0061", "0066", "0072", "0078", "0085")
-"""The five casillas this shim manages."""
+"""The five casillas this provider manages."""
 
 
 class AnexoCMergeReport(BaseModel):
@@ -76,8 +76,8 @@ def compute_or_passthrough(
 
     When any of the repository arguments is ``None``, the rental
     register is treated as absent and the provided casillas are
-    returned unchanged (passthrough mode). This is the M100 pre-
-    #454 behaviour and preserves Kent's existing flow.
+    returned unchanged (passthrough mode). This is the legacy M100
+    behaviour and preserves the operator's existing flow.
 
     When all repositories are supplied AND the finca repository
     has at least one row, derived aggregates from the register are

@@ -1,23 +1,19 @@
-"""Hand-curated static casilla schema for Modelo 303 (v1).
+"""Hand-curated static casilla schema for Modelo 303.
 
-Modelo 303 is the quarterly ``autoliquidación`` of IVA general
-regime filed by Spanish autónomos and businesses. The casilla
-layout committed here is v1 coverage per ADR
-``2026-04-12-modelo-303-390-adr``: IVA devengado on operaciones
-interiores régimen general (01-09), IVA deducible (28-45), and
-resultado de la liquidación (64-71).
+Modelo 303 is the quarterly ``autoliquidación`` of IVA general regime filed
+by Spanish autónomos and businesses. The current coverage scope is IVA
+devengado on operaciones interiores régimen general (01-09), IVA deducible
+(28-45), and resultado de la liquidación (64-71).
 
-The numbering and formulas are taken from the *Manual práctico
-IVA 2025* (AEAT) and from the BOE-published Orden HAC/819/2024
-modelo order. The full form carries régimen simplificado,
-intracomunitarias, importaciones, recargo de equivalencia and
-regularization casillas which are explicitly OUT OF SCOPE for v1
-and will be added by follow-up issues.
+The numbering and formulas come from the *Manual práctico IVA 2025* (AEAT)
+and the BOE-published Orden HAC/819/2024 modelo order. The full form
+additionally carries régimen simplificado, intracomunitarias, importaciones,
+recargo de equivalencia and regularización casillas which are out of scope
+for this static schema.
 
-This module re-uses :class:`StaticCasillaSchema` /
-:class:`StaticCasillaCollection` from the Modelo 130 schema
-module — both classes are generic and will be replaced by the
-casilla DB (#23) in a single import rewrite.
+Re-uses :class:`aeat.domain.filing._builders._modelo_130_schema.StaticCasillaSchema`
+and :class:`aeat.domain.filing._builders._modelo_130_schema.StaticCasillaCollection`
+because both classes are generic across modelos.
 """
 
 from __future__ import annotations

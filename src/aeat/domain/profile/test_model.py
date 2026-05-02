@@ -1,4 +1,9 @@
-"""Unit tests for Kent's tax-residence profile models."""
+"""Unit tests for the contribuyente tax-residence profile models.
+
+Covers strict-frozen guarantees, schema-version handling, residence-
+change ledger validation, and accented / foral-alias parsing in
+:func:`aeat.domain.profile.parse_tax_region`.
+"""
 
 from __future__ import annotations
 

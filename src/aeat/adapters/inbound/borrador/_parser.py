@@ -1,4 +1,11 @@
-"""Public ``parse_borrador`` entry point for Modelo 100 PDFs (#305)."""
+"""Public :func:`parse_borrador` entry point for Modelo 100 PDFs.
+
+Composes the artefact-kind detector
+(:func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`)
+with the per-año extractor registry
+(:mod:`aeat.adapters.inbound.borrador._extractors`) into the single
+function callers should depend on.
+"""
 
 from __future__ import annotations
 
@@ -23,15 +30,16 @@ def parse_borrador(
         año_override: Skip auto-detection of the tax year and force it.
 
     Returns:
-        A strict :class:`BorradorFiling` with the summary-block casillas
-        extracted.
+        A strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`
+        with the summary-block casillas extracted.
 
     Raises:
-        ArtefactNotRecognisedError: When the PDF has no recognisable
-            VISTA PREVIA / BORRADOR / CSV marker and no override is
-            supplied.
-        BorradorParseError: Base class for other parse errors (PDF not
-            found, empty text, missing header fields).
+        :exc:`aeat.adapters.inbound.borrador._errors.ArtefactNotRecognisedError`:
+            When the PDF has no recognisable VISTA PREVIA / BORRADOR /
+            CSV marker and ``artefact_kind_override`` is not supplied.
+        :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
+            Base class for other parse errors (PDF not found, empty text,
+            missing header fields).
     """
     path = Path(pdf_path)
 

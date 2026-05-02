@@ -1,4 +1,13 @@
-"""Unit tests for record-level log scrubbing."""
+"""Unit tests for the record-level log secret scrubber.
+
+Exercises :class:`aeat.core.logging.SecretScrubbingFilter` end-to-end
+through the standard :mod:`logging` pipeline: tuple ``%``-args, dict
+``extra=`` payloads, exception tracebacks, and inline secrets in the
+record's message format string. The tests verify that key-paired
+secrets (``token=``, ``cookie=``, ``Bearer ...``) collapse to
+``<redacted>`` while non-sensitive context (region, status, account,
+counts) survives intact.
+"""
 
 from __future__ import annotations
 

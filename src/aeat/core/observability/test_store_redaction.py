@@ -1,4 +1,13 @@
-"""Regression tests for save_trace / save_events_append redaction (TRACE-001)."""
+"""Regression tests for run-trace and event-log on-disk redaction.
+
+Locks the contract that :func:`aeat.core.observability.save_trace` and
+:func:`aeat.core.observability.save_events_append` must redact every
+in-scope sensitive value (NIF, bearer token, sensitive URL path) before
+the structured payload reaches the on-disk store. Tracks the original
+TRACE-001 regression: plaintext NIF and OAuth tokens were observed in
+``runs/<run-id>/trace.json`` because the audit-class redaction policy
+was not applied to argument records and navigation events.
+"""
 
 from __future__ import annotations
 

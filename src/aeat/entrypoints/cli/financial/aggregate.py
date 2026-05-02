@@ -1,4 +1,11 @@
-"""`aeat financial aggregate` command for T6 casilla derivation."""
+"""Implement the ``aeat financial aggregate`` Typer command.
+
+Bridges the financial-input pipeline to the casilla derivation stage by
+loading classified transactions through
+:class:`aeat.application.aggregation._provider.FinancialFilingInputsProvider`
+and rendering the resulting :class:`aeat.application.aggregation.CasillaAggregation`
+ledger as either human-readable tables or canonical JSON.
+"""
 
 from __future__ import annotations
 
@@ -6,13 +13,13 @@ from decimal import Decimal
 
 import typer
 
-from ....core.config import load_settings
-from ....core.i18n import Language, Translatable, get_translation
 from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....application.aggregation import (
     AggregationError,
     CasillaAggregation,
 )
+from ....core.config import load_settings
+from ....core.i18n import Language, Translatable, get_translation
 from .._errors import json_output_requested
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ._catalogue import catalogue_repository
@@ -20,7 +27,13 @@ from ._catalogue import catalogue_repository
 
 @register_schema("financial aggregate")
 class FinancialAggregateJson(OutputRootSchema[CasillaAggregation]):
-    """Schema for ``aeat financial aggregate --json``."""
+    """JSON envelope schema for ``aeat financial aggregate --json``.
+
+    Specialises :class:`aeat.entrypoints.cli._schemas.OutputRootSchema`
+    over :class:`aeat.application.aggregation.CasillaAggregation` so the
+    contract test suite can validate emitted output against a single
+    pydantic model.
+    """
 
 
 def aggregate_cmd(
@@ -28,7 +41,25 @@ def aggregate_cmd(
     period: str = typer.Option(..., "--period", help="Period: YYYY-Qn, YYYYQn, YYYY-MM, or YYYY."),
     as_json: bool = typer.Option(False, "--json", help="Emit the CasillaAggregation ledger as JSON."),
 ) -> None:
-    """Aggregate classified transactions into a casilla ledger."""
+    """Aggregate classified transactions into a casilla ledger.
+
+    Loads the persisted transaction catalogue, derives the casilla totals
+    via :class:`aeat.application.aggregation._provider.FinancialFilingInputsProvider`,
+    and emits the result either as a human-readable summary or as the
+    JSON envelope defined by :class:`FinancialAggregateJson`.
+
+    Args:
+        modelo: AEAT modelo code (e.g. ``"130"``) the aggregation targets.
+        period: Period selector accepted by the provider — ``YYYY-Qn``,
+            ``YYYYQn``, ``YYYY-MM``, or ``YYYY``.
+        as_json: When ``True`` (or when the global ``--json`` flag was
+            supplied) emit the ledger via :func:`emit_json_success`
+            instead of the human-readable rendering.
+
+    Raises:
+        :exc:`aeat.application.aggregation.AggregationError`: When the
+            provider rejects the requested modelo / period combination.
+    """
 
     from ....application.aggregation._provider import FinancialFilingInputsProvider
 
@@ -44,6 +75,7 @@ def aggregate_cmd(
 
 
 def _render_human(aggregation: CasillaAggregation) -> None:
+    """Print the casilla ledger and provenance rows in the operator language."""
     typer.echo(
         _msg(
             {
@@ -99,6 +131,7 @@ def _render_human(aggregation: CasillaAggregation) -> None:
 
 
 def _output_language() -> Language:
+    """Resolve the configured operator output language, falling back to Spanish."""
     try:
         return Language(load_settings().aeat_output_language)
     except Exception:
@@ -106,10 +139,12 @@ def _output_language() -> Language:
 
 
 def _msg(message: Translatable) -> str:
+    """Return ``message`` translated into the configured operator language."""
     return get_translation(message, _output_language())
 
 
 def _format_decimal(value: Decimal) -> str:
+    """Render a :class:`decimal.Decimal` using the canonical financial format."""
     return canonical_decimal(value)
 
 

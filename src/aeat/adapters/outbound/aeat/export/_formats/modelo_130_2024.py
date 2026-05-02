@@ -1,41 +1,35 @@
-"""Fichero-BOE record spec for Modelo 130 ejercicio 2024.
+"""Define the fichero-BOE record spec for Modelo 130 ejercicio 2024.
 
- (scaffold) + (BOE-accurate rewrite). Source: AEAT
-*Diseño de Registro* ``dr130.09.pdf`` + ``DR130e15v12.xls`` (2015
-revision, last-modified 2021-07-13). The Modelo 130 layout has NOT
-been superseded since the 2015 revision; Orden EHA/672/2007
-(BOE-A-2007-6032) remains the governing norma. Orden HAC/819/2024 is
-IVA-scoped (Modelo 303), not 130.
+Encodes the AEAT *Diseño de Registro* ``dr130.09.pdf`` together with the
+companion spreadsheet ``DR130e15v12.xls`` (2015 revision, last modified
+2021-07-13). The Modelo 130 layout has not been superseded since the 2015
+revision; Orden EHA/672/2007 (BOE-A-2007-6032) remains the governing norma.
+Orden HAC/819/2024 is IVA-scoped (Modelo 303) and does not touch 130.
 
-## Record shape
+The module exposes the immutable artefacts consumed by
+:mod:`aeat.adapters.outbound.aeat.export._formats._serialise` and
+:mod:`aeat.adapters.outbound.aeat.export._formats._deserialise`:
+:data:`RECORD_LENGTH`, :data:`ENCODING`, :data:`REQUIRED_HEADER_FIELDS`, and
+the :data:`RECORD_SPECS` tuple of
+:class:`aeat.adapters.outbound.aeat.export._formats._record_spec.RecordFieldSpec`.
 
-- Total on-wire size: **880 bytes** per filing (positions 1-878 for
-  field content + positions 879-880 for the CRLF terminator).
-- Encoding: Windows-1252 (CP1252). Filename: ``{NIF}{ejercicio}{periodo}.130``.
-- ``RECORD_LENGTH = 878`` below counts ONLY the field content
-  (positions 1-878). The serialiser owns the 2-byte CRLF terminator
-  — it is not represented as a field in ``RECORD_SPECS``.
+Record shape:
+    Total on-wire size is 880 bytes per filing (positions 1-878 for field
+    content plus positions 879-880 for the CRLF terminator). Encoding is
+    Windows-1252 (CP1252). Filename is ``{NIF}{ejercicio}{periodo}.130``.
+    :data:`RECORD_LENGTH` counts only the field content (positions 1-878);
+    the serialiser owns the 2-byte CRLF terminator — it is not represented as
+    a field in :data:`RECORD_SPECS`.
 
-## Sign convention
+Sign convention:
+    No separate SIGNO field. A negative declaration is indicated via
+    ``tipo_declaracion = "N"``. Amount fields emit the absolute magnitude
+    with 2 implicit decimals (13 digits zero-padded, no decimal point).
 
-No separate SIGNO field. A negative declaration is indicated via
-``tipo_declaracion = "N"``. Amount fields emit the absolute magnitude
-with 2 implicit decimals (13 digits zero-padded, no decimal point).
-
-## History of prior miscites (tracked for auditability)
-
-- draft used Stream D's offsets which did not match
-  dr130.09.pdf for the header block — TIPO_DECLARACION at 79 (wrong;
-  real is 7), NIF at 10 (real 13), EJERCICIO at 4 (real 71), PERIODO
-  at 8 (real 75). All casillas shifted +3. IBAN was a single 20-byte
-  field; real is 4 sub-fields. FIRMA_MES was length 8; real is 10.
-   (this file) aligns with dr130.09.pdf verbatim.
-
-## References
-
-- https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.09.pdf
-- https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls
-- https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032
+References:
+    - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.09.pdf
+    - https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls
+    - https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032
 """
 
 from __future__ import annotations
@@ -48,21 +42,20 @@ from ._record_spec import (
     validate_record_specs,
 )
 
-#: Field-content byte length per the 2015+ Diseño de Registro
-#: (positions 1-878). On-wire stream adds 2-byte CRLF terminator
-#: at positions 879-880 (serialiser-owned; not in ``RECORD_SPECS``).
 RECORD_LENGTH = 878
+"""Field-content byte length per the 2015+ Diseño de Registro.
 
-#: Wire encoding for Modelo 130 fichero-BOE output.
+Covers positions 1-878. The on-wire stream adds a 2-byte CRLF terminator at
+positions 879-880; that terminator is serialiser-owned and not represented in
+:data:`RECORD_SPECS`.
+"""
+
 ENCODING: FicheroBoeEncoding = "cp1252"
+"""Wire encoding for Modelo 130 fichero-BOE output."""
 
-#: Width of every currency (amount) field: 11 integer + 2 implicit
-#: decimals = 13 digits zero-padded.
 _AMOUNT_LEN = 13
+"""Width of every currency (amount) field: 11 integer + 2 implicit decimals."""
 
-#: Header-field identifiers every draft MUST provide. Consumed by
-#: :mod:`aeat.adapters.outbound.aeat.export._formats._serialise` to fail-fast on missing
-#: required inputs before emitting any bytes.
 REQUIRED_HEADER_FIELDS: frozenset[str] = frozenset(
     {
         "EJERCICIO",
@@ -73,6 +66,11 @@ REQUIRED_HEADER_FIELDS: frozenset[str] = frozenset(
         "TIPO_DECLARACION",
     }
 )
+"""Header-field identifiers every draft MUST provide.
+
+Consumed by :mod:`aeat.adapters.outbound.aeat.export._formats._serialise` to
+fail-fast on missing required inputs before emitting any bytes.
+"""
 
 RECORD_SPECS: tuple[RecordFieldSpec, ...] = (
     # ---- Record header (positions 1-76) ----

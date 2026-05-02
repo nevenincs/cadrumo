@@ -1,4 +1,19 @@
-"""Strict immutable models for the transaction catalogue."""
+"""Strict immutable models for the transaction catalogue.
+
+Defines the boundary records that flow through the transaction
+pipeline:
+
+- :class:`Transaction` -- the immutable wrapper that preserves the
+  upstream :class:`aeat.domain.transactions._raw_transaction.RawTransaction`
+  verbatim and adds classification metadata.
+- :class:`ClassificationHistoryEntry` -- one frozen record in the
+  per-transaction classification chain.
+- :class:`TransactionCatalogue` -- the immutable mapping keyed by
+  ``transaction_id``.
+
+Every model is strict + frozen + ``extra="forbid"``; no dataclasses;
+no bare ``dict[str, Any]`` at the boundary.
+"""
 
 from __future__ import annotations
 
@@ -12,15 +27,10 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
-from ...core.logging import get_logger
+from ._enums import BusinessClassification, TransactionDirection
 from ._raw_transaction import RawTransaction
-from ._enums import LEGACY_UNCLASSIFIED_ALIAS, BusinessClassification, TransactionDirection
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_LOGGER = get_logger(__name__)
-# Module-local flag so the legacy-alias INFO line fires at most once per process.
-# Wrapped in a list to permit mutation from helper functions without ``global``.
-_LEGACY_ALIAS_LOGGED: list[bool] = [False]
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -65,25 +75,6 @@ def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def _coerce_classification_state(raw: str) -> BusinessClassification:
-    """Coerce a string classification value, normalising the legacy alias.
-
-    Pre-#237 catalogues stored the literal ``"UNCLASSIFIED"``. New
-    enum members do not include that value, so the loader normalises
-    it to ``NOT_YET_PROCESSED`` and logs one INFO line per process so
-    Kent knows to re-save his catalogue.
-    """
-    if raw == LEGACY_UNCLASSIFIED_ALIAS:
-        if not _LEGACY_ALIAS_LOGGED[0]:
-            _LOGGER.info(
-                "legacy classification value 'UNCLASSIFIED' aliased to 'NOT_YET_PROCESSED' "
-                "(issue #237). Re-save the catalogue to migrate."
-            )
-            _LEGACY_ALIAS_LOGGED[0] = True
-        return BusinessClassification.NOT_YET_PROCESSED
-    return BusinessClassification(raw)
-
-
 def _coerce_history(raw: Any) -> tuple[Any, ...]:
     """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
     if isinstance(raw, tuple):
@@ -103,10 +94,9 @@ def _require_aware_datetime(value: datetime) -> datetime:
 def _validate_classified_by_shape(value: str) -> str:
     """Restrict ``classified_by`` to ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>``.
 
-    The ``llm:<model>`` shape is required by #236 so an LLM classifier can
-    emit confidence scores alongside its predictions; the pipeline
-    distinguishes its output from manual and rule-based decisions via
-    this prefix.
+    The ``llm:<model>`` shape lets an LLM classifier emit confidence
+    scores alongside its predictions; the pipeline distinguishes its
+    output from manual and rule-based decisions via this prefix.
     """
     normalized = value.strip()
     if normalized in {"auto", "manual"}:
@@ -152,10 +142,31 @@ def _validate_business_pct_coupling(
 class ClassificationHistoryEntry(BaseModel):
     """One frozen record in a transaction's classification chain.
 
-    Reserved `confidence` and `provenance` slots anticipate issue #236
-    (decision confidence and `DecisionProvenance`). Today both default to
-    ``None``; future writers populate them without a schema bump because
-    the field list is stable.
+    The :attr:`confidence` and :attr:`provenance` fields are reserved
+    extension points; today both default to ``None`` and future writers
+    populate them without a schema bump because the field list is
+    stable.
+
+    Attributes:
+        business_classification: The :class:`BusinessClassification`
+            decided at this point in the chain.
+        business_pct: Required when ``business_classification`` is
+            :attr:`BusinessClassification.MIXED`; must be ``None``
+            otherwise. Coupling enforced via
+            :func:`_validate_business_pct_coupling`.
+        classified_at: Timezone-aware UTC timestamp of the decision.
+        classified_by: Classifier source string in the
+            ``auto`` / ``manual`` / ``rule:<id>`` / ``llm:<model>``
+            shape.
+        reason: Free-text justification (may be empty).
+        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+            foreign key.
+        notes: Free-text notes (may be empty).
+        confidence: Optional decision confidence in ``[0, 1]``.
+        provenance: Optional reserved provenance payload; the pydantic
+            type intentionally widens to a dict so future writers can
+            replace it with a typed record without a breaking schema
+            change.
     """
 
     model_config = _STRICT_FROZEN
@@ -168,11 +179,10 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    # Placeholder for the future ``DecisionProvenance`` pydantic record added
-    # by issue #236. Because this model declares ``extra="forbid"``, the next
-    # ADR must widen this type via a compatible union (``dict[str, Any] |
-    # DecisionProvenance | None``) rather than swap it, so payloads written
-    # under #237 keep validating once #236 lands.
+    # Placeholder for a future typed ``DecisionProvenance`` pydantic record.
+    # Because this model declares ``extra="forbid"``, widening must happen
+    # via a compatible union (``dict[str, Any] | DecisionProvenance | None``)
+    # rather than a type swap, so previously-written payloads keep validating.
     provenance: dict[str, Any] | None = None
 
     @model_validator(mode="before")
@@ -186,7 +196,7 @@ class ClassificationHistoryEntry(BaseModel):
         payload = dict(data)
         raw_state = payload.get("business_classification")
         if isinstance(raw_state, str):
-            payload["business_classification"] = _coerce_classification_state(raw_state)
+            payload["business_classification"] = BusinessClassification(raw_state)
         if isinstance(payload.get("business_pct"), str):
             payload["business_pct"] = Decimal(payload["business_pct"])
         if isinstance(payload.get("classified_at"), str):
@@ -244,7 +254,33 @@ class ClassificationHistoryEntry(BaseModel):
 
 
 class Transaction(BaseModel):
-    """Immutable transaction wrapper that preserves raw provenance verbatim."""
+    """Immutable transaction wrapper that preserves raw provenance verbatim.
+
+    Attributes:
+        transaction_id: Lowercase 64-char SHA-256 derived deterministically
+            from the wrapped raw record by :func:`derive_transaction_id`.
+            Re-validated on every parse to detect tampering.
+        raw: The verbatim
+            :class:`aeat.domain.transactions._raw_transaction.RawTransaction`.
+        direction: Closed :class:`TransactionDirection`.
+        business_classification: Current :class:`BusinessClassification`
+            decision; defaults to
+            :attr:`BusinessClassification.NOT_YET_PROCESSED`.
+        business_pct: Required when ``business_classification`` is
+            :attr:`BusinessClassification.MIXED`; ``None`` otherwise.
+        invoice_id: Optional invoice foreign key.
+        category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
+            foreign key.
+        notes: Free-text notes.
+        classified_at: Timezone-aware timestamp of the active decision
+            (``None`` when never classified).
+        classified_by: Classifier source string for the active decision.
+        classification_reason: Free-text reason for the active decision.
+        classification_confidence: Optional confidence in ``[0, 1]`` for
+            the active decision.
+        classification_history: Tuple of historical
+            :class:`ClassificationHistoryEntry` records, oldest first.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -290,7 +326,7 @@ class Transaction(BaseModel):
             payload["direction"] = TransactionDirection(payload["direction"])
         raw_state = payload.get("business_classification")
         if isinstance(raw_state, str):
-            payload["business_classification"] = _coerce_classification_state(raw_state)
+            payload["business_classification"] = BusinessClassification(raw_state)
         if isinstance(payload.get("business_pct"), str):
             payload["business_pct"] = Decimal(payload["business_pct"])
         if isinstance(payload.get("classified_at"), str):
@@ -348,7 +384,14 @@ class Transaction(BaseModel):
 
 
 class TransactionCatalogue(BaseModel):
-    """Immutable catalogue keyed by ``transaction_id``."""
+    """Immutable catalogue keyed by ``transaction_id``.
+
+    Attributes:
+        transactions: Frozen :class:`types.MappingProxyType` from
+            stable transaction id to :class:`Transaction`. Built via
+            :meth:`from_transactions` or by passing a mapping / iterable
+            to ``model_validate``.
+    """
 
     model_config = _STRICT_FROZEN
 

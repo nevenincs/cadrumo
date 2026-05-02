@@ -1,31 +1,31 @@
-"""Closed enumeration of the 15 ordinary autonomous communities + per-CCAA tarifa autonómica brackets.
+"""Closed enumeration of the 15 ordinary CCAAs and per-CCAA tarifa autonómica brackets.
 
 País Vasco and Navarra are foral regimes (Concierto Económico Ley
 12/2002, Convenio Económico Ley 28/1990) and file separate IRPF-
 equivalent declarations under their own Norma Foral / Decreto Foral
-Legislativo. They are NOT members of this enum.
+Legislativo. They are NOT members of :class:`CCAA`.
 
 Ceuta and Melilla are NOT autonomous communities — they are ciudades
-autónomas without LIRPF art. 46 bis competence. Their IRPF benefit is a
-STATE-level deduction (LIRPF art. 68.4 — 60 % reducción on the cuota
-proporcional, post Ley 6/2018) handled in Anexo G, not Anexo Ñ.
+autónomas without LIRPF art. 46 bis competence. Their IRPF benefit is
+a STATE-level deduction (LIRPF art. 68.4 — 60 % reducción on the
+cuota proporcional, per Ley 6/2018) handled in Anexo G, not Anexo Ñ.
 
-This module also publishes the **per-CCAA tarifa autonómica general
-brackets** for all 15 ordinary CCAAs per LIRPF arts. 46 bis + 73-77 +
+This module also publishes the per-CCAA tarifa autonómica general
+brackets for all 15 ordinary CCAAs per LIRPF arts. 46 bis + 73-77 and
 Ley 22/2009 (cesión de competencias normativas a las CCAA). The
 brackets follow the same shape as the estatal tarifas
-(`tuple[tuple[from, to | None, rate], ...]`) consumed by
-``progressive_tarifa()`` in Anexo G.
+(``tuple[tuple[from, to | None, rate], ...]``) consumed by the
+``progressive_tarifa()`` helper in Anexo G.
 
-Dispatch is two-step: ``PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR`` covers
-the year-dependent CCAAs (Asturias post Ley 3/2025; Canarias post Ley
-5/2024) keyed by ``(CCAA, año)``; everything else falls back to the
-stable ``PER_CCAA_TARIFA_AUTONOMICA`` per-CCAA dict.
+Dispatch is two-step: :data:`PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR` covers
+the year-dependent CCAAs (Asturias under Ley 3/2025; Canarias under
+Ley 5/2024) keyed by ``(CCAA, año)``; everything else falls back to
+the stable :data:`PER_CCAA_TARIFA_AUTONOMICA` per-CCAA dict.
 
-Caller computes the autonomic cuota íntegra (casilla 0551) externally
-via ``compute_cuota_autonomica_general(blg, ccaa, año)`` and supplies
-the result; the engine verifies the cuota chain via Anexo G's
-0551 + 0561 -> 0595 aggregation.
+Callers compute the autonomic cuota íntegra (casilla 0551) externally
+via :func:`compute_cuota_autonomica_general` and supply the result;
+the engine verifies the cuota chain via Anexo G's
+``0551 + 0561 -> 0595`` aggregation.
 """
 
 from __future__ import annotations
@@ -37,11 +37,11 @@ from enum import StrEnum
 class CCAA(StrEnum):
     """Closed enumeration of the 15 in-scope ordinary CCAAs.
 
-    The CCAA where Kent has habitual residence determines (a) which
-    tarifa autonómica applies to his base liquidable general / ahorro,
-    and (b) which set of deducciones autonómicas he can claim in
-    Anexo Ñ. País Vasco and Navarra are deliberately absent (foral
-    regimes — out of scope per `#424`).
+    The CCAA where the contribuyente has habitual residence determines
+    (a) which tarifa autonómica applies to the base liquidable general
+    and ahorro, and (b) which set of deducciones autonómicas may be
+    claimed in Anexo Ñ. País Vasco and Navarra are deliberately absent
+    as foral regimes are out of scope.
     """
 
     ANDALUCIA = "andalucia"
@@ -303,23 +303,30 @@ PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR: dict[tuple[CCAA, int], tuple[tuple[str, str 
 
 
 def compute_cuota_autonomica_general(blg: Decimal, ccaa: CCAA, año: int = 2025) -> Decimal:
-    """Compute the cuota íntegra autonómica general for `ccaa` at base
-    liquidable general `blg` for ejercicio `año`.
+    """Compute the cuota íntegra autonómica general for ``ccaa`` and ``año``.
 
-    Pure-Python progressive-tarifa computation that mirrors the AST shape
-    built by ``progressive_tarifa()`` in Anexo G. Caller uses this to
-    derive casilla 0551 externally before supplying it to the engine.
+    Pure-Python progressive-tarifa computation that mirrors the AST
+    shape built by the ``progressive_tarifa()`` helper in Anexo G.
+    Callers use this to derive casilla 0551 externally before supplying
+    it to the engine.
 
-    Dispatch order:
-    1. ``PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR[(ccaa, año)]`` — Asturias
-       (Ley 3/2025 retroactive 1/1/2025) and Canarias (Ley 5/2024
-       deflactación 1/1/2025) have year-dependent schedules.
-    2. ``PER_CCAA_TARIFA_AUTONOMICA[ccaa]`` — fallback for the 13
-       stable CCAAs.
+    Dispatch is two-step: the year-dependent table
+    :data:`PER_CCAA_TARIFA_AUTONOMICA_BY_YEAR` is consulted first
+    (Asturias under Ley 3/2025 retroactive 1/1/2025, Canarias under Ley
+    5/2024 deflactación 1/1/2025), then :data:`PER_CCAA_TARIFA_AUTONOMICA`
+    serves as fallback for the 13 stable CCAAs. All 15 ordinary CCAAs are
+    encoded, so this function does not raise :exc:`KeyError` for any
+    in-scope CCAA. País Vasco and Navarra are not members of
+    :class:`CCAA` (foral regimes are out of scope).
 
-    All 15 ordinary CCAAs are encoded; this function should not raise
-    `KeyError` for any in-scope CCAA. País Vasco / Navarra are not
-    members of the `CCAA` enum (foral regimes per `#424`).
+    Args:
+        blg: Base liquidable general expressed as a :class:`~decimal.Decimal`.
+        ccaa: Autonomous community of habitual residence.
+        año: Filing year. Defaults to ``2025``.
+
+    Returns:
+        The cuota íntegra autonómica general, rounded to two decimal
+        places using :data:`~decimal.ROUND_HALF_UP`.
     """
     # Two-step lookup: dict.get() defaults are evaluated eagerly, so
     # `PER_CCAA_TARIFA_AUTONOMICA[ccaa]` would raise KeyError for the

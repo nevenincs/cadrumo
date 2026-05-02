@@ -1,11 +1,12 @@
-"""Unit tests for the LIS art. 12.1.a) amortization table + LIS art. 17 inventory model.
+"""Cover the LIS art. 12.1.a) amortization table and LIS art. 17 inventory model.
 
-Closes the claude vaultspec-code-review M1 finding: the foundational
-types `AmortizationCategory` and `InventoryRecord` were "exported but
-uncalled". This test file exercises the construction surface, verifies
-the LIS-table data integrity, and confirms LIFO is rejected by Pydantic
-construction (LIS art. 17.6 enforced structurally rather than
-runtime-checked).
+Exercises the construction surface of
+:class:`aeat.domain.formulas._rulesets.modelo_100._amortization.AmortizationCategory`
+and :class:`aeat.domain.formulas._rulesets.modelo_100._inventario.InventoryRecord`,
+verifies the LIS-table data integrity for
+:data:`aeat.domain.formulas._rulesets.modelo_100._amortization.LIS_ART_12_LINEAL_TABLE`,
+and confirms LIFO is rejected by Pydantic construction (LIS art. 17.6
+enforced structurally rather than runtime-checked).
 """
 
 from __future__ import annotations

@@ -1,4 +1,11 @@
-"""Computation ledger, discrepancy record, and audit-report models."""
+"""Computation ledger, discrepancy record, and audit-report models.
+
+The ledger is the engine's only output channel: every derivation produces a
+:class:`ComputationLedger` of :class:`LedgerEntry` rows, and every audit
+produces an :class:`AuditReport` carrying that ledger plus zero or more
+:class:`Discrepancy` rows. All four types are strict, frozen pydantic v2
+models so they round-trip cleanly to JSON for offline verification.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +19,23 @@ from ._codes import FormulaOp
 
 
 class LedgerEntry(BaseModel):
-    """One row in a :class:`ComputationLedger`."""
+    """One row in a :class:`ComputationLedger`.
+
+    Attributes:
+        casilla_id: The computed casilla this row stores.
+        value: The derived :class:`decimal.Decimal` value.
+        op: The :class:`aeat.domain.formulas.FormulaOp` used at the
+            outermost node of the formula tree.
+        formula_id: The stable id of the
+            :class:`aeat.domain.formulas.FormulaDefinition` applied.
+        operand_refs: Casilla ids referenced by the formula tree (in
+            traversal order).
+        operand_values: Values for each entry in :attr:`operand_refs`.
+        ruleset_id: Identifier of the
+            :class:`aeat.domain.formulas.Ruleset` that produced this row.
+        notes: Optional free-form annotation; never consumed by the
+            engine.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -27,7 +50,15 @@ class LedgerEntry(BaseModel):
 
 
 class ComputationLedger(BaseModel):
-    """Ordered collection of :class:`LedgerEntry` rows for one evaluation."""
+    """Ordered collection of :class:`LedgerEntry` rows for one evaluation.
+
+    Attributes:
+        ruleset_id: Identifier of the
+            :class:`aeat.domain.formulas.Ruleset` that produced the
+            ledger.
+        entries: Tuple of :class:`LedgerEntry`, ordered by topological
+            evaluation.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -43,7 +74,20 @@ class ComputationLedger(BaseModel):
 
 
 class Discrepancy(BaseModel):
-    """One mismatch between a user-provided and engine-derived value."""
+    """One mismatch between a user-provided and engine-derived value.
+
+    Attributes:
+        casilla_id: The casilla where the mismatch surfaced.
+        user_value: The caller-supplied :class:`decimal.Decimal`.
+        computed_value: The engine-derived :class:`decimal.Decimal`.
+        delta: ``user_value - computed_value`` (signed).
+        formula_id: The formula whose evaluation produced
+            ``computed_value``.
+        contributing_casillas: Upstream casilla ids the formula
+            referenced.
+        ruleset_id: Identifier of the
+            :class:`aeat.domain.formulas.Ruleset`.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -57,7 +101,15 @@ class Discrepancy(BaseModel):
 
 
 class AuditReport(BaseModel):
-    """Forward ledger plus any discovered discrepancies."""
+    """Forward ledger plus any discovered discrepancies.
+
+    Attributes:
+        ledger: The :class:`ComputationLedger` produced from
+            ``provided``'s user inputs.
+        discrepancies: Tuple of :class:`Discrepancy` rows, one per
+            casilla where the caller's value diverged from the engine's
+            derivation beyond tolerance.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -69,7 +121,7 @@ class AuditReport(BaseModel):
         return not self.discrepancies
 
     def assert_clean(self) -> None:
-        """Raise :class:`AuditDiscrepancyError` when discrepancies exist."""
+        """Raise :exc:`aeat.core.errors.AuditDiscrepancyError` when discrepancies exist."""
         if self.discrepancies:
             summary = "; ".join(
                 f"{d.casilla_id}: user={d.user_value} computed={d.computed_value}" for d in self.discrepancies

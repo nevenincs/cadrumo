@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ..modelos import ModeloCode as CanonicalModeloCode
 from . import (
     CasillaCatalogue,
     CasillaDataType,
@@ -20,7 +21,6 @@ from . import (
     save_casillas,
     verify_casillas,
 )
-from ..modelos import ModeloCode as CanonicalModeloCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

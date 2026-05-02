@@ -1,8 +1,7 @@
-"""Programmatic Alembic wrappers.
+"""Programmatic Alembic command surface.
 
-A thin facade over Alembic so callers (CLI, tests) do not reach into its
-private API. The Alembic config is loaded from the repo-root ``alembic.ini``
-and the SQLAlchemy URL is injected from the provided engine.
+The Alembic config is loaded from the repo-root ``alembic.ini`` and the
+SQLAlchemy URL is injected from the provided engine.
 """
 
 from __future__ import annotations

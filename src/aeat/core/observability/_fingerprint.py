@@ -1,8 +1,14 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by the observability layer to gate read-only replay. See ADR D5 for
-the rationale (auditability over time-travel) and the research doc for
-the precise hash inputs.
+Used by the observability layer to gate read-only replay: a recorded
+:class:`aeat.core.observability._models.RunTrace` carries hashes
+captured at run time, and
+:func:`aeat.core.observability.replay_run` refuses to replay when any
+of those hashes has drifted relative to the on-disk state.
+
+Auditability is prioritised over time-travel: a drift refusal forces
+the operator to acknowledge the change rather than silently re-running
+a recorded command against a moved-on environment.
 """
 
 from __future__ import annotations
@@ -88,8 +94,7 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
 
     Combining (2) + (3) is deliberate: (2) alone misses post-startup
     ``.env`` edits; (3) alone misses shell-exported env vars and
-    test-fixture overrides. Together they close the drift hole per
-    audit B1 (vaultspec-code-reviewer, 2026-04-21).
+    test-fixture overrides. Together they close the drift hole.
 
     Args:
         vault_dir: Path to the ``.vault/`` directory.

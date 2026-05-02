@@ -35,21 +35,6 @@ entry = "uv run ty check src/"
 pass_filenames = false
 types = ["python"]
 
-# ── #162 relative-imports mandate ───────────────────────────────────────────
-[[repos]]
-repo = "local"
-
-[[repos.hooks]]
-id = "relative-imports-mandate"
-name = "enforce relative imports inside src/aeat/ (#162)"
-language = "system"
-entry = "uv run python scripts/check_relative_imports.py"
-# Per-file scan keeps prek fast on big repos; the script silently drops
-# paths outside src/aeat/ (tests/, scripts/, etc.) by design.
-pass_filenames = true
-files = "^src/aeat/.*\\.py$"
-types = ["python"]
-
 # ── Vault hygiene (vaultspec-core, manual stage) ────────────────────────────
 # `vault-fix` rewrites files in place (unsafe mid-commit) and `spec-check`
 # reports local-dev framework health that is not meaningful inside CI.

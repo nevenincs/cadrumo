@@ -1,4 +1,4 @@
-"""Unit tests for the pure setup-wizard verifier (#61)."""
+"""Unit tests for the pure :class:`aeat.application.setup.Verifier`."""
 
 from __future__ import annotations
 

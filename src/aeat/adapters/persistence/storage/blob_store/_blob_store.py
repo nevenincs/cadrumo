@@ -43,18 +43,18 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.logging import get_logger
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from .....core.locks import fsync_parent_dir
+from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
-from .....core.locks import fsync_parent_dir
-from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     ClassificationError,
     EnvelopeVersionError,
 )
+from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
 _log = get_logger(__name__)
 
@@ -497,7 +497,7 @@ class EncryptedBlobStore:
         target.parent.mkdir(parents=True, exist_ok=True)
         # Capture the tempfile path BEFORE the ``with`` so cleanup works
         # even when context entry raises (rare but possible on some
-        # filesystems / antivirus shims). NamedTemporaryFile itself
+        # filesystems / antivirus hooks). NamedTemporaryFile itself
         # raising means no file was created; the ``except OSError``
         # below re-raises cleanly.
         handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below

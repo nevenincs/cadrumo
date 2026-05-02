@@ -1,4 +1,13 @@
-"""Proportionality and explainability primitives for category profiles."""
+"""Proportionality and explainability primitives for category profiles.
+
+Defines the closed enums and strict pydantic models that encode how
+a spending category is deducted on the autónomo filings, plus the
+citation chain back to BOE / Manual práctico that makes each rule
+explainable. Every :class:`ProportionalityRule` carries at least one
+:class:`CategoryCitation`; the consistency rules between
+``kind``-specific fields (``fixed_pct``, ``default_ratio``,
+``statutory_cap_*``) are enforced by the model validator.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +24,16 @@ class _ProportionalityStrictFrozenModel(BaseModel):
 
 
 class CategoryCitationSource(StrEnum):
-    """Allowed citation sources for explainable category profiles."""
+    """Allowed citation sources for explainable category profiles.
+
+    Attributes:
+        MANUAL_RENTA: AEAT *Manual práctico Renta*.
+        MANUAL_IVA: AEAT *Manual práctico IVA*.
+        LEY_IRPF: Ley del Impuesto sobre la Renta de las Personas
+            Físicas.
+        REGLAMENTO_IRPF: Reglamento del IRPF.
+        AEAT_HELP: AEAT online help / portal text.
+    """
 
     MANUAL_RENTA = "manual_renta"
     MANUAL_IVA = "manual_iva"
@@ -25,7 +43,18 @@ class CategoryCitationSource(StrEnum):
 
 
 class CategoryCitation(_ProportionalityStrictFrozenModel):
-    """A traceable citation backing one category or proportionality rule."""
+    """Traceable citation backing one category or proportionality rule.
+
+    Attributes:
+        source: Originating :class:`CategoryCitationSource`.
+        reference: Human-readable document reference (title,
+            edition, BOE number).
+        locator: Section, article, or page locator within the
+            referenced document.
+        url: Canonical URL where the citation can be checked.
+        quote_es: Verbatim Spanish-language quote backing the rule
+            (kept short — under 1024 chars).
+    """
 
     source: CategoryCitationSource
     reference: str = Field(min_length=1, max_length=256)
@@ -38,13 +67,37 @@ _HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
 
 def parse_http_url(value: str) -> AnyHttpUrl:
-    """Parse a string into a statically typed :class:`AnyHttpUrl`."""
+    """Parse a string into a statically typed :class:`AnyHttpUrl`.
+
+    Args:
+        value: Raw HTTP / HTTPS URL string.
+
+    Returns:
+        A validated :class:`pydantic.AnyHttpUrl`.
+
+    Raises:
+        :exc:`pydantic.ValidationError`: When the input is not a
+            valid HTTP / HTTPS URL.
+    """
 
     return _HTTP_URL_ADAPTER.validate_python(value)
 
 
 class ProportionalityKind(StrEnum):
-    """Supported proportionality kinds for downstream evaluator engines."""
+    """Supported proportionality kinds for downstream evaluator engines.
+
+    Attributes:
+        FULL_DEDUCTIBLE: Fully deductible against the activity.
+        FIXED_PERCENTAGE: Deductible at a fixed percentage; requires
+            ``fixed_pct``.
+        USAGE_RATIO_PERSONAL: Deductible at a personal-usage ratio
+            chosen by the taxpayer; may carry ``default_ratio``.
+        USAGE_RATIO_HOME_AREA: Deductible at the home-office area
+            ratio; may carry ``default_ratio``.
+        STATUTORY_CAP: Capped by a statutory daily or annual limit;
+            requires the matching ``statutory_cap_*`` fields.
+        NON_DEDUCTIBLE: Not deductible against the activity.
+    """
 
     FULL_DEDUCTIBLE = "full_deductible"
     FIXED_PERCENTAGE = "fixed_percentage"
@@ -55,14 +108,39 @@ class ProportionalityKind(StrEnum):
 
 
 class StatutoryCapPeriod(StrEnum):
-    """Supported statutory-cap periods."""
+    """Supported statutory-cap accounting periods.
+
+    Attributes:
+        DAY: Cap applies per day.
+        YEAR_PER_PERSON: Cap applies per year per covered person.
+    """
 
     DAY = "day"
     YEAR_PER_PERSON = "year_per_person"
 
 
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
-    """Deductibility and proportionality rule for one spending category."""
+    """Deductibility and proportionality rule for one spending category.
+
+    Attributes:
+        kind: One of :class:`ProportionalityKind`.
+        fixed_pct: Required when ``kind`` is
+            :attr:`ProportionalityKind.FIXED_PERCENTAGE`; otherwise
+            must be ``None``.
+        default_ratio: Optional default usage ratio; only valid for
+            usage-ratio kinds.
+        statutory_cap_eur_per_day: Daily statutory cap; only valid
+            for :attr:`ProportionalityKind.STATUTORY_CAP`.
+        statutory_cap_eur: Generic statutory cap amount; only valid
+            for :attr:`ProportionalityKind.STATUTORY_CAP` and must
+            be paired with :attr:`statutory_cap_period`.
+        statutory_cap_period: :class:`StatutoryCapPeriod` that the
+            generic cap applies over; required when
+            :attr:`statutory_cap_eur` is set.
+        citations: At least one :class:`CategoryCitation` proving
+            the rule.
+        notes_es: Spanish-language notes describing the rule.
+    """
 
     kind: ProportionalityKind
     fixed_pct: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))

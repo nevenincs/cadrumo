@@ -1,4 +1,11 @@
-"""Unit tests for the verify pipeline and the real corpus."""
+"""Unit tests for the normative verification pipeline and the real corpus.
+
+Loads the committed catalogue via :func:`aeat.domain.normatives.load_catalogue`,
+runs :func:`aeat.domain.normatives.verify_catalogue` against it, and confirms
+:func:`aeat.domain.normatives.raise_on_errors` correctly raises
+:exc:`aeat.domain.normatives.NormativeError` on dirty reports while remaining a
+no-op on clean ones.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +33,8 @@ _EXPECTED_IDS = {
 
 
 class TestRealCorpus:
+    """End-to-end checks against the committed normative corpus."""
+
     def test_load_real_corpus(self) -> None:
         catalogue = load_catalogue()
         loaded_ids = {ref.id for ref in catalogue}
@@ -51,12 +60,14 @@ class TestRealCorpus:
 
 
 class TestRaiseOnErrors:
-    def test_raises_on_dirty_report(self) -> None:
-        from . import VerificationIssue, VerificationReport
+    """Behaviour of :func:`aeat.domain.normatives.raise_on_errors`."""
 
-        report = VerificationReport(
+    def test_raises_on_dirty_report(self) -> None:
+        from . import NormativeVerificationIssue, NormativeVerificationReport
+
+        report = NormativeVerificationReport(
             issues=(
-                VerificationIssue(
+                NormativeVerificationIssue(
                     level="error",
                     code="synthetic",
                     message="test-only failure",

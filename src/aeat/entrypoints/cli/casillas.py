@@ -1,6 +1,6 @@
 """Typer commands for the curated AEAT casilla catalogue.
 
-Wraps :mod:`aeat.domain.casillas` so Kent can dump, verify, and
+Wraps :mod:`aeat.domain.casillas` so the operator can dump, verify, and
 (eventually) extract / translate per-modelo casilla catalogues from the
 command line. Real extraction and translation are gated on the LLM
 client surface and currently exit ``2`` with an explanatory message.
@@ -15,6 +15,7 @@ import typer
 
 from ...core.config import load_settings
 from ...domain.casillas import CasillaCatalogue, CasillaParseError, load_casillas, verify_casillas
+from ._i18n import t, tr
 
 app = typer.Typer(
     name="casillas",
@@ -70,7 +71,16 @@ def verify(
         for error in errors:
             typer.secho(str(error), fg=typer.colors.RED)
         raise typer.Exit(code=1)
-    typer.echo(f"verified {path}")
+    typer.echo(
+        tr(
+            t(
+                f"verificado {path}",
+                f"verified {path}",
+                f"verificat {path}",
+                f"verifikalva {path}",
+            )
+        )
+    )
 
 
 @app.command(name="extract", help="Write a draft extraction payload to a temp JSON file.")
@@ -88,8 +98,17 @@ def extract(
     """
     _load_for_cli(modelo, period, root)
     typer.secho(
-        "aeat casillas extract requires the real issue-21 LLM client surface; "
-        "this branch only ships the protocol boundary and canonical corpus support.",
+        tr(
+            t(
+                "aeat casillas extract requiere la superficie de cliente LLM; "
+                "esta rama solo incluye el límite de protocolo y el soporte de corpus canónico.",
+                "aeat casillas extract requires the LLM client surface; "
+                "this branch only ships the protocol boundary and canonical corpus support.",
+                "aeat casillas extract requereix la superfície de client LLM; "
+                "aquesta branca només inclou el límit de protocol i el suport de corpus canònic.",
+                "az aeat casillas extract az LLM kliens feluletet igényli; ez az ag csak a protokoll hatart es a kanonikus korpusz tamogatast tartalmazza.",
+            )
+        ),
         fg=typer.colors.YELLOW,
     )
     raise typer.Exit(code=2)
@@ -128,8 +147,17 @@ def translate(
     """
     _load_for_cli(modelo, period, root)
     typer.secho(
-        "aeat casillas translate requires the real issue-21 bulk translator surface; "
-        "this branch only ships the protocol boundary and canonical corpus support.",
+        tr(
+            t(
+                "aeat casillas translate requiere la superficie del traductor en bulk; "
+                "esta rama solo incluye el límite de protocolo y el soporte de corpus canónico.",
+                "aeat casillas translate requires the bulk translator surface; "
+                "this branch only ships the protocol boundary and canonical corpus support.",
+                "aeat casillas translate requereix la superfície del traductor en massa; "
+                "aquesta branca només inclou el límit de protocol i el suport de corpus canònic.",
+                "az aeat casillas translate a csoportos forditasi feluletet igényli; ez az ag csak a protokoll hatart es a kanonikus korpusz tamogatast tartalmazza.",
+            )
+        ),
         fg=typer.colors.YELLOW,
     )
     raise typer.Exit(code=2)

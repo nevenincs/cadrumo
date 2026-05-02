@@ -1,4 +1,11 @@
-"""Portal: Modelo 036 — declaración censal."""
+"""Catalogue entry for the *Modelo 036* census-declaration procedure page.
+
+Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
+under :attr:`aeat.domain.portals.PortalCategory.CENSUS` cross-referencing
+:attr:`aeat.domain.modelos.ModeloCode.MODELO_036`. Covers registration,
+modification, and deregistration on the census of entrepreneurs,
+professionals, and withholders.
+"""
 
 from __future__ import annotations
 
@@ -29,3 +36,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Alta, modificación y baja en el censo de empresarios, profesionales y retenedores.",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 census procedure page."""

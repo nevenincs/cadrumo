@@ -1,4 +1,10 @@
-"""End-to-end tests for :class:`Engine` against the Modelo 130 rulesets."""
+"""End-to-end tests for :class:`Engine` against the Modelo 130 rulesets.
+
+Exercises :class:`aeat.domain.formulas._engine.Engine` ``derive`` and
+``audit_against`` paths plus :func:`compute_casilla_13_minoracion`
+edge-case behaviour against the
+:data:`aeat.domain.formulas._rulesets.modelo_130_2024.RULESET`.
+"""
 
 from __future__ import annotations
 
@@ -78,7 +84,7 @@ def test_derive_q1_loss_floors_pago_fraccionado_and_total() -> None:
 
 @pytest.mark.unit
 def test_derive_caller_maintained_arrastre() -> None:
-    """Prior-quarter 19⁻ carry (casilla 15) flows through casilla 17 as a user-input."""
+    """Prior-quarter 19 carry (casilla 15) flows through casilla 17 as a user-input."""
     engine = Engine()
     ledger = engine.derive(
         ruleset=_resolve_2024_q2(),
@@ -354,8 +360,8 @@ def test_derive_division_by_zero_raises_evaluation_error() -> None:
     from ..modelos import LegalCitation, LegalCitationSource
     from ._casilla import CasillaDefinition
     from ._formula import (
-        CasillaRef,
         DivFormula,
+        FormulaCasillaRef,
         FormulaDefinition,
         Literal,
         RoundFormula,
@@ -364,7 +370,7 @@ def test_derive_division_by_zero_raises_evaluation_error() -> None:
 
     body = DivFormula(
         operands=(  # type: ignore[arg-type]
-            CasillaRef(casilla_id="01"),
+            FormulaCasillaRef(casilla_id="01"),
             Literal(value=Decimal("0")),
         )
     )
@@ -417,7 +423,7 @@ def test_vivienda_habitual_cap_clamp_via_min_op() -> None:
     # Rather than baking the cap into the ruleset (which would require
     # cross-casilla gating the engine does not enforce), we verify that
     # Apartado I base 50000 x 2% = 1000 > 660.14, so the caller-side
-    # ``min(…, 660.14)`` would produce 660.14. This test documents the
+    # ``min(..., 660.14)`` would produce 660.14. This test documents the
     # expected integration behaviour.
     base = Decimal("50000")
     rate = Decimal("0.02")

@@ -1,4 +1,10 @@
-"""Unit tests for Modelo 200 corporate-tax statutory helpers."""
+"""Unit tests for Modelo 200 corporate-tax statutory helpers.
+
+Exercises the rate-resolution, BIN-compensation cap, lineal-amortization,
+and minimum-liquid-quota helpers in
+:mod:`aeat.domain.formulas._rulesets.modelo_200_corporate_tax` against the
+LIS arts. 12, 26, 29, 30 bis, and 30 tax-base derivations.
+"""
 
 from __future__ import annotations
 
@@ -40,13 +46,13 @@ def test_modelo_200_rate_regimes_derive_tax_and_printed_effective_rate(
     expected_tax: Decimal,
     expected_rate: Decimal,
 ) -> None:
-    """LIS art. 29 and DT 44 rate cases produce casilla 00558/00562 inputs."""
+    """LIS art. 29 + DT 44 rate cases produce casilla 00558 / 00562 inputs."""
     assert modelo_200_tax_due(taxable_base=base, year=year, regime=regime) == expected_tax
     assert modelo_200_effective_rate(taxable_base=base, year=year, regime=regime) == expected_rate
 
 
 def test_modelo_200_zec_rate_applies_only_to_zec_eligible_base() -> None:
-    """LIS art. 29.7 + Ley 19/1994 art. 43 apply 4% only to ZEC base."""
+    """LIS art. 29.7 + Ley 19/1994 art. 43 apply 4 % only to the ZEC base."""
     tax_due = modelo_200_tax_due(
         taxable_base=Decimal("300000.00"),
         year=2026,
@@ -75,7 +81,7 @@ def test_modelo_200_bin_compensation_cap_general_rule(
     pending: Decimal,
     expected: Decimal,
 ) -> None:
-    """LIS art. 26 allows 70% of base, with a 1,000,000 EUR floor."""
+    """LIS art. 26 allows 70 % of base, with a 1 000 000 € floor."""
     assert modelo_200_bin_compensation_cap(base_before_bin=base, pending_bin=pending) == expected
 
 
@@ -155,7 +161,7 @@ def test_modelo_200_minimum_liquid_quota_lis_art_30_bis(
     base: Decimal,
     expected: Decimal,
 ) -> None:
-    """LIS art. 30 bis floors are available when the taxpayer is in scope."""
+    """LIS art. 30 bis floors apply when the taxpayer is in scope."""
     assert (
         modelo_200_minimum_liquid_quota(
             taxable_base=base,

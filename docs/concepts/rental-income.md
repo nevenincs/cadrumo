@@ -78,9 +78,9 @@ Imputación applies per-finca whose `use_type` is `OTRO_INMUEBLE_NO_AFECTO` or `
 
 The pre-#454 M100 Anexo C ruleset (`anexo_c_2024.py / 2025.py / 2026.py`) treated casillas 0061/0066/0072/0078/0085 as caller-supplied. With #454 the wiring is:
 
-- The `compute_or_passthrough` shim in `aeat.rental.anexo_c_provider` is the only entry point M100 callers consult.
+- The `compute_or_passthrough` provider in `aeat.domain.rental.anexo_c_provider` is the only entry point M100 callers consult.
 - When the rental register has fincas registered for the period, derived aggregates take precedence. Caller-supplied values that differ from derived surface as discrepancies via `AnexoCMergeReport.overridden`.
-- When the register is empty (Kent hasn't onboarded a finca yet), the shim passes the caller-supplied casillas through unchanged. **No regression on existing callers.**
+- When the register is empty (Kent hasn't onboarded a finca yet), the provider passes the caller-supplied casillas through unchanged. **No regression on existing callers.**
 
 The 7 pre-existing M100 Anexo C tests still pass unchanged.
 

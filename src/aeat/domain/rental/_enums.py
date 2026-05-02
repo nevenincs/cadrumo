@@ -1,4 +1,10 @@
-"""Closed enumerations for the rental register (#454)."""
+"""Closed enumerations for the rental register.
+
+Defines the closed catalogues the rental register's pydantic models
+constrain themselves with: :class:`UseType` (finca purpose),
+:class:`ExpenseCategory` (LIRPF art. 23.1 deductible-expense slots),
+and :class:`ReduccionTier` (LIRPF art. 23.2 reducción outcomes).
+"""
 
 from __future__ import annotations
 
@@ -25,7 +31,7 @@ class UseType(StrEnum):
         VIVIENDA_DESOCUPADA: Empty dwelling not let — same imputación
             treatment as OTRO_INMUEBLE_NO_AFECTO; flagged distinctly
             for downstream IBI recargo modelling per Ley 12/2023
-            disposición final tercera (out of #454 scope).
+            disposición final tercera.
     """
 
     VIVIENDA_ARRENDADA = "VIVIENDA_ARRENDADA"

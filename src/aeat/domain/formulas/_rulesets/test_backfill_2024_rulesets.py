@@ -1,19 +1,18 @@
-"""Unit tests for the 2024 backfill rulesets (EPIC #305).
+"""Unit tests for the 2024 backfill rulesets.
 
-H4 coverage gap: six 2024 backfill rulesets shipped
-with zero dedicated unit tests. The backfills are structural clones
-of their 2025 siblings (same casillas + formulas + citations; only
-the ParameterTable effective range narrows to 2024), so the test
-surface is intentionally compact:
+The 2024 backfills are structural clones of their 2025 siblings (same
+casillas + formulas + citations; only the
+:class:`aeat.domain.formulas._ruleset.ParameterTable` effective range
+narrows to 2024), so the test surface is intentionally compact:
 
-1. Registration + ruleset_id + effective range shape.
-2. Happy-path audit against a canonical fixture (mirrors the 2025
-   sibling's happy path to confirm the backfill did not drift).
-3. One mutation per ruleset proves the formulas actually enforce.
+- Registration plus ``ruleset_id`` and effective range shape.
+- Happy-path audit against a canonical fixture (mirrors the 2025
+  sibling's happy path to confirm the backfill did not drift).
+- One mutation per ruleset proves the formulas actually enforce.
 
-Avoids tautology by recomputing expected values independently of
-the ruleset — arithmetic is done inline in the fixture so a
-formula-author bug surfaces as a mismatch.
+Avoids tautology by recomputing expected values independently of the
+ruleset -- arithmetic is done inline in the fixture so a formula-author
+bug surfaces as a mismatch.
 """
 
 from __future__ import annotations

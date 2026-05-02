@@ -16,7 +16,6 @@ import pytest
 
 from ...core.config import Settings
 from ...core.i18n import Translatable
-from ...adapters.inbound.financial import RawProvenance, RawTransaction, SourceFormat
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -26,8 +25,18 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.invoices._repository import InvoiceCatalogueRepository
+from ...domain.sync import (
+    CasillaAddedWithDefault,
+    CasillaRemoved,
+    DivergenceClassification,
+    DivergenceRecord,
+    ModeloIdentifier,
+)
 from ...domain.transactions import (
     BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
@@ -41,14 +50,7 @@ from ..filing import (
     FilingValue,
     FilingValueKind,
 )
-from ..sync import (
-    CasillaAddedWithDefault,
-    CasillaRemoved,
-    DivergenceClassification,
-    DivergenceRecord,
-    JsonFileDivergenceRepository,
-    ModeloIdentifier,
-)
+from ..sync import JsonFileDivergenceRepository
 from . import (
     DivergenceReviewItem,
     FindingReviewItem,
@@ -347,7 +349,7 @@ def test_divergences_pending_severity_mapping(
 
 def test_divergences_pending_skips_non_pending_records(tmp_path: Path) -> None:
     """Records that already transitioned out of PENDING must not appear in the queue."""
-    from ..sync import ResolutionState
+    from ...domain.sync import ResolutionState
 
     settings = _build_settings(tmp_path)
     repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
@@ -467,7 +469,7 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
 
 
 def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
-    """`status=APPROVAL_STALE` (#230) must surface as a HIGH-severity finding row."""
+    """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
     _write_draft(settings, _draft(draft_id="d_stale", status=FilingDraftStatus.APPROVAL_STALE))
     items = drafts_pending(settings)

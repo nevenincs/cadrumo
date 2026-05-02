@@ -1,10 +1,10 @@
 """Closed enumeration of every AEAT modelo tracked by the registry.
 
-The :class:`ModeloCode` members name every modelo that the v1 catalogue
-materialises under :mod:`aeat.domain.modelos`. The enum values are the canonical
-three-character AEAT code strings (``"036"``, ``"100"``, ...), which
-lets consumers interoperate transparently with string-keyed APIs such
-as :data:`aeat.domain.deadlines.CALENDAR`.
+The :class:`ModeloCode` members name every modelo materialised by the
+catalogue under :mod:`aeat.domain.modelos`. Each enum value is the
+canonical three-character AEAT code string (``"036"``, ``"100"``, ...),
+which lets consumers interoperate transparently with string-keyed
+APIs such as :data:`aeat.domain.deadlines.CALENDAR`.
 """
 
 from __future__ import annotations
@@ -17,9 +17,31 @@ class ModeloCode(StrEnum):
 
     Each member's value is the three-character numeric code AEAT uses
     on public forms and Sede Electrónica URLs. The closed membership
-    tracks the twenty-one modelos covered by the v1 inventory (see the
-    modelo-inventory research document for the provenance of each
-    code).
+    tracks the modelos covered by the inventory.
+
+    Attributes:
+        MODELO_036: Full census declaration (*Declaración censal completa*).
+        MODELO_037: Simplified census declaration (*Declaración censal
+            simplificada*; retired 2025-02-03).
+        MODELO_100: Annual personal income-tax (IRPF) return.
+        MODELO_111: IRPF withholding — employment and economic activities.
+        MODELO_115: Withholding — urban rental payments.
+        MODELO_123: Withholding — investment income (interest, dividends).
+        MODELO_130: Quarterly IRPF instalment — direct-estimation regime.
+        MODELO_131: Quarterly IRPF instalment — objective-estimation regime.
+        MODELO_180: Annual summary of urban-rental withholdings.
+        MODELO_190: Annual summary of employment and activity withholdings.
+        MODELO_193: Annual summary of investment-income withholdings.
+        MODELO_200: Annual corporate-tax (Impuesto sobre Sociedades) return.
+        MODELO_202: Quarterly corporate-tax instalment.
+        MODELO_232: Related-party and tax-haven operations declaration.
+        MODELO_303: Periodic VAT (IVA) self-assessment.
+        MODELO_347: Annual declaration of third-party operations.
+        MODELO_349: Recapitulative declaration of intra-EU operations.
+        MODELO_369: VAT self-assessment for the OSS / IOSS regime.
+        MODELO_390: Annual VAT summary return.
+        MODELO_720: Informative declaration of foreign assets and rights.
+        MODELO_840: Economic Activities Tax (IAE) declaration.
     """
 
     MODELO_036 = "036"

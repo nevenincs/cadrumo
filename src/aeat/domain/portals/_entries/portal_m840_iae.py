@@ -1,4 +1,10 @@
-"""Portal: Modelo 840 — Impuesto sobre Actividades Económicas."""
+"""Registry entry for Modelo 840 — Impuesto sobre Actividades Económicas (IAE).
+
+Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
@@ -28,3 +34,4 @@ ENTRY: PortalMetadata = build_entry(
     },
     purpose_es="Alta, variación y baja en el Impuesto sobre Actividades Económicas (IAE).",
 )
+"""Portal entry for Modelo 840 (Impuesto sobre Actividades Económicas — IAE)."""

@@ -1,4 +1,10 @@
-"""Unit tests for the Modelo 390 2025 IVA annual-resumen ruleset."""
+"""Unit tests for the Modelo 390 2025 IVA annual-resumen ruleset.
+
+Exercises :data:`aeat.domain.formulas._rulesets.MODELO_390_2025` against
+:class:`aeat.domain.formulas._engine.Engine`. Expected values are
+derived from LIVA arts. 90 / 91 / 92 / 102 / 107 / 164 and the AEAT
+Modelo 390 Instrucciones, never from the ruleset's parameter table.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _provided() -> dict[str, Decimal]:
-    """A consistent 2025 filing for an autónomo on régimen general.
+    """Return a consistent 2025 régimen-general filing.
 
     Provenance: LIVA arts. 90 (21 % general) and 91 (10 % reduced and
     4 % super-reduced) ground the rate buckets that produce casilla 96
@@ -24,6 +30,10 @@ def _provided() -> dict[str, Decimal]:
     (suma resultado), 191 = 190 - 662 (cuota anual after bienes-
     inversión regularización), 192 = clamp_pos(191) (a ingresar),
     193 = clamp_pos(0 - 191) (a devolver, sign-flipped).
+
+    Returns:
+        A casilla-id keyed mapping suitable for
+        :meth:`aeat.domain.formulas._engine.Engine.audit_against`.
     """
     return {
         "01": Decimal("12500.00"),
@@ -45,6 +55,8 @@ def _provided() -> dict[str, Decimal]:
 
 
 class TestModelo390Ruleset2025:
+    """Behavioural tests for the 2025 Modelo 390 ruleset variant."""
+
     def test_consistent_filing_is_clean(self) -> None:
         report = Engine().audit_against(
             ruleset=MODELO_390_2025,
@@ -165,7 +177,7 @@ class TestModelo390Ruleset2025:
         |casilla 191| cuando es negativo, en otro caso 0 (total a
         devolver).
 
-        Scenario. Kent's 2025 annual resumen: bases imponibles 95 =
+        Scenario. A 2025 annual resumen: bases imponibles 95 =
         80 000, cuotas repercutidas 96 = 16 800 (12 000 al 21 % + 4 800
         al 10 %), IVA soportado interior 100 = 8 500, IVA soportado
         importaciones 101 = 1 500, no simplificado / otros, sin

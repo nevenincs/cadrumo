@@ -1,4 +1,12 @@
-"""Draft approval persistence and stale-detection helpers."""
+"""Draft approval persistence and stale-detection helpers.
+
+Provides the :func:`approve_draft` / :func:`unapprove_draft` /
+:func:`refresh_review_status` lifecycle on top of
+:class:`aeat.domain.filing.FilingDraft`, plus the deterministic
+fingerprint pipeline that lets :func:`approval_stale_reasons` detect
+when an APPROVED draft has been invalidated by upstream changes
+(catalogue, profiles, schema, or the draft's own validation surface).
+"""
 
 from __future__ import annotations
 
@@ -44,7 +52,23 @@ _DOWNSTREAM_STATUSES = frozenset(
 
 
 class FilingApprovalStaleReason(StrEnum):
-    """Stable reason codes surfaced when an approval becomes stale."""
+    """Stable reason codes surfaced when a draft approval becomes stale.
+
+    Attributes:
+        APPROVAL_BASIS_VERSION_CHANGED: The
+            :class:`aeat.domain.filing.FilingApprovalBasis` schema
+            version has been bumped since approval.
+        DRAFT_PAYLOAD_CHANGED: The draft's payload fingerprint
+            (``draft_id``) no longer matches the stored basis.
+        DRAFT_REVIEW_CHANGED: The draft's validation findings or
+            machine status changed since approval.
+        TRANSACTION_CATALOGUE_CHANGED: Upstream classified
+            transactions have been updated since approval.
+        CATEGORY_PROFILES_CHANGED: The fiscal category profile catalog
+            has been edited since approval.
+        SCHEMA_FORMULA_CHANGED: The casilla schema or active ruleset
+            has changed since approval.
+    """
 
     APPROVAL_BASIS_VERSION_CHANGED = "APPROVAL_BASIS_VERSION_CHANGED"
     DRAFT_PAYLOAD_CHANGED = "DRAFT_PAYLOAD_CHANGED"
@@ -62,7 +86,24 @@ def compute_current_approval_basis(
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     transaction_catalogue_path: Path | None = None,
 ) -> FilingApprovalBasis:
-    """Return the approval-basis digests for the current upstream state."""
+    """Return the :class:`FilingApprovalBasis` digests for the current upstream state.
+
+    Args:
+        draft: The :class:`aeat.domain.filing.FilingDraft` whose basis
+            is being computed.
+        schema_provider: The active
+            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+        transaction_catalogue: Optional override of the persisted
+            transaction catalogue. When ``None``, the catalogue is
+            loaded from disk via the ``aeat_financial_txs_dir`` setting.
+        category_profiles: Optional override of the active category
+            profile map. Defaults to ``CATEGORY_PROFILES_2025``.
+        transaction_catalogue_path: Optional override of the catalogue
+            store directory.
+
+    Returns:
+        A freshly computed :class:`FilingApprovalBasis`.
+    """
 
     catalogue = transaction_catalogue or _load_transaction_catalogue(transaction_catalogue_path)
     profiles = category_profiles or CATEGORY_PROFILES_2025
@@ -79,7 +120,14 @@ def compute_current_approval_basis(
 
 
 def compute_review_checksum(approval_basis: FilingApprovalBasis) -> str:
-    """Return the canonical checksum for ``approval_basis``."""
+    """Return the canonical SHA-256 hex checksum for ``approval_basis``.
+
+    Args:
+        approval_basis: The basis to hash.
+
+    Returns:
+        Lowercase hex SHA-256 of the basis's canonical JSON dump.
+    """
 
     return _sha256_payload(approval_basis.model_dump(mode="json"))
 
@@ -94,8 +142,21 @@ def approval_stale_reasons(
 ) -> tuple[FilingApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
 
-    The return value is empty when the draft has no approval metadata or when
-    its stored approval basis still matches the freshly recomputed basis.
+    The return value is empty when the draft has no approval metadata
+    or when its stored approval basis still matches the freshly
+    recomputed basis.
+
+    Args:
+        draft: The :class:`aeat.domain.filing.FilingDraft` to inspect.
+        schema_provider: The active
+            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+        transaction_catalogue: Optional catalogue override.
+        category_profiles: Optional category profile map override.
+        transaction_catalogue_path: Optional catalogue store override.
+
+    Returns:
+        Tuple of :class:`FilingApprovalStaleReason` values in
+        evaluation order; empty when the basis is fresh.
     """
 
     if draft.approval_basis is None:
@@ -135,7 +196,28 @@ def approve_draft(
     approved_at: datetime | None = None,
     transaction_catalogue_path: Path | None = None,
 ) -> FilingDraft:
-    """Persist approval metadata on ``draft`` and promote it to ``APPROVED``."""
+    """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
+
+    Args:
+        draft: The draft to approve. Must currently be
+            :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+        approved_by: Operator identifier; rejected when blank after
+            stripping.
+        schema_provider: The active
+            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+        transaction_catalogue: Optional catalogue override.
+        category_profiles: Optional category profile map override.
+        approved_at: Optional timestamp; defaults to ``datetime.now(UTC)``.
+        transaction_catalogue_path: Optional catalogue store override.
+
+    Returns:
+        A new :class:`FilingDraft` with approval metadata populated.
+
+    Raises:
+        :exc:`aeat.domain.filing.FilingDraftError`: When
+            ``approved_by`` is blank or the draft is not currently in
+            :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
+    """
 
     normalized_approver = approved_by.strip()
     if not normalized_approver:
@@ -169,7 +251,18 @@ def unapprove_draft(
     *,
     unapproved_at: datetime | None = None,
 ) -> FilingDraft:
-    """Remove approval metadata and restore the machine validation status."""
+    """Remove approval metadata and restore the machine validation status.
+
+    Args:
+        draft: The draft to revert.
+        unapproved_at: Optional timestamp; defaults to
+            ``datetime.now(UTC)``.
+
+    Returns:
+        A new :class:`FilingDraft` with approval metadata cleared and
+        ``status`` set to the validation status derived from
+        :attr:`FilingDraft.findings`.
+    """
 
     timestamp = unapproved_at or datetime.now(tz=UTC)
     return draft.model_copy(
@@ -193,7 +286,28 @@ def refresh_review_status(
     refreshed_at: datetime | None = None,
     transaction_catalogue_path: Path | None = None,
 ) -> FilingDraft:
-    """Return ``draft`` with its approval status synchronized to current state."""
+    """Return ``draft`` with its approval status synchronised to current state.
+
+    Downstream-status drafts (submitted / acknowledged / rejected /
+    amended / cancelled) get any leftover approval metadata cleared
+    so historical state cannot pretend to be current. APPROVED drafts
+    transition to :attr:`FilingDraftStatus.APPROVAL_STALE` when
+    :func:`approval_stale_reasons` returns a non-empty tuple.
+
+    Args:
+        draft: The draft to refresh.
+        schema_provider: The active
+            :class:`aeat.domain.filing.CasillaSchemaProvider`.
+        transaction_catalogue: Optional catalogue override.
+        category_profiles: Optional category profile map override.
+        refreshed_at: Optional timestamp; defaults to
+            ``datetime.now(UTC)``.
+        transaction_catalogue_path: Optional catalogue store override.
+
+    Returns:
+        Either ``draft`` unchanged (when no transition was needed) or a
+        new :class:`FilingDraft` with the appropriate status update.
+    """
 
     timestamp = refreshed_at or datetime.now(tz=UTC)
     has_review_metadata = _has_review_metadata(draft)
@@ -238,7 +352,14 @@ def refresh_review_status(
 
 
 def describe_stale_reason(reason: FilingApprovalStaleReason) -> str:
-    """Return a short user-facing explanation for ``reason``."""
+    """Return a short user-facing English explanation for ``reason``.
+
+    Args:
+        reason: The :class:`FilingApprovalStaleReason` to describe.
+
+    Returns:
+        A lowercase imperative phrase suitable for inline UI display.
+    """
 
     match reason:
         case FilingApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
@@ -315,16 +436,13 @@ def _load_transaction_catalogue_cached(
 def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
     """Load a catalogue from a caller-supplied store directory.
 
-    The ``path`` argument here is the store directory (legacy callers
-    still pass a directory under :attr:`Settings.aeat_financial_txs_dir`),
-    not the legacy ``transactions.json`` file path. Loads route through
+    The ``path`` argument here is the store directory. Loads route through
     :class:`TransactionCatalogueRepository` so the on-disk record is
     always the encrypted envelope.
     """
     from ...domain.transactions import TransactionCatalogueRepository
 
-    store_dir = path if path.is_dir() else path.parent
-    repository = TransactionCatalogueRepository(store_dir=store_dir)
+    repository = TransactionCatalogueRepository(store_dir=path)
     if not repository.envelope_path.exists():
         return TransactionCatalogue()
     return repository.load()
