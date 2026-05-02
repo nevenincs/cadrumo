@@ -144,13 +144,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pagaments fraccionats anteriors (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Pagaments fraccionats anteriors (Apartat I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Prior-quarter fractional payments (caller-maintained) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores. (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi részletfizetések (hívó fél tartja karban) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Pagaments fraccionats anteriors (Apartado I)",
+        "ca": "Pagaments fraccionats anteriors (Apartat I)",
         "en": "Prior-quarter fractional payments (caller-maintained)",
         "es": "Pagos fraccionados anteriores (Apartado I)",
         "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
@@ -176,13 +176,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions e ingressos a cuenta (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Retencions i ingressos a compte (Apartat I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "YTD withholdings (Apartado I) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Retenciones e ingresos a cuenta (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Éves halmozott levonások (I. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta (Apartado I)",
+        "ca": "Retencions i ingressos a compte (Apartat I)",
         "en": "YTD withholdings (Apartado I)",
         "es": "Retenciones e ingresos a cuenta (Apartado I)",
         "hu": "Éves halmozott levonások (I. szakasz)"
@@ -208,13 +208,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado parcial Apartado I (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Resultat parcial Apartat I (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Partial Apartado I result (04 - 05 - 06) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado parcial Apartado I (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "I. szakasz részösszeg (04 - 05 - 06) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado I",
+        "ca": "Resultat parcial Apartat I",
         "en": "Partial Apartado I result (04 - 05 - 06)",
         "es": "Resultado parcial Apartado I",
         "hu": "I. szakasz részösszeg (04 - 05 - 06)"
@@ -246,13 +246,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Volum de ingressos del trimestre (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Volum de ingressos del trimestre (Apartat II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Quarterly income volume (Apartado II, per-quarter not YTD) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Volumen de ingresos del trimestre (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Negyedéves bevétel (II. szakasz, nem halmozott) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Volum de ingressos del trimestre (Apartado II)",
+        "ca": "Volum de ingressos del trimestre (Apartat II)",
         "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
         "es": "Volumen de ingresos del trimestre (Apartado II)",
         "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
@@ -310,13 +310,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions e ingressos a cuenta (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Retencions i ingressos a compte (Apartat II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Quarterly withholdings (Apartado II) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Retenciones e ingresos a cuenta (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Negyedéves levonások (II. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta (Apartado II)",
+        "ca": "Retencions i ingressos a compte (Apartat II)",
         "en": "Quarterly withholdings (Apartado II)",
         "es": "Retenciones e ingresos a cuenta (Apartado II)",
         "hu": "Negyedéves levonások (II. szakasz)"
@@ -342,13 +342,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado parcial Apartado II (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Resultat parcial Apartat II (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Partial Apartado II result (09 - 10) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado parcial Apartado II (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "II. szakasz részösszeg (09 - 10) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado II",
+        "ca": "Resultat parcial Apartat II",
         "en": "Partial Apartado II result (09 - 10)",
         "es": "Resultado parcial Apartado II",
         "hu": "II. szakasz részösszeg (09 - 10)"
@@ -380,13 +380,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma de resultados parciales (nunca negativa) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Suma de resultats parcials (nunca negativa) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Sum of Apartados I + II, clamped ≥ 0 (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Suma de resultados parciales (nunca negativa) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Részösszegek összege, nem-negatív (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Suma de resultados parciales (nunca negativa)",
+        "ca": "Suma de resultats parcials (nunca negativa)",
         "en": "Sum of Apartados I + II, clamped ≥ 0",
         "es": "Suma de resultados parciales (nunca negativa)",
         "hu": "Részösszegek összege, nem-negatív"
@@ -450,13 +450,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Neto tras minoració (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Net tras minoració (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Net after minoration (12 - 13, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Neto tras minoración (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Csökkentés utáni nettó (12 - 13, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Neto tras minoració",
+        "ca": "Net tras minoració",
         "en": "Net after minoration (12 - 13, signed)",
         "es": "Neto tras minoración",
         "hu": "Csökkentés utáni nettó (12 - 13, előjeles)"
@@ -552,13 +552,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Diferencia (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Diferència (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Difference (14 - 15 - 16, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Diferencia (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Különbség (14 - 15 - 16, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Diferencia",
+        "ca": "Diferència",
         "en": "Difference (14 - 15 - 16, signed)",
         "es": "Diferencia",
         "hu": "Különbség (14 - 15 - 16, előjeles)"
@@ -590,13 +590,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat a ingressar de autoliquidacions anteriors (complementària) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Resultat a ingressar d'autoliquidacions anteriors (complementària) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Amount paid in earlier complementarias for the same quarter (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultat a ingressar de autoliquidacions anteriors (complementària)",
+        "ca": "Resultat a ingressar d'autoliquidacions anteriors (complementària)",
         "en": "Amount paid in earlier complementarias for the same quarter",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
@@ -622,13 +622,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado final (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Resultat final (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Final result (17 - 18, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado final (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Végeredmény (17 - 18, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado final",
+        "ca": "Resultat final",
         "en": "Final result (17 - 18, signed)",
         "es": "Resultado final",
         "hu": "Végeredmény (17 - 18, előjeles)"

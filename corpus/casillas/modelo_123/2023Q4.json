@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Perceptors otras rendes",
+        "ca": "Perceptors altres rendes",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
       },
       "label": {
-        "ca": "Perceptors otras rendes",
+        "ca": "Perceptors altres rendes",
         "en": "Other recipients",
         "es": "Perceptores otras rentas",
         "hu": "Egyéb kedvezményezettek"
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones dividends",
+        "ca": "Base retencions dividends",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
       },
       "label": {
-        "ca": "Base retenciones dividends",
+        "ca": "Base retencions dividends",
         "en": "Dividend withholding base",
         "es": "Base retenciones dividendos",
         "hu": "Osztalék levonási alap"
@@ -138,13 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base retenciones otras rendes",
+        "ca": "Base retencions altres rendes",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
       },
       "label": {
-        "ca": "Base retenciones otras rendes",
+        "ca": "Base retencions altres rendes",
         "en": "Other withholding base",
         "es": "Base retenciones otras rentas",
         "hu": "Egyéb levonási alap"
@@ -170,13 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
+        "ca": "Base total retencions (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "en": "Total withholding base (Legal basis: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "es": "Base total retenciones (Base legal: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)",
         "hu": "Teljes levonási alap (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Base total retenciones",
+        "ca": "Base total retencions",
         "en": "Total withholding base",
         "es": "Base total retenciones",
         "hu": "Teljes levonási alap"
@@ -234,13 +234,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions otras rendes",
+        "ca": "Retencions altres rendes",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
       },
       "label": {
-        "ca": "Retencions otras rendes",
+        "ca": "Retencions altres rendes",
         "en": "Other withholdings",
         "es": "Retenciones otras rentas",
         "hu": "Egyéb levonás"
@@ -298,13 +298,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado declaracion anterior (complementària)",
+        "ca": "Resultat declaració anterior (complementària)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
       },
       "label": {
-        "ca": "Resultado declaracion anterior (complementària)",
+        "ca": "Resultat declaració anterior (complementària)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"

@@ -42,16 +42,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo 4 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "ca": "Tipus 4 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "en": "Rate 4 % (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
         "es": "Tipo impositivo súper-reducido (constante). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Kulcs 4 % (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
+        "hu": "Adókulcs 4 % (szuper-csökkentett) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Tipo 4 %",
+        "ca": "Tipus 4 %",
         "en": "Rate 4 %",
         "es": "Tipo 4 %",
-        "hu": "Kulcs 4 %"
+        "hu": "Adókulcs 4 % (szuper-csökkentett)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
@@ -80,13 +80,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota devengada al 4 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "ca": "Quota meritada al 4 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "en": "Output VAT at 4 % (01 x 0.04) (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
         "es": "Cuota devengada al 4 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota devengada al 4 %",
+        "ca": "Quota meritada al 4 %",
         "en": "Output VAT at 4 % (01 x 0.04)",
         "es": "Cuota devengada al 4 %",
         "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04)"
@@ -144,16 +144,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo 10 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "ca": "Tipus 10 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "en": "Rate 10 % (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
         "es": "Tipo impositivo reducido (constante). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Kulcs 10 % (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
+        "hu": "Adókulcs 10 % (csökkentett) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Tipo 10 %",
+        "ca": "Tipus 10 %",
         "en": "Rate 10 %",
         "es": "Tipo 10 %",
-        "hu": "Kulcs 10 %"
+        "hu": "Adókulcs 10 % (csökkentett)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
@@ -182,13 +182,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota devengada al 10 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "ca": "Quota meritada al 10 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "en": "Output VAT at 10 % (04 x 0.10) (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
         "es": "Cuota devengada al 10 % (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
         "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota devengada al 10 %",
+        "ca": "Quota meritada al 10 %",
         "en": "Output VAT at 10 % (04 x 0.10)",
         "es": "Cuota devengada al 10 %",
         "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10)"
@@ -246,16 +246,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo 21 % (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
+        "ca": "Tipus 21 % (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
         "en": "Rate 21 % (Legal basis: Ley, art. 90, BOE-A-1992-28740.)",
         "es": "Tipo impositivo general (constante). (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
-        "hu": "Kulcs 21 % (Jogalap: Ley, art. 90, BOE-A-1992-28740.)"
+        "hu": "Adókulcs 21 % (általános) (Jogalap: Ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Tipo 21 %",
+        "ca": "Tipus 21 %",
         "en": "Rate 21 %",
         "es": "Tipo 21 %",
-        "hu": "Kulcs 21 %"
+        "hu": "Adókulcs 21 % (általános)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_303",
@@ -284,13 +284,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota devengada al 21 % (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
+        "ca": "Quota meritada al 21 % (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
         "en": "Output VAT at 21 % (07 x 0.21) (Legal basis: Ley, art. 90, BOE-A-1992-28740.)",
         "es": "Cuota devengada al 21 % (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
         "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21) (Jogalap: Ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota devengada al 21 %",
+        "ca": "Quota meritada al 21 %",
         "en": "Output VAT at 21 % (07 x 0.21)",
         "es": "Cuota devengada al 21 %",
         "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21)"
@@ -316,13 +316,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — operaciones interiores corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — operacions interiors corrents (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — domestic current operations (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base imponible total del IVA soportado deducible en operaciones interiores corrientes. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — belföldi folyó ügyletek (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — operaciones interiores corrientes",
+        "ca": "Base — operacions interiors corrents",
         "en": "Base — domestic current operations",
         "es": "Base — operaciones interiores corrientes",
         "hu": "Adóalap — belföldi folyó ügyletek"
@@ -348,13 +348,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — operaciones interiores corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — operacions interiors corrents (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — domestic current operations (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — operaciones interiores corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — belföldi folyó ügyletek (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — operaciones interiores corrientes",
+        "ca": "Quota deduïble — operacions interiors corrents",
         "en": "Deductible VAT — domestic current operations",
         "es": "Cuota deducible — operaciones interiores corrientes",
         "hu": "Levonható ÁFA — belföldi folyó ügyletek"
@@ -380,13 +380,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — operaciones interiores bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — operacions interiors béns d'inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — domestic capital goods (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — operaciones interiores bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — belföldi tárgyi eszközök (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — operaciones interiores bienes de inversión",
+        "ca": "Base — operacions interiors béns d'inversió",
         "en": "Base — domestic capital goods",
         "es": "Base — operaciones interiores bienes de inversión",
         "hu": "Adóalap — belföldi tárgyi eszközök"
@@ -412,13 +412,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — béns d'inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — capital goods (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — tárgyi eszközök (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — bienes de inversión",
+        "ca": "Quota deduïble — béns d'inversió",
         "en": "Deductible VAT — capital goods",
         "es": "Cuota deducible — bienes de inversión",
         "hu": "Levonható ÁFA — tárgyi eszközök"
@@ -444,13 +444,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — importaciones bienes corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — importacions béns corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — current-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — importaciones bienes corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — folyó termékimport (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — importaciones bienes corrientes",
+        "ca": "Base — importacions béns corrientes",
         "en": "Base — current-good imports",
         "es": "Base — importaciones bienes corrientes",
         "hu": "Adóalap — folyó termékimport"
@@ -476,13 +476,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — importaciones corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — importacions corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — current-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — importaciones corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — folyó termékimport (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — importaciones corrientes",
+        "ca": "Quota deduïble — importacions corrientes",
         "en": "Deductible VAT — current-good imports",
         "es": "Cuota deducible — importaciones corrientes",
         "hu": "Levonható ÁFA — folyó termékimport"
@@ -508,13 +508,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — importaciones bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — importacions béns d'inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — capital-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — importaciones bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — tárgyieszköz-import (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — importaciones bienes de inversión",
+        "ca": "Base — importacions béns d'inversió",
         "en": "Base — capital-good imports",
         "es": "Base — importaciones bienes de inversión",
         "hu": "Adóalap — tárgyieszköz-import"
@@ -540,13 +540,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — importaciones de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — importacions de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — capital-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — importaciones de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — tárgyieszköz-import (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — importaciones de inversión",
+        "ca": "Quota deduïble — importacions de inversión",
         "en": "Deductible VAT — capital-good imports",
         "es": "Cuota deducible — importaciones de inversión",
         "hu": "Levonható ÁFA — tárgyieszköz-import"
@@ -572,13 +572,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — adquisiciones intracomunitarias corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — adquisicions intracomunitàries corrents (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — intra-community current acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — adquisiciones intracomunitarias corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — közösségi folyó beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — adquisiciones intracomunitarias corrientes",
+        "ca": "Base — adquisicions intracomunitàries corrents",
         "en": "Base — intra-community current acquisitions",
         "es": "Base — adquisiciones intracomunitarias corrientes",
         "hu": "Adóalap — közösségi folyó beszerzések"
@@ -604,13 +604,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — adquisiciones intracomunitarias corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — intra-community current acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — adquisiciones intracomunitarias corrientes (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — közösségi folyó beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias corrientes",
+        "ca": "Quota deduïble — adquisiciones intracomunitarias corrientes",
         "en": "Deductible VAT — intra-community current acquisitions",
         "es": "Cuota deducible — adquisiciones intracomunitarias corrientes",
         "hu": "Levonható ÁFA — közösségi folyó beszerzések"
@@ -636,13 +636,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — adquisiciones intracomunitarias de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — adquisicions intracomunitàries d'inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — intra-community capital acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — adquisiciones intracomunitarias de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — közösségi tárgyieszköz-beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — adquisiciones intracomunitarias de inversión",
+        "ca": "Base — adquisicions intracomunitàries d'inversió",
         "en": "Base — intra-community capital acquisitions",
         "es": "Base — adquisiciones intracomunitarias de inversión",
         "hu": "Adóalap — közösségi tárgyieszköz-beszerzések"
@@ -668,13 +668,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Quota deduïble — adquisiciones intracomunitarias inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — intra-community capital acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — adquisiciones intracomunitarias inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — közösségi tárgyieszköz-beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias inversión",
+        "ca": "Quota deduïble — adquisiciones intracomunitarias inversión",
         "en": "Deductible VAT — intra-community capital acquisitions",
         "es": "Cuota deducible — adquisiciones intracomunitarias inversión",
         "hu": "Levonható ÁFA — közösségi tárgyieszköz-beszerzések"
@@ -732,13 +732,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Compensaciones régimen especial A.G.P. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Compensacions règim especial A.G.P. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "REAGP compensations (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Compensaciones régimen especial A.G.P. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "REAGP-kompenzációk (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Compensaciones régimen especial A.G.P.",
+        "ca": "Compensacions règim especial A.G.P.",
         "en": "REAGP compensations",
         "es": "Compensaciones régimen especial A.G.P.",
         "hu": "REAGP-kompenzációk"
@@ -764,13 +764,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Regularización bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Regularització béns d'inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Capital-goods regularisation (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Regularización bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Tárgyi eszközök szabályozása (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Regularización bienes de inversión",
+        "ca": "Regularització béns d'inversió",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"
@@ -796,13 +796,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Regularización por aplicación del porcentaje definitivo de prorrata (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Regularització por aplicación del porcentaje definitivo de prorrata (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Definitive prorata regularisation (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Importe ya calculado por el contribuyente; el motor no deriva el porcentaje aquí. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Végleges prorata-szabályozás (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Regularización por aplicación del porcentaje definitivo de prorrata",
+        "ca": "Regularització por aplicación del porcentaje definitivo de prorrata",
         "en": "Definitive prorata regularisation",
         "es": "Regularización por aplicación del porcentaje definitivo de prorrata",
         "hu": "Végleges prorata-szabályozás"
@@ -860,13 +860,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado régimen general (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Resultat règim general (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Régimen general result ((03+06+09) - 44) (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Resultado régimen general (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Régimen general eredmény ((03+06+09) - 44) (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado régimen general",
+        "ca": "Resultat règim general",
         "en": "Régimen general result ((03+06+09) - 44)",
         "es": "Resultado régimen general",
         "hu": "Régimen general eredmény ((03+06+09) - 44)"
@@ -892,13 +892,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma de resultados (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Suma de resultats (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "Sum of partial results (= 45 in v1) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Suma de resultados (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Részeredmények összege (= 45 v1-ben) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Suma de resultados",
+        "ca": "Suma de resultats",
         "en": "Sum of partial results (= 45 in v1)",
         "es": "Suma de resultados",
         "hu": "Részeredmények összege (= 45 v1-ben)"
@@ -924,13 +924,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "% atribuible al Estado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "% atribuïble a l'Estat (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "% attributable to the State (default 100) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Default 100 para contribuyentes sin atribución foral. Foral (País Vasco / Navarra) no es objeto de este motor. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Az állam részesedése (alapértelmezetten 100) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "% atribuible al Estado",
+        "ca": "% atribuïble a l'Estat",
         "en": "% attributable to the State (default 100)",
         "es": "% atribuible al Estado",
         "hu": "Az állam részesedése (alapértelmezetten 100)"
@@ -962,13 +962,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Atribuible al Estado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Atribuïble a l'Estat (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "Attributable to the State (64 x 65 ÷ 100) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Atribuible al Estado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Államnak juttatott rész (64 x 65 ÷ 100) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Atribuible al Estado",
+        "ca": "Atribuïble a l'Estat",
         "en": "Attributable to the State (64 x 65 ÷ 100)",
         "es": "Atribuible al Estado",
         "hu": "Államnak juttatott rész (64 x 65 ÷ 100)"
@@ -994,13 +994,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuotas a compensar de períodos anteriors (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Quotes a compensar de períodos anteriors (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "Carry-over compensation from prior periods (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Acumulador cross-quarter. El motor no deriva 67 dentro de una sola liquidación; el llamador mantiene la suma de cuotas a compensar de trimestres anteriores. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Korábbi időszakok kompenzálandó tételei (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuotas a compensar de períodos anteriors",
+        "ca": "Quotes a compensar de períodos anteriors",
         "en": "Carry-over compensation from prior periods",
         "es": "Cuotas a compensar de períodos anteriores",
         "hu": "Korábbi időszakok kompenzálandó tételei"
@@ -1026,13 +1026,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Resultat (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "Result (66 - 67) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Resultado (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Eredmény (66 - 67) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado",
+        "ca": "Resultat",
         "en": "Result (66 - 67)",
         "es": "Resultado",
         "hu": "Eredmény (66 - 67)"
@@ -1058,13 +1058,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado de la autoliquidació (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Resultat de la autoliquidació (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "en": "Self-assessment result (= 69 in v1) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
         "es": "Resultado de la autoliquidación (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Önadózás eredménye (= 69 v1-ben) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado de la autoliquidació",
+        "ca": "Resultat de la autoliquidació",
         "en": "Self-assessment result (= 69 in v1)",
         "es": "Resultado de la autoliquidación",
         "hu": "Önadózás eredménye (= 69 v1-ben)"

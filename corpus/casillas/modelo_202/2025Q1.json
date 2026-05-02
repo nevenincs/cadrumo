@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo de gravamen aplicable",
+        "ca": "Tipus de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
       },
       "label": {
-        "ca": "Tipo de gravamen aplicable",
+        "ca": "Tipus de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
@@ -86,13 +86,13 @@
         ]
       },
       "help": {
-        "ca": "Cuota integra. Es calcula com ((17 / 100) * 16). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "ca": "Quota íntegra. Es calcula com ((17 / 100) * 16). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Gross tax amount. Computed as ((17 / 100) * 16). (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cuota integra. Se calcula como ((17 / 100) * 16). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16) (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
-        "ca": "Cuota integra",
+        "ca": "Quota íntegra",
         "en": "Gross tax amount",
         "es": "Cuota integra",
         "hu": "Bruttó adóösszeg"
@@ -129,13 +129,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Bonificaciones",
+        "ca": "Bonificacions",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
       },
       "label": {
-        "ca": "Bonificaciones",
+        "ca": "Bonificacions",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
@@ -161,13 +161,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retencions e ingressos a cuenta",
+        "ca": "Retencions i ingressos a compte",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
       },
       "label": {
-        "ca": "Retencions e ingressos a cuenta",
+        "ca": "Retencions i ingressos a compte",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
@@ -233,13 +233,13 @@
         ]
       },
       "help": {
-        "ca": "Resultado. Es calcula com (((18 - 27) - 28) - 30). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "ca": "Resultat. Es calcula com (((18 - 27) - 28) - 30). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Net result. Computed as (((18 - 27) - 28) - 30). (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30) (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
-        "ca": "Resultado",
+        "ca": "Resultat",
         "en": "Net result",
         "es": "Resultado",
         "hu": "Nettó eredmény"

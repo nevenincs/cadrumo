@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Clase de cuota del IAE: municipal, provincial o nacional.",
+        "ca": "Clase de quota del IAE: municipal, provincial o nacional.",
         "en": "IAE quota class: municipal, provincial or national.",
         "es": "Clase de cuota del IAE: municipal, provincial o nacional.",
         "hu": "IAE-adóosztály: önkormányzati, tartományi vagy országos."
       },
       "label": {
-        "ca": "Clase de cuota",
+        "ca": "Clase de quota",
         "en": "Quota class",
         "es": "Clase de cuota",
         "hu": "Adóosztály"
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Tipo de actividad: empresarial, profesional o artística.",
+        "ca": "Tipus d'activitat: empresarial, professional o artística.",
         "en": "Activity type: business, professional or artistic.",
         "es": "Tipo de actividad: empresarial, profesional o artística.",
         "hu": "Tevékenység típusa: vállalkozói, szakmai vagy művészi."
       },
       "label": {
-        "ca": "Tipo de actividad",
+        "ca": "Tipus d'activitat",
         "en": "Activity type",
         "es": "Tipo de actividad",
         "hu": "Tevékenység típusa"
@@ -138,13 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
+        "ca": "Grup o epígraf de l'IAE assignat a l'activitat econòmica del subjecte passiu.",
         "en": "IAE group or heading assigned to the taxpayer's economic activity.",
         "es": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
         "hu": "A tevékenységhez rendelt IAE-csoport vagy tételszám."
       },
       "label": {
-        "ca": "Grupo o epígrafe",
+        "ca": "Grup o epígraf",
         "en": "Group or heading",
         "es": "Grupo o epígrafe",
         "hu": "Csoport vagy tételszám"
@@ -170,13 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Municipio en el que se ejerce la actividad declarada.",
+        "ca": "Municipi en el que s'exerceix l'activitat declarada.",
         "en": "Municipality where the declared activity is carried out.",
         "es": "Municipio en el que se ejerce la actividad declarada.",
         "hu": "A tevékenység végzésének helye szerinti település."
       },
       "label": {
-        "ca": "Municipio",
+        "ca": "Municipi",
         "en": "Municipality",
         "es": "Municipio",
         "hu": "Település"
@@ -202,13 +202,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Provincia en la que se ejerce la actividad declarada.",
+        "ca": "Província en la que s'exerceix l'activitat declarada.",
         "en": "Province where the declared activity is carried out.",
         "es": "Provincia en la que se ejerce la actividad declarada.",
         "hu": "A tevékenység végzésének helye szerinti tartomány."
       },
       "label": {
-        "ca": "Provincia",
+        "ca": "Província",
         "en": "Province",
         "es": "Provincia",
         "hu": "Tartomány"
@@ -240,7 +240,7 @@
         "hu": "A bejelentés hatálybalépésének dátuma."
       },
       "label": {
-        "ca": "Fecha de efectos",
+        "ca": "Data d'efectes",
         "en": "Effective date",
         "es": "Fecha de efectos",
         "hu": "Hatálybalépés dátuma"

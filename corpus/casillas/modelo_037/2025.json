@@ -202,7 +202,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Marqueu si tributeu per estimación objetiva (Orden HFP/1359/2023, mòduls).",
+        "ca": "Marqueu si tributeu per estimación objetiva (Ordre HFP/1359/2023, mòduls).",
         "en": "Tick if you fall under the objective-estimation (modules) regime.",
         "es": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos).",
         "hu": "Jelölje be, ha objektív becsléssel adózik (modulok)."
@@ -272,7 +272,7 @@
         "hu": "A bejelentés hatálybalépésének dátuma."
       },
       "label": {
-        "ca": "Fecha de efectos",
+        "ca": "Data d'efectes",
         "en": "Effective date",
         "es": "Fecha de efectos",
         "hu": "Hatálybalépés dátuma"
