@@ -12,7 +12,7 @@ modelo/year/period the project supports (2023-2026). Sources:
 
 - Modelos whose extractor exposes ``casilla_ids`` / ``text_casilla_ids``
   (190/193/347/349/840) and modelos extracted via named fields
-  (036/037/232/369/720) are hydrated from the curated trilingual data
+  (036/037/232/369/720) are hydrated from the curated quad-lingual data
   inside this script — sourced from BOE Órdenes and AEAT Manuales
   Prácticos for the supported period.
 
@@ -73,15 +73,6 @@ IVA_MANUAL_URL = (
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-{year}.html"
 )
 SOCIEDADES_MANUAL_URL = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-{year}.html"
-BOE_036_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9659"
-BOE_840_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17472"
-BOE_232_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
-BOE_720_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954"
-BOE_369_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10049"
-BOE_347_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17004"
-BOE_349_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
-BOE_190_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-1997-25776"
-BOE_193_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 
 
 # ---------------------------------------------------------------------
@@ -189,7 +180,7 @@ def _periods_for(cadence: ModeloCadence, year: int) -> list[str]:
 
 
 # ---------------------------------------------------------------------
-# Trilingual help dictionaries for non-ruleset modelos.
+# Quad-lingual help dictionaries for non-ruleset modelos.
 # ---------------------------------------------------------------------
 
 
@@ -1054,21 +1045,62 @@ def _legal_hint(legal_basis: tuple) -> str:
     return " (Base legal: " + "; ".join(parts) + ".)"
 
 
+def _upstream_modelos(modelo: str) -> tuple[str, ...]:
+    """Return the modelos whose ``caps_into`` resolves to ``modelo``.
+
+    Pulls from the engine's :class:`ModeloMetadata.caps_into` field so
+    the hydrate's cross-modelo hints inherit any future caps-into
+    additions automatically. ``M390`` will list ``("303",)``,
+    ``M100`` will list ``("130", "131")``, etc.
+    """
+    from ..modelos import ModeloCode, get_modelo
+
+    upstream: list[str] = []
+    for code in ModeloCode:
+        meta = get_modelo(code.value)
+        if meta.caps_into is not None and meta.caps_into.value == modelo:
+            upstream.append(code.value)
+    return tuple(sorted(upstream))
+
+
+def _cross_modelo_hint(modelo: str) -> str:
+    """Return a short Spanish note pointing at the upstream modelos, if any.
+
+    Sourced from :class:`ModeloMetadata.caps_into` in the engine so the
+    upstream relationship is never re-declared in the corpus layer.
+    """
+    upstream = _upstream_modelos(modelo)
+    if not upstream:
+        return ""
+    if modelo == "100":
+        # Annual IRPF — caps in pagos fraccionados from M130 / M131.
+        joined = " y ".join(f"modelo {m}" for m in upstream)
+        return f" Declaración anual del IRPF; recoge los pagos fraccionados de los {joined}."
+    if modelo == "200":
+        joined = " y ".join(f"modelo {m}" for m in upstream)
+        return f" Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del {joined}."
+    # Generic resumen-anual phrasing for the IRPF retention summaries
+    # and the M390 IVA summary.
+    joined = " y ".join(f"modelo {m}" for m in upstream)
+    return f" Resumen anual que consolida los datos trimestrales del {joined}."
+
+
 def _help_from_label(
     label: dict[str, str],
     notes_es: str | None,
     *,
     formula_expression: str | None = None,
     legal_hint: str = "",
+    cross_modelo_hint: str = "",
 ) -> dict[str, str]:
-    """Return a trilingual help body distinct from the label.
+    """Return a quad-lingual help body distinct from the label.
 
     Priority:
       1. ``notes_es`` (engine-author note in Spanish) — paired with the
          English / Hungarian labels for cross-lingual context.
       2. Computed casillas: append a formula reminder so the help
          carries calculation provenance.
-      3. Otherwise: re-use the label trilingually as a stable fallback.
+      3. Otherwise: re-use the label quad-lingually as a stable fallback.
 
     The ``legal_hint`` (``(Base legal: …)``) is appended to every variant
     so the corpus carries the BOE / law / orden grounding inline,
@@ -1078,27 +1110,50 @@ def _help_from_label(
     legal_es = legal_hint
     legal_en = legal_hint.replace("Base legal:", "Legal basis:") if legal_hint else ""
     legal_hu = legal_hint.replace("Base legal:", "Jogalap:") if legal_hint else ""
+    cross_es = cross_modelo_hint
+    cross_en = cross_modelo_hint.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Annual summary that consolidates the quarterly data of form",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Annual IRPF declaration; consolidates the fractional payments of forms",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
+    )
+    cross_hu = cross_modelo_hint.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
+    )
     if notes_es:
         return {
-            "es": notes_es + suffix_es + legal_es,
+            "es": notes_es + suffix_es + cross_es + legal_es,
             "en": label.get("en", label["es"])
             + (f" Computed as {formula_expression}." if formula_expression else "")
+            + cross_en
             + legal_en,
             "hu": label.get("hu", label["es"])
             + (f" Számítás: {formula_expression}." if formula_expression else "")
+            + cross_hu
             + legal_hu,
         }
     if formula_expression:
         return {
-            "es": f"{label['es']}. Se calcula como {formula_expression}.{legal_es}",
-            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{legal_en}",
-            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{legal_hu}",
+            "es": f"{label['es']}. Se calcula como {formula_expression}.{cross_es}{legal_es}",
+            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{cross_en}{legal_en}",
+            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{cross_hu}{legal_hu}",
         }
-    if legal_hint:
+    if legal_hint or cross_modelo_hint:
         return {
-            "es": label["es"] + legal_es,
-            "en": label.get("en", label["es"]) + legal_en,
-            "hu": label.get("hu", label["es"]) + legal_hu,
+            "es": label["es"] + cross_es + legal_es,
+            "en": label.get("en", label["es"]) + cross_en + legal_en,
+            "hu": label.get("hu", label["es"]) + cross_hu + legal_hu,
         }
     return {
         "es": label["es"],
@@ -1112,19 +1167,68 @@ def _help_from_label(
 # ---------------------------------------------------------------------
 
 
+_CATEGORY_MANUAL_URL: dict[str, str] = {
+    "irpf": IRPF_MANUAL_URL,
+    "iva": IVA_MANUAL_URL,
+    "retenciones": IRPF_MANUAL_URL,  # withholdings are documented under the IRPF manual
+    "sociedades": SOCIEDADES_MANUAL_URL,
+}
+
+
+# ``informativa`` modelos straddle two manuals depending on the underlying
+# tax. ``caps_into`` resolves this — a 190/193 caps into M100 (IRPF), a
+# 232 caps into M200 (IS) — but 347/349 have no caps_into so we map by
+# modelo code. The map is keyed on the canonical modelo string the
+# extractors declare; future modelos that gain a category may either
+# rely on the caps_into upstream or land here.
+_INFORMATIVA_MANUAL_OVERRIDES: dict[str, str] = {
+    "232": SOCIEDADES_MANUAL_URL,
+    "347": IVA_MANUAL_URL,
+    "349": IVA_MANUAL_URL,
+}
+
+
 def _source_url_for(modelo: str, year: int) -> str:
-    if modelo in {"100", "111", "115", "123", "130", "131", "180", "190", "193"}:
-        return IRPF_MANUAL_URL.format(year=year)
-    if modelo in {"303", "390", "347", "349", "369"}:
-        return IVA_MANUAL_URL.format(year=year)
-    if modelo in {"200", "202", "232"}:
-        return SOCIEDADES_MANUAL_URL.format(year=year)
-    if modelo in {"036", "037"}:
-        return BOE_036_URL
-    if modelo == "720":
-        return BOE_720_URL
-    if modelo == "840":
-        return BOE_840_URL
+    """Resolve the AEAT manual URL for a (modelo, year) pair.
+
+    Drives off :class:`ModeloMetadata.category` (the engine's
+    canonical taxonomy) plus :attr:`ModeloMetadata.caps_into` to
+    figure out which manual practical page to point at. Modelos
+    without a manual page (censal / patrimonio / IAE / etc.) fall
+    back to the BOE article URL of the modelo's first
+    ``legal_basis`` citation.
+    """
+    from ..modelos import get_modelo
+
+    meta = get_modelo(modelo)
+    template = _CATEGORY_MANUAL_URL.get(meta.category.value)
+    if template is not None:
+        return template.format(year=year)
+    if meta.category.value == "informativa":
+        # Resolve via the upstream modelos' category when possible.
+        # M180/190/193/390 are receiving ends of caps_into; their feeders
+        # (M115/111/123/303) belong to a categorisable family.
+        for upstream_code in _upstream_modelos(modelo):
+            upstream_meta = get_modelo(upstream_code)
+            upstream_template = _CATEGORY_MANUAL_URL.get(upstream_meta.category.value)
+            if upstream_template is not None:
+                return upstream_template.format(year=year)
+        # Forward direction: a modelo whose own caps_into points at a
+        # categorisable destination.
+        if meta.caps_into is not None:
+            downstream_meta = get_modelo(meta.caps_into.value)
+            downstream_template = _CATEGORY_MANUAL_URL.get(downstream_meta.category.value)
+            if downstream_template is not None:
+                return downstream_template.format(year=year)
+        override = _INFORMATIVA_MANUAL_OVERRIDES.get(modelo)
+        if override is not None:
+            return override.format(year=year)
+    # No per-year manual; fall back to the engine's first BOE legal-basis URL.
+    for cit in meta.legal_basis:
+        url = getattr(cit, "url", None)
+        if url is not None:
+            url_str = str(url)
+            return url_str.split("#", 1)[0]
     return IRPF_MANUAL_URL.format(year=year)
 
 
@@ -1409,6 +1513,7 @@ def _record_from_ruleset_casilla(
         cdef.notes_es,
         formula_expression=formula_expression,
         legal_hint=legal_hint,
+        cross_modelo_hint=_cross_modelo_hint(modelo),
     )
 
     formula_obj = (
@@ -1521,13 +1626,38 @@ def _record_from_manual(
         if c.formula_expression
         else None
     )
+    cross = _cross_modelo_hint(modelo)
+    cross_en = cross.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Annual summary that consolidates the quarterly data of form",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Annual IRPF declaration; consolidates the fractional payments of forms",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
+    )
+    cross_hu = cross.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
+    )
     return CasillaRecord(
         synthetic=False,
         modelo=f"MODELO_{modelo}",
         period=period,
         casilla_id=c.casilla_id,
         label={"es": c.label_es, "en": c.label_en, "hu": c.label_hu},
-        help={"es": c.help_es, "en": c.help_en, "hu": c.help_hu},
+        help={
+            "es": c.help_es + cross,
+            "en": c.help_en + cross_en,
+            "hu": c.help_hu + cross_hu,
+        },
         data_type=c.data_type,
         select_options=c.select_options,
         required=False,
@@ -1662,21 +1792,21 @@ def generate_records(modelo: str, period: str, year: int) -> list[CasillaRecord]
     if modelo in {"036", "037"}:
         return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in CENSAL_CASILLAS]
     if modelo == "232":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_232_URL) for c in M232_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M232_CASILLAS]
     if modelo == "369":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_369_URL) for c in M369_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M369_CASILLAS]
     if modelo == "720":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_720_URL) for c in M720_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M720_CASILLAS]
     if modelo == "190":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_190_URL) for c in M190_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M190_CASILLAS]
     if modelo == "193":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_193_URL) for c in M193_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M193_CASILLAS]
     if modelo == "347":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_347_URL) for c in M347_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M347_CASILLAS]
     if modelo == "349":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_349_URL) for c in M349_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M349_CASILLAS]
     if modelo == "840":
-        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=BOE_840_URL) for c in M840_CASILLAS]
+        return [_record_from_manual(modelo=modelo, period=period, c=c, source_url=src) for c in M840_CASILLAS]
 
     raise SystemExit(f"no generator for modelo {modelo}")
 
@@ -1686,30 +1816,12 @@ def generate_records(modelo: str, period: str, year: int) -> list[CasillaRecord]
 # ---------------------------------------------------------------------
 
 
-# Maps (modelo, year) to source year for manual URLs.
-ALL_MODELOS: tuple[str, ...] = (
-    "036",
-    "037",
-    "100",
-    "111",
-    "115",
-    "123",
-    "130",
-    "131",
-    "180",
-    "190",
-    "193",
-    "200",
-    "202",
-    "232",
-    "303",
-    "347",
-    "349",
-    "369",
-    "390",
-    "720",
-    "840",
-)
+# The canonical set of supported modelos is owned by the ModeloCode
+# enum; we derive the iteration order from there so this list never
+# drifts when a new modelo lands.
+from ..modelos import ModeloCode as _ModeloCode  # noqa: E402
+
+ALL_MODELOS: tuple[str, ...] = tuple(sorted(code.value for code in _ModeloCode))
 
 
 def _save_with_retry(catalogue: CasillaCatalogue, *, attempts: int = 5) -> None:
@@ -1736,16 +1848,81 @@ def _save_with_retry(catalogue: CasillaCatalogue, *, attempts: int = 5) -> None:
         raise last_exc
 
 
+def _extractor_casilla_ids(modelo: str) -> set[str]:
+    """Return the union of every registered extractor's declared casilla IDs for a modelo.
+
+    Pulls from :class:`GenericDeclaracionExtractor` ``casilla_ids`` and
+    ``text_casilla_ids`` ClassVars so the hydrate generator does not
+    shadow lists that already live on the extractor classes.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    out: set[str] = set()
+    for cls in _REGISTERED_CLASSES:
+        if cls.template_revision.modelo != modelo:
+            continue
+        out.update(getattr(cls, "casilla_ids", ()))
+        out.update(getattr(cls, "text_casilla_ids", ()))
+    return out
+
+
+def _assert_manual_data_tracks_extractors() -> None:
+    """Loud-fail if the curated manual ``_Casilla`` tuples drift from the extractor IDs.
+
+    The extractor classes (e.g. :class:`Modelo190V2025Extractor`) own
+    the canonical casilla-id set for modelos that lack a rule-engine
+    ruleset. The hydrate script's curated tuples carry quad-lingual
+    label / help / data_type which the extractor does not. To avoid
+    shadowing, we never declare a casilla in the curated tuple that
+    the extractor doesn't declare and vice versa.
+    """
+    pairs = [
+        ("190", M190_CASILLAS),
+        ("193", M193_CASILLAS),
+        ("347", M347_CASILLAS),
+        ("349", M349_CASILLAS),
+        ("840", M840_CASILLAS),
+    ]
+    failures: list[str] = []
+    for modelo, manual in pairs:
+        manual_ids = {c.casilla_id for c in manual}
+        extractor_ids = _extractor_casilla_ids(modelo)
+        missing = extractor_ids - manual_ids
+        extra = manual_ids - extractor_ids
+        if missing:
+            failures.append(f"M{modelo}: extractor declares ids missing from manual data: {sorted(missing)}")
+        if extra:
+            failures.append(f"M{modelo}: manual data declares ids not in extractor: {sorted(extra)}")
+    if failures:
+        raise RuntimeError(
+            "hydrate manual data drifted from extractor casilla IDs:\n" + "\n".join(f" - {f}" for f in failures)
+        )
+
+
+def _years_for(modelo: str) -> tuple[int, ...]:
+    """Return the fiscal years the corpus must cover for a modelo.
+
+    Combines the project-wide ``YEARS`` baseline (2023-2026) with the
+    union of declared extractor ``año`` values, so a modelo whose
+    extractor lineup pre-dates 2023 (e.g., the M100 2021 / 2022 legacy
+    parsers) auto-extends the corpus year range without a hardcoded
+    special-case.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    extractor_years = {
+        cls.template_revision.año for cls in _REGISTERED_CLASSES if cls.template_revision.modelo == modelo
+    }
+    return tuple(sorted(set(YEARS) | extractor_years))
+
+
 def run() -> None:
+    _assert_manual_data_tracks_extractors()
     written = 0
     for modelo in ALL_MODELOS:
         meta = get_modelo(modelo)
         cadence = meta.cadence
-
-        years = list(YEARS)
-        if modelo == "100":
-            years = [2021, 2022, 2023, 2024, 2025, 2026]
-
+        years = _years_for(modelo)
         for year in years:
             for period in _periods_for(cadence, year):
                 records = generate_records(modelo, period, year)

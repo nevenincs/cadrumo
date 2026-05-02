@@ -43,7 +43,7 @@ class PortalMetadata(BaseModel):
         related_modelo: Foreign key into :class:`ModeloCode`. Required
             iff ``category`` is ``FILING``, ``CENSUS``, or ``BORRADOR``;
             forbidden for every other category.
-        label: Trilingual display label with non-empty ``es`` / ``en``
+        label: Quad-lingual display label with non-empty ``es`` / ``en``
             / ``hu`` keys.
         purpose_es: One-sentence Spanish purpose, non-empty after
             stripping.
@@ -81,7 +81,7 @@ class PortalMetadata(BaseModel):
 
     @field_validator("label")
     @classmethod
-    def _label_trilingual(cls, value: Translatable) -> Translatable:
+    def _label_quad_lingual(cls, value: Translatable) -> Translatable:
         """Require non-empty ``es`` / ``en`` / ``hu`` keys on label."""
         for key in ("es", "en", "hu"):
             raw = value.get(key)  # type: ignore[misc]

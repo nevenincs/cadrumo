@@ -309,3 +309,334 @@ def test_corpus_inline_boe_ids_well_formed() -> None:
                         failures.append(f"{modelo} {period} cas {rec.casilla_id}: implausible BOE year {m.group(0)}")
     if failures:
         pytest.fail("Corpus has malformed BOE identifiers:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_data_type_is_uniform_per_casilla() -> None:
+    """A casilla's ``data_type`` must not drift across periods."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, rec.casilla_id)].add(rec.data_type.value)
+    failures = [
+        f"{modelo} cas {cid}: data_type drift = {sorted(types)}"
+        for (modelo, cid), types in seen.items()
+        if len(types) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus data_type drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_label_es_is_uniform_per_casilla() -> None:
+    """A casilla's authoritative Spanish label must not drift across periods."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, rec.casilla_id)].add(rec.label["es"])
+    failures = [
+        f"{modelo} cas {cid}: label drift {sorted(labels)}"
+        for (modelo, cid), labels in seen.items()
+        if len(labels) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus label.es drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_references_rules_is_uniform_within_year() -> None:
+    """All periods within a single fiscal year must agree on references_rules."""
+    from collections import defaultdict
+
+    seen: dict[tuple[str, str, str], set[tuple[str, ...]]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        year = period[:4]
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            seen[(modelo, year, rec.casilla_id)].add(tuple(rec.references_rules))
+    failures = [
+        f"{modelo} {year} cas {cid}: references_rules drift = {sorted(variants)}"
+        for (modelo, year, cid), variants in seen.items()
+        if len(variants) > 1
+    ]
+    if failures:
+        pytest.fail("Corpus references_rules drift within year:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_must_derive_validation_aligns_with_computed_flag() -> None:
+    """``computed=True`` ↔ ``must_derive`` validation rule (both directions)."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            has_must_derive = any(v.rule == "must_derive" for v in rec.validation)
+            if rec.computed and not has_must_derive:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed but missing must_derive")
+            if not rec.computed and has_must_derive:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: must_derive on a non-computed record")
+    if failures:
+        pytest.fail("Corpus computed/validation drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_formula_presence_aligns_with_computed_flag() -> None:
+    """``computed=True`` ↔ a non-null ``formula`` reference."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if rec.computed and rec.formula is None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed but formula is None")
+            if not rec.computed and rec.formula is not None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: not computed but carries a formula")
+    if failures:
+        pytest.fail("Corpus formula/computed drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_formula_expression_mentions_match_references_casillas() -> None:
+    """Casilla IDs inside the rendered formula expression must match references_casillas exactly."""
+    import re
+
+    token_re = re.compile(r"\b(\d{2,5})\b(?!%)")
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        catalogue_ids = {r.casilla_id for r in catalogue.records}
+        for rec in catalogue.records:
+            if rec.formula is None:
+                continue
+            mentioned = sorted({tok for tok in token_re.findall(rec.formula.expression) if tok in catalogue_ids})
+            declared = sorted(set(rec.references_casillas))
+            if mentioned != declared:
+                failures.append(
+                    f"{modelo} {period} cas {rec.casilla_id}: expr {rec.formula.expression!r} "
+                    f"mentions {mentioned} but declared refs are {declared}"
+                )
+    if failures:
+        pytest.fail("Corpus formula expression vs refs drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_directory_layout_matches_modelo_registry() -> None:
+    """Every ModeloCode must have a corpus directory and vice versa."""
+    from ..modelos import ModeloCode
+
+    corpus_root = PROJECT_ROOT / "corpus" / "casillas"
+    corpus_dirs = {p.name.removeprefix("modelo_").upper() for p in corpus_root.iterdir() if p.is_dir()}
+    enum_codes = {code.value for code in ModeloCode}
+
+    missing_dirs = enum_codes - corpus_dirs
+    extra_dirs = corpus_dirs - enum_codes
+    failures: list[str] = []
+    if missing_dirs:
+        failures.append(f"ModeloCode entries without a corpus directory: {sorted(missing_dirs)}")
+    if extra_dirs:
+        failures.append(f"corpus directories without a ModeloCode entry: {sorted(extra_dirs)}")
+    if failures:
+        pytest.fail("Corpus / ModeloCode coverage mismatch:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_committed_records_are_canonical_not_drafts() -> None:
+    """No record may carry ``synthetic=True`` or ``llm_draft_provenance``.
+
+    The committed corpus is the human-reviewed canonical surface; LLM
+    draft payloads are temp-file only via :func:`write_extract_draft`
+    / :func:`write_translate_draft`. A record with either flag set
+    here means an unreviewed draft leaked into the canonical store.
+    """
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if rec.synthetic:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: synthetic=True in canonical corpus")
+            if rec.llm_draft_provenance is not None:
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: carries LLM draft provenance")
+    if failures:
+        pytest.fail("Corpus contains non-canonical records:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_casilla_id_set_matches_engine_ruleset() -> None:
+    """For each (modelo, year), the corpus' casilla IDs must be a superset of the engine ruleset's IDs.
+
+    The corpus may carry additional manually-curated user-input casillas
+    that the engine does not formula-derive (e.g., the M111 augmentation
+    perceptor / percepción rows). What it must NOT do is omit any ID
+    the engine declares — that would mean the engine derives a casilla
+    the corpus has no record of.
+    """
+    registry = get_registry()
+    rs_by_key: dict[tuple[str, int], list] = {}
+    for rs in registry.rulesets:
+        rs_by_key.setdefault((rs.modelo.value, rs.effective_from.year), []).append(rs)
+
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        modelo_code = modelo.removeprefix("MODELO_")
+        year = int(period[:4])
+        rulesets = rs_by_key.get((modelo_code, year), [])
+        if not rulesets:
+            continue
+        engine_ids = {c.casilla_id for rs in rulesets for c in rs.casillas}
+        catalogue = load_casillas(modelo, period)
+        corpus_ids = {r.casilla_id for r in catalogue.records}
+        missing = engine_ids - corpus_ids
+        if missing:
+            failures.append(
+                f"{modelo} {period}: engine ruleset declares casillas not in corpus: {sorted(missing)}"
+            )
+    if failures:
+        pytest.fail("Corpus is missing casillas that the engine declares:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
+    """For modelos without a rule engine ruleset (190 / 193 / 347 / 349 / 840),
+    the corpus casilla ID set must exactly match the registered extractor's
+    ``casilla_ids ∪ text_casilla_ids``.
+
+    Catches drift between the curated trilingual label/help data in
+    :mod:`aeat.domain.casillas._hydrate` and the canonical extractor IDs.
+    The extractor is the single source of truth for the ID list; the
+    hydrate script only adds label / help curation on top.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    failures: list[str] = []
+    for non_ruleset_modelo in ("190", "193", "347", "349", "840"):
+        extractor_ids: set[str] = set()
+        for cls in _REGISTERED_CLASSES:
+            if cls.template_revision.modelo != non_ruleset_modelo:
+                continue
+            extractor_ids.update(getattr(cls, "casilla_ids", ()))
+            extractor_ids.update(getattr(cls, "text_casilla_ids", ()))
+        if not extractor_ids:
+            continue
+
+        # Pick the latest period as the representative catalogue.
+        modelo = f"MODELO_{non_ruleset_modelo}"
+        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
+        if not candidates:
+            failures.append(f"{modelo}: no corpus catalogues on disk")
+            continue
+        catalogue = load_casillas(modelo, candidates[-1].stem)
+        corpus_ids = {r.casilla_id for r in catalogue.records}
+        missing = extractor_ids - corpus_ids
+        extra = corpus_ids - extractor_ids
+        if missing:
+            failures.append(f"{modelo}: extractor IDs missing from corpus: {sorted(missing)}")
+        if extra:
+            failures.append(f"{modelo}: corpus IDs not declared by extractor: {sorted(extra)}")
+    if failures:
+        pytest.fail(
+            "Corpus drifted from extractor canonical IDs:\n" + "\n".join(f" - {f}" for f in failures)
+        )
+
+
+def test_corpus_references_rules_have_no_duplicates() -> None:
+    """``references_rules`` must be dedup'd per record."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if len(rec.references_rules) != len(set(rec.references_rules)):
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_rules {list(rec.references_rules)}")
+    if failures:
+        pytest.fail("Corpus has duplicate references_rules:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_references_casillas_have_no_duplicates() -> None:
+    """``references_casillas`` must be dedup'd per record."""
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            if len(rec.references_casillas) != len(set(rec.references_casillas)):
+                failures.append(f"{modelo} {period} cas {rec.casilla_id}: duplicate references_casillas {list(rec.references_casillas)}")
+    if failures:
+        pytest.fail("Corpus has duplicate references_casillas:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
+    """Annual summary modelos must mention every modelo whose ``caps_into`` resolves to them.
+
+    The engine's :class:`ModeloMetadata.caps_into` field encodes the
+    upstream relationship (e.g., M130 caps into M100). The corpus help
+    body for an annual modelo must mention each upstream modelo so the
+    cross-modelo dependency is visible to Kent inline.
+    """
+    from ..modelos import ModeloCode, get_modelo
+
+    upstream_by_modelo: dict[str, set[str]] = {}
+    for code in ModeloCode:
+        meta = get_modelo(code.value)
+        if meta.caps_into is not None:
+            upstream_by_modelo.setdefault(meta.caps_into.value, set()).add(code.value)
+
+    failures: list[str] = []
+    for downstream, upstream_set in upstream_by_modelo.items():
+        modelo = f"MODELO_{downstream}"
+        # Pick the latest year's catalogue.
+        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
+        if not candidates:
+            continue
+        catalogue = load_casillas(modelo, candidates[-1].stem)
+        if not catalogue.records:
+            continue
+        # Sample help.es of any single record (the cross-modelo hint
+        # is appended uniformly).
+        help_es = catalogue.records[0].help["es"]
+        for upstream in upstream_set:
+            if f"modelo {upstream}" not in help_es:
+                failures.append(
+                    f"{modelo}: help body does not mention upstream M{upstream} "
+                    f"(engine caps_into={sorted(upstream_set)})"
+                )
+    if failures:
+        pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
+    """M840 corpus ``label.es`` must agree (modulo accents) with the extractor's ``text_labels`` map.
+
+    The extractor's ``text_labels`` is the canonical Spanish-label
+    source for the M840 text-casilla set; it carries an ASCII-folded
+    form of each label so the PDF-extraction regex stays robust against
+    accent rendering quirks. The corpus carries the proper-accent
+    Spanish; comparison is therefore accent-insensitive.
+    """
+    import unicodedata
+
+    from ...adapters.inbound.declaracion._extractors.modelo_840_v2025 import Modelo840V2025Extractor
+
+    def _ascii_fold(text: str) -> str:
+        return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower()
+
+    text_labels = Modelo840V2025Extractor.text_labels
+    catalogue = load_casillas("MODELO_840", "2025")
+    by_id = {r.casilla_id: r for r in catalogue.records}
+    failures: list[str] = []
+    for cid, expected_label in text_labels.items():
+        rec = by_id.get(cid)
+        if rec is None:
+            failures.append(f"M840 cas {cid}: missing in corpus (extractor labels {expected_label!r})")
+            continue
+        # Ignore accents and "de" connector ("Causa presentacion" vs "Causa de presentación").
+        corpus_folded = _ascii_fold(rec.label["es"]).replace(" de ", " ")
+        extractor_folded = _ascii_fold(expected_label).replace(" de ", " ")
+        if corpus_folded != extractor_folded:
+            failures.append(
+                f"M840 cas {cid}: corpus label.es {rec.label['es']!r} != extractor {expected_label!r}"
+            )
+    if failures:
+        pytest.fail("M840 corpus drifted from extractor text_labels:\n" + "\n".join(f" - {f}" for f in failures))
