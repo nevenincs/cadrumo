@@ -240,7 +240,7 @@
         "hu": "Általános rendszer eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado régimen general",
+        "ca": "Resultat régimen general",
         "en": "Result (general regime)",
         "es": "Resultado régimen general",
         "hu": "Általános rendszer eredménye"
@@ -272,7 +272,7 @@
         "hu": "Egyszerűsített rendszer eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Resultado régimen simplificado",
+        "ca": "Resultat régimen simplificado",
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
         "hu": "Egyszerűsített rendszer eredménye"
@@ -304,7 +304,7 @@
         "hu": "Egyéb rendszerek eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Resultado otros regímenes",
+        "ca": "Resultat otros regímenes",
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
         "hu": "Egyéb rendszerek eredménye"
@@ -336,7 +336,7 @@
         "hu": "Eredmény összege Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Suma resultado",
+        "ca": "Suma resultat",
         "en": "Result sum",
         "es": "Suma resultado",
         "hu": "Eredmény összege"
@@ -400,7 +400,7 @@
         "hu": "Fizetendő összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
-        "ca": "Total a ingresar",
+        "ca": "Total a ingressar",
         "en": "Total payable",
         "es": "Total a ingresar",
         "hu": "Fizetendő összeg"
@@ -438,7 +438,7 @@
         "hu": "Visszatérítendő összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
-        "ca": "Total a devolver",
+        "ca": "Total a retornar",
         "en": "Total refundable",
         "es": "Total a devolver",
         "hu": "Visszatérítendő összeg"
@@ -476,7 +476,7 @@
         "hu": "Tárgyi eszközök szabályozása Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Regularización bienes de inversión",
+        "ca": "Regularización bienes de inversió",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"

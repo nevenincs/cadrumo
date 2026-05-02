@@ -349,13 +349,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado declaracion anterior (complementaria)",
+        "ca": "Resultat declaracion anterior (complementaria)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
       },
       "label": {
-        "ca": "Resultado declaracion anterior (complementaria)",
+        "ca": "Resultat declaracion anterior (complementaria)",
         "en": "Prior filing result (complementaria)",
         "es": "Resultado declaracion anterior (complementaria)",
         "hu": "Korábbi bevallás eredménye"
@@ -393,7 +393,7 @@
         "hu": "Fizetendő eredmény. Számítás: (09 - 10) (Jogalap: Ley, art. 25, BOE-A-2006-20764; Ley, art. 101.4, BOE-A-2006-20764; Reglamento, art. 90, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar",
+        "ca": "Resultat a ingresar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"
