@@ -79,7 +79,7 @@
         ]
       },
       "help": {
-        "ca": "Total retencions. Es calcula com (19% * 02). Resum anual que consolida les dades trimestrals del model 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "ca": "Total retencions. Es calcula com (19% * 02). Resum anual que consolida les dades trimestrals del model 115. (Base legal: Reglament, art. 100.1, BOE-A-2007-6820.)",
         "en": "Total withholdings. Computed as (19% * 02). Annual summary consolidating the quarterly data of form 115. (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "es": "Total retenciones. Se calcula como (19% * 02). Resumen anual que consolida los datos trimestrales del modelo 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "hu": "Teljes levonás. Számítás: (19% * 02) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell. (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"

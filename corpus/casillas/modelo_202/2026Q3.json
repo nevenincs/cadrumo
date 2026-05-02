@@ -80,7 +80,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Quota íntegra (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "ca": "Quota íntegra (Base legal: Llei, art. 40, BOE-A-2014-12328; Ordre, art. HFP/227/2017, BOE-A-2017-2778; Ordre, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Gross tax amount (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cuota integra (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Bruttó adóösszeg (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
@@ -208,7 +208,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "ca": "Resultat (Base legal: Llei, art. 40, BOE-A-2014-12328; Ordre, art. HFP/227/2017, BOE-A-2017-2778; Ordre, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Net result (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Resultado (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Nettó eredmény (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
@@ -272,7 +272,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cantidad a ingressar (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
+        "ca": "Cantidad a ingressar (Base legal: Llei, art. 40, BOE-A-2014-12328; Ordre, art. HFP/227/2017, BOE-A-2017-2778; Ordre, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Amount payable (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cantidad a ingresar (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Fizetendő összeg (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"

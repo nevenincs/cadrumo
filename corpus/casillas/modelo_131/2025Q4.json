@@ -111,7 +111,7 @@
         ]
       },
       "help": {
-        "ca": "2% s/casella 03. Es calcula com (2% * 03). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "2% s/casella 03. Es calcula com (2% * 03). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "2% on casilla 03. Computed as (2% * 03). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "2% s/casilla 03. Se calcula como (2% * 03). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "2%-os arány. Számítás: (2% * 03) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
@@ -195,7 +195,7 @@
         ]
       },
       "help": {
-        "ca": "2% s/casella 05. Es calcula com (2% * 05). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "2% s/casella 05. Es calcula com (2% * 05). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "2% on casilla 05. Computed as (2% * 05). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "2% s/casilla 05. Se calcula como (2% * 05). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "2%-os arány. Számítás: (2% * 05) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
@@ -249,7 +249,7 @@
         ]
       },
       "help": {
-        "ca": "Total 02+04+06. Es calcula com (02 + 04 + 06). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "Total 02+04+06. Es calcula com (02 + 04 + 06). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "Total. Computed as (02 + 04 + 06). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Total 02+04+06. Se calcula como (02 + 04 + 06). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "Összesen. Számítás: (02 + 04 + 06) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
@@ -369,7 +369,7 @@
         ]
       },
       "help": {
-        "ca": "Resultat 07-08-09. Es calcula com ((07 - 08) - 09). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "Resultat 07-08-09. Es calcula com ((07 - 08) - 09). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "Result after credits. Computed as ((07 - 08) - 09). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado 07-08-09. Se calcula como ((07 - 08) - 09). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "Levonás utáni eredmény. Számítás: ((07 - 08) - 09) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
@@ -489,7 +489,7 @@
         ]
       },
       "help": {
-        "ca": "Resultat 10-11-12. Es calcula com ((10 - 11) - 12). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "Resultat 10-11-12. Es calcula com ((10 - 11) - 12). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "Intermediate result. Computed as ((10 - 11) - 12). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado 10-11-12. Se calcula como ((10 - 11) - 12). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "Köztes eredmény. Számítás: ((10 - 11) - 12) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"
@@ -576,7 +576,7 @@
         ]
       },
       "help": {
-        "ca": "Resultat a ingressar. Es calcula com (13 - 14). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
+        "ca": "Resultat a ingressar. Es calcula com (13 - 14). (Base legal: Reglament, art. 110, BOE-A-2007-6820; Ordre, art. EHA/672/2007, BOE-A-2007-6032.)",
         "en": "Net amount payable. Computed as (13 - 14). (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "es": "Resultado a ingresar. Se calcula como (13 - 14). (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)",
         "hu": "Fizetendő eredmény. Számítás: (13 - 14) (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032.)"

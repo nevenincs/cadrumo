@@ -182,7 +182,7 @@
         ]
       },
       "help": {
-        "ca": "Quota íntegra. Es calcula com ((00558 / 100) * 00552). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Quota íntegra. Es calcula com ((00558 / 100) * 00552). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Reglament, art. RD 634/2015, BOE-A-2015-7771.)",
         "en": "Gross tax amount. Computed as ((00558 / 100) * 00552). Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "es": "Cuota integra. Se calcula como ((00558 / 100) * 00552). Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "hu": "Bruttó adóösszeg. Számítás: ((00558 / 100) * 00552) Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
@@ -490,7 +490,7 @@
         ]
       },
       "help": {
-        "ca": "Quota diferencial. Es calcula com ((((00592 - 00599) - 00601) - 00603) - 00605). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Quota diferencial. Es calcula com ((((00592 - 00599) - 00601) - 00603) - 00605). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Reglament, art. RD 634/2015, BOE-A-2015-7771.)",
         "en": "Tax differential. Computed as ((((00592 - 00599) - 00601) - 00603) - 00605). Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "es": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605). Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "hu": "Adókülönbözet. Számítás: ((((00592 - 00599) - 00601) - 00603) - 00605) Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
@@ -543,7 +543,7 @@
         ]
       },
       "help": {
-        "ca": "Liquido a ingressar o devolver. Es calcula com ((00611 - 00615) + 00619). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Liquido a ingressar o devolver. Es calcula com ((00611 - 00615) + 00619). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Llei, art. 29-30, BOE-A-2014-12328; Llei, art. 30+39+125.3, BOE-A-2014-12328; Reglament, art. RD 634/2015, BOE-A-2015-7771.)",
         "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619). Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
         "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619) Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"

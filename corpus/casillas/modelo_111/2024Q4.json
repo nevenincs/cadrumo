@@ -271,7 +271,7 @@
         ]
       },
       "help": {
-        "ca": "Retencions premis. Es calcula com (19% * 08). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "ca": "Retencions premis. Es calcula com (19% * 08). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
         "en": "Prize withholdings. Computed as (19% * 08). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "es": "Retenciones premios. Se calcula como (19% * 08). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "hu": "Nyeremény levonás. Számítás: (19% * 08) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
@@ -382,7 +382,7 @@
         ]
       },
       "help": {
-        "ca": "Retencions ganancias patrimoniales. Es calcula com (19% * 11). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "ca": "Retencions ganancias patrimoniales. Es calcula com (19% * 11). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
         "en": "Capital gains withholdings. Computed as (19% * 11). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "es": "Retenciones ganancias patrimoniales. Se calcula como (19% * 11). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "hu": "Vagyonnyereség levonás. Számítás: (19% * 11) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
@@ -626,7 +626,7 @@
         ]
       },
       "help": {
-        "ca": "Total retencions. Es calcula com (03 + 06 + 09 + 12 + 15 + 18). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "ca": "Total retencions. Es calcula com (03 + 06 + 09 + 12 + 15 + 18). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
         "en": "Total withholdings. Computed as (03 + 06 + 09 + 12 + 15 + 18). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "es": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "hu": "Levonás összesen. Számítás: (03 + 06 + 09 + 12 + 15 + 18) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
@@ -711,7 +711,7 @@
         ]
       },
       "help": {
-        "ca": "Resultat a ingressar. Es calcula com (28 - 29). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "ca": "Resultat a ingressar. Es calcula com (28 - 29). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
         "en": "Net amount payable. Computed as (28 - 29). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar. Se calcula como (28 - 29). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
         "hu": "Fizetendő eredmény. Számítás: (28 - 29) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
