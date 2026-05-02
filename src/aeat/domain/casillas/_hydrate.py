@@ -1837,17 +1837,30 @@ def _assert_manual_data_tracks_extractors() -> None:
         )
 
 
+def _years_for(modelo: str) -> tuple[int, ...]:
+    """Return the fiscal years the corpus must cover for a modelo.
+
+    Combines the project-wide ``YEARS`` baseline (2023-2026) with the
+    union of declared extractor ``año`` values, so a modelo whose
+    extractor lineup pre-dates 2023 (e.g., the M100 2021 / 2022 legacy
+    parsers) auto-extends the corpus year range without a hardcoded
+    special-case.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    extractor_years = {
+        cls.template_revision.año for cls in _REGISTERED_CLASSES if cls.template_revision.modelo == modelo
+    }
+    return tuple(sorted(set(YEARS) | extractor_years))
+
+
 def run() -> None:
     _assert_manual_data_tracks_extractors()
     written = 0
     for modelo in ALL_MODELOS:
         meta = get_modelo(modelo)
         cadence = meta.cadence
-
-        years = list(YEARS)
-        if modelo == "100":
-            years = [2021, 2022, 2023, 2024, 2025, 2026]
-
+        years = _years_for(modelo)
         for year in years:
             for period in _periods_for(cadence, year):
                 records = generate_records(modelo, period, year)
