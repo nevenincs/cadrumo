@@ -1793,7 +1793,7 @@
         "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Saldo a integrar en base ahorro (> 1 año)",
+        "ca": "Saldo a integrar en base estalvi (> 1 año)",
         "en": "Net amount integrating into savings base (held > 1 yr)",
         "es": "Saldo a integrar en base ahorro (> 1 año)",
         "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)"
@@ -1831,7 +1831,7 @@
         "hu": "Teljes netto vagyon vagy veszteseg. Számítás: (0306 - 0307) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 33, BOE-A-2006-20764; Ley, art. 37, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Saldo neto patrimonial total",
+        "ca": "Saldo net patrimonial total",
         "en": "Total net capital gain/loss",
         "es": "Saldo neto patrimonial total",
         "hu": "Teljes netto vagyon vagy veszteseg"
@@ -1874,7 +1874,7 @@
         "hu": "Nyugdijrendszer-hozzajarulasi csokkentes Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 51, BOE-A-2006-20764; Ley, art. 52, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Reducción por aportaciones a sistemas de previsión social",
+        "ca": "Reducción por aportacions a sistemas de previsión social",
         "en": "Pension-system contributions reduction (art. 51-52)",
         "es": "Reducción por aportaciones a sistemas de previsión social",
         "hu": "Nyugdijrendszer-hozzajarulasi csokkentes"
@@ -1938,7 +1938,7 @@
         "hu": "Adoalany szemelyi minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 57, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo del contribuyente",
+        "ca": "Mínim del contribuyente",
         "en": "Personal exemption (art. 57)",
         "es": "Mínimo del contribuyente",
         "hu": "Adoalany szemelyi minimum"
@@ -1970,7 +1970,7 @@
         "hu": "Leszarmazok szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 58, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por descendientes",
+        "ca": "Mínim por descendents",
         "en": "Dependents exemption (art. 58)",
         "es": "Mínimo por descendientes",
         "hu": "Leszarmazok szerinti minimum"
@@ -2002,7 +2002,7 @@
         "hu": "Felmenok szerinti minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 59, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por ascendientes",
+        "ca": "Mínim por ascendents",
         "en": "Ascendants exemption (art. 59)",
         "es": "Mínimo por ascendientes",
         "hu": "Felmenok szerinti minimum"
@@ -2034,7 +2034,7 @@
         "hu": "Fogyatekossagi minimum Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 60, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Mínimo por discapacidad",
+        "ca": "Mínim por discapacidad",
         "en": "Disability exemption (art. 60)",
         "es": "Mínimo por discapacidad",
         "hu": "Fogyatekossagi minimum"
@@ -2131,7 +2131,7 @@
         "hu": "Megtakaritasi adoalap. Számítás: (0049 + 0400) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 49, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Base imponible del ahorro",
+        "ca": "Base imponible del estalvi",
         "en": "Savings taxable base",
         "es": "Base imponible del ahorro",
         "hu": "Megtakaritasi adoalap"
@@ -2182,7 +2182,7 @@
         "hu": "Szemelyi es csaladi minimum osszesen. Számítás: ((0505 + 0510) + (0515 + 0520)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 56, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Minimo personal y familiar total",
+        "ca": "Mínim personal i familiar total",
         "en": "Personal + family exemption (total)",
         "es": "Minimo personal y familiar total",
         "hu": "Szemelyi es csaladi minimum osszesen"
@@ -2283,7 +2283,7 @@
         "hu": "Megtakaritasi likvidalt adoalap. Számítás: 0460 Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 50, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Base liquidable del ahorro",
+        "ca": "Base liquidable de l'estalvi",
         "en": "Savings liquidable base",
         "es": "Base liquidable del ahorro",
         "hu": "Megtakaritasi likvidalt adoalap"
@@ -2378,7 +2378,7 @@
         "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva). Számítás: ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota tarifa estatal sobre mínimo personal y familiar",
+        "ca": "Cuota tarifa estatal sobre mínim personal y familiar",
         "en": "State general tarifa applied to mínimo (capped at BLG)",
         "es": "Cuota tarifa estatal sobre mínimo personal y familiar",
         "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)"
@@ -2470,7 +2470,7 @@
         "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 73, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota íntegra autonómica general",
+        "ca": "Cuota íntegra autonòmica general",
         "en": "Autonomic general gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica general",
         "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)"
@@ -2507,7 +2507,7 @@
         "hu": "Allami megtakaritasi brutto ado. Számítás: ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 66, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota íntegra estatal del ahorro",
+        "ca": "Cuota íntegra estatal del estalvi",
         "en": "State savings gross tax",
         "es": "Cuota íntegra estatal del ahorro",
         "hu": "Allami megtakaritasi brutto ado"
@@ -2549,7 +2549,7 @@
         "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota íntegra autonómica del ahorro",
+        "ca": "Cuota íntegra autonòmica del estalvi",
         "en": "Autonomic savings gross tax (per-CCAA caller input)",
         "es": "Cuota íntegra autonómica del ahorro",
         "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)"
@@ -2589,7 +2589,7 @@
         "hu": "Teljes brutto ado (allami + autonom). Számítás: ((0550 + 0551) + (0560 + 0561)) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 63, BOE-A-2006-20764; Ley, art. 66, BOE-A-2006-20764; Ley, art. 73, BOE-A-2006-20764; Ley, art. 76, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota íntegra total (estatal + autonómica)",
+        "ca": "Cuota íntegra total (estatal + autonòmica)",
         "en": "Total gross tax (state + autonomic)",
         "es": "Cuota íntegra total (estatal + autonómica)",
         "hu": "Teljes brutto ado (allami + autonom)"
@@ -2666,7 +2666,7 @@
         "hu": "Allami levonasok osszesen Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Deducciones estatales total",
+        "ca": "Deduccions estatals total",
         "en": "Total state deductions (donativos / vivienda / etc.)",
         "es": "Deducciones estatales total",
         "hu": "Allami levonasok osszesen"
@@ -2704,7 +2704,7 @@
         "hu": "Teljes levonasok. Számítás: (0620 + 0622) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 68, BOE-A-2006-20764; Ley, art. 77, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Total deducciones (estatales + autonómicas)",
+        "ca": "Total deduccions (estatals + autonòmiques)",
         "en": "Total deductions (state + autonomic)",
         "es": "Total deducciones (estatales + autonómicas)",
         "hu": "Teljes levonasok"
@@ -2869,7 +2869,7 @@
         "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk). Számítás: ((0698 - 0699) - 0700) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 79, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Cuota diferencial / resultado de la autoliquidación",
+        "ca": "Cuota diferencial / resultat de la autoliquidación",
         "en": "Differential cuota / autoliquidation result (art. 79)",
         "es": "Cuota diferencial / resultado de la autoliquidación",
         "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk)"
@@ -2913,7 +2913,7 @@
         "hu": "Autonom levonasok osszesen — Andaluzia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Andalucía",
+        "ca": "Total deduccions autonòmiques — Andalusia",
         "en": "Total autonomic deductions — Andalusia",
         "es": "Total deducciones autonómicas — Andalucía",
         "hu": "Autonom levonasok osszesen — Andaluzia"
@@ -2945,7 +2945,7 @@
         "hu": "Autonom levonasok osszesen — Aragonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Aragón",
+        "ca": "Total deduccions autonòmiques — Aragó",
         "en": "Total autonomic deductions — Aragon",
         "es": "Total deducciones autonómicas — Aragón",
         "hu": "Autonom levonasok osszesen — Aragonia"
@@ -2977,7 +2977,7 @@
         "hu": "Autonom levonasok osszesen — Asztur Hercegseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Principado de Asturias",
+        "ca": "Total deduccions autonòmiques — Principat d'Astúries",
         "en": "Total autonomic deductions — Asturias",
         "es": "Total deducciones autonómicas — Principado de Asturias",
         "hu": "Autonom levonasok osszesen — Asztur Hercegseg"
@@ -3009,7 +3009,7 @@
         "hu": "Autonom levonasok osszesen — Baleari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Illes Balears",
+        "ca": "Total deduccions autonòmiques — Illes Balears",
         "en": "Total autonomic deductions — Balearic Islands",
         "es": "Total deducciones autonómicas — Illes Balears",
         "hu": "Autonom levonasok osszesen — Baleari-szigetek"
@@ -3041,7 +3041,7 @@
         "hu": "Autonom levonasok osszesen — Kanari-szigetek Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Canarias",
+        "ca": "Total deduccions autonòmiques — Canàries",
         "en": "Total autonomic deductions — Canary Islands",
         "es": "Total deducciones autonómicas — Canarias",
         "hu": "Autonom levonasok osszesen — Kanari-szigetek"
@@ -3073,7 +3073,7 @@
         "hu": "Autonom levonasok osszesen — Kantabria Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Cantabria",
+        "ca": "Total deduccions autonòmiques — Cantàbria",
         "en": "Total autonomic deductions — Cantabria",
         "es": "Total deducciones autonómicas — Cantabria",
         "hu": "Autonom levonasok osszesen — Kantabria"
@@ -3105,7 +3105,7 @@
         "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Castilla-La Mancha",
+        "ca": "Total deduccions autonòmiques — Castella-la Manxa",
         "en": "Total autonomic deductions — Castile-La Mancha",
         "es": "Total deducciones autonómicas — Castilla-La Mancha",
         "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha"
@@ -3137,7 +3137,7 @@
         "hu": "Autonom levonasok osszesen — Kasztilia es Leon Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Castilla y León",
+        "ca": "Total deduccions autonòmiques — Castella i Lleó",
         "en": "Total autonomic deductions — Castile and Leon",
         "es": "Total deducciones autonómicas — Castilla y León",
         "hu": "Autonom levonasok osszesen — Kasztilia es Leon"
@@ -3169,7 +3169,7 @@
         "hu": "Autonom levonasok osszesen — Katalonia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Cataluña",
+        "ca": "Total deduccions autonòmiques — Catalunya",
         "en": "Total autonomic deductions — Catalonia",
         "es": "Total deducciones autonómicas — Cataluña",
         "hu": "Autonom levonasok osszesen — Katalonia"
@@ -3201,7 +3201,7 @@
         "hu": "Autonom levonasok osszesen — Valenciai kozosseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Comunitat Valenciana",
+        "ca": "Total deduccions autonòmiques — Comunitat Valenciana",
         "en": "Total autonomic deductions — Valencian Community",
         "es": "Total deducciones autonómicas — Comunitat Valenciana",
         "hu": "Autonom levonasok osszesen — Valenciai kozosseg"
@@ -3233,7 +3233,7 @@
         "hu": "Autonom levonasok osszesen — Extremadura Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Extremadura",
+        "ca": "Total deduccions autonòmiques — Extremadura",
         "en": "Total autonomic deductions — Extremadura",
         "es": "Total deducciones autonómicas — Extremadura",
         "hu": "Autonom levonasok osszesen — Extremadura"
@@ -3265,7 +3265,7 @@
         "hu": "Autonom levonasok osszesen — Galicia Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Galicia",
+        "ca": "Total deduccions autonòmiques — Galícia",
         "en": "Total autonomic deductions — Galicia",
         "es": "Total deducciones autonómicas — Galicia",
         "hu": "Autonom levonasok osszesen — Galicia"
@@ -3297,7 +3297,7 @@
         "hu": "Autonom levonasok osszesen — Madridi kozosseg Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Comunidad de Madrid",
+        "ca": "Total deduccions autonòmiques — Comunitat de Madrid",
         "en": "Total autonomic deductions — Madrid Community",
         "es": "Total deducciones autonómicas — Comunidad de Madrid",
         "hu": "Autonom levonasok osszesen — Madridi kozosseg"
@@ -3329,7 +3329,7 @@
         "hu": "Autonom levonasok osszesen — Murcia regio Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — Región de Murcia",
+        "ca": "Total deduccions autonòmiques — Regió de Múrcia",
         "en": "Total autonomic deductions — Murcia Region",
         "es": "Total deducciones autonómicas — Región de Murcia",
         "hu": "Autonom levonasok osszesen — Murcia regio"
@@ -3361,7 +3361,7 @@
         "hu": "Autonom levonasok osszesen — La Rioja Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Manual práctico, art. renta-2025-parte-2.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas — La Rioja",
+        "ca": "Total deduccions autonòmiques — La Rioja",
         "en": "Total autonomic deductions — La Rioja",
         "es": "Total deducciones autonómicas — La Rioja",
         "hu": "Autonom levonasok osszesen — La Rioja"
@@ -3412,7 +3412,7 @@
         "hu": "Osszes autonom levonas (15 CCAA osszege). Számítás: (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115) Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze: 130-os modell és 131-os modell. (Jogalap: Ley, art. 46-bis, BOE-A-2006-20764.)"
       },
       "label": {
-        "ca": "Total deducciones autonómicas (suma per-CCAA)",
+        "ca": "Total deduccions autonòmiques (suma per-CCAA)",
         "en": "Total autonomic deductions (sum across 15 CCAAs)",
         "es": "Total deducciones autonómicas (suma per-CCAA)",
         "hu": "Osszes autonom levonas (15 CCAA osszege)"

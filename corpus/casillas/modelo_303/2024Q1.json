@@ -455,13 +455,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — operaciones interiores bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — operaciones interiores bienes de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — domestic capital goods (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — operaciones interiores bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — belföldi tárgyi eszközök (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — operaciones interiores bienes de inversión",
+        "ca": "Base — operaciones interiores bienes de inversió",
         "en": "Base — domestic capital goods",
         "es": "Base — operaciones interiores bienes de inversión",
         "hu": "Adóalap — belföldi tárgyi eszközök"
@@ -487,13 +487,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Cuota deducible — bienes de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — capital goods (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — tárgyi eszközök (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — bienes de inversión",
+        "ca": "Cuota deducible — bienes de inversió",
         "en": "Deductible VAT — capital goods",
         "es": "Cuota deducible — bienes de inversión",
         "hu": "Levonható ÁFA — tárgyi eszközök"
@@ -583,13 +583,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — importaciones bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — importaciones bienes de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — capital-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — importaciones bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — tárgyieszköz-import (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — importaciones bienes de inversión",
+        "ca": "Base — importaciones bienes de inversió",
         "en": "Base — capital-good imports",
         "es": "Base — importaciones bienes de inversión",
         "hu": "Adóalap — tárgyieszköz-import"
@@ -615,13 +615,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — importaciones de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Cuota deducible — importaciones de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — capital-good imports (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — importaciones de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — tárgyieszköz-import (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — importaciones de inversión",
+        "ca": "Cuota deducible — importaciones de inversió",
         "en": "Deductible VAT — capital-good imports",
         "es": "Cuota deducible — importaciones de inversión",
         "hu": "Levonható ÁFA — tárgyieszköz-import"
@@ -711,13 +711,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base — adquisiciones intracomunitarias de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Base — adquisiciones intracomunitarias de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Base — intra-community capital acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Base — adquisiciones intracomunitarias de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Adóalap — közösségi tárgyieszköz-beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Base — adquisiciones intracomunitarias de inversión",
+        "ca": "Base — adquisiciones intracomunitarias de inversió",
         "en": "Base — intra-community capital acquisitions",
         "es": "Base — adquisiciones intracomunitarias de inversión",
         "hu": "Adóalap — közösségi tárgyieszköz-beszerzések"
@@ -743,13 +743,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Cuota deducible — adquisiciones intracomunitarias inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Deductible VAT — intra-community capital acquisitions (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Cuota deducible — adquisiciones intracomunitarias inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Levonható ÁFA — közösségi tárgyieszköz-beszerzések (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Cuota deducible — adquisiciones intracomunitarias inversión",
+        "ca": "Cuota deducible — adquisiciones intracomunitarias inversió",
         "en": "Deductible VAT — intra-community capital acquisitions",
         "es": "Cuota deducible — adquisiciones intracomunitarias inversión",
         "hu": "Levonható ÁFA — közösségi tárgyieszköz-beszerzések"
@@ -839,13 +839,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Regularización bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "ca": "Regularización bienes de inversió (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "en": "Capital-goods regularisation (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
         "es": "Regularización bienes de inversión (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Tárgyi eszközök szabályozása (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Regularización bienes de inversión",
+        "ca": "Regularización bienes de inversió",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"
@@ -982,7 +982,7 @@
         "hu": "Régimen general eredmény ((03+06+09) - 44). Számítás: ((03 + 06 + 09) - 44) (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado régimen general",
+        "ca": "Resultat régimen general",
         "en": "Régimen general result ((03+06+09) - 44)",
         "es": "Resultado régimen general",
         "hu": "Régimen general eredmény ((03+06+09) - 44)"
@@ -1032,7 +1032,7 @@
         "hu": "Részeredmények összege (= 45 v1-ben). Számítás: (45 + 0) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Suma de resultados",
+        "ca": "Suma de resultats",
         "en": "Sum of partial results (= 45 in v1)",
         "es": "Suma de resultados",
         "hu": "Részeredmények összege (= 45 v1-ben)"
@@ -1199,7 +1199,7 @@
         "hu": "Eredmény (66 - 67). Számítás: (66 - 67) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado",
+        "ca": "Resultat",
         "en": "Result (66 - 67)",
         "es": "Resultado",
         "hu": "Eredmény (66 - 67)"
@@ -1247,7 +1247,7 @@
         "hu": "Önadózás eredménye (= 69 v1-ben). Számítás: (69 + 0) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultado de la autoliquidación",
+        "ca": "Resultat de la autoliquidación",
         "en": "Self-assessment result (= 69 in v1)",
         "es": "Resultado de la autoliquidación",
         "hu": "Önadózás eredménye (= 69 v1-ben)"

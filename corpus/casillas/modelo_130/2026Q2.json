@@ -252,7 +252,7 @@
         "hu": "I. szakasz részösszeg (04 - 05 - 06). Számítás: ((04 - 05) - 06) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado I",
+        "ca": "Resultat parcial Apartado I",
         "en": "Partial Apartado I result (04 - 05 - 06)",
         "es": "Resultado parcial Apartado I",
         "hu": "I. szakasz részösszeg (04 - 05 - 06)"
@@ -418,7 +418,7 @@
         "hu": "II. szakasz részösszeg (09 - 10). Számítás: (09 - 10) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado parcial Apartado II",
+        "ca": "Resultat parcial Apartado II",
         "en": "Partial Apartado II result (09 - 10)",
         "es": "Resultado parcial Apartado II",
         "hu": "II. szakasz részösszeg (09 - 10)"
@@ -472,7 +472,7 @@
         "hu": "Részösszegek összege, nem-negatív. Számítás: max(0, (07 + 11)) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Suma de resultados parciales (nunca negativa)",
+        "ca": "Suma de resultats parciales (nunca negativa)",
         "en": "Sum of Apartados I + II, clamped ≥ 0",
         "es": "Suma de resultados parciales (nunca negativa)",
         "hu": "Részösszegek összege, nem-negatív"
@@ -638,7 +638,7 @@
         "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Deducción por inversión en vivienda habitual",
+        "ca": "Deducción por inversió en habitatge habitual",
         "en": "Primary-residence deduction (2% capped at 660.14 €)",
         "es": "Deducción por inversión en vivienda habitual",
         "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
@@ -720,13 +720,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "ca": "Resultat a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Amount paid in earlier complementarias for the same quarter (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+        "ca": "Resultat a ingresar de autoliquidaciones anteriores (complementaria)",
         "en": "Amount paid in earlier complementarias for the same quarter",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
@@ -764,7 +764,7 @@
         "hu": "Végeredmény (17 - 18, előjeles). Számítás: (17 - 18) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado final",
+        "ca": "Resultat final",
         "en": "Final result (17 - 18, signed)",
         "es": "Resultado final",
         "hu": "Végeredmény (17 - 18, előjeles)"

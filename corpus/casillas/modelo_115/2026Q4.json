@@ -198,7 +198,7 @@
         "hu": "Fizetendő eredmény. Számítás: ((03 + 04) - 05) (Jogalap: Ley, art. 101.8, BOE-A-2006-20764; Reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
-        "ca": "Resultado a ingresar",
+        "ca": "Resultat a ingresar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"
