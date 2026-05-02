@@ -1,0 +1,237 @@
+{
+  "modelo": "MODELO_115",
+  "period": "2023Q2",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Nº de arrendadores",
+        "en": "Number of landlords",
+        "es": "Nº de arrendadores",
+        "hu": "Bérbeadók száma"
+      },
+      "label": {
+        "ca": "Nº de arrendadores",
+        "en": "Number of landlords",
+        "es": "Nº de arrendadores",
+        "hu": "Bérbeadók száma"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Datos generales",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base de retención",
+        "en": "Withholding base",
+        "es": "Base de retención",
+        "hu": "Levonási alap"
+      },
+      "label": {
+        "ca": "Base de retención",
+        "en": "Withholding base",
+        "es": "Base de retención",
+        "hu": "Levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Datos relativos a la liquidación",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(irpf.arrendamientos_rate * 02)",
+        "references_casillas": [
+          "02"
+        ]
+      },
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta. Se calcula como (irpf.arrendamientos_rate * 02).",
+        "en": "Withholdings. Computed as (irpf.arrendamientos_rate * 02).",
+        "es": "Retenciones e ingresos a cuenta. Se calcula como (irpf.arrendamientos_rate * 02).",
+        "hu": "Levonások. Számítás: (irpf.arrendamientos_rate * 02)."
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [
+        "02"
+      ],
+      "references_rules": [
+        "modelo_115.2025.retenciones"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Datos relativos a la liquidación",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Ingresos a cuenta por retribución en especie",
+        "en": "In-kind payments on account",
+        "es": "Ingresos a cuenta por retribución en especie",
+        "hu": "Természetbeni előlegek"
+      },
+      "label": {
+        "ca": "Ingresos a cuenta por retribución en especie",
+        "en": "In-kind payments on account",
+        "es": "Ingresos a cuenta por retribución en especie",
+        "hu": "Természetbeni előlegek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Datos relativos a la liquidación",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "05",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "A deducir: exclusivamente en declaración complementaria",
+        "en": "Prior-filing deduction (complementary filings only)",
+        "es": "A deducir: exclusivamente en declaración complementaria",
+        "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
+      },
+      "label": {
+        "ca": "A deducir: exclusivamente en declaración complementaria",
+        "en": "Prior-filing deduction (complementary filings only)",
+        "es": "A deducir: exclusivamente en declaración complementaria",
+        "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Datos relativos a la liquidación",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "06",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((03 + 04) - 05)",
+        "references_casillas": [
+          "03",
+          "04",
+          "05"
+        ]
+      },
+      "help": {
+        "ca": "Resultado a ingresar. Se calcula como ((03 + 04) - 05).",
+        "en": "Net amount payable. Computed as ((03 + 04) - 05).",
+        "es": "Resultado a ingresar. Se calcula como ((03 + 04) - 05).",
+        "hu": "Fizetendő eredmény. Számítás: ((03 + 04) - 05)."
+      },
+      "label": {
+        "ca": "Resultado a ingresar",
+        "en": "Net amount payable",
+        "es": "Resultado a ingresar",
+        "hu": "Fizetendő eredmény"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_115",
+      "period": "2023Q2",
+      "references_casillas": [
+        "03",
+        "04",
+        "05"
+      ],
+      "references_rules": [
+        "modelo_115.2025.resultado_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Resultado a ingresar",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "Resultado a ingresar trimestral debe ser ≥ 0 (RIRPF art. 100.1).",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

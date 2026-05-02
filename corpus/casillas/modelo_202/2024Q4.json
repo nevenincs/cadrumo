@@ -1,0 +1,355 @@
+{
+  "modelo": "MODELO_202",
+  "period": "2024Q4",
+  "records": [
+    {
+      "casilla_id": "16",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base del pago fraccionado",
+        "en": "Instalment base",
+        "es": "Base del pago fraccionado",
+        "hu": "Részletfizetés alapja"
+      },
+      "label": {
+        "ca": "Base del pago fraccionado",
+        "en": "Instalment base",
+        "es": "Base del pago fraccionado",
+        "hu": "Részletfizetés alapja"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado A — Cuota íntegra",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "17",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Tipo de gravamen aplicable",
+        "en": "Applicable rate",
+        "es": "Tipo de gravamen aplicable",
+        "hu": "Alkalmazandó kulcs"
+      },
+      "label": {
+        "ca": "Tipo de gravamen aplicable",
+        "en": "Applicable rate",
+        "es": "Tipo de gravamen aplicable",
+        "hu": "Alkalmazandó kulcs"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado A — Cuota íntegra",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "LIS art. 40.3: tipo aplicable impreso como entero porcentual (e.g. 17 = 17%).",
+          "rule": "whole_percent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "18",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((17 / 100) * 16)",
+        "references_casillas": [
+          "17",
+          "16"
+        ]
+      },
+      "help": {
+        "ca": "Quota integra. Se calcula como ((17 / 100) * 16).",
+        "en": "Gross tax amount. Computed as ((17 / 100) * 16).",
+        "es": "Cuota integra. Se calcula como ((17 / 100) * 16).",
+        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16)."
+      },
+      "label": {
+        "ca": "Quota integra",
+        "en": "Gross tax amount",
+        "es": "Cuota integra",
+        "hu": "Bruttó adóösszeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [
+        "17",
+        "16"
+      ],
+      "references_rules": [
+        "modelo_202.2025.cuota_integra"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado A — Cuota íntegra",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "27",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Bonificaciones",
+        "en": "Rebates",
+        "es": "Bonificaciones",
+        "hu": "Kedvezmények"
+      },
+      "label": {
+        "ca": "Bonificaciones",
+        "en": "Rebates",
+        "es": "Bonificaciones",
+        "hu": "Kedvezmények"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado B — Bonificaciones, retenciones, pagos previos",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "28",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings and payments on account",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások és előlegek"
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings and payments on account",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások és előlegek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado B — Bonificaciones, retenciones, pagos previos",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "30",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pagos fraccionados anteriores del ejercicio",
+        "en": "Prior instalments of the period",
+        "es": "Pagos fraccionados anteriores del ejercicio",
+        "hu": "Korábbi részletek az időszakból"
+      },
+      "label": {
+        "ca": "Pagos fraccionados anteriores del ejercicio",
+        "en": "Prior instalments of the period",
+        "es": "Pagos fraccionados anteriores del ejercicio",
+        "hu": "Korábbi részletek az időszakból"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado B — Bonificaciones, retenciones, pagos previos",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "32",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(((18 - 27) - 28) - 30)",
+        "references_casillas": [
+          "18",
+          "27",
+          "28",
+          "30"
+        ]
+      },
+      "help": {
+        "ca": "Resultado. Se calcula como (((18 - 27) - 28) - 30).",
+        "en": "Net result. Computed as (((18 - 27) - 28) - 30).",
+        "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30).",
+        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30)."
+      },
+      "label": {
+        "ca": "Resultado",
+        "en": "Net result",
+        "es": "Resultado",
+        "hu": "Nettó eredmény"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [
+        "18",
+        "27",
+        "28",
+        "30"
+      ],
+      "references_rules": [
+        "modelo_202.2025.resultado"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado C — Resultado y mínimo a ingresar",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "33",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Minimo a ingresar",
+        "en": "Minimum payable",
+        "es": "Minimo a ingresar",
+        "hu": "Minimális fizetendő"
+      },
+      "label": {
+        "ca": "Minimo a ingresar",
+        "en": "Minimum payable",
+        "es": "Minimo a ingresar",
+        "hu": "Minimális fizetendő"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado C — Resultado y mínimo a ingresar",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "34",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(32, 33)",
+        "references_casillas": [
+          "32",
+          "33"
+        ]
+      },
+      "help": {
+        "ca": "Cantidad a ingresar. Se calcula como max(32, 33).",
+        "en": "Amount payable. Computed as max(32, 33).",
+        "es": "Cantidad a ingresar. Se calcula como max(32, 33).",
+        "hu": "Fizetendő összeg. Számítás: max(32, 33)."
+      },
+      "label": {
+        "ca": "Cantidad a ingresar",
+        "en": "Amount payable",
+        "es": "Cantidad a ingresar",
+        "hu": "Fizetendő összeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_202",
+      "period": "2024Q4",
+      "references_casillas": [
+        "32",
+        "33"
+      ],
+      "references_rules": [
+        "modelo_202.2025.cantidad_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2024.html",
+      "source_page": 1,
+      "source_section": "Apartado C — Resultado y mínimo a ingresar",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

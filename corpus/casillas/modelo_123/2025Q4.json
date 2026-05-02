@@ -1,0 +1,426 @@
+{
+  "modelo": "MODELO_123",
+  "period": "2025Q4",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Perceptores dividendos",
+        "en": "Dividend recipients",
+        "es": "Perceptores dividendos",
+        "hu": "Osztalék-kedvezményezettek"
+      },
+      "label": {
+        "ca": "Perceptores dividendos",
+        "en": "Dividend recipients",
+        "es": "Perceptores dividendos",
+        "hu": "Osztalék-kedvezményezettek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Total perceptores (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Perceptores otras rentas",
+        "en": "Other recipients",
+        "es": "Perceptores otras rentas",
+        "hu": "Egyéb kedvezményezettek"
+      },
+      "label": {
+        "ca": "Perceptores otras rentas",
+        "en": "Other recipients",
+        "es": "Perceptores otras rentas",
+        "hu": "Egyéb kedvezményezettek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Total perceptores (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(01 + 02)",
+        "references_casillas": [
+          "01",
+          "02"
+        ]
+      },
+      "help": {
+        "ca": "Total perceptores. Se calcula como (01 + 02).",
+        "en": "Total recipients. Computed as (01 + 02).",
+        "es": "Total perceptores. Se calcula como (01 + 02).",
+        "hu": "Összes kedvezményezett. Számítás: (01 + 02)."
+      },
+      "label": {
+        "ca": "Total perceptores",
+        "en": "Total recipients",
+        "es": "Total perceptores",
+        "hu": "Összes kedvezményezett"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [
+        "01",
+        "02"
+      ],
+      "references_rules": [
+        "modelo_123.2025.total_perceptores"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Total perceptores (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base retenciones dividendos",
+        "en": "Dividend withholding base",
+        "es": "Base retenciones dividendos",
+        "hu": "Osztalék levonási alap"
+      },
+      "label": {
+        "ca": "Base retenciones dividendos",
+        "en": "Dividend withholding base",
+        "es": "Base retenciones dividendos",
+        "hu": "Osztalék levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Base retenciones (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "05",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base retenciones otras rentas",
+        "en": "Other withholding base",
+        "es": "Base retenciones otras rentas",
+        "hu": "Egyéb levonási alap"
+      },
+      "label": {
+        "ca": "Base retenciones otras rentas",
+        "en": "Other withholding base",
+        "es": "Base retenciones otras rentas",
+        "hu": "Egyéb levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Base retenciones (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "06",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(04 + 05)",
+        "references_casillas": [
+          "04",
+          "05"
+        ]
+      },
+      "help": {
+        "ca": "Base total retenciones. Se calcula como (04 + 05).",
+        "en": "Total withholding base. Computed as (04 + 05).",
+        "es": "Base total retenciones. Se calcula como (04 + 05).",
+        "hu": "Teljes levonási alap. Számítás: (04 + 05)."
+      },
+      "label": {
+        "ca": "Base total retenciones",
+        "en": "Total withholding base",
+        "es": "Base total retenciones",
+        "hu": "Teljes levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [
+        "04",
+        "05"
+      ],
+      "references_rules": [
+        "modelo_123.2025.base_total"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Base retenciones (dividendos / otras rentas)",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "07",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones dividendos",
+        "en": "Dividend withholdings",
+        "es": "Retenciones dividendos",
+        "hu": "Osztalék-levonás"
+      },
+      "label": {
+        "ca": "Retenciones dividendos",
+        "en": "Dividend withholdings",
+        "es": "Retenciones dividendos",
+        "hu": "Osztalék-levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total retenciones e ingresos a cuenta",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "08",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones otras rentas",
+        "en": "Other withholdings",
+        "es": "Retenciones otras rentas",
+        "hu": "Egyéb levonás"
+      },
+      "label": {
+        "ca": "Retenciones otras rentas",
+        "en": "Other withholdings",
+        "es": "Retenciones otras rentas",
+        "hu": "Egyéb levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total retenciones e ingresos a cuenta",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "09",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(07 + 08)",
+        "references_casillas": [
+          "07",
+          "08"
+        ]
+      },
+      "help": {
+        "ca": "Total retenciones. Se calcula como (07 + 08).",
+        "en": "Total withholdings. Computed as (07 + 08).",
+        "es": "Total retenciones. Se calcula como (07 + 08).",
+        "hu": "Teljes levonás. Számítás: (07 + 08)."
+      },
+      "label": {
+        "ca": "Total retenciones",
+        "en": "Total withholdings",
+        "es": "Total retenciones",
+        "hu": "Teljes levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [
+        "07",
+        "08"
+      ],
+      "references_rules": [
+        "modelo_123.2025.total_retenciones"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Total retenciones e ingresos a cuenta",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "10",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Resultado declaracion anterior (complementaria)",
+        "en": "Prior filing result (complementaria)",
+        "es": "Resultado declaracion anterior (complementaria)",
+        "hu": "Korábbi bevallás eredménye"
+      },
+      "label": {
+        "ca": "Resultado declaracion anterior (complementaria)",
+        "en": "Prior filing result (complementaria)",
+        "es": "Resultado declaracion anterior (complementaria)",
+        "hu": "Korábbi bevallás eredménye"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "IV. Resultado a ingresar",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "11",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(09 - 10)",
+        "references_casillas": [
+          "09",
+          "10"
+        ]
+      },
+      "help": {
+        "ca": "Resultado a ingresar. Se calcula como (09 - 10).",
+        "en": "Net amount payable. Computed as (09 - 10).",
+        "es": "Resultado a ingresar. Se calcula como (09 - 10).",
+        "hu": "Fizetendő eredmény. Számítás: (09 - 10)."
+      },
+      "label": {
+        "ca": "Resultado a ingresar",
+        "en": "Net amount payable",
+        "es": "Resultado a ingresar",
+        "hu": "Fizetendő eredmény"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_123",
+      "period": "2025Q4",
+      "references_casillas": [
+        "09",
+        "10"
+      ],
+      "references_rules": [
+        "modelo_123.2025.resultado_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "IV. Resultado a ingresar",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

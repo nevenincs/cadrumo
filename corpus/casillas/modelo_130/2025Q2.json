@@ -1,6 +1,6 @@
 {
   "modelo": "MODELO_130",
-  "period": "2025Q4",
+  "period": "2025Q2",
   "records": [
     {
       "casilla_id": "01",
@@ -23,7 +23,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -55,7 +55,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -93,7 +93,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "01",
         "02"
@@ -141,7 +141,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "03"
       ],
@@ -188,7 +188,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -220,7 +220,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -259,7 +259,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "04",
         "05",
@@ -308,7 +308,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -345,7 +345,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "08"
       ],
@@ -387,7 +387,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -425,7 +425,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "09",
         "10"
@@ -479,7 +479,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "07",
         "11"
@@ -527,7 +527,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -565,7 +565,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "12",
         "13"
@@ -613,7 +613,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -645,7 +645,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -684,7 +684,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "14",
         "15",
@@ -733,7 +733,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [],
       "references_rules": [],
       "required": false,
@@ -771,7 +771,7 @@
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_130",
-      "period": "2025Q4",
+      "period": "2025Q2",
       "references_casillas": [
         "17",
         "18"

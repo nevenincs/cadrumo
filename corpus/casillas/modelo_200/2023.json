@@ -1,0 +1,583 @@
+{
+  "modelo": "MODELO_200",
+  "period": "2023",
+  "records": [
+    {
+      "casilla_id": "00547",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Compensacion BINs",
+        "en": "BIN compensation",
+        "es": "Compensacion BINs",
+        "hu": "Veszteség-beszámítás"
+      },
+      "label": {
+        "ca": "Compensacion BINs",
+        "en": "BIN compensation",
+        "es": "Compensacion BINs",
+        "hu": "Veszteség-beszámítás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00550",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base imposable antes reserva",
+        "en": "BI pre-reserve",
+        "es": "Base imponible antes reserva",
+        "hu": "Adóalap rezerv előtt"
+      },
+      "label": {
+        "ca": "Base imposable antes reserva",
+        "en": "BI pre-reserve",
+        "es": "Base imponible antes reserva",
+        "hu": "Adóalap rezerv előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00552",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Base imposable",
+        "en": "Taxable base",
+        "es": "Base imponible",
+        "hu": "Adóalap"
+      },
+      "label": {
+        "ca": "Base imposable",
+        "en": "Taxable base",
+        "es": "Base imponible",
+        "hu": "Adóalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00558",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Tipo de gravamen",
+        "en": "Tax rate",
+        "es": "Tipo de gravamen",
+        "hu": "Adókulcs"
+      },
+      "label": {
+        "ca": "Tipo de gravamen",
+        "en": "Tax rate",
+        "es": "Tipo de gravamen",
+        "hu": "Adókulcs"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "LIS arts. 29-30: tipo de gravamen impreso como entero porcentual (e.g. 25 = 25%).",
+          "rule": "whole_percent",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "00560",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Quota integra previa",
+        "en": "Gross tax (pre)",
+        "es": "Cuota integra previa",
+        "hu": "Bruttó adó (elő)"
+      },
+      "label": {
+        "ca": "Quota integra previa",
+        "en": "Gross tax (pre)",
+        "es": "Cuota integra previa",
+        "hu": "Bruttó adó (elő)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00562",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((00558 / 100) * 00552)",
+        "references_casillas": [
+          "00558",
+          "00552"
+        ]
+      },
+      "help": {
+        "ca": "Quota integra. Se calcula como ((00558 / 100) * 00552).",
+        "en": "Gross tax amount. Computed as ((00558 / 100) * 00552).",
+        "es": "Cuota integra. Se calcula como ((00558 / 100) * 00552).",
+        "hu": "Bruttó adóösszeg. Számítás: ((00558 / 100) * 00552)."
+      },
+      "label": {
+        "ca": "Quota integra",
+        "en": "Gross tax amount",
+        "es": "Cuota integra",
+        "hu": "Bruttó adóösszeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [
+        "00558",
+        "00552"
+      ],
+      "references_rules": [
+        "modelo_200.2025.cuota_integra"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Liquidación cuota íntegra",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "00582",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Bonificaciones y deducciones doble imposición internacional",
+        "en": "Bonuses and international double-taxation deductions",
+        "es": "Bonificaciones y deducciones doble imposición internacional",
+        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások"
+      },
+      "label": {
+        "ca": "Bonificaciones y deducciones doble imposición internacional",
+        "en": "Bonuses and international double-taxation deductions",
+        "es": "Bonificaciones y deducciones doble imposición internacional",
+        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota líquida",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00592",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Quota liquida",
+        "en": "Net tax amount",
+        "es": "Cuota liquida",
+        "hu": "Nettó adóösszeg"
+      },
+      "label": {
+        "ca": "Quota liquida",
+        "en": "Net tax amount",
+        "es": "Cuota liquida",
+        "hu": "Nettó adóösszeg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota líquida",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00599",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások"
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota diferencial",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00601",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pagament fraccionat 1P",
+        "en": "Instalment 1P",
+        "es": "Pago fraccionado 1P",
+        "hu": "1P részlet"
+      },
+      "label": {
+        "ca": "Pagament fraccionat 1P",
+        "en": "Instalment 1P",
+        "es": "Pago fraccionado 1P",
+        "hu": "1P részlet"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota diferencial",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00603",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pagament fraccionat 2P",
+        "en": "Instalment 2P",
+        "es": "Pago fraccionado 2P",
+        "hu": "2P részlet"
+      },
+      "label": {
+        "ca": "Pagament fraccionat 2P",
+        "en": "Instalment 2P",
+        "es": "Pago fraccionado 2P",
+        "hu": "2P részlet"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota diferencial",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00605",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pagament fraccionat 3P",
+        "en": "Instalment 3P",
+        "es": "Pago fraccionado 3P",
+        "hu": "3P részlet"
+      },
+      "label": {
+        "ca": "Pagament fraccionat 3P",
+        "en": "Instalment 3P",
+        "es": "Pago fraccionado 3P",
+        "hu": "3P részlet"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota diferencial",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00615",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Abono de deducciones",
+        "en": "Deductions refund",
+        "es": "Abono de deducciones",
+        "hu": "Kedvezmény-visszatérítés"
+      },
+      "label": {
+        "ca": "Abono de deducciones",
+        "en": "Deductions refund",
+        "es": "Abono de deducciones",
+        "hu": "Kedvezmény-visszatérítés"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Líquido a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00619",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Incremento por perdida beneficios fiscales",
+        "en": "Increment for lost tax benefits",
+        "es": "Incremento por perdida beneficios fiscales",
+        "hu": "Növelés elveszett kedvezmények miatt"
+      },
+      "label": {
+        "ca": "Incremento por perdida beneficios fiscales",
+        "en": "Increment for lost tax benefits",
+        "es": "Incremento por perdida beneficios fiscales",
+        "hu": "Növelés elveszett kedvezmények miatt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Líquido a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "00611",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((((00592 - 00599) - 00601) - 00603) - 00605)",
+        "references_casillas": [
+          "00592",
+          "00599",
+          "00601",
+          "00603",
+          "00605"
+        ]
+      },
+      "help": {
+        "ca": "Quota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605).",
+        "en": "Tax differential. Computed as ((((00592 - 00599) - 00601) - 00603) - 00605).",
+        "es": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605).",
+        "hu": "Adókülönbözet. Számítás: ((((00592 - 00599) - 00601) - 00603) - 00605)."
+      },
+      "label": {
+        "ca": "Quota diferencial",
+        "en": "Tax differential",
+        "es": "Cuota diferencial",
+        "hu": "Adókülönbözet"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [
+        "00592",
+        "00599",
+        "00601",
+        "00603",
+        "00605"
+      ],
+      "references_rules": [
+        "modelo_200.2025.cuota_diferencial"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Cuota diferencial",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "00621",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((00611 - 00615) + 00619)",
+        "references_casillas": [
+          "00611",
+          "00615",
+          "00619"
+        ]
+      },
+      "help": {
+        "ca": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619).",
+        "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619).",
+        "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619).",
+        "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619)."
+      },
+      "label": {
+        "ca": "Liquido a ingresar o devolver",
+        "en": "Net payable or refundable",
+        "es": "Liquido a ingresar o devolver",
+        "hu": "Fizetendő vagy visszatérítendő"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_200",
+      "period": "2023",
+      "references_casillas": [
+        "00611",
+        "00615",
+        "00619"
+      ],
+      "references_rules": [
+        "modelo_200.2025.liquido_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/sociedades-2023.html",
+      "source_page": 1,
+      "source_section": "Página 14 — Líquido a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

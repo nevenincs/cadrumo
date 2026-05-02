@@ -1,0 +1,3458 @@
+{
+  "modelo": "MODELO_100",
+  "period": "2023",
+  "records": [
+    {
+      "casilla_id": "0001",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma de sueldos, salarios, pensiones, prestaciones de desempleo, retribuciones a administradores y demás rendimientos del trabajo definidos por LIRPF art. 17.",
+        "en": "Gross work income (Anexo B1)",
+        "es": "Suma de sueldos, salarios, pensiones, prestaciones de desempleo, retribuciones a administradores y demás rendimientos del trabajo definidos por LIRPF art. 17.",
+        "hu": "Munkajövedelem bruttó (B1 melléklet)"
+      },
+      "label": {
+        "ca": "Ingresos íntegros rendimientos del trabajo",
+        "en": "Gross work income (Anexo B1)",
+        "es": "Ingresos íntegros rendimientos del trabajo",
+        "hu": "Munkajövedelem bruttó (B1 melléklet)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0008",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Gasto deducible cotización Seguridad Social",
+        "en": "Social Security contributions (deductible)",
+        "es": "Gasto deducible cotización Seguridad Social",
+        "hu": "Társadalombiztosítási járulék (levonható)"
+      },
+      "label": {
+        "ca": "Gasto deducible cotización Seguridad Social",
+        "en": "Social Security contributions (deductible)",
+        "es": "Gasto deducible cotización Seguridad Social",
+        "hu": "Társadalombiztosítási járulék (levonható)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0009",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Quotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF.",
+        "en": "Other deductible work expenses",
+        "es": "Cuotas colegiales, sindicatos, defensa jurídica, suplemento 2.000 € art. 19.2 LIRPF.",
+        "hu": "Egyéb levonható munkajövedelem-költségek"
+      },
+      "label": {
+        "ca": "Otros gastos deducibles del trabajo",
+        "en": "Other deductible work expenses",
+        "es": "Otros gastos deducibles del trabajo",
+        "hu": "Egyéb levonható munkajövedelem-költségek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0010",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Gasto adicional movilidad geográfica",
+        "en": "Geographic mobility expense",
+        "es": "Gasto adicional movilidad geográfica",
+        "hu": "Földrajzi mobilitási költség"
+      },
+      "label": {
+        "ca": "Gasto adicional movilidad geográfica",
+        "en": "Geographic mobility expense",
+        "es": "Gasto adicional movilidad geográfica",
+        "hu": "Földrajzi mobilitási költség"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0019",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Import ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €.",
+        "en": "Art. 18 reduction (irregular earnings)",
+        "es": "Importe ya minorado por el 30% del art. 18.2 sobre la base irregular, con un límite cuantitativo de 300.000 €.",
+        "hu": "18. cikk csökkentés (rendszertelen jövedelem)"
+      },
+      "label": {
+        "ca": "Reducció art. 18 — rendimientos irregulares",
+        "en": "Art. 18 reduction (irregular earnings)",
+        "es": "Reducción art. 18 — rendimientos irregulares",
+        "hu": "18. cikk csökkentés (rendszertelen jövedelem)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0020",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, ((((0001 - 0008) - 0009) - 0010) - 0019))",
+        "references_casillas": [
+          "0001",
+          "0008",
+          "0009",
+          "0010",
+          "0019"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto previo del trabajo. Se calcula como max(0, ((((0001 - 0008) - 0009) - 0010) - 0019)).",
+        "en": "Net work income before art. 20 reduction. Computed as max(0, ((((0001 - 0008) - 0009) - 0010) - 0019)).",
+        "es": "Rendimiento neto previo del trabajo. Se calcula como max(0, ((((0001 - 0008) - 0009) - 0010) - 0019)).",
+        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt. Számítás: max(0, ((((0001 - 0008) - 0009) - 0010) - 0019))."
+      },
+      "label": {
+        "ca": "Rendimiento neto previo del trabajo",
+        "en": "Net work income before art. 20 reduction",
+        "es": "Rendimiento neto previo del trabajo",
+        "hu": "Bruttó munkajövedelem az art. 20 csökkentés előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0001",
+        "0008",
+        "0009",
+        "0010",
+        "0019"
+      ],
+      "references_rules": [
+        "modelo_100.2025.b1.rendimiento_neto_previo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0021",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52)))))))",
+        "references_casillas": [
+          "0020"
+        ]
+      },
+      "help": {
+        "ca": "Reducció art. 20 rendimientos del trabajo. Se calcula como min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))).",
+        "en": "Art. 20 reduction (work-income obtention). Computed as min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))).",
+        "es": "Reducción art. 20 rendimientos del trabajo. Se calcula como min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52))))))).",
+        "hu": "20. cikk csökkentés (munkajövedelem szerzés). Számítás: min(0020, max(max(0, (7302 - (1.75 * max(0, (0020 - 14852))))), max(0, (2364.34 - (1.14 * max(0, (0020 - 17673.52)))))))."
+      },
+      "label": {
+        "ca": "Reducció art. 20 rendimientos del trabajo",
+        "en": "Art. 20 reduction (work-income obtention)",
+        "es": "Reducción art. 20 rendimientos del trabajo",
+        "hu": "20. cikk csökkentés (munkajövedelem szerzés)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0020"
+      ],
+      "references_rules": [
+        "modelo_100.2025.b1.reduccion_art_20"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0022",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0020 - 0021))",
+        "references_casillas": [
+          "0020",
+          "0021"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido del trabajo. Se calcula como max(0, (0020 - 0021)).",
+        "en": "Net work income (reduced). Computed as max(0, (0020 - 0021)).",
+        "es": "Rendimiento neto reducido del trabajo. Se calcula como max(0, (0020 - 0021)).",
+        "hu": "Nettó munkajövedelem (csökkentett). Számítás: max(0, (0020 - 0021))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido del trabajo",
+        "en": "Net work income (reduced)",
+        "es": "Rendimiento neto reducido del trabajo",
+        "hu": "Nettó munkajövedelem (csökkentett)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0020",
+        "0021"
+      ],
+      "references_rules": [
+        "modelo_100.2025.b1.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0028",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Dividendos íntegros",
+        "en": "Gross dividend income",
+        "es": "Dividendos íntegros",
+        "hu": "Bruttó osztalékjövedelem"
+      },
+      "label": {
+        "ca": "Dividendos íntegros",
+        "en": "Gross dividend income",
+        "es": "Dividendos íntegros",
+        "hu": "Bruttó osztalékjövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0029",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Intereses de cuentas y depósitos",
+        "en": "Bank deposit interest income",
+        "es": "Intereses de cuentas y depósitos",
+        "hu": "Banki betét kamatjövedelem"
+      },
+      "label": {
+        "ca": "Intereses de cuentas y depósitos",
+        "en": "Bank deposit interest income",
+        "es": "Intereses de cuentas y depósitos",
+        "hu": "Banki betét kamatjövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0030",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Intereses de títulos (públicos / privados)",
+        "en": "Securities interest income (public/private)",
+        "es": "Intereses de títulos (públicos / privados)",
+        "hu": "Értékpapír kamatjövedelem"
+      },
+      "label": {
+        "ca": "Intereses de títulos (públicos / privados)",
+        "en": "Securities interest income (public/private)",
+        "es": "Intereses de títulos (públicos / privados)",
+        "hu": "Értékpapír kamatjövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0031",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Otros rendimientos del capital mobiliario",
+        "en": "Other capital-income types",
+        "es": "Otros rendimientos del capital mobiliario",
+        "hu": "Egyéb tőkejövedelem"
+      },
+      "label": {
+        "ca": "Otros rendimientos del capital mobiliario",
+        "en": "Other capital-income types",
+        "es": "Otros rendimientos del capital mobiliario",
+        "hu": "Egyéb tőkejövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0032",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Import ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €.",
+        "en": "Art. 26.2 reduction (irregular capital income)",
+        "es": "Importe ya minorado por el 30 % del art. 26.2 sobre la base irregular, con un límite de 300.000 €.",
+        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem)"
+      },
+      "label": {
+        "ca": "Reducció art. 26.2 — irregularidad capital mobiliario",
+        "en": "Art. 26.2 reduction (irregular capital income)",
+        "es": "Reducción art. 26.2 — irregularidad capital mobiliario",
+        "hu": "26.2 cikk csökkentés (rendszertelen tőkejövedelem)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0035",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Gastos de administración y custodia",
+        "en": "Administration and custody expenses",
+        "es": "Gastos de administración y custodia",
+        "hu": "Adminisztrációs és letétkezelési költségek"
+      },
+      "label": {
+        "ca": "Gastos de administración y custodia",
+        "en": "Administration and custody expenses",
+        "es": "Gastos de administración y custodia",
+        "hu": "Adminisztrációs és letétkezelési költségek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0048",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (((0028 + 0029) + (0030 + 0031)) - 0035))",
+        "references_casillas": [
+          "0028",
+          "0029",
+          "0030",
+          "0031",
+          "0035"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto previo capital mobiliario. Se calcula como max(0, (((0028 + 0029) + (0030 + 0031)) - 0035)).",
+        "en": "Net capital-income before art. 26.2 reduction. Computed as max(0, (((0028 + 0029) + (0030 + 0031)) - 0035)).",
+        "es": "Rendimiento neto previo capital mobiliario. Se calcula como max(0, (((0028 + 0029) + (0030 + 0031)) - 0035)).",
+        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt. Számítás: max(0, (((0028 + 0029) + (0030 + 0031)) - 0035))."
+      },
+      "label": {
+        "ca": "Rendimiento neto previo capital mobiliario",
+        "en": "Net capital-income before art. 26.2 reduction",
+        "es": "Rendimiento neto previo capital mobiliario",
+        "hu": "Bruttó tőkejövedelem 26.2 csökkentés előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0028",
+        "0029",
+        "0030",
+        "0031",
+        "0035"
+      ],
+      "references_rules": [
+        "modelo_100.2025.b2.rendimiento_neto_previo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0049",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0048 - 0032))",
+        "references_casillas": [
+          "0048",
+          "0032"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido capital mobiliario. Se calcula como max(0, (0048 - 0032)).",
+        "en": "Net capital-income (reduced). Computed as max(0, (0048 - 0032)).",
+        "es": "Rendimiento neto reducido capital mobiliario. Se calcula como max(0, (0048 - 0032)).",
+        "hu": "Nettó tőkejövedelem (csökkentett). Számítás: max(0, (0048 - 0032))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido capital mobiliario",
+        "en": "Net capital-income (reduced)",
+        "es": "Rendimiento neto reducido capital mobiliario",
+        "hu": "Nettó tőkejövedelem (csökkentett)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0048",
+        "0032"
+      ],
+      "references_rules": [
+        "modelo_100.2025.b2.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0061",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Ingresos íntegros arrendamiento inmuebles",
+        "en": "Gross rental income (urban properties)",
+        "es": "Ingresos íntegros arrendamiento inmuebles",
+        "hu": "Bruttó bérleti díj bevétel"
+      },
+      "label": {
+        "ca": "Ingresos íntegros arrendamiento inmuebles",
+        "en": "Gross rental income (urban properties)",
+        "es": "Ingresos íntegros arrendamiento inmuebles",
+        "hu": "Bruttó bérleti díj bevétel"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0066",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma de financiación, IBI, comunidad, reparación y conservación, seguros, suministros, gestión y otros gastos deducibles per LIRPF art. 23.1.",
+        "en": "Deductible rental expenses",
+        "es": "Suma de financiación, IBI, comunidad, reparación y conservación, seguros, suministros, gestión y otros gastos deducibles per LIRPF art. 23.1.",
+        "hu": "Levonható bérleti költségek"
+      },
+      "label": {
+        "ca": "Gastos deducibles arrendamiento",
+        "en": "Deductible rental expenses",
+        "es": "Gastos deducibles arrendamiento",
+        "hu": "Levonható bérleti költségek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0072",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "3 % sobre el mayor del coste de adquisición o del valor catastral de la construcción (LIRPF art. 23.1, párr. f).",
+        "en": "Building amortization (3 %)",
+        "es": "3 % sobre el mayor del coste de adquisición o del valor catastral de la construcción (LIRPF art. 23.1, párr. f).",
+        "hu": "Építmény-amortizáció (3 %)"
+      },
+      "label": {
+        "ca": "Amortización 3 % construcción",
+        "en": "Building amortization (3 %)",
+        "es": "Amortización 3 % construcción",
+        "hu": "Építmény-amortizáció (3 %)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0078",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción).",
+        "en": "Art. 23.2 reduction (50/60/70/90 % tiered)",
+        "es": "El consumidor calcula el tramo aplicable según los metadatos del contrato: por defecto 50 %, vivienda rehabilitada en los 2 años anteriores 60 %, primer alquiler en zona tensionada a inquilino joven o Administración Pública 70 %, zona tensionada con reducción >= 5 % sobre la renta inicial del contrato anterior 90 %. Se aplica sobre el rendimiento neto positivo declarado (0106 antes de la reducción).",
+        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű)"
+      },
+      "label": {
+        "ca": "Reducció art. 23.2 — tramos 50/60/70/90 %",
+        "en": "Art. 23.2 reduction (50/60/70/90 % tiered)",
+        "es": "Reducción art. 23.2 — tramos 50/60/70/90 %",
+        "hu": "23.2 cikk csökkentés (50/60/70/90 % többszintű)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0085",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "El consumidor calcula 1,1 % o 2 % del valor catastral por cada inmueble no afecto. No alimenta las casillas 0106 / 0107 — es una línea de ingresos paralela consumida por el Anexo F.",
+        "en": "Imputed real-estate income (art. 85)",
+        "es": "El consumidor calcula 1,1 % o 2 % del valor catastral por cada inmueble no afecto. No alimenta las casillas 0106 / 0107 — es una línea de ingresos paralela consumida por el Anexo F.",
+        "hu": "Ingatlan-betudott jövedelem (85. cikk)"
+      },
+      "label": {
+        "ca": "Imputación rentas inmobiliarias",
+        "en": "Imputed real-estate income (art. 85)",
+        "es": "Imputación rentas inmobiliarias",
+        "hu": "Ingatlan-betudott jövedelem (85. cikk)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0106",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, ((0061 - 0066) - 0072))",
+        "references_casillas": [
+          "0061",
+          "0066",
+          "0072"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto previo capital inmobiliario. Se calcula como max(0, ((0061 - 0066) - 0072)).",
+        "en": "Net real-estate income before art. 23.2 reduction. Computed as max(0, ((0061 - 0066) - 0072)).",
+        "es": "Rendimiento neto previo capital inmobiliario. Se calcula como max(0, ((0061 - 0066) - 0072)).",
+        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt. Számítás: max(0, ((0061 - 0066) - 0072))."
+      },
+      "label": {
+        "ca": "Rendimiento neto previo capital inmobiliario",
+        "en": "Net real-estate income before art. 23.2 reduction",
+        "es": "Rendimiento neto previo capital inmobiliario",
+        "hu": "Bruttó ingatlanjövedelem 23.2 csökkentés előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0061",
+        "0066",
+        "0072"
+      ],
+      "references_rules": [
+        "modelo_100.2025.c.rendimiento_neto_previo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0107",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0106 - 0078))",
+        "references_casillas": [
+          "0106",
+          "0078"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido capital inmobiliario. Se calcula como max(0, (0106 - 0078)).",
+        "en": "Net real-estate income (reduced). Computed as max(0, (0106 - 0078)).",
+        "es": "Rendimiento neto reducido capital inmobiliario. Se calcula como max(0, (0106 - 0078)).",
+        "hu": "Nettó ingatlanjövedelem (csökkentett). Számítás: max(0, (0106 - 0078))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido capital inmobiliario",
+        "en": "Net real-estate income (reduced)",
+        "es": "Rendimiento neto reducido capital inmobiliario",
+        "hu": "Nettó ingatlanjövedelem (csökkentett)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0106",
+        "0078"
+      ],
+      "references_rules": [
+        "modelo_100.2025.c.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0140",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Ingresos de explotación",
+        "en": "Operating income (E.D. normal)",
+        "es": "Ingresos de explotación",
+        "hu": "Üzemi bevétel (E.D. normál)"
+      },
+      "label": {
+        "ca": "Ingresos de explotación",
+        "en": "Operating income (E.D. normal)",
+        "es": "Ingresos de explotación",
+        "hu": "Üzemi bevétel (E.D. normál)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0150",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Compras y consumos del ejercicio",
+        "en": "Purchases and consumption (E.D. normal)",
+        "es": "Compras y consumos del ejercicio",
+        "hu": "Beszerzés és felhasználás"
+      },
+      "label": {
+        "ca": "Compras y consumos del ejercicio",
+        "en": "Purchases and consumption (E.D. normal)",
+        "es": "Compras y consumos del ejercicio",
+        "hu": "Beszerzés és felhasználás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0155",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos.",
+        "en": "Inventory variation (final - initial)",
+        "es": "Calculado por el consumidor a partir de `InventoryRecord` según LIS art. 17. Con signo: positivo = existencias finales > iniciales = contribución a ingresos; negativo = existencias finales < iniciales = contribución a gastos.",
+        "hu": "Keszletvaltozas (zaro - nyito)"
+      },
+      "label": {
+        "ca": "Variación de existencias",
+        "en": "Inventory variation (final - initial)",
+        "es": "Variación de existencias",
+        "hu": "Keszletvaltozas (zaro - nyito)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0165",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Gastos de personal",
+        "en": "Personnel expenses",
+        "es": "Gastos de personal",
+        "hu": "Személyi költségek"
+      },
+      "label": {
+        "ca": "Gastos de personal",
+        "en": "Personnel expenses",
+        "es": "Gastos de personal",
+        "hu": "Személyi költségek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0170",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Servicios exteriores, tributos y otros",
+        "en": "External services, taxes, other",
+        "es": "Servicios exteriores, tributos y otros",
+        "hu": "Külső szolgáltatások, adók, egyéb"
+      },
+      "label": {
+        "ca": "Servicios exteriores, tributos y otros",
+        "en": "External services, taxes, other",
+        "es": "Servicios exteriores, tributos y otros",
+        "hu": "Külső szolgáltatások, adók, egyéb"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0173",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Calculado por el consumidor según la tabla LIS art. 12 lineal (33 filas) o el régimen de libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024).",
+        "en": "Tangible/intangible amortization",
+        "es": "Calculado por el consumidor según la tabla LIS art. 12 lineal (33 filas) o el régimen de libertad de amortización (LIS art. 102 PYMES, DA 18ª LIS, DA 59ª LIRPF tras RD-Ley 4/2024).",
+        "hu": "Befektetett eszközök amortizációja"
+      },
+      "label": {
+        "ca": "Amortización del inmovilizado",
+        "en": "Tangible/intangible amortization",
+        "es": "Amortización del inmovilizado",
+        "hu": "Befektetett eszközök amortizációja"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0180",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Provisiones y deterioros",
+        "en": "Provisions and impairments",
+        "es": "Provisiones y deterioros",
+        "hu": "Tartalékok és értékvesztés"
+      },
+      "label": {
+        "ca": "Provisiones y deterioros",
+        "en": "Provisions and impairments",
+        "es": "Provisiones y deterioros",
+        "hu": "Tartalékok és értékvesztés"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0190",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(((0150 + 0165) + (0170 + (0173 + 0180))) - 0155)",
+        "references_casillas": [
+          "0150",
+          "0165",
+          "0170",
+          "0173",
+          "0180",
+          "0155"
+        ]
+      },
+      "help": {
+        "ca": "Total gastos computables E.D. normal. Se calcula como (((0150 + 0165) + (0170 + (0173 + 0180))) - 0155).",
+        "en": "Total deductible expenses (E.D. normal). Computed as (((0150 + 0165) + (0170 + (0173 + 0180))) - 0155).",
+        "es": "Total gastos computables E.D. normal. Se calcula como (((0150 + 0165) + (0170 + (0173 + 0180))) - 0155).",
+        "hu": "Összes levonható költség (E.D. normál). Számítás: (((0150 + 0165) + (0170 + (0173 + 0180))) - 0155)."
+      },
+      "label": {
+        "ca": "Total gastos computables E.D. normal",
+        "en": "Total deductible expenses (E.D. normal)",
+        "es": "Total gastos computables E.D. normal",
+        "hu": "Összes levonható költség (E.D. normál)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0150",
+        "0165",
+        "0170",
+        "0173",
+        "0180",
+        "0155"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_normal.total_gastos"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0195",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0140 - 0190))",
+        "references_casillas": [
+          "0140",
+          "0190"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto previo E.D. normal. Se calcula como max(0, (0140 - 0190)).",
+        "en": "Net business income before art. 32 reduction. Computed as max(0, (0140 - 0190)).",
+        "es": "Rendimiento neto previo E.D. normal. Se calcula como max(0, (0140 - 0190)).",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt. Számítás: max(0, (0140 - 0190))."
+      },
+      "label": {
+        "ca": "Rendimiento neto previo E.D. normal",
+        "en": "Net business income before art. 32 reduction",
+        "es": "Rendimiento neto previo E.D. normal",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk csökkentés előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0140",
+        "0190"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_normal.rendimiento_neto_previo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0200",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Reducció LIRPF art. 32",
+        "en": "Art. 32 reduction (irregular / startup)",
+        "es": "Reducción LIRPF art. 32",
+        "hu": "32. cikk csökkentés (rendszertelen / induló)"
+      },
+      "label": {
+        "ca": "Reducció LIRPF art. 32",
+        "en": "Art. 32 reduction (irregular / startup)",
+        "es": "Reducción LIRPF art. 32",
+        "hu": "32. cikk csökkentés (rendszertelen / induló)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0205",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0195 - 0200))",
+        "references_casillas": [
+          "0195",
+          "0200"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido E.D. normal. Se calcula como max(0, (0195 - 0200)).",
+        "en": "Net business income (reduced, E.D. normal). Computed as max(0, (0195 - 0200)).",
+        "es": "Rendimiento neto reducido E.D. normal. Se calcula como max(0, (0195 - 0200)).",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál). Számítás: max(0, (0195 - 0200))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido E.D. normal",
+        "en": "Net business income (reduced, E.D. normal)",
+        "es": "Rendimiento neto reducido E.D. normal",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, normál)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0195",
+        "0200"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_normal.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0210",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Ingresos de explotación E.D. simplificada",
+        "en": "Operating income (E.D. simplificada)",
+        "es": "Ingresos de explotación E.D. simplificada",
+        "hu": "Üzemi bevétel (E.D. egyszerűsített)"
+      },
+      "label": {
+        "ca": "Ingresos de explotación E.D. simplificada",
+        "en": "Operating income (E.D. simplificada)",
+        "es": "Ingresos de explotación E.D. simplificada",
+        "hu": "Üzemi bevétel (E.D. egyszerűsített)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0215",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Engloba gastos de personal, servicios exteriores, tributos, amortización per la tabla simplificada del Anexo de la Orden de 27/3/1998. Excluye los gastos de difícil justificación (computados aparte en 0225 al 5 %).",
+        "en": "Deductible general expenses (E.D. simplificada)",
+        "es": "Engloba gastos de personal, servicios exteriores, tributos, amortización per la tabla simplificada del Anexo de la Orden de 27/3/1998. Excluye los gastos de difícil justificación (computados aparte en 0225 al 5 %).",
+        "hu": "Általános levonható költségek (egyszerűsített)"
+      },
+      "label": {
+        "ca": "Gastos generales deducibles E.D. simplificada",
+        "en": "Deductible general expenses (E.D. simplificada)",
+        "es": "Gastos generales deducibles E.D. simplificada",
+        "hu": "Általános levonható költségek (egyszerűsített)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0220",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0210 - 0215))",
+        "references_casillas": [
+          "0210",
+          "0215"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto antes del 5 % difícil justificación. Se calcula como max(0, (0210 - 0215)).",
+        "en": "Net income before 5 % unjustified-expenses cap. Computed as max(0, (0210 - 0215)).",
+        "es": "Rendimiento neto antes del 5 % difícil justificación. Se calcula como max(0, (0210 - 0215)).",
+        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt. Számítás: max(0, (0210 - 0215))."
+      },
+      "label": {
+        "ca": "Rendimiento neto antes del 5 % difícil justificación",
+        "en": "Net income before 5 % unjustified-expenses cap",
+        "es": "Rendimiento neto antes del 5 % difícil justificación",
+        "hu": "Bruttó jövedelem 5 % nehezen igazolható költség előtt"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0210",
+        "0215"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_simplificada.rendimiento_neto_pre_cap"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0225",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "min((0.05 * 0220), 2000)",
+        "references_casillas": [
+          "0220"
+        ]
+      },
+      "help": {
+        "ca": "Gastos de difícil justificación (5 % límite 2.000 €). Se calcula como min((0.05 * 0220), 2000).",
+        "en": "Unjustified expenses (5 % capped at 2.000 €). Computed as min((0.05 * 0220), 2000).",
+        "es": "Gastos de difícil justificación (5 % límite 2.000 €). Se calcula como min((0.05 * 0220), 2000).",
+        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső). Számítás: min((0.05 * 0220), 2000)."
+      },
+      "label": {
+        "ca": "Gastos de difícil justificación (5 % límite 2.000 €)",
+        "en": "Unjustified expenses (5 % capped at 2.000 €)",
+        "es": "Gastos de difícil justificación (5 % límite 2.000 €)",
+        "hu": "Nehezen igazolható költségek (5 %, 2.000 € felső)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0220"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_simplificada.gastos_dificil_justificacion"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0230",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0220 - 0225))",
+        "references_casillas": [
+          "0220",
+          "0225"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto previo E.D. simplificada. Se calcula como max(0, (0220 - 0225)).",
+        "en": "Net business income before art. 32 reduction (simpl.). Computed as max(0, (0220 - 0225)).",
+        "es": "Rendimiento neto previo E.D. simplificada. Se calcula como max(0, (0220 - 0225)).",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített). Számítás: max(0, (0220 - 0225))."
+      },
+      "label": {
+        "ca": "Rendimiento neto previo E.D. simplificada",
+        "en": "Net business income before art. 32 reduction (simpl.)",
+        "es": "Rendimiento neto previo E.D. simplificada",
+        "hu": "Bruttó vállalkozási jövedelem 32. cikk előtt (egyszerűsített)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0220",
+        "0225"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_simplificada.rendimiento_neto_previo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0235",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Reducció LIRPF art. 32 — E.D. simplificada",
+        "en": "Art. 32 reduction (E.D. simplificada)",
+        "es": "Reducción LIRPF art. 32 — E.D. simplificada",
+        "hu": "32. cikk csökkentés (egyszerűsített)"
+      },
+      "label": {
+        "ca": "Reducció LIRPF art. 32 — E.D. simplificada",
+        "en": "Art. 32 reduction (E.D. simplificada)",
+        "es": "Reducción LIRPF art. 32 — E.D. simplificada",
+        "hu": "32. cikk csökkentés (egyszerűsített)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0240",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0230 - 0235))",
+        "references_casillas": [
+          "0230",
+          "0235"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido E.D. simplificada. Se calcula como max(0, (0230 - 0235)).",
+        "en": "Net business income (reduced, simpl.). Computed as max(0, (0230 - 0235)).",
+        "es": "Rendimiento neto reducido E.D. simplificada. Se calcula como max(0, (0230 - 0235)).",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített). Számítás: max(0, (0230 - 0235))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido E.D. simplificada",
+        "en": "Net business income (reduced, simpl.)",
+        "es": "Rendimiento neto reducido E.D. simplificada",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, egyszerűsített)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0230",
+        "0235"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_simplificada.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0250",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Caller-computed from the Orden HAC tabla anual: signos, índices y módulos por actividad. Para 2025 la Orden rectora es HAC/277/2026 (BOE-A-2026-7041); para 2026 es Orden HAC/1425/2025 (BOE-A-2025-25272).",
+        "en": "Net business income before reduction (módulos)",
+        "es": "Caller-computed from the Orden HAC tabla anual: signos, índices y módulos por actividad. Para 2025 la Orden rectora es HAC/277/2026 (BOE-A-2026-7041); para 2026 es Orden HAC/1425/2025 (BOE-A-2025-25272).",
+        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos)"
+      },
+      "label": {
+        "ca": "Rendimiento neto previo módulos",
+        "en": "Net business income before reduction (módulos)",
+        "es": "Rendimiento neto previo módulos",
+        "hu": "Bruttó vállalkozási jövedelem csökkentés előtt (módulos)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0255",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Reducció del 5 % o porcentaje específico vigente per Orden HAC del ejercicio (DA primera Orden HAC, en ocasiones reducciones extraordinarias por DANA, incendios, etc.).",
+        "en": "Modulus regime reduction",
+        "es": "Reducción del 5 % o porcentaje específico vigente per Orden HAC del ejercicio (DA primera Orden HAC, en ocasiones reducciones extraordinarias por DANA, incendios, etc.).",
+        "hu": "Modulus rendszer csökkentés"
+      },
+      "label": {
+        "ca": "Reducció rendimiento neto módulos",
+        "en": "Modulus regime reduction",
+        "es": "Reducción rendimiento neto módulos",
+        "hu": "Modulus rendszer csökkentés"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0260",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0250 - 0255))",
+        "references_casillas": [
+          "0250",
+          "0255"
+        ]
+      },
+      "help": {
+        "ca": "Rendimiento neto reducido módulos. Se calcula como max(0, (0250 - 0255)).",
+        "en": "Net business income (reduced, módulos). Computed as max(0, (0250 - 0255)).",
+        "es": "Rendimiento neto reducido módulos. Se calcula como max(0, (0250 - 0255)).",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos). Számítás: max(0, (0250 - 0255))."
+      },
+      "label": {
+        "ca": "Rendimiento neto reducido módulos",
+        "en": "Net business income (reduced, módulos)",
+        "es": "Rendimiento neto reducido módulos",
+        "hu": "Nettó vállalkozási jövedelem (csökkentett, módulos)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0250",
+        "0255"
+      ],
+      "references_rules": [
+        "modelo_100.2025.d_modulos.rendimiento_neto_reducido"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0306",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Ganancias patrimoniales brutas",
+        "en": "Gross capital gains (Anexo E)",
+        "es": "Ganancias patrimoniales brutas",
+        "hu": "Brutto vagyongyarapodas"
+      },
+      "label": {
+        "ca": "Ganancias patrimoniales brutas",
+        "en": "Gross capital gains (Anexo E)",
+        "es": "Ganancias patrimoniales brutas",
+        "hu": "Brutto vagyongyarapodas"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0307",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pérdidas patrimoniales brutas",
+        "en": "Gross capital losses (Anexo E)",
+        "es": "Pérdidas patrimoniales brutas",
+        "hu": "Brutto vagyonveszteseg"
+      },
+      "label": {
+        "ca": "Pérdidas patrimoniales brutas",
+        "en": "Gross capital losses (Anexo E)",
+        "es": "Pérdidas patrimoniales brutas",
+        "hu": "Brutto vagyonveszteseg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0399",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta).",
+        "en": "Net amount integrating into general base (held <= 1 yr)",
+        "es": "Caller-computed: net of ganancias - pérdidas con período de generación <= 1 año. Puede ser negativo (pérdida neta).",
+        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev)"
+      },
+      "label": {
+        "ca": "Saldo a integrar en base general (<= 1 año)",
+        "en": "Net amount integrating into general base (held <= 1 yr)",
+        "es": "Saldo a integrar en base general (<= 1 año)",
+        "hu": "Altalanos alapba szamitando egyenleg (<= 1 ev)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0400",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo.",
+        "en": "Net amount integrating into savings base (held > 1 yr)",
+        "es": "Caller-computed: net of ganancias - pérdidas con período de generación > 1 año. Puede ser negativo.",
+        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)"
+      },
+      "label": {
+        "ca": "Saldo a integrar en base ahorro (> 1 año)",
+        "en": "Net amount integrating into savings base (held > 1 yr)",
+        "es": "Saldo a integrar en base ahorro (> 1 año)",
+        "hu": "Megtakaritasi alapba szamitando egyenleg (> 1 ev)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0405",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(0306 - 0307)",
+        "references_casillas": [
+          "0306",
+          "0307"
+        ]
+      },
+      "help": {
+        "ca": "Saldo neto patrimonial total. Se calcula como (0306 - 0307).",
+        "en": "Total net capital gain/loss. Computed as (0306 - 0307).",
+        "es": "Saldo neto patrimonial total. Se calcula como (0306 - 0307).",
+        "hu": "Teljes netto vagyon vagy veszteseg. Számítás: (0306 - 0307)."
+      },
+      "label": {
+        "ca": "Saldo neto patrimonial total",
+        "en": "Total net capital gain/loss",
+        "es": "Saldo neto patrimonial total",
+        "hu": "Teljes netto vagyon vagy veszteseg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0306",
+        "0307"
+      ],
+      "references_rules": [
+        "modelo_100.2025.e.saldo_neto_patrimonial"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0445",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52).",
+        "en": "Pension-system contributions reduction (art. 51-52)",
+        "es": "Verificado por el llamador: límite general de 1.500 EUR + hasta 8.500 EUR adicionales vía contribuciones empresariales a sistemas de previsión social (LIRPF art. 52).",
+        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes"
+      },
+      "label": {
+        "ca": "Reducció por aportaciones a sistemas de previsión social",
+        "en": "Pension-system contributions reduction (art. 51-52)",
+        "es": "Reducción por aportaciones a sistemas de previsión social",
+        "hu": "Nyugdijrendszer-hozzajarulasi csokkentes"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0455",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Reducció por tributación conjunta",
+        "en": "Joint-filing reduction (art. 84)",
+        "es": "Reducción por tributación conjunta",
+        "hu": "Egyuttes ado-bevallasi csokkentes"
+      },
+      "label": {
+        "ca": "Reducció por tributación conjunta",
+        "en": "Joint-filing reduction (art. 84)",
+        "es": "Reducción por tributación conjunta",
+        "hu": "Egyuttes ado-bevallasi csokkentes"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0505",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Mínim del contribuyente",
+        "en": "Personal exemption (art. 57)",
+        "es": "Mínimo del contribuyente",
+        "hu": "Adoalany szemelyi minimum"
+      },
+      "label": {
+        "ca": "Mínim del contribuyente",
+        "en": "Personal exemption (art. 57)",
+        "es": "Mínimo del contribuyente",
+        "hu": "Adoalany szemelyi minimum"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0510",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Mínim por descendientes",
+        "en": "Dependents exemption (art. 58)",
+        "es": "Mínimo por descendientes",
+        "hu": "Leszarmazok szerinti minimum"
+      },
+      "label": {
+        "ca": "Mínim por descendientes",
+        "en": "Dependents exemption (art. 58)",
+        "es": "Mínimo por descendientes",
+        "hu": "Leszarmazok szerinti minimum"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0515",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Mínim por ascendientes",
+        "en": "Ascendants exemption (art. 59)",
+        "es": "Mínimo por ascendientes",
+        "hu": "Felmenok szerinti minimum"
+      },
+      "label": {
+        "ca": "Mínim por ascendientes",
+        "en": "Ascendants exemption (art. 59)",
+        "es": "Mínimo por ascendientes",
+        "hu": "Felmenok szerinti minimum"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0520",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Mínim por discapacidad",
+        "en": "Disability exemption (art. 60)",
+        "es": "Mínimo por discapacidad",
+        "hu": "Fogyatekossagi minimum"
+      },
+      "label": {
+        "ca": "Mínim por discapacidad",
+        "en": "Disability exemption (art. 60)",
+        "es": "Mínimo por discapacidad",
+        "hu": "Fogyatekossagi minimum"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0432",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399))",
+        "references_casillas": [
+          "0022",
+          "0107",
+          "0085",
+          "0205",
+          "0240",
+          "0260",
+          "0399"
+        ]
+      },
+      "help": {
+        "ca": "Base imposable general. Se calcula como (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)).",
+        "en": "General taxable base. Computed as (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)).",
+        "es": "Base imponible general. Se calcula como (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399)).",
+        "hu": "Altalanos adoalap. Számítás: (((0022 + 0107) + (0085 + 0205)) + ((0240 + 0260) + 0399))."
+      },
+      "label": {
+        "ca": "Base imposable general",
+        "en": "General taxable base",
+        "es": "Base imponible general",
+        "hu": "Altalanos adoalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0022",
+        "0107",
+        "0085",
+        "0205",
+        "0240",
+        "0260",
+        "0399"
+      ],
+      "references_rules": [
+        "modelo_100.2025.f.base_imponible_general"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0460",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(0049 + 0400)",
+        "references_casillas": [
+          "0049",
+          "0400"
+        ]
+      },
+      "help": {
+        "ca": "Base imposable del ahorro. Se calcula como (0049 + 0400).",
+        "en": "Savings taxable base. Computed as (0049 + 0400).",
+        "es": "Base imponible del ahorro. Se calcula como (0049 + 0400).",
+        "hu": "Megtakaritasi adoalap. Számítás: (0049 + 0400)."
+      },
+      "label": {
+        "ca": "Base imposable del ahorro",
+        "en": "Savings taxable base",
+        "es": "Base imponible del ahorro",
+        "hu": "Megtakaritasi adoalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0049",
+        "0400"
+      ],
+      "references_rules": [
+        "modelo_100.2025.f.base_imponible_ahorro"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0500",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0505 + 0510) + (0515 + 0520))",
+        "references_casillas": [
+          "0505",
+          "0510",
+          "0515",
+          "0520"
+        ]
+      },
+      "help": {
+        "ca": "Minimo personal y familiar total. Se calcula como ((0505 + 0510) + (0515 + 0520)).",
+        "en": "Personal + family exemption (total). Computed as ((0505 + 0510) + (0515 + 0520)).",
+        "es": "Minimo personal y familiar total. Se calcula como ((0505 + 0510) + (0515 + 0520)).",
+        "hu": "Szemelyi es csaladi minimum osszesen. Számítás: ((0505 + 0510) + (0515 + 0520))."
+      },
+      "label": {
+        "ca": "Minimo personal y familiar total",
+        "en": "Personal + family exemption (total)",
+        "es": "Minimo personal y familiar total",
+        "hu": "Szemelyi es csaladi minimum osszesen"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0505",
+        "0510",
+        "0515",
+        "0520"
+      ],
+      "references_rules": [
+        "modelo_100.2025.f.minimo_personal_familiar_total"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0545",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, ((0432 - 0445) - 0455))",
+        "references_casillas": [
+          "0432",
+          "0445",
+          "0455"
+        ]
+      },
+      "help": {
+        "ca": "Base liquidable general. Se calcula como max(0, ((0432 - 0445) - 0455)).",
+        "en": "General liquidable base. Computed as max(0, ((0432 - 0445) - 0455)).",
+        "es": "Base liquidable general. Se calcula como max(0, ((0432 - 0445) - 0455)).",
+        "hu": "Altalanos likvidalt adoalap. Számítás: max(0, ((0432 - 0445) - 0455))."
+      },
+      "label": {
+        "ca": "Base liquidable general",
+        "en": "General liquidable base",
+        "es": "Base liquidable general",
+        "hu": "Altalanos likvidalt adoalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0432",
+        "0445",
+        "0455"
+      ],
+      "references_rules": [
+        "modelo_100.2025.f.base_liquidable_general"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0555",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "0460",
+        "references_casillas": [
+          "0460"
+        ]
+      },
+      "help": {
+        "ca": "Base liquidable del ahorro. Se calcula como 0460.",
+        "en": "Savings liquidable base. Computed as 0460.",
+        "es": "Base liquidable del ahorro. Se calcula como 0460.",
+        "hu": "Megtakaritasi likvidalt adoalap. Számítás: 0460."
+      },
+      "label": {
+        "ca": "Base liquidable del ahorro",
+        "en": "Savings liquidable base",
+        "es": "Base liquidable del ahorro",
+        "hu": "Megtakaritasi likvidalt adoalap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0460"
+      ],
+      "references_rules": [
+        "modelo_100.2025.f.base_liquidable_ahorro"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0540",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000))))",
+        "references_casillas": [
+          "0545"
+        ]
+      },
+      "help": {
+        "ca": "Quota tarifa estatal general sobre base liquidable. Se calcula como ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))).",
+        "en": "State general tarifa applied to BLG. Computed as ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))).",
+        "es": "Cuota tarifa estatal general sobre base liquidable. Se calcula como ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000)))).",
+        "hu": "Allami altalanos tarifa BLG-re alkalmazva. Számítás: ((0.095 * (max(0, 0545) - max(0, (0545 - 12450)))) + (0.12 * (max(0, (0545 - 12450)) - max(0, (0545 - 20200)))) + (0.15 * (max(0, (0545 - 20200)) - max(0, (0545 - 35200)))) + (0.185 * (max(0, (0545 - 35200)) - max(0, (0545 - 60000)))) + (0.225 * (max(0, (0545 - 60000)) - max(0, (0545 - 300000)))) + (0.245 * max(0, (0545 - 300000))))."
+      },
+      "label": {
+        "ca": "Quota tarifa estatal general sobre base liquidable",
+        "en": "State general tarifa applied to BLG",
+        "es": "Cuota tarifa estatal general sobre base liquidable",
+        "hu": "Allami altalanos tarifa BLG-re alkalmazva"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0545"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_tarifa_estatal_blg"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0542",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000))))",
+        "references_casillas": [
+          "0500",
+          "0545"
+        ]
+      },
+      "help": {
+        "ca": "Quota tarifa estatal sobre mínimo personal y familiar. Se calcula como ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))).",
+        "en": "State general tarifa applied to mínimo (capped at BLG). Computed as ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))).",
+        "es": "Cuota tarifa estatal sobre mínimo personal y familiar. Se calcula como ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000)))).",
+        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva). Számítás: ((0.095 * (max(0, min(0500, 0545)) - max(0, (min(0500, 0545) - 12450)))) + (0.12 * (max(0, (min(0500, 0545) - 12450)) - max(0, (min(0500, 0545) - 20200)))) + (0.15 * (max(0, (min(0500, 0545) - 20200)) - max(0, (min(0500, 0545) - 35200)))) + (0.185 * (max(0, (min(0500, 0545) - 35200)) - max(0, (min(0500, 0545) - 60000)))) + (0.225 * (max(0, (min(0500, 0545) - 60000)) - max(0, (min(0500, 0545) - 300000)))) + (0.245 * max(0, (min(0500, 0545) - 300000))))."
+      },
+      "label": {
+        "ca": "Quota tarifa estatal sobre mínimo personal y familiar",
+        "en": "State general tarifa applied to mínimo (capped at BLG)",
+        "es": "Cuota tarifa estatal sobre mínimo personal y familiar",
+        "hu": "Allami altalanos tarifa szemelyi minimumra (BLG-re korlatozva)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0500",
+        "0545"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_tarifa_estatal_minimo"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0550",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, (0540 - 0542))",
+        "references_casillas": [
+          "0540",
+          "0542"
+        ]
+      },
+      "help": {
+        "ca": "Quota íntegra estatal general. Se calcula como max(0, (0540 - 0542)).",
+        "en": "State general gross tax. Computed as max(0, (0540 - 0542)).",
+        "es": "Cuota íntegra estatal general. Se calcula como max(0, (0540 - 0542)).",
+        "hu": "Allami altalanos brutto ado. Számítás: max(0, (0540 - 0542))."
+      },
+      "label": {
+        "ca": "Quota íntegra estatal general",
+        "en": "State general gross tax",
+        "es": "Cuota íntegra estatal general",
+        "hu": "Allami altalanos brutto ado"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0540",
+        "0542"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_integra_estatal_general"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0551",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Quota íntegra autonómica general",
+        "en": "Autonomic general gross tax (per-CCAA caller input)",
+        "es": "Cuota íntegra autonómica general",
+        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)"
+      },
+      "label": {
+        "ca": "Quota íntegra autonómica general",
+        "en": "Autonomic general gross tax (per-CCAA caller input)",
+        "es": "Cuota íntegra autonómica general",
+        "hu": "Autonom altalanos brutto ado (CCAA-fuggo, hivo szolgaltatja)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0560",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000))))",
+        "references_casillas": [
+          "0555"
+        ]
+      },
+      "help": {
+        "ca": "Quota íntegra estatal del ahorro. Se calcula como ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))).",
+        "en": "State savings gross tax. Computed as ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))).",
+        "es": "Cuota íntegra estatal del ahorro. Se calcula como ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000)))).",
+        "hu": "Allami megtakaritasi brutto ado. Számítás: ((0.095 * (max(0, 0555) - max(0, (0555 - 6000)))) + (0.105 * (max(0, (0555 - 6000)) - max(0, (0555 - 50000)))) + (0.115 * (max(0, (0555 - 50000)) - max(0, (0555 - 200000)))) + (0.135 * (max(0, (0555 - 200000)) - max(0, (0555 - 300000)))) + (0.15 * max(0, (0555 - 300000))))."
+      },
+      "label": {
+        "ca": "Quota íntegra estatal del ahorro",
+        "en": "State savings gross tax",
+        "es": "Cuota íntegra estatal del ahorro",
+        "hu": "Allami megtakaritasi brutto ado"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0555"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_integra_estatal_ahorro"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0561",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Quota íntegra autonómica del ahorro",
+        "en": "Autonomic savings gross tax (per-CCAA caller input)",
+        "es": "Cuota íntegra autonómica del ahorro",
+        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)"
+      },
+      "label": {
+        "ca": "Quota íntegra autonómica del ahorro",
+        "en": "Autonomic savings gross tax (per-CCAA caller input)",
+        "es": "Cuota íntegra autonómica del ahorro",
+        "hu": "Autonom megtakaritasi brutto ado (CCAA-fuggo)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0595",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0550 + 0551) + (0560 + 0561))",
+        "references_casillas": [
+          "0550",
+          "0551",
+          "0560",
+          "0561"
+        ]
+      },
+      "help": {
+        "ca": "Quota íntegra total (estatal + autonómica). Se calcula como ((0550 + 0551) + (0560 + 0561)).",
+        "en": "Total gross tax (state + autonomic). Computed as ((0550 + 0551) + (0560 + 0561)).",
+        "es": "Cuota íntegra total (estatal + autonómica). Se calcula como ((0550 + 0551) + (0560 + 0561)).",
+        "hu": "Teljes brutto ado (allami + autonom). Számítás: ((0550 + 0551) + (0560 + 0561))."
+      },
+      "label": {
+        "ca": "Quota íntegra total (estatal + autonómica)",
+        "en": "Total gross tax (state + autonomic)",
+        "es": "Cuota íntegra total (estatal + autonómica)",
+        "hu": "Teljes brutto ado (allami + autonom)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0550",
+        "0551",
+        "0560",
+        "0561"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_integra_total"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0612",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total.",
+        "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4)",
+        "es": "Calculado por el consumidor: 60 % sobre la cuota íntegra proporcional a las rentas obtenidas en Ceuta o Melilla (tras Ley 6/2018). Tope: la deducción no puede exceder del 60 % de la cuota íntegra total.",
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonas"
+      },
+      "label": {
+        "ca": "Deducció 60 % rentas Ceuta / Melilla",
+        "en": "60 % deduction for Ceuta/Melilla income (LIRPF art. 68.4)",
+        "es": "Deducción 60 % rentas Ceuta / Melilla",
+        "hu": "Ceuta/Melilla bevetel 60 %-os levonas"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0620",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Deducciones estatales total",
+        "en": "Total state deductions (donativos / vivienda / etc.)",
+        "es": "Deducciones estatales total",
+        "hu": "Allami levonasok osszesen"
+      },
+      "label": {
+        "ca": "Deducciones estatales total",
+        "en": "Total state deductions (donativos / vivienda / etc.)",
+        "es": "Deducciones estatales total",
+        "hu": "Allami levonasok osszesen"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0630",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(0620 + 0622)",
+        "references_casillas": [
+          "0620",
+          "0622"
+        ]
+      },
+      "help": {
+        "ca": "Total deducciones (estatales + autonómicas). Se calcula como (0620 + 0622).",
+        "en": "Total deductions (state + autonomic). Computed as (0620 + 0622).",
+        "es": "Total deducciones (estatales + autonómicas). Se calcula como (0620 + 0622).",
+        "hu": "Teljes levonasok. Számítás: (0620 + 0622)."
+      },
+      "label": {
+        "ca": "Total deducciones (estatales + autonómicas)",
+        "en": "Total deductions (state + autonomic)",
+        "es": "Total deducciones (estatales + autonómicas)",
+        "hu": "Teljes levonasok"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0620",
+        "0622"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.total_deducciones"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0698",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "max(0, ((0595 - 0630) - 0612))",
+        "references_casillas": [
+          "0595",
+          "0630",
+          "0612"
+        ]
+      },
+      "help": {
+        "ca": "Quota líquida total. Se calcula como max(0, ((0595 - 0630) - 0612)).",
+        "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla). Computed as max(0, ((0595 - 0630) - 0612)).",
+        "es": "Cuota líquida total. Se calcula como max(0, ((0595 - 0630) - 0612)).",
+        "hu": "Teljes netto ado. Számítás: max(0, ((0595 - 0630) - 0612))."
+      },
+      "label": {
+        "ca": "Quota líquida total",
+        "en": "Total net tax (cuota íntegra - deducciones - Ceuta/Melilla)",
+        "es": "Cuota líquida total",
+        "hu": "Teljes netto ado"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0595",
+        "0630",
+        "0612"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_liquida_total"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "0699",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings and prepayments (LIRPF arts. 99-101)",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonasok es eloleg befizetesek"
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings and prepayments (LIRPF arts. 99-101)",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonasok es eloleg befizetesek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0700",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Pagos fraccionados (Modelos 130 / 131)",
+        "en": "Fractional payments (Models 130 / 131)",
+        "es": "Pagos fraccionados (Modelos 130 / 131)",
+        "hu": "Reszletfizetesek (130 / 131 modell)"
+      },
+      "label": {
+        "ca": "Pagos fraccionados (Modelos 130 / 131)",
+        "en": "Fractional payments (Models 130 / 131)",
+        "es": "Pagos fraccionados (Modelos 130 / 131)",
+        "hu": "Reszletfizetesek (130 / 131 modell)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0720",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "((0698 - 0699) - 0700)",
+        "references_casillas": [
+          "0698",
+          "0699",
+          "0700"
+        ]
+      },
+      "help": {
+        "ca": "Quota diferencial / resultado de la autoliquidación. Se calcula como ((0698 - 0699) - 0700).",
+        "en": "Differential cuota / autoliquidation result (art. 79). Computed as ((0698 - 0699) - 0700).",
+        "es": "Cuota diferencial / resultado de la autoliquidación. Se calcula como ((0698 - 0699) - 0700).",
+        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk). Számítás: ((0698 - 0699) - 0700)."
+      },
+      "label": {
+        "ca": "Quota diferencial / resultado de la autoliquidación",
+        "en": "Differential cuota / autoliquidation result (art. 79)",
+        "es": "Cuota diferencial / resultado de la autoliquidación",
+        "hu": "Onbevallas eredmenye / kulonbozeti ado (79. cikk)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "0698",
+        "0699",
+        "0700"
+      ],
+      "references_rules": [
+        "modelo_100.2025.g.cuota_diferencial"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "1101",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Andalusia",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Andalucía en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Andaluzia"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Andalucía",
+        "en": "Total autonomic deductions — Andalusia",
+        "es": "Total deducciones autonómicas — Andalucía",
+        "hu": "Autonom levonasok osszesen — Andaluzia"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1102",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Aragon",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Aragón en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Aragonia"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Aragón",
+        "en": "Total autonomic deductions — Aragon",
+        "es": "Total deducciones autonómicas — Aragón",
+        "hu": "Autonom levonasok osszesen — Aragonia"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1103",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Asturias",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Principado de Asturias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Asztur Hercegseg"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Principado de Asturias",
+        "en": "Total autonomic deductions — Asturias",
+        "es": "Total deducciones autonómicas — Principado de Asturias",
+        "hu": "Autonom levonasok osszesen — Asztur Hercegseg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1104",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Balearic Islands",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Illes Balears en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Baleari-szigetek"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Illes Balears",
+        "en": "Total autonomic deductions — Balearic Islands",
+        "es": "Total deducciones autonómicas — Illes Balears",
+        "hu": "Autonom levonasok osszesen — Baleari-szigetek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1105",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Canary Islands",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Canarias en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Kanari-szigetek"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Canarias",
+        "en": "Total autonomic deductions — Canary Islands",
+        "es": "Total deducciones autonómicas — Canarias",
+        "hu": "Autonom levonasok osszesen — Kanari-szigetek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1106",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Cantabria",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cantabria en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Kantabria"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Cantabria",
+        "en": "Total autonomic deductions — Cantabria",
+        "es": "Total deducciones autonómicas — Cantabria",
+        "hu": "Autonom levonasok osszesen — Kantabria"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1107",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Castile-La Mancha",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla-La Mancha en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Castilla-La Mancha",
+        "en": "Total autonomic deductions — Castile-La Mancha",
+        "es": "Total deducciones autonómicas — Castilla-La Mancha",
+        "hu": "Autonom levonasok osszesen — Kasztilia-La Mancha"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1108",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Castile and Leon",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Castilla y León en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Kasztilia es Leon"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Castilla y León",
+        "en": "Total autonomic deductions — Castile and Leon",
+        "es": "Total deducciones autonómicas — Castilla y León",
+        "hu": "Autonom levonasok osszesen — Kasztilia es Leon"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1109",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Catalonia",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Cataluña en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Katalonia"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Cataluña",
+        "en": "Total autonomic deductions — Catalonia",
+        "es": "Total deducciones autonómicas — Cataluña",
+        "hu": "Autonom levonasok osszesen — Katalonia"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1110",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Valencian Community",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunitat Valenciana en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Valenciai kozosseg"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Comunitat Valenciana",
+        "en": "Total autonomic deductions — Valencian Community",
+        "es": "Total deducciones autonómicas — Comunitat Valenciana",
+        "hu": "Autonom levonasok osszesen — Valenciai kozosseg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1111",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Extremadura",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Extremadura en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Extremadura"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Extremadura",
+        "en": "Total autonomic deductions — Extremadura",
+        "es": "Total deducciones autonómicas — Extremadura",
+        "hu": "Autonom levonasok osszesen — Extremadura"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1112",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Galicia",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Galicia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Galicia"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Galicia",
+        "en": "Total autonomic deductions — Galicia",
+        "es": "Total deducciones autonómicas — Galicia",
+        "hu": "Autonom levonasok osszesen — Galicia"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1113",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Madrid Community",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Comunidad de Madrid en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Madridi kozosseg"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Comunidad de Madrid",
+        "en": "Total autonomic deductions — Madrid Community",
+        "es": "Total deducciones autonómicas — Comunidad de Madrid",
+        "hu": "Autonom levonasok osszesen — Madridi kozosseg"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1114",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — Murcia Region",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para Región de Murcia en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — Murcia regio"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — Región de Murcia",
+        "en": "Total autonomic deductions — Murcia Region",
+        "es": "Total deducciones autonómicas — Región de Murcia",
+        "hu": "Autonom levonasok osszesen — Murcia regio"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "1115",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "en": "Total autonomic deductions — La Rioja",
+        "es": "Sumatorio agregado por el consumidor de las deducciones autonómicas vigentes para La Rioja en el ejercicio. Solo una de las 15 casillas (1101-1115) debería ser distinta de cero por declaración, correspondiente a la CCAA de residencia habitual del contribuyente. Las restantes permanecen en 0,00.",
+        "hu": "Autonom levonasok osszesen — La Rioja"
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas — La Rioja",
+        "en": "Total autonomic deductions — La Rioja",
+        "es": "Total deducciones autonómicas — La Rioja",
+        "hu": "Autonom levonasok osszesen — La Rioja"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "0622",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115)",
+        "references_casillas": [
+          "1101",
+          "1102",
+          "1103",
+          "1104",
+          "1105",
+          "1106",
+          "1107",
+          "1108",
+          "1109",
+          "1110",
+          "1111",
+          "1112",
+          "1113",
+          "1114",
+          "1115"
+        ]
+      },
+      "help": {
+        "ca": "Total deducciones autonómicas (suma per-CCAA). Se calcula como (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115).",
+        "en": "Total autonomic deductions (sum across 15 CCAAs). Computed as (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115).",
+        "es": "Total deducciones autonómicas (suma per-CCAA). Se calcula como (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115).",
+        "hu": "Osszes autonom levonas (15 CCAA osszege). Számítás: (1101 + 1102 + 1103 + 1104 + 1105 + 1106 + 1107 + 1108 + 1109 + 1110 + 1111 + 1112 + 1113 + 1114 + 1115)."
+      },
+      "label": {
+        "ca": "Total deducciones autonómicas (suma per-CCAA)",
+        "en": "Total autonomic deductions (sum across 15 CCAAs)",
+        "es": "Total deducciones autonómicas (suma per-CCAA)",
+        "hu": "Osszes autonom levonas (15 CCAA osszege)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_100",
+      "period": "2023",
+      "references_casillas": [
+        "1101",
+        "1102",
+        "1103",
+        "1104",
+        "1105",
+        "1106",
+        "1107",
+        "1108",
+        "1109",
+        "1110",
+        "1111",
+        "1112",
+        "1113",
+        "1114",
+        "1115"
+      ],
+      "references_rules": [
+        "modelo_100.2025.n.total_deducciones_autonomicas"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2023.html",
+      "source_page": 1,
+      "source_section": "Cuota a ingresar / devolver",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

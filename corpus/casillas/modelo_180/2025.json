@@ -1,0 +1,154 @@
+{
+  "modelo": "MODELO_180",
+  "period": "2025",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total perceptores",
+        "en": "Total recipients",
+        "es": "Total perceptores",
+        "hu": "Összes bérbeadó"
+      },
+      "label": {
+        "ca": "Total perceptores",
+        "en": "Total recipients",
+        "es": "Total perceptores",
+        "hu": "Összes bérbeadó"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_180",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resumen anual — Bases",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total base retencion",
+        "en": "Total withholding base",
+        "es": "Total base retencion",
+        "hu": "Teljes levonási alap"
+      },
+      "label": {
+        "ca": "Total base retencion",
+        "en": "Total withholding base",
+        "es": "Total base retencion",
+        "hu": "Teljes levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_180",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resumen anual — Bases",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(irpf.arrendamientos_rate * 02)",
+        "references_casillas": [
+          "02"
+        ]
+      },
+      "help": {
+        "ca": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02).",
+        "en": "Total withholdings. Computed as (irpf.arrendamientos_rate * 02).",
+        "es": "Total retenciones. Se calcula como (irpf.arrendamientos_rate * 02).",
+        "hu": "Teljes levonás. Számítás: (irpf.arrendamientos_rate * 02)."
+      },
+      "label": {
+        "ca": "Total retenciones",
+        "en": "Total withholdings",
+        "es": "Total retenciones",
+        "hu": "Teljes levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_180",
+      "period": "2025",
+      "references_casillas": [
+        "02"
+      ],
+      "references_rules": [
+        "modelo_180.2025.total_retenciones"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resumen anual — Retenciones e ingresos a cuenta",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "RIRPF art. 100.1: total retenciones = 19% de la base de retención (modelo 180 anual).",
+          "rule": "equals_19_percent_of",
+          "value": "02"
+        }
+      ]
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total ingresos a cuenta por retribuciones en especie",
+        "en": "In-kind payments on account",
+        "es": "Total ingresos a cuenta por retribuciones en especie",
+        "hu": "Természetbeni előlegek"
+      },
+      "label": {
+        "ca": "Total ingresos a cuenta por retribuciones en especie",
+        "en": "In-kind payments on account",
+        "es": "Total ingresos a cuenta por retribuciones en especie",
+        "hu": "Természetbeni előlegek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_180",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Resumen anual — Retenciones e ingresos a cuenta",
+      "synthetic": false,
+      "validation": []
+    }
+  ]
+}

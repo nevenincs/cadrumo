@@ -1,0 +1,134 @@
+{
+  "modelo": "MODELO_349",
+  "period": "2025Q3",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
+        "en": "Number of intra-Community operators declared in the period (supplies and/or acquisitions, Spanish VAT Act arts. 25-26).",
+        "es": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
+        "hu": "A bejelentett közösségi szereplők száma az időszakban (LIVA 25-26. cikk)."
+      },
+      "label": {
+        "ca": "N.º total operadores intracomunitarios",
+        "en": "Intra-Community operators",
+        "es": "N.º total operadores intracomunitarios",
+        "hu": "Közösségi gazdasági szereplők"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_349",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+      "source_page": 1,
+      "source_section": "Resumen",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Import total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
+        "en": "Total amount of intra-Community operations declared (supplies + acquisitions + services).",
+        "es": "Importe total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
+        "hu": "A közösségi ügyletek teljes összege."
+      },
+      "label": {
+        "ca": "Import total operaciones",
+        "en": "Total operation amount",
+        "es": "Importe total operaciones",
+        "hu": "Ügyletek teljes összege"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_349",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+      "source_page": 1,
+      "source_section": "Resumen",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores.",
+        "en": "Operators whose operations are rectifying earlier periods.",
+        "es": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores.",
+        "hu": "Korábbi időszakok helyesbítésében érintett szereplők száma."
+      },
+      "label": {
+        "ca": "N.º operadores con rectificaciones",
+        "en": "Operators with rectifications",
+        "es": "N.º operadores con rectificaciones",
+        "hu": "Helyesbítéssel érintett szereplők"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_349",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+      "source_page": 1,
+      "source_section": "Resumen — Rectificaciones",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Import total de las rectificaciones declaradas en el período (signo positivo = aumento).",
+        "en": "Total amount of rectifications declared in the period (positive sign = increase).",
+        "es": "Importe total de las rectificaciones declaradas en el período (signo positivo = aumento).",
+        "hu": "Az időszakban bejelentett helyesbítések teljes összege (pozitív jel = növekedés)."
+      },
+      "label": {
+        "ca": "Import rectificaciones",
+        "en": "Rectifications amount",
+        "es": "Importe rectificaciones",
+        "hu": "Helyesbítések összege"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_349",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
+      "source_page": 1,
+      "source_section": "Resumen — Rectificaciones",
+      "synthetic": false,
+      "validation": []
+    }
+  ]
+}

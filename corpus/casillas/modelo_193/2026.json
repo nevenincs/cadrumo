@@ -1,0 +1,102 @@
+{
+  "modelo": "MODELO_193",
+  "period": "2026",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25).",
+        "en": "Annual cumulative number of recipients of investment income subject to withholding (LIRPF art. 25).",
+        "es": "Total acumulado anual de perceptores de rendimientos del capital mobiliario sujetos a retención (LIRPF art. 25).",
+        "hu": "Tőkejövedelemben részesülők éves száma."
+      },
+      "label": {
+        "ca": "N.º total perceptores",
+        "en": "Total recipients",
+        "es": "N.º total perceptores",
+        "hu": "Összes kedvezményezett"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_193",
+      "period": "2026",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396",
+      "source_page": 1,
+      "source_section": "Resumen anual",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario.",
+        "en": "Annual sum of bases subject to withholding on investment income.",
+        "es": "Suma anual de las bases sujetas a retención sobre rendimientos del capital mobiliario.",
+        "hu": "A tőkejövedelmek éves levonási alapjának összege."
+      },
+      "label": {
+        "ca": "Base retenciones",
+        "en": "Withholding base",
+        "es": "Base retenciones",
+        "hu": "Levonási alap"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_193",
+      "period": "2026",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396",
+      "source_page": 1,
+      "source_section": "Resumen anual",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4).",
+        "en": "Annual sum of withholdings and payments on account at the 19% rate (LIRPF art. 101.4).",
+        "es": "Suma anual de las retenciones e ingresos a cuenta practicadas al tipo del 19% (LIRPF art. 101.4).",
+        "hu": "A tőkejövedelmekre alkalmazott 19%-os éves levonás összege."
+      },
+      "label": {
+        "ca": "Retenciones e ingresos a cuenta",
+        "en": "Withholdings and payments on account",
+        "es": "Retenciones e ingresos a cuenta",
+        "hu": "Levonások és előlegek"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_193",
+      "period": "2026",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396",
+      "source_page": 1,
+      "source_section": "Resumen anual",
+      "synthetic": false,
+      "validation": []
+    }
+  ]
+}
