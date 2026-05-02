@@ -1054,12 +1054,31 @@ def _legal_hint(legal_basis: tuple) -> str:
     return " (Base legal: " + "; ".join(parts) + ".)"
 
 
+_CROSS_MODELO = {
+    "180": ("M115", "Resumen anual que consolida los datos trimestrales del modelo 115."),
+    "190": ("M111", "Resumen anual que consolida los datos trimestrales del modelo 111."),
+    "193": ("M123", "Resumen anual que consolida los datos trimestrales del modelo 123."),
+    "390": ("M303", "Resumen anual que consolida los datos trimestrales del modelo 303."),
+    "100": ("M130/M131", "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos 130 y 131."),
+    "200": ("M202", "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202."),
+}
+
+
+def _cross_modelo_hint(modelo: str) -> str:
+    """Return a short Spanish note pointing at the upstream modelo, if any."""
+    if modelo not in _CROSS_MODELO:
+        return ""
+    _, note = _CROSS_MODELO[modelo]
+    return f" {note}"
+
+
 def _help_from_label(
     label: dict[str, str],
     notes_es: str | None,
     *,
     formula_expression: str | None = None,
     legal_hint: str = "",
+    cross_modelo_hint: str = "",
 ) -> dict[str, str]:
     """Return a trilingual help body distinct from the label.
 
@@ -1078,27 +1097,50 @@ def _help_from_label(
     legal_es = legal_hint
     legal_en = legal_hint.replace("Base legal:", "Legal basis:") if legal_hint else ""
     legal_hu = legal_hint.replace("Base legal:", "Jogalap:") if legal_hint else ""
+    cross_es = cross_modelo_hint
+    cross_en = cross_modelo_hint.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Annual summary that consolidates the quarterly data of form",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Annual IRPF declaration; consolidates the fractional payments of forms",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
+    )
+    cross_hu = cross_modelo_hint.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
+    )
     if notes_es:
         return {
-            "es": notes_es + suffix_es + legal_es,
+            "es": notes_es + suffix_es + cross_es + legal_es,
             "en": label.get("en", label["es"])
             + (f" Computed as {formula_expression}." if formula_expression else "")
+            + cross_en
             + legal_en,
             "hu": label.get("hu", label["es"])
             + (f" Számítás: {formula_expression}." if formula_expression else "")
+            + cross_hu
             + legal_hu,
         }
     if formula_expression:
         return {
-            "es": f"{label['es']}. Se calcula como {formula_expression}.{legal_es}",
-            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{legal_en}",
-            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{legal_hu}",
+            "es": f"{label['es']}. Se calcula como {formula_expression}.{cross_es}{legal_es}",
+            "en": f"{label.get('en', label['es'])}. Computed as {formula_expression}.{cross_en}{legal_en}",
+            "hu": f"{label.get('hu', label['es'])}. Számítás: {formula_expression}.{cross_hu}{legal_hu}",
         }
-    if legal_hint:
+    if legal_hint or cross_modelo_hint:
         return {
-            "es": label["es"] + legal_es,
-            "en": label.get("en", label["es"]) + legal_en,
-            "hu": label.get("hu", label["es"]) + legal_hu,
+            "es": label["es"] + cross_es + legal_es,
+            "en": label.get("en", label["es"]) + cross_en + legal_en,
+            "hu": label.get("hu", label["es"]) + cross_hu + legal_hu,
         }
     return {
         "es": label["es"],
@@ -1409,6 +1451,7 @@ def _record_from_ruleset_casilla(
         cdef.notes_es,
         formula_expression=formula_expression,
         legal_hint=legal_hint,
+        cross_modelo_hint=_cross_modelo_hint(modelo),
     )
 
     formula_obj = (
@@ -1521,13 +1564,38 @@ def _record_from_manual(
         if c.formula_expression
         else None
     )
+    cross = _cross_modelo_hint(modelo)
+    cross_en = cross.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Annual summary that consolidates the quarterly data of form",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Annual IRPF declaration; consolidates the fractional payments of forms",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Annual Corporate Income Tax declaration; consolidates the fractional payments of form",
+    )
+    cross_hu = cross.replace(
+        "Resumen anual que consolida los datos trimestrales del modelo",
+        "Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja:",
+    ).replace(
+        "Declaración anual del IRPF; recoge los pagos fraccionados de los modelos",
+        "Éves IRPF-bevallás; az alábbi modellek részletfizetéseit foglalja össze:",
+    ).replace(
+        "Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo",
+        "Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze:",
+    )
     return CasillaRecord(
         synthetic=False,
         modelo=f"MODELO_{modelo}",
         period=period,
         casilla_id=c.casilla_id,
         label={"es": c.label_es, "en": c.label_en, "hu": c.label_hu},
-        help={"es": c.help_es, "en": c.help_en, "hu": c.help_hu},
+        help={
+            "es": c.help_es + cross,
+            "en": c.help_en + cross_en,
+            "hu": c.help_hu + cross_hu,
+        },
         data_type=c.data_type,
         select_options=c.select_options,
         required=False,

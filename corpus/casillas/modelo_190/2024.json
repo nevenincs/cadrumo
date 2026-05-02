@@ -10,9 +10,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual cumulative number of recipients of work income (LIRPF art. 17).",
-        "es": "Total acumulado anual de perceptores con rendimientos del trabajo (LIRPF art. 17).",
-        "hu": "Munkajövedelem-kedvezményezettek éves száma (LIRPF 17. cikk)."
+        "en": "Annual cumulative number of recipients of work income (LIRPF art. 17). Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total acumulado anual de perceptores con rendimientos del trabajo (LIRPF art. 17). Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Munkajövedelem-kedvezményezettek éves száma (LIRPF 17. cikk). Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — work income",
@@ -40,9 +40,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of gross perceptions paid as work income.",
-        "es": "Suma anual de las percepciones íntegras satisfechas por rendimientos del trabajo.",
-        "hu": "A munkajövedelemként kifizetett bruttó jövedelmek éves összege."
+        "en": "Annual sum of gross perceptions paid as work income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las percepciones íntegras satisfechas por rendimientos del trabajo. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A munkajövedelemként kifizetett bruttó jövedelmek éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Perceptions amount — work income",
@@ -70,9 +70,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings and payments on account on work income.",
-        "es": "Suma anual de las retenciones e ingresos a cuenta practicados sobre rendimientos del trabajo.",
-        "hu": "Munkajövedelem után visszatartott és befizetett összegek éves összege."
+        "en": "Annual sum of withholdings and payments on account on work income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las retenciones e ingresos a cuenta practicados sobre rendimientos del trabajo. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Munkajövedelem után visszatartott és befizetett összegek éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Withholdings — work income",
@@ -100,9 +100,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual cumulative number of recipients of business income.",
-        "es": "Total acumulado anual de perceptores con rendimientos de actividades económicas.",
-        "hu": "Vállalkozói jövedelemben részesülő személyek éves száma."
+        "en": "Annual cumulative number of recipients of business income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total acumulado anual de perceptores con rendimientos de actividades económicas. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Vállalkozói jövedelemben részesülő személyek éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — business income",
@@ -130,9 +130,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of gross perceptions paid as business income.",
-        "es": "Suma anual de las percepciones íntegras satisfechas por actividades económicas.",
-        "hu": "Vállalkozási jövedelem éves bruttó összege."
+        "en": "Annual sum of gross perceptions paid as business income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las percepciones íntegras satisfechas por actividades económicas. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Vállalkozási jövedelem éves bruttó összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Perceptions amount — business income",
@@ -160,9 +160,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings on professionals and business activities (15% / 7%).",
-        "es": "Suma anual de las retenciones practicadas a profesionales y actividades económicas (15%/7%).",
-        "hu": "Szakemberek és vállalkozók után visszatartott összegek éves összege (15% / 7%)."
+        "en": "Annual sum of withholdings on professionals and business activities (15% / 7%). Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las retenciones practicadas a profesionales y actividades económicas (15%/7%). Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Szakemberek és vállalkozók után visszatartott összegek éves összege (15% / 7%). Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Withholdings — business income",
@@ -190,9 +190,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual number of recipients of prizes subject to withholding (LIRPF art. 101.7).",
-        "es": "Total anual de perceptores de premios sujetos a retención (LIRPF art. 101.7).",
-        "hu": "A levonás alá eső nyereményekben részesülők éves száma."
+        "en": "Annual number of recipients of prizes subject to withholding (LIRPF art. 101.7). Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total anual de perceptores de premios sujetos a retención (LIRPF art. 101.7). Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A levonás alá eső nyereményekben részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — prizes",
@@ -220,9 +220,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of taxable prizes paid.",
-        "es": "Suma anual de los premios satisfechos sometidos a retención.",
-        "hu": "A levonás alá eső nyeremények éves összege."
+        "en": "Annual sum of taxable prizes paid. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de los premios satisfechos sometidos a retención. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A levonás alá eső nyeremények éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Perceptions amount — prizes",
@@ -250,9 +250,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings on prizes at the fixed 19% rate.",
-        "es": "Suma anual de las retenciones practicadas sobre premios al tipo fijo del 19%.",
-        "hu": "A nyeremények után 19%-os fix kulccsal levont összegek éves összege."
+        "en": "Annual sum of withholdings on prizes at the fixed 19% rate. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las retenciones practicadas sobre premios al tipo fijo del 19%. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A nyeremények után 19%-os fix kulccsal levont összegek éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Withholdings — prizes",
@@ -280,9 +280,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual number of recipients of forestry-derived capital gains on public lands.",
-        "es": "Total anual de perceptores de ganancias derivadas de aprovechamientos forestales en montes públicos.",
-        "hu": "Az állami erdőkben elért vagyonnyereségben részesülők éves száma."
+        "en": "Annual number of recipients of forestry-derived capital gains on public lands. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total anual de perceptores de ganancias derivadas de aprovechamientos forestales en montes públicos. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Az állami erdőkben elért vagyonnyereségben részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — capital gains (forestry)",
@@ -310,9 +310,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of forestry capital gains on public lands.",
-        "es": "Suma anual de las percepciones por aprovechamientos forestales en montes públicos.",
-        "hu": "Az erdészeti vagyonnyereségek éves összege."
+        "en": "Annual sum of forestry capital gains on public lands. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las percepciones por aprovechamientos forestales en montes públicos. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Az erdészeti vagyonnyereségek éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Perceptions amount — forestry capital gains",
@@ -340,9 +340,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings on forestry-related capital gains (19%).",
-        "es": "Suma anual de las retenciones practicadas sobre ganancias patrimoniales por aprovechamientos forestales (19%).",
-        "hu": "Az erdészeti vagyonnyereségek után 19%-kal levont összegek éves összege."
+        "en": "Annual sum of withholdings on forestry-related capital gains (19%). Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las retenciones practicadas sobre ganancias patrimoniales por aprovechamientos forestales (19%). Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Az erdészeti vagyonnyereségek után 19%-kal levont összegek éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Withholdings — capital gains",
@@ -370,9 +370,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual number of recipients of in-kind perceptions subject to a payment on account.",
-        "es": "Total anual de perceptores de retribuciones en especie sujetas a ingreso a cuenta.",
-        "hu": "A természetbeni juttatásban részesülők éves száma."
+        "en": "Annual number of recipients of in-kind perceptions subject to a payment on account. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total anual de perceptores de retribuciones en especie sujetas a ingreso a cuenta. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A természetbeni juttatásban részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — in-kind perceptions",
@@ -400,9 +400,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of the tax-valuation of in-kind perceptions paid.",
-        "es": "Suma anual del valor fiscal de las contraprestaciones en especie satisfechas.",
-        "hu": "A természetbeni juttatások adóértékének éves összege."
+        "en": "Annual sum of the tax-valuation of in-kind perceptions paid. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual del valor fiscal de las contraprestaciones en especie satisfechas. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A természetbeni juttatások adóértékének éves összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Valuation — in-kind perceptions",
@@ -430,9 +430,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of payments on account on in-kind perceptions.",
-        "es": "Suma anual de los ingresos a cuenta practicados sobre contraprestaciones en especie.",
-        "hu": "Természetbeni juttatásokra alkalmazott éves előlegek összege."
+        "en": "Annual sum of payments on account on in-kind perceptions. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de los ingresos a cuenta practicados sobre contraprestaciones en especie. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Természetbeni juttatásokra alkalmazott éves előlegek összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Payments on account — in-kind",
@@ -460,9 +460,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual number of recipients of imputed image-rights income (LIRPF art. 92).",
-        "es": "Total anual de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92).",
-        "hu": "Képmás-jog átruházás miatti beszámított jövedelmekben részesülők éves száma."
+        "en": "Annual number of recipients of imputed image-rights income (LIRPF art. 92). Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Total anual de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92). Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Képmás-jog átruházás miatti beszámított jövedelmekben részesülők éves száma. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Recipients — image-rights assignment",
@@ -490,9 +490,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of imputed image-rights income.",
-        "es": "Suma anual de las imputaciones de rentas por cesión de derechos de imagen.",
-        "hu": "Képmás-jog átruházás miatti éves jövedelem összege."
+        "en": "Annual sum of imputed image-rights income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las imputaciones de rentas por cesión de derechos de imagen. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Képmás-jog átruházás miatti éves jövedelem összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Perceptions amount — image rights",
@@ -520,9 +520,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Annual sum of withholdings on imputed image-rights income.",
-        "es": "Suma anual de las retenciones e ingresos a cuenta por imputación de rentas por cesión de derechos de imagen.",
-        "hu": "Képmás-jog jövedelemre alkalmazott éves levonás összege."
+        "en": "Annual sum of withholdings on imputed image-rights income. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma anual de las retenciones e ingresos a cuenta por imputación de rentas por cesión de derechos de imagen. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "Képmás-jog jövedelemre alkalmazott éves levonás összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Withholdings — image rights",
@@ -560,9 +560,9 @@
         ]
       },
       "help": {
-        "en": "Global sum of recipients declared in form 190.",
-        "es": "Suma global de perceptores declarados en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő összes kedvezményezett."
+        "en": "Global sum of recipients declared in form 190. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma global de perceptores declarados en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A 190-es nyomtatványban szereplő összes kedvezményezett. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Total recipients",
@@ -613,9 +613,9 @@
         ]
       },
       "help": {
-        "en": "Global sum of gross perceptions declared in form 190.",
-        "es": "Suma global de las percepciones íntegras declaradas en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő bruttó jövedelmek összege."
+        "en": "Global sum of gross perceptions declared in form 190. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma global de las percepciones íntegras declaradas en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A 190-es nyomtatványban szereplő bruttó jövedelmek összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Total perceptions",
@@ -666,9 +666,9 @@
         ]
       },
       "help": {
-        "en": "Global sum of withholdings and payments on account declared in form 190.",
-        "es": "Suma global de las retenciones e ingresos a cuenta declarados en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő levonások és előlegek összege."
+        "en": "Global sum of withholdings and payments on account declared in form 190. Annual summary that consolidates the quarterly data of form 111.",
+        "es": "Suma global de las retenciones e ingresos a cuenta declarados en el modelo 190. Resumen anual que consolida los datos trimestrales del modelo 111.",
+        "hu": "A 190-es nyomtatványban szereplő levonások és előlegek összege. Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 111."
       },
       "label": {
         "en": "Total withholdings and payments on account",
