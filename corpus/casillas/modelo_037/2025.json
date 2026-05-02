@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque esta casilla para comunicar el inicio de la actividad económica.",
         "en": "Tick this box to report the start of the economic activity.",
         "es": "Marque esta casilla para comunicar el inicio de la actividad económica.",
         "hu": "Jelölje be a gazdasági tevékenység megkezdésének bejelentéséhez."
       },
       "label": {
+        "ca": "Solicitud de alta en el censo de empresarios",
         "en": "Request to enrol in the census of business operators",
         "es": "Solicitud de alta en el censo de empresarios",
         "hu": "Bejelentkezés a vállalkozói nyilvántartásba"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque para modificar los datos relativos al régimen de IVA.",
         "en": "Tick this box when changing the VAT regime data.",
         "es": "Marque para modificar los datos relativos al régimen de IVA.",
         "hu": "Jelölje be az ÁFA-rendszer adatainak módosításához."
       },
       "label": {
+        "ca": "Modificación de datos relativos al IVA",
         "en": "Update of VAT-related data",
         "es": "Modificación de datos relativos al IVA",
         "hu": "Az ÁFA-adatok módosítása"
@@ -70,11 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque esta casilla para comunicar el cese de la actividad económica.",
         "en": "Tick this box to report the cessation of the economic activity.",
         "es": "Marque esta casilla para comunicar el cese de la actividad económica.",
         "hu": "Jelölje be a gazdasági tevékenység megszüntetésének bejelentéséhez."
       },
       "label": {
+        "ca": "Baja en el censo de empresarios",
         "en": "Removal from the census of business operators",
         "es": "Baja en el censo de empresarios",
         "hu": "Kijelentkezés a vállalkozói nyilvántartásból"
@@ -100,11 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque si tributa por el régimen general del IVA (LIVA art. 90/91).",
         "en": "Tick if you fall under the general VAT regime (Spanish VAT Act art. 90/91).",
         "es": "Marque si tributa por el régimen general del IVA (LIVA art. 90/91).",
         "hu": "Jelölje be, ha az általános ÁFA-rendszer alá tartozik (LIVA 90/91. cikk)."
       },
       "label": {
+        "ca": "Régimen general del IVA",
         "en": "General VAT regime",
         "es": "Régimen general del IVA",
         "hu": "Általános ÁFA-rendszer"
@@ -130,11 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque si tributa por el régimen simplificado del IVA.",
         "en": "Tick if you fall under the simplified VAT regime.",
         "es": "Marque si tributa por el régimen simplificado del IVA.",
         "hu": "Jelölje be, ha az egyszerűsített ÁFA-rendszer alá tartozik."
       },
       "label": {
+        "ca": "Régimen simplificado del IVA",
         "en": "Simplified VAT regime",
         "es": "Régimen simplificado del IVA",
         "hu": "Egyszerűsített ÁFA-rendszer"
@@ -160,11 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque si tributa el rendimiento de la actividad por estimación directa (LIRPF art. 28).",
         "en": "Tick if you compute business income under the direct estimation regime (LIRPF art. 28).",
         "es": "Marque si tributa el rendimiento de la actividad por estimación directa (LIRPF art. 28).",
         "hu": "Jelölje be, ha közvetlen becsléssel állapítja meg a jövedelmét (LIRPF 28. cikk)."
       },
       "label": {
+        "ca": "Régimen de estimación directa del IRPF",
         "en": "Direct estimation IRPF regime",
         "es": "Régimen de estimación directa del IRPF",
         "hu": "Közvetlen becslésű IRPF-rendszer"
@@ -190,11 +202,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos).",
         "en": "Tick if you fall under the objective-estimation (modules) regime.",
         "es": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos).",
         "hu": "Jelölje be, ha objektív becsléssel adózik (modulok)."
       },
       "label": {
+        "ca": "Régimen de estimación objetiva del IRPF (módulos)",
         "en": "Objective estimation (modules) IRPF regime",
         "es": "Régimen de estimación objetiva del IRPF (módulos)",
         "hu": "Objektív becslésű IRPF-rendszer (modulok)"
@@ -220,11 +234,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Código de epígrafe del Impuesto sobre Actividades Económicas que clasifica la actividad.",
         "en": "Heading code of the Spanish economic-activities tax that classifies the activity.",
         "es": "Código de epígrafe del Impuesto sobre Actividades Económicas que clasifica la actividad.",
         "hu": "A spanyol gazdasági-tevékenység-adó tevékenységi kódja."
       },
       "label": {
+        "ca": "Epígrafe IAE",
         "en": "IAE heading (economic-activities tax)",
         "es": "Epígrafe IAE",
         "hu": "IAE tevékenységi kód"
@@ -250,11 +266,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Fecha desde la que produce efectos la presente declaración censal.",
         "en": "Date from which this census declaration takes effect.",
         "es": "Fecha desde la que produce efectos la presente declaración censal.",
         "hu": "A bejelentés hatálybalépésének dátuma."
       },
       "label": {
+        "ca": "Fecha de efectos",
         "en": "Effective date",
         "es": "Fecha de efectos",
         "hu": "Hatálybalépés dátuma"

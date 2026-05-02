@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Base del pago fraccionado",
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
         "hu": "Részletfizetés alapja"
       },
       "label": {
+        "ca": "Base del pago fraccionado",
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
         "hu": "Részletfizetés alapja"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Tipo de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
       },
       "label": {
+        "ca": "Tipo de gravamen aplicable",
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
         "hu": "Alkalmazandó kulcs"
@@ -76,11 +80,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Cuota integra (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Gross tax amount (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cuota integra (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Bruttó adóösszeg (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
+        "ca": "Cuota integra",
         "en": "Gross tax amount",
         "es": "Cuota integra",
         "hu": "Bruttó adóösszeg"
@@ -106,11 +112,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Bonificaciones",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
       },
       "label": {
+        "ca": "Bonificaciones",
         "en": "Rebates",
         "es": "Bonificaciones",
         "hu": "Kedvezmények"
@@ -136,11 +144,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Retenciones e ingresos a cuenta",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
       },
       "label": {
+        "ca": "Retenciones e ingresos a cuenta",
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások és előlegek"
@@ -166,11 +176,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Pagos fraccionados anteriores del ejercicio",
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
         "hu": "Korábbi részletek az időszakból"
       },
       "label": {
+        "ca": "Pagos fraccionados anteriores del ejercicio",
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
         "hu": "Korábbi részletek az időszakból"
@@ -196,11 +208,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Resultado (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Net result (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Resultado (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Nettó eredmény (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
+        "ca": "Resultado",
         "en": "Net result",
         "es": "Resultado",
         "hu": "Nettó eredmény"
@@ -226,11 +240,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Minimo a ingresar",
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
         "hu": "Minimális fizetendő"
       },
       "label": {
+        "ca": "Minimo a ingresar",
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
         "hu": "Minimális fizetendő"
@@ -256,11 +272,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Cantidad a ingresar (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "en": "Amount payable (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cantidad a ingresar (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "hu": "Fizetendő összeg (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
+        "ca": "Cantidad a ingresar",
         "en": "Amount payable",
         "es": "Cantidad a ingresar",
         "hu": "Fizetendő összeg"

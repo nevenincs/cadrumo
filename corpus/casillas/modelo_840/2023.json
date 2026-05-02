@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Ejercicio al que se refiere la declaración del IAE.",
         "en": "Tax year covered by the IAE declaration.",
         "es": "Ejercicio al que se refiere la declaración del IAE.",
         "hu": "Az IAE-bevallás vonatkozó adóéve."
       },
       "label": {
+        "ca": "Ejercicio",
         "en": "Tax year",
         "es": "Ejercicio",
         "hu": "Adóév"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas.",
         "en": "Census act prompting the declaration: enrolment, change, or removal in the IAE.",
         "es": "Acto censal que motiva la declaración: alta, variación o baja en el Impuesto sobre Actividades Económicas.",
         "hu": "A bejelentést indokoló esemény: beiratkozás, módosítás vagy kijelentkezés."
       },
       "label": {
+        "ca": "Causa de presentación",
         "en": "Filing cause",
         "es": "Causa de presentación",
         "hu": "Bejelentés oka"
@@ -70,11 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Clase de cuota del IAE: municipal, provincial o nacional.",
         "en": "IAE quota class: municipal, provincial or national.",
         "es": "Clase de cuota del IAE: municipal, provincial o nacional.",
         "hu": "IAE-adóosztály: önkormányzati, tartományi vagy országos."
       },
       "label": {
+        "ca": "Clase de cuota",
         "en": "Quota class",
         "es": "Clase de cuota",
         "hu": "Adóosztály"
@@ -100,11 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Tipo de actividad: empresarial, profesional o artística.",
         "en": "Activity type: business, professional or artistic.",
         "es": "Tipo de actividad: empresarial, profesional o artística.",
         "hu": "Tevékenység típusa: vállalkozói, szakmai vagy művészi."
       },
       "label": {
+        "ca": "Tipo de actividad",
         "en": "Activity type",
         "es": "Tipo de actividad",
         "hu": "Tevékenység típusa"
@@ -130,11 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
         "en": "IAE group or heading assigned to the taxpayer's economic activity.",
         "es": "Grupo o epígrafe del IAE asignado a la actividad económica del sujeto pasivo.",
         "hu": "A tevékenységhez rendelt IAE-csoport vagy tételszám."
       },
       "label": {
+        "ca": "Grupo o epígrafe",
         "en": "Group or heading",
         "es": "Grupo o epígrafe",
         "hu": "Csoport vagy tételszám"
@@ -160,11 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Municipio en el que se ejerce la actividad declarada.",
         "en": "Municipality where the declared activity is carried out.",
         "es": "Municipio en el que se ejerce la actividad declarada.",
         "hu": "A tevékenység végzésének helye szerinti település."
       },
       "label": {
+        "ca": "Municipio",
         "en": "Municipality",
         "es": "Municipio",
         "hu": "Település"
@@ -190,11 +202,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Provincia en la que se ejerce la actividad declarada.",
         "en": "Province where the declared activity is carried out.",
         "es": "Provincia en la que se ejerce la actividad declarada.",
         "hu": "A tevékenység végzésének helye szerinti tartomány."
       },
       "label": {
+        "ca": "Provincia",
         "en": "Province",
         "es": "Provincia",
         "hu": "Tartomány"
@@ -220,11 +234,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Fecha desde la que produce efectos la presente declaración del IAE.",
         "en": "Date from which this IAE declaration takes effect.",
         "es": "Fecha desde la que produce efectos la presente declaración del IAE.",
         "hu": "A bejelentés hatálybalépésének dátuma."
       },
       "label": {
+        "ca": "Fecha de efectos",
         "en": "Effective date",
         "es": "Fecha de efectos",
         "hu": "Hatálybalépés dátuma"

@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Ingresos (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Cumulative gross income (Apartado I) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Totalidad de los ingresos íntegros fiscalmente computables del conjunto de las actividades. Acumulado hasta el cierre del trimestre. (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Halmozott bruttó bevétel (I. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Ingresos",
         "en": "Cumulative gross income (Apartado I)",
         "es": "Ingresos",
         "hu": "Halmozott bruttó bevétel (I. szakasz)"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Gastos (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Cumulative deductible expenses (Apartado I) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Gastos (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Halmozott levonható költségek (I. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Gastos",
         "en": "Cumulative deductible expenses (Apartado I)",
         "es": "Gastos",
         "hu": "Halmozott levonható költségek (I. szakasz)"
@@ -70,11 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Rendimiento neto (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Net return (01 - 02) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Rendimiento neto (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Nettó eredmény (01 - 02) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Rendimiento neto",
         "en": "Net return (01 - 02)",
         "es": "Rendimiento neto",
         "hu": "Nettó eredmény (01 - 02)"
@@ -100,11 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Importe del pago fraccionado (20%) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Fractional payment (20% of 03, clamped ≥ 0) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Importe del pago fraccionado (20%) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Részletfizetés összege (03 x 20%, nem-negatív) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Importe del pago fraccionado (20%)",
         "en": "Fractional payment (20% of 03, clamped ≥ 0)",
         "es": "Importe del pago fraccionado (20%)",
         "hu": "Részletfizetés összege (03 x 20%, nem-negatív)"
@@ -136,11 +144,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Pagos fraccionados anteriores (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Prior-quarter fractional payments (caller-maintained) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Acumulador cross-quarter. El motor no deriva 05 dentro de una sola liquidación; el llamador mantiene la suma de cas. 07 positivas y cas. 16 de trimestres anteriores. (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi részletfizetések (hívó fél tartja karban) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Pagos fraccionados anteriores (Apartado I)",
         "en": "Prior-quarter fractional payments (caller-maintained)",
         "es": "Pagos fraccionados anteriores (Apartado I)",
         "hu": "Korábbi részletfizetések (hívó fél tartja karban)"
@@ -166,11 +176,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "YTD withholdings (Apartado I) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Retenciones e ingresos a cuenta (Apartado I) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Éves halmozott levonások (I. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado I)",
         "en": "YTD withholdings (Apartado I)",
         "es": "Retenciones e ingresos a cuenta (Apartado I)",
         "hu": "Éves halmozott levonások (I. szakasz)"
@@ -196,11 +208,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Resultado parcial Apartado I (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Partial Apartado I result (04 - 05 - 06) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado parcial Apartado I (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "I. szakasz részösszeg (04 - 05 - 06) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Resultado parcial Apartado I",
         "en": "Partial Apartado I result (04 - 05 - 06)",
         "es": "Resultado parcial Apartado I",
         "hu": "I. szakasz részösszeg (04 - 05 - 06)"
@@ -232,11 +246,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Volumen de ingresos del trimestre (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Quarterly income volume (Apartado II, per-quarter not YTD) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Volumen de ingresos del trimestre (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Negyedéves bevétel (II. szakasz, nem halmozott) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Volumen de ingresos del trimestre (Apartado II)",
         "en": "Quarterly income volume (Apartado II, per-quarter not YTD)",
         "es": "Volumen de ingresos del trimestre (Apartado II)",
         "hu": "Negyedéves bevétel (II. szakasz, nem halmozott)"
@@ -262,11 +278,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Importe del pago fraccionado (2%) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Fractional payment (2% of 08) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Importe del pago fraccionado (2%) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Részletfizetés összege (08 x 2%) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Importe del pago fraccionado (2%)",
         "en": "Fractional payment (2% of 08)",
         "es": "Importe del pago fraccionado (2%)",
         "hu": "Részletfizetés összege (08 x 2%)"
@@ -292,11 +310,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Quarterly withholdings (Apartado II) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Retenciones e ingresos a cuenta (Apartado II) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Negyedéves levonások (II. szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Retenciones e ingresos a cuenta (Apartado II)",
         "en": "Quarterly withholdings (Apartado II)",
         "es": "Retenciones e ingresos a cuenta (Apartado II)",
         "hu": "Negyedéves levonások (II. szakasz)"
@@ -322,11 +342,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Resultado parcial Apartado II (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Partial Apartado II result (09 - 10) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado parcial Apartado II (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "II. szakasz részösszeg (09 - 10) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Resultado parcial Apartado II",
         "en": "Partial Apartado II result (09 - 10)",
         "es": "Resultado parcial Apartado II",
         "hu": "II. szakasz részösszeg (09 - 10)"
@@ -358,11 +380,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Suma de resultados parciales (nunca negativa) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Sum of Apartados I + II, clamped ≥ 0 (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Suma de resultados parciales (nunca negativa) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Részösszegek összege, nem-negatív (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Suma de resultados parciales (nunca negativa)",
         "en": "Sum of Apartados I + II, clamped ≥ 0",
         "es": "Suma de resultados parciales (nunca negativa)",
         "hu": "Részösszegek összege, nem-negatív"
@@ -394,11 +418,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Low-income minoration (art. 110.3.c step function) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "El contribuyente introduce el importe directamente o usa el ayudante compute_casilla_13_minoracion con el rendimiento neto del ejercicio anterior. La escala 100/75/50/25 €. (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
         "en": "Low-income minoration (art. 110.3.c step function)",
         "es": "Minoración por rendimientos netos ≤ 12.000 € (art. 110.3.c)",
         "hu": "Alacsony jövedelmi csökkentés (110.3.c szakasz)"
@@ -424,11 +450,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Neto tras minoración (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Net after minoration (12 - 13, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Neto tras minoración (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Csökkentés utáni nettó (12 - 13, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Neto tras minoración",
         "en": "Net after minoration (12 - 13, signed)",
         "es": "Neto tras minoración",
         "hu": "Csökkentés utáni nettó (12 - 13, előjeles)"
@@ -460,11 +488,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Arrastre de negativos (trimestres anteriores) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Carry-forward of prior-quarter negatives (caller-maintained) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "El motor no impone el tope 15 ≤ 14 en este ciclo; queda a cargo del llamador para la orquestación inter-trimestral. (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi negatívok átvitele (hívó fél tartja karban) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Arrastre de negativos (trimestres anteriores)",
         "en": "Carry-forward of prior-quarter negatives (caller-maintained)",
         "es": "Arrastre de negativos (trimestres anteriores)",
         "hu": "Korábbi negatívok átvitele (hívó fél tartja karban)"
@@ -490,11 +520,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Deducción por inversión en vivienda habitual (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Primary-residence deduction (2% capped at 660.14 €) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Aportada por el llamador bajo su propio gating (elegibilidad, apartados mutuamente excluyentes). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Deducción por inversión en vivienda habitual",
         "en": "Primary-residence deduction (2% capped at 660.14 €)",
         "es": "Deducción por inversión en vivienda habitual",
         "hu": "Lakásvásárlási levonás (2%, 660,14 € felső határ)"
@@ -520,11 +552,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Diferencia (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Difference (14 - 15 - 16, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Diferencia (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Különbség (14 - 15 - 16, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Diferencia",
         "en": "Difference (14 - 15 - 16, signed)",
         "es": "Diferencia",
         "hu": "Különbség (14 - 15 - 16, előjeles)"
@@ -556,11 +590,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Amount paid in earlier complementarias for the same quarter (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria) (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "en": "Amount paid in earlier complementarias for the same quarter",
         "es": "Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
         "hu": "Korábbi kiegészítő bevallásban befizetett összeg"
@@ -586,11 +622,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
+        "ca": "Resultado final (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "en": "Final result (17 - 18, signed) (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
         "es": "Resultado final (Base legal: RD, art. 110, BOE-A-2007-6820.)",
         "hu": "Végeredmény (17 - 18, előjeles) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Resultado final",
         "en": "Final result (17 - 18, signed)",
         "es": "Resultado final",
         "hu": "Végeredmény (17 - 18, előjeles)"

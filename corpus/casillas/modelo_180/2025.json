@@ -10,11 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total recipients Annual summary that consolidates the quarterly data of form 115.",
+        "ca": "Total perceptores Resum anual que consolida les dades trimestrals del model 115.",
+        "en": "Total recipients Annual summary consolidating the quarterly data of form 115.",
         "es": "Total perceptores Resumen anual que consolida los datos trimestrales del modelo 115.",
-        "hu": "Összes bérbeadó Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
+        "hu": "Összes bérbeadó Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
+        "ca": "Total perceptores",
         "en": "Total recipients",
         "es": "Total perceptores",
         "hu": "Összes bérbeadó"
@@ -40,11 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "Total withholding base Annual summary that consolidates the quarterly data of form 115.",
+        "ca": "Total base retencion Resum anual que consolida les dades trimestrals del model 115.",
+        "en": "Total withholding base Annual summary consolidating the quarterly data of form 115.",
         "es": "Total base retencion Resumen anual que consolida los datos trimestrales del modelo 115.",
-        "hu": "Teljes levonási alap Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
+        "hu": "Teljes levonási alap Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
+        "ca": "Total base retencion",
         "en": "Total withholding base",
         "es": "Total base retencion",
         "hu": "Teljes levonási alap"
@@ -75,11 +79,13 @@
         ]
       },
       "help": {
-        "en": "Total withholdings. Computed as (19% * 02). Annual summary that consolidates the quarterly data of form 115. (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "ca": "Total retenciones. Es calcula com (19% * 02). Resum anual que consolida les dades trimestrals del model 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
+        "en": "Total withholdings. Computed as (19% * 02). Annual summary consolidating the quarterly data of form 115. (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "es": "Total retenciones. Se calcula como (19% * 02). Resumen anual que consolida los datos trimestrales del modelo 115. (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás. Számítás: (19% * 02). Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115. (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "hu": "Teljes levonás. Számítás: (19% * 02) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell. (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
+        "ca": "Total retenciones",
         "en": "Total withholdings",
         "es": "Total retenciones",
         "hu": "Teljes levonás"
@@ -120,11 +126,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "en": "In-kind payments on account Annual summary that consolidates the quarterly data of form 115.",
+        "ca": "Total ingresos a cuenta por retribuciones en especie Resum anual que consolida les dades trimestrals del model 115.",
+        "en": "In-kind payments on account Annual summary consolidating the quarterly data of form 115.",
         "es": "Total ingresos a cuenta por retribuciones en especie Resumen anual que consolida los datos trimestrales del modelo 115.",
-        "hu": "Természetbeni előlegek Éves összefoglaló, amely az alábbi modell negyedéves adatait konszolidálja: 115."
+        "hu": "Természetbeni előlegek Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 115-os modell."
       },
       "label": {
+        "ca": "Total ingresos a cuenta por retribuciones en especie",
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
         "hu": "Természetbeni előlegek"

@@ -503,7 +503,7 @@ def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
     the corpus casilla ID set must exactly match the registered extractor's
     ``casilla_ids ∪ text_casilla_ids``.
 
-    Catches drift between the curated quad-lingual label/help data in
+    Catches drift between the curated multilingual label/help data in
     :mod:`aeat.domain.casillas._hydrate` and the canonical extractor IDs.
     The extractor is the single source of truth for the ID list; the
     hydrate script only adds label / help curation on top.
@@ -604,6 +604,33 @@ def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
                 )
     if failures:
         pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_label_and_help_carry_every_supported_language() -> None:
+    """Every record's ``label`` and ``help`` must include every code from :class:`Language`.
+
+    The Translatable contract is open-ended; the corpus mirrors the
+    engine's :class:`aeat.core.i18n.Language` enum. Adding a language
+    to the enum auto-widens the corpus on the next hydrate run; this
+    test fires before the next hydrate if a language is added but
+    not propagated.
+    """
+    from ...core.i18n import Language
+
+    expected = {lang.value for lang in Language}
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            for field in ("label", "help"):
+                container = getattr(rec, field)
+                missing = expected - set(container.keys())
+                if missing:
+                    failures.append(f"{modelo} {period} cas {rec.casilla_id} {field}: missing languages {sorted(missing)}")
+                    break  # one report per record is enough
+    if failures:
+        pytest.fail("Corpus label / help missing supported languages:\n" + "\n".join(f" - {f}" for f in failures))
 
 
 def test_corpus_help_and_label_carry_no_dev_process_leakage() -> None:
