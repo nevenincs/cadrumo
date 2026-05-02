@@ -606,6 +606,34 @@ def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
         pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
 
 
+def test_corpus_help_and_label_carry_no_dev_process_leakage() -> None:
+    """User-facing strings must not leak engineering metadata.
+
+    The corpus' label / help is operator-facing; it must not contain
+    development-process tokens (``wave``, ``phase``, ``WIP``,
+    ``sub-EPIC``, ``TBD``, ``FIXME``) that belong to commit messages
+    and vault docs, not to the AEAT domain language Kent reads.
+    """
+    import re
+
+    forbidden = re.compile(r"\b(wave|phase|wip|sub-EPIC|TBD|FIXME)\b", re.IGNORECASE)
+    failures: list[str] = []
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            for field in ("label", "help"):
+                container = getattr(rec, field)
+                for lang in ("es", "en", "hu"):
+                    value = container.get(lang, "")
+                    if forbidden.search(value):
+                        failures.append(
+                            f"{modelo} {period} cas {rec.casilla_id} {field}.{lang}: dev-process leakage in {value[:80]!r}"
+                        )
+    if failures:
+        pytest.fail("Corpus leaks dev-process tokens into user-facing strings:\n" + "\n".join(f" - {f}" for f in failures))
+
+
 def test_corpus_source_manual_url_matches_hydrate_resolver() -> None:
     """Every record's ``source_manual_url`` must agree with ``_source_url_for(modelo, year)``.
 

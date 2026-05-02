@@ -824,7 +824,7 @@
       "formula": null,
       "help": {
         "en": "Definitive prorata regularisation (Legal basis: Ley, art. 92, BOE-A-1992-28740.)",
-        "es": "Importe ya calculado por el contribuyente; el motor no deriva el porcentaje en este wave. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
+        "es": "Importe ya calculado por el contribuyente; el motor no deriva el porcentaje aquí. (Base legal: Ley, art. 92, BOE-A-1992-28740.)",
         "hu": "Végleges prorata-szabályozás (Jogalap: Ley, art. 92, BOE-A-1992-28740.)"
       },
       "label": {
@@ -1013,7 +1013,7 @@
       "formula": null,
       "help": {
         "en": "% attributable to the State (default 100) (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Default 100 para contribuyentes sin atribución foral. Foral (País Vasco / Navarra) queda fuera de este wave. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Default 100 para contribuyentes sin atribución foral. Foral (País Vasco / Navarra) no es objeto de este motor. (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
         "hu": "Az állam részesedése (alapértelmezetten 100) (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
