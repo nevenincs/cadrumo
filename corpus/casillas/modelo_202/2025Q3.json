@@ -12,14 +12,12 @@
       "help": {
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
-        "hu": "Részletfizetés alapja",
-        "ca": "Base del pago fraccionado"
+        "hu": "Részletfizetés alapja"
       },
       "label": {
         "en": "Instalment base",
         "es": "Base del pago fraccionado",
-        "hu": "Részletfizetés alapja",
-        "ca": "Base del pago fraccionado"
+        "hu": "Részletfizetés alapja"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
-        "hu": "Alkalmazandó kulcs",
-        "ca": "Tipo de gravamen aplicable"
+        "hu": "Alkalmazandó kulcs"
       },
       "label": {
         "en": "Applicable rate",
         "es": "Tipo de gravamen aplicable",
-        "hu": "Alkalmazandó kulcs",
-        "ca": "Tipo de gravamen aplicable"
+        "hu": "Alkalmazandó kulcs"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -88,14 +84,12 @@
       "help": {
         "en": "Gross tax amount. Computed as ((17 / 100) * 16). (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cuota integra. Se calcula como ((17 / 100) * 16). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "ca": "Cuota integra. Se calcula como ((17 / 100) * 16). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "hu": "Bruttó adóösszeg. Számítás: ((17 / 100) * 16). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Gross tax amount",
         "es": "Cuota integra",
-        "hu": "Bruttó adóösszeg",
-        "ca": "Cuota integra"
+        "hu": "Bruttó adóösszeg"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -131,14 +125,12 @@
       "help": {
         "en": "Rebates",
         "es": "Bonificaciones",
-        "hu": "Kedvezmények",
-        "ca": "Bonificaciones"
+        "hu": "Kedvezmények"
       },
       "label": {
         "en": "Rebates",
         "es": "Bonificaciones",
-        "hu": "Kedvezmények",
-        "ca": "Bonificaciones"
+        "hu": "Kedvezmények"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -163,14 +155,12 @@
       "help": {
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások és előlegek",
-        "ca": "Retenciones e ingresos a cuenta"
+        "hu": "Levonások és előlegek"
       },
       "label": {
         "en": "Withholdings and payments on account",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások és előlegek",
-        "ca": "Retenciones e ingresos a cuenta"
+        "hu": "Levonások és előlegek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -195,14 +185,12 @@
       "help": {
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
-        "hu": "Korábbi részletek az időszakból",
-        "ca": "Pagos fraccionados anteriores del ejercicio"
+        "hu": "Korábbi részletek az időszakból"
       },
       "label": {
         "en": "Prior instalments of the period",
         "es": "Pagos fraccionados anteriores del ejercicio",
-        "hu": "Korábbi részletek az időszakból",
-        "ca": "Pagos fraccionados anteriores del ejercicio"
+        "hu": "Korábbi részletek az időszakból"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -235,14 +223,12 @@
       "help": {
         "en": "Net result. Computed as (((18 - 27) - 28) - 30). (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Resultado. Se calcula como (((18 - 27) - 28) - 30). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "ca": "Resultado. Se calcula como (((18 - 27) - 28) - 30). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "hu": "Nettó eredmény. Számítás: (((18 - 27) - 28) - 30). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Net result",
         "es": "Resultado",
-        "hu": "Nettó eredmény",
-        "ca": "Resultado"
+        "hu": "Nettó eredmény"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -280,14 +266,12 @@
       "help": {
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
-        "hu": "Minimális fizetendő",
-        "ca": "Minimo a ingresar"
+        "hu": "Minimális fizetendő"
       },
       "label": {
         "en": "Minimum payable",
         "es": "Minimo a ingresar",
-        "hu": "Minimális fizetendő",
-        "ca": "Minimo a ingresar"
+        "hu": "Minimális fizetendő"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",
@@ -318,14 +302,12 @@
       "help": {
         "en": "Amount payable. Computed as max(32, 33). (Legal basis: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
         "es": "Cantidad a ingresar. Se calcula como max(32, 33). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "hu": "Fizetendő összeg. Számítás: max(32, 33). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)",
-        "ca": "Cantidad a ingresar. Se calcula como max(32, 33). (Base legal: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
+        "hu": "Fizetendő összeg. Számítás: max(32, 33). (Jogalap: Ley, art. 40, BOE-A-2014-12328; Orden, art. HFP/227/2017, BOE-A-2017-2778; Orden, art. HAC/262/2025, BOE-A-2025-5407.)"
       },
       "label": {
         "en": "Amount payable",
         "es": "Cantidad a ingresar",
-        "hu": "Fizetendő összeg",
-        "ca": "Cantidad a ingresar"
+        "hu": "Fizetendő összeg"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_202",

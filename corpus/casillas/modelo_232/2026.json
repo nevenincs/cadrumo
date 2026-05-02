@@ -12,14 +12,12 @@
       "help": {
         "en": "Total related-party operation records declared in the form (Cuadro I, art. 18 LIS).",
         "es": "Total de registros de operaciones con personas o entidades vinculadas declarados en el modelo (Cuadro I, art. 18 LIS).",
-        "hu": "A bejelentésben szereplő kapcsolt-fél ügyletek rekordjainak száma (I. táblázat, LIS 18. cikk).",
-        "ca": "Total de registros de operaciones con personas o entidades vinculadas declarados en el modelo (Cuadro I, art. 18 LIS)."
+        "hu": "A bejelentésben szereplő kapcsolt-fél ügyletek rekordjainak száma (I. táblázat, LIS 18. cikk)."
       },
       "label": {
         "en": "Number of related-party transaction records",
         "es": "N.º registros — operaciones con personas o entidades vinculadas",
-        "hu": "Kapcsolt felekkel folytatott ügyletek rekordjainak száma",
-        "ca": "N.º registros — operaciones con personas o entidades vinculadas"
+        "hu": "Kapcsolt felekkel folytatott ügyletek rekordjainak száma"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_232",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Total intangible-asset operation records that benefit from the LIS art. 23 incentive.",
         "es": "Total de registros de operaciones con activos intangibles que se han acogido al beneficio fiscal del art. 23 LIS.",
-        "hu": "Az LIS 23. cikke szerinti kedvezményt igénylő ügyletek rekordjainak száma.",
-        "ca": "Total de registros de operaciones con activos intangibles que se han acogido al beneficio fiscal del art. 23 LIS."
+        "hu": "Az LIS 23. cikke szerinti kedvezményt igénylő ügyletek rekordjainak száma."
       },
       "label": {
         "en": "Number of intangible-asset transaction records (LIS art. 23)",
         "es": "N.º registros — operaciones con activos intangibles (art. 23 LIS)",
-        "hu": "Immateriális eszközökkel kapcsolatos ügyletek rekordjainak száma",
-        "ca": "N.º registros — operaciones con activos intangibles (art. 23 LIS)"
+        "hu": "Immateriális eszközökkel kapcsolatos ügyletek rekordjainak száma"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_232",
@@ -76,14 +72,12 @@
       "help": {
         "en": "Total operation records with countries classified as tax havens.",
         "es": "Total de registros de operaciones realizadas con países o territorios calificados como paraísos fiscales.",
-        "hu": "Az adóparadicsomnak minősített országokkal folytatott ügyletek rekordjainak száma.",
-        "ca": "Total de registros de operaciones realizadas con países o territorios calificados como paraísos fiscales."
+        "hu": "Az adóparadicsomnak minősített országokkal folytatott ügyletek rekordjainak száma."
       },
       "label": {
         "en": "Number of tax-haven transaction records",
         "es": "N.º registros — operaciones con paraísos fiscales",
-        "hu": "Adóparadicsomokkal folytatott ügyletek rekordjainak száma",
-        "ca": "N.º registros — operaciones con paraísos fiscales"
+        "hu": "Adóparadicsomokkal folytatott ügyletek rekordjainak száma"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_232",

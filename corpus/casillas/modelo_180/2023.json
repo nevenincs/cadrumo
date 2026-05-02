@@ -12,14 +12,12 @@
       "help": {
         "en": "Total recipients",
         "es": "Total perceptores",
-        "hu": "Összes bérbeadó",
-        "ca": "Total perceptores"
+        "hu": "Összes bérbeadó"
       },
       "label": {
         "en": "Total recipients",
         "es": "Total perceptores",
-        "hu": "Összes bérbeadó",
-        "ca": "Total perceptores"
+        "hu": "Összes bérbeadó"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_180",
@@ -44,14 +42,12 @@
       "help": {
         "en": "Total withholding base",
         "es": "Total base retencion",
-        "hu": "Teljes levonási alap",
-        "ca": "Total base retencion"
+        "hu": "Teljes levonási alap"
       },
       "label": {
         "en": "Total withholding base",
         "es": "Total base retencion",
-        "hu": "Teljes levonási alap",
-        "ca": "Total base retencion"
+        "hu": "Teljes levonási alap"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_180",
@@ -76,14 +72,12 @@
       "help": {
         "en": "Total withholdings (Legal basis: Reglamento, art. 100.1, BOE-A-2007-6820.)",
         "es": "Total retenciones (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "hu": "Teljes levonás (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)",
-        "ca": "Total retenciones (Base legal: Reglamento, art. 100.1, BOE-A-2007-6820.)"
+        "hu": "Teljes levonás (Jogalap: Reglamento, art. 100.1, BOE-A-2007-6820.)"
       },
       "label": {
         "en": "Total withholdings",
         "es": "Total retenciones",
-        "hu": "Teljes levonás",
-        "ca": "Total retenciones"
+        "hu": "Teljes levonás"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_180",
@@ -114,14 +108,12 @@
       "help": {
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
-        "hu": "Természetbeni előlegek",
-        "ca": "Total ingresos a cuenta por retribuciones en especie"
+        "hu": "Természetbeni előlegek"
       },
       "label": {
         "en": "In-kind payments on account",
         "es": "Total ingresos a cuenta por retribuciones en especie",
-        "hu": "Természetbeni előlegek",
-        "ca": "Total ingresos a cuenta por retribuciones en especie"
+        "hu": "Természetbeni előlegek"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_180",
