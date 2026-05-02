@@ -1754,30 +1754,12 @@ def generate_records(modelo: str, period: str, year: int) -> list[CasillaRecord]
 # ---------------------------------------------------------------------
 
 
-# Maps (modelo, year) to source year for manual URLs.
-ALL_MODELOS: tuple[str, ...] = (
-    "036",
-    "037",
-    "100",
-    "111",
-    "115",
-    "123",
-    "130",
-    "131",
-    "180",
-    "190",
-    "193",
-    "200",
-    "202",
-    "232",
-    "303",
-    "347",
-    "349",
-    "369",
-    "390",
-    "720",
-    "840",
-)
+# The canonical set of supported modelos is owned by the ModeloCode
+# enum; we derive the iteration order from there so this list never
+# drifts when a new modelo lands.
+from ..modelos import ModeloCode as _ModeloCode  # noqa: E402
+
+ALL_MODELOS: tuple[str, ...] = tuple(sorted(code.value for code in _ModeloCode))
 
 
 def _save_with_retry(catalogue: CasillaCatalogue, *, attempts: int = 5) -> None:
