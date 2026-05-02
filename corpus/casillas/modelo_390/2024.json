@@ -12,12 +12,14 @@
       "help": {
         "en": "General regime Q1 base",
         "es": "Régimen general 1T base",
-        "hu": "Általános rendszer 1T alap"
+        "hu": "Általános rendszer 1T alap",
+        "ca": "Régimen general 1T base"
       },
       "label": {
         "en": "General regime Q1 base",
         "es": "Régimen general 1T base",
-        "hu": "Általános rendszer 1T alap"
+        "hu": "Általános rendszer 1T alap",
+        "ca": "Régimen general 1T base"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -42,12 +44,14 @@
       "help": {
         "en": "General regime Q1 quota",
         "es": "Régimen general 1T cuota",
-        "hu": "Általános rendszer 1T összeg"
+        "hu": "Általános rendszer 1T összeg",
+        "ca": "Régimen general 1T cuota"
       },
       "label": {
         "en": "General regime Q1 quota",
         "es": "Régimen general 1T cuota",
-        "hu": "Általános rendszer 1T összeg"
+        "hu": "Általános rendszer 1T összeg",
+        "ca": "Régimen general 1T cuota"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -72,12 +76,14 @@
       "help": {
         "en": "Total taxable bases",
         "es": "Total bases imponibles",
-        "hu": "Összes adóalap"
+        "hu": "Összes adóalap",
+        "ca": "Total bases imponibles"
       },
       "label": {
         "en": "Total taxable bases",
         "es": "Total bases imponibles",
-        "hu": "Összes adóalap"
+        "hu": "Összes adóalap",
+        "ca": "Total bases imponibles"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -102,12 +108,14 @@
       "help": {
         "en": "Total output VAT",
         "es": "Total cuotas repercutidas",
-        "hu": "Áthárított ÁFA összesen"
+        "hu": "Áthárított ÁFA összesen",
+        "ca": "Total cuotas repercutidas"
       },
       "label": {
         "en": "Total output VAT",
         "es": "Total cuotas repercutidas",
-        "hu": "Áthárított ÁFA összesen"
+        "hu": "Áthárított ÁFA összesen",
+        "ca": "Total cuotas repercutidas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -132,12 +140,14 @@
       "help": {
         "en": "Total deductible input VAT (domestic)",
         "es": "Total IVA soportado deducible operaciones interiores",
-        "hu": "Levonható ÁFA belföld"
+        "hu": "Levonható ÁFA belföld",
+        "ca": "Total IVA soportado deducible operaciones interiores"
       },
       "label": {
         "en": "Total deductible input VAT (domestic)",
         "es": "Total IVA soportado deducible operaciones interiores",
-        "hu": "Levonható ÁFA belföld"
+        "hu": "Levonható ÁFA belföld",
+        "ca": "Total IVA soportado deducible operaciones interiores"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -162,12 +172,14 @@
       "help": {
         "en": "Total deductible input VAT (imports)",
         "es": "Total IVA soportado deducible importaciones",
-        "hu": "Levonható ÁFA import"
+        "hu": "Levonható ÁFA import",
+        "ca": "Total IVA soportado deducible importaciones"
       },
       "label": {
         "en": "Total deductible input VAT (imports)",
         "es": "Total IVA soportado deducible importaciones",
-        "hu": "Levonható ÁFA import"
+        "hu": "Levonható ÁFA import",
+        "ca": "Total IVA soportado deducible importaciones"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -196,14 +208,16 @@
         ]
       },
       "help": {
-        "en": "Total deductible input VAT. Computed as (100 + 101). (Legal basis: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
-        "es": "Total IVA soportado deducible. Se calcula como (100 + 101). (Base legal: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)",
-        "hu": "Összes levonható ÁFA. Számítás: (100 + 101). (Jogalap: ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740.)"
+        "en": "Total deductible input VAT. Computed as (100 + 101). (Legal basis: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "es": "Total IVA soportado deducible. Se calcula como (100 + 101). (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "hu": "Összes levonható ÁFA. Számítás: (100 + 101). (Jogalap: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "ca": "Total IVA soportado deducible. Se calcula como (100 + 101). (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Total deductible input VAT",
         "es": "Total IVA soportado deducible",
-        "hu": "Összes levonható ÁFA"
+        "hu": "Összes levonható ÁFA",
+        "ca": "Total IVA soportado deducible"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -243,14 +257,16 @@
         ]
       },
       "help": {
-        "en": "Result (general regime). Computed as (96 - 104). (Legal basis: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Resultado régimen general. Se calcula como (96 - 104). (Base legal: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Általános rendszer eredménye. Számítás: (96 - 104). (Jogalap: ley, art. 90, BOE-A-1992-28740; ley, art. 91, BOE-A-1992-28740; ley, art. 92, BOE-A-1992-28740; ley, art. 102, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result (general regime). Computed as (96 - 104). (Legal basis: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Resultado régimen general. Se calcula como (96 - 104). (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Általános rendszer eredménye. Számítás: (96 - 104). (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Resultado régimen general. Se calcula como (96 - 104). (Base legal: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result (general regime)",
         "es": "Resultado régimen general",
-        "hu": "Általános rendszer eredménye"
+        "hu": "Általános rendszer eredménye",
+        "ca": "Resultado régimen general"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -286,12 +302,14 @@
       "help": {
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
-        "hu": "Egyszerűsített rendszer eredménye"
+        "hu": "Egyszerűsített rendszer eredménye",
+        "ca": "Resultado régimen simplificado"
       },
       "label": {
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
-        "hu": "Egyszerűsített rendszer eredménye"
+        "hu": "Egyszerűsített rendszer eredménye",
+        "ca": "Resultado régimen simplificado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -316,12 +334,14 @@
       "help": {
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
-        "hu": "Egyéb rendszerek eredménye"
+        "hu": "Egyéb rendszerek eredménye",
+        "ca": "Resultado otros regímenes"
       },
       "label": {
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
-        "hu": "Egyéb rendszerek eredménye"
+        "hu": "Egyéb rendszerek eredménye",
+        "ca": "Resultado otros regímenes"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -351,14 +371,16 @@
         ]
       },
       "help": {
-        "en": "Result sum. Computed as (105 + 108 + 109). (Legal basis: ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Suma resultado. Se calcula como (105 + 108 + 109). (Base legal: ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Eredmény összege. Számítás: (105 + 108 + 109). (Jogalap: ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Result sum. Computed as (105 + 108 + 109). (Legal basis: Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Suma resultado. Se calcula como (105 + 108 + 109). (Base legal: Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Eredmény összege. Számítás: (105 + 108 + 109). (Jogalap: Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Suma resultado. Se calcula como (105 + 108 + 109). (Base legal: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Result sum",
         "es": "Suma resultado",
-        "hu": "Eredmény összege"
+        "hu": "Eredmény összege",
+        "ca": "Suma resultado"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -399,14 +421,16 @@
         ]
       },
       "help": {
-        "en": "Annual result quota. Computed as (190 - 662). (Legal basis: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "es": "Cuota resultante anual. Se calcula como (190 - 662). (Base legal: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)",
-        "hu": "Éves eredmény-összeg. Számítás: (190 - 662). (Jogalap: ley, art. 107, BOE-A-1992-28740; ley, art. 164, BOE-A-1992-28740.)"
+        "en": "Annual result quota. Computed as (190 - 662). (Legal basis: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "es": "Cuota resultante anual. Se calcula como (190 - 662). (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "hu": "Éves eredmény-összeg. Számítás: (190 - 662). (Jogalap: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)",
+        "ca": "Cuota resultante anual. Se calcula como (190 - 662). (Base legal: Ley, art. 107, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
         "en": "Annual result quota",
         "es": "Cuota resultante anual",
-        "hu": "Éves eredmény-összeg"
+        "hu": "Éves eredmény-összeg",
+        "ca": "Cuota resultante anual"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -445,14 +469,16 @@
         ]
       },
       "help": {
-        "en": "Total payable. Computed as max(0, 191). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a ingresar. Se calcula como max(0, 191). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Fizetendő összeg. Számítás: max(0, 191). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total payable. Computed as max(0, 191). (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a ingresar. Se calcula como max(0, 191). (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Fizetendő összeg. Számítás: max(0, 191). (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a ingresar. Se calcula como max(0, 191). (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total payable",
         "es": "Total a ingresar",
-        "hu": "Fizetendő összeg"
+        "hu": "Fizetendő összeg",
+        "ca": "Total a ingresar"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -495,14 +521,16 @@
         ]
       },
       "help": {
-        "en": "Total refundable. Computed as max(0, (0 - 191)). (Legal basis: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "es": "Total a devolver. Se calcula como max(0, (0 - 191)). (Base legal: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)",
-        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)). (Jogalap: ley, art. 164, BOE-A-1992-28740; reglamento, art. 71.7, BOE-A-1992-28925; orden ministerial, art. EHA/3111/2009, BOE-A-2009-18472.)"
+        "en": "Total refundable. Computed as max(0, (0 - 191)). (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "es": "Total a devolver. Se calcula como max(0, (0 - 191)). (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)). (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a devolver. Se calcula como max(0, (0 - 191)). (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
       },
       "label": {
         "en": "Total refundable",
         "es": "Total a devolver",
-        "hu": "Visszatérítendő összeg"
+        "hu": "Visszatérítendő összeg",
+        "ca": "Total a devolver"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",
@@ -542,12 +570,14 @@
       "help": {
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
-        "hu": "Tárgyi eszközök szabályozása"
+        "hu": "Tárgyi eszközök szabályozása",
+        "ca": "Regularización bienes de inversión"
       },
       "label": {
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
-        "hu": "Tárgyi eszközök szabályozása"
+        "hu": "Tárgyi eszközök szabályozása",
+        "ca": "Regularización bienes de inversión"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_390",

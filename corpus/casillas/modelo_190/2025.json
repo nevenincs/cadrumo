@@ -12,12 +12,14 @@
       "help": {
         "en": "Annual cumulative number of recipients of work income (LIRPF art. 17).",
         "es": "Total acumulado anual de perceptores con rendimientos del trabajo (LIRPF art. 17).",
-        "hu": "Munkajövedelem-kedvezményezettek éves száma (LIRPF 17. cikk)."
+        "hu": "Munkajövedelem-kedvezményezettek éves száma (LIRPF 17. cikk).",
+        "ca": "Total acumulado anual de perceptores con rendimientos del trabajo (LIRPF art. 17)."
       },
       "label": {
         "en": "Recipients — work income",
         "es": "N.º perceptores — rendimientos del trabajo",
-        "hu": "Munkajövedelem-kedvezményezettek"
+        "hu": "Munkajövedelem-kedvezményezettek",
+        "ca": "N.º perceptores — rendimientos del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -42,12 +44,14 @@
       "help": {
         "en": "Annual sum of gross perceptions paid as work income.",
         "es": "Suma anual de las percepciones íntegras satisfechas por rendimientos del trabajo.",
-        "hu": "A munkajövedelemként kifizetett bruttó jövedelmek éves összege."
+        "hu": "A munkajövedelemként kifizetett bruttó jövedelmek éves összege.",
+        "ca": "Suma anual de las percepciones íntegras satisfechas por rendimientos del trabajo."
       },
       "label": {
         "en": "Perceptions amount — work income",
         "es": "Importe percepciones — rendimientos del trabajo",
-        "hu": "Munkajövedelem összege"
+        "hu": "Munkajövedelem összege",
+        "ca": "Importe percepciones — rendimientos del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -72,12 +76,14 @@
       "help": {
         "en": "Annual sum of withholdings and payments on account on work income.",
         "es": "Suma anual de las retenciones e ingresos a cuenta practicados sobre rendimientos del trabajo.",
-        "hu": "Munkajövedelem után visszatartott és befizetett összegek éves összege."
+        "hu": "Munkajövedelem után visszatartott és befizetett összegek éves összege.",
+        "ca": "Suma anual de las retenciones e ingresos a cuenta practicados sobre rendimientos del trabajo."
       },
       "label": {
         "en": "Withholdings — work income",
         "es": "Retenciones — rendimientos del trabajo",
-        "hu": "Munkajövedelem-levonás"
+        "hu": "Munkajövedelem-levonás",
+        "ca": "Retenciones — rendimientos del trabajo"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -102,12 +108,14 @@
       "help": {
         "en": "Annual cumulative number of recipients of business income.",
         "es": "Total acumulado anual de perceptores con rendimientos de actividades económicas.",
-        "hu": "Vállalkozói jövedelemben részesülő személyek éves száma."
+        "hu": "Vállalkozói jövedelemben részesülő személyek éves száma.",
+        "ca": "Total acumulado anual de perceptores con rendimientos de actividades económicas."
       },
       "label": {
         "en": "Recipients — business income",
         "es": "N.º perceptores — actividades económicas",
-        "hu": "Vállalkozói-jövedelem kedvezményezettek"
+        "hu": "Vállalkozói-jövedelem kedvezményezettek",
+        "ca": "N.º perceptores — actividades económicas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -132,12 +140,14 @@
       "help": {
         "en": "Annual sum of gross perceptions paid as business income.",
         "es": "Suma anual de las percepciones íntegras satisfechas por actividades económicas.",
-        "hu": "Vállalkozási jövedelem éves bruttó összege."
+        "hu": "Vállalkozási jövedelem éves bruttó összege.",
+        "ca": "Suma anual de las percepciones íntegras satisfechas por actividades económicas."
       },
       "label": {
         "en": "Perceptions amount — business income",
         "es": "Importe percepciones — actividades económicas",
-        "hu": "Vállalkozói jövedelem összege"
+        "hu": "Vállalkozói jövedelem összege",
+        "ca": "Importe percepciones — actividades económicas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -162,12 +172,14 @@
       "help": {
         "en": "Annual sum of withholdings on professionals and business activities (15% / 7%).",
         "es": "Suma anual de las retenciones practicadas a profesionales y actividades económicas (15%/7%).",
-        "hu": "Szakemberek és vállalkozók után visszatartott összegek éves összege (15% / 7%)."
+        "hu": "Szakemberek és vállalkozók után visszatartott összegek éves összege (15% / 7%).",
+        "ca": "Suma anual de las retenciones practicadas a profesionales y actividades económicas (15%/7%)."
       },
       "label": {
         "en": "Withholdings — business income",
         "es": "Retenciones — actividades económicas",
-        "hu": "Vállalkozói-jövedelem levonás"
+        "hu": "Vállalkozói-jövedelem levonás",
+        "ca": "Retenciones — actividades económicas"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -192,12 +204,14 @@
       "help": {
         "en": "Annual number of recipients of prizes subject to withholding (LIRPF art. 101.7).",
         "es": "Total anual de perceptores de premios sujetos a retención (LIRPF art. 101.7).",
-        "hu": "A levonás alá eső nyereményekben részesülők éves száma."
+        "hu": "A levonás alá eső nyereményekben részesülők éves száma.",
+        "ca": "Total anual de perceptores de premios sujetos a retención (LIRPF art. 101.7)."
       },
       "label": {
         "en": "Recipients — prizes",
         "es": "N.º perceptores — premios",
-        "hu": "Nyeremény-kedvezményezettek"
+        "hu": "Nyeremény-kedvezményezettek",
+        "ca": "N.º perceptores — premios"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -222,12 +236,14 @@
       "help": {
         "en": "Annual sum of taxable prizes paid.",
         "es": "Suma anual de los premios satisfechos sometidos a retención.",
-        "hu": "A levonás alá eső nyeremények éves összege."
+        "hu": "A levonás alá eső nyeremények éves összege.",
+        "ca": "Suma anual de los premios satisfechos sometidos a retención."
       },
       "label": {
         "en": "Perceptions amount — prizes",
         "es": "Importe percepciones — premios",
-        "hu": "Nyeremény összege"
+        "hu": "Nyeremény összege",
+        "ca": "Importe percepciones — premios"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -252,12 +268,14 @@
       "help": {
         "en": "Annual sum of withholdings on prizes at the fixed 19% rate.",
         "es": "Suma anual de las retenciones practicadas sobre premios al tipo fijo del 19%.",
-        "hu": "A nyeremények után 19%-os fix kulccsal levont összegek éves összege."
+        "hu": "A nyeremények után 19%-os fix kulccsal levont összegek éves összege.",
+        "ca": "Suma anual de las retenciones practicadas sobre premios al tipo fijo del 19%."
       },
       "label": {
         "en": "Withholdings — prizes",
         "es": "Retenciones — premios",
-        "hu": "Nyeremény-levonás"
+        "hu": "Nyeremény-levonás",
+        "ca": "Retenciones — premios"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -282,12 +300,14 @@
       "help": {
         "en": "Annual number of recipients of forestry-derived capital gains on public lands.",
         "es": "Total anual de perceptores de ganancias derivadas de aprovechamientos forestales en montes públicos.",
-        "hu": "Az állami erdőkben elért vagyonnyereségben részesülők éves száma."
+        "hu": "Az állami erdőkben elért vagyonnyereségben részesülők éves száma.",
+        "ca": "Total anual de perceptores de ganancias derivadas de aprovechamientos forestales en montes públicos."
       },
       "label": {
         "en": "Recipients — capital gains (forestry)",
         "es": "N.º perceptores — ganancias patrimoniales (aprovechamientos forestales)",
-        "hu": "Erdészeti vagyonnyereség-kedvezményezettek"
+        "hu": "Erdészeti vagyonnyereség-kedvezményezettek",
+        "ca": "N.º perceptores — ganancias patrimoniales (aprovechamientos forestales)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -312,12 +332,14 @@
       "help": {
         "en": "Annual sum of forestry capital gains on public lands.",
         "es": "Suma anual de las percepciones por aprovechamientos forestales en montes públicos.",
-        "hu": "Az erdészeti vagyonnyereségek éves összege."
+        "hu": "Az erdészeti vagyonnyereségek éves összege.",
+        "ca": "Suma anual de las percepciones por aprovechamientos forestales en montes públicos."
       },
       "label": {
         "en": "Perceptions amount — forestry capital gains",
         "es": "Importe percepciones — ganancias patrimoniales (aprovechamientos forestales)",
-        "hu": "Erdészeti vagyonnyereség összege"
+        "hu": "Erdészeti vagyonnyereség összege",
+        "ca": "Importe percepciones — ganancias patrimoniales (aprovechamientos forestales)"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -342,12 +364,14 @@
       "help": {
         "en": "Annual sum of withholdings on forestry-related capital gains (19%).",
         "es": "Suma anual de las retenciones practicadas sobre ganancias patrimoniales por aprovechamientos forestales (19%).",
-        "hu": "Az erdészeti vagyonnyereségek után 19%-kal levont összegek éves összege."
+        "hu": "Az erdészeti vagyonnyereségek után 19%-kal levont összegek éves összege.",
+        "ca": "Suma anual de las retenciones practicadas sobre ganancias patrimoniales por aprovechamientos forestales (19%)."
       },
       "label": {
         "en": "Withholdings — capital gains",
         "es": "Retenciones — ganancias patrimoniales",
-        "hu": "Vagyonnyereség-levonás"
+        "hu": "Vagyonnyereség-levonás",
+        "ca": "Retenciones — ganancias patrimoniales"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -372,12 +396,14 @@
       "help": {
         "en": "Annual number of recipients of in-kind perceptions subject to a payment on account.",
         "es": "Total anual de perceptores de retribuciones en especie sujetas a ingreso a cuenta.",
-        "hu": "A természetbeni juttatásban részesülők éves száma."
+        "hu": "A természetbeni juttatásban részesülők éves száma.",
+        "ca": "Total anual de perceptores de retribuciones en especie sujetas a ingreso a cuenta."
       },
       "label": {
         "en": "Recipients — in-kind perceptions",
         "es": "N.º perceptores — contraprestaciones en especie",
-        "hu": "Természetbeni-jövedelem kedvezményezettek"
+        "hu": "Természetbeni-jövedelem kedvezményezettek",
+        "ca": "N.º perceptores — contraprestaciones en especie"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -402,12 +428,14 @@
       "help": {
         "en": "Annual sum of the tax-valuation of in-kind perceptions paid.",
         "es": "Suma anual del valor fiscal de las contraprestaciones en especie satisfechas.",
-        "hu": "A természetbeni juttatások adóértékének éves összege."
+        "hu": "A természetbeni juttatások adóértékének éves összege.",
+        "ca": "Suma anual del valor fiscal de las contraprestaciones en especie satisfechas."
       },
       "label": {
         "en": "Valuation — in-kind perceptions",
         "es": "Valoración percepciones — contraprestaciones en especie",
-        "hu": "Természetbeni juttatások értéke"
+        "hu": "Természetbeni juttatások értéke",
+        "ca": "Valoración percepciones — contraprestaciones en especie"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -432,12 +460,14 @@
       "help": {
         "en": "Annual sum of payments on account on in-kind perceptions.",
         "es": "Suma anual de los ingresos a cuenta practicados sobre contraprestaciones en especie.",
-        "hu": "Természetbeni juttatásokra alkalmazott éves előlegek összege."
+        "hu": "Természetbeni juttatásokra alkalmazott éves előlegek összege.",
+        "ca": "Suma anual de los ingresos a cuenta practicados sobre contraprestaciones en especie."
       },
       "label": {
         "en": "Payments on account — in-kind",
         "es": "Ingresos a cuenta — contraprestaciones en especie",
-        "hu": "Természetbeni-előlegek"
+        "hu": "Természetbeni-előlegek",
+        "ca": "Ingresos a cuenta — contraprestaciones en especie"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -462,12 +492,14 @@
       "help": {
         "en": "Annual number of recipients of imputed image-rights income (LIRPF art. 92).",
         "es": "Total anual de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92).",
-        "hu": "Képmás-jog átruházás miatti beszámított jövedelmekben részesülők éves száma."
+        "hu": "Képmás-jog átruházás miatti beszámított jövedelmekben részesülők éves száma.",
+        "ca": "Total anual de perceptores por imputación de rentas por cesión de derechos de imagen (LIRPF art. 92)."
       },
       "label": {
         "en": "Recipients — image-rights assignment",
         "es": "N.º perceptores — cesión de derechos de imagen",
-        "hu": "Képmás-jog átruházás kedvezményezettek"
+        "hu": "Képmás-jog átruházás kedvezményezettek",
+        "ca": "N.º perceptores — cesión de derechos de imagen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -492,12 +524,14 @@
       "help": {
         "en": "Annual sum of imputed image-rights income.",
         "es": "Suma anual de las imputaciones de rentas por cesión de derechos de imagen.",
-        "hu": "Képmás-jog átruházás miatti éves jövedelem összege."
+        "hu": "Képmás-jog átruházás miatti éves jövedelem összege.",
+        "ca": "Suma anual de las imputaciones de rentas por cesión de derechos de imagen."
       },
       "label": {
         "en": "Perceptions amount — image rights",
         "es": "Importe percepciones — cesión de derechos de imagen",
-        "hu": "Képmás-jog átruházás jövedelme"
+        "hu": "Képmás-jog átruházás jövedelme",
+        "ca": "Importe percepciones — cesión de derechos de imagen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -522,12 +556,14 @@
       "help": {
         "en": "Annual sum of withholdings on imputed image-rights income.",
         "es": "Suma anual de las retenciones e ingresos a cuenta por imputación de rentas por cesión de derechos de imagen.",
-        "hu": "Képmás-jog jövedelemre alkalmazott éves levonás összege."
+        "hu": "Képmás-jog jövedelemre alkalmazott éves levonás összege.",
+        "ca": "Suma anual de las retenciones e ingresos a cuenta por imputación de rentas por cesión de derechos de imagen."
       },
       "label": {
         "en": "Withholdings — image rights",
         "es": "Retenciones — cesión de derechos de imagen",
-        "hu": "Képmás-jog átruházás levonás"
+        "hu": "Képmás-jog átruházás levonás",
+        "ca": "Retenciones — cesión de derechos de imagen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -562,12 +598,14 @@
       "help": {
         "en": "Global sum of recipients declared in form 190.",
         "es": "Suma global de perceptores declarados en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő összes kedvezményezett."
+        "hu": "A 190-es nyomtatványban szereplő összes kedvezményezett.",
+        "ca": "Suma global de perceptores declarados en el modelo 190."
       },
       "label": {
         "en": "Total recipients",
         "es": "Total perceptores",
-        "hu": "Összes kedvezményezett"
+        "hu": "Összes kedvezményezett",
+        "ca": "Total perceptores"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -615,12 +653,14 @@
       "help": {
         "en": "Global sum of gross perceptions declared in form 190.",
         "es": "Suma global de las percepciones íntegras declaradas en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő bruttó jövedelmek összege."
+        "hu": "A 190-es nyomtatványban szereplő bruttó jövedelmek összege.",
+        "ca": "Suma global de las percepciones íntegras declaradas en el modelo 190."
       },
       "label": {
         "en": "Total perceptions",
         "es": "Total percepciones",
-        "hu": "Összes jövedelem"
+        "hu": "Összes jövedelem",
+        "ca": "Total percepciones"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",
@@ -668,12 +708,14 @@
       "help": {
         "en": "Global sum of withholdings and payments on account declared in form 190.",
         "es": "Suma global de las retenciones e ingresos a cuenta declarados en el modelo 190.",
-        "hu": "A 190-es nyomtatványban szereplő levonások és előlegek összege."
+        "hu": "A 190-es nyomtatványban szereplő levonások és előlegek összege.",
+        "ca": "Suma global de las retenciones e ingresos a cuenta declarados en el modelo 190."
       },
       "label": {
         "en": "Total withholdings and payments on account",
         "es": "Total retenciones e ingresos a cuenta",
-        "hu": "Összes levonás és előleg"
+        "hu": "Összes levonás és előleg",
+        "ca": "Total retenciones e ingresos a cuenta"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_190",

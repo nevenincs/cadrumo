@@ -12,12 +12,14 @@
       "help": {
         "en": "BIN compensation",
         "es": "Compensacion BINs",
-        "hu": "Veszteség-beszámítás"
+        "hu": "Veszteség-beszámítás",
+        "ca": "Compensacion BINs"
       },
       "label": {
         "en": "BIN compensation",
         "es": "Compensacion BINs",
-        "hu": "Veszteség-beszámítás"
+        "hu": "Veszteség-beszámítás",
+        "ca": "Compensacion BINs"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -42,12 +44,14 @@
       "help": {
         "en": "BI pre-reserve",
         "es": "Base imponible antes reserva",
-        "hu": "Adóalap rezerv előtt"
+        "hu": "Adóalap rezerv előtt",
+        "ca": "Base imponible antes reserva"
       },
       "label": {
         "en": "BI pre-reserve",
         "es": "Base imponible antes reserva",
-        "hu": "Adóalap rezerv előtt"
+        "hu": "Adóalap rezerv előtt",
+        "ca": "Base imponible antes reserva"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -72,12 +76,14 @@
       "help": {
         "en": "Taxable base",
         "es": "Base imponible",
-        "hu": "Adóalap"
+        "hu": "Adóalap",
+        "ca": "Base imponible"
       },
       "label": {
         "en": "Taxable base",
         "es": "Base imponible",
-        "hu": "Adóalap"
+        "hu": "Adóalap",
+        "ca": "Base imponible"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -102,12 +108,14 @@
       "help": {
         "en": "Tax rate",
         "es": "Tipo de gravamen",
-        "hu": "Adókulcs"
+        "hu": "Adókulcs",
+        "ca": "Tipo de gravamen"
       },
       "label": {
         "en": "Tax rate",
         "es": "Tipo de gravamen",
-        "hu": "Adókulcs"
+        "hu": "Adókulcs",
+        "ca": "Tipo de gravamen"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -138,12 +146,14 @@
       "help": {
         "en": "Gross tax (pre)",
         "es": "Cuota integra previa",
-        "hu": "Bruttó adó (elő)"
+        "hu": "Bruttó adó (elő)",
+        "ca": "Cuota integra previa"
       },
       "label": {
         "en": "Gross tax (pre)",
         "es": "Cuota integra previa",
-        "hu": "Bruttó adó (elő)"
+        "hu": "Bruttó adó (elő)",
+        "ca": "Cuota integra previa"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -172,14 +182,16 @@
         ]
       },
       "help": {
-        "en": "Gross tax amount. Computed as ((00558 / 100) * 00552). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Cuota integra. Se calcula como ((00558 / 100) * 00552). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Bruttó adóösszeg. Számítás: ((00558 / 100) * 00552). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Gross tax amount. Computed as ((00558 / 100) * 00552). (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "es": "Cuota integra. Se calcula como ((00558 / 100) * 00552). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "hu": "Bruttó adóösszeg. Számítás: ((00558 / 100) * 00552). (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Cuota integra. Se calcula como ((00558 / 100) * 00552). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
       },
       "label": {
         "en": "Gross tax amount",
         "es": "Cuota integra",
-        "hu": "Bruttó adóösszeg"
+        "hu": "Bruttó adóösszeg",
+        "ca": "Cuota integra"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -215,12 +227,14 @@
       "help": {
         "en": "Bonuses and international double-taxation deductions",
         "es": "Bonificaciones y deducciones doble imposición internacional",
-        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások"
+        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások",
+        "ca": "Bonificaciones y deducciones doble imposición internacional"
       },
       "label": {
         "en": "Bonuses and international double-taxation deductions",
         "es": "Bonificaciones y deducciones doble imposición internacional",
-        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások"
+        "hu": "Bónuszok és nemzetközi kettős adóztatás levonások",
+        "ca": "Bonificaciones y deducciones doble imposición internacional"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -245,12 +259,14 @@
       "help": {
         "en": "Net tax amount",
         "es": "Cuota liquida",
-        "hu": "Nettó adóösszeg"
+        "hu": "Nettó adóösszeg",
+        "ca": "Cuota liquida"
       },
       "label": {
         "en": "Net tax amount",
         "es": "Cuota liquida",
-        "hu": "Nettó adóösszeg"
+        "hu": "Nettó adóösszeg",
+        "ca": "Cuota liquida"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -275,12 +291,14 @@
       "help": {
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások"
+        "hu": "Levonások",
+        "ca": "Retenciones e ingresos a cuenta"
       },
       "label": {
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
-        "hu": "Levonások"
+        "hu": "Levonások",
+        "ca": "Retenciones e ingresos a cuenta"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -305,12 +323,14 @@
       "help": {
         "en": "Instalment 1P",
         "es": "Pago fraccionado 1P",
-        "hu": "1P részlet"
+        "hu": "1P részlet",
+        "ca": "Pago fraccionado 1P"
       },
       "label": {
         "en": "Instalment 1P",
         "es": "Pago fraccionado 1P",
-        "hu": "1P részlet"
+        "hu": "1P részlet",
+        "ca": "Pago fraccionado 1P"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -335,12 +355,14 @@
       "help": {
         "en": "Instalment 2P",
         "es": "Pago fraccionado 2P",
-        "hu": "2P részlet"
+        "hu": "2P részlet",
+        "ca": "Pago fraccionado 2P"
       },
       "label": {
         "en": "Instalment 2P",
         "es": "Pago fraccionado 2P",
-        "hu": "2P részlet"
+        "hu": "2P részlet",
+        "ca": "Pago fraccionado 2P"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -365,12 +387,14 @@
       "help": {
         "en": "Instalment 3P",
         "es": "Pago fraccionado 3P",
-        "hu": "3P részlet"
+        "hu": "3P részlet",
+        "ca": "Pago fraccionado 3P"
       },
       "label": {
         "en": "Instalment 3P",
         "es": "Pago fraccionado 3P",
-        "hu": "3P részlet"
+        "hu": "3P részlet",
+        "ca": "Pago fraccionado 3P"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -395,12 +419,14 @@
       "help": {
         "en": "Deductions refund",
         "es": "Abono de deducciones",
-        "hu": "Kedvezmény-visszatérítés"
+        "hu": "Kedvezmény-visszatérítés",
+        "ca": "Abono de deducciones"
       },
       "label": {
         "en": "Deductions refund",
         "es": "Abono de deducciones",
-        "hu": "Kedvezmény-visszatérítés"
+        "hu": "Kedvezmény-visszatérítés",
+        "ca": "Abono de deducciones"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -425,12 +451,14 @@
       "help": {
         "en": "Increment for lost tax benefits",
         "es": "Incremento por perdida beneficios fiscales",
-        "hu": "Növelés elveszett kedvezmények miatt"
+        "hu": "Növelés elveszett kedvezmények miatt",
+        "ca": "Incremento por perdida beneficios fiscales"
       },
       "label": {
         "en": "Increment for lost tax benefits",
         "es": "Incremento por perdida beneficios fiscales",
-        "hu": "Növelés elveszett kedvezmények miatt"
+        "hu": "Növelés elveszett kedvezmények miatt",
+        "ca": "Incremento por perdida beneficios fiscales"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -462,14 +490,16 @@
         ]
       },
       "help": {
-        "en": "Tax differential. Computed as ((((00592 - 00599) - 00601) - 00603) - 00605). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Adókülönbözet. Számítás: ((((00592 - 00599) - 00601) - 00603) - 00605). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Tax differential. Computed as ((((00592 - 00599) - 00601) - 00603) - 00605). (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "es": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "hu": "Adókülönbözet. Számítás: ((((00592 - 00599) - 00601) - 00603) - 00605). (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Cuota diferencial. Se calcula como ((((00592 - 00599) - 00601) - 00603) - 00605). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
       },
       "label": {
         "en": "Tax differential",
         "es": "Cuota diferencial",
-        "hu": "Adókülönbözet"
+        "hu": "Adókülönbözet",
+        "ca": "Cuota diferencial"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
@@ -513,14 +543,16 @@
         ]
       },
       "help": {
-        "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619). (Legal basis: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). (Base legal: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
-        "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619). (Jogalap: ley, art. 29-30, BOE-A-2014-12328; ley, art. 30+39+125.3, BOE-A-2014-12328; reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
+        "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619). (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619). (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)",
+        "ca": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Reglamento, art. RD 634/2015, BOE-A-2015-7771.)"
       },
       "label": {
         "en": "Net payable or refundable",
         "es": "Liquido a ingresar o devolver",
-        "hu": "Fizetendő vagy visszatérítendő"
+        "hu": "Fizetendő vagy visszatérítendő",
+        "ca": "Liquido a ingresar o devolver"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_200",
