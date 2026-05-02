@@ -606,6 +606,43 @@ def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
         pytest.fail("Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures))
 
 
+def test_corpus_within_year_periods_share_structural_shape() -> None:
+    """Every period within a single fiscal year must agree on each casilla's structure.
+
+    Snapshots ``(data_type, computed, references_casillas, references_rules,
+    validation rule names)`` per ``(modelo, year, casilla_id)`` across
+    every period file (Q1-Q4 / M01-M12 / annual). Drift between
+    periods of the same year is a structural integrity failure —
+    e.g., M303 cas 03 must have the same data_type and rule link in
+    2024Q1 and 2024Q4.
+    """
+    from collections import defaultdict
+
+    snapshots: dict[tuple[str, str, str], set[tuple]] = defaultdict(set)
+    for path in _iter_corpus_files():
+        modelo, period = _modelo_period_for(path)
+        year = period[:4]
+        if "Q" not in period and "-" not in period:
+            continue
+        catalogue = load_casillas(modelo, period)
+        for rec in catalogue.records:
+            snap = (
+                rec.data_type.value,
+                rec.computed,
+                tuple(rec.references_casillas),
+                tuple(rec.references_rules),
+                tuple(v.rule for v in rec.validation),
+            )
+            snapshots[(modelo, year, rec.casilla_id)].add(snap)
+    failures = [
+        f"{modelo} {year} cas {cid}: {len(shapes)} differing shapes"
+        for (modelo, year, cid), shapes in snapshots.items()
+        if len(shapes) > 1
+    ]
+    if failures:
+        pytest.fail("Within-year period shape drift:\n" + "\n".join(f" - {f}" for f in failures))
+
+
 def test_corpus_label_and_help_carry_every_supported_language() -> None:
     """Every record's ``label`` and ``help`` must include every code from :class:`Language`.
 
@@ -637,13 +674,19 @@ def test_corpus_help_and_label_carry_no_dev_process_leakage() -> None:
     """User-facing strings must not leak engineering metadata.
 
     The corpus' label / help is operator-facing; it must not contain
-    development-process tokens (``wave``, ``phase``, ``WIP``,
-    ``sub-EPIC``, ``TBD``, ``FIXME``) that belong to commit messages
-    and vault docs, not to the AEAT domain language Kent reads.
+    development-process tokens (``wave``, ``phase``, ``cycle``,
+    ``iteration``, ``WIP``, ``EPIC``, ``sub-EPIC``, ``Tier-L``,
+    ``restructure``, ``TBD``, ``FIXME``, ``audit finding``,
+    ``Stream A`` / ``Track A``) that belong to commit messages, not
+    to the AEAT domain language operators read.
     """
     import re
 
-    forbidden = re.compile(r"\b(wave|phase|wip|sub-EPIC|TBD|FIXME)\b", re.IGNORECASE)
+    forbidden = re.compile(
+        r"\b(wave|phase|cycle|iteration|wip|EPIC|sub-EPIC|Tier[- ]?L|"
+        r"restructure|TBD|FIXME|audit\s+finding|Stream\s+[ABC]|Track\s+[AB])\b",
+        re.IGNORECASE,
+    )
     failures: list[str] = []
     for path in _iter_corpus_files():
         modelo, period = _modelo_period_for(path)
