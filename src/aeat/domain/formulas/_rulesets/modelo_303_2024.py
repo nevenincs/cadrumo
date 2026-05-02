@@ -1,11 +1,11 @@
-"""Modelo 303 ruleset covering the full 2024 fiscal year (#183).
+"""Modelo 303 ruleset covering the full 2024 fiscal year.
 
 Codifies the régimen general arithmetic of the autoliquidación
 trimestral de IVA: IVA devengado on operaciones interiores
 (casillas 01-09), IVA deducible (casillas 28-45) and the
-resultado de la liquidación (casillas 64-71). Out-of-scope for
-this wave (per the ADR
-``2026-04-17-modelo-303-formulas-adr.md``):
+resultado de la liquidación (casillas 64-71).
+
+Out of scope:
 
 - Régimen simplificado, REAGP, REBU, recargo de equivalencia
   (casillas 46-63).
@@ -16,11 +16,10 @@ this wave (per the ADR
 - Foral attribution; casilla 65 defaults to 100.
 
 The 2024 and 2025 rulesets are mechanically identical because
-LIVA arts. 90 / 91 régimen general rates were not amended
-between the two years (see the doc
-``2026-04-17-modelo-303-casilla-rules-research.md`` §"Mid-year
-rule changes"). The shared casilla and citation tuples live in
-this module; the 2025 sibling re-imports them.
+LIVA arts. 90 / 91 régimen general rates were not amended between
+the two years. The shared casilla and citation tuples live in this
+module; the 2025 and 2026 siblings re-import them and bind their
+own year-stamped formula identifiers and parameter tables.
 """
 
 from __future__ import annotations
@@ -355,7 +354,7 @@ _CASILLAS = (
         },
         computed=False,
         legal_basis=_CITATIONS[2:3],
-        notes_es="Importe ya calculado por el contribuyente; el motor no deriva el porcentaje en este wave.",
+        notes_es="Importe ya calculado por el contribuyente; el motor no deriva el porcentaje aquí.",
     ),
     casilla(
         casilla_id="44",
@@ -398,7 +397,7 @@ _CASILLAS = (
         computed=False,
         legal_basis=_CITATIONS[3:4],
         notes_es="Default 100 para contribuyentes sin atribución foral. "
-        "Foral (País Vasco / Navarra) queda fuera de este wave.",
+        "Foral (País Vasco / Navarra) no es objeto de este motor.",
     ),
     casilla(
         casilla_id="66",
