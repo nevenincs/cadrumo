@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Régimen general 1T base Resum anual que consolida les dades trimestrals del model 303.",
+        "ca": "Règim general 1T base Resum anual que consolida les dades trimestrals del model 303.",
         "en": "General regime Q1 base Annual summary consolidating the quarterly data of form 303.",
         "es": "Régimen general 1T base Resumen anual que consolida los datos trimestrales del modelo 303.",
         "hu": "Általános rendszer 1T alap Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Régimen general 1T base",
+        "ca": "Règim general 1T base",
         "en": "General regime Q1 base",
         "es": "Régimen general 1T base",
         "hu": "Általános rendszer 1T alap"
@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Régimen general 1T cuota Resum anual que consolida les dades trimestrals del model 303.",
+        "ca": "Règim general 1T cuota Resum anual que consolida les dades trimestrals del model 303.",
         "en": "General regime Q1 quota Annual summary consolidating the quarterly data of form 303.",
         "es": "Régimen general 1T cuota Resumen anual que consolida los datos trimestrales del modelo 303.",
         "hu": "Általános rendszer 1T összeg Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Régimen general 1T cuota",
+        "ca": "Règim general 1T cuota",
         "en": "General regime Q1 quota",
         "es": "Régimen general 1T cuota",
         "hu": "Általános rendszer 1T összeg"
@@ -138,13 +138,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total IVA soportado deducible operaciones interiores Resum anual que consolida les dades trimestrals del model 303.",
+        "ca": "Total IVA suportat deducible operaciones interiores Resum anual que consolida les dades trimestrals del model 303.",
         "en": "Total deductible input VAT (domestic) Annual summary consolidating the quarterly data of form 303.",
         "es": "Total IVA soportado deducible operaciones interiores Resumen anual que consolida los datos trimestrales del modelo 303.",
         "hu": "Levonható ÁFA belföld Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Total IVA soportado deducible operaciones interiores",
+        "ca": "Total IVA suportat deducible operaciones interiores",
         "en": "Total deductible input VAT (domestic)",
         "es": "Total IVA soportado deducible operaciones interiores",
         "hu": "Levonható ÁFA belföld"
@@ -170,13 +170,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total IVA soportado deducible importaciones Resum anual que consolida les dades trimestrals del model 303.",
+        "ca": "Total IVA suportat deducible importaciones Resum anual que consolida les dades trimestrals del model 303.",
         "en": "Total deductible input VAT (imports) Annual summary consolidating the quarterly data of form 303.",
         "es": "Total IVA soportado deducible importaciones Resumen anual que consolida los datos trimestrales del modelo 303.",
         "hu": "Levonható ÁFA import Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Total IVA soportado deducible importaciones",
+        "ca": "Total IVA suportat deducible importaciones",
         "en": "Total deductible input VAT (imports)",
         "es": "Total IVA soportado deducible importaciones",
         "hu": "Levonható ÁFA import"
@@ -208,13 +208,13 @@
         ]
       },
       "help": {
-        "ca": "Total IVA soportado deducible. Es calcula com (100 + 101). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
+        "ca": "Total IVA suportat deducible. Es calcula com (100 + 101). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
         "en": "Total deductible input VAT. Computed as (100 + 101). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
         "es": "Total IVA soportado deducible. Se calcula como (100 + 101). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)",
         "hu": "Összes levonható ÁFA. Számítás: (100 + 101) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Total IVA soportado deducible",
+        "ca": "Total IVA suportat deducible",
         "en": "Total deductible input VAT",
         "es": "Total IVA soportado deducible",
         "hu": "Összes levonható ÁFA"
@@ -263,7 +263,7 @@
         "hu": "Általános rendszer eredménye. Számítás: (96 - 104) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 90, BOE-A-1992-28740; Ley, art. 91, BOE-A-1992-28740; Ley, art. 92, BOE-A-1992-28740; Ley, art. 102, BOE-A-1992-28740; Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Resultat régimen general",
+        "ca": "Resultado régimen general",
         "en": "Result (general regime)",
         "es": "Resultado régimen general",
         "hu": "Általános rendszer eredménye"
@@ -306,7 +306,7 @@
         "hu": "Egyszerűsített rendszer eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Resultat régimen simplificado",
+        "ca": "Resultado régimen simplificado",
         "en": "Result (simplified regime)",
         "es": "Resultado régimen simplificado",
         "hu": "Egyszerűsített rendszer eredménye"
@@ -338,7 +338,7 @@
         "hu": "Egyéb rendszerek eredménye Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Resultat otros regímenes",
+        "ca": "Resultado otros regímenes",
         "en": "Result (other regimes)",
         "es": "Resultado otros regímenes",
         "hu": "Egyéb rendszerek eredménye"
@@ -377,7 +377,7 @@
         "hu": "Eredmény összege. Számítás: (105 + 108 + 109) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740.)"
       },
       "label": {
-        "ca": "Suma resultat",
+        "ca": "Suma resultado",
         "en": "Result sum",
         "es": "Suma resultado",
         "hu": "Eredmény összege"
@@ -469,7 +469,7 @@
         ]
       },
       "help": {
-        "ca": "Total a ingresar. Es calcula com max(0, 191). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a ingressar. Es calcula com max(0, 191). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "en": "Total payable. Computed as max(0, 191). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "es": "Total a ingresar. Se calcula como max(0, 191). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "hu": "Fizetendő összeg. Számítás: max(0, 191) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
@@ -521,7 +521,7 @@
         ]
       },
       "help": {
-        "ca": "Total a devolver. Es calcula com max(0, (0 - 191)). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
+        "ca": "Total a retornar. Es calcula com max(0, (0 - 191)). Resum anual que consolida les dades trimestrals del model 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "en": "Total refundable. Computed as max(0, (0 - 191)). Annual summary consolidating the quarterly data of form 303. (Legal basis: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "es": "Total a devolver. Se calcula como max(0, (0 - 191)). Resumen anual que consolida los datos trimestrales del modelo 303. (Base legal: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)",
         "hu": "Visszatérítendő összeg. Számítás: max(0, (0 - 191)) Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell. (Jogalap: Ley, art. 164, BOE-A-1992-28740; Reglamento, art. 71.7, BOE-A-1992-28925; Orden, art. EHA/3111/2009, BOE-A-2009-18472.)"
@@ -574,7 +574,7 @@
         "hu": "Tárgyi eszközök szabályozása Éves összefoglaló, amely az alábbi modell negyedéves adatait foglalja össze: 303-os modell."
       },
       "label": {
-        "ca": "Regularización bienes de inversió",
+        "ca": "Regularización bienes de inversión",
         "en": "Capital-goods regularisation",
         "es": "Regularización bienes de inversión",
         "hu": "Tárgyi eszközök szabályozása"

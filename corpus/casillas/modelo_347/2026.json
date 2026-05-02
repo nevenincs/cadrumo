@@ -10,7 +10,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de personas o entidades respecto de las cuales se ha realizado declaración por superar 3.005,06 € (Orden EHA/3012/2008).",
+        "ca": "Nombre de personas o entidades respecto de las cuales se ha realizado declaració por superar 3.005,06 € (Orden EHA/3012/2008).",
         "en": "Number of parties for which a declaration is filed because the threshold of €3,005.06 was exceeded.",
         "es": "Número de personas o entidades respecto de las cuales se ha realizado declaración por superar 3.005,06 € (Orden EHA/3012/2008).",
         "hu": "A 3 005,06 €-os küszöb átlépése miatt bejelentett személyek száma."
@@ -48,7 +48,7 @@
         "hu": "A 347. nyomtatványban bejelentett ügyletek éves összege."
       },
       "label": {
-        "ca": "Importe total anual de operaciones declaradas",
+        "ca": "Import total anual de operaciones declaradas",
         "en": "Annual total of declared operations",
         "es": "Importe total anual de operaciones declaradas",
         "hu": "A bejelentett ügyletek éves teljes összege"
@@ -74,7 +74,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de registros declarados respecto de cobros en metálico superiores a 6.000 € (art. 7 RGAT).",
+        "ca": "Nombre de registros declarados respecto de cobros en metálico superiores a 6.000 € (art. 7 RGAT).",
         "en": "Records declared for cash receipts exceeding €6,000 (RGAT art. 7).",
         "es": "Número de registros declarados respecto de cobros en metálico superiores a 6.000 € (art. 7 RGAT).",
         "hu": "6 000 € feletti készpénzes bevétel rekordjainak száma."
@@ -112,7 +112,7 @@
         "hu": "A 6 000 € feletti készpénzes bevételek éves összege."
       },
       "label": {
-        "ca": "Importe total — cobros en metálico",
+        "ca": "Import total — cobros en metálico",
         "en": "Total cash payments received",
         "es": "Importe total — cobros en metálico",
         "hu": "Készpénzes-bevétel összege"

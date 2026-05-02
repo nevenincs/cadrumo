@@ -22,6 +22,7 @@ the deterministic generated payload.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -86,6 +87,526 @@ def _format_decimal(value: Decimal) -> str:
     if "." in s and "e" not in s.lower():
         s = s.rstrip("0").rstrip(".")
     return s or "0"
+
+
+# Spanish→Catalan lemma map for hydrate-time CA fallback. Sources:
+# DOGC, Agència Tributària de Catalunya, Generalitat de Catalunya
+# Departament d'Economia i Hisenda, AEAT Manual Pràctic Catalan
+# editions, TERMCAT. See
+# .vault/reference/2026-05-01-quadlingual-i18n-reference.md.
+#
+# Spanish acronyms (IVA, IRPF, IRNR, ITP, etc.) are kept unchanged
+# per the ADR's acronym-retention decision because the Generalitat
+# itself uses them on Catalan-language tax forms.
+_ES_TO_CA_LEMMAS: tuple[tuple[str, str], ...] = (
+    ("Marque esta casilla para comunicar el inicio de la actividad económica.",
+     "Marqueu aquesta casella per comunicar l'inici de l'activitat econòmica."),
+    ("Marque esta casilla para comunicar el cese de la actividad económica.",
+     "Marqueu aquesta casella per comunicar el cessament de l'activitat econòmica."),
+    ("Marque para modificar los datos relativos al régimen de IVA.",
+     "Marqueu per modificar les dades relatives al règim d'IVA."),
+    ("Adquisiciones intracomunitarias", "Adquisicions intracomunitàries"),
+    ("Entregas intracomunitarias", "Lliuraments intracomunitaris"),
+    ("Operaciones interiores corrientes", "Operacions interiors corrents"),
+    ("Operaciones interiores", "Operacions interiors"),
+    ("Inversión del sujeto pasivo", "Inversió del subjecte passiu"),
+    ("Recargo de equivalencia", "Recàrrec d'equivalència"),
+    ("Régimen simplificado del IVA", "Règim simplificat de l'IVA"),
+    ("Régimen general del IVA", "Règim general de l'IVA"),
+    ("Régimen de estimación directa del IRPF", "Règim d'estimació directa de l'IRPF"),
+    ("Régimen de estimación objetiva del IRPF", "Règim d'estimació objectiva de l'IRPF"),
+    ("Régimen simplificado", "Règim simplificat"),
+    ("Régimen general", "Règim general"),
+    ("Régimen especial", "Règim especial"),
+    ("Tipo superreducido", "Tipus superreduït"),
+    ("Tipo reducido", "Tipus reduït"),
+    ("Tipo general", "Tipus general"),
+    ("Tipo impositivo", "Tipus impositiu"),
+    ("IVA devengado", "IVA meritat"),
+    ("IVA repercutido", "IVA repercutit"),
+    ("IVA soportado", "IVA suportat"),
+    ("IVA deducible", "IVA deduïble"),
+    ("Base imponible gravada al tipo superreducido", "Base imposable gravada al tipus superreduït"),
+    ("Base imponible gravada al tipo reducido", "Base imposable gravada al tipus reduït"),
+    ("Base imponible", "Base imposable"),
+    ("Base liquidable general", "Base liquidable general"),
+    ("Base liquidable del ahorro", "Base liquidable de l'estalvi"),
+    ("Base liquidable", "Base liquidable"),
+    ("Cuota líquida", "Quota líquida"),
+    ("Cuota tributaria", "Quota tributària"),
+    ("Cuota íntegra", "Quota íntegra"),
+    ("Cuota a ingresar", "Quota a ingressar"),
+    ("Cuota a devolver", "Quota a retornar"),
+    ("Rendimientos del trabajo", "Rendiments del treball"),
+    ("Rendimientos de actividades económicas", "Rendiments d'activitats econòmiques"),
+    ("Rendimientos del capital mobiliario", "Rendiments del capital mobiliari"),
+    ("Rendimientos del capital inmobiliario", "Rendiments del capital immobiliari"),
+    ("Rendimiento neto previo del trabajo", "Rendiment net previ del treball"),
+    ("Rendimiento neto reducido del trabajo", "Rendiment net reduït del treball"),
+    ("Rendimiento neto previo capital mobiliario", "Rendiment net previ capital mobiliari"),
+    ("Rendimiento neto reducido capital mobiliario", "Rendiment net reduït capital mobiliari"),
+    ("Rendimiento neto previo capital inmobiliario", "Rendiment net previ capital immobiliari"),
+    ("Rendimiento neto reducido capital inmobiliario", "Rendiment net reduït capital immobiliari"),
+    ("Rendimiento neto previo", "Rendiment net previ"),
+    ("Rendimiento neto reducido", "Rendiment net reduït"),
+    ("Rendimiento neto", "Rendiment net"),
+    ("Rendimiento íntegro", "Rendiment íntegre"),
+    ("Rendimientos", "Rendiments"),
+    ("Ganancias y pérdidas patrimoniales", "Guanys i pèrdues patrimonials"),
+    ("Mínimo personal y familiar", "Mínim personal i familiar"),
+    ("Retención", "Retenció"),
+    ("Retenciones", "Retencions"),
+    ("Ingreso a cuenta", "Ingrés a compte"),
+    ("Ingresos a cuenta", "Ingressos a compte"),
+    ("Pago fraccionado", "Pagament fraccionat"),
+    ("Pagos fraccionados", "Pagaments fraccionats"),
+    ("Solicitud de alta en el censo de empresarios",
+     "Sol·licitud d'alta al cens d'empresaris"),
+    ("Modificación de datos relativos al IVA",
+     "Modificació de dades relatives a l'IVA"),
+    ("Baja en el censo de empresarios", "Baixa al cens d'empresaris"),
+    ("Código de epígrafe del Impuesto sobre Actividades Económicas",
+     "Codi d'epígraf de l'Impost sobre Activitats Econòmiques"),
+    ("Epígrafe IAE", "Epígraf IAE"),
+    ("declaración censal", "declaració censal"),
+    ("Declaración censal", "Declaració censal"),
+    ("declaración informativa", "declaració informativa"),
+    ("Declaración informativa", "Declaració informativa"),
+    ("declaraciones informativas", "declaracions informatives"),
+    ("Declaraciones informativas", "Declaracions informatives"),
+    # Generic structural lemmas
+    ("declaración", "declaració"),
+    ("Declaración", "Declaració"),
+    ("declaraciones", "declaracions"),
+    ("Declaraciones", "Declaracions"),
+    ("autoliquidación", "autoliquidació"),
+    ("Autoliquidación", "Autoliquidació"),
+    ("autoliquidaciones", "autoliquidacions"),
+    ("Autoliquidaciones", "Autoliquidacions"),
+    ("liquidación", "liquidació"),
+    ("Liquidación", "Liquidació"),
+    ("presentación", "presentació"),
+    ("Presentación", "Presentació"),
+    ("complementaria", "complementària"),
+    ("Complementaria", "Complementària"),
+    ("sustitutiva", "substitutiva"),
+    ("Sustitutiva", "Substitutiva"),
+    ("rectificación", "rectificació"),
+    ("Rectificación", "Rectificació"),
+    ("ejercicio", "exercici"),
+    ("Ejercicio", "Exercici"),
+    ("período impositivo", "període impositiu"),
+    ("Período impositivo", "Període impositiu"),
+    # Accounting lemmas
+    ("Ingresos de explotación", "Ingressos d'explotació"),
+    ("Variación de existencias", "Variació d'existències"),
+    ("Gastos de personal", "Despeses de personal"),
+    ("Servicios exteriores, tributos y otros", "Serveis exteriors, tributs i altres"),
+    ("Amortización del inmovilizado", "Amortització de l'immobilitzat"),
+    ("Provisiones y deterioros", "Provisions i deterioraments"),
+    ("Total gastos computables", "Total despeses computables"),
+    ("Total ingresos computables", "Total ingressos computables"),
+    ("Gasto deducible cotización Seguridad Social",
+     "Despesa deduïble cotització Seguretat Social"),
+    ("Otros gastos deducibles del trabajo", "Altres despeses deduïbles del treball"),
+    ("Gasto adicional movilidad geográfica", "Despesa addicional mobilitat geogràfica"),
+    ("Saldo neto patrimonial total", "Saldo net patrimonial total"),
+    ("Mínimo personal y familiar total", "Mínim personal i familiar total"),
+    ("Total deducciones autonómicas", "Total deduccions autonòmiques"),
+    ("Total deducciones (estatales + autonómicas)",
+     "Total deduccions (estatals + autonòmiques)"),
+    ("deducciones autonómicas", "deduccions autonòmiques"),
+    ("Deducciones autonómicas", "Deduccions autonòmiques"),
+    ("deducciones estatales", "deduccions estatals"),
+    ("Deducciones estatales", "Deduccions estatals"),
+    ("Total deducciones autonómicas (suma per-CCAA)",
+     "Total deduccions autonòmiques (suma per CCAA)"),
+    # CCAA names
+    ("Andalucía", "Andalusia"),
+    ("Aragón", "Aragó"),
+    ("Principado de Asturias", "Principat d'Astúries"),
+    ("Asturias", "Astúries"),
+    ("Canarias", "Canàries"),
+    ("Cantabria", "Cantàbria"),
+    ("Castilla-La Mancha", "Castella-la Manxa"),
+    ("Castilla y León", "Castella i Lleó"),
+    ("Cataluña", "Catalunya"),
+    ("Comunidad Valenciana", "Comunitat Valenciana"),
+    ("Galicia", "Galícia"),
+    ("Comunidad de Madrid", "Comunitat de Madrid"),
+    ("Región de Murcia", "Regió de Múrcia"),
+    ("País Vasco", "País Basc"),
+    # Common nouns / domain terms
+    ("Marque si tributa por", "Marqueu si tributeu per"),
+    ("Marque si tributa", "Marqueu si tributeu"),
+    ("Marque si", "Marqueu si"),
+    ("Marque para", "Marqueu per"),
+    ("Marque la casilla", "Marqueu la casella"),
+    ("Marque", "Marqueu"),
+    ("Indique", "Indiqueu"),
+    ("Consulte", "Consulteu"),
+    ("Introduzca", "Introduïu"),
+    ("Anote", "Anoteu"),
+    ("Cumplimente", "Empleneu"),
+    ("Detalle", "Detalleu"),
+    ("ingresos", "ingressos"),
+    ("Ingresos", "Ingressos"),
+    ("ingreso", "ingrés"),
+    ("Ingreso", "Ingrés"),
+    ("gastos deducibles", "despeses deduïbles"),
+    ("Gastos deducibles", "Despeses deduïbles"),
+    ("gastos no deducibles", "despeses no deduïbles"),
+    ("Gastos no deducibles", "Despeses no deduïbles"),
+    ("gastos", "despeses"),
+    ("Gastos", "Despeses"),
+    ("gasto", "despesa"),
+    ("Gasto", "Despesa"),
+    ("amortización", "amortització"),
+    ("Amortización", "Amortització"),
+    ("provisión", "provisió"),
+    ("Provisión", "Provisió"),
+    ("inmovilizado", "immobilitzat"),
+    ("Inmovilizado", "Immobilitzat"),
+    ("explotación", "explotació"),
+    ("Explotación", "Explotació"),
+    ("variación", "variació"),
+    ("Variación", "Variació"),
+    ("existencias", "existències"),
+    ("Existencias", "Existències"),
+    ("inmuebles", "immobles"),
+    ("Inmuebles", "Immobles"),
+    ("inmueble", "immoble"),
+    ("Inmueble", "Immoble"),
+    ("arrendamiento", "arrendament"),
+    ("Arrendamiento", "Arrendament"),
+    ("intereses", "interessos"),
+    ("Intereses", "Interessos"),
+    ("dividendos", "dividends"),
+    ("Dividendos", "Dividends"),
+    ("cuentas", "comptes"),
+    ("Cuentas", "Comptes"),
+    ("depósitos", "dipòsits"),
+    ("Depósitos", "Dipòsits"),
+    ("Seguridad Social", "Seguretat Social"),
+    ("cotización", "cotització"),
+    ("Cotización", "Cotització"),
+    ("administración", "administració"),
+    ("Administración", "Administració"),
+    ("custodia", "custòdia"),
+    ("Custodia", "Custòdia"),
+    ("imputación", "imputació"),
+    ("Imputación", "Imputació"),
+    ("renta", "renda"),
+    ("Renta", "Renda"),
+    ("rentas", "rendes"),
+    ("Rentas", "Rendes"),
+    ("ahorro", "estalvi"),
+    ("Ahorro", "Estalvi"),
+    ("autonómica", "autonòmica"),
+    ("Autonómica", "Autonòmica"),
+    ("autonómicas", "autonòmiques"),
+    ("Autonómicas", "Autonòmiques"),
+    ("autonómico", "autonòmic"),
+    ("Autonómico", "Autonòmic"),
+    ("autonómicos", "autonòmics"),
+    ("Autonómicos", "Autonòmics"),
+    ("Comunidad Autónoma", "Comunitat Autònoma"),
+    ("comunidad autónoma", "comunitat autònoma"),
+    ("Comunidades Autónomas", "Comunitats Autònomes"),
+    ("estatal", "estatal"),
+    ("Estatal", "Estatal"),
+    ("estatales", "estatals"),
+    ("Estatales", "Estatals"),
+    ("Real Decreto", "Reial Decret"),
+    ("Ley", "Llei"),
+    ("Leyes", "Lleis"),
+    ("artículo", "article"),
+    ("Artículo", "Article"),
+    ("artículos", "articles"),
+    ("Artículos", "Articles"),
+    ("Anexo", "Annex"),
+    ("anexo", "annex"),
+    ("según", "segons"),
+    ("Según", "Segons"),
+    ("vigente", "vigent"),
+    ("aplicable", "aplicable"),
+    ("correspondiente", "corresponent"),
+    ("Casilla", "Casella"),
+    ("casilla", "casella"),
+    ("Casillas", "Caselles"),
+    ("casillas", "caselles"),
+    ("Importe", "Import"),
+    ("importe", "import"),
+    ("Total", "Total"),
+    ("total", "total"),
+    ("totales", "totals"),
+    # Modelo 111 / 130 / 131 retentions + percepciones
+    ("Retenciones e ingresos a cuenta", "Retencions i ingressos a compte"),
+    ("Total retenciones", "Total retencions"),
+    ("Retenciones rendimientos del trabajo", "Retencions rendiments del treball"),
+    ("Retenciones actividades económicas", "Retencions activitats econòmiques"),
+    ("Retenciones contraprestaciones en especie", "Retencions contraprestacions en espècie"),
+    ("Retenciones cesión de imagen", "Retencions cessió d'imatge"),
+    ("Retenciones dividendos", "Retencions dividends"),
+    ("Retenciones otras rentas", "Retencions altres rendes"),
+    ("Percepciones premios", "Percepcions premis"),
+    ("Percepciones ganancias patrimoniales", "Percepcions guanys patrimonials"),
+    ("Perceptores dividendos", "Perceptors dividends"),
+    ("Perceptores otras rentas", "Perceptors altres rendes"),
+    ("Base de retención", "Base de retenció"),
+    ("Base retenciones dividendos", "Base retencions dividends"),
+    ("Base retenciones otras rentas", "Base retencions altres rendes"),
+    ("Ingresos a cuenta por retribución en especie", "Ingressos a compte per retribució en espècie"),
+    ("Nº de arrendadores", "Nre. d'arrendadors"),
+    ("N.º de arrendadores", "Nre. d'arrendadors"),
+    ("número de arrendadores", "nombre d'arrendadors"),
+    # Modelo 130/131 fractional payment
+    ("A deducir: exclusivamente en declaración complementaria",
+     "A deduir: exclusivament en declaració complementària"),
+    ("Resultado a ingresar", "Resultat a ingressar"),
+    ("Resultado a devolver", "Resultat a retornar"),
+    ("Resultado declaracion anterior (complementaria)",
+     "Resultat declaració anterior (complementària)"),
+    ("Resultado declaración anterior (complementaria)",
+     "Resultat declaració anterior (complementària)"),
+    ("Resultado a ingresar de autoliquidaciones anteriores (complementaria)",
+     "Resultat a ingressar d'autoliquidacions anteriors (complementària)"),
+    ("Resultados negativos autoliquidaciones anteriores",
+     "Resultats negatius autoliquidacions anteriors"),
+    ("A deducir autoliquidaciones anteriores", "A deduir autoliquidacions anteriors"),
+    ("Suma rendimientos netos modulos", "Suma rendiments nets mòduls"),
+    ("Suma rendimientos netos módulos", "Suma rendiments nets mòduls"),
+    ("Pago fraccionado del trimestre", "Pagament fraccionat del trimestre"),
+    ("Volumen ventas sin datos-base", "Volum vendes sense dades-base"),
+    ("Volumen ingresos agricolas/ganaderas/forestales",
+     "Volum ingressos agrícoles/ramaderes/forestals"),
+    ("Volumen ingresos agrícolas/ganaderas/forestales",
+     "Volum ingressos agrícoles/ramaderes/forestals"),
+    ("Minoracion rendimientos ano anterior", "Minoració rendiments any anterior"),
+    ("Minoración rendimientos año anterior", "Minoració rendiments any anterior"),
+    ("Deduccion vivienda habitual", "Deducció habitatge habitual"),
+    ("Deducción vivienda habitual", "Deducció habitatge habitual"),
+    ("Base del pago fraccionado", "Base del pagament fraccionat"),
+    # More verbs/connectives
+    ("a deducir", "a deduir"),
+    ("A deducir", "A deduir"),
+    ("a ingresar", "a ingressar"),
+    ("a devolver", "a retornar"),
+    ("declaración anterior", "declaració anterior"),
+    ("Declaración anterior", "Declaració anterior"),
+    ("autoliquidación anterior", "autoliquidació anterior"),
+    ("autoliquidaciones anteriores", "autoliquidacions anteriors"),
+    ("Autoliquidaciones anteriores", "Autoliquidacions anteriors"),
+    ("contraprestación", "contraprestació"),
+    ("Contraprestación", "Contraprestació"),
+    ("contraprestaciones", "contraprestacions"),
+    ("Contraprestaciones", "Contraprestacions"),
+    ("retribución", "retribució"),
+    ("Retribución", "Retribució"),
+    ("retribuciones", "retribucions"),
+    ("Retribuciones", "Retribucions"),
+    ("en especie", "en espècie"),
+    ("En especie", "En espècie"),
+    ("cesión de imagen", "cessió d'imatge"),
+    ("Cesión de imagen", "Cessió d'imatge"),
+    ("cesión", "cessió"),
+    ("Cesión", "Cessió"),
+    ("cesiones", "cessions"),
+    ("Cesiones", "Cessions"),
+    ("imagen", "imatge"),
+    ("Imagen", "Imatge"),
+    ("perceptores", "perceptors"),
+    ("Perceptores", "Perceptors"),
+    ("perceptor", "perceptor"),
+    ("Perceptor", "Perceptor"),
+    ("percepciones", "percepcions"),
+    ("Percepciones", "Percepcions"),
+    ("percepción", "percepció"),
+    ("Percepción", "Percepció"),
+    ("premios", "premis"),
+    ("Premios", "Premis"),
+    ("premio", "premi"),
+    ("Premio", "Premi"),
+    ("arrendadores", "arrendadors"),
+    ("Arrendadores", "Arrendadors"),
+    ("arrendador", "arrendador"),
+    ("Arrendador", "Arrendador"),
+    ("rendimientos netos", "rendiments nets"),
+    ("Rendimientos netos", "Rendiments nets"),
+    ("rendimiento neto", "rendiment net"),
+    ("módulos", "mòduls"),
+    ("modulos", "mòduls"),
+    ("Modulos", "Mòduls"),
+    ("Módulos", "Mòduls"),
+    ("trimestre", "trimestre"),
+    ("Trimestre", "Trimestre"),
+    ("mensual", "mensual"),
+    ("Mensual", "Mensual"),
+    ("anual", "anual"),
+    ("Anual", "Anual"),
+    ("habitual", "habitual"),
+    ("Habitual", "Habitual"),
+    ("vivienda", "habitatge"),
+    ("Vivienda", "Habitatge"),
+    ("agricolas", "agrícoles"),
+    ("agrícolas", "agrícoles"),
+    ("ganaderas", "ramaderes"),
+    ("ganaderías", "ramaderies"),
+    ("Ganaderías", "Ramaderies"),
+    ("ganadería", "ramaderia"),
+    ("Ganadería", "Ramaderia"),
+    ("forestales", "forestals"),
+    ("Forestales", "Forestals"),
+    ("ventas", "vendes"),
+    ("Ventas", "Vendes"),
+    ("venta", "venda"),
+    ("Venta", "Venda"),
+    ("volumen", "volum"),
+    ("Volumen", "Volum"),
+    ("base de", "base de"),
+    ("Base de", "Base de"),
+    ("año anterior", "any anterior"),
+    ("año", "any"),
+    ("Año", "Any"),
+    ("años", "anys"),
+    ("Años", "Anys"),
+    ("anterior", "anterior"),
+    ("Anterior", "Anterior"),
+    ("anteriores", "anteriors"),
+    ("Anteriores", "Anteriors"),
+    ("siguiente", "següent"),
+    ("Siguiente", "Següent"),
+    ("siguientes", "següents"),
+    ("Siguientes", "Següents"),
+    ("trimestral", "trimestral"),
+    ("Trimestral", "Trimestral"),
+    ("trimestres", "trimestres"),
+    ("Trimestres", "Trimestres"),
+    ("minoración", "minoració"),
+    ("Minoración", "Minoració"),
+    ("minoraciones", "minoracions"),
+    ("Minoraciones", "Minoracions"),
+    ("agrícola", "agrícola"),
+    ("Agrícola", "Agrícola"),
+    ("agrícolas/ganaderas", "agrícoles/ramaderes"),
+    ("número", "nombre"),
+    ("Número", "Nombre"),
+    ("números", "nombres"),
+    # Modelo 303 / IVA additional lemmas
+    ("Tipo de gravamen aplicable", "Tipus de gravamen aplicable"),
+    ("Tipo de gravamen", "Tipus de gravamen"),
+    ("tipo de gravamen", "tipus de gravamen"),
+    ("Bonificaciones", "Bonificacions"),
+    ("bonificaciones", "bonificacions"),
+    ("Bonificación", "Bonificació"),
+    ("bonificación", "bonificació"),
+    ("Resultado régimen general", "Resultat règim general"),
+    ("resultado régimen general", "resultat règim general"),
+    ("Resultado parcial Apartado I", "Resultat parcial Apartat I"),
+    ("Resultado parcial Apartado II", "Resultat parcial Apartat II"),
+    ("Resultado parcial Apartado III", "Resultat parcial Apartat III"),
+    ("Resultado parcial Apartado", "Resultat parcial Apartat"),
+    ("Resultado parcial", "Resultat parcial"),
+    ("Apartado", "Apartat"),
+    ("apartado", "apartat"),
+    ("Apartados", "Apartats"),
+    ("apartados", "apartats"),
+    ("Suma de resultados parciales", "Suma de resultats parcials"),
+    ("resultados parciales", "resultats parcials"),
+    ("Resultados parciales", "Resultats parcials"),
+    ("Diferencia", "Diferència"),
+    ("diferencia", "diferència"),
+    ("Resultado final", "Resultat final"),
+    ("resultado final", "resultat final"),
+    ("Resultado", "Resultat"),
+    ("resultado", "resultat"),
+    ("Total bases imponibles", "Total bases imposables"),
+    ("bases imponibles", "bases imposables"),
+    ("Bases imponibles", "Bases imposables"),
+    ("Base total retenciones", "Base total retencions"),
+    ("base total retenciones", "base total retencions"),
+    ("Cuota integra", "Quota íntegra"),
+    ("cuota integra", "quota íntegra"),
+    ("Cuota devengada", "Quota meritada"),
+    ("cuota devengada", "quota meritada"),
+    ("Cuota deducible", "Quota deduïble"),
+    ("cuota deducible", "quota deduïble"),
+    ("Cuota", "Quota"),
+    ("cuota", "quota"),
+    ("Tipo 4 %", "Tipus 4 %"),
+    ("Tipo 10 %", "Tipus 10 %"),
+    ("Tipo 21 %", "Tipus 21 %"),
+    ("Cuota devengada al", "Quota meritada al"),
+    ("Base — operaciones interiores corrientes", "Base — operacions interiors corrents"),
+    ("Cuota deducible — operaciones interiores corrientes",
+     "Quota deduïble — operacions interiors corrents"),
+    ("Regularización bienes de inversión", "Regularització béns d'inversió"),
+    ("regularización", "regularització"),
+    ("Regularización", "Regularització"),
+    ("bienes de inversión", "béns d'inversió"),
+    ("Bienes de inversión", "Béns d'inversió"),
+    ("bienes", "béns"),
+    ("Bienes", "Béns"),
+    ("Bien", "Bé"),
+    ("Total 02+04+06", "Total 02+04+06"),  # arithmetic; no translation
+    ("Resultado 07-08-09", "Resultat 07-08-09"),
+    ("Resultado 10-11-12", "Resultat 10-11-12"),
+    # Common verbs / phrases that recur in ledger-style help
+    ("ámbito territorial", "àmbit territorial"),
+    ("territorial", "territorial"),
+    ("territorial común", "territorial comú"),
+    ("territorio común", "territori comú"),
+    ("Territorio común", "Territori comú"),
+    ("territorio foral", "territori foral"),
+    ("Territorio foral", "Territori foral"),
+    ("operaciones realizadas", "operacions realitzades"),
+    ("operaciones interiores", "operacions interiors"),
+    ("Operaciones interiores", "Operacions interiors"),
+    ("operaciones intracomunitarias", "operacions intracomunitàries"),
+    ("Operaciones intracomunitarias", "Operacions intracomunitàries"),
+    ("operaciones exteriores", "operacions exteriors"),
+    ("Operaciones exteriores", "Operacions exteriors"),
+    ("importaciones", "importacions"),
+    ("Importaciones", "Importacions"),
+    ("exportaciones", "exportacions"),
+    ("Exportaciones", "Exportacions"),
+    ("autoconsumo", "autoconsum"),
+    ("Autoconsumo", "Autoconsum"),
+    ("inversión del sujeto pasivo", "inversió del subjecte passiu"),
+    ("Inversión del sujeto pasivo", "Inversió del subjecte passiu"),
+    ("repercusión", "repercussió"),
+    ("Repercusión", "Repercussió"),
+    ("deducción del IVA soportado", "deducció de l'IVA suportat"),
+    ("Deducción del IVA soportado", "Deducció de l'IVA suportat"),
+    ("legal", "legal"),
+    ("Legal", "Legal"),
+    ("base legal", "base legal"),
+    ("Base legal", "Base legal"),
+    ("Ley, art.", "Llei, art."),
+)
+
+
+def _es_to_ca_via_lemmas(es_text: str) -> str:
+    """Apply the lemma map to derive a Catalan rendering from Spanish.
+
+    Catalan ≠ Spanish. When the curated record carries no
+    ``label_ca`` / ``help_ca``, fall back through this lemma-based
+    translator instead of duplicating the Spanish text. Records whose
+    Spanish content does not match any lemma return unchanged — the
+    perpetual i18n audit loop surfaces those for native-Catalan
+    review (per the 6-source authoritative chain documented in
+    .vault/reference/2026-05-01-quadlingual-i18n-reference.md).
+    """
+
+    if not es_text:
+        return es_text
+    out = es_text
+    for old, new in _ES_TO_CA_LEMMAS:
+        if old == new:
+            continue
+        pattern = r'(?<![A-Za-zÀ-ɏ])' + re.escape(old) + r'(?![A-Za-zÀ-ɏ])'
+        out = re.sub(pattern, new, out)
+    return out
 
 
 def _render_param_value(param_id: str, params: dict[str, Decimal] | None) -> str:
@@ -206,25 +727,43 @@ class _Casilla:
     def label_for_languages(self, languages: tuple[str, ...]) -> dict[str, str]:
         """Return ``{lang: label}`` for every language code in ``languages``.
 
-        Reads ``label_<lang>`` attributes via reflection, with the
-        Spanish authoritative text as a per-Generalitat fallback when
-        a language-specific label is empty. Iterating the engine's
-        :class:`Language` enum avoids hardcoding the language count.
+        Reads ``label_<lang>`` attributes via reflection. When a slot
+        is empty, falls back per-language: ``ca`` is derived from the
+        Spanish text via the lemma-based translator
+        :func:`_es_to_ca_via_lemmas` (Catalan ≠ Spanish, so a direct
+        copy would violate the multilingual contract). Other languages
+        fall back to the Spanish authoritative text as the legal
+        canonical fallback.
         """
         es = self.label_es
         out: dict[str, str] = {}
         for lang in languages:
             value = getattr(self, f"label_{lang}", "")
-            out[lang] = value or es
+            if value:
+                out[lang] = value
+            elif lang == "ca":
+                out[lang] = _es_to_ca_via_lemmas(es)
+            else:
+                out[lang] = es
         return out
 
     def help_for_languages(self, languages: tuple[str, ...]) -> dict[str, str]:
-        """Return ``{lang: help}`` for every language code in ``languages``."""
+        """Return ``{lang: help}`` for every language code in ``languages``.
+
+        Same fallback policy as :meth:`label_for_languages`: empty ``ca``
+        slots run through the Spanish→Catalan lemma translator; every
+        other language falls back to the Spanish authoritative text.
+        """
         es = self.help_es
         out: dict[str, str] = {}
         for lang in languages:
             value = getattr(self, f"help_{lang}", "")
-            out[lang] = value or es
+            if value:
+                out[lang] = value
+            elif lang == "ca":
+                out[lang] = _es_to_ca_via_lemmas(es)
+            else:
+                out[lang] = es
         return out
 
 
@@ -1141,7 +1680,14 @@ def _expand_label_to_supported_languages(label: dict[str, str]) -> dict[str, str
     out = dict(label)
     for lang in _supported_language_codes():
         if lang not in out or not out[lang]:
-            out[lang] = es
+            if lang == "ca":
+                # Catalan ≠ Spanish — never copy ES into CA. Fall back
+                # through the lemma-based translator so the CA slot
+                # carries a grounded Catalan rendering whenever the
+                # source-of-truth ruleset omits Catalan content.
+                out[lang] = _es_to_ca_via_lemmas(es)
+            else:
+                out[lang] = es
     return out
 
 
@@ -1229,11 +1775,16 @@ def _help_from_label(
     label_es = label.get("es", "")
     out: dict[str, str] = {}
     for lang in languages:
-        # Per-language label fallback: when the engine ruleset hasn't
-        # provided a language-specific rendering, fall back to the
-        # Spanish authoritative text. Per Generalitat / ATC convention
-        # tax acronyms (IVA, IRPF) stay identical to Spanish anyway.
-        lang_label = label.get(lang, label_es)
+        # Per-language label fallback. When the engine ruleset omits a
+        # language slot, Catalan goes through the Spanish→Catalan
+        # lemma translator (Catalan ≠ Spanish) and every other language
+        # falls back to the Spanish authoritative text.
+        if lang in label and label[lang]:
+            lang_label = label[lang]
+        elif lang == "ca":
+            lang_label = _es_to_ca_via_lemmas(label_es)
+        else:
+            lang_label = label_es
         formula_clause = ""
         if formula_expression:
             prefix = _FORMULA_CLAUSE_PREFIX.get(lang, _FORMULA_CLAUSE_PREFIX["en"])

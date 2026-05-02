@@ -10,13 +10,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Suma rendimientos netos modulos",
+        "ca": "Suma rendiments nets mòduls",
         "en": "Modules net income sum",
         "es": "Suma rendimientos netos modulos",
         "hu": "Modul nettó jövedelem"
       },
       "label": {
-        "ca": "Suma rendimientos netos modulos",
+        "ca": "Suma rendiments nets mòduls",
         "en": "Modules net income sum",
         "es": "Suma rendimientos netos modulos",
         "hu": "Modul nettó jövedelem"
@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pago fraccionado del trimestre",
+        "ca": "Pagament fraccionat del trimestre",
         "en": "Quarterly instalment",
         "es": "Pago fraccionado del trimestre",
         "hu": "Negyedéves részlet"
       },
       "label": {
-        "ca": "Pago fraccionado del trimestre",
+        "ca": "Pagament fraccionat del trimestre",
         "en": "Quarterly instalment",
         "es": "Pago fraccionado del trimestre",
         "hu": "Negyedéves részlet"
@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Volumen ventas sin datos-base",
+        "ca": "Volum vendes sense dades-base",
         "en": "Sales volume",
         "es": "Volumen ventas sin datos-base",
         "hu": "Értékesítési volumen"
       },
       "label": {
-        "ca": "Volumen ventas sin datos-base",
+        "ca": "Volum vendes sense dades-base",
         "en": "Sales volume",
         "es": "Volumen ventas sin datos-base",
         "hu": "Értékesítési volumen"
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "2% s/casilla 03 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "ca": "2% s/casella 03 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "en": "2% on casilla 03 (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "es": "2% s/casilla 03 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "hu": "2%-os arány (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
-        "ca": "2% s/casilla 03",
+        "ca": "2% s/casella 03",
         "en": "2% on casilla 03",
         "es": "2% s/casilla 03",
         "hu": "2%-os arány"
@@ -144,13 +144,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Volumen ingresos agricolas/ganaderas/forestales",
+        "ca": "Volum ingressos agrícoles/ramaderes/forestals",
         "en": "Agricultural income",
         "es": "Volumen ingresos agricolas/ganaderas/forestales",
         "hu": "Mezőgazdasági bevétel"
       },
       "label": {
-        "ca": "Volumen ingresos agricolas/ganaderas/forestales",
+        "ca": "Volum ingressos agrícoles/ramaderes/forestals",
         "en": "Agricultural income",
         "es": "Volumen ingresos agricolas/ganaderas/forestales",
         "hu": "Mezőgazdasági bevétel"
@@ -176,13 +176,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "2% s/casilla 05 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "ca": "2% s/casella 05 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "en": "2% on casilla 05 (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "es": "2% s/casilla 05 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "hu": "2%-os arány (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
-        "ca": "2% s/casilla 05",
+        "ca": "2% s/casella 05",
         "en": "2% on casilla 05",
         "es": "2% s/casilla 05",
         "hu": "2%-os arány"
@@ -252,13 +252,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones e ingresos a cuenta",
+        "ca": "Retencions e ingressos a cuenta",
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások"
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta",
+        "ca": "Retencions e ingressos a cuenta",
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások"
@@ -284,13 +284,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Minoracion rendimientos ano anterior",
+        "ca": "Minoració rendiments any anterior",
         "en": "Prior-year minoration",
         "es": "Minoracion rendimientos ano anterior",
         "hu": "Korábbi év mérséklés"
       },
       "label": {
-        "ca": "Minoracion rendimientos ano anterior",
+        "ca": "Minoració rendiments any anterior",
         "en": "Prior-year minoration",
         "es": "Minoracion rendimientos ano anterior",
         "hu": "Korábbi év mérséklés"
@@ -316,13 +316,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat 07-08-09 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "ca": "Resultado 07-08-09 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "en": "Result after credits (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "es": "Resultado 07-08-09 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "hu": "Levonás utáni eredmény (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
-        "ca": "Resultat 07-08-09",
+        "ca": "Resultado 07-08-09",
         "en": "Result after credits",
         "es": "Resultado 07-08-09",
         "hu": "Levonás utáni eredmény"
@@ -354,13 +354,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultats negativos autoliquidaciones anteriores",
+        "ca": "Resultados negativos autoliquidacions anteriors",
         "en": "Prior negatives",
         "es": "Resultados negativos autoliquidaciones anteriores",
         "hu": "Korábbi negatív eredmény"
       },
       "label": {
-        "ca": "Resultats negativos autoliquidaciones anteriores",
+        "ca": "Resultados negativos autoliquidacions anteriors",
         "en": "Prior negatives",
         "es": "Resultados negativos autoliquidaciones anteriores",
         "hu": "Korábbi negatív eredmény"
@@ -386,13 +386,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Deduccion habitatge habitual",
+        "ca": "Deducció habitatge habitual",
         "en": "Primary residence deduction",
         "es": "Deduccion vivienda habitual",
         "hu": "Lakásvásárlási kedvezmény"
       },
       "label": {
-        "ca": "Deduccion habitatge habitual",
+        "ca": "Deducció habitatge habitual",
         "en": "Primary residence deduction",
         "es": "Deduccion vivienda habitual",
         "hu": "Lakásvásárlási kedvezmény"
@@ -418,13 +418,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat 10-11-12 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "ca": "Resultado 10-11-12 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "en": "Intermediate result (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "es": "Resultado 10-11-12 (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "hu": "Köztes eredmény (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
-        "ca": "Resultat 10-11-12",
+        "ca": "Resultado 10-11-12",
         "en": "Intermediate result",
         "es": "Resultado 10-11-12",
         "hu": "Köztes eredmény"
@@ -456,13 +456,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "A deducir autoliquidaciones anteriores",
+        "ca": "A deduir autoliquidacions anteriors",
         "en": "Prior-filing offset",
         "es": "A deducir autoliquidaciones anteriores",
         "hu": "Korábbi bevallási levonás"
       },
       "label": {
-        "ca": "A deducir autoliquidaciones anteriores",
+        "ca": "A deduir autoliquidacions anteriors",
         "en": "Prior-filing offset",
         "es": "A deducir autoliquidaciones anteriores",
         "hu": "Korábbi bevallási levonás"
@@ -488,13 +488,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Resultat a ingresar (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
+        "ca": "Resultat a ingressar (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "en": "Net amount payable (Legal basis: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "es": "Resultado a ingresar (Base legal: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)",
         "hu": "Fizetendő eredmény (Jogalap: Reglamento, art. 110, BOE-A-2007-6820; Orden, art. EHA/672/2007, BOE-A-2007-6032; Orden, art. HFP/1359/2023, https://www.boe.es/boe/dias/2023/12/21/pdfs/BOE-A-2023-25882.pdf.)"
       },
       "label": {
-        "ca": "Resultat a ingresar",
+        "ca": "Resultat a ingressar",
         "en": "Net amount payable",
         "es": "Resultado a ingresar",
         "hu": "Fizetendő eredmény"

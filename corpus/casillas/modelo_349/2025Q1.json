@@ -10,7 +10,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
+        "ca": "Nombre de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
         "en": "Number of intra-Community operators declared in the period (supplies and/or acquisitions, Spanish VAT Act arts. 25-26).",
         "es": "Número de operadores intracomunitarios declarados en el período (entregas y/o adquisiciones, LIVA art. 25 y 26).",
         "hu": "A bejelentett közösségi szereplők száma az időszakban (LIVA 25-26. cikk)."
@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Importe total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
+        "ca": "Import total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
         "en": "Total amount of intra-Community operations declared (supplies + acquisitions + services).",
         "es": "Importe total de las operaciones intracomunitarias declaradas (entregas + adquisiciones + servicios).",
         "hu": "A közösségi ügyletek teljes összege."
       },
       "label": {
-        "ca": "Importe total operaciones",
+        "ca": "Import total operaciones",
         "en": "Total operation amount",
         "es": "Importe total operaciones",
         "hu": "Ügyletek teljes összege"
@@ -74,7 +74,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores.",
+        "ca": "Operadores cuyas operaciones se rectifican respecto de períodos anteriors.",
         "en": "Operators whose operations are rectifying earlier periods.",
         "es": "Operadores cuyas operaciones se rectifican respecto de períodos anteriores.",
         "hu": "Korábbi időszakok helyesbítésében érintett szereplők száma."
@@ -106,13 +106,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Importe total de las rectificaciones declaradas en el período (signo positivo = aumento).",
+        "ca": "Import total de las rectificaciones declaradas en el período (signo positivo = aumento).",
         "en": "Total amount of rectifications declared in the period (positive sign = increase).",
         "es": "Importe total de las rectificaciones declaradas en el período (signo positivo = aumento).",
         "hu": "Az időszakban bejelentett helyesbítések teljes összege (pozitív jel = növekedés)."
       },
       "label": {
-        "ca": "Importe rectificaciones",
+        "ca": "Import rectificaciones",
         "en": "Rectifications amount",
         "es": "Importe rectificaciones",
         "hu": "Helyesbítések összege"

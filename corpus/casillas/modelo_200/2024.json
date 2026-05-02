@@ -42,13 +42,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base imponible antes reserva Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Base imposable antes reserva Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "BI pre-reserve Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Base imponible antes reserva Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Adóalap rezerv előtt Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Base imponible antes reserva",
+        "ca": "Base imposable antes reserva",
         "en": "BI pre-reserve",
         "es": "Base imponible antes reserva",
         "hu": "Adóalap rezerv előtt"
@@ -74,13 +74,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Base imponible Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Base imposable Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Taxable base Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Base imponible Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Adóalap Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Base imponible",
+        "ca": "Base imposable",
         "en": "Taxable base",
         "es": "Base imponible",
         "hu": "Adóalap"
@@ -289,13 +289,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Retenciones e ingresos a cuenta Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Retencions e ingressos a cuenta Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Withholdings Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Retenciones e ingresos a cuenta Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "Levonások Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Retenciones e ingresos a cuenta",
+        "ca": "Retencions e ingressos a cuenta",
         "en": "Withholdings",
         "es": "Retenciones e ingresos a cuenta",
         "hu": "Levonások"
@@ -321,13 +321,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pago fraccionado 1P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Pagament fraccionat 1P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Instalment 1P Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Pago fraccionado 1P Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "1P részlet Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Pago fraccionado 1P",
+        "ca": "Pagament fraccionat 1P",
         "en": "Instalment 1P",
         "es": "Pago fraccionado 1P",
         "hu": "1P részlet"
@@ -353,13 +353,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pago fraccionado 2P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Pagament fraccionat 2P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Instalment 2P Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Pago fraccionado 2P Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "2P részlet Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Pago fraccionado 2P",
+        "ca": "Pagament fraccionat 2P",
         "en": "Instalment 2P",
         "es": "Pago fraccionado 2P",
         "hu": "2P részlet"
@@ -385,13 +385,13 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Pago fraccionado 3P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
+        "ca": "Pagament fraccionat 3P Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202.",
         "en": "Instalment 3P Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202.",
         "es": "Pago fraccionado 3P Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202.",
         "hu": "3P részlet Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell."
       },
       "label": {
-        "ca": "Pago fraccionado 3P",
+        "ca": "Pagament fraccionat 3P",
         "en": "Instalment 3P",
         "es": "Pago fraccionado 3P",
         "hu": "3P részlet"
@@ -543,13 +543,13 @@
         ]
       },
       "help": {
-        "ca": "Liquido a ingresar o devolver. Es calcula com ((00611 - 00615) + 00619). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
+        "ca": "Liquido a ingressar o devolver. Es calcula com ((00611 - 00615) + 00619). Declaració anual de l'Impost sobre Societats; recull els pagaments fraccionats del model 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "en": "Net payable or refundable. Computed as ((00611 - 00615) + 00619). Annual Corporate Income Tax declaration; consolidates the fractional payments of form 202. (Legal basis: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "es": "Liquido a ingresar o devolver. Se calcula como ((00611 - 00615) + 00619). Declaración anual del Impuesto sobre Sociedades; recoge los pagos fraccionados del modelo 202. (Base legal: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)",
         "hu": "Fizetendő vagy visszatérítendő. Számítás: ((00611 - 00615) + 00619) Éves társasági adó bevallás; az alábbi modell részletfizetéseit foglalja össze: 202-os modell. (Jogalap: Ley, art. 29-30, BOE-A-2014-12328; Ley, art. 30+39+125.3, BOE-A-2014-12328; Orden, art. HAC/657/2025, BOE-A-2025-12818.)"
       },
       "label": {
-        "ca": "Liquido a ingresar o devolver",
+        "ca": "Liquido a ingressar o devolver",
         "en": "Net payable or refundable",
         "es": "Liquido a ingresar o devolver",
         "hu": "Fizetendő vagy visszatérítendő"
