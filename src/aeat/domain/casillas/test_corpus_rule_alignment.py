@@ -496,3 +496,82 @@ def test_corpus_casilla_id_set_matches_engine_ruleset() -> None:
             )
     if failures:
         pytest.fail("Corpus is missing casillas that the engine declares:\n" + "\n".join(f" - {f}" for f in failures))
+
+
+def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
+    """For modelos without a rule engine ruleset (190 / 193 / 347 / 349 / 840),
+    the corpus casilla ID set must exactly match the registered extractor's
+    ``casilla_ids ∪ text_casilla_ids``.
+
+    Catches drift between the curated trilingual label/help data in
+    :mod:`aeat.domain.casillas._hydrate` and the canonical extractor IDs.
+    The extractor is the single source of truth for the ID list; the
+    hydrate script only adds label / help curation on top.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    failures: list[str] = []
+    for non_ruleset_modelo in ("190", "193", "347", "349", "840"):
+        extractor_ids: set[str] = set()
+        for cls in _REGISTERED_CLASSES:
+            if cls.template_revision.modelo != non_ruleset_modelo:
+                continue
+            extractor_ids.update(getattr(cls, "casilla_ids", ()))
+            extractor_ids.update(getattr(cls, "text_casilla_ids", ()))
+        if not extractor_ids:
+            continue
+
+        # Pick the latest period as the representative catalogue.
+        modelo = f"MODELO_{non_ruleset_modelo}"
+        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
+        if not candidates:
+            failures.append(f"{modelo}: no corpus catalogues on disk")
+            continue
+        catalogue = load_casillas(modelo, candidates[-1].stem)
+        corpus_ids = {r.casilla_id for r in catalogue.records}
+        missing = extractor_ids - corpus_ids
+        extra = corpus_ids - extractor_ids
+        if missing:
+            failures.append(f"{modelo}: extractor IDs missing from corpus: {sorted(missing)}")
+        if extra:
+            failures.append(f"{modelo}: corpus IDs not declared by extractor: {sorted(extra)}")
+    if failures:
+        pytest.fail(
+            "Corpus drifted from extractor canonical IDs:\n" + "\n".join(f" - {f}" for f in failures)
+        )
+
+
+def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
+    """M840 corpus ``label.es`` must agree (modulo accents) with the extractor's ``text_labels`` map.
+
+    The extractor's ``text_labels`` is the canonical Spanish-label
+    source for the M840 text-casilla set; it carries an ASCII-folded
+    form of each label so the PDF-extraction regex stays robust against
+    accent rendering quirks. The corpus carries the proper-accent
+    Spanish; comparison is therefore accent-insensitive.
+    """
+    import unicodedata
+
+    from ...adapters.inbound.declaracion._extractors.modelo_840_v2025 import Modelo840V2025Extractor
+
+    def _ascii_fold(text: str) -> str:
+        return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower()
+
+    text_labels = Modelo840V2025Extractor.text_labels
+    catalogue = load_casillas("MODELO_840", "2025")
+    by_id = {r.casilla_id: r for r in catalogue.records}
+    failures: list[str] = []
+    for cid, expected_label in text_labels.items():
+        rec = by_id.get(cid)
+        if rec is None:
+            failures.append(f"M840 cas {cid}: missing in corpus (extractor labels {expected_label!r})")
+            continue
+        # Ignore accents and "de" connector ("Causa presentacion" vs "Causa de presentación").
+        corpus_folded = _ascii_fold(rec.label["es"]).replace(" de ", " ")
+        extractor_folded = _ascii_fold(expected_label).replace(" de ", " ")
+        if corpus_folded != extractor_folded:
+            failures.append(
+                f"M840 cas {cid}: corpus label.es {rec.label['es']!r} != extractor {expected_label!r}"
+            )
+    if failures:
+        pytest.fail("M840 corpus drifted from extractor text_labels:\n" + "\n".join(f" - {f}" for f in failures))

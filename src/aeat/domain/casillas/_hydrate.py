@@ -1804,7 +1804,59 @@ def _save_with_retry(catalogue: CasillaCatalogue, *, attempts: int = 5) -> None:
         raise last_exc
 
 
+def _extractor_casilla_ids(modelo: str) -> set[str]:
+    """Return the union of every registered extractor's declared casilla IDs for a modelo.
+
+    Pulls from :class:`GenericDeclaracionExtractor` ``casilla_ids`` and
+    ``text_casilla_ids`` ClassVars so the hydrate generator does not
+    shadow lists that already live on the extractor classes.
+    """
+    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
+
+    out: set[str] = set()
+    for cls in _REGISTERED_CLASSES:
+        if cls.template_revision.modelo != modelo:
+            continue
+        out.update(getattr(cls, "casilla_ids", ()))
+        out.update(getattr(cls, "text_casilla_ids", ()))
+    return out
+
+
+def _assert_manual_data_tracks_extractors() -> None:
+    """Loud-fail if the curated manual ``_Casilla`` tuples drift from the extractor IDs.
+
+    The extractor classes (e.g. :class:`Modelo190V2025Extractor`) own
+    the canonical casilla-id set for modelos that lack a rule-engine
+    ruleset. The hydrate script's curated tuples carry trilingual
+    label / help / data_type which the extractor does not. To avoid
+    shadowing, we never declare a casilla in the curated tuple that
+    the extractor doesn't declare and vice versa.
+    """
+    pairs = [
+        ("190", M190_CASILLAS),
+        ("193", M193_CASILLAS),
+        ("347", M347_CASILLAS),
+        ("349", M349_CASILLAS),
+        ("840", M840_CASILLAS),
+    ]
+    failures: list[str] = []
+    for modelo, manual in pairs:
+        manual_ids = {c.casilla_id for c in manual}
+        extractor_ids = _extractor_casilla_ids(modelo)
+        missing = extractor_ids - manual_ids
+        extra = manual_ids - extractor_ids
+        if missing:
+            failures.append(f"M{modelo}: extractor declares ids missing from manual data: {sorted(missing)}")
+        if extra:
+            failures.append(f"M{modelo}: manual data declares ids not in extractor: {sorted(extra)}")
+    if failures:
+        raise RuntimeError(
+            "hydrate manual data drifted from extractor casilla IDs:\n" + "\n".join(f" - {f}" for f in failures)
+        )
+
+
 def run() -> None:
+    _assert_manual_data_tracks_extractors()
     written = 0
     for modelo in ALL_MODELOS:
         meta = get_modelo(modelo)
