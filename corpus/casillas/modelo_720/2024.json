@@ -1,0 +1,102 @@
+{
+  "modelo": "MODELO_720",
+  "period": "2024",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total de cuentas en entidades financieras situadas en el extranjero declaradas (clave C, DA 18ª LGT).",
+        "en": "Total accounts at foreign financial institutions declared (key C, DA 18 LGT).",
+        "es": "Total de cuentas en entidades financieras situadas en el extranjero declaradas (clave C, DA 18ª LGT).",
+        "hu": "A bejelentett külföldi pénzintézeti számlák száma (C kulcs, LGT 18. kiegészítő rendelkezés)."
+      },
+      "label": {
+        "ca": "N.º registros — clave C (cuentas en entidades financieras)",
+        "en": "Records — key C (accounts in financial institutions)",
+        "es": "N.º registros — clave C (cuentas en entidades financieras)",
+        "hu": "Rekordok — C kulcs (külföldi pénzintézeti számlák)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_720",
+      "period": "2024",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954",
+      "source_page": 1,
+      "source_section": "Resumen — clave C",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total de valores, seguros y rentas situados en el extranjero declarados (clave V).",
+        "en": "Total securities, insurance contracts and annuities held abroad (key V).",
+        "es": "Total de valores, seguros y rentas situados en el extranjero declarados (clave V).",
+        "hu": "A bejelentett külföldi értékpapírok, biztosítások és járadékok száma (V kulcs)."
+      },
+      "label": {
+        "ca": "N.º registros — clave V (valores, seguros, rentas)",
+        "en": "Records — key V (securities, insurance, annuities)",
+        "es": "N.º registros — clave V (valores, seguros, rentas)",
+        "hu": "Rekordok — V kulcs (értékpapírok, biztosítások, járadékok)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_720",
+      "period": "2024",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954",
+      "source_page": 1,
+      "source_section": "Resumen — clave V",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declarados (clave I).",
+        "en": "Total foreign real estate and rights thereon declared (key I).",
+        "es": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declarados (clave I).",
+        "hu": "A bejelentett külföldi ingatlanok és ingatlanjogok száma (I kulcs)."
+      },
+      "label": {
+        "ca": "N.º registros — clave I (bienes inmuebles en el extranjero)",
+        "en": "Records — key I (foreign real estate)",
+        "es": "N.º registros — clave I (bienes inmuebles en el extranjero)",
+        "hu": "Rekordok — I kulcs (külföldi ingatlanok)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_720",
+      "period": "2024",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954",
+      "source_page": 1,
+      "source_section": "Resumen — clave I",
+      "synthetic": false,
+      "validation": []
+    }
+  ]
+}

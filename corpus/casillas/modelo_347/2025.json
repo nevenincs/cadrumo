@@ -1,0 +1,134 @@
+{
+  "modelo": "MODELO_347",
+  "period": "2025",
+  "records": [
+    {
+      "casilla_id": "01",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Número de personas o entidades respecto de las cuales se ha realizado declaración por superar 3.005,06 € (Orden EHA/3012/2008).",
+        "en": "Number of parties for which a declaration is filed because the threshold of €3,005.06 was exceeded.",
+        "es": "Número de personas o entidades respecto de las cuales se ha realizado declaración por superar 3.005,06 € (Orden EHA/3012/2008).",
+        "hu": "A 3 005,06 €-os küszöb átlépése miatt bejelentett személyek száma."
+      },
+      "label": {
+        "ca": "N.º total declarados",
+        "en": "Total declared parties",
+        "es": "N.º total declarados",
+        "hu": "Összes bejelentett fél"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_347",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17004",
+      "source_page": 1,
+      "source_section": "Resumen",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "02",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma agregada anual de las operaciones con terceros declaradas en el modelo 347.",
+        "en": "Aggregate annual sum of third-party operations declared on form 347.",
+        "es": "Suma agregada anual de las operaciones con terceros declaradas en el modelo 347.",
+        "hu": "A 347. nyomtatványban bejelentett ügyletek éves összege."
+      },
+      "label": {
+        "ca": "Import total anual de operaciones declaradas",
+        "en": "Annual total of declared operations",
+        "es": "Importe total anual de operaciones declaradas",
+        "hu": "A bejelentett ügyletek éves teljes összege"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_347",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17004",
+      "source_page": 1,
+      "source_section": "Resumen",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "03",
+      "computed": false,
+      "data_type": "integer",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Número de registros declarados respecto de cobros en metálico superiores a 6.000 € (art. 7 RGAT).",
+        "en": "Records declared for cash receipts exceeding €6,000 (RGAT art. 7).",
+        "es": "Número de registros declarados respecto de cobros en metálico superiores a 6.000 € (art. 7 RGAT).",
+        "hu": "6 000 € feletti készpénzes bevétel rekordjainak száma."
+      },
+      "label": {
+        "ca": "N.º total registros — cobros en metálico",
+        "en": "Records — cash payments received",
+        "es": "N.º total registros — cobros en metálico",
+        "hu": "Készpénzes-bevétel rekordok"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_347",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17004",
+      "source_page": 1,
+      "source_section": "Resumen — Metálico",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "04",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-02",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Suma anual de los cobros en metálico superiores a 6.000 € declarados.",
+        "en": "Annual sum of cash receipts exceeding €6,000 declared.",
+        "es": "Suma anual de los cobros en metálico superiores a 6.000 € declarados.",
+        "hu": "A 6 000 € feletti készpénzes bevételek éves összege."
+      },
+      "label": {
+        "ca": "Import total — cobros en metálico",
+        "en": "Total cash payments received",
+        "es": "Importe total — cobros en metálico",
+        "hu": "Készpénzes-bevétel összege"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_347",
+      "period": "2025",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-17004",
+      "source_page": 1,
+      "source_section": "Resumen — Metálico",
+      "synthetic": false,
+      "validation": []
+    }
+  ]
+}
