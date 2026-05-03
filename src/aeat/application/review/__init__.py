@@ -40,6 +40,22 @@ from ._enums import (
     severity_rank,
 )
 from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
+from ._filter import (
+    DeclarationReviewFilterKey,
+    DeclarationReviewFilterSpec,
+    DeclarationReviewStatus,
+    FilterClause,
+    FilterParseError,
+    InvoiceReviewFilterKey,
+    InvoiceReviewFilterSpec,
+    InvoiceReviewStatus,
+    LedgerReviewFilterKey,
+    LedgerReviewFilterSpec,
+    LedgerReviewIssue,
+    LedgerReviewStatus,
+    parse_filter_clause,
+    parse_filter_clauses,
+)
 from ._models import (
     DivergenceReviewItem,
     FindingReviewItem,
@@ -49,9 +65,21 @@ from ._models import (
 )
 
 __all__ = [
+    "DeclarationReviewFilterKey",
+    "DeclarationReviewFilterSpec",
+    "DeclarationReviewStatus",
     "DivergenceReviewItem",
+    "FilterClause",
+    "FilterParseError",
     "FindingReviewItem",
+    "InvoiceReviewFilterKey",
+    "InvoiceReviewFilterSpec",
     "InvoiceReviewItem",
+    "InvoiceReviewStatus",
+    "LedgerReviewFilterKey",
+    "LedgerReviewFilterSpec",
+    "LedgerReviewIssue",
+    "LedgerReviewStatus",
     "ReviewError",
     "ReviewFormat",
     "ReviewItem",
@@ -65,6 +93,8 @@ __all__ = [
     "divergences_pending",
     "drafts_pending",
     "invoices_pending",
+    "parse_filter_clause",
+    "parse_filter_clauses",
     "reserved_kind_reason",
     "severity_rank",
     "transactions_pending",
