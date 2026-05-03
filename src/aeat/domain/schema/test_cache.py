@@ -24,8 +24,8 @@ from . import (
     SchemaVersion,
     load_modelo_from_cache,
     resolve_schema_cache_file,
-    save_modelo_to_cache,
 )
+from ._cache import save_modelo_to_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

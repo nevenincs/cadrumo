@@ -18,9 +18,9 @@ from . import (
     LLMDraftProvenance,
     SelectOption,
     load_casillas,
-    save_casillas,
     verify_casillas,
 )
+from .catalogue import save_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
