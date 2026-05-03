@@ -88,6 +88,16 @@ def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -
     assert "validated registry snapshots" in source
 
 
+def test_application_testing_helpers_do_not_import_builder_static_schemas() -> None:
+    source = _source("src/aeat/application/filing/testing.py")
+    helper_source = _source("src/aeat/application/filing/_testing_static_schema.py")
+    assert "domain.filing._builders" not in source
+    assert "domain.filing._builders" not in helper_source
+    assert "_modelo_130_schema" not in source
+    assert "_modelo_303_schema" not in source
+    assert "_modelo_390_schema" not in source
+
+
 def test_application_verification_cannot_import_legacy_formula_engine() -> None:
     source = _source("src/aeat/application/verification/_verify.py")
     assert "domain.formulas" not in source

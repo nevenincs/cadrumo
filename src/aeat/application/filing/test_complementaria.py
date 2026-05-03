@@ -161,6 +161,7 @@ class TestBuildComplementaria:
                 "06": Decimal("0.00"),
                 "_reasons": {"01": "Late income invoice received after original filing."},
             },
+            schema_provider=default_schema_provider(),
         )
 
         by_casilla = {change.casilla_code: change for change in amendment.delta}
@@ -194,6 +195,7 @@ class TestBuildComplementaria:
                     "05": Decimal("400.00"),
                     "06": Decimal("0.00"),
                 },
+                schema_provider=default_schema_provider(),
             )
 
     def test_modelo_303_pre_rectificativa_is_complementaria(
@@ -212,6 +214,7 @@ class TestBuildComplementaria:
                 "29": Decimal("200.00"),
                 "_reasons": {"07": "Additional taxable turnover discovered during closing review."},
             },
+            schema_provider=default_schema_provider(),
         )
 
         by_casilla = {change.casilla_code: change for change in amendment.delta}
@@ -240,6 +243,7 @@ class TestBuildComplementaria:
                 QUARTERLY_303_INPUT_KEY: quarterly_updated,
                 "_reasons": {"109": "Annual total updated after revising Q2 quarterly VAT return."},
             },
+            schema_provider=default_schema_provider(),
         )
 
         assert amendment.amendment_kind is AmendmentKind.SUSTITUTIVA

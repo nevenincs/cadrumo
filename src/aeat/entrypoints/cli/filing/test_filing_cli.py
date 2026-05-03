@@ -11,6 +11,7 @@ persistence layer rather than the production master key.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -18,6 +19,7 @@ from typer.testing import CliRunner
 
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
+from ....domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -38,6 +40,33 @@ def _write_inputs(tmp_path: Path) -> Path:
     target = tmp_path / "inputs.json"
     target.write_text(json.dumps(payload), encoding="utf-8")
     return target
+
+
+def _write_submitted_filing(submissions_dir: Path) -> SubmittedFiling:
+    """Persist a real submitted-filing record for CLI amendment tests."""
+    now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
+    filing = SubmittedFiling(
+        submission_id="sub-cli-1",
+        draft_id="draft-cli-1",
+        modelo="130",
+        period="2024Q1",
+        profile_tax_id="00000000T",
+        status=SubmissionStatus.SUBMITTED,
+        justificante_csv="CSV-sub-cli-1",
+        justificante_pdf_path=None,
+        submitted_at=now,
+        acknowledged_at=None,
+        attempts=(
+            SubmissionAttempt(
+                attempt_id="sub-cli-1.1",
+                started_at=now,
+                ended_at=now,
+                status=SubmissionStatus.SUBMITTED,
+            ),
+        ),
+    )
+    (submissions_dir / "sub-cli-1.json").write_text(filing.model_dump_json(), encoding="utf-8")
+    return filing
 
 
 @pytest.fixture
@@ -270,3 +299,29 @@ class TestFilingCLI:
         # Click/Typer returns 2 for an unknown subcommand.
         assert result.exit_code == 2, result.output
         assert "no such command" in result.output.lower()
+
+    def test_complementaria_build_requires_registry_schema_provider(
+        self,
+        drafts_dir: Path,
+        submissions_dir: Path,
+    ) -> None:
+        submitted = _write_submitted_filing(submissions_dir)
+        payload = {
+            "original_submission_id": submitted.submission_id,
+            "updated_inputs": {
+                "01": 13000,
+                "02": 3500,
+                "05": 400,
+                "06": 0,
+            },
+        }
+
+        result = runner.invoke(
+            app,
+            ["complementaria", "build", "130", "2024Q1", json.dumps(payload)],
+        )
+
+        assert result.exit_code != 0, result.output
+        assert "validated registry" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert not (submissions_dir / "amendments").exists()
