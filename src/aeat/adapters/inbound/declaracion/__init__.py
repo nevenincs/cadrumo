@@ -1,13 +1,11 @@
-"""Casilla-complete declaración PDF parsing.
+"""Fail-closed declaración PDF parsing boundary.
 
-The module turns a *copia de la declaración* PDF into a strict
-:class:`DeclaracionFiling` record carrying every casilla ID + printed
-value the extractor recovered. Downstream consumers:
+The module retains strict declaration parser records and the public
+``parse_declaracion`` entry point, but legacy Python extractor dispatch is
+disabled until validated registry snapshots back extraction.
 
-- :mod:`aeat.application.filing.build_draft` materialises a :class:`FilingDraft`
-  from the extracted casillas via ``inputs={c.casilla_id: c.printed_value ...}``.
-- :mod:`aeat.application.verification.verify_declaracion` compares the re-derived
-  casillas against the printed ones via registry-backed audit.
+Downstream consumers must treat this surface as unavailable for
+casilla-complete extraction until that registry-backed implementation exists.
 
 Public API:
 
@@ -23,7 +21,6 @@ from __future__ import annotations
 
 from ._errors import DeclaracionParseError
 from ._extractor import DeclaracionExtractor
-from ._generic_extractor import GenericDeclaracionExtractor
 from ._parser import parse_declaracion
 from ._schema import (
     DeclaracionFiling,
@@ -48,7 +45,6 @@ __all__ = [
     "DeclaracionParseError",
     "ExtractionStatus",
     "ExtractionWarning",
-    "GenericDeclaracionExtractor",
     "TemplateRevision",
     "parse_declaracion",
     "registered_extractors",

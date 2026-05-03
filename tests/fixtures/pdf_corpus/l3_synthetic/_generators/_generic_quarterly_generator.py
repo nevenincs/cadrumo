@@ -1,9 +1,8 @@
-"""Generic synthetic generator for quarterly AEAT modelos (#305).
+"""Generic synthetic generator for declaration-like AEAT PDFs.
 
-Renders a PDF whose text layer matches the line-anchored regex the
-:class:`aeat.declaracion._generic_extractor.GenericDeclaracionExtractor`
-reads: header (NIF / Ejercicio / Período), then each casilla on its
-own line prefixed by the zero-padded ID + label + Spanish amount.
+Renders a PDF with header text (NIF / Ejercicio / Período) and each
+casilla on its own line prefixed by the zero-padded ID + label + Spanish
+amount.
 
 Per-modelo generator modules compose a ``QuarterlyGenParams`` instance
 with their own label map and call :func:`generate`.
