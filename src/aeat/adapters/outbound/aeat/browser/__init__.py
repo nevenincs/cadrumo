@@ -37,13 +37,14 @@ from ._site_health_parsers import (
     parse_rate_limit_response,
     parse_waf_challenge,
 )
-from .evasion import EvasionStrategy, PlaywrightStealthEvasion
+from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
 from .session import BrowserError, BrowserSession
 
 __all__ = [
     "BrowserError",
+    "BrowserEvasionError",
     "BrowserSession",
     "DefaultBrowserSession",
     "EvasionStrategy",

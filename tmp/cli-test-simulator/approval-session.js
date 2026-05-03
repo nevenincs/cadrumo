@@ -1,13 +1,13 @@
 (function () {
-  const STORAGE_KEY = "aeat-cli-approval-session-v5";
-  const DRAFT_STORAGE_KEY = "aeat-cli-approval-session-v5-drafts";
+  const STORAGE_KEY = "aeat-cli-approval-session-v6";
+  const DRAFT_STORAGE_KEY = "aeat-cli-approval-session-v6-drafts";
 
   const sections = [
     {
       id: "root",
       title: "Root Boundary",
       status: "accepted anchor",
-      question: "Approve the root boundary for v5?",
+      question: "Approve the root boundary for v6?",
       context:
         "The CLI has two root domains. Setup contains prerequisites. App contains operational tax work. No developer command family belongs in this user surface.",
       shape: `aeat setup
@@ -16,9 +16,9 @@
 aeat app
   Work through overview, ledger, invoice, and declaration workflows.`,
       options: [
-        option("approve-root-v5", "Approve root", "Keep setup/app with this wording.", true),
-        option("revise-root-v5", "Revise wording", "Keep the boundary but change the descriptions."),
-        option("block-root-v5", "Needs redesign", "Do not carry this root framing forward."),
+        option("approve-root-v6", "Approve root", "Keep setup/app with this wording.", true),
+        option("revise-root-v6", "Revise wording", "Keep the boundary but change the descriptions."),
+        option("block-root-v6", "Needs redesign", "Do not carry this root framing forward."),
       ],
     },
     {
@@ -49,19 +49,19 @@ aeat setup auth whoami
 aeat setup auth logout
   Clear active authentication state.`,
       options: [
-        option("approve-auth-v5", "Approve auth", "Use provider configure/login/status/whoami/logout.", true),
-        option("revise-auth-v5", "Revise auth", "Change provider wording or login commands."),
-        option("block-auth-v5", "Needs redesign", "Authentication still does not model user login correctly."),
+        option("approve-auth-v6", "Approve auth", "Use provider configure/login/status/whoami/logout.", true),
+        option("revise-auth-v6", "Revise auth", "Change provider wording or login commands."),
+        option("block-auth-v6", "Needs redesign", "Authentication still does not model user login correctly."),
       ],
     },
     {
       id: "setup-profile",
       title: "Setup Profile",
       status: "accepted anchor",
-      question: "Approve a schema-backed profile editor?",
+      question: "Approve schema-backed profile values?",
       context:
         "Profile stores taxpayer facts used by app workflows. Keys must be discoverable and validated before filing work starts.",
-      shape: `aeat setup profile create NAME
+      shape: `aeat setup init --name NAME
   Create a taxpayer profile.
 
 aeat setup profile use NAME
@@ -69,6 +69,9 @@ aeat setup profile use NAME
 
 aeat setup profile show
   Show current profile facts and validation state.
+
+aeat setup profile keys
+  List editable keys, types, requiredness, and descriptions.
 
 aeat setup profile list-keys
   List editable keys, types, requiredness, and descriptions.
@@ -85,12 +88,12 @@ aeat setup profile unset KEY
 aeat setup profile validate
   Validate completeness and consistency.
 
-aeat setup profile edit
-  Open an interactive schema-backed editor.`,
+aeat setup profile list
+  List configured profiles.`,
       options: [
-        option("approve-profile-v5", "Approve profile", "Use dictionary-backed keys and validation.", true),
-        option("revise-profile-v5", "Revise profile", "Keep schema editing but change commands or keys."),
-        option("block-profile-v5", "Needs redesign", "Profile is still too weak or unclear."),
+        option("approve-profile-v6", "Approve profile", "Use dictionary-backed keys and validation.", true),
+        option("revise-profile-v6", "Revise profile", "Keep schema editing but change commands or keys."),
+        option("block-profile-v6", "Needs redesign", "Profile is still too weak or unclear."),
       ],
     },
     {
@@ -100,7 +103,7 @@ aeat setup profile edit
       question: "Approve the singular app domain map?",
       context:
         "The app surface stays singular and user-operational. Calendar discovery remains inside overview. Supporting files are fields on records.",
-      shape: `aeat app overview
+      shape: `aeat app overview status
   Show profile-scoped readiness, unresolved work, declaration status, and next actions.
 
 aeat app ledger
@@ -110,11 +113,11 @@ aeat app invoice
   Import, inspect, enrich, and match issued and received invoice records.
 
 aeat app declaration
-  Calculate, review, approve, validate, export, verify, and amend declarations.`,
+  Calculate, review, approve, validate, export, verify, and recalculate declaration drafts.`,
       options: [
-        option("approve-domains-v5", "Approve domains", "Use overview, ledger, invoice, declaration.", true),
-        option("revise-domains-v5", "Revise domains", "Keep singular nouns but change the map."),
-        option("block-domains-v5", "Needs redesign", "The domain structure still is not usable."),
+        option("approve-domains-v6", "Approve domains", "Use overview, ledger, invoice, declaration.", true),
+        option("revise-domains-v6", "Revise domains", "Keep singular nouns but change the map."),
+        option("block-domains-v6", "Needs redesign", "The domain structure still is not usable."),
       ],
     },
     {
@@ -152,9 +155,9 @@ Required audit:
   define skip state
   define split and clear behavior`,
       options: [
-        option("accept-ledger-audit-v5", "Accept audit gate", "Treat fields as backend-driven requirements, not manual approval.", true),
-        option("revise-ledger-contract-v5", "Revise contract", "Change field names or audit requirements."),
-        option("block-ledger-contract-v5", "Needs redesign", "Ledger remains too ambiguous."),
+        option("accept-ledger-audit-v6", "Accept audit gate", "Treat fields as backend-driven requirements, not manual approval.", true),
+        option("revise-ledger-contract-v6", "Revise contract", "Change field names or audit requirements."),
+        option("block-ledger-contract-v6", "Needs redesign", "Ledger remains too ambiguous."),
       ],
     },
     {
@@ -167,7 +170,7 @@ Required audit:
       shape: `aeat app ledger import PATH --provider n26 --dry-run
   Validate a transaction file before saving records.
 
-aeat app ledger import PATH --provider n26 --verify --original ./downloads/n26-jan.pdf --verbose
+aeat app ledger import PATH --provider n26 --verify --source ./downloads/n26-jan.pdf --verbose
   Import records and run backend verification, including source-file, gap, duplicate, and parser diagnostics.
 
 Rejected:
@@ -177,39 +180,39 @@ Rejected:
   aeat app ledger import exclude ...
   aeat app ledger import restore ...`,
       options: [
-        option("approve-ledger-import-v5", "Approve import", "Use import PATH with --provider and --verify.", true),
-        option("revise-ledger-import-v5", "Revise import", "Change verification or original-file wording."),
-        option("block-ledger-import-v5", "Needs redesign", "Import grammar is still not concrete enough."),
+        option("approve-ledger-import-v6", "Approve import", "Use import PATH with --provider and --verify.", true),
+        option("revise-ledger-import-v6", "Revise import", "Change verification or original-file wording."),
+        option("block-ledger-import-v6", "Needs redesign", "Import grammar is still not concrete enough."),
       ],
     },
     {
       id: "ledger-inspection",
       title: "Ledger Inspection",
       status: "reworked",
-      question: "Approve list and show as the read-only ledger surface?",
+      question: "Approve review as the read-only ledger surface?",
       context:
-        "A user needs to inspect imported records before editing. List and show must expose stable row identities, review status, provenance, and filterable work queues.",
-      shape: `aeat app ledger list --filter status=pending --filter period=2026-Q1
+        "A user needs to inspect imported records before editing. Review must expose stable row identities, review status, provenance, and filterable work queues.",
+      shape: `aeat app ledger review --filter status=pending --filter period=2026-Q1
   List records using cohesive filters.
 
-aeat app ledger list --filter issue=duplicate --filter period=2026-Q1
+aeat app ledger review --filter issue=duplicate --filter period=2026-Q1
   Inspect duplicate diagnostics produced by import verification.
 
-aeat app ledger show --id row_1042 --verbose
+aeat app ledger review --id row_1042 --verbose
   Show one record, provenance, classification history, linked invoice/category data, notes, document path, and skip state.`,
       options: [
-        option("approve-ledger-inspection-v5", "Approve inspection", "Use list/show with filters and stable ids.", true),
-        option("revise-ledger-inspection-v5", "Revise inspection", "Change filter syntax or displayed fields."),
-        option("block-ledger-inspection-v5", "Needs redesign", "Read-only ledger work is still unclear."),
+        option("approve-ledger-inspection-v6", "Approve inspection", "Use review with filters and stable ids.", true),
+        option("revise-ledger-inspection-v6", "Revise inspection", "Change filter syntax or displayed fields."),
+        option("block-ledger-inspection-v6", "Needs redesign", "Read-only ledger work is still unclear."),
       ],
     },
     {
       id: "ledger-edit",
       title: "Ledger Edit, Skip, Split",
       status: "reworked",
-      question: "Approve edit, skip, and normalized split behavior?",
+      question: "Approve edit, skip, and split behavior?",
       context:
-        "Exclude and restore are removed. Skipping is an auditable edit. Splits use normalized shares that must add to 1.0 and require backend support for source identity, split metadata, and clearing a split.",
+        "Exclude and restore are removed. Skipping is an auditable edit. Splits use share values that must add to 1.0 and require backend support for source identity, split metadata, and clearing a split.",
       shape: `aeat app ledger edit --id row_1042 --set category=software --set business.share=1.0 --set reference=inv_901 --reason invoice
   Edit schema-backed ledger fields.
 
@@ -219,15 +222,15 @@ aeat app ledger edit --id row_1051 --skip true --reason private-expense
 aeat app ledger edit --id row_1051 --skip false --reason invoice-found
   Return a skipped record to review.
 
-aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment
-  Split one source transaction into normalized shares.
+aeat app ledger edit --id row_1050 --split business=0.45 --split personal=0.55 --reason mixed-card-payment
+  Split one source transaction into share values.
 
-aeat app ledger split --id row_1050 --clear --reason corrected-single-use
+aeat app ledger edit --id row_1050 --split clear --reason corrected-single-use
   Clear split metadata and return to the source transaction.`,
       options: [
-        option("approve-ledger-edit-v5", "Approve edit model", "Use edit --skip and normalized split/clear.", true),
-        option("revise-ledger-edit-v5", "Revise edit model", "Change edit, skip, split, or clear syntax."),
-        option("block-ledger-edit-v5", "Needs redesign", "Ledger row work still does not model real review."),
+        option("approve-ledger-edit-v6", "Approve edit model", "Use edit --skip and split/clear.", true),
+        option("revise-ledger-edit-v6", "Revise edit model", "Change edit, skip, split, or clear syntax."),
+        option("block-ledger-edit-v6", "Needs redesign", "Ledger row work still does not model real review."),
       ],
     },
     {
@@ -243,9 +246,9 @@ aeat app ledger split --id row_1050 --clear --reason corrected-single-use
 aeat app invoice edit --id inv_2041 --set document.path=./invoices/inv-2041.pdf --set payment.id=row_1042 --reason invoice-review
   Link an invoice file through invoice columns.`,
       options: [
-        option("approve-record-files-v5", "Approve fields", "Use record fields for supporting files and references.", true),
-        option("revise-record-files-v5", "Revise fields", "Change file/reference/comment field names."),
-        option("block-record-files-v5", "Needs redesign", "Supporting files still need a different model."),
+        option("approve-record-files-v6", "Approve fields", "Use record fields for supporting files and references.", true),
+        option("revise-record-files-v6", "Revise fields", "Change file/reference/comment field names."),
+        option("block-record-files-v6", "Needs redesign", "Supporting files still need a different model."),
       ],
     },
     {
@@ -280,16 +283,16 @@ Required audit:
   confirm payment linkage
   confirm import/edit history`,
       options: [
-        option("accept-invoice-audit-v5", "Accept audit gate", "Treat fields as backend-driven requirements.", true),
-        option("revise-invoice-contract-v5", "Revise contract", "Change invoice fields or audit requirements."),
-        option("block-invoice-contract-v5", "Needs redesign", "Invoice design is still too thin."),
+        option("accept-invoice-audit-v6", "Accept audit gate", "Treat fields as backend-driven requirements.", true),
+        option("revise-invoice-contract-v6", "Revise contract", "Change invoice fields or audit requirements."),
+        option("block-invoice-contract-v6", "Needs redesign", "Invoice design is still too thin."),
       ],
     },
     {
       id: "invoice-review",
       title: "Invoice Review",
       status: "reworked",
-      question: "Approve invoice import, list, show, edit, and match?",
+      question: "Approve invoice import, review, edit, match, and verify?",
       context:
         "Issued and received invoice records stay under singular invoice. Review uses the same filter and schema-backed edit pattern as ledger.",
       shape: `aeat app invoice import PATH --kind issued --dry-run
@@ -298,21 +301,24 @@ Required audit:
 aeat app invoice import PATH --kind received --dry-run
   Validate received invoice records.
 
-aeat app invoice list --filter status=pending --filter kind=received
+aeat app invoice review --filter status=pending --filter kind=received
   List invoice records that need metadata review.
 
-aeat app invoice show --id inv_2041 --verbose
+aeat app invoice review --id inv_2041 --verbose
   Show invoice lines, totals, payment linkage, references, comments, and backend audit gaps.
 
 aeat app invoice edit --id inv_2041 --set base=120.00 --set iva.rate=21 --set iva.amount=25.20 --set iva.category=general --set retention.rate=15 --set payment.id=row_1042 --reason invoice-review
   Enrich invoice metadata.
 
 aeat app invoice match --period 2026-Q1
-  Match invoice records to payments and ledger records.`,
+  Match invoice records to payments and ledger records.
+
+aeat app invoice verify
+  Verify invoice and ledger links are two-sided.`,
       options: [
-        option("approve-invoice-review-v5", "Approve review", "Use singular invoice with filters and schema-backed edits.", true),
-        option("revise-invoice-review-v5", "Revise review", "Change invoice kind, edit, or matching grammar."),
-        option("block-invoice-review-v5", "Needs redesign", "Invoice workflow still is not granular enough."),
+        option("approve-invoice-review-v6", "Approve review", "Use singular invoice with filters and schema-backed edits.", true),
+        option("revise-invoice-review-v6", "Revise review", "Change invoice kind, edit, or matching grammar."),
+        option("block-invoice-review-v6", "Needs redesign", "Invoice workflow still is not granular enough."),
       ],
     },
     {
@@ -322,18 +328,18 @@ aeat app invoice match --period 2026-Q1
       question: "Approve overview as the period and resume surface?",
       context:
         "Interrupted work resumes from profile-scoped state. No user-facing session or workspace command is required for normal continuation.",
-      shape: `aeat app overview
+      shape: `aeat app overview status
   Show profile readiness, pending record counts, declaration state, and next action.
 
-aeat app overview --calendar --from 2025-10-01 --to 2026-07-20
+aeat app overview status --calendar --from 2025-10-01 --to 2026-07-20
   Show period states across a date range.
 
-aeat app overview --period 2026-Q1 --verbose
+aeat app overview status --period 2026-Q1 --verbose
   Explain local state, imported AEAT state where available, unresolved work, and next commands.`,
       options: [
-        option("approve-overview-v5", "Approve overview", "Use overview for discovery and resume.", true),
-        option("revise-overview-v5", "Revise overview", "Change calendar, period, or resume wording."),
-        option("block-overview-v5", "Needs redesign", "Period discovery still is not usable."),
+        option("approve-overview-v6", "Approve overview", "Use overview for discovery and resume.", true),
+        option("revise-overview-v6", "Revise overview", "Change calendar, period, or resume wording."),
+        option("block-overview-v6", "Needs redesign", "Period discovery still is not usable."),
       ],
     },
     {
@@ -356,9 +362,9 @@ Invalid operation behavior:
   show missing profile facts
   show the command needed to repair the first blocker`,
       options: [
-        option("approve-calculate-v5", "Approve output", "Bare calculate prints summary and next action.", true),
-        option("revise-calculate-v5", "Revise output", "Change calculate summary or invalid-operation behavior."),
-        option("block-calculate-v5", "Needs redesign", "Calculate behavior is still ambiguous."),
+        option("approve-calculate-v6", "Approve output", "Bare calculate prints summary and next action.", true),
+        option("revise-calculate-v6", "Revise output", "Change calculate summary or invalid-operation behavior."),
+        option("block-calculate-v6", "Needs redesign", "Calculate behavior is still ambiguous."),
       ],
     },
     {
@@ -374,15 +380,15 @@ Invalid operation behavior:
 aeat app declaration status --filter status=pending --period 2026-Q1 --modelo 303
   Show unresolved work through cohesive filters.
 
-aeat app declaration edit --period 2026-Q1 --modelo 303 --set casilla.71=1200.00 --reason manual-check
+aeat app declaration edit --id draft_303_2026-Q1 --set casilla.71=1200.00 --reason manual-check
   Record an auditable manual change and reset approval.
 
-aeat app declaration approve --period 2026-Q1 --modelo 303 --reason reviewed-against-ledger
+aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason reviewed-against-ledger
   Approve the reviewed declaration state.`,
       options: [
-        option("approve-declaration-review-v5", "Approve gates", "Use review/status/edit/approve.", true),
-        option("revise-declaration-review-v5", "Revise gates", "Change review, status, edit, or approval syntax."),
-        option("block-declaration-review-v5", "Needs redesign", "Declaration review still is unsafe or unclear."),
+        option("approve-declaration-review-v6", "Approve gates", "Use review/status/edit/approve.", true),
+        option("revise-declaration-review-v6", "Revise gates", "Change review, status, edit, or approval syntax."),
+        option("block-declaration-review-v6", "Needs redesign", "Declaration review still is unsafe or unclear."),
       ],
     },
     {
@@ -391,62 +397,62 @@ aeat app declaration approve --period 2026-Q1 --modelo 303 --reason reviewed-aga
       status: "reworked",
       question: "Approve export and verify separation?",
       context:
-        "Export writes a local artifact with an explicit output path. Verify does not take an export flag; it verifies declaration state and may write a JSON audit report.",
-      shape: `aeat app declaration validate --period 2026-Q1 --modelo 303
+        "Export writes a local artifact with an explicit output path. Verify does not take an export flag; it reads the exported file with --file and reports mismatches.",
+      shape: `aeat app declaration validate --id draft_303_2026-Q1
   Validate only after human approval.
 
-aeat app declaration validate --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-validation.json
+aeat app declaration validate --id draft_303_2026-Q1 --format json --output ./exports/2026-q1-validation.json
   Write a validation report when unresolved work remains.
 
-aeat app declaration preview --period 2026-Q1 --modelo 303 --format pdf
+aeat app declaration preview --id draft_303_2026-Q1
   Create a non-filing preview where supported.
 
-aeat app declaration export --period 2026-Q1 --modelo 303 --format boe --output ./exports/2026-q1
+aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1
   Export a local AEAT-compatible file where supported.
 
-aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-verify.json
-  Verify declaration state and write machine-readable audit output.
+aeat app declaration verify --id draft_303_2026-Q1 --file ./exports/2026-q1-verify.json
+  Verify the exported file against the approved local draft.
 
 Rejected:
   aeat app declaration verify --export PATH`,
       options: [
-        option("approve-declaration-export-v5", "Approve outputs", "Use explicit export --output and verify --format json --output.", true),
-        option("revise-declaration-export-v5", "Revise outputs", "Change output names or gating wording."),
-        option("block-declaration-export-v5", "Needs redesign", "Export behavior still is not safe enough."),
+        option("approve-declaration-export-v6", "Approve outputs", "Use explicit export --output and verify --file.", true),
+        option("revise-declaration-export-v6", "Revise outputs", "Change output names or gating wording."),
+        option("block-declaration-export-v6", "Needs redesign", "Export behavior still is not safe enough."),
       ],
     },
     {
-      id: "amend-flag",
-      title: "Amend Flag",
+      id: "correction-recalculation",
+      title: "Correction Recalculation",
       status: "reworked",
-      question: "Approve corrective declaration work through --amend --id?",
+      question: "Approve corrective work as recalculation of a new draft?",
       context:
-        "There is no corrective-filing noun or subcommand. The declaration command itself states that it amends a prior AEAT declaration. The id is the prior AEAT justificante id; do not add a separate CSV code concept.",
-      shape: `aeat app declaration calculate --period 2026-Q1 --modelo 303 --amend --id 3031234567890
-  Calculate a declaration that amends the prior declaration identified by AEAT justificante id.
+        "There is no corrective-filing noun or subcommand in the user CLI. When records change after export, the user recalculates a new draft, reviews the differences, approves it, exports it, and verifies the exported file.",
+      shape: `aeat app declaration calculate --period 2026-Q1 --modelo 303
+  Calculate a new draft after late or corrected records.
 
-aeat app declaration review --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format table
+aeat app declaration review --period 2026-Q1 --modelo 303 --format table
   Review changed values and blocker state.
 
-aeat app declaration approve --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --reason amend-reviewed
-  Approve the amended declaration state.
+aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason recalculation-reviewed
+  Approve the recalculated declaration state.
 
-aeat app declaration export --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format boe --output ./exports/2026-q1-amend
-  Export the amended declaration artifact.
+aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1-recalculated
+  Export the recalculated declaration artifact.
 
 Research rule:
-  where AEAT requires latest prior rectification identity, --id must refer to that justificante id.`,
+  AEAT-side correction identity is a backend/legal mapping, not a separate user command noun.`,
       options: [
-        option("approve-amend-flag-v5", "Approve flag", "Use --amend --id on declaration commands.", true),
-        option("revise-amend-flag-v5", "Revise flag", "Change id wording or command coverage."),
-        option("block-amend-flag-v5", "Needs redesign", "Corrective declaration modeling is still wrong."),
+        option("approve-correction-recalc-v6", "Approve recalc", "Use calculate/review/approve/export/verify on a new draft.", true),
+        option("revise-correction-recalc-v6", "Revise recalc", "Change correction wording or command coverage."),
+        option("block-correction-recalc-v6", "Needs redesign", "Corrective declaration modeling is still wrong."),
       ],
     },
     {
       id: "safety-status",
       title: "Safety And Status",
       status: "in progress",
-      question: "Approve v5 as the next review candidate, not implementation approval?",
+      question: "Approve v6 as the next review candidate, not implementation approval?",
       context:
         "This approval session is design review only. Production CLI implementation still requires backend audit, tests, and a separate implementation plan.",
       shape: `Global rules:
@@ -454,11 +460,10 @@ Research rule:
   --verbose is required on diagnostic and state-sensitive workflows.
   --dry-run is required where practical on import, edit, approve, validate, and export commands.
   --format table|json controls CLI response format.
-  --format boe is only for supported AEAT-compatible local declaration artifacts.
   --format pdf is only for previews.
   No live submission command is approved.
 
-V5 status:
+V6 status:
   review candidate
   not approved for production implementation
 
@@ -470,9 +475,9 @@ Required before implementation:
   export and verify output contract
   corrective declaration behavior against AEAT justificante rules`,
       options: [
-        option("approve-status-v5", "Approve candidate", "Accept v5 as the next review candidate.", true),
-        option("revise-status-v5", "Revise status", "More comments must be incorporated before review."),
-        option("block-status-v5", "Needs redesign", "Do not proceed from this candidate."),
+        option("approve-status-v6", "Approve candidate", "Accept v6 as the next review candidate.", true),
+        option("revise-status-v6", "Revise status", "More comments must be incorporated before review."),
+        option("block-status-v6", "Needs redesign", "Do not proceed from this candidate."),
       ],
     },
   ];
@@ -630,7 +635,7 @@ Required before implementation:
 
   function buildExport() {
     return {
-      artifact: "aeat-cli-redesign-approval-session-v5",
+      artifact: "aeat-cli-redesign-approval-session-v6",
       generatedAt: new Date().toISOString(),
       adr: ".vault/adr/2026-05-02-aeat-cli-redesign-adr.md",
       reference: ".vault/reference/2026-05-02-aeat-cli-redesign-reference.md",
@@ -740,7 +745,7 @@ Required before implementation:
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "aeat-cli-approval-session-v5.json";
+    link.download = "aeat-cli-approval-session-v6.json";
     document.body.appendChild(link);
     link.click();
     link.remove();

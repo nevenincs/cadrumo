@@ -15,9 +15,12 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AmbiguousPeriodError, MissingRulesetError, RulesetValidationError
+from ...core.logging import get_logger
 from ..modelos import ModeloCode
 from ._period import FiscalPeriod
 from ._ruleset import Ruleset
+
+_logger = get_logger(__name__)
 
 __all__ = ["RulesetRegistry", "get_registry"]
 
@@ -127,5 +130,7 @@ def get_registry() -> RulesetRegistry:
     if _cached_registry is None:
         from ._rulesets import ALL_RULESETS
 
+        _logger.debug("initialising ruleset registry from ALL_RULESETS")
         _cached_registry = RulesetRegistry(rulesets=ALL_RULESETS)
+        _logger.debug("ruleset registry ready: %d rulesets", len(_cached_registry.rulesets))
     return _cached_registry

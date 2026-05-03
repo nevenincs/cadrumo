@@ -31,8 +31,11 @@ from types import MappingProxyType
 
 from pydantic import Field, model_validator
 
+from ...core.logging import get_logger
 from ._classification import InvoiceDirection
 from ._schema import VATCategory, VATRateKind, _VatStrictFrozen
+
+_logger = get_logger(__name__)
 
 
 class CasillaRole(StrEnum):
@@ -234,8 +237,28 @@ def lookup_modelo_303_contribution(
     """
     if category is VATCategory.DOMESTIC_REVERSE_CHARGE and direction is InvoiceDirection.ISSUED:
         effective_tier = rate_tier if rate_tier is not None else VATRateKind.GENERAL
-        return _DOMESTIC_REVERSE_CHARGE_ISSUED_BY_TIER.get(effective_tier, ())
-    return MODELO_303_CASILLA_MAPPING.get((category, direction), ())
+        if rate_tier is None:
+            _logger.debug(
+                "lookup_modelo_303_contribution: DOMESTIC_REVERSE_CHARGE ISSUED with no rate_tier; "
+                "defaulting to GENERAL",
+            )
+        result = _DOMESTIC_REVERSE_CHARGE_ISSUED_BY_TIER.get(effective_tier, ())
+        if not result:
+            _logger.debug(
+                "lookup_modelo_303_contribution: no casilla mapping for DOMESTIC_REVERSE_CHARGE "
+                "ISSUED tier=%s; returning empty",
+                effective_tier.value,
+            )
+        return result
+    result = MODELO_303_CASILLA_MAPPING.get((category, direction), ())
+    if not result:
+        _logger.debug(
+            "lookup_modelo_303_contribution: no casilla mapping for category=%s direction=%s; "
+            "likely out-of-scope for v1",
+            category.value,
+            direction.value,
+        )
+    return result
 
 
 __all__ = [

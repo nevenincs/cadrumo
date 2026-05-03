@@ -196,7 +196,12 @@ def _print_step(
 
 def _copy_oauth_client_json(json_path: Path) -> Path:
     raw = json_path.read_text(encoding="utf-8")
-    client_id, client_secret = parse_oauth_client_json(json.loads(raw))
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        logger.warning("_copy_oauth_client_json: invalid JSON in %s", json_path, exc_info=True)
+        raise ValueError(f"invalid JSON in {json_path}: {exc}") from exc
+    client_id, client_secret = parse_oauth_client_json(payload)
     stable_client_path = PROJECT_ROOT / "env" / "oauth-client.json"
     stable_client_path.parent.mkdir(parents=True, exist_ok=True)
     stable_client_path.write_text(raw, encoding="utf-8")
@@ -614,14 +619,14 @@ async def _close_provider(provider: Any) -> None:
         return
     try:
         result = close()
-    except Exception as exc:
-        logger.warning("provider close() raised: %s", exc)
+    except Exception:  # auth provider close() exception surface varies by provider; teardown must not abort
+        logger.warning("provider close raised", exc_info=True)
         return
     if asyncio.iscoroutine(result):
         try:
             await result
-        except Exception as exc:
-            logger.warning("provider async close() raised: %s", exc)
+        except Exception:  # async auth provider close() exception surface varies by provider; teardown must not abort
+            logger.warning("provider async close raised", exc_info=True)
 
 
 async def _do_login(settings: Settings, kind: AuthProviderKind) -> AeatSession:
@@ -669,6 +674,10 @@ def _resolve_env_file(settings: Settings) -> Path:
                 return candidate
             if isinstance(candidate, str):
                 return Path(candidate)
+    logger.warning(
+        "_resolve_env_file: Settings.env_file has unsupported shape %s; cannot determine env file path",
+        type(env_file).__name__,
+    )
     raise typer.BadParameter(
         tr(
             t(
@@ -900,6 +909,7 @@ def configure(
         mapping["AEAT_AUTH_PROVIDER"] = kind.value
 
     write_env_vars(env_file, mapping)
+    logger.info("configure: wrote %d key(s) for provider %s", len(mapping), kind.value)
     # The CLI never echoes the written values (DNI/NIE + contraste are
     # PII) and no longer surfaces the underlying env-var names either —
     # the operator thinks in human terms ("my NIE", "my support number"),
@@ -1030,11 +1040,13 @@ def login(
     try:
         session = asyncio.run(_do_login(settings, kind))
     except _registry.ProviderNotImplementedError as exc:
+        logger.error("login: provider not implemented: %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        logger.error("login: authentication failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(
@@ -1051,6 +1063,7 @@ def login(
         )
         raise typer.Exit(code=1) from exc
 
+    logger.info("login: authenticated via %s", kind.value)
     if json_output or json_output_requested():
         # The storage_state_path is intentionally omitted from the JSON
         # surface — it is an internal file location that the operator has
@@ -1137,6 +1150,7 @@ def status(
         raise typer.Exit(code=2) from exc
 
     if session is None or (kind is not None and session.provider_kind != kind):
+        logger.debug("status: no active session (kind=%s)", kind.value if kind is not None else "any")
         if json_output or json_output_requested():
             emit_json_success("auth status", {"session": None})
         else:
@@ -1209,11 +1223,13 @@ def whoami(
     try:
         refreshed, assertion = asyncio.run(_do_whoami(settings, kind))
     except _registry.ProviderNotImplementedError as exc:
+        logger.error("whoami: provider not implemented: %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     except Exception as exc:
+        logger.error("whoami: probe failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(
@@ -1331,6 +1347,11 @@ def logout(
         try:
             persisted = _session.load(settings, target_kind)
         except _session.CorruptAuthSessionError:
+            logger.warning(
+                "logout: corrupt session for provider %s; proceeding to delete",
+                target_kind.value,
+                exc_info=True,
+            )
             persisted = None
         target_paths = storage_state_paths(settings, target_kind)
         # `--provider` only removes its own files. A mismatched persisted
@@ -1347,6 +1368,7 @@ def logout(
         try:
             persisted = _session.load(settings)
         except _session.CorruptAuthSessionError:
+            logger.warning("logout: corrupt session on disk; cannot determine provider; skipping delete", exc_info=True)
             persisted = None
         if persisted is not None:
             removed_for_kind = _session.delete(settings, persisted.provider_kind)

@@ -1,4 +1,4 @@
-# CLI Flow Generator System V5
+# CLI Flow Generator System V6
 
 Status: recovered-comment generator, not approved for implementation.
 
@@ -15,17 +15,17 @@ rejected in the approval comments.
 | Setup auth | Generate provider configuration, login, status, whoami, logout. |
 | Setup profile | Generate schema-backed profile key commands. |
 | App domains | Generate `overview`, `ledger`, `invoice`, and `declaration`. |
-| Discovery | Generate `overview --calendar` and `overview --period`. |
+| Discovery | Generate `overview status --calendar` and `overview status --period`. |
 | Ledger import | Generate `ledger import PATH --provider PROVIDER`; add `--verify` for diagnostics. |
-| Original file check | Generate `ledger import PATH --provider PROVIDER --verify --original PATH`. |
-| Ledger inspection | Generate `ledger list` and `ledger show`. |
+| Original file check | Generate `ledger import PATH --provider PROVIDER --verify --source PATH`. |
+| Ledger inspection | Generate `ledger review` and `ledger review`. |
 | Ledger edit | Generate `ledger edit --id ROW --set column=value --reason REASON`. |
 | Skip state | Generate `ledger edit --id ROW --skip true|false --reason REASON`. |
-| Split state | Generate normalized `ledger split --business SHARE --personal SHARE`; shares must add to `1.0`. |
+| Split state | Generate `ledger edit --split business=SHARE --split personal=SHARE`; share values must add to `1.0`. |
 | Invoice | Generate singular `app invoice` commands with `--kind issued|received` where importing. |
 | Calculation | Generate `declaration calculate`, `review`, `status`, `edit`, and `approve`. |
-| Output | Generate `validate`, `preview`, `export --output`, and `verify --format json --output`. |
-| Corrective declaration | Generate the same declaration commands with `--amend --id JUSTIFICANTE_ID`. |
+| Output | Generate `validate`, `preview`, `export --output`, and `verify --file`. |
+| Corrective declaration | Generate a new calculate/review/approve/export/verify sequence after late or corrected records. |
 | State | Do not generate user-facing session/workspace save-load commands. |
 
 ## Rejected Output
@@ -43,7 +43,7 @@ aeat app ledger restore ...
 aeat app declaration amendment create ...
 aeat app declaration verify --export PATH
 --csv-code
---amendment
+amendment subcommand
 ```
 
 ## Input Facts
@@ -84,8 +84,8 @@ declaration:
   review_state: not_reviewed | pending | approved | stale
 
 recovery:
-  amend_needed: true | false
-  justificante_id: missing | present
+  late_records: true | false
+  previous_export: missing | present
   export_expected: ready | pending_review | validation_errors | unknown
 ```
 
@@ -104,14 +104,14 @@ recovery:
 | invoice import | Import issued and received invoice records with singular `invoice`. |
 | invoice enrichment | Edit invoice base, IVA, retention, payment link, references, comments, and document paths. |
 | invoice matching | Match invoice records, payments, and ledger rows. |
-| declaration calculation | Calculate declarations by period/modelo and print summary output. |
+| declaration calculation | Calculate declaration drafts by period/modelo and print summary output. |
 | declaration review | Review values, pending decisions, assumptions, and manual edits. |
 | approval | Explicitly approve reviewed calculations. |
 | validation | Validate after approval or write validation report. |
 | preview | Create draft PDF previews where supported. |
 | export | Export AEAT-compatible local files through `--output`. |
-| verification | Write verification audit output with `--format json --output`. |
-| amend | Apply `--amend --id JUSTIFICANTE_ID` to declaration commands when amending prior AEAT output. |
+| verification | Verify an exported file with `--file`. |
+| recalculation | Generate a new draft and compare it against the prior approved/exported draft when records change after export. |
 
 ## Primitive Command Templates
 
@@ -124,48 +124,48 @@ aeat setup auth login
 aeat setup auth status
 aeat setup auth whoami
 aeat setup profile list-keys
-aeat setup profile create PROFILE
+aeat setup init --name PROFILE
 aeat setup profile use PROFILE
 aeat setup profile set KEY VALUE
 aeat setup profile unset KEY
 aeat setup profile validate
 
-aeat app overview --calendar --from DATE --to DATE
-aeat app overview --period PERIOD --verbose
+aeat app overview status --calendar --from DATE --to DATE
+aeat app overview status --period PERIOD --verbose
 
 aeat app ledger import PATH --provider PROVIDER --dry-run
-aeat app ledger import PATH --provider PROVIDER --verify --original PATH
-aeat app ledger list --filter KEY=VALUE
-aeat app ledger show --id ROW --verbose
+aeat app ledger import PATH --provider PROVIDER --verify --source PATH
+aeat app ledger review --filter KEY=VALUE
+aeat app ledger review --id ROW --verbose
 aeat app ledger edit --id ROW --set COLUMN=VALUE --reason REASON
 aeat app ledger edit --id ROW --skip true --reason REASON
 aeat app ledger edit --id ROW --skip false --reason REASON
-aeat app ledger split --id ROW --business SHARE --personal SHARE --reason REASON
-aeat app ledger split --id ROW --clear --reason REASON
+aeat app ledger edit --id ROW --split business=SHARE --split personal=SHARE --reason REASON
+aeat app ledger edit --id ROW --split clear --reason REASON
 
 aeat app invoice import PATH --kind issued --dry-run
 aeat app invoice import PATH --kind received --dry-run
-aeat app invoice list --filter KEY=VALUE
-aeat app invoice show --id INVOICE --verbose
+aeat app invoice review --filter KEY=VALUE
+aeat app invoice review --id INVOICE --verbose
 aeat app invoice edit --id INVOICE --set COLUMN=VALUE --reason REASON
 aeat app invoice match --period PERIOD
 
 aeat app declaration calculate --period PERIOD --modelo MODELO
 aeat app declaration review --period PERIOD --modelo MODELO --format table
 aeat app declaration status --filter status=pending --period PERIOD --modelo MODELO
-aeat app declaration edit --period PERIOD --modelo MODELO --set COLUMN=VALUE --reason REASON
-aeat app declaration approve --period PERIOD --modelo MODELO --reason REASON
-aeat app declaration validate --period PERIOD --modelo MODELO
-aeat app declaration validate --period PERIOD --modelo MODELO --format json --output PATH
-aeat app declaration preview --period PERIOD --modelo MODELO --format pdf
-aeat app declaration export --period PERIOD --modelo MODELO --format boe --output PATH
-aeat app declaration verify --period PERIOD --modelo MODELO --format json --output PATH
+aeat app declaration edit --id draft_MODELO_PERIOD --set COLUMN=VALUE --reason REASON
+aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON
+aeat app declaration validate --id draft_MODELO_PERIOD
+aeat app declaration validate --id draft_MODELO_PERIOD --format json --output PATH
+aeat app declaration preview --id draft_MODELO_PERIOD
+aeat app declaration export --id draft_MODELO_PERIOD --output PATH
+aeat app declaration verify --id DRAFT_ID --file PATH
 
-aeat app declaration calculate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID
-aeat app declaration review --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --format table
-aeat app declaration approve --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --reason REASON
-aeat app declaration validate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID
-aeat app declaration export --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --format boe --output PATH
+aeat app declaration calculate --period PERIOD --modelo MODELO
+aeat app declaration review --period PERIOD --modelo MODELO --format table
+aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON
+aeat app declaration validate --id draft_MODELO_PERIOD
+aeat app declaration export --id draft_MODELO_PERIOD --output PATH
 ```
 
 ## Scoring Lenses
@@ -176,4 +176,4 @@ aeat app declaration export --period PERIOD --modelo MODELO --amend --id JUSTIFI
 | Import | Verification is one flag on import. | Import becomes a subdomain. |
 | Review | User can inspect, revise, skip, unskip, split, clear, and document rows. | User must delete data or use emotional/status commands. |
 | Declaration | Calculate prints useful summary output and next action. | Calculate is silent or hides blockers. |
-| Corrective work | User supplies AEAT justificante id through `--amend --id`. | CLI invents amendment nouns or CSV-code identities. |
+| Corrective work | User recalculates a new draft after late or corrected records. | CLI invents correction nouns or CSV-code identities. |

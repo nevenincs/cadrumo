@@ -16,6 +16,9 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from pydantic import ValidationError
+
+from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...core.paths import resolve_record_json_path
 from ._errors import WorkflowError
@@ -77,13 +80,17 @@ def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
     lock_target = target.with_name(
         target.name[: -len(_WORKFLOW_RUN_ENVELOPE_SUFFIX)] + ".lock",
     )
-    with exclusive_file_lock(lock_target):
-        save_encrypted_envelope(
-            envelope,
-            target,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_WORKFLOW_HKDF_CONTEXT,
-        )
+    try:
+        with exclusive_file_lock(lock_target):
+            save_encrypted_envelope(
+                envelope,
+                target,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_WORKFLOW_HKDF_CONTEXT,
+            )
+    except OSError:
+        _logger.error("workflow: failed to persist run %s to %s", result.run_id, target, exc_info=True)
+        raise
     _logger.info("workflow: persisted run %s to %s", result.run_id, target)
     return target
 
@@ -160,8 +167,8 @@ def list_runs(
                 hkdf_context=_WORKFLOW_HKDF_CONTEXT,
                 max_supported_version=_WORKFLOW_RUN_VERSION,
             )
-        except Exception as exc:  # pragma: no cover - defensive
-            _logger.warning("workflow: skipping unreadable run %s: %s", path, exc)
+        except (OSError, ValueError, ValidationError, AeatError):  # pragma: no cover - defensive
+            _logger.warning("workflow: skipping unreadable run %s", path, exc_info=True)
             continue
         result = envelope.payload
         if since is not None and result.started_at.date() < since:

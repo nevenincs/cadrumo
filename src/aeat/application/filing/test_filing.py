@@ -32,6 +32,7 @@ from . import (
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingValidationError,
+    FilingBuilderError,
     FilingValidationFinding,
     FilingValidator,
     FilingValue,
@@ -456,7 +457,7 @@ class TestPublicAPI:
         assert finding_info not in warnings_or_errors
         all_findings = list(iter_findings(draft, severity_at_least="INFO"))
         assert finding_info in all_findings
-        with pytest.raises(ValueError):
+        with pytest.raises(FilingBuilderError):
             list(iter_findings(draft, severity_at_least="HUGE"))
 
     def test_fail_on_warning_raises(self) -> None:

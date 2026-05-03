@@ -37,8 +37,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import quote
 
+from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.errors import AeatError
 from .....core.logging import get_logger
@@ -281,7 +282,7 @@ class ClaveMovilAuthProvider:
 
             try:
                 sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
-            except Exception as exc:
+            except (OSError, ValueError, ValidationError) as exc:
                 raise AeatLoginAssertionError(f"Cl@ve Móvil sidecar invalid: {exc}") from exc
             if sidecar.idle_deadline <= datetime.now(UTC):
                 raise AeatLoginAssertionError("Cl@ve Móvil session past idle deadline")
@@ -325,7 +326,7 @@ class ClaveMovilAuthProvider:
                         }
                     )
                     self._active_session = refreshed
-                    with contextlib.suppress(Exception):
+                    try:
                         refreshed_sidecar = sidecar.model_copy(
                             update={
                                 "authenticated_at": refreshed.authenticated_at,
@@ -333,12 +334,25 @@ class ClaveMovilAuthProvider:
                             }
                         )
                         self._write_json_atomic(sidecar_path, refreshed_sidecar.model_dump(mode="json"))
+                    except Exception:  # sidecar write is best-effort; OSError/tempfile errors must not abort a valid session
+                        log.warning(
+                            "ClaveMovilAuthProvider: sidecar refresh write failed;"
+                            " session valid but deadline not persisted",
+                            exc_info=True,
+                        )
                     return refreshed, assertion
+                log.warning(
+                    "ClaveMovilAuthProvider: live probe returned invalid assertion status=%s error=%r",
+                    assertion.status_code,
+                    assertion.error_message,
+                )
                 return session, assertion
-            except Exception:
-                with contextlib.suppress(Exception):
-                    if context is not None:
+            except Exception:  # cleanup on any verify error then re-raise; Playwright+AeatError surface too broad to enumerate
+                if context is not None:
+                    try:
                         await context.close()
+                    except Exception as _exc:
+                        log.debug("ClaveMovilAuthProvider: context.close in verify cleanup suppressed: %s", _exc)
                 if owns_session:
                     await self._close_browser_session(session_like)
                 self._browser_session = None
@@ -401,8 +415,10 @@ class ClaveMovilAuthProvider:
             error_message = f"{type(exc).__name__}: {exc}"
         finally:
             if page is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await page.close()
+                except Exception as _exc:
+                    log.debug("ClaveMovilAuthProvider.verify: page.close suppressed: %s", _exc)
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         is_valid = session_cookie_present and bool(session.identity_nif)
@@ -506,8 +522,10 @@ class ClaveMovilAuthProvider:
         self._context = None
         if context is None:
             return
-        with contextlib.suppress(Exception):
+        try:
             await context.close()
+        except Exception as _exc:
+            log.debug("ClaveMovilAuthProvider: context.close in _drop_context suppressed: %s", _exc)
 
     @staticmethod
     async def _close_browser_session(session: BrowserSessionLike | None) -> None:
@@ -520,8 +538,8 @@ class ClaveMovilAuthProvider:
             result = close()
             if asyncio.iscoroutine(result):
                 await result
-        except Exception as exc:
-            log.warning("ClaveMovilAuthProvider: browser session close failed: %s", exc)
+        except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
+            log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
 
     # ── Sidecar + storage state ─────────────────────────────────────────────
 
@@ -548,7 +566,7 @@ class ClaveMovilAuthProvider:
             from .....core.locks import fsync_parent_dir
 
             fsync_parent_dir(path)
-        except Exception:
+        except Exception:  # OSError/RuntimeError from fdopen/fsync/os.replace; clean up tmp then re-raise
             with contextlib.suppress(FileNotFoundError):
                 tmp_path.unlink()
             raise
@@ -626,11 +644,15 @@ class ClaveMovilAuthProvider:
             await page.close()
         except Exception as exc:
             if page is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
+                except Exception as _exc:
+                    log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc)
             if context is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await context.close()
+                except Exception as _exc:
+                    log.debug("ClaveMovilAuthProvider: context.close in fresh-login cleanup suppressed: %s", _exc)
             if owns_session:
                 await self._close_browser_session(session_like)
             raise
@@ -673,8 +695,7 @@ class ClaveMovilAuthProvider:
         self._context = context
         self._active_session = session
         log.info(
-            "ClaveMovilAuthProvider: authenticated nif=%s non_qr=%s landing=%s",
-            dni_nie,
+            "ClaveMovilAuthProvider: authenticated non_qr=%s landing=%s",
             self._settings.aeat_clave_prefer_non_qr,
             landing_url,
         )
@@ -737,17 +758,18 @@ class ClaveMovilAuthProvider:
             )
             self._active_session = refreshed
             log.info(
-                "ClaveMovilAuthProvider: resumed nif=%s landing=%s",
-                refreshed.identity_nif,
+                "ClaveMovilAuthProvider: resumed landing=%s",
                 assertion.assertion_detail.landing_url
                 if isinstance(assertion.assertion_detail, ClaveMovilLoginAssertionDetail)
                 else None,
             )
             return refreshed
-        except Exception:
+        except Exception:  # cleanup on any resume error then re-raise; Playwright+AeatError surface too broad to enumerate
             if context is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await context.close()
+                except Exception as _exc:
+                    log.debug("ClaveMovilAuthProvider: context.close in resume cleanup suppressed: %s", _exc)
             self._browser_session = None
             self._context = None
             self._active_session = None
@@ -783,7 +805,7 @@ class ClaveMovilAuthProvider:
         try:
             await wait_for("#spanCodigoVerificacion", timeout=30_000)
             raw = await text_content("#spanCodigoVerificacion")
-        except Exception:
+        except (PlaywrightTimeoutError, PlaywrightError):
             return None
         if raw is None:
             return None
@@ -842,7 +864,7 @@ class ClaveMovilAuthProvider:
             return
         try:
             html = await content()
-        except Exception:
+        except PlaywrightError:
             return
         if "No ha sido posible generar una nueva petici" in html:
             await self._dump_diagnostic(page, reason="pending-request-refusal")
@@ -872,7 +894,7 @@ class ClaveMovilAuthProvider:
             accept = getattr(dialog, "accept", None)
             if accept is None:
                 return
-            log.info(
+            log.debug(
                 "ClaveMovilAuthProvider: auto-accepting dialog type=%s message=%r",
                 getattr(dialog, "type", "?"),
                 getattr(dialog, "message", ""),
@@ -911,8 +933,8 @@ class ClaveMovilAuthProvider:
                 url,
                 reason,
             )
-        except Exception as exc:
-            log.warning("ClaveMovilAuthProvider: diagnostic dump failed: %s", exc)
+        except Exception:  # diagnostic dump is best-effort; Playwright screenshot/content errors must not raise
+            log.warning("ClaveMovilAuthProvider: diagnostic dump failed", exc_info=True)
 
     async def _wait_for_post_auth_landing(
         self,
@@ -940,7 +962,7 @@ class ClaveMovilAuthProvider:
             # encoded on the push-waiting page).
             try:
                 current_path = urlsplit(current).path
-            except Exception:
+            except ValueError:
                 current_path = ""
             if "DialogoRepresentacion" in current_path and "SelectorAccesos" not in current:
                 raise AeatLoginAssertionError(
@@ -948,6 +970,11 @@ class ClaveMovilAuthProvider:
                     "The provider will not submit representation forms automatically."
                 )
             await asyncio.sleep(0.5)
+        log.warning(
+            "ClaveMovilAuthProvider: post-auth landing timeout target_path=%r timeout_ms=%d",
+            target_path,
+            timeout_ms,
+        )
         raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
 
 

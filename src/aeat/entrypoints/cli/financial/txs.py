@@ -17,9 +17,11 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import typer
+from pydantic import ValidationError
 
 from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial.providers._base import FinancialProviderError
 from ....domain.categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -1131,7 +1133,7 @@ def _build_catalogue(source: Path) -> TransactionCatalogue:
         )
     try:
         rows = tuple(provider.ingest(source))
-    except Exception as exc:
+    except (FinancialProviderError, OSError) as exc:
         raise TransactionError(f"unable to ingest transaction source: {source.resolve()}") from exc
     return _catalogue_from_raw_transactions(rows)
 
@@ -1159,7 +1161,7 @@ def _build_catalogue_from_ndjson(source: Path) -> TransactionCatalogue:
             continue
         try:
             rows.append(RawTransaction.model_validate_json(line))
-        except Exception as exc:
+        except (ValueError, ValidationError) as exc:
             raise TransactionError(f"invalid RawTransaction JSON at line {index} in {source.resolve()}") from exc
     if not rows:
         raise TransactionError(
@@ -1217,7 +1219,7 @@ def _catalogue_from_raw_transactions(rows: list[RawTransaction] | tuple[RawTrans
             for raw in rows
         ]
         return TransactionCatalogue.from_transactions(transactions)
-    except Exception as exc:
+    except (ValueError, ValidationError) as exc:
         raise TransactionError(f"unable to build transaction catalogue from the supplied rows: {exc}") from exc
 
 

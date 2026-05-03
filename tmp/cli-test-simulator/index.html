@@ -12,7 +12,7 @@
       <header class="topbar">
         <div>
           <h1>AEAT CLI test simulator</h1>
-          <p>Audit the v5 CLI from setup to reviewed, approved, and verified local export.</p>
+          <p>Audit the v6 CLI from setup to reviewed, approved, and verified local export.</p>
         </div>
         <div class="topbar-actions">
           <button id="randomizeBtn" type="button">Random scenario</button>
@@ -48,7 +48,7 @@
           <div class="terminal-header">
             <div>
               <h2>Terminal</h2>
-              <p class="muted">Type v5 commands or replay a tape. The simulator mutates local scenario state.</p>
+              <p class="muted">Type v6 commands or replay a tape. The simulator mutates local scenario state.</p>
             </div>
             <button id="clearBtn" type="button">Clear output</button>
           </div>
@@ -93,13 +93,13 @@
           <section class="panel-section">
             <h2>Generative audit</h2>
             <p class="muted audit-copy">
-              Run seeded stochastic audit tapes against the v5 setup/app CLI to see how a non-expert autonomo might try to complete filing from N26 transaction files and invoice records.
+              Run seeded stochastic audit tapes against the v6 setup/app CLI to see how a non-expert autonomo might try to complete filing from N26 transaction files and invoice records.
             </p>
             <div class="audit-controls">
               <label for="auditRuns">Runs</label>
               <input id="auditRuns" type="number" min="1" max="2000" step="25" value="250" />
               <label for="auditSeed">Seed</label>
-              <input id="auditSeed" value="kent-n26-v5" spellcheck="false" />
+              <input id="auditSeed" value="kent-n26-v6" spellcheck="false" />
               <div class="button-row">
                 <button id="runAuditBtn" type="button">Run audit</button>
                 <button id="playAuditTapeBtn" type="button" disabled>Play sample</button>
@@ -112,7 +112,7 @@
       </section>
     </main>
 
-    <script src="./audit-engine.js?v=5-recovered-comments"></script>
-    <script src="./app.js?v=5-recovered-comments"></script>
+    <script src="./audit-engine.js?v=6-finalized-review"></script>
+    <script src="./app.js?v=6-finalized-review"></script>
   </body>
 </html>

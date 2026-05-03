@@ -93,10 +93,10 @@ def test_set_ratio_help_lists_only_current_aliases() -> None:
     """
     from typer.testing import CliRunner
 
-    from .. import app as root_app
+    from .profile import app as profile_app
 
     runner = CliRunner()
-    result = runner.invoke(root_app, ["financial", "profile", "set-ratio", "--help"])
+    result = runner.invoke(profile_app, ["set-ratio", "--help"])
     assert result.exit_code == 0
     # Every advertised alias must still exist.
     for alias in FAMILY_ALIASES:

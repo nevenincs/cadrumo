@@ -33,7 +33,7 @@ from aeat.domain.transactions import (
     unregister_classifier,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.entrypoints.cli import app as root_app
+from aeat.entrypoints.cli.financial import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -41,7 +41,7 @@ _RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Bind every test to a fresh in-memory master key + secret store.
 
     Required because the repository routes every read/write through
@@ -49,6 +49,7 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     a configured provider every CLI invocation would prompt for the
     file-backend passphrase.
     """
+    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -177,8 +178,8 @@ def test_financial_txs_list_filters_by_state_option(tmp_path: Path) -> None:
     by_state = {transaction.business_classification: transaction.transaction_id for transaction in catalogue.values()}
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--state", "PROCESSED_UNCLASSIFIED"],
+        financial_app,
+        ["txs", "list", "--state", "PROCESSED_UNCLASSIFIED"],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -206,8 +207,8 @@ def test_financial_txs_list_every_pipeline_state_is_independently_filterable(tmp
         BusinessClassification.FAILED_VALIDATION,
     ):
         result = _RUNNER.invoke(
-            root_app,
-            ["financial", "txs", "list", "--state", state.value],
+            financial_app,
+            ["txs", "list", "--state", state.value],
             env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
         )
         assert result.exit_code == 0, result.output
@@ -223,9 +224,8 @@ def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> No
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -256,8 +256,8 @@ def test_financial_txs_show_emits_json_payload(tmp_path: Path) -> None:
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "show", transaction.transaction_id],
+        financial_app,
+        ["txs", "show", transaction.transaction_id],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -273,9 +273,8 @@ def test_financial_txs_classify_updates_catalogue_file(tmp_path: Path) -> None:
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -303,9 +302,8 @@ def test_financial_txs_classify_rejects_invalid_business_pct_combo(tmp_path: Pat
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -327,9 +325,8 @@ def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> N
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -370,9 +367,8 @@ def test_financial_txs_classify_allows_metadata_only_update(tmp_path: Path) -> N
     _save_catalogue(updated, tmp_path)
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -399,9 +395,8 @@ def test_financial_txs_classify_rejects_category_for_unprocessed_transaction(tmp
     )
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -421,9 +416,8 @@ def test_financial_txs_classify_rejects_category_for_incoming_payment(tmp_path: 
     transaction = next(item for item in catalogue.values() if item.direction is TransactionDirection.INCOMING)
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -453,8 +447,8 @@ def test_financial_txs_build_creates_catalogue_from_csv_ingest_ndjson(tmp_path: 
     source, expected_amounts = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.csv")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -470,8 +464,8 @@ def test_financial_txs_build_creates_catalogue_from_ofx_ingest_ndjson(tmp_path: 
     source, expected_amounts = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.ofx", ofx=True)
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -488,8 +482,8 @@ def test_financial_txs_build_refuses_to_overwrite_existing_catalogue_without_rep
     source, _ = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.csv")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -503,8 +497,8 @@ def test_financial_txs_build_rejects_empty_ndjson(tmp_path: Path) -> None:
     source.write_text("", encoding="utf-8")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -537,8 +531,8 @@ def test_financial_txs_build_rejects_duplicate_raw_rows_cleanly(tmp_path: Path) 
     source.write_text(f"{line}\n{line}\n", encoding="utf-8")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -571,8 +565,8 @@ def test_financial_txs_build_accepts_cp1252_encoded_ndjson(tmp_path: Path) -> No
     source.write_bytes((raw.model_dump_json() + "\n").encode("cp1252"))
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -605,8 +599,8 @@ def test_financial_txs_build_accepts_utf8_bom_ndjson(tmp_path: Path) -> None:
     source.write_bytes(("﻿" + raw.model_dump_json() + "\n").encode("utf-8"))
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(source)],
+        financial_app,
+        ["txs", "build", str(source)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -620,8 +614,8 @@ def test_financial_txs_build_accepts_direct_csv_source(tmp_path: Path) -> None:
     fixture = Path("tests/fixtures/financial/synthetic-transactions.csv")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "build", str(fixture)],
+        financial_app,
+        ["txs", "build", str(fixture)],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -666,9 +660,8 @@ def test_financial_txs_classify_accepts_confidence_flag(tmp_path: Path) -> None:
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -693,9 +686,8 @@ def test_financial_txs_classify_defaults_manual_confidence_to_one(tmp_path: Path
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -716,9 +708,8 @@ def test_financial_txs_classify_rejects_invalid_confidence(tmp_path: Path) -> No
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -740,9 +731,8 @@ def test_financial_txs_classify_rejects_out_of_range_confidence(tmp_path: Path) 
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify",
             transaction.transaction_id,
@@ -767,9 +757,8 @@ def test_financial_txs_list_filters_by_confidence_below(tmp_path: Path) -> None:
         catalogue = _load_catalogue(tmp_path)
         target_id = next(tx.transaction_id for tx in catalogue.values() if tx.raw.transaction_id == provider_id)
         result = _RUNNER.invoke(
-            root_app,
+            financial_app,
             [
-                "financial",
                 "txs",
                 "classify",
                 target_id,
@@ -786,8 +775,8 @@ def test_financial_txs_list_filters_by_confidence_below(tmp_path: Path) -> None:
     _classify("conf-row-high", "BUSINESS", "0.9")
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--confidence-below", "0.5"],
+        financial_app,
+        ["txs", "list", "--confidence-below", "0.5"],
         env=env,
     )
 
@@ -815,9 +804,8 @@ def test_financial_txs_list_composes_state_and_confidence_filters(tmp_path: Path
     ):
         assert (
             _RUNNER.invoke(
-                root_app,
+                financial_app,
                 [
-                    "financial",
                     "txs",
                     "classify",
                     target_id,
@@ -832,8 +820,8 @@ def test_financial_txs_list_composes_state_and_confidence_filters(tmp_path: Path
         )
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--state", "BUSINESS", "--confidence-below", "0.5"],
+        financial_app,
+        ["txs", "list", "--state", "BUSINESS", "--confidence-below", "0.5"],
         env=env,
     )
 
@@ -848,8 +836,8 @@ def test_financial_txs_list_rejects_out_of_range_confidence_below(tmp_path: Path
     _write_catalogue(tmp_path)
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--confidence-below", "1.5"],
+        financial_app,
+        ["txs", "list", "--confidence-below", "1.5"],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -869,8 +857,8 @@ def test_financial_txs_list_empty_confidence_filter_guides_kent(tmp_path: Path) 
     _write_catalogue(tmp_path)
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "list", "--confidence-below", "0.5"],
+        financial_app,
+        ["txs", "list", "--confidence-below", "0.5"],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -931,9 +919,8 @@ def test_classify_llm_single_persists_the_classifier_decision(
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify-llm",
             transaction.transaction_id,
@@ -963,9 +950,8 @@ def test_classify_llm_dry_run_does_not_persist(
     original_state = transaction.business_classification
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify-llm",
             transaction.transaction_id,
@@ -992,8 +978,8 @@ def test_classify_llm_all_only_targets_unclassified(
     _write_catalogue(tmp_path)  # seeds one NOT_YET_PROCESSED + one BUSINESS
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "classify-llm", "--provider", scripted_provider, "--all"],
+        financial_app,
+        ["txs", "classify-llm", "--provider", scripted_provider, "--all"],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -1013,9 +999,8 @@ def test_classify_llm_rejects_both_id_and_all(
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify-llm",
             transaction.transaction_id,
@@ -1037,8 +1022,8 @@ def test_classify_llm_rejects_missing_target(
     _write_catalogue(tmp_path)
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "classify-llm", "--provider", scripted_provider],
+        financial_app,
+        ["txs", "classify-llm", "--provider", scripted_provider],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -1055,8 +1040,8 @@ def test_classify_llm_populates_notes_field_for_parity_with_manual_path(
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "txs", "classify-llm", transaction.transaction_id, "--provider", scripted_provider],
+        financial_app,
+        ["txs", "classify-llm", transaction.transaction_id, "--provider", scripted_provider],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
 
@@ -1099,8 +1084,8 @@ def test_classify_llm_applies_default_ratio_from_category_profile(tmp_path: Path
     provider_name = _register_mixed_home_office_provider()
     try:
         result = _RUNNER.invoke(
-            root_app,
-            ["financial", "txs", "classify-llm", transaction.transaction_id, "--provider", provider_name],
+            financial_app,
+            ["txs", "classify-llm", transaction.transaction_id, "--provider", provider_name],
             env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
         )
         assert result.exit_code == 0, result.output
@@ -1123,9 +1108,8 @@ def test_classify_llm_pct_override_beats_profile_default(tmp_path: Path) -> None
     provider_name = _register_mixed_home_office_provider()
     try:
         result = _RUNNER.invoke(
-            root_app,
+            financial_app,
             [
-                "financial",
                 "txs",
                 "classify-llm",
                 transaction.transaction_id,
@@ -1163,9 +1147,8 @@ def test_classify_llm_category_hint_forces_category(tmp_path: Path) -> None:
     register_classifier("test-hint-override", lambda **_: classifier)
     try:
         result = _RUNNER.invoke(
-            root_app,
+            financial_app,
             [
-                "financial",
                 "txs",
                 "classify-llm",
                 transaction.transaction_id,
@@ -1194,9 +1177,8 @@ def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify-llm",
             transaction.transaction_id,
@@ -1221,9 +1203,8 @@ def test_classify_llm_rejects_unknown_provider(tmp_path: Path) -> None:
     transaction = next(catalogue.values())
 
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "txs",
             "classify-llm",
             transaction.transaction_id,

@@ -238,7 +238,7 @@ class HashedLookup(TypeDecorator[bytes]):
     def compute(cls, plaintext: str) -> bytes:
         """Compute the HMAC-SHA256 digest of ``plaintext``.
 
-        Emits a one-shot INFO log (sec-M-4) when ``plaintext`` is
+        Emits a one-shot WARNING (sec-M-4) when ``plaintext`` is
         shorter than 12 bytes — short plaintexts are vulnerable to
         frequency-analysis attacks against the deterministic digest
         column. The warning is suppressed for the rest of the process
@@ -254,10 +254,10 @@ class HashedLookup(TypeDecorator[bytes]):
             raise TypeError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         global _low_entropy_warning_emitted
         if len(plaintext.encode("utf-8")) < _LOW_ENTROPY_LENGTH_THRESHOLD and not _low_entropy_warning_emitted:
-            _log.info(
-                "HashedLookup.compute called on a plaintext shorter than %d bytes; "
+            _log.warning(
+                "hashed_lookup.compute called on a plaintext shorter than %d bytes; "
                 "short plaintexts are vulnerable to frequency analysis on the "
-                "deterministic digest column. This warning is logged once per process.",
+                "deterministic digest column (logged once per process)",
                 _LOW_ENTROPY_LENGTH_THRESHOLD,
             )
             _low_entropy_warning_emitted = True

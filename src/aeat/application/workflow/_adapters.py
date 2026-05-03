@@ -25,6 +25,7 @@ from typing import Protocol, cast
 from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.export import FilingDraftLike
 from ...core.config import Settings, load_settings
+from ...core.logging import get_logger
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
@@ -51,6 +52,8 @@ from ._protocols import (
     SyncRunnerProtocol,
     SyncRunSummary,
 )
+
+_logger = get_logger(__name__)
 
 
 class _FinancialInputsProvider(Protocol):
@@ -204,7 +207,11 @@ class JsonFileInputsProvider:
             raise WorkflowError("AEAT_WORKFLOW_DRAFT_INPUTS_PATH is unset; cannot build a draft")
         if not self._path.exists():
             raise WorkflowError(f"workflow draft inputs file not found: {self._path}")
-        raw = json.loads(self._path.read_text(encoding="utf-8"))
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            _logger.error("workflow draft inputs file %s is malformed JSON", self._path, exc_info=True)
+            raise WorkflowError(f"workflow draft inputs file {self._path} is not valid JSON: {exc}") from exc
         if not isinstance(raw, dict):
             raise WorkflowError(f"workflow draft inputs file {self._path} must be a JSON object")
         # The structure is "modelo -> period -> {casilla: value}" if the
@@ -257,12 +264,19 @@ class FinancialThenJsonInputsProvider:
         """
 
         if self._financial_provider is None:
+            _logger.debug("financial provider not wired; using json fallback modelo=%s period=%s", modelo, period)
             return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
         if not self._financial_provider.has_catalogue():
+            _logger.debug("transaction catalogue absent; using json fallback modelo=%s period=%s", modelo, period)
             return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
         try:
             return self._financial_provider.load_inputs(modelo=modelo, period=period, profile=profile)
         except AggregationUnsupportedModeloError:
+            _logger.debug(
+                "financial aggregation not supported for modelo=%s period=%s; falling back to manual inputs",
+                modelo,
+                period,
+            )
             return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
 
 

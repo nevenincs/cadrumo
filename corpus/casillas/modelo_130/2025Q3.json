@@ -98,9 +98,7 @@
         "01",
         "02"
       ],
-      "references_rules": [
-        "modelo_130.2025.rendimiento_neto"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -122,16 +120,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "max(0, (20% * 03))",
+        "expression": "max(0, (irpf.trimestral_rate * 03))",
         "references_casillas": [
           "03"
         ]
       },
       "help": {
-        "ca": "Import del pago fraccionado (20%). Es calcula com max(0, (20% * 03)). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
-        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (20% * 03)). (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (20% * 03)). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (20% * 03)) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
+        "ca": "Import del pago fraccionado (20%). Es calcula com max(0, (irpf.trimestral_rate * 03)). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "en": "Fractional payment (20% of 03, clamped ≥ 0). Computed as max(0, (irpf.trimestral_rate * 03)). (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (20%). Se calcula como max(0, (irpf.trimestral_rate * 03)). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (03 x 20%, nem-negatív). Számítás: max(0, (irpf.trimestral_rate * 03)) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "ca": "Import del pago fraccionado (20%)",
@@ -145,9 +143,7 @@
       "references_casillas": [
         "03"
       ],
-      "references_rules": [
-        "modelo_130.2025.pago_fraccionado"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -265,9 +261,7 @@
         "05",
         "06"
       ],
-      "references_rules": [
-        "modelo_130.2025.resultado_apartado_i"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -326,16 +320,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(2% * 08)",
+        "expression": "(agraria.trimestral_rate * 08)",
         "references_casillas": [
           "08"
         ]
       },
       "help": {
-        "ca": "Import del pago fraccionado (2%). Es calcula com (2% * 08). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
-        "en": "Fractional payment (2% of 08). Computed as (2% * 08). (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
-        "es": "Importe del pago fraccionado (2%). Se calcula como (2% * 08). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
-        "hu": "Részletfizetés összege (08 x 2%). Számítás: (2% * 08) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
+        "ca": "Import del pago fraccionado (2%). Es calcula com (agraria.trimestral_rate * 08). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "en": "Fractional payment (2% of 08). Computed as (agraria.trimestral_rate * 08). (Legal basis: RD, art. 110, BOE-A-2007-6820.)",
+        "es": "Importe del pago fraccionado (2%). Se calcula como (agraria.trimestral_rate * 08). (Base legal: RD, art. 110, BOE-A-2007-6820.)",
+        "hu": "Részletfizetés összege (08 x 2%). Számítás: (agraria.trimestral_rate * 08) (Jogalap: RD, art. 110, BOE-A-2007-6820.)"
       },
       "label": {
         "ca": "Import del pago fraccionado (2%)",
@@ -349,9 +343,7 @@
       "references_casillas": [
         "08"
       ],
-      "references_rules": [
-        "modelo_130.2025.pago_fraccionado_agraria"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -430,9 +422,7 @@
         "09",
         "10"
       ],
-      "references_rules": [
-        "modelo_130.2025.resultado_apartado_ii"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -484,9 +474,7 @@
         "07",
         "11"
       ],
-      "references_rules": [
-        "modelo_130.2025.suma_parciales"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -570,9 +558,7 @@
         "12",
         "13"
       ],
-      "references_rules": [
-        "modelo_130.2025.neto_tras_minoracion"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -690,9 +676,7 @@
         "15",
         "16"
       ],
-      "references_rules": [
-        "modelo_130.2025.diferencia"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
@@ -776,9 +760,7 @@
         "17",
         "18"
       ],
-      "references_rules": [
-        "modelo_130.2025.resultado_final"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",

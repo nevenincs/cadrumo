@@ -21,6 +21,42 @@ class ReviewSourceLoadError(ReviewError):
     """Raised when a source disk file is present but cannot be parsed."""
 
 
+class FilterParseError(ReviewError):
+    """Raised when ``--filter KEY=VALUE`` cannot be parsed.
+
+    Carries the raw token plus a stable reason code so the CLI can render
+    a per-language repair hint.
+
+    Attributes:
+        raw_token: The string the operator supplied (e.g. ``"status="`` or
+            ``"period: 2026-Q1"``).
+        reason: One of ``"missing-equals"``, ``"empty-key"``,
+            ``"empty-value"``, ``"unknown-key-{scope}"``,
+            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
+    """
+
+    def __init__(self, raw_token: str, *, reason: str) -> None:
+        super().__init__(f"cannot parse filter token {raw_token!r}: {reason}")
+        self.raw_token = raw_token
+        self.reason = reason
+
+
+class EditParseError(ReviewError):
+    """Raised when ``--set KEY=VALUE`` cannot be parsed.
+
+    Attributes:
+        raw_token: The string the operator supplied.
+        reason: One of ``"missing-equals"``, ``"empty-key"``,
+            ``"empty-value"``, ``"unknown-key-{scope}"``,
+            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
+    """
+
+    def __init__(self, raw_token: str, *, reason: str) -> None:
+        super().__init__(f"cannot parse edit token {raw_token!r}: {reason}")
+        self.raw_token = raw_token
+        self.reason = reason
+
+
 class ReviewKindReservedError(ReviewError):
     """Raised when the CLI receives a reserved-but-not-implemented kind token.
 

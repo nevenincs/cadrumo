@@ -202,6 +202,10 @@ class Invoice(BaseModel):
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
+    iva_category: str | None = None
+    retention_rate: Decimal | None = None
+    retention_amount: Decimal | None = None
+    payment_id: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -280,6 +284,21 @@ class Invoice(BaseModel):
 
         if "notes" in payload and isinstance(payload["notes"], str):
             payload["notes"] = payload["notes"].strip()
+
+        if "retention_rate" in payload and payload["retention_rate"] is not None:
+            payload["retention_rate"] = _coerce_decimal(payload["retention_rate"])
+        if "retention_amount" in payload and payload["retention_amount"] is not None:
+            payload["retention_amount"] = _coerce_decimal(payload["retention_amount"])
+        if "iva_category" in payload and isinstance(payload["iva_category"], str):
+            payload["iva_category"] = payload["iva_category"].strip() or None
+        if "payment_id" in payload and isinstance(payload["payment_id"], str):
+            normalized_payment_id = payload["payment_id"].strip().lower()
+            if normalized_payment_id:
+                if not _is_hex_digest(normalized_payment_id, length=_HEX_TRANSACTION_ID_LENGTH):
+                    raise ValueError("payment_id must be a 64-character lowercase hex digest")
+                payload["payment_id"] = normalized_payment_id
+            else:
+                payload["payment_id"] = None
 
         if (
             "lines" in payload

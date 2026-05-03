@@ -48,8 +48,8 @@ from aeat.domain.transactions import (
     set_classification,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._schemas import SCHEMA_REGISTRY
+from aeat.entrypoints.cli.financial import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -348,8 +348,8 @@ def test_cli_aggregate_json_round_trips(encrypted_store: Path, tmp_path: Path) -
     TransactionCatalogueRepository(store_dir=encrypted_store).save(_classified_catalogue(tmp_path))
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "aggregate", "--modelo", "130", "--period", "2025-Q1", "--json"],
+        financial_app,
+        ["aggregate", "--modelo", "130", "--period", "2025-Q1", "--json"],
         env={
             "AEAT_FINANCIAL_TXS_DIR": str(encrypted_store),
             "AEAT_OUTPUT_LANGUAGE": "en",

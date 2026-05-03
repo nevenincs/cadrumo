@@ -432,10 +432,8 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         )
 
     log.info(
-        "Loaded PKCS#12 certificate: subject=%s thumbprint=%s friendly_name=%s backend=%s",
-        loaded.subject,
+        "loaded PKCS#12 certificate: thumbprint=%s backend=%s",
         loaded.sha256_thumbprint,
-        loaded.friendly_name,
         loaded.backend.value,
     )
     return loaded

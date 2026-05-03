@@ -11,10 +11,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile
 from ...domain.transactions import TransactionCatalogueRepository
 from ._models import CasillaAggregation
 from ._service import aggregate_catalogue
+
+_logger = get_logger(__name__)
 
 
 class FinancialFilingInputsProvider:
@@ -57,8 +60,10 @@ class FinancialFilingInputsProvider:
 
     def has_catalogue(self) -> bool:
         """Return whether a persisted transaction catalogue exists on disk."""
-
-        return self._repository.envelope_path.exists()
+        exists = self._repository.envelope_path.exists()
+        if not exists:
+            _logger.debug("transaction catalogue not found at %s", self._repository.envelope_path)
+        return exists
 
     def load_inputs(
         self,

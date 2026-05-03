@@ -29,16 +29,16 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline `code`. -->
 
-# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v5` | (**status:** `in progress`)
+# `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `in progress`)
 
 ## Problem Statement
 
 The AEAT user CLI redesign remains in progress. The latest approval comments
-require a v5 rework because the v4 surface still presented rejected import,
+require a v6 rework because the v4 surface still presented rejected import,
 skip, verification, and corrective declaration concepts as viable command
 grammar.
 
-This ADR records the v5 review candidate. It does not accept a final command
+This ADR records the v6 review candidate. It does not accept a final command
 tree, authorize implementation, approve aliases, supersede prior no-live-submit
 safety decisions, or permit any live AEAT submission behavior.
 
@@ -48,13 +48,13 @@ The accepted root direction remains `aeat setup` plus `aeat app`. Setup owns
 authentication, profile data, and local readiness. App owns operational tax
 work: overview, ledger, invoice, and declaration.
 
-The v5 design removes the rejected setup account family. Identity is exposed
+The v6 design removes the rejected setup account family. Identity is exposed
 through auth and profile status. Profile data must be schema-backed so users can
 discover editable keys, set and unset values, validate completeness, and revise
 profile facts without bespoke command families.
 
 Authentication is not an import-validation surface. It is provider
-configuration plus AEAT login state. The v5 candidate exposes auth provider
+configuration plus AEAT login state. The v6 candidate exposes auth provider
 listing, configuration, login, status, whoami, and logout. Implemented provider
 wording is limited to certificate and `clave_movil`; `clave_permanente` remains
 research-only until backend support exists.
@@ -76,7 +76,7 @@ metadata.
 Ledger import is an action, not a command domain. The review candidate uses
 `aeat app ledger import PATH --provider PROVIDER`. Import diagnostics, including
 original-file checks, gap checks, duplicate checks, parser checks, and verbose
-diagnostics, are exposed by `--verify`, `--original PATH`, and `--verbose`. The
+diagnostics, are exposed by `--verify`, `--source PATH`, and `--verbose`. The
 candidate rejects import subcommands named `verify`, `gaps`, `duplicates`,
 `exclude`, or `restore`.
 
@@ -84,11 +84,10 @@ Ledger skip state is an auditable edit, not a separate exclude/restore command
 pair. The candidate uses `aeat app ledger edit --id ROW --skip true --reason
 REASON` and `aeat app ledger edit --id ROW --skip false --reason REASON`.
 
-Mixed-use transactions use normalized split shares. The candidate command is
-`aeat app ledger split --id ROW --business SHARE --personal SHARE --reason
-REASON`, where shares must add to `1.0`. Backend implementation must preserve
+Mixed-use transactions use split share values. The candidate command is
+`aeat app ledger edit --id ROW --split business=SHARE --split personal=SHARE --reason REASON`, where shares must add to `1.0`. Backend implementation must preserve
 source transaction identity, split metadata, and a clear path such as `aeat app
-ledger split --id ROW --clear --reason REASON`.
+ledger edit --id ROW --split clear --reason REASON`.
 
 Invoice is a separate review and enrichment domain. It must be separated from
 ledger transaction evidence. The target invoice contract includes id, kind,
@@ -98,27 +97,26 @@ lines, and review history. Current backend support must be audited before
 retention and IVA category claims become implementation commitments.
 
 Declaration is the filing work domain. It owns calculation, review, status,
-edit, approval, validation, preview, export, verification, and amended
-declaration flags. Bare `calculate` must print a compact summary table, blocker
+edit, approval, validation, preview, export, verification, and recalculation
+after records change. Bare `calculate` must print a compact summary table, blocker
 counts, warnings, and the next action. If inputs are unresolved, it must show
 repair hints instead of succeeding silently.
 
 Export and verify are separate. Export writes a local artifact and therefore
-requires `--output PATH`. Verify does not accept an export flag; it verifies
-declaration state and may write machine-readable audit output through `--format
-json --output PATH`.
+requires `--output PATH`. Verify does not accept an export flag; it verifies an
+exported file through `--file PATH` and may emit machine-readable output through
+the root `--format json` option.
 
-Corrective declaration work uses the same declaration commands with `--amend
---id JUSTIFICANTE_ID`. The candidate rejects any extra corrective-filing noun,
-any amendment subcommand, any `--amendment` flag, and any separate CSV-code
-identity. The `--id` value is the AEAT justificante id for the prior declaration
-being amended. Official AEAT behavior indicates that where prior rectifications
-exist, the latest relevant justificante identity can matter; implementation must
-confirm this per modelo before release.
+Corrective declaration work recalculates a new draft and compares it against the
+previous approved/exported draft. The candidate rejects any extra
+corrective-filing noun, any amendment subcommand, any amendment flag, and any
+separate CSV-code identity in the user CLI. Official AEAT correction identity
+requirements remain a backend/legal mapping to confirm per modelo before
+release.
 
 ## Decision
 
-Adopt the v5 recovered-comment review candidate as the current design surface
+Adopt the v6 recovered-comment review candidate as the current design surface
 for continued review only.
 
 - Keep `aeat setup` and `aeat app` as the root boundary.
@@ -129,14 +127,13 @@ for continued review only.
   record fields.
 - Use `ledger import PATH --provider PROVIDER` and `--verify` for import
   verification and coverage checks.
-- Use `ledger list`, `show`, `edit`, and `split` for row review.
+- Use `ledger review` and `ledger edit` for row review.
 - Use `ledger edit --skip true|false` instead of exclude/restore.
-- Use normalized split shares that add to `1.0`.
-- Use singular `invoice` with import, list, show, edit, and match workflows.
+- Use split share values that add to `1.0`.
+- Use singular `invoice` with import, review, edit, match, and verify workflows.
 - Use declaration calculation, review, status, edit, approval, validation,
   preview, export, and verification gates.
-- Use `--amend --id JUSTIFICANTE_ID` on declaration commands for amended
-  declarations.
+- Recalculate a new declaration draft after late or corrected records.
 - Keep all live submission behavior out of scope.
 
 This ADR explicitly rejects:
@@ -187,8 +184,7 @@ A later implementation plan must first complete backend audits for:
   linkage.
 - Declaration calculate output, review/edit/approval, staleness checks,
   validation, export, and verification.
-- Amended declaration terminology, prior AEAT justificante identity, and legal
-  layering.
+- Correction terminology, prior AEAT identity rules, and legal layering.
 
 The current simulator is a review artifact only. It can replay messy user paths
 and surface gaps, but it is not a production command contract.
@@ -201,11 +197,10 @@ a command domain, rejected exclude/restore verbs, amount-based split examples,
 ambiguous calculate output, `verify --export`, and an extra amendment command
 noun.
 
-The v5 surface is driven by the user's real work: set up authentication and
+The v6 surface is driven by the user's real work: set up authentication and
 profile data, import and verify transaction records, revise ledger decisions,
 enrich invoice records, review declaration calculations, reject unsafe export
-states, and amend a declaration with an AEAT justificante id when new data
-appears after filing.
+states, and recalculate a declaration when new data appears after export.
 
 Preserving local-export and no-live-submit constraints protects prior safety
 work while the command model is still under review.
@@ -215,13 +210,13 @@ work while the command model is still under review.
 The redesign cannot move to an accepted ADR or implementation plan until the
 reopened and backend-audit items are resolved.
 
-The next approval session must review the v5 surface. Tapes must cover invalid
+The next approval session must review the v6 surface. Tapes must cover invalid
 imports, incomplete periods, duplicate and wrong-account imports, manual ledger
 record review, mixed payments, split clearing, user revisions, skip and unskip
 decisions, invoice base and IVA metadata, retention metadata, invoice matching,
 multi-period backlog work, missed deadlines, stale calculations, export refusal,
-validation reports, local export, verification audit output, amended
-declarations, and profile-scoped interruption recovery.
+validation reports, local export, export verification results, recalculated
+declaration drafts after late records, and profile-scoped interruption recovery.
 
 No execution record or implementation plan may treat this ADR as approval to
 ship the redesigned CLI.

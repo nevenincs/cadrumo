@@ -35,7 +35,7 @@ from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from ...domain.submission import SubmissionPreflightError
-from ._errors import WorkflowComponentError
+from ._errors import WorkflowAbortSignal, WorkflowComponentError
 from ._models import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -143,24 +143,6 @@ def _enum_value(value: object) -> str:
         return ""
     raw = getattr(value, "value", value)
     return str(raw)
-
-
-class _AbortError(Exception):
-    """Internal signal raised by a stage method to trigger a bailout.
-
-    Never propagates outside :class:`WorkflowEngine` — :meth:`_drive`
-    always catches it and materialises the :class:`WorkflowResult`.
-    """
-
-    def __init__(
-        self,
-        *,
-        reason: WorkflowAbortReason,
-        summary: Translatable,
-    ) -> None:
-        super().__init__(reason.value)
-        self.reason = reason
-        self.summary = summary
 
 
 class WorkflowEngine:
@@ -366,14 +348,35 @@ class WorkflowEngine:
                 steps=steps,
             )
             final_stage = WorkflowStage.DONE
-        except _AbortError as abort:
+        except WorkflowAbortSignal as abort:
             aborted_reason = abort.reason
             abort_summary = abort.summary
-            _logger.info(
-                "workflow: aborted at stage=%s reason=%s",
-                steps[-1].stage if steps else "?",
-                abort.reason,
-            )
+            _abort_stage = steps[-1].stage if steps else "?"
+            if abort.reason is WorkflowAbortReason.UNHANDLED_EXCEPTION:
+                _logger.error(
+                    "workflow: aborted at stage=%s reason=%s",
+                    _abort_stage,
+                    abort.reason,
+                    exc_info=True,
+                )
+            elif abort.reason in (
+                WorkflowAbortReason.SITE_UNAVAILABLE,
+                WorkflowAbortReason.CERT_INVALID,
+                WorkflowAbortReason.PREFLIGHT_FAILED,
+                WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
+                WorkflowAbortReason.DRAFT_HAS_ERRORS,
+            ):
+                _logger.warning(
+                    "workflow: aborted at stage=%s reason=%s",
+                    _abort_stage,
+                    abort.reason,
+                )
+            else:
+                _logger.info(
+                    "workflow: aborted at stage=%s reason=%s",
+                    _abort_stage,
+                    abort.reason,
+                )
 
         ended_at = _utcnow()
         self._run_tax_id = None
@@ -476,6 +479,13 @@ class WorkflowEngine:
                 period=target_period,
                 auto_heal=False,
             )
+            _logger.debug(
+                "sync stage complete modelo=%s divergences=%d auto_healed=%d escalated=%d",
+                target_modelo,
+                summary_result.divergence_count,
+                summary_result.auto_healed_count,
+                summary_result.escalated_count,
+            )
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.SYNCING_CATALOGUES,
@@ -557,7 +567,7 @@ class WorkflowEngine:
                     summary=no_summary,
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
                 summary=no_summary,
             )
@@ -581,7 +591,7 @@ class WorkflowEngine:
                     },
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.DEADLINE_PASSED,
                 summary=closed_summary,
             )
@@ -667,7 +677,7 @@ class WorkflowEngine:
                     },
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
                 summary=blocked_summary,
             )
@@ -723,6 +733,12 @@ class WorkflowEngine:
                 if e.modelo == obligation.modelo and (target_year is None or e.ejercicio == target_year)
             )
             if already:
+                _logger.debug(
+                    "already-filed gate triggered modelo=%s period=%s expediente_count=%d",
+                    obligation.modelo,
+                    obligation.period,
+                    len(already),
+                )
                 already_summary = _t(f"Already filed: modelo={obligation.modelo} period={obligation.period}")
                 steps.append(
                     WorkflowStep(
@@ -738,7 +754,7 @@ class WorkflowEngine:
                         },
                     )
                 )
-                raise _AbortError(
+                raise WorkflowAbortSignal(
                     reason=WorkflowAbortReason.ALREADY_FILED,
                     summary=already_summary,
                 )
@@ -802,7 +818,7 @@ class WorkflowEngine:
                     details={"draft_id": draft.draft_id, "status": status_value},
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
                 summary=status_summary,
             )
@@ -842,7 +858,7 @@ class WorkflowEngine:
                     details={"error_count": str(len(error_findings))},
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
                 summary=errors_summary,
             )
@@ -889,12 +905,11 @@ class WorkflowEngine:
                         },
                     )
                 )
-                raise _AbortError(
+                raise WorkflowAbortSignal(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
             cert_details = {
-                "cert_subject": certificate.subject or "",
                 "provider_kind": certificate.kind.value,
                 "provider_operator_impact": describe_provider_operator_impact(certificate),
             }
@@ -914,7 +929,7 @@ class WorkflowEngine:
                         details=cert_details,
                     )
                 )
-                raise _AbortError(
+                raise WorkflowAbortSignal(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=provider_summary,
                 )
@@ -938,7 +953,7 @@ class WorkflowEngine:
                 expiry_summary = _t(
                     f"Certificate pre-expiry gate: severity={cert_severity.value} "
                     f"days_until_expiry={days_until_expiry} "
-                    f"subject={certificate.subject}"
+                    f"kind={certificate.kind.value}"
                 )
                 steps.append(
                     WorkflowStep(
@@ -950,14 +965,14 @@ class WorkflowEngine:
                         details=cert_details,
                     )
                 )
-                raise _AbortError(
+                raise WorkflowAbortSignal(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=expiry_summary,
                 )
             if cert_severity is CertificateHealthSeverity.WARN:
                 _logger.warning(
-                    "workflow: certificate nearing expiry subject=%s days=%d",
-                    certificate.subject,
+                    "workflow: certificate nearing expiry kind=%s days=%d",
+                    certificate.kind.value,
                     days_until_expiry,
                 )
         else:
@@ -984,7 +999,7 @@ class WorkflowEngine:
                     details={**cert_details, "error_message": str(exc)},
                 )
             )
-            raise _AbortError(
+            raise WorkflowAbortSignal(
                 reason=WorkflowAbortReason.PREFLIGHT_FAILED,
                 summary=preflight_summary,
             ) from exc
@@ -1038,7 +1053,7 @@ class WorkflowEngine:
         exc: BaseException,
         steps: list[WorkflowStep],
     ) -> NoReturn:
-        """Record a failed step and raise ``_AbortError(UNHANDLED_EXCEPTION)``.
+        """Record a failed step and raise ``WorkflowAbortSignal(UNHANDLED_EXCEPTION)``.
 
         Centralises the wrap-and-record ritual so every stage method
         surfaces an unexpected exception identically.
@@ -1059,7 +1074,7 @@ class WorkflowEngine:
         )
         wrapped = WorkflowComponentError(f"{stage.value} component raised {type(exc).__name__}: {exc}")
         wrapped.__cause__ = exc
-        raise _AbortError(
+        raise WorkflowAbortSignal(
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
         ) from wrapped
@@ -1080,7 +1095,7 @@ class WorkflowEngine:
         composes a :class:`aeat.application.workflow.SiteHealthAlert`
         around the caught error, appends a failed :class:`WorkflowStep`
         carrying the alert, and raises
-        ``_AbortError(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
+        ``WorkflowAbortSignal(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
         so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
         """
         run_id = self._compute_current_run_id() or "unassigned"
@@ -1105,7 +1120,7 @@ class WorkflowEngine:
                 site_health_alert=alert,
             )
         )
-        raise _AbortError(
+        raise WorkflowAbortSignal(
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
             summary=summary,
         ) from exc

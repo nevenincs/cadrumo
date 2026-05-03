@@ -30,7 +30,7 @@ from aeat.domain.transactions import (
     TransactionDirection,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.entrypoints.cli import app as root_app
+from aeat.entrypoints.cli.financial import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -146,7 +146,7 @@ def _seed_environment(tmp_path: Path) -> tuple[InvoiceCatalogue, TransactionCata
 def test_financial_invoices_list_emits_full_catalogue(tmp_path: Path) -> None:
     """`aeat financial invoices list` must print every stored invoice."""
     invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "list"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "list"], env=env)
     assert result.exit_code == 0, result.output
     for invoice in invoices.values():
         assert invoice.invoice_id in result.output
@@ -155,7 +155,7 @@ def test_financial_invoices_list_emits_full_catalogue(tmp_path: Path) -> None:
 def test_financial_invoices_list_filters_by_kind(tmp_path: Path) -> None:
     """`--kind issued` filters to ISSUED invoices only."""
     invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "list", "--kind", "ISSUED"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "list", "--kind", "ISSUED"], env=env)
     assert result.exit_code == 0, result.output
     issued_ids = [invoice.invoice_id for invoice in invoices.values() if invoice.kind is InvoiceKind.ISSUED]
     received_ids = [invoice.invoice_id for invoice in invoices.values() if invoice.kind is InvoiceKind.RECEIVED]
@@ -169,7 +169,7 @@ def test_financial_invoices_show_emits_json(tmp_path: Path) -> None:
     """`aeat financial invoices show <id>` must emit the stored invoice JSON."""
     invoices, _, env = _seed_environment(tmp_path)
     invoice = next(invoices.values())
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "show", invoice.invoice_id], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "show", invoice.invoice_id], env=env)
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     assert payload["invoice_id"] == invoice.invoice_id
@@ -178,7 +178,7 @@ def test_financial_invoices_show_emits_json(tmp_path: Path) -> None:
 def test_financial_invoices_show_missing_id_exits_two(tmp_path: Path) -> None:
     """Missing invoice ID must exit code 2."""
     _, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "show", "missing"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "show", "missing"], env=env)
     assert result.exit_code == 2
 
 
@@ -189,8 +189,8 @@ def test_financial_invoices_link_updates_both_files(tmp_path: Path) -> None:
     transaction = next(transactions.values())
 
     result = _RUNNER.invoke(
-        root_app,
-        ["financial", "invoices", "link", invoice.invoice_id, transaction.transaction_id],
+        financial_app,
+        ["invoices", "link", invoice.invoice_id, transaction.transaction_id],
         env=env,
     )
     assert result.exit_code == 0, result.output
@@ -208,7 +208,7 @@ def test_financial_invoices_reconcile_prints_suggestions(tmp_path: Path) -> None
     _, transactions, env = _seed_environment(tmp_path)
     transaction = next(transactions.values())
 
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "reconcile"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile"], env=env)
     assert result.exit_code == 0, result.output
     assert transaction.transaction_id in result.output
 
@@ -218,7 +218,7 @@ def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> No
     _, transactions, env = _seed_environment(tmp_path)
     transaction = next(transactions.values())
 
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "reconcile", "--apply"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile", "--apply"], env=env)
     assert result.exit_code == 0, result.output
 
     updated = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
@@ -228,7 +228,7 @@ def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> No
 def test_financial_invoices_verify_exits_zero_when_consistent(tmp_path: Path) -> None:
     """`aeat financial invoices verify` exits 0 when no drift exists."""
     _, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "verify"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "verify"], env=env)
     assert result.exit_code == 0, result.output
 
 
@@ -270,14 +270,14 @@ def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> Non
         InvoiceCatalogue.from_invoices([drifted]),
     )
 
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "verify"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "verify"], env=env)
     assert result.exit_code == 2, result.output
 
 
 def test_financial_invoices_unmatched_lists_unlinked_invoices(tmp_path: Path) -> None:
     """`aeat financial invoices unmatched` prints invoices without transactions."""
     invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(root_app, ["financial", "invoices", "unmatched"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "unmatched"], env=env)
     assert result.exit_code == 0, result.output
     for invoice in invoices.values():
         assert invoice.invoice_id in result.output

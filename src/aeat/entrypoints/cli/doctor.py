@@ -50,7 +50,10 @@ from ...adapters.outbound.google import (
 )
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import PROJECT_ROOT, Settings
+from ...core.logging import get_logger
 from ._i18n import t, tr
+
+_log = get_logger(__name__)
 
 # ── Row primitives ──────────────────────────────────────────────────────────
 
@@ -551,6 +554,7 @@ def check_api_enablement(settings: Settings) -> list[Row]:
                     enabled.add(name.rsplit("/", 1)[-1])
             request = service.services().list_next(previous_request=request, previous_response=response)
     except Exception as exc:
+        _log.warning("check_api_enablement: service usage call failed", exc_info=True)
         return [
             Row(
                 section="API enablement",
@@ -604,6 +608,7 @@ def check_drive_round_trip() -> Row:
         response = service.about().get(fields="user(emailAddress)").execute()
         email = response.get("user", {}).get("emailAddress", "unknown")
     except Exception as exc:
+        _log.warning("check_drive_round_trip: drive api call failed", exc_info=True)
         return Row(
             section="Drive round-trip",
             required=required,
@@ -634,6 +639,7 @@ def check_sheets_round_trip(settings: Settings) -> Row:
         response = service.spreadsheets().get(spreadsheetId=settings.aeat_scratch_sheet_id).execute()
         title = response.get("properties", {}).get("title", "unknown")
     except Exception as exc:
+        _log.warning("check_sheets_round_trip: sheets api call failed", exc_info=True)
         return Row(
             section="Sheets round-trip",
             required=False,
@@ -658,6 +664,7 @@ def check_docs_round_trip(settings: Settings) -> Row:
         response = service.documents().get(documentId=settings.aeat_scratch_doc_id).execute()
         title = response.get("title", "unknown")
     except Exception as exc:
+        _log.warning("check_docs_round_trip: docs api call failed", exc_info=True)
         return Row(
             section="Docs round-trip",
             required=False,
@@ -681,6 +688,7 @@ def check_cloud_storage(settings: Settings) -> Row:
         client = build_storage_client(creds, settings.google_cloud_project)
         count = sum(1 for _ in client.list_buckets(max_results=5))
     except Exception as exc:
+        _log.warning("check_cloud_storage: storage api call failed", exc_info=True)
         return Row(
             section="Storage list",
             required=False,
@@ -705,6 +713,7 @@ def check_cloud_functions(settings: Settings) -> Row:
         parent = f"projects/{settings.google_cloud_project}/locations/-"
         results = list(client.list_functions(parent=parent))
     except Exception as exc:
+        _log.warning("check_cloud_functions: functions api call failed", exc_info=True)
         return Row(
             section="Functions list",
             required=False,
@@ -734,6 +743,7 @@ def check_cloud_run(settings: Settings) -> Row:
         parent = f"projects/{settings.google_cloud_project}/locations/-"
         results = list(client.list_services(parent=parent))
     except Exception as exc:
+        _log.warning("check_cloud_run: cloud run api call failed", exc_info=True)
         return Row(
             section="Run list",
             required=False,

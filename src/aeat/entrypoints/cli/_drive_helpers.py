@@ -14,6 +14,10 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
+from ...core.logging import get_logger
+
+_logger = get_logger(__name__)
+
 
 def escape_drive_query_literal(value: str) -> str:
     """Escape a string literal for inclusion in a Drive ``q=`` parameter.
@@ -98,6 +102,11 @@ def parse_adc_identity(adc_path: Path) -> dict[str, str | None]:
     try:
         data = json.loads(adc_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        _logger.warning(
+            "parse_adc_identity: could not read or parse ADC file %s; returning unknown",
+            adc_path,
+            exc_info=True,
+        )
         return {"type": "unknown", "email": None, "impersonates": None}
     cred_type = str(data.get("type", "unknown"))
     if cred_type == "service_account":

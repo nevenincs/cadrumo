@@ -76,14 +76,14 @@ def _probe_factory(probe_builder: Callable[[], HealthProbeLike]) -> ProbeFactory
 
 def test_health_ok_exits_zero() -> None:
     with override_probe_factory(_probe_factory(_HealthyProbe)):
-        result = _RUNNER.invoke(app, ["health"])
+        result = _RUNNER.invoke(app, [])
     assert result.exit_code == 0
     assert "state=ok" in result.stdout
 
 
 def test_health_ok_json_exits_zero() -> None:
     with override_probe_factory(_probe_factory(_HealthyProbe)):
-        result = _RUNNER.invoke(app, ["health", "--json"])
+        result = _RUNNER.invoke(app, ["--json"])
     assert result.exit_code == 0
     payload = _unwrap_result(result.stdout)
     assert payload["state"] == "ok"
@@ -121,7 +121,7 @@ def test_health_exit_code_table(
         return _RaisingProbe(error)
 
     with override_probe_factory(_probe_factory(_builder)):
-        result = _RUNNER.invoke(app, ["health"])
+        result = _RUNNER.invoke(app, [])
     assert result.exit_code == expected_exit
     assert f"state={expected_state.value}" in result.stdout
 
@@ -225,7 +225,7 @@ def test_health_json_emits_parseable_payload() -> None:
         http_status=200,
     )
     with override_probe_factory(_probe_factory(lambda: _RaisingProbe(error))):
-        result = _RUNNER.invoke(app, ["health", "--json"])
+        result = _RUNNER.invoke(app, ["--json"])
     assert result.exit_code == 2
     payload = _unwrap_result(result.stdout)
     assert payload["state"] == "mantenimiento"

@@ -41,7 +41,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.locks import fsync_parent_dir
@@ -52,6 +52,8 @@ from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     ClassificationError,
+    DecryptionError,
+    EncryptionError,
     EnvelopeVersionError,
 )
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
@@ -234,6 +236,13 @@ class EncryptedBlobStore:
             payload=manifest,
         )
         save_envelope(envelope, self._manifest_path_for(sha_hex))
+        _log.debug(
+            "blob_store put: sha256=%s classification=%s size=%d content_type=%s",
+            sha_hex[:16],
+            classification.value,
+            len(plaintext),
+            content_type,
+        )
         return BlobReference(
             sha256_plaintext_hex=sha_hex,
             classification=classification,
@@ -285,12 +294,26 @@ class EncryptedBlobStore:
         # the inconsistency is observable on the next read.
         for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
             if payload_path.exists():
-                payload_path.unlink()
+                try:
+                    payload_path.unlink()
+                except OSError:
+                    _log.error(
+                        "blob_store delete: failed to remove payload %s sha256=%s",
+                        payload_path,
+                        sha_hex[:16],
+                        exc_info=True,
+                    )
+                    raise
         # Manifest last; only its removal surface is allowed to be
         # treated as best-effort (the get path raises BlobNotFoundError
         # on a missing manifest, which is the expected post-delete
         # state).
         manifest_path.unlink()
+        _log.debug(
+            "blob_store delete: removed sha256=%s classification=%s",
+            sha_hex[:16],
+            reference.classification.value,
+        )
 
     def iter_manifests(self) -> Iterator[BlobManifest]:
         """Yield the manifest of every blob currently persisted.
@@ -327,14 +350,14 @@ class EncryptedBlobStore:
                     envelope = Envelope[BlobManifest].model_validate_json(
                         manifest_path.read_text(encoding="utf-8"),
                     )
-                except Exception as exc:
+                except (OSError, ValueError, ValidationError):
                     # A single corrupted manifest must not break the
                     # whole iteration. Log and skip; the operator can
                     # surface the broken file via filesystem inspection.
                     _log.warning(
-                        "blob_store: skipping unparseable manifest %s: %s",
+                        "blob_store: skipping unparseable manifest %s",
                         manifest_path,
-                        exc,
+                        exc_info=True,
                     )
                     continue
                 if envelope.schema_version > _BLOB_MANIFEST_VERSION:
@@ -388,16 +411,16 @@ class EncryptedBlobStore:
                 decrypt_record(wrapped_blob, key=new_master_key, associated_data=_DEK_AAD)
                 skipped += 1
                 continue
-            except Exception:  # noqa: S110 - intentional fallthrough to legacy unwrap
+            except (DecryptionError, EncryptionError):
                 pass
             # Fall back to the old key.
             try:
                 dek = decrypt_record(wrapped_blob, key=old_master_key, associated_data=_DEK_AAD)
-            except Exception as exc:
+            except (DecryptionError, EncryptionError):
                 _log.warning(
-                    "blob_store rotate_master_key: cannot decrypt wrapped_dek for %s: %s",
+                    "blob_store rotate_master_key: cannot decrypt wrapped_dek for %s",
                     manifest_path,
-                    exc,
+                    exc_info=True,
                 )
                 errors += 1
                 continue
@@ -412,11 +435,11 @@ class EncryptedBlobStore:
             )
             try:
                 save_envelope(new_envelope, manifest_path)
-            except OSError as exc:
+            except OSError:
                 _log.warning(
-                    "blob_store rotate_master_key: failed to atomic-write %s: %s",
+                    "blob_store rotate_master_key: failed to atomic-write %s",
                     manifest_path,
-                    exc,
+                    exc_info=True,
                 )
                 errors += 1
                 continue
@@ -517,6 +540,11 @@ class EncryptedBlobStore:
             fsync_parent_dir(target)
         except OSError:
             tmp_path.unlink(missing_ok=True)
+            _log.error(
+                "blob_store: atomic write failed target=%s",
+                target,
+                exc_info=True,
+            )
             raise
 
 

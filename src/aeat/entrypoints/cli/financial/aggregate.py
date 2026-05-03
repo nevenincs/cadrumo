@@ -12,6 +12,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import typer
+from pydantic import ValidationError
 
 from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....application.aggregation import (
@@ -20,9 +21,12 @@ from ....application.aggregation import (
 )
 from ....core.config import load_settings
 from ....core.i18n import Language, Translatable, get_translation
+from ....core.logging import get_logger
 from .._errors import json_output_requested
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 from ._catalogue import catalogue_repository
+
+_logger = get_logger(__name__)
 
 
 @register_schema("financial aggregate")
@@ -67,6 +71,12 @@ def aggregate_cmd(
     try:
         aggregation = provider.load_aggregation(modelo=modelo, period=period)
     except AggregationError:
+        _logger.warning(
+            "aggregate: aggregation failed for modelo=%s period=%s",
+            modelo,
+            period,
+            exc_info=True,
+        )
         raise
     if as_json or json_output_requested():
         emit_json_success("financial aggregate", aggregation)
@@ -134,7 +144,8 @@ def _output_language() -> Language:
     """Resolve the configured operator output language, falling back to Spanish."""
     try:
         return Language(load_settings().aeat_output_language)
-    except Exception:
+    except (ValueError, ValidationError):
+        _logger.warning("aggregate: failed to resolve output language; falling back to es", exc_info=True)
         return Language.ES
 
 

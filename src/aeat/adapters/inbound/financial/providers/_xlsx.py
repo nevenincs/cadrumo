@@ -18,6 +18,7 @@ from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
+from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -40,6 +41,8 @@ from ._csv import (
     _row_is_blank,
     _value_from_aliases,
 )
+
+_logger = get_logger(__name__)
 
 
 class XlsxProvider(FinancialProvider):
@@ -141,6 +144,12 @@ class XlsxProvider(FinancialProvider):
                     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
                     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
                 except ValueError as exc:
+                    _logger.warning(
+                        "xlsx_provider: parse error row=%d file=%s",
+                        source_row_index,
+                        path.name,
+                        exc_info=True,
+                    )
                     raise InvalidFinancialSourceError(
                         f"worksheet row {source_row_index} could not be parsed: {exc}",
                     ) from exc
@@ -204,6 +213,11 @@ class XlsxProvider(FinancialProvider):
                 return workbook, best_rows, best_sheet_name, None, None, None, best_header_index
             return workbook, best_rows, best_sheet_name, best_layout, best_headers, best_lookup, best_header_index
         except Exception:
+            # Re-raise wrapper that guarantees workbook teardown. Broad
+            # catch because the upstream parse can raise openpyxl/xlrd
+            # errors, KeyError, ValueError, OSError, IndexError or
+            # TypeError depending on file shape; the close() must run
+            # uniformly. ``raise`` preserves the original cause.
             with suppress(Exception):
                 workbook.close()
             raise

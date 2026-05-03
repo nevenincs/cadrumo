@@ -10,9 +10,12 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.logging import get_logger
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+
+_logger = get_logger(__name__)
 
 
 class _OpenAIUsage(BaseModel):
@@ -123,8 +126,25 @@ class OpenAIAdapter(_ProviderAdapter):
                 },
             )
         if response.status_code == 429:
+            _logger.warning(
+                "openai: rate limit response status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
             raise_rate_limit("OpenAI rate limit exceeded.", response.headers.get("retry-after"))
+        if response.status_code >= 500:
+            _logger.error(
+                "openai: server error status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
+            raise LLMProviderError(f"OpenAI API failure ({response.status_code}).")
         if response.status_code >= 400:
+            _logger.warning(
+                "openai: client error status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
             raise LLMProviderError(f"OpenAI API failure ({response.status_code}).")
         parsed = _OpenAIResponse.model_validate_json(response.text)
         text = parsed.choices[0].message.content or ""

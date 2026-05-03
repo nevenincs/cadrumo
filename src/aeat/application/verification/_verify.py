@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from ...adapters.inbound.declaracion import DeclaracionFiling
 from ...core.i18n import Translatable
+from ...core.logging import get_logger
 from ...domain.formulas import Discrepancy, Engine, Ruleset
 from ._schema import (
     ClassifiedDiscrepancy,
@@ -21,6 +22,8 @@ from ._schema import (
     VerificationStatus,
     VerificationVerdict,
 )
+
+_logger = get_logger(__name__)
 
 _DEFAULT_TOLERANCE = Decimal("0.01")
 """Default per-casilla absolute tolerance (one cent) for verdicts."""
@@ -62,6 +65,11 @@ def verify_declaracion(
         timestamp the verdict was produced.
     """
     if ruleset is None:
+        _logger.debug(
+            "no ruleset for modelo=%s period=%s — returning UNVERIFIABLE verdict",
+            declaracion.modelo,
+            declaracion.period,
+        )
         return _unverifiable_verdict(declaracion)
 
     provided: dict[str, Decimal] = {}
@@ -95,6 +103,14 @@ def verify_declaracion(
     status = _derive_status(classified, coverage)
     narrative = _compose_narrative(declaracion, status, classified, coverage)
 
+    _logger.info(
+        "verified declaracion modelo=%s period=%s status=%s discrepancies=%d coverage=%.2f",
+        declaracion.modelo,
+        declaracion.period,
+        status.value,
+        len(classified),
+        coverage,
+    )
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=declaracion.period,
@@ -133,6 +149,7 @@ def _classify_discrepancy(
                 f"Casilla {casilla_id}: el extractor ha marcado este valor como poco fiable. Revisa manualmente el PDF."
             ),
             en=(f"Casilla {casilla_id}: the extractor flagged this value as low-confidence. Review the PDF manually."),
+            ca=(f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. Revisa manualment el PDF."),
             hu=(f"{casilla_id} casilla: az extraktor alacsony magabiztosságúnak jelölte. Ellenőrizd a PDF-et kézzel."),
         )
     elif casilla_id not in ruleset_casillas:
@@ -140,6 +157,7 @@ def _classify_discrepancy(
         rationale = Translatable(
             es=(f"Casilla {casilla_id}: el ruleset no contempla esta casilla. Se acepta el valor extraído."),
             en=(f"Casilla {casilla_id}: the ruleset has no formula for it. Extracted value accepted as-is."),
+            ca=(f"Casella {casilla_id}: el ruleset no contempla aquesta casella. S'accepta el valor extret."),
             hu=(f"{casilla_id} casilla: a ruleset nem ismeri. A kinyert érték elfogadva."),
         )
     elif abs_delta < 10 * tolerance:
@@ -147,6 +165,7 @@ def _classify_discrepancy(
         rationale = Translatable(
             es=f"Casilla {casilla_id}: diferencia dentro del margen de redondeo ({abs_delta} €).",
             en=f"Casilla {casilla_id}: delta within rounding tolerance ({abs_delta} €).",
+            ca=f"Casella {casilla_id}: diferència dins del marge d'arrodoniment ({abs_delta} €).",
             hu=f"{casilla_id} casilla: a kerekítési toleranciába esik ({abs_delta} €).",
         )
     else:
@@ -154,6 +173,7 @@ def _classify_discrepancy(
         rationale = Translatable(
             es=(f"Casilla {casilla_id}: diferencia significativa ({abs_delta} €). Revisa el PDF o el ruleset."),
             en=(f"Casilla {casilla_id}: material divergence ({abs_delta} €). Review the PDF or the ruleset."),
+            ca=(f"Casella {casilla_id}: diferència significativa ({abs_delta} €). Revisa el PDF o el ruleset."),
             hu=(f"{casilla_id} casilla: jelentős eltérés ({abs_delta} €). Ellenőrizd a PDF-et vagy a ruleset-et."),
         )
 

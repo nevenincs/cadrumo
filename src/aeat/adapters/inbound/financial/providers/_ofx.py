@@ -19,6 +19,7 @@ from typing import Protocol, cast
 
 from ofxparse import OfxParser
 
+from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -29,6 +30,8 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+
+_logger = get_logger(__name__)
 
 
 class _OfxTransactionLike(Protocol):
@@ -97,6 +100,7 @@ class OfxProvider(FinancialProvider):
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict raw transactions from every OFX account statement."""
+        _logger.debug("ofx_provider ingest: loading %s", path.name)
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
@@ -121,6 +125,12 @@ class OfxProvider(FinancialProvider):
                     amount = Decimal(str(getattr(transaction, "amount", "0")))
                     booked_date = parse_date_value(posted_at, day_first=False)
                 except ValueError as exc:
+                    _logger.warning(
+                        "ofx_provider: parse error transaction=%d file=%s",
+                        source_row_index,
+                        path.name,
+                        exc_info=True,
+                    )
                     raise InvalidFinancialSourceError(
                         f"OFX transaction {source_row_index} could not be parsed: {exc}",
                     ) from exc
@@ -154,6 +164,7 @@ class OfxProvider(FinancialProvider):
             with path.open("rb") as handle:
                 parsed = OfxParser.parse(handle)
         except Exception as exc:  # pragma: no cover - validated in tests through error path
+            _logger.error("ofx_provider: failed to parse OFX file %s", path.name, exc_info=True)
             raise InvalidFinancialSourceError(f"could not parse OFX file: {path}") from exc
         accounts = []
         if getattr(parsed, "accounts", None):

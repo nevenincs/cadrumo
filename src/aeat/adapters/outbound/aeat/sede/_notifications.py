@@ -26,13 +26,13 @@ Public surface: :class:`RemoteNotification`, :class:`NotificationsSnapshot`,
 
 from __future__ import annotations
 
-import contextlib
 import re
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
+from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import async_playwright
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
@@ -451,17 +451,31 @@ async def _fetch_and_parse(
         try:
             page = await context.new_page()
             # Warm the cookie jar on the authenticated landing.
-            with contextlib.suppress(Exception):
+            try:
                 await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            except Exception as exc:
+                log.debug(
+                    "fetch_notifications: warm-up navigation to %s suppressed: %s",
+                    _RESUMEN_URL,
+                    exc,
+                )
             try:
                 await page.goto(url, wait_until="domcontentloaded")
-            except Exception as exc:
+            except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
             html = await page.content()
-            return parser(html, source_url=url)
+            snapshot = parser(html, source_url=url)
+            log.info(
+                "fetch_notifications: fetched %d row(s) from %s",
+                len(snapshot.rows),
+                url,
+            )
+            return snapshot
         finally:
-            with contextlib.suppress(Exception):
+            try:
                 await context.close()
+            except Exception as _exc:
+                log.debug("fetch_notifications: context.close suppressed: %s", _exc)
             await browser_session.close()
 
 

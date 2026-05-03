@@ -13,9 +13,12 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
+from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
 from ._repository import AttachmentStore
+
+_logger = get_logger(__name__)
 
 
 def add_attachment(
@@ -63,6 +66,7 @@ def add_attachment(
         The persisted
         :class:`~aeat.domain.attachments._models.Attachment` manifest.
     """
+    _logger.debug("ingesting attachment from %s kind=%s source=%s", path, kind.value, source.value)
     sha256, bytes_size = store.put_file(path)
     attachment = Attachment.model_validate(
         {
@@ -81,6 +85,7 @@ def add_attachment(
         }
     )
     store.write_manifest(attachment)
+    _logger.info("added attachment kind=%s source=%s bytes=%d", kind.value, source.value, bytes_size)
     return attachment
 
 

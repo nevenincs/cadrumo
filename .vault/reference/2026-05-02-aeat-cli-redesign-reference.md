@@ -25,7 +25,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline `code`. -->
 
-# `aeat-cli-redesign` reference: `user-cli-redesign-review-packet-v5`
+# `aeat-cli-redesign` reference: `user-cli-redesign-review-packet-v6`
 
 ## Packet Status
 
@@ -33,7 +33,7 @@ This packet is an in-progress recovered-comment review packet for the AEAT user
 CLI redesign. It is not an accepted ADR, does not authorize implementation, and
 does not supersede prior no-live-submit safety work.
 
-The v5 packet supersedes the previous review surface because the previous
+The v6 packet supersedes the previous review surface because the previous
 surface still contained rejected import subcommands, exclude/restore verbs,
 ambiguous calculate output, `verify --export`, and an extra amendment command
 noun.
@@ -55,20 +55,20 @@ noun.
 | Area | Status | Required Handling |
 | --- | --- | --- |
 | Authentication | Accepted anchor | Configure provider, log in, show status, show whoami, and logout. Do not model auth as file import. |
-| Profile | Accepted anchor | Use schema-backed profile keys with list/get/set/unset/validate/edit. |
+| Profile | Accepted anchor | Use schema-backed profile keys with keys/list/get/set/unset/validate. |
 | Account noun | Rejected | Identity belongs to auth/profile status. |
 | App domains | Accepted anchor | Use `overview`, `ledger`, `invoice`, `declaration`. |
 | Ledger schema | Backend audit | Backend must define record fields, skip state, split metadata, edit history, filters, and lifecycle. |
 | Ledger import | Reworked | Use `ledger import PATH --provider PROVIDER`; verification is `--verify`, not an import subcommand. |
 | Import diagnostics | Reworked | Gap, duplicate, original-file, and parser diagnostics are output from `ledger import ... --verify`. |
-| Ledger review | Reworked | Use list/show/edit/split with `--filter`, `--set`, `--skip`, and normalized split shares. |
+| Ledger review | Reworked | Use `review` and `edit` with `--filter`, `--set`, `--skip`, and split share values. |
 | Ledger exclude/restore | Rejected | Use `ledger edit --skip true|false --reason REASON`. |
 | Supporting files | Accepted anchor | Model review files, references, and comments as record fields. |
 | Invoice schema | Backend audit | Define base, IVA, IVA category, retention, payment link, references, comments, lines, and history. |
 | Declaration calculate | Reworked | Bare calculate prints a summary, blocker counts, warnings, and next action. |
 | Declaration review | Accepted anchor | Use calculate/review/status/edit/approve before validation/export. |
-| Declaration export | Reworked | Export requires `--output`; verify may write JSON but has no export flag. |
-| Corrective declaration | Reworked | Use `--amend --id JUSTIFICANTE_ID` on declaration commands. |
+| Declaration export | Reworked | Export requires `--output`; verify reads `--file` and has no export flag. |
+| Corrective declaration | Reworked | Recalculate a new declaration draft after late or corrected records. |
 | Work state | Rejected old shape | Resume through active profile state, overview, and status filters. |
 
 ## Current Candidate CLI Shape
@@ -109,7 +109,7 @@ aeat app
 | `aeat setup auth status` | Shows provider and login state. |
 | `aeat setup auth whoami` | Shows the authenticated identity when available. |
 | `aeat setup auth logout` | Clears active authentication state. |
-| `aeat setup profile create NAME` | Creates a taxpayer profile. |
+| `aeat setup init --name NAME` | Creates a taxpayer profile. |
 | `aeat setup profile use NAME` | Selects the active profile. |
 | `aeat setup profile show` | Shows current profile facts and validation state. |
 | `aeat setup profile list-keys` | Lists editable keys, value types, requiredness, and descriptions. |
@@ -117,41 +117,41 @@ aeat app
 | `aeat setup profile set KEY VALUE` | Sets one schema-backed profile value. |
 | `aeat setup profile unset KEY` | Clears one optional profile value. |
 | `aeat setup profile validate` | Validates profile completeness and consistency. |
-| `aeat setup profile edit` | Opens an interactive schema-backed profile editor. |
-| `aeat app overview` | Shows profile-scoped readiness, pending record counts, declaration state, and next action. |
-| `aeat app overview --calendar --from DATE --to DATE` | Shows period states across a date range. |
-| `aeat app overview --period PERIOD --verbose` | Explains local state, unresolved work, and next commands for one period. |
+| `aeat setup profile list` | Lists configured setup profiles. |
+| `aeat app overview status` | Shows profile-scoped readiness, pending record counts, declaration state, and next action. |
+| `aeat app overview status --calendar --from DATE --to DATE` | Shows period states across a date range. |
+| `aeat app overview status --period PERIOD --verbose` | Explains local state, unresolved work, and next commands for one period. |
 | `aeat app ledger import PATH --provider n26 --dry-run` | Validates a transaction file before saving records. |
-| `aeat app ledger import PATH --provider n26 --verify --original PATH --verbose` | Imports records and runs original-file, gap, duplicate, parser, and verbose diagnostics. |
-| `aeat app ledger list --filter status=pending --filter period=PERIOD` | Lists records needing review. |
-| `aeat app ledger list --filter issue=duplicate --filter period=PERIOD` | Lists duplicate diagnostics produced by import verification. |
-| `aeat app ledger show --id RECORD_ID --verbose` | Shows one ledger record, provenance, editable columns, document links, and skip state. |
+| `aeat app ledger import PATH --provider n26 --verify --source PATH --verbose` | Imports records and runs original-file, gap, duplicate, parser, and verbose diagnostics. |
+| `aeat app ledger review --filter status=pending --filter period=PERIOD` | Lists records needing review. |
+| `aeat app ledger review --filter issue=duplicate --filter period=PERIOD` | Lists duplicate diagnostics produced by import verification. |
+| `aeat app ledger review --id RECORD_ID --verbose` | Shows one ledger record, provenance, editable columns, document links, and skip state. |
 | `aeat app ledger edit --id RECORD_ID --set COLUMN=VALUE --reason REASON` | Edits schema-backed ledger columns. |
 | `aeat app ledger edit --id RECORD_ID --skip true --reason REASON` | Skips a row without deleting it. |
 | `aeat app ledger edit --id RECORD_ID --skip false --reason REASON` | Returns a skipped row to review. |
-| `aeat app ledger split --id RECORD_ID --business SHARE --personal SHARE --reason REASON` | Splits mixed spending into normalized shares that add to `1.0`. |
-| `aeat app ledger split --id RECORD_ID --clear --reason REASON` | Clears split metadata and returns to the source row. |
+| `aeat app ledger edit --id RECORD_ID --split business=SHARE --split personal=SHARE --reason REASON` | Splits mixed spending into share values that add to `1.0`. |
+| `aeat app ledger edit --id RECORD_ID --split clear --reason REASON` | Clears split metadata and returns to the source row. |
 | `aeat app invoice import PATH --kind issued --dry-run` | Validates invoice records issued by the taxpayer. |
 | `aeat app invoice import PATH --kind received --dry-run` | Validates invoice records received from suppliers. |
-| `aeat app invoice list --filter status=pending --filter kind=received` | Lists invoice records needing metadata review. |
-| `aeat app invoice show --id INVOICE_ID --verbose` | Shows invoice metadata, lines, totals, payment linkage, references, and comments. |
+| `aeat app invoice review --filter status=pending --filter kind=received` | Lists invoice records needing metadata review. |
+| `aeat app invoice review --id INVOICE_ID --verbose` | Shows invoice metadata, lines, totals, payment linkage, references, and comments. |
 | `aeat app invoice edit --id INVOICE_ID --set COLUMN=VALUE --reason REASON` | Edits invoice metadata. |
 | `aeat app invoice match --period PERIOD` | Matches invoice records to payments and ledger records. |
 | `aeat app declaration calculate --period PERIOD --modelo MODELO` | Calculates declaration values and prints summary output, blockers, warnings, and next action. |
 | `aeat app declaration review --period PERIOD --modelo MODELO --format table` | Presents human-reviewable calculated values and assumptions. |
 | `aeat app declaration status --filter status=pending --period PERIOD --modelo MODELO` | Shows unresolved declaration work. |
-| `aeat app declaration edit --period PERIOD --modelo MODELO --set COLUMN=VALUE --reason REASON` | Records a manual calculation value change and resets approval. |
-| `aeat app declaration approve --period PERIOD --modelo MODELO --reason REASON` | Marks reviewed values as approved by a human. |
-| `aeat app declaration validate --period PERIOD --modelo MODELO` | Validates only after review approval. |
-| `aeat app declaration validate --period PERIOD --modelo MODELO --format json --output PATH` | Saves a validation report when unresolved work remains. |
-| `aeat app declaration preview --period PERIOD --modelo MODELO --format pdf` | Creates a non-filing preview where supported. |
-| `aeat app declaration export --period PERIOD --modelo MODELO --format boe --output PATH` | Exports a local AEAT-compatible file where supported. |
-| `aeat app declaration verify --period PERIOD --modelo MODELO --format json --output PATH` | Writes declaration verification audit output. |
-| `aeat app declaration calculate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID` | Calculates a declaration that amends the prior declaration identified by AEAT justificante id. |
-| `aeat app declaration review --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --format table` | Reviews amended declaration values. |
-| `aeat app declaration approve --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --reason REASON` | Approves amended declaration state. |
-| `aeat app declaration validate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID` | Validates amended declaration state. |
-| `aeat app declaration export --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID --format boe --output PATH` | Exports amended declaration output. |
+| `aeat app declaration edit --id draft_MODELO_PERIOD --set COLUMN=VALUE --reason REASON` | Records a manual calculation value change and resets approval. |
+| `aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON` | Marks reviewed values as approved by a human. |
+| `aeat app declaration validate --id draft_MODELO_PERIOD` | Validates only after review approval. |
+| `aeat app declaration validate --id draft_MODELO_PERIOD --format json --output PATH` | Saves a validation report when unresolved work remains. |
+| `aeat app declaration preview --id draft_MODELO_PERIOD` | Creates a non-filing preview where supported. |
+| `aeat app declaration export --id draft_MODELO_PERIOD --output PATH` | Exports a local AEAT-compatible file where supported. |
+| `aeat app declaration verify --id DRAFT_ID --file PATH` | Verifies the exported file against the approved local draft. |
+| `aeat app declaration calculate --period PERIOD --modelo MODELO` | Recalculates a new draft after late or corrected records. |
+| `aeat app declaration review --period PERIOD --modelo MODELO --format table` | Reviews recalculated declaration values. |
+| `aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON` | Approves recalculated declaration state. |
+| `aeat app declaration validate --id draft_MODELO_PERIOD` | Validates recalculated declaration state. |
+| `aeat app declaration export --id draft_MODELO_PERIOD --output PATH` | Exports recalculated declaration output. |
 
 ## Candidate Data Fields
 
@@ -225,7 +225,7 @@ The simulator and tapes must exercise:
 - Duplicate imports and wrong-account imports.
 - User decisions to skip and unskip ledger records.
 - Manual ledger categorization, references, comments, and document-path fields.
-- Mixed business/personal spending with normalized split shares.
+- Mixed business/personal spending with split share values.
 - Split clearing and reapplying corrected split metadata.
 - Issued and received invoice import through singular `invoice`.
 - Invoice enrichment for base, IVA, IVA category, retention, payment link,
@@ -236,8 +236,7 @@ The simulator and tapes must exercise:
 - Multi-period forgetfulness.
 - Missed deadline recovery.
 - Stale calculations after data changes.
-- Amended declaration flow requiring AEAT justificante id through `--amend
-  --id`.
+- Recalculated declaration flow after late or corrected records.
 - Validation report output for unresolved work.
 - Interruption and resume through profile-scoped persistent state.
 
@@ -251,7 +250,7 @@ The simulator and tapes must exercise:
 - How should split metadata preserve source transactions and support clearing?
 - Which invoice retention and IVA category fields must be implemented first?
 - What exact declaration staleness rules must block validation and export?
-- How should official AEAT amended declaration modes and justificante id rules
-  be mapped after research?
+- How should official AEAT correction modes and justificante identity rules be
+  mapped after research?
 
-No completion-rate score is valid until the v5 tapes are replayed.
+No completion-rate score is valid until the v6 tapes are replayed.

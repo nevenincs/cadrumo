@@ -157,6 +157,7 @@ class JsonFileDivergenceRepository:
                     hkdf_context=_HKDF_CONTEXT_DIVERGENCE,
                 )
         except OSError as exc:
+            _LOGGER.error("failed to persist divergence record %s", record.record_id, exc_info=True)
             raise DivergenceRepositoryError(f"Failed to persist divergence record {record.record_id}: {exc}") from exc
         _LOGGER.info("persisted divergence record %s -> %s", record.record_id, target)
 
@@ -239,6 +240,12 @@ class JsonFileDivergenceRepository:
             The persisted, updated :class:`DivergenceRecord`.
         """
         current = self.load(record_id)
+        _LOGGER.info(
+            "updating resolution record_id=%s state=%s -> %s",
+            record_id,
+            current.resolution_state.value,
+            resolution_state.value,
+        )
         updated_fields: dict[str, object] = {"resolution_state": resolution_state}
         if notes is not None:
             updated_fields["notes"] = notes

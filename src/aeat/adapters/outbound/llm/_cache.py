@@ -7,7 +7,10 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from ....core.config import PROJECT_ROOT
+from ....core.logging import get_logger
 from ._errors import LLMCacheError
 from ._models import (
     CachedEntry,
@@ -17,6 +20,8 @@ from ._models import (
     LLMRequest,
     LLMResponse,
 )
+
+_log = get_logger(__name__)
 
 
 class LLMCache:
@@ -70,12 +75,14 @@ class LLMCache:
 
         path = self._path_for(self.build_key(request, provider, model))
         if not path.exists():
+            _log.debug("llm_cache miss: provider=%s model=%s", provider.value, model)
             return None
         try:
             entry = CachedEntry.model_validate_json(path.read_text(encoding="utf-8"))
-        except Exception as exc:  # pragma: no cover - defensive filesystem path
+        except (OSError, ValueError, ValidationError) as exc:  # pragma: no cover - defensive filesystem path
             msg = f"Failed to parse cache entry at {path}"
             raise LLMCacheError(msg) from exc
+        _log.debug("llm_cache hit: provider=%s model=%s", provider.value, model)
         return entry.response.model_copy(
             update={
                 "cache_hit": True,

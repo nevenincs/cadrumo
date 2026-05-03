@@ -24,7 +24,6 @@ Narrower scope constants are provided for least-privilege scenarios.
 
 from __future__ import annotations
 
-import logging
 import os
 from collections.abc import Sequence
 from pathlib import Path
@@ -40,6 +39,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from ....core.file_permissions import restrict_file_permissions
+from ....core.logging import get_logger
 from ._paths import (
     GoogleAuthInspection,
     GoogleAuthPath,
@@ -91,7 +91,7 @@ __all__ = [
     "normalize_google_auth_path",
 ]
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 # ── Scope constants ─────────────────────────────────────────────────────────
 # Default: full read/write access to Drive, Sheets, Docs, and Cloud Platform.
@@ -154,7 +154,7 @@ def _write_oauth_token_cache(token_path: Path, payload: str) -> None:
         try:
             os.chmod(token_path.parent, 0o700)
         except OSError:
-            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent)
+            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent, exc_info=True)
     token_path.write_text(payload, encoding="utf-8")
     restrict_file_permissions(token_path)
 
@@ -191,10 +191,10 @@ def get_oauth_credentials(
 
     # 2. Refresh if expired, or run a new consent flow
     if creds and creds.expired and creds.refresh_token:
-        log.info("Refreshing expired OAuth token")
+        log.info("refreshing expired oauth token")
         creds.refresh(Request())
     elif not creds or not creds.valid:
-        log.info("Starting OAuth consent flow (browser will open)")
+        log.info("starting oauth consent flow (browser will open)")
         client_config: dict[str, Any] = {
             "installed": {
                 "client_id": client_id,
@@ -266,7 +266,7 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
         sa_path = inspection.service_account_existing_path
         if sa_path is None:
             raise DefaultCredentialsError(inspection.blocking_reason or "service-account key missing")
-        log.info("Using Service-account automation path from %s", sa_path)
+        log.info("using service-account automation path from %s", sa_path)
         return get_service_account_credentials(
             sa_path,
             scopes=scopes,
@@ -276,7 +276,7 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
     if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         if not (settings.google_oauth_client_id and settings.google_oauth_client_secret):
             raise DefaultCredentialsError(inspection.blocking_reason or "desktop OAuth client config missing")
-        log.info("Using Desktop OAuth local-dev path")
+        log.info("using desktop oauth local-dev path")
         token_path = settings.aeat_token_dir / "google_oauth_token.json"
         return get_oauth_credentials(
             settings.google_oauth_client_id,

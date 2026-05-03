@@ -25,6 +25,7 @@ On failure, the helper falls back to the old key.
 
 from __future__ import annotations
 
+import binascii
 import os
 import tempfile
 from collections.abc import Iterator
@@ -32,7 +33,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
@@ -44,6 +45,7 @@ from .envelope._envelope import (
     _build_aad,  # type: ignore[attr-defined]
     _derive_envelope_key,  # type: ignore[attr-defined]
 )
+from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
@@ -168,11 +170,12 @@ def _try_decrypt_bytes(
         aad = _build_aad(cipher_envelope.classification, hkdf_context)
         if cipher_envelope.encryption.associated_data() != aad:
             return None
-    except Exception:
+    except (ValueError, binascii.Error):
         # Malformed nonce/ciphertext base64 or invalid AAD encoding
         # surfaces as a probe miss rather than a hard error so the
         # rotation can continue past the corrupt file and report it
         # in the errors counter via the outer caller.
+        _log.debug("rotation probe: AAD/blob parse failed; treating as miss", exc_info=True)
         return None
     derived_key = _derive_envelope_key(
         master_key=master_key_provider.get_master_key(),
@@ -180,7 +183,8 @@ def _try_decrypt_bytes(
     )
     try:
         return decrypt_record(blob, key=derived_key, associated_data=aad)
-    except Exception:
+    except (DecryptionError, EncryptionError):
+        _log.debug("rotation probe: decrypt failed; treating as miss", exc_info=True)
         return None
 
 
@@ -205,6 +209,7 @@ def _atomic_write(target: Path, *, payload: str) -> None:
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:
+        _log.error("rotation: atomic write failed target=%s", target, exc_info=True)
         tmp_path.unlink(missing_ok=True)
         raise
 
@@ -261,8 +266,8 @@ def rotate_master_key(
                 cipher_envelope = CipherEnvelope.model_validate_json(
                     path.read_text(encoding="utf-8"),
                 )
-            except Exception as exc:
-                _log.warning("rotate_master_key: %s is not a CipherEnvelope: %s", path, exc)
+            except (OSError, ValueError, ValidationError):
+                _log.warning("rotate_master_key: %s is not a CipherEnvelope", path, exc_info=True)
                 errors += 1
                 continue
 
@@ -273,6 +278,7 @@ def rotate_master_key(
                 hkdf_context=entry.hkdf_context,
             )
             if already_rotated is not None:
+                _log.debug("rotate_master_key: %s already rotated, skipping", path)
                 skipped += 1
                 continue
 
@@ -300,8 +306,8 @@ def rotate_master_key(
             )
             try:
                 new_blob = encrypt_record(plaintext, key=new_derived_key, associated_data=aad)
-            except Exception as exc:
-                _log.warning("rotate_master_key: failed to encrypt %s: %s", path, exc)
+            except EncryptionError:
+                _log.warning("rotate_master_key: failed to encrypt %s", path, exc_info=True)
                 errors += 1
                 continue
 
@@ -313,8 +319,8 @@ def rotate_master_key(
             )
             try:
                 _atomic_write(path, payload=new_cipher_envelope.model_dump_json())
-            except OSError as exc:
-                _log.warning("rotate_master_key: failed to atomic-write %s: %s", path, exc)
+            except OSError:
+                _log.warning("rotate_master_key: failed to atomic-write %s", path, exc_info=True)
                 errors += 1
                 continue
             rotated += 1

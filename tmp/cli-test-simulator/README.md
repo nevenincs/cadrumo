@@ -1,14 +1,14 @@
 # AEAT CLI test simulator
 
-Temporary interactive simulator for the AEAT CLI v5 redesign.
+Temporary interactive simulator for the AEAT CLI v6 redesign.
 
-Status: v5 review candidate, not approved for implementation.
+Status: v6 review candidate, not approved for implementation.
 
 Open `index.html` for the command simulator or `approval-session.html` for the
 section-by-section approval session. The pages are dependency-free and keep
 state in browser local storage.
 
-## What V5 Tests
+## What V6 Tests
 
 - Separation between setup prerequisites and app operation.
 - Authentication as provider configuration plus AEAT login.
@@ -20,12 +20,12 @@ state in browser local storage.
 - Read-only ledger inspection through `list` and `show`.
 - Ledger edits through repeated `--set column=value`.
 - Skip and unskip decisions through `ledger edit --skip true|false`.
-- Mixed-use splits through normalized shares that add to `1.0`.
+- Mixed-use splits through share values that add to `1.0`.
 - Invoice enrichment for base, IVA rate, IVA amount, IVA category, retention,
   payment linkage, references, comments, and document paths.
 - Declaration calculation with visible summary output and human review gates.
 - Local validation, preview, export, and verification with explicit outputs.
-- Corrective declaration work through `--amend --id JUSTIFICANTE_ID`.
+- Corrective declaration work through a recalculated draft.
 - Interruption/resume as profile-scoped persisted app state.
 - Global `--verbose` diagnostics on state-sensitive workflows.
 
@@ -55,7 +55,7 @@ old forms.
 From this folder or the repository root:
 
 ```text
-node tmp/cli-test-simulator/run-audits.js --runs 250 --seed kent-n26-v5 --out tmp/cli-test-simulator/generated-findings-v5.md --format md
+node tmp/cli-test-simulator/run-audits.js --runs 250 --seed kent-n26-v6 --out tmp/cli-test-simulator/generated-findings-v6.md --format md
 ```
 
 The web simulator also has a Generative audit panel. Run a seeded audit,
@@ -77,36 +77,35 @@ aeat
       whoami
       logout
     profile
-      create NAME
       use NAME
       show
+      keys
       list-keys
       get KEY
       set KEY VALUE
       unset KEY
       validate
-      edit
+      list
 
   app
     overview
-      --calendar
-      --period PERIOD
+      status [--calendar] [--period PERIOD]
+      next
 
     ledger
-      import PATH --provider PROVIDER [--verify] [--original PATH]
-      list --filter KEY=VALUE
-      show --id RECORD_ID
+      import PATH --provider PROVIDER [--verify] [--source PATH]
+      review [--filter KEY=VALUE] [--id RECORD_ID]
       edit --id RECORD_ID --set COLUMN=VALUE
       edit --id RECORD_ID --skip true|false
-      split --id RECORD_ID --business SHARE --personal SHARE
-      split --id RECORD_ID --clear
+      edit --id RECORD_ID --split business=SHARE --split personal=SHARE
+      edit --id RECORD_ID --split clear
 
     invoice
       import PATH --kind issued|received
-      list --filter KEY=VALUE
-      show --id INVOICE_ID
+      review [--filter KEY=VALUE] [--id INVOICE_ID]
       edit --id INVOICE_ID --set COLUMN=VALUE
       match
+      verify
 
     declaration
       calculate
@@ -117,8 +116,7 @@ aeat
       validate
       preview
       export --output PATH
-      verify --format json --output PATH
-      calculate --amend --id JUSTIFICANTE_ID
+      verify --id DRAFT_ID --file PATH
 ```
 
 The simulator intentionally avoids current implementation terms such as

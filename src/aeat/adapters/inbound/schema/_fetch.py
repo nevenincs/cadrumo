@@ -374,7 +374,19 @@ def fetch_boe_pdf(
     try:
         sha256, length = _stream_to_file(url_to_fetch, destination)
     except httpx.HTTPError as exc:
+        _logger.error(
+            "fetch_boe_pdf: HTTP transport failure modelo=%s boe_ref=%s",
+            modelo_code.value,
+            boe_ref,
+            exc_info=True,
+        )
         raise SchemaCacheError(f"BOE fetch failed: {exc}") from exc
+    _logger.info(
+        "fetch_boe_pdf: saved %d bytes sha256=%s path=%s",
+        length,
+        sha256[:16],
+        destination,
+    )
     return FetchedSchemaSource(
         modelo_code=modelo_code,
         boe_ref=boe_ref,

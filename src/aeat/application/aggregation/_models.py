@@ -107,6 +107,8 @@ class Period(BaseModel):
             payload.pop("period_type", None)
             if isinstance(payload.get("quarter"), str):
                 payload["quarter"] = Quarter(payload["quarter"])
+            if isinstance(payload.get("kind"), str):
+                payload["kind"] = PeriodKind(payload["kind"])
             return payload
         return data
 

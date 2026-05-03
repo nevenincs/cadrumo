@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ....core.config import load_settings
+from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.assets import (
     AmortizationLedger,
@@ -200,7 +201,7 @@ class AssetsLedgerRepository:
                 max_supported_version=_ENVELOPE_VERSION,
             )
             return envelope.payload
-        except Exception as exc:
+        except (OSError, AeatError) as exc:
             raise AssetRecordError(f"unable to load asset ledger: {self.envelope_path}") from exc
 
     def save(self, document: AssetsLedgerDocument) -> None:
@@ -332,7 +333,7 @@ class AmortizationLedgerRepository:
                 max_supported_version=_ENVELOPE_VERSION,
             )
             return envelope.payload
-        except Exception as exc:
+        except (OSError, AeatError) as exc:
             raise AssetRecordError(f"unable to load amortization ledger: {self.envelope_path}") from exc
 
     def save(self, ledger: AmortizationLedger) -> None:
