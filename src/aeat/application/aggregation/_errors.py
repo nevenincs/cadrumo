@@ -1,8 +1,8 @@
-"""Errors raised while aggregating classified transactions into casilla totals.
+"""Errors raised while handling financial transaction aggregation boundaries.
 
 Used by :mod:`aeat.application.aggregation` to signal contract
-violations when classified transaction streams are folded into the
-casilla ledger consumed by :mod:`aeat.domain.filing`.
+violations before transaction streams reach the central calculation
+registry.
 """
 
 from __future__ import annotations
@@ -31,10 +31,6 @@ class AggregationCategoryCoverageError(AggregationError):
     """Raised when a business transaction lacks category or profile coverage."""
 
 
-class AggregationCasillaMappingError(AggregationError):
-    """Raised when category profiles do not provide usable casilla mappings."""
-
-
 def t(es: str, en: str, hu: str) -> Translatable:
     """Build a multilingual :class:`aeat.core.i18n.Translatable` message payload.
 
@@ -52,7 +48,6 @@ def t(es: str, en: str, hu: str) -> Translatable:
 
 
 __all__ = [
-    "AggregationCasillaMappingError",
     "AggregationCategoryCoverageError",
     "AggregationError",
     "AggregationMissingClassificationError",

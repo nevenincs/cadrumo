@@ -300,3 +300,36 @@ def test_vat_domain_does_not_export_modelo_303_casilla_bridge() -> None:
     ):
         assert not hasattr(vat_package, name)
         assert name not in vat_package.__all__
+
+
+def test_categories_domain_does_not_export_casilla_mapping_bridge() -> None:
+    categories_package = importlib.import_module("aeat.domain.categories")
+    profile_source = _source("src/aeat/domain/categories/_profile.py")
+    registry_source = _source("src/aeat/domain/categories/_registry.py")
+    package_source = _source("src/aeat/domain/categories/__init__.py")
+    aggregation_source = _source("src/aeat/application/aggregation/_service.py")
+    aggregation_exports = _source("src/aeat/application/aggregation/__init__.py")
+    aggregation_errors = _source("src/aeat/application/aggregation/_errors.py")
+    categories_cli = _source("src/aeat/entrypoints/cli/categories.py")
+    assert not (_ROOT / "src/aeat/domain/categories/_casilla_mapping.py").exists()
+    assert importlib.util.find_spec("aeat.domain.categories._casilla_mapping") is None
+    assert "_casilla_mapping" not in package_source
+    assert "casilla_mappings" not in profile_source
+    assert "casilla_mappings" not in registry_source
+    assert "casilla_mappings" not in aggregation_source
+    assert "profile.casilla_mappings" not in categories_cli
+    assert "AggregationCasillaMappingError" not in aggregation_exports
+    assert "AggregationCasillaMappingError" not in aggregation_errors
+    for name in ("CasillaMapping", "CasillaMappingSign"):
+        assert not hasattr(categories_package, name)
+        assert name not in categories_package.__all__
+
+
+def test_declaration_cli_does_not_project_invoice_values_to_modelo_casillas() -> None:
+    common_source = _source("src/aeat/entrypoints/cli/_common.py")
+
+    assert 'modelo == "303"' not in common_source
+    assert "InvoiceKind" not in common_source
+    assert "iva.rate" not in common_source
+    for assignment in ('inputs["01"]', 'inputs["04"]', 'inputs["07"]', 'inputs["29"]'):
+        assert assignment not in common_source

@@ -1,13 +1,12 @@
-"""Category profile schema consumed by downstream T4 classifiers."""
+"""Category profile schema consumed by downstream classifiers."""
 
 from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from ...core.i18n import Translatable, TranslationError, require_authoritative
-from ._casilla_mapping import CasillaMapping
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
@@ -15,7 +14,7 @@ from ._spending_category import SpendingCategory
 class _CategoryProfileStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class VatCategory(StrEnum):
@@ -32,7 +31,6 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     category: SpendingCategory
     display_label: Translatable
     proportionality: ProportionalityRule
-    casilla_mappings: tuple[CasillaMapping, ...] = Field(default_factory=tuple)
     vat_hint: VatCategory | None = None
 
     @model_validator(mode="after")
@@ -41,12 +39,4 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
             require_authoritative(self.display_label, domain="aeat")
         except TranslationError as exc:
             raise ValueError(str(exc)) from exc
-        if not self.casilla_mappings:
-            raise ValueError("category profiles require at least one casilla mapping")
-        seen: set[tuple[str, str, str]] = set()
-        for mapping in self.casilla_mappings:
-            key = (mapping.modelo.value, mapping.period_type.value, mapping.casilla_code)
-            if key in seen:
-                raise ValueError("duplicate casilla mapping detected")
-            seen.add(key)
         return self
