@@ -761,7 +761,7 @@ class TestWave12KdfMigration:
         ``MasterKeyPassphraseMismatchError``.
         """
         from .....core.locks import exclusive_file_lock
-        from ..errors import LockAcquisitionError
+        from .....core.locks_errors import LockAcquisitionError
 
         store = tmp_path / "secrets"
         _seed_legacy_v1_store(store, passphrase="hunter2")

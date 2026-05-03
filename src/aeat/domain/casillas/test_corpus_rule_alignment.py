@@ -303,6 +303,8 @@ def test_corpus_inline_boe_ids_well_formed() -> None:
         catalogue = load_casillas(modelo, period)
         for rec in catalogue.records:
             for value in rec.help.values():
+                if not isinstance(value, str):
+                    continue
                 for m in boe_re.finditer(value):
                     year = int(m.group(1))
                     if year < 1968 or year > 2026:

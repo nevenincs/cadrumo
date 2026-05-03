@@ -26,8 +26,12 @@ import re
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import cast
+
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from ...core.config import PROJECT_ROOT
+from ...core.i18n import Translatable
 from ..formulas._casilla import CasillaDefinition
 from ..formulas._formula import (
     AddFormula,
@@ -59,6 +63,9 @@ from .models import (
 CORPUS_ROOT = PROJECT_ROOT / "corpus" / "casillas"
 REVIEWED_BY = "human-codex"
 REVIEWED_AT = date(2026, 5, 1)
+
+_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
+"""Validates plain ``str`` BOE/manual URLs into the ``AnyHttpUrl`` shape."""
 
 YEARS = (2023, 2024, 2025, 2026)
 
@@ -1114,8 +1121,9 @@ def _collect_casilla_refs(node: object) -> list[str]:
             if n.casilla_id not in seen:
                 seen.append(n.casilla_id)
             return
-        if hasattr(n, "operands"):
-            for op in n.operands:
+        operands = getattr(n, "operands", None)
+        if operands is not None:
+            for op in operands:
                 walk(op)
 
     walk(node)
@@ -2659,8 +2667,8 @@ def _record_from_ruleset_casilla(
         modelo=f"MODELO_{modelo}",
         period=period,
         casilla_id=cdef.casilla_id,
-        label=label,
-        help=help_text,
+        label=cast(Translatable, label),
+        help=cast(Translatable, help_text),
         data_type=cdef.data_type,
         select_options=None,
         required=False,
@@ -2669,7 +2677,7 @@ def _record_from_ruleset_casilla(
         references_casillas=tuple(formula_refs),
         references_rules=tuple(references_rules),
         validation=_validation_for(modelo, cdef.casilla_id, computed),
-        source_manual_url=source_url,
+        source_manual_url=_HTTP_URL_ADAPTER.validate_python(source_url),
         source_page=1,
         source_section=section,
         definition_reviewed_by=REVIEWED_BY,
@@ -2695,7 +2703,7 @@ def _records_from_ruleset(
     # Resolve parameter values active on the ruleset's effective_from.
     params_resolved: dict[str, Decimal] = {}
     try:
-        for param_id in ruleset.parameters.entries.keys():
+        for param_id in ruleset.parameters.entries:
             params_resolved[param_id] = ruleset.parameters.resolve(param_id, on=ruleset.effective_from)
     except Exception:
         params_resolved = {}
@@ -2707,7 +2715,7 @@ def _records_from_ruleset(
             inner = f.formula.operands[0] if isinstance(f.formula, RoundFormula) else f.formula
             expr = _render_operand(inner, params=params_resolved)
             refs = tuple(_collect_casilla_refs(f.formula))
-            rules_ref: tuple[str, ...] = (f.formula_id,) + tuple(extra_formula_ids.get(cdef.casilla_id, ()))
+            rules_ref: tuple[str, ...] = (f.formula_id, *extra_formula_ids.get(cdef.casilla_id, ()))
             computed = cdef.computed
         elif f is not None:
             # Schema-only fallback (cross-year): keep the casilla but
@@ -2766,8 +2774,8 @@ def _record_from_manual(
         modelo=f"MODELO_{modelo}",
         period=period,
         casilla_id=c.casilla_id,
-        label=label_per_lang,
-        help=help_per_lang,
+        label=cast(Translatable, label_per_lang),
+        help=cast(Translatable, help_per_lang),
         data_type=c.data_type,
         select_options=c.select_options,
         required=False,
@@ -2776,7 +2784,7 @@ def _record_from_manual(
         references_casillas=c.formula_refs,
         references_rules=c.references_rules,
         validation=_validation_for(modelo, c.casilla_id, c.computed),
-        source_manual_url=source_url,
+        source_manual_url=_HTTP_URL_ADAPTER.validate_python(source_url),
         source_page=1,
         source_section=c.section or _section_for(modelo),
         definition_reviewed_by=REVIEWED_BY,

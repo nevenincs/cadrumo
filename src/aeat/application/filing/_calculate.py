@@ -134,7 +134,7 @@ class DeclarationCalculateSummary(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _enforce_repair_hint_invariant(self) -> "DeclarationCalculateSummary":
+    def _enforce_repair_hint_invariant(self) -> DeclarationCalculateSummary:
         """Repair hints accompany the RESOLVE_BLOCKERS verdict only.
 
         The CLI renders ``repair_hints`` as a remediation block. Surfacing
@@ -144,14 +144,10 @@ class DeclarationCalculateSummary(BaseModel):
         """
         if self.next_action is DeclarationCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
-                raise ValueError(
-                    "repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS"
-                )
+                raise ValueError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
         else:
             if self.repair_hints:
-                raise ValueError(
-                    "repair_hints must be empty unless next_action is RESOLVE_BLOCKERS"
-                )
+                raise ValueError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
         return self
 
 
@@ -250,14 +246,8 @@ def _default_narrative(
     next_action: DeclarationCalculateNextAction,
 ) -> Translatable:
     """Compose a default multilingual narrative for a calculate summary."""
-    es = (
-        f"Modelo {draft.modelo} {draft.period}: estado {draft.status.value}, "
-        f"siguiente paso {next_action.value}."
-    )
-    en = (
-        f"Modelo {draft.modelo} {draft.period}: status {draft.status.value}, "
-        f"next action {next_action.value}."
-    )
+    es = f"Modelo {draft.modelo} {draft.period}: estado {draft.status.value}, siguiente paso {next_action.value}."
+    en = f"Modelo {draft.modelo} {draft.period}: status {draft.status.value}, next action {next_action.value}."
     narrative: Translatable = {"es": es, "en": en}
     return narrative
 

@@ -79,8 +79,8 @@ def _collect_multilingual_calls(tree: ast.Module) -> list[tuple[int, str, str, s
                 slots.append(arg.value)
             else:
                 slots.append("")
-        if all(slots):
-            out.append((node.lineno, *slots))  # type: ignore[arg-type]
+        if all(slots) and len(slots) == 4:
+            out.append((node.lineno, slots[0], slots[1], slots[2], slots[3]))
     return out
 
 
@@ -107,7 +107,7 @@ def test_hu_slot_has_diacritics_when_es_does() -> None:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):
             continue
-        for lineno, es, en, ca, hu in _collect_multilingual_calls(tree):
+        for lineno, es, _en, ca, hu in _collect_multilingual_calls(tree):
             es_has = _has_diacritics(es, _ES_DIACRITICS)
             ca_has = _has_diacritics(ca, _CA_DIACRITICS)
             hu_has = _has_diacritics(hu, _HU_DIACRITICS)

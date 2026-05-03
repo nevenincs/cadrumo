@@ -14,6 +14,7 @@ Domain lifecycle types live in :mod:`aeat.domain.submission`.
 from __future__ import annotations
 
 from .....core.access_gate import LiveSubmitForbiddenError
+from .....domain._identifiers import ModeloIdentifier
 from .....domain.submission import Preflight
 from .....domain.submission._protocols import (
     AuthProviderProbe,
@@ -23,7 +24,6 @@ from .....domain.submission._protocols import (
     FilingDraftLike,
     FilingFinding,
     FilingFindingSeverity,
-    ModeloIdentifier,
 )
 
 __all__ = [
