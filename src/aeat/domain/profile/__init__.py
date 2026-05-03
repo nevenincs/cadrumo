@@ -14,6 +14,14 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..formulas import CCAA
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
+from ._keys import (
+    PROFILE_KEYS,
+    ProfileKey,
+    ProfileKeyRequirement,
+    get_profile_key,
+    optional_profile_keys,
+    required_profile_keys,
+)
 
 _FORAL_ALIASES = frozenset(
     {

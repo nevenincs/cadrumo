@@ -13,6 +13,15 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ..casillas.models import CasillaDataType
+
+__all__ = [
+    "BinaryFormulaOp",
+    "CasillaDataType",
+    "CompareOp",
+    "SchemaSource",
+]
+
 
 class SchemaSource(StrEnum):
     """Provenance class of an extracted :class:`aeat.domain.schema.Modelo`.

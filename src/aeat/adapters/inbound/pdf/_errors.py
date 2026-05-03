@@ -1,10 +1,15 @@
 """Root exception for every PDF-import-side error.
 
-Every PDF-class module (:mod:`aeat.domain.justificante`, :mod:`aeat.adapters.inbound.declaracion`,
-:mod:`aeat.adapters.inbound.borrador`) defines its own ``*Error``
-subclass that inherits :class:`PdfFilingImportError`, which itself inherits
-the project-wide :class:`aeat.core.errors.AeatError`. Callers wanting to catch
-every PDF-import error regardless of source use :class:`PdfFilingImportError`.
+The canonical class lives in :mod:`aeat.domain.justificante._errors`
+because it is the project-wide root for every PDF-import failure
+(declaración / borrador / justificante). This module simply re-
+exports it so adapter code can use the local-package import path
+without introducing a duplicate class identity that would conflict
+with the error-code registry.
 """
 
 from __future__ import annotations
+
+from ....domain.justificante._errors import PdfFilingImportError
+
+__all__ = ["PdfFilingImportError"]
