@@ -2,9 +2,9 @@
 
 The reconcile happy-path compares an APPROVED local
 :class:`aeat.domain.filing.FilingDraft` against the AEAT-stored
-justificante. Real drafts are produced by the long workflow pipeline
-(transactions -> ruleset -> formulas -> validator -> approval). For a
-one-shot reconcile sanity check we want a much shorter loop: pick a
+justificante. Registry-backed drafts are produced by the filing
+workflow once validated modelo definitions are available. For a
+one-shot reconcile sanity check we keep a much shorter loop: pick a
 sanitised fixture under ``tests/fixtures/justificantes/{modelo}/``,
 read its casillas off the source-pdf parser, and stamp them onto a
 synthetic :class:`FilingDraft` whose status is

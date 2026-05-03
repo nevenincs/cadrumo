@@ -144,12 +144,24 @@ def test_domain_filing_package_does_not_export_legacy_builders() -> None:
 
 def test_application_testing_helpers_do_not_import_builder_static_schemas() -> None:
     source = _source("src/aeat/application/filing/testing.py")
-    helper_source = _source("src/aeat/application/filing/_testing_static_schema.py")
+    filing_testing = importlib.import_module("aeat.application.filing.testing")
+    assert not (_ROOT / "src/aeat/application/filing/_testing_static_schema.py").exists()
+    assert importlib.util.find_spec("aeat.application.filing._testing_static_schema") is None
     assert "domain.filing._builders" not in source
-    assert "domain.filing._builders" not in helper_source
     assert "_modelo_130_schema" not in source
     assert "_modelo_303_schema" not in source
     assert "_modelo_390_schema" not in source
+    for name in (
+        "MODELO_130_SCHEMA",
+        "MODELO_303_SCHEMA",
+        "MODELO_390_SCHEMA",
+        "StaticCasillaCollection",
+        "StaticCasillaSchema",
+        "StaticCasillaSchemaProvider",
+        "default_schema_provider",
+    ):
+        assert not hasattr(filing_testing, name)
+        assert name not in filing_testing.__all__
 
 
 def test_filing_validator_does_not_own_model_specific_calculation_truth() -> None:
