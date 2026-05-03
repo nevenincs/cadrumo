@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -238,6 +239,14 @@ def test_calculation_registry_facade_cannot_import_legacy_rulesets() -> None:
     assert "ALL_RULESETS" not in source
     assert "RulesetRegistry" not in source
     assert "legacy calculation registry is disabled" in source
+
+
+def test_legacy_formula_package_is_deleted() -> None:
+    formula_dir = _ROOT / "src/aeat/domain/formulas"
+    formula_import_contract_dir = _ROOT / "tests/import_contract/domain/formulas"
+    assert not formula_dir.exists()
+    assert not formula_import_contract_dir.exists()
+    assert importlib.util.find_spec("aeat.domain.formulas") is None
 
 
 def test_export_generator_cli_cannot_write_modules() -> None:

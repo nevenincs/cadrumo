@@ -1,1 +1,0 @@
-"""Formula import-contract tests."""

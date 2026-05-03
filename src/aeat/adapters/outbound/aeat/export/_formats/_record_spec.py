@@ -147,7 +147,7 @@ class RecordFieldSpec(BaseModel):
             auto-extracted descriptive names from DR*.xlsx where AEAT
             uses long Spanish-language field names (such as
             ``DP30301_F001_INICIO_DEL_IDENTIFICADOR_DE_REGISTRO``).
-        casilla_id: Optional mapping to a ruleset casilla. ``None`` for
+        casilla_id: Optional mapping to a Modelo casilla. ``None`` for
             header, reserved, or literal fields that do not correspond
             to a casilla.
         kind: Semantic :class:`FieldKind` selecting the encoder route.
@@ -178,7 +178,7 @@ class RecordFieldSpec(BaseModel):
     """AEAT field identifier (e.g. ``F01001``, ``NIF``, ``EJERCICIO``)."""
 
     casilla_id: Annotated[str, Field(max_length=5)] | None = None
-    """Optional mapping to a ruleset casilla."""
+    """Optional mapping to a Modelo casilla."""
 
     kind: FieldKind
 
@@ -238,9 +238,7 @@ def record_field(
 ) -> RecordFieldSpec:
     """Concise constructor for :class:`RecordFieldSpec`.
 
-    Mirrors the
-    :func:`aeat.domain.formulas._rulesets._common.formula` helper
-    pattern used in the formulas package. Applies kind-appropriate
+    Mirrors the compact registry declaration style. Applies kind-appropriate
     defaults for ``justification`` and ``pad_char`` so most field
     declarations only need ``offset`` / ``length`` / ``field_id`` /
     ``kind``:
@@ -253,7 +251,7 @@ def record_field(
         offset: 1-based byte offset within the record.
         length: Field byte length.
         field_id: AEAT field identifier.
-        casilla_id: Optional ruleset-casilla mapping.
+        casilla_id: Optional Modelo casilla mapping.
         kind: Semantic :class:`FieldKind`.
         justification: Override the kind-aware default justification.
         pad_char: Override the kind-aware default pad character.

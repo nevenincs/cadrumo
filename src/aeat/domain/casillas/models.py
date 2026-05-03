@@ -120,7 +120,7 @@ class FormulaReference(_SchemaStrictFrozenModel):
 
     Carries just enough shape for the casilla schema to reference
     formulas by expression text and the casillas they consume; the
-    full evaluation engine lives in :mod:`aeat.domain.formulas`.
+    full evaluation engine lives in the calculation registry.
 
     Attributes:
         expression: Raw formula expression string.

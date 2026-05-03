@@ -17,7 +17,6 @@ Subpackages
    aeat.domain.categories
    aeat.domain.deadlines
    aeat.domain.filing
-   aeat.domain.formulas
    aeat.domain.invoices
    aeat.domain.justificante
    aeat.domain.manuals
