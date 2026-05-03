@@ -374,12 +374,14 @@ def test_declaracion_extractor_registry_does_not_import_model_specific_extractor
     extractor_package = importlib.import_module("aeat.adapters.inbound.declaracion._extractors")
     extractor_dir = _ROOT / "src/aeat/adapters/inbound/declaracion/_extractors"
     parser_modelo_100_dir = _ROOT / "src/aeat/adapters/inbound/declaracion/_parsers/modelo_100"
+    generic_extractor = _ROOT / "src/aeat/adapters/inbound/declaracion/_generic_extractor.py"
     assert "_REGISTERED_CLASSES" not in source
     assert "_REGISTRY" not in source
     assert "from .modelo_" not in source
     assert "from .._parsers.modelo_100" not in source
     assert sorted(path.name for path in extractor_dir.glob("modelo_*.py")) == []
     assert not parser_modelo_100_dir.exists()
+    assert not generic_extractor.exists()
     assert not hasattr(extractor_package, "_REGISTERED_CLASSES")
     get_extractor = _function_node(source, "get_extractor")
     assert any(isinstance(stmt, ast.Raise) for stmt in get_extractor.body)

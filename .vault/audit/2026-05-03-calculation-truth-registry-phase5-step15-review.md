@@ -25,6 +25,8 @@ Review result:
   - Updated the extractor base docstring to describe it as a structural base for
     future registry-backed adapters.
 - Follow-up review result: no remaining findings.
+- Additional cleanup review result: no findings after deleting the orphaned
+  generic extractor engine and removing its public export.
 
 Verification reviewed:
 
@@ -32,7 +34,8 @@ Verification reviewed:
 - full ty passed.
 - Focused pytest passed with 38 passed.
 - Deletion gates check that only `_extractors/__init__.py` remains in the
-  extractor package and the old Modelo 100 parser directory is absent.
+  extractor package, the old Modelo 100 parser directory is absent, and the
+  generic extractor engine is absent.
 
 Residual risk:
 
