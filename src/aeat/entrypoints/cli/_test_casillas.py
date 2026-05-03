@@ -95,3 +95,11 @@ def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None
     assert translate_result.exit_code == 2
     assert "requires the LLM client surface" in extract_result.stdout
     assert "requires the bulk translator surface" in translate_result.stdout
+
+
+def test_hydrate_command_is_not_app_facing() -> None:
+    """The legacy hydrate write path must not be reachable from the CLI."""
+    result = runner.invoke(app, ["hydrate"])
+
+    assert result.exit_code == 2
+    assert "No such command" in result.output

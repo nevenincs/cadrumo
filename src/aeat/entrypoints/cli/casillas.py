@@ -115,24 +115,6 @@ def extract(
     raise typer.Exit(code=2)
 
 
-@app.command(
-    name="hydrate",
-    help="Re-generate the entire corpus/casillas/ tree from the rule engine + curated data.",
-)
-def hydrate() -> None:
-    """Run the deterministic corpus hydration generator.
-
-    Calls :func:`aeat.domain.casillas._hydrate.run`, which writes one
-    JSON catalogue per ``(modelo, period)`` for every modelo / year /
-    period the project supports. Idempotent; re-running produces zero
-    diff against the committed corpus when the rule engine and the
-    curated data are unchanged.
-    """
-    from ...domain.casillas._hydrate import run
-
-    run()
-
-
 @app.command(name="translate", help="Validate catalogue inputs and report translation availability.")
 def translate(
     modelo: str = typer.Option(..., "--modelo", help="Stable modelo identifier, e.g. MODELO_130."),

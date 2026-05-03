@@ -20,6 +20,7 @@ import typer
 
 from . import _declaration, _invoice, _ledger, _overview, _setup
 from . import casillas as casillas_module
+from . import registry as registry_module
 from ._common import _FORMAT_TEXT
 
 # ---------------------------------------------------------------------
@@ -65,6 +66,7 @@ app_app.add_typer(_ledger.app, name="ledger")
 app_app.add_typer(_invoice.app, name="invoice")
 app_app.add_typer(_declaration.app, name="declaration")
 app_app.add_typer(casillas_module.app, name="casillas")
+app_app.add_typer(registry_module.app, name="registry")
 
 
 # ---------------------------------------------------------------------
