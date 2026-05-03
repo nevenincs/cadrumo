@@ -456,34 +456,8 @@ def test_corpus_source_manual_url_matches_hydrate_resolver(corpus_catalogues: _C
 
 
 def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
-    """M840 corpus ``label.es`` must agree (modulo accents) with the extractor's ``text_labels`` map.
+    """M840 corpus labels must not depend on a Python extractor class map."""
+    import importlib.util
 
-    The extractor's ``text_labels`` is the canonical Spanish-label
-    source for the M840 text-casilla set; it carries an ASCII-folded
-    form of each label so the PDF-extraction regex stays robust against
-    accent rendering quirks. The corpus carries the proper-accent
-    Spanish; comparison is therefore accent-insensitive.
-    """
-    import unicodedata
-
-    from ...adapters.inbound.declaracion._extractors.modelo_840_v2025 import Modelo840V2025Extractor
-
-    def _ascii_fold(text: str) -> str:
-        return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower()
-
-    text_labels = Modelo840V2025Extractor.text_labels
-    catalogue = load_casillas("MODELO_840", "2025")
-    by_id = {r.casilla_id: r for r in catalogue.records}
-    failures: list[str] = []
-    for cid, expected_label in text_labels.items():
-        rec = by_id.get(cid)
-        if rec is None:
-            failures.append(f"M840 cas {cid}: missing in corpus (extractor labels {expected_label!r})")
-            continue
-        # Ignore accents and "de" connector ("Causa presentacion" vs "Causa de presentación").
-        corpus_folded = _ascii_fold(rec.label["es"]).replace(" de ", " ")
-        extractor_folded = _ascii_fold(expected_label).replace(" de ", " ")
-        if corpus_folded != extractor_folded:
-            failures.append(f"M840 cas {cid}: corpus label.es {rec.label['es']!r} != extractor {expected_label!r}")
-    if failures:
-        pytest.fail("M840 corpus drifted from extractor text_labels:\n" + "\n".join(f" - {f}" for f in failures))
+    spec = importlib.util.find_spec("aeat.adapters.inbound.declaracion._extractors.modelo_840_v2025")
+    assert spec is None
