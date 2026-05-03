@@ -310,3 +310,69 @@ Cycle 5 progress on remaining gaps:
 Backend full sweep at cycle close: 3774 passed, 5 skipped
 (`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
 `-m "not live"`).
+
+## Cycle 6 — 2026-05-03
+
+CLI-REDESIGN-009 | PARTIALLY-RESOLVED | MEDIUM | Typed `DeclarationCalculateSummary` for the bare-`calculate` flow
+The v6 ADR mandates that bare `aeat app declaration calculate` prints a
+compact summary table, blocker counts, warnings, and the next action,
+and that it shows repair hints instead of succeeding silently when the
+inputs are unresolved. Until cycle 6 the application layer exposed
+`build_draft` (which returns a `FilingDraft` with mixed-severity
+findings) but no typed surface the CLI could render against; the
+next-action heuristic (review / approve / export / refresh-approval /
+amend / resolve-blockers) was therefore not project-owned and risked
+diverging across renderer reimplementations.
+
+`src/aeat/application/filing/_calculate.py` exposes a strict pydantic
+:class:`DeclarationCalculateSummary` (draft id, modelo, period, status,
+blocker / warning / info counts, closed
+:class:`DeclarationCalculateNextAction`, multilingual repair hints,
+multilingual narrative, calculated-at timestamp) plus a
+:func:`summarise_calculation` factory that maps a `FilingDraft` to the
+summary. The next-action mapping is deterministic: any ERROR finding
+routes to `resolve-blockers` regardless of status; otherwise the
+status-driven walk is `READY_TO_SUBMIT → approve`, `APPROVED → export`,
+`APPROVAL_STALE → refresh-approval`, downstream lifecycle (submitted /
+acknowledged / rejected / amended / cancelled) → `amend`, anything
+else → `review`. A model-validator enforces the v6 silent-blocker
+prohibition: `repair_hints` must be non-empty when `next_action` is
+`resolve-blockers` and must be empty otherwise. Fourteen unit tests in
+`test_calculate.py` lock the enum vocabulary, the routing matrix, the
+finding-count tabulation, the i18n contract, and the frozen-record
+invariant.
+
+This scaffold lives entirely in the application layer; it does not
+modify any domain record, does not touch the CLI facade, and binds
+purely to the existing `FilingDraft` / `FilingDraftStatus` /
+`FilingFindingSeverity` types. The orchestration layer that synthesises
+truly upstream-aware repair hints from the casilla catalogue is the
+next layer; this scaffold lets the CLI render bare-calculate output
+against a stable schema today.
+
+Cycle 6 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN; the in-flight CLI work
+  under `src/aeat/application/user_cli.py` carries an emerging
+  `LedgerReviewRecord` / `LedgerSplit` / `WorkflowEvent` review-state
+  layer that overlays the immutable `Transaction` record. The schema
+  fields (skip, split, comments, reference, document.path, modelo,
+  review.history) are largely covered there; the remaining backend
+  work is the persistence / migration / hash-anchor wiring.
+* CLI-REDESIGN-002 (invoice schema) — OPEN; same pattern. The
+  `InvoiceReviewRecord` overlay covers comments / fields / history;
+  `iva.category`, `retention.rate`, `retention.amount`, `payment.id`
+  remain canonical-Invoice-record gaps.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED on the
+  domain side from cycle 3; the in-flight `ProfileRecord` workflow
+  layer covers the editable values; the CLI migration is in motion.
+* CLI-REDESIGN-004 (declaration export/verify) — PARTIALLY-RESOLVED
+  via cycle 5's typed surface; orchestration use-case still OPEN.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED via the
+  cycle-4 typed surface; orchestration use-case still OPEN.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED via this cycle's typed surface; the upstream-
+  aware repair-hint synthesis is the next layer.
+
+Backend full sweep at cycle close: 3788 passed, 5 skipped
+(`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
+`-m "not live"`).
