@@ -208,33 +208,6 @@ def test_per_year_round_trip_resolves_to_correct_template(tmp_path: Path, año: 
         assert by_id[casilla_id].printed_value == Decimal(expected_raw)
 
 
-def test_modelo_130_ruleset_extractor_year_symmetry() -> None:
-    """Every Modelo 130 ruleset year has a matching extractor key.
-
-    Walks ``ALL_RULESETS`` for the Modelo 130 modelo code and the
-    extractor ``_REGISTRY`` for the same modelo, then asserts the
-    year-sets are equal. A future contributor that adds a new M130
-    ruleset year (e.g., 2027) is forced to also register the
-    matching extractor; conversely, a refactor that drops V2024 or
-    V2026 from the extractor registry fails this assertion before
-    the gap can ship. Scoped narrowly to Modelo 130 to avoid
-    surfacing pre-existing cross-coverage gaps on other modelos.
-    """
-    from ....domain.formulas._rulesets import ALL_RULESETS
-    from ._extractors import _REGISTRY
-
-    ruleset_years = {r.effective_from.year for r in ALL_RULESETS if r.modelo.value == "130"}
-    extractor_years = {year for (modelo, year, _rev) in _REGISTRY if modelo == "130"}
-    assert ruleset_years == extractor_years, (
-        f"Modelo 130 ruleset/extractor year-sets must match.\n"
-        f"  ruleset years (in ALL_RULESETS):    {sorted(ruleset_years)}\n"
-        f"  extractor years (in _REGISTRY):    {sorted(extractor_years)}\n"
-        f"  rulesets without extractor:         {sorted(ruleset_years - extractor_years)}\n"
-        f"  extractors without ruleset:         {sorted(extractor_years - ruleset_years)}\n"
-        f"Add the missing class to balance the two registries."
-    )
-
-
 def test_full_19_casilla_liquidacion_round_trip(tmp_path: Path) -> None:
     """Full 19-casilla liquidación block round-trips end-to-end.
 

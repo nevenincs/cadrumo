@@ -13,14 +13,13 @@ member is either present in the mapping (for at least one
 direction) or explicitly listed in :data:`_OUT_OF_SCOPE_V1`. The
 import-time invariant raises :class:`RuntimeError` on drift.
 
-The casilla layout matches the ruleset
-(`src/aeat/formulas/_rulesets/modelo_303_*.py`) which covers
-casillas 01-09, 28-45, 64-71. Categories whose contributions
-target informational-only or régimen-simplificado casillas
-(46-63, 59, 60, 80+) are tagged with the casilla id but flagged
-as informational; downstream consumers honor the role + sign and
-ignore the contribution if the does not declare
-the casilla.
+The casilla layout is validated against the Modelo 303 registry
+definition for the relevant filing period. Categories whose
+contributions target informational-only or régimen-simplificado
+casillas (46-63, 59, 60, 80+) are tagged with the casilla id but
+flagged as informational; downstream consumers honor the role +
+sign and ignore the contribution if the target model definition
+does not declare the casilla.
 """
 
 from __future__ import annotations

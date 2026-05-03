@@ -117,15 +117,13 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-# -- aeat.domain.formulas error hierarchy --------------------------------------
-# The formula engine lives in :mod:`aeat.domain.formulas`. All domain errors
-# inherit from :class:`aeat.core.errors.AeatError`, so the entire
-# formula-engine error hierarchy is declared here rather than inside the
-# subpackage.
+# -- legacy formula error hierarchy --------------------------------------------
+# Retained temporarily so persisted envelopes can still deserialize while the
+# calculation registry replaces the old ruleset engine.
 
 
 class FormulasError(AeatError):
-    """Base error for the :mod:`aeat.domain.formulas` engine."""
+    """Base error for legacy formula-engine failures."""
 
 
 class RulesetValidationError(FormulasError):

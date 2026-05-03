@@ -66,16 +66,13 @@ from ._record_spec import (
 
 
 class IngestSourceMeta(TypedDict, total=False):
-    """Provenance metadata written into the generated module docstring.
+    """Provenance metadata carried by an ingested DR spec document.
 
     Every key is optional; only the fields that the underlying JSON
     spec carries are surfaced. ``extra_required_fields`` is an optional
-    list of field IDs to force-merge into ``REQUIRED_HEADER_FIELDS`` so
-    the heuristic in
-    :func:`aeat.adapters.outbound.aeat.export._formats._generate._collect_required_field_ids`
-    can be extended for modelos whose header spans multiple segments
-    (for example Modelo 303's per-page identification fields in
-    DP30301).
+    list of field IDs to force-merge into registry-backed required
+    header metadata for modelos whose header spans multiple segments
+    (for example Modelo 303's per-page identification fields in DP30301).
     """
 
     modelo: str
