@@ -229,3 +229,36 @@ Cycle 3 progress on remaining gaps:
 
 Backend full sweep at cycle start: 3746 passed, 5 skipped
 (`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`).
+
+## Cycle 4 — 2026-05-03
+
+CLI-REDESIGN-005 | PARTIALLY-RESOLVED | MEDIUM | Typed `LedgerImportDiagnostic` record landed in the application layer
+The v6 candidate's `aeat app ledger import PATH --provider PROVIDER --verify` flow needs structured diagnostics covering four
+closed kinds: original-file, gap, duplicate, parser. Cycle 4 ships
+the typed surface that the CLI implementation team's renderers can
+target without waiting for the full use-case orchestration.
+
+`src/aeat/application/transactions/_diagnostics.py` exposes a strict
+pydantic :class:`LedgerImportDiagnostic` record, the
+:class:`LedgerImportDiagnosticKind` closed enum (matching the v6
+ADR vocabulary verbatim), :class:`LedgerImportDiagnosticSeverity`
+(info / warning / error), a `build_ledger_import_diagnostic`
+factory, and seven unit tests that lock the kind / severity
+enumerations, the multilingual-message contract, and the frozen-
+record invariants.
+
+The orchestration use-case that fans the four diagnostic kinds out
+across an actual import run is the next layer; it depends on a
+duplicate-detection helper, a calendar-gap analyser, and an
+original-file fingerprint comparator that the implementation team
+can land incrementally on top of this typed scaffold without
+breaking the CLI's renderer contract.
+
+Cycle 4 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED on the
+  domain side from cycle 3.
+* CLI-REDESIGN-004 (declaration export/verify) — OPEN.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED via
+  the typed surface; orchestration use-case still OPEN.
