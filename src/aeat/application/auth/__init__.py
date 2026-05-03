@@ -8,6 +8,16 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._catalogue import (
+    AUTH_PROVIDER_CATALOGUE,
+    AuthProviderAvailability,
+    AuthProviderListing,
+    get_auth_provider,
+    implemented_auth_providers,
+    list_auth_providers,
+    research_only_auth_providers,
+)
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -118,8 +128,15 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
 
 
 __all__ = [
+    "AUTH_PROVIDER_CATALOGUE",
     "AuthProvider",
+    "AuthProviderAvailability",
     "AuthProviderDescription",
     "AuthProviderKind",
+    "AuthProviderListing",
     "describe_provider_operator_impact",
+    "get_auth_provider",
+    "implemented_auth_providers",
+    "list_auth_providers",
+    "research_only_auth_providers",
 ]
