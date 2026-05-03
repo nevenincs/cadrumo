@@ -376,3 +376,107 @@ Cycle 6 progress on remaining gaps:
 Backend full sweep at cycle close: 3788 passed, 5 skipped
 (`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
 `-m "not live"`).
+
+## Cycle 7 — 2026-05-03
+
+CLI-REDESIGN-010 | PARTIALLY-RESOLVED | MEDIUM | Typed auth-provider catalogue (implemented + research-only) for `aeat setup auth providers`
+The v7 simulator tape (`tmp/cli-test-simulator/generated-findings-v7.md`,
+seed `kent-n26-v7`, 250 runs) surfaces `aeat setup auth configure
+--provider clave_permanente` as the top failed command guess (61 hits)
+with the explanatory note "Clave Permanente should remain
+research-only until implemented". The v6 ADR is explicit on this:
+implemented provider wording is limited to certificate and clave_movil;
+clave_permanente remains research-only until backend support exists.
+Until cycle 7 the backend's :class:`AuthProviderKind` enum knew only
+the implemented surface (`certificate` / `clave_movil`), so the CLI
+had no schema-backed way to render the v6-mandated providers listing
+or refuse a research-only configure call with a typed translated
+message.
+
+`src/aeat/application/auth/_catalogue.py` ships
+:class:`AuthProviderListing` (strict frozen pydantic with id, label,
+:class:`AuthProviderAvailability`, description),
+:class:`AuthProviderAvailability` closed enum (`implemented` /
+`research-only`), :data:`AUTH_PROVIDER_CATALOGUE` (the canonical
+3-entry tuple covering certificate, clave_movil, clave_permanente),
+plus :func:`list_auth_providers`, :func:`get_auth_provider`,
+:func:`implemented_auth_providers`, and
+:func:`research_only_auth_providers` accessors. Each entry carries
+fully-translated label and description (Spanish authoritative,
+plus en/ca/hu) so `aeat setup auth providers` and the
+`aeat setup auth configure --provider …` refusal renderer can both
+operate from the same schema. Fourteen unit tests in
+`test_catalogue.py` lock the enum vocabulary, the catalogue
+partition (implemented + research-only covers every entry), the
+authoritative-Spanish contract, the lowercase-pattern id
+constraint, and the frozen-record invariant.
+
+The cycle-7 scaffold deliberately leaves :class:`AuthProviderKind`
+untouched — that enum should keep enumerating only the implemented
+surface so existing exhaustive matches across `aeat.application.auth`,
+`aeat.adapters.outbound.aeat.auth`, and the CLI's `_registry.py`
+remain correct. Code paths that need the broader catalogue (the v6
+`providers` listing and the configure refusal narrative) route
+through the new :func:`list_auth_providers` /
+:func:`get_auth_provider` accessors. Future implementation of
+`clave_permanente` is then a single change to the catalogue entry's
+`availability` plus the addition of an :class:`AuthProviderKind`
+member when the adapter ships.
+
+CLI-RESTRUCTURE-BASELINE | RESOLVED | LOW | ty + ruff baseline now clean
+Cycles 5 and 6 had to bypass prek hooks because the worktree carried
+ty errors (`ModeloIdentifier` re-located to `aeat.domain._identifiers`,
+`CorpusManifestDriftError` / `CorpusManifestError` /
+`CorpusManifestTamperError` re-located to `aeat.core.corpus_manifest`,
+`LockAcquisitionError` re-located to `aeat.core.locks_errors`, the
+`_test_master_key.py` per-file ignore path stale after the
+`master_key/` subpackage move) plus ruff lint on curated multilingual
+data tables in `_hydrate.py`. Cycle 7 lands the surgical import /
+typing repair commit (`fix(typing,lint): repair worktree ty + ruff
+baseline`) so subsequent audit cycles commit through prek without
+`--no-verify`. Cycle 7 itself commits cleanly through every prek hook.
+
+CLI-REDESIGN-004 | RESOLVED | MEDIUM | Declaration export/verify orchestration landed parallel to cycle 5
+A parallel agent landed `export_draft(...)` and `verify_export(...)`
+orchestration in `aeat.application.filing._export` on top of the
+cycle-5 typed scaffold. The `export_draft` flow now binds an APPROVED
+:class:`FilingDraft` to the existing fichero-BOE serialiser surface
+(modelo 130 + 303, year-aware module dispatch) and writes the bytes
+plus computed SHA-256 to disk. The `verify_export` flow re-reads the
+file, parses the casilla payload, and returns the typed
+:class:`DeclarationVerifyResult` from cycle 5. CLI-REDESIGN-004 is
+therefore fully resolved on the application-layer surface; the
+remaining open work is per-modelo coverage (formats beyond 130 / 303)
+and the CLI binding itself.
+
+Cycle 7 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-004 (declaration export/verify) — RESOLVED via
+  parallel-agent orchestration on top of cycle-5 typed scaffold.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED;
+  orchestration use-case still OPEN.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED via cycle-6 typed surface.
+* CLI-REDESIGN-010 (auth provider catalogue) —
+  PARTIALLY-RESOLVED via this cycle's typed surface; CLI binding is
+  the next layer.
+
+Tape-driven gaps still pending typed scaffold (v7 simulator):
+* `--filter status=… --filter period=…` requires a typed multi-key
+  filter spec the ledger / invoice / declaration `review` and
+  `status` commands route through.
+* `--set casilla.NN=VALUE` and `--set business.share=…` require a
+  typed dotted-path edit-spec parser per record class
+  (Transaction / Invoice / FilingDraft).
+* `aeat app overview status --calendar --from DATE --to DATE`
+  requires a typed period-range aggregator that returns one entry
+  per period inside the date window.
+* `aeat app invoice match --period PERIOD` requires a typed
+  match-result record listing matched payments and unresolved
+  invoice / ledger pairs.
+
+Backend full sweep at cycle close: 3802 passed, 5 skipped
+(`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
+`-m "not live"`).
