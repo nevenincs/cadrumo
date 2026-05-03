@@ -708,3 +708,77 @@ Tape-driven gaps still pending typed scaffold (v7 simulator):
 
 Backend full sweep at cycle close: 25 new tests (overview calendar);
 the in-flight WIP's pre-existing failures continue to be unrelated.
+
+## Cycle 11 — 2026-05-03
+
+CLI-REDESIGN-014 | PARTIALLY-RESOLVED | HIGH | Application-layer `validate_profile` API replaces hardcoded CLI validation
+The audit scope expanded mid-cycle to "deliver CLI + backend together
+as cohesive features"; the new mandate forbids business logic in CLI
+modules. A CLI audit surfaced that every reachable copy of
+`aeat setup profile validate` (the HEAD stub scaffold has no surface
+for it; the in-flight CLI WIP version hardcodes
+``("tax.id", "activity")`` directly in the handler body) re-implements
+the v6 required-keys decision without touching the cycle-3
+:data:`aeat.domain.profile.PROFILE_KEYS` registry. This is a
+schema-drift hazard: any future profile-key addition would land in
+the registry but bypass the CLI handler.
+
+`src/aeat/application/profile/__init__.py` ships the typed validation
+surface the CLI MUST call: :class:`ProfileValidationResult`
+(strict frozen pydantic with `valid: bool`, `missing_required`,
+`present_required`, `present_optional`, `unknown_keys` tuples ordered
+by canonical registry key order), :func:`validate_profile(values)`
+(pure projection of the registry over operator values; treats blank /
+whitespace strings as absent), and the
+:func:`list_profile_key_records()` accessor for `setup profile
+list-keys`. Eleven unit tests cover every branch: empty values,
+all-required-filled, blank required value, present optional keys,
+unknown keys (validation passes but they are surfaced for CLI
+warning), unknown-key sort stability, registry-order preservation,
+and the frozen-record invariant.
+
+The CLI binding lands once the v6 `setup_profile_app` Typer namespace
+exists at HEAD — the current HEAD `cli/__init__.py` is a stub
+scaffold that pre-dates the v6 redesign and has no `setup profile`
+sub-app, while the in-flight rewrite is uncommitted in another
+agent's worktree. The backend API is fully implemented and tested
+NOW so that when the CLI scaffold lands, the handler is a thin
+3-line `validate_profile(profile.values)` + render call, not a
+re-implementation of the registry decision. This honours the
+"every functionality is fully implemented in the python apis the
+cli is referencing" contract.
+
+Cycle 11 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — RESOLVED on the validation
+  surface; CLI binding lands when the v6 setup namespace exists at
+  HEAD.
+* CLI-REDESIGN-004 (declaration export/verify) — RESOLVED.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-010 (auth provider catalogue) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-011 (typed --filter parser) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-012 (typed --set parser) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-013 (overview calendar aggregator) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-014 (profile validation surface) —
+  PARTIALLY-RESOLVED via this cycle's typed application API; CLI
+  binding lands next cycle.
+
+Foundational gap surfaced by the cycle-11 CLI audit: the v6 CLI
+namespace (`aeat setup` / `aeat setup profile` / `aeat setup auth` /
+`aeat app overview` / `aeat app ledger` / `aeat app invoice` /
+`aeat app declaration`) does not yet exist at HEAD's
+`src/aeat/entrypoints/cli/__init__.py`. The current stub scaffold
+carries pre-v6 placeholder commands (`setup check`, `setup start`,
+`app status`, `app next`, `ledger import statements`, etc.). Future
+cycles must bootstrap the v6 Typer namespace from the stub before
+each new CLI command can land cohesively with its backend.
+
+Backend full sweep at cycle close: 11 new tests
+(`aeat.application.profile`); broader sweep unaffected.
