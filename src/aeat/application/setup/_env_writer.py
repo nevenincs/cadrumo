@@ -240,9 +240,9 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     ):
         log.warning(
             "setup: a master key was just minted at %s but no recovery "
-            "wrapping exists. Run `aeat security provision --force` to "
-            "generate a 24-word recovery key now — without it, a forgotten "
-            "passphrase or lost keychain means losing every persisted record.",
+            "wrapping exists — run `aeat security provision --force` to "
+            "generate a 24-word recovery key now; without it a forgotten "
+            "passphrase or lost keychain means losing every persisted record",
             secret_dir,
         )
 

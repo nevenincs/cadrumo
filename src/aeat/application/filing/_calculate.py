@@ -1,15 +1,15 @@
-"""Typed summary surface for the v6 ``aeat app declaration calculate`` flow.
+"""Typed summary surface for ``aeat app declaration calculate``.
 
-The v6 CLI redesign mandates that bare ``aeat app declaration calculate``
-prints a compact summary table, blocker counts, warnings, and the next
+The CLI contract requires bare ``aeat app declaration calculate`` to
+print a compact summary table, blocker counts, warnings, and the next
 action — and shows repair hints instead of succeeding silently when the
 inputs are unresolved. The CLI cannot compute that summary by inspecting
 :class:`aeat.domain.filing.FilingDraft` ad-hoc: the next-action heuristic
 is shared logic the application layer owns, and the typed record gives
 the renderers and tests a stable schema to target.
 
-This module ships the typed surface plus the :func:`summarise_calculation`
-helper. The CLI binding then becomes::
+The :func:`summarise_calculation` helper turns a draft into the typed
+summary consumed by renderers::
 
     draft = build_draft(...)
     summary = summarise_calculation(draft)
@@ -139,8 +139,7 @@ class DeclarationCalculateSummary(BaseModel):
 
         The CLI renders ``repair_hints`` as a remediation block. Surfacing
         them on a non-blocker verdict would mislead the operator — and
-        omitting them on a blocker verdict would yield the silent-success
-        the v6 ADR forbids.
+        omitting them on a blocker verdict would yield a silent success.
         """
         if self.next_action is DeclarationCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
@@ -196,7 +195,7 @@ def summarise_calculation(
             :func:`aeat.application.filing.build_draft`.
         repair_hints: Multilingual remediation hints. Required when
             the draft carries any ``ERROR`` finding (the CLI must not
-            surface a silent blocker per the v6 ADR); rejected
+            surface a silent blocker); rejected
             otherwise. Passing the existing draft findings unchanged
             is acceptable; callers that derive richer hints from
             upstream catalogues can synthesise their own.

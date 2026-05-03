@@ -1,4 +1,4 @@
-"""Unit tests for the v6 typed overview-calendar aggregator."""
+"""Unit tests for the typed overview-calendar aggregator."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _profile() -> AutonomoProfile:
 # ---------------------------------------------------------------------
 
 
-def test_period_state_enum_carries_v6_canonical_values() -> None:
+def test_period_state_enum_carries_cli_values() -> None:
     assert {item.value for item in OverviewPeriodState} == {
         "due",
         "late",
@@ -71,7 +71,7 @@ def test_user_state_maps_not_applicable_to_unknown() -> None:
 
 
 def test_user_state_covers_every_engine_status() -> None:
-    """Every ObligationStatus must map to a v6 user state — no silent gap."""
+    """Every ObligationStatus must map to a user state."""
     for status in ObligationStatus:
         assert isinstance(user_state_for(status), OverviewPeriodState)
 
@@ -178,7 +178,7 @@ def test_entry_is_frozen() -> None:
 
 
 def test_build_returns_typed_calendar_for_quarterly_window() -> None:
-    """Verbatim tape: ``--from 2026-01-01 --to 2026-04-20`` covers Q1 2026."""
+    """``--from 2026-01-01 --to 2026-04-20`` covers Q1 2026."""
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
@@ -214,7 +214,7 @@ def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
 
 
 def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> None:
-    """Verbatim tape: ``--from 2025-10-01 --to 2026-07-20``."""
+    """``--from 2025-10-01 --to 2026-07-20`` spans multiple years."""
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20)),

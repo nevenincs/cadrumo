@@ -1,8 +1,8 @@
-"""Hard regression guard for the mandatory-citation invariant (#339).
+"""Hard regression guard for the mandatory-citation invariant.
 
-The :class:`CasillaDefinition` validator added in this issue raises at
-construction time when a ``computed=True`` casilla has empty
-``legal_basis``. This test walks every ruleset registered under
+The :class:`CasillaDefinition` validator raises at construction time
+when a ``computed=True`` casilla has empty ``legal_basis``. This test
+walks every ruleset registered under
 :data:`ALL_RULESETS` and asserts 100% coverage on every computed
 casilla — defence in depth against any future ruleset that bypasses
 the validator via :meth:`pydantic.BaseModel.model_construct` or any
@@ -11,7 +11,7 @@ other escape hatch.
 Together with the per-validator unit tests in
 ``src/aeat/formulas/test_casilla_validator.py``, this file is the CI
 guarantee that the mandatory-citation contract holds across the entire
-shipped ruleset universe.
+registered ruleset universe.
 """
 
 from __future__ import annotations

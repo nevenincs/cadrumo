@@ -67,9 +67,9 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     assert show.exit_code == 0, show.output
     assert validate.exit_code == 0, validate.output
     payload = json.loads(show.output)
-    assert payload["profile"]["name"] == "kent"
-    assert payload["profile"]["values"]["activity"] == "design"
-    assert payload["profile"]["values"]["tax.id"] == "12345678Z"
+    assert payload["active_profile"] == "kent"
+    assert payload["values"]["activity"] == "design"
+    assert payload["values"]["tax.id"] == "12345678Z"
 
 
 def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
@@ -84,7 +84,7 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     certificate.write_bytes(b"fixture")
     _runner.invoke(
         app,
-        ["setup", "auth", "configure", "--provider", "certificate", "--certificate", str(certificate)],
+        ["setup", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
         env=env,
     )
     _runner.invoke(app, ["setup", "auth", "login"], env=env)
@@ -95,11 +95,11 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     assert ready.exit_code == 0, ready.output
     ready_payload = json.loads(ready.output)
     assert ready_payload["profile_ready"] is True
-    assert ready_payload["auth_ready"] is True
-    assert ready_payload["next"] == "aeat app overview status"
+    assert ready_payload["login_ready"] is True
+    assert ready_payload["next_action"] == "aeat app overview status"
 
 
-def test_setup_auth_rejects_research_only_provider(tmp_path: Path) -> None:
+def test_setup_auth_rejects_unavailable_provider(tmp_path: Path) -> None:
     result = _runner.invoke(
         app,
         ["setup", "auth", "configure", "--provider", "clave_permanente"],
@@ -107,4 +107,4 @@ def test_setup_auth_rejects_research_only_provider(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "research-only" in result.output
+    assert "unavailable-provider" in result.output

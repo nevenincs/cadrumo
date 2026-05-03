@@ -1,8 +1,7 @@
-"""Typed ``--filter KEY=VALUE`` parser for the v6 review surface.
+"""Typed ``--filter KEY=VALUE`` parser for review commands.
 
-The v6 CLI redesign (see the `aeat-cli-redesign` ADR + reference
-packet) routes every record-list command through ``--filter KEY=VALUE``
-flags. The relevant invocations from the `kent-n26` simulator tapes:
+The CLI routes every record-list command through ``--filter KEY=VALUE``
+flags. Representative invocations:
 
 - ``aeat app ledger review --filter status=pending --filter period=2026-Q1``
 - ``aeat app ledger review --filter issue=gap --filter period=2026-Q1``
@@ -23,9 +22,7 @@ ReviewQueue / aggregator call site.
 
 The specs are *parsing* surfaces; the actual filtering logic lives in
 :class:`aeat.application.review.ReviewQueue` and the per-scope
-adapters. Each spec's ``apply`` will land as that orchestration is
-adopted; cycle 8 ships only the parser + key catalogues + value
-validation contract.
+adapters.
 """
 
 from __future__ import annotations
@@ -125,7 +122,7 @@ def parse_filter_clauses(raw: Iterable[str]) -> tuple[FilterClause, ...]:
 
 
 class LedgerReviewFilterKey(StrEnum):
-    """Closed catalogue of v6 ``aeat app ledger review --filter`` keys.
+    """Closed catalogue of ``aeat app ledger review --filter`` keys.
 
     Attributes:
         STATUS: Lifecycle state of the row (``pending`` / ``reviewed``
@@ -144,7 +141,7 @@ class LedgerReviewFilterKey(StrEnum):
 
 
 class LedgerReviewStatus(StrEnum):
-    """Closed catalogue of v6 ledger ``status=`` filter values."""
+    """Closed catalogue of ledger ``status=`` filter values."""
 
     PENDING = "pending"
     REVIEWED = "reviewed"
@@ -152,11 +149,11 @@ class LedgerReviewStatus(StrEnum):
 
 
 class LedgerReviewIssue(StrEnum):
-    """Closed catalogue of v6 ledger ``issue=`` filter values.
+    """Closed catalogue of ledger ``issue=`` filter values.
 
     Mirrors :class:`aeat.application.transactions.LedgerImportDiagnosticKind`
     so callers can route the matched diagnostic kinds straight through
-    the import-diagnostics surface from cycle 4.
+    the import-diagnostics surface.
     """
 
     ORIGINAL_FILE = "original-file"
@@ -166,7 +163,7 @@ class LedgerReviewIssue(StrEnum):
 
 
 class InvoiceReviewFilterKey(StrEnum):
-    """Closed catalogue of v6 ``aeat app invoice review --filter`` keys.
+    """Closed catalogue of ``aeat app invoice review --filter`` keys.
 
     Attributes:
         STATUS: Lifecycle state of the invoice (``pending`` /
@@ -180,7 +177,7 @@ class InvoiceReviewFilterKey(StrEnum):
 
 
 class InvoiceReviewStatus(StrEnum):
-    """Closed catalogue of v6 invoice ``status=`` filter values."""
+    """Closed catalogue of invoice ``status=`` filter values."""
 
     PENDING = "pending"
     REVIEWED = "reviewed"
@@ -189,7 +186,7 @@ class InvoiceReviewStatus(StrEnum):
 
 
 class DeclarationReviewFilterKey(StrEnum):
-    """Closed catalogue of v6 ``aeat app declaration status --filter`` keys.
+    """Closed catalogue of ``aeat app declaration status --filter`` keys.
 
     Attributes:
         STATUS: Lifecycle state of the draft (``pending`` /
@@ -201,7 +198,7 @@ class DeclarationReviewFilterKey(StrEnum):
 
 
 class DeclarationReviewStatus(StrEnum):
-    """Closed catalogue of v6 declaration ``status=`` filter values."""
+    """Closed catalogue of declaration ``status=`` filter values."""
 
     PENDING = "pending"
     APPROVED = "approved"
@@ -222,10 +219,8 @@ def _ensure_unique_keys(
 ) -> None:
     """Reject filter specs that carry the same key twice.
 
-    The v6 ADR's CLI grammar surfaces one value per key; repeating a
-    key would be ambiguous (intersection vs union). The CLI parses
-    multi-value selection through repeated invocations or future
-    comma-separated lists per key. This helper enforces the
+    The CLI grammar surfaces one value per key; repeating a key would
+    be ambiguous (intersection vs union). This helper enforces the
     one-clause-per-key invariant.
     """
     seen: set[str] = set()
@@ -272,7 +267,7 @@ def _enum_value_or_raise[E: StrEnum](
             ``clause.value.upper()`` against the enum member values.
             Used for :class:`aeat.domain.invoices.InvoiceKind`, whose
             members are uppercase (``ISSUED`` / ``RECEIVED``) but the
-            v6 CLI grammar lowercases command-line values.
+            The CLI grammar lowercases command-line values.
     """
     candidate = clause.value.upper() if case_fold else clause.value
     valid = {member.value for member in enum_cls}
@@ -285,7 +280,7 @@ def _enum_value_or_raise[E: StrEnum](
 
 
 class LedgerReviewFilterSpec(BaseModel):
-    """Typed v6 ``aeat app ledger review --filter`` spec.
+    """Typed ``aeat app ledger review --filter`` spec.
 
     Attributes:
         clauses: The raw clauses, in input order. Empty when the
@@ -313,7 +308,7 @@ class LedgerReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
-        """Parse v6 ``--filter`` arguments into a typed ledger spec."""
+        """Parse ``--filter`` arguments into a typed ledger spec."""
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
         _ensure_unique_keys(clauses, scope="ledger")
@@ -367,7 +362,7 @@ class LedgerReviewFilterSpec(BaseModel):
 
 
 class InvoiceReviewFilterSpec(BaseModel):
-    """Typed v6 ``aeat app invoice review --filter`` spec.
+    """Typed ``aeat app invoice review --filter`` spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -384,7 +379,7 @@ class InvoiceReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> InvoiceReviewFilterSpec:
-        """Parse v6 ``--filter`` arguments into a typed invoice spec."""
+        """Parse ``--filter`` arguments into a typed invoice spec."""
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
         _ensure_unique_keys(clauses, scope="invoice")
@@ -418,7 +413,7 @@ class InvoiceReviewFilterSpec(BaseModel):
 
 
 class DeclarationReviewFilterSpec(BaseModel):
-    """Typed v6 ``aeat app declaration status --filter`` spec.
+    """Typed ``aeat app declaration status --filter`` spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -432,7 +427,7 @@ class DeclarationReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> DeclarationReviewFilterSpec:
-        """Parse v6 ``--filter`` arguments into a typed declaration spec."""
+        """Parse ``--filter`` arguments into a typed declaration spec."""
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="declaration", allowed=DeclarationReviewFilterKey)
         _ensure_unique_keys(clauses, scope="declaration")

@@ -22,6 +22,7 @@ def _invoke(args: list[str]):
 
 def _json_output(result: Any) -> str:
     import re
+
     # print(f"DEBUG: result.output={result.output!r}")
     match = re.search(r"(\{.*\}|\[.*\])", result.output, re.DOTALL)
     if not match:
@@ -119,15 +120,15 @@ def test_auth_configure_supports_user_provider_aliases(monkeypatch: pytest.Monke
 
     providers = _invoke(["setup", "auth", "providers"])
     configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    research_only = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
+    unavailable = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
 
     assert providers.exit_code == 0, providers.output
     assert "clave-permanente" in providers.output
-    assert "research-only" in providers.output
+    assert "unavailable" in providers.output
     assert configure.exit_code == 0, configure.output
     assert "clave-movil" in configure.output
-    assert research_only.exit_code != 0
-    assert "research-only" in research_only.output
+    assert unavailable.exit_code != 0
+    assert "unavailable-provider" in unavailable.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

@@ -1,7 +1,6 @@
 """Orchestration layer for ledger imports with diagnostics.
 
-Implements the v6 CLI candidate requirements for emitting structured
-diagnostics during import verification.
+Emits structured diagnostics during ledger-import verification.
 """
 
 from __future__ import annotations

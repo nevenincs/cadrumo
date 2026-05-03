@@ -49,8 +49,8 @@ def test_no_alias_overlap_across_the_mapping() -> None:
 
     Overlapping aliases would silently clobber prior ``set-ratio``
     values when two aliases are set in sequence. ``phone_fixed_business``
-    was removed for this exact reason; this test guards against a
-    future regression.
+    was removed for this exact reason; this test guards against
+    reintroducing that overlap.
     """
     seen: set[SpendingCategory] = set()
     for members in FAMILY_ALIASES.values():

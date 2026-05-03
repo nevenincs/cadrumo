@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...core.i18n import Translatable
 from . import (
@@ -15,6 +16,8 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_SOURCE_PATH = Path("imports/n26-2026Q1.csv")
 
 
 def _message() -> Translatable:
@@ -27,7 +30,7 @@ def _message() -> Translatable:
     return message
 
 
-def test_kind_enum_carries_v6_canonical_values() -> None:
+def test_kind_enum_carries_cli_values() -> None:
     assert LedgerImportDiagnosticKind.ORIGINAL_FILE.value == "original-file"
     assert LedgerImportDiagnosticKind.GAP.value == "gap"
     assert LedgerImportDiagnosticKind.DUPLICATE.value == "duplicate"
@@ -43,14 +46,14 @@ def test_factory_round_trips_canonical_fields() -> None:
         kind=LedgerImportDiagnosticKind.GAP,
         severity=LedgerImportDiagnosticSeverity.WARNING,
         message=_message(),
-        source_path=Path("/tmp/n26-2026Q1.csv"),
+        source_path=_SOURCE_PATH,
         source_locator="period=2026-03",
         affected_transaction_ids=("aa" * 32,),
     )
     assert diag.kind is LedgerImportDiagnosticKind.GAP
     assert diag.severity is LedgerImportDiagnosticSeverity.WARNING
     assert diag.message["es"]
-    assert diag.source_path == Path("/tmp/n26-2026Q1.csv")
+    assert diag.source_path == _SOURCE_PATH
     assert diag.source_locator == "period=2026-03"
     assert diag.affected_transaction_ids == ("aa" * 32,)
 
@@ -80,7 +83,7 @@ def test_diagnostic_is_frozen() -> None:
         severity=LedgerImportDiagnosticSeverity.INFO,
         message=_message(),
     )
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         diag.severity = LedgerImportDiagnosticSeverity.ERROR  # type: ignore[misc]
 
 

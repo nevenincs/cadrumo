@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from pydantic import ValidationError
 
 from ...core.i18n import Translatable
 from ...domain.filing import (
@@ -88,7 +89,7 @@ def _finding(severity: FilingFindingSeverity, code: str) -> FilingValidationFind
     )
 
 
-def test_next_action_enum_carries_v6_canonical_values() -> None:
+def test_next_action_enum_carries_cli_values() -> None:
     assert {item.value for item in DeclarationCalculateNextAction} == {
         "resolve-blockers",
         "review",
@@ -205,7 +206,7 @@ def test_summary_rejects_repair_hint_without_authoritative_spanish() -> None:
 def test_summary_is_frozen() -> None:
     draft = _make_draft(status=FilingDraftStatus.VALIDATED)
     summary = summarise_calculation(draft)
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         summary.blocker_count = 99  # type: ignore[misc]
 
 

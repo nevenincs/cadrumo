@@ -51,7 +51,7 @@ def _format_expires(description: AuthProviderDescription) -> str:
 def _format_health(description: AuthProviderDescription, entry: ProviderRegistryEntry) -> str:
     """Render the HEALTH column as operator-readable prose.
 
-    Implemented providers either supply a prose ``health_summary``
+    Providers either supply a prose ``health_summary``
     (Cl@ve Móvil emits "ready — requires push approval on the Cl@ve
     app") that is passed through, or the cert-provider's legacy
     ``"{severity}:{days_until_expiry}"`` sentinel token (e.g.
@@ -109,9 +109,8 @@ def render_list_providers_json(
 ) -> list[dict[str, Any]]:
     """Produce the JSON payload for ``aeat auth list-providers --json``."""
     dumped: list[dict[str, Any]] = []
-    for entry, description in rows:
+    for _entry, description in rows:
         payload = description.model_dump(mode="json")
-        payload["implemented"] = entry.implemented
         dumped.append(payload)
     return dumped
 
@@ -165,5 +164,5 @@ def render_status_json(session: PersistedAuthSession, now: datetime | None = Non
 
 def render_no_session_line(settings: Settings) -> str:
     """Render the friendly no-op line used by status/logout when no session exists."""
-    del settings  # unused but kept for future per-provider messaging
+    del settings  # Signature stays aligned with other auth renderers.
     return "no active session; run `aeat auth login` to authenticate"

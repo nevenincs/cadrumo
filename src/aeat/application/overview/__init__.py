@@ -1,21 +1,18 @@
-"""Typed overview-status surface for the v6 ``aeat app overview`` command.
+"""Typed overview-status surface for ``aeat app overview``.
 
-The v6 CLI redesign exposes::
+The CLI exposes::
 
     aeat app overview status                                # bare readiness
     aeat app overview status --calendar --from DATE --to DATE
     aeat app overview status --period PERIOD --verbose
 
-The simulator tapes (`tmp/cli-test-simulator/tax-filing-cli-flows.md`)
-describe the calendar view as "due, late, filed, and unknown period
-state" — a closed 4-state user-facing taxonomy that maps from the
-existing :class:`aeat.domain.deadlines.ObligationStatus` six-state
-enum.
-
-Cycle 10 ships the typed query record (:class:`OverviewCalendarRange`),
-the per-period entry record (:class:`OverviewCalendarEntry`), the
-result wrapper (:class:`OverviewCalendar`), the user-facing state
-enum (:class:`OverviewPeriodState`), and the
+The calendar view uses a closed 4-state user-facing taxonomy that maps
+from the existing :class:`aeat.domain.deadlines.ObligationStatus`
+six-state enum. The typed query record
+(:class:`OverviewCalendarRange`), the per-period entry record
+(:class:`OverviewCalendarEntry`), the result wrapper
+(:class:`OverviewCalendar`), the user-facing state enum
+(:class:`OverviewPeriodState`), and the
 :func:`build_overview_calendar` aggregator that composes the existing
 :class:`aeat.domain.deadlines.DeadlineEngine` over the year window.
 
@@ -44,7 +41,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class OverviewPeriodState(StrEnum):
-    """Closed 4-state user-facing period state for the v6 calendar view.
+    """Closed 4-state user-facing period state for the calendar view.
 
     The CLI renders one row per ``(modelo, period)`` pair; the row's
     state column is one of these values. The mapping from
@@ -77,16 +74,16 @@ _USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[ObligationStatus, OverviewPe
         ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
     }
 )
-"""Translates the 6-state engine status into the v6 4-state CLI taxonomy."""
+"""Translates the 6-state engine status into the CLI's 4-state taxonomy."""
 
 
 def user_state_for(obligation_status: ObligationStatus) -> OverviewPeriodState:
-    """Return the v6 :class:`OverviewPeriodState` for an engine status."""
+    """Return the :class:`OverviewPeriodState` for an engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
 class OverviewCalendarRange(BaseModel):
-    """Inclusive date window for the v6 ``overview status --calendar`` query.
+    """Inclusive date window for the ``overview status --calendar`` query.
 
     Attributes:
         from_date: Inclusive earliest date the operator wants to see
@@ -119,7 +116,7 @@ class OverviewCalendarEntry(BaseModel):
     """One ``(modelo, period)`` row in the calendar view.
 
     Mirrors :class:`aeat.domain.deadlines.FilingObligation` fields the
-    CLI table needs, plus the precomputed v6 user state so renderers
+    CLI table needs, plus the precomputed user state so renderers
     do not re-derive the mapping at every call site.
 
     Attributes:
@@ -211,7 +208,7 @@ def build_overview_calendar(
 
     Composes the existing :class:`aeat.domain.deadlines.DeadlineEngine`
     over each year the range spans, filters obligations to those whose
-    filing window intersects the range, attaches the v6 user-state
+    filing window intersects the range, attaches the user-state
     mapping, and returns the typed result.
 
     Args:

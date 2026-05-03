@@ -1,4 +1,4 @@
-"""Unit tests for the v6 typed profile-validation surface."""
+"""Unit tests for typed profile validation."""
 
 from __future__ import annotations
 

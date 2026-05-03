@@ -1,20 +1,4 @@
-"""Typed catalogue surface for the v6 ``aeat setup auth providers`` flow.
-
-The v6 CLI redesign mandates that ``aeat setup auth providers`` lists
-*both* implemented and research-only authentication providers — and that
-a configure attempt against a research-only provider refuses with an
-operator-facing message rather than failing with an opaque enum error.
-The :mod:`aeat.application.auth` package's existing
-:class:`AuthProviderKind` enum intentionally enumerates only the
-implemented surface (``certificate`` / ``clave_movil``); extending it
-would imply availability semantics the codebase does not yet have.
-
-This module ships the typed listing the CLI renders, plus the closed
-:class:`AuthProviderAvailability` discriminator the configure command
-checks. The catalogue lives in the application layer alongside the
-provider Protocol so callers do not have to walk the adapter package
-tree.
-"""
+"""Typed catalogue for ``aeat setup auth providers``."""
 
 from __future__ import annotations
 
@@ -29,24 +13,21 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class AuthProviderAvailability(StrEnum):
-    """Closed catalogue of v6 auth-provider availability states.
+    """Closed catalogue of auth-provider availability states.
 
     Attributes:
-        IMPLEMENTED: A backend adapter exists; the provider can be
+        AVAILABLE: A backend adapter exists; the provider can be
             configured, login can run, and identity can be probed.
-        RESEARCH_ONLY: The provider is documented in the v6 ADR but
-            no backend adapter has shipped. Configure / login attempts
-            must refuse with a translated message; the CLI's
-            ``providers`` listing still surfaces the entry so operators
-            see the roadmap.
+        UNAVAILABLE: The provider is known but cannot be configured or
+            used for login.
     """
 
-    IMPLEMENTED = "implemented"
-    RESEARCH_ONLY = "research-only"
+    AVAILABLE = "available"
+    UNAVAILABLE = "unavailable"
 
 
 class AuthProviderListing(BaseModel):
-    """One row in the v6 ``aeat setup auth providers`` catalogue.
+    """One row in the ``aeat setup auth providers`` catalogue.
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,
@@ -56,8 +37,7 @@ class AuthProviderListing(BaseModel):
         label: Multilingual display label, Spanish authoritative.
         availability: Closed :class:`AuthProviderAvailability`.
         description: Multilingual one-paragraph operator-facing
-            description; tells the operator what the provider does
-            and what to expect when it is research-only.
+            description.
     """
 
     model_config = _STRICT_FROZEN
@@ -143,26 +123,23 @@ _CLAVE_PERMANENTE_LABEL: Translatable = {
 _CLAVE_PERMANENTE_DESCRIPTION: Translatable = {
     "es": (
         "Autenticación con usuario, contraseña reforzada y código SMS "
-        "de Cl@ve Permanente. Investigación en curso; aún no hay "
-        "implementación de backend, por lo que ``configure`` y "
-        "``login`` se rechazan."
+        "de Cl@ve Permanente. No está disponible en esta instalación; "
+        "``configure`` y ``login`` se rechazan."
     ),
     "en": (
         "Username + reinforced-password + SMS authentication via "
-        "Cl@ve Permanente. Research-only — no backend adapter ships "
-        "yet, so ``configure`` and ``login`` refuse the provider."
+        "Cl@ve Permanente. Not available in this installation, so "
+        "``configure`` and ``login`` refuse the provider."
     ),
     "ca": (
         "Autenticació amb usuari, contrasenya reforçada i codi SMS de "
-        "Cl@ve Permanente. Investigació en curs; encara no hi ha "
-        "implementació de backend, així que ``configure`` i ``login`` "
-        "es rebutgen."
+        "Cl@ve Permanente. No està disponible en aquesta instal·lació, "
+        "així que ``configure`` i ``login`` es rebutgen."
     ),
     "hu": (
         "Cl@ve Permanente felhasználónév + megerősített jelszó + "
-        "SMS-kód alapú hitelesítés. Kutatási fázisban; backend "
-        "adapter még nem érhető el, ezért a ``configure`` és "
-        "``login`` parancsokat elutasítja."
+        "SMS-kód alapú hitelesítés. Ebben a telepítésben nem érhető el, "
+        "ezért a ``configure`` és ``login`` parancsokat elutasítja."
     ),
 }
 
@@ -171,37 +148,30 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="certificate",
         label=_CERTIFICATE_LABEL,
-        availability=AuthProviderAvailability.IMPLEMENTED,
+        availability=AuthProviderAvailability.AVAILABLE,
         description=_CERTIFICATE_DESCRIPTION,
     ),
     AuthProviderListing(
         id="clave-movil",
         label=_CLAVE_MOVIL_LABEL,
-        availability=AuthProviderAvailability.IMPLEMENTED,
+        availability=AuthProviderAvailability.AVAILABLE,
         description=_CLAVE_MOVIL_DESCRIPTION,
     ),
     AuthProviderListing(
         id="clave-permanente",
         label=_CLAVE_PERMANENTE_LABEL,
-        availability=AuthProviderAvailability.RESEARCH_ONLY,
+        availability=AuthProviderAvailability.UNAVAILABLE,
         description=_CLAVE_PERMANENTE_DESCRIPTION,
     ),
 )
-"""v6 catalogue of supported and research-only auth provider entries.
-
-Order matters: the CLI's ``aeat setup auth providers`` listing renders
-in this order; implemented providers come first so operators see what
-they can use today before the roadmap entry.
-"""
+"""Catalogue of auth provider entries in display order."""
 
 
 def list_auth_providers() -> tuple[AuthProviderListing, ...]:
-    """Return the v6 auth provider catalogue.
+    """Return the auth provider catalogue.
 
-    Wraps :data:`AUTH_PROVIDER_CATALOGUE` so the CLI has a stable
-    function-call site. Future cycles may filter the listing (e.g.
-    hide research-only entries when an operator has opted out via
-    settings) without changing call sites.
+    Wraps :data:`AUTH_PROVIDER_CATALOGUE` so callers have a stable
+    function-call site.
     """
     return AUTH_PROVIDER_CATALOGUE
 
@@ -223,17 +193,15 @@ def get_auth_provider(provider_id: str) -> AuthProviderListing:
     raise KeyError(provider_id)
 
 
-def implemented_auth_providers() -> tuple[AuthProviderListing, ...]:
-    """Return only catalogue entries with an implemented backend."""
-    return tuple(
-        entry for entry in AUTH_PROVIDER_CATALOGUE if entry.availability is AuthProviderAvailability.IMPLEMENTED
-    )
+def available_auth_providers() -> tuple[AuthProviderListing, ...]:
+    """Return only catalogue entries that can be configured and used."""
+    return tuple(entry for entry in AUTH_PROVIDER_CATALOGUE if entry.availability is AuthProviderAvailability.AVAILABLE)
 
 
-def research_only_auth_providers() -> tuple[AuthProviderListing, ...]:
-    """Return only catalogue entries that are research-only."""
+def unavailable_auth_providers() -> tuple[AuthProviderListing, ...]:
+    """Return only catalogue entries that cannot be used."""
     return tuple(
-        entry for entry in AUTH_PROVIDER_CATALOGUE if entry.availability is AuthProviderAvailability.RESEARCH_ONLY
+        entry for entry in AUTH_PROVIDER_CATALOGUE if entry.availability is AuthProviderAvailability.UNAVAILABLE
     )
 
 
@@ -241,8 +209,8 @@ __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
     "AuthProviderAvailability",
     "AuthProviderListing",
+    "available_auth_providers",
     "get_auth_provider",
-    "implemented_auth_providers",
     "list_auth_providers",
-    "research_only_auth_providers",
+    "unavailable_auth_providers",
 ]

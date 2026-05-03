@@ -4,8 +4,8 @@ The operator runs these commands to discover which providers are
 configured, sign in, inspect the live session TTL, and clear a
 persisted session. The four subcommands are thin dispatch layers over
 the shared ``AuthProvider`` abstraction in
-:mod:`aeat.adapters.outbound.aeat.auth`; no auth logic is
-reimplemented here.
+:mod:`aeat.adapters.outbound.aeat.auth`; the CLI owns argument parsing,
+rendering, and process exit mapping only.
 """
 
 from __future__ import annotations
@@ -95,7 +95,6 @@ class AuthListProvidersRowJson(OutputSchema):
     health_severity: str | None = None
     days_until_expiry: int | None = None
     health_summary: str | None = None
-    implemented: bool
 
 
 @register_schema("auth list-providers")
@@ -567,7 +566,7 @@ def list_providers(
     show_all: bool = typer.Option(
         False,
         "--all",
-        help="Reserved for future hidden providers; no-op today.",
+        help="Include hidden provider entries when the registry defines any.",
     ),
     json_output: bool = typer.Option(
         False,
@@ -576,7 +575,7 @@ def list_providers(
     ),
 ) -> None:
     """Operator-facing overview of every supported auth provider in the registry."""
-    del show_all  # reserved for future use
+    del show_all  # The registry has no hidden entries to add.
     settings = _load_settings()
 
     rows = []
@@ -609,9 +608,8 @@ async def _close_provider(provider: Any) -> None:
     """Best-effort ``close()`` on an :class:`AuthProvider`-like object.
 
     Some providers (Cl@ve Móvil) expose an async ``close()``; others
-    may grow a synchronous equivalent in the future. The helper
-    accepts either by inspecting the return value for a coroutine,
-    mirroring the dispatch pattern used inside
+    expose a synchronous one. The helper accepts either by inspecting
+    the return value for a coroutine, mirroring the dispatch pattern used inside
     :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` for browser-session teardown.
     """
     close = getattr(provider, "close", None)
@@ -637,9 +635,7 @@ async def _do_login(settings: Settings, kind: AuthProviderKind) -> AeatSession:
     to the caller. This is safe because :class:`AeatSession` is a
     strict frozen Pydantic model with no live resources — every field
     (identity, timestamps, storage-state path, cookie-hash) is a plain
-    value already persisted to disk at this point. A future provider
-    whose ``AeatSession`` grows a live in-memory handle (e.g. an open
-    httpx client) MUST extend this helper to keep the handle alive.
+    value already persisted to disk at this point.
     """
     provider = _registry.build_provider(kind, settings)
     try:
@@ -716,7 +712,7 @@ def configure(
         AuthProviderKind.CLAVE_MOVIL.value,
         "--provider",
         "-p",
-        help="Provider to configure (currently only clave_movil is supported here).",
+        help="Provider to configure.",
     ),
     dni_nie: str | None = typer.Option(
         None,
@@ -774,13 +770,13 @@ def configure(
         raise typer.BadParameter(
             tr(
                 t(
-                    f"`aeat auth configure --provider {provider}` aún no es compatible. "
+                    f"`aeat auth configure --provider {provider}` no es compatible. "
                     "Ejecuta `aeat setup` para el proveedor de certificado.",
-                    f"`aeat auth configure --provider {provider}` is not supported yet. "
+                    f"`aeat auth configure --provider {provider}` is not supported. "
                     "Run `aeat setup` for the certificate provider.",
-                    f"`aeat auth configure --provider {provider}` encara no s'admet. "
+                    f"`aeat auth configure --provider {provider}` no s'admet. "
                     "Executa `aeat setup` per al proveïdor de certificat.",
-                    f"`aeat auth configure --provider {provider}` meg nem tamogatott. "
+                    f"`aeat auth configure --provider {provider}` nem tamogatott. "
                     "Futtasd: `aeat setup` a tanusitvany szolgaltatohoz.",
                 )
             )
@@ -1026,9 +1022,11 @@ def login(
     if non_interactive and kind in _registry.INTERACTIVE_KINDS:
         msg = tr(
             t(
-                f"el proveedor {kind.value} requiere un paso de aprobación interactivo; no puede ejecutarse con --non-interactive",
+                f"el proveedor {kind.value} requiere un paso de aprobación interactivo; "
+                "no puede ejecutarse con --non-interactive",
                 f"provider {kind.value} requires an interactive approval step; cannot run with --non-interactive",
-                f"el proveïdor {kind.value} requereix un pas d'aprovació interactiu; no es pot executar amb --non-interactive",
+                f"el proveïdor {kind.value} requereix un pas d'aprovació interactiu; "
+                "no es pot executar amb --non-interactive",
                 f"a {kind.value} szolgaltato interaktiv jovahagyast igenyel; nem futtathato --non-interactive mellett",
             )
         )
@@ -1039,8 +1037,8 @@ def login(
 
     try:
         session = asyncio.run(_do_login(settings, kind))
-    except _registry.ProviderNotImplementedError as exc:
-        logger.error("login: provider not implemented: %s", kind.value, exc_info=True)
+    except _registry.ProviderUnavailableError as exc:
+        logger.error("login: provider unavailable: %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
@@ -1167,8 +1165,8 @@ def status(
 async def _do_whoami(settings: Settings, kind: AuthProviderKind) -> tuple[AeatSession, Any]:
     """Probe the persisted session for ``kind`` without side effects.
 
-    Uses ``probe_persisted_session()`` on providers that expose one
-    (currently Cl@ve Móvil). Falls back to the generic
+    Uses ``probe_persisted_session()`` on providers that expose one.
+    Falls back to the generic
     ``authenticate() + verify()`` path on providers that do not —
     intended for the certificate provider's resume-from-storage-state
     flow, which is already idempotent. NEVER triggers a fresh login.
@@ -1222,8 +1220,8 @@ def whoami(
 
     try:
         refreshed, assertion = asyncio.run(_do_whoami(settings, kind))
-    except _registry.ProviderNotImplementedError as exc:
-        logger.error("whoami: provider not implemented: %s", kind.value, exc_info=True)
+    except _registry.ProviderUnavailableError as exc:
+        logger.error("whoami: provider unavailable: %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
@@ -1286,10 +1284,13 @@ def whoami(
             "[yellow]"
             + tr(
                 t(
-                    f"La sesión guardada de {label} está caducada o revocada. Ejecuta `aeat auth login` para iniciar sesión de nuevo.",
+                    f"La sesión guardada de {label} está caducada o revocada. "
+                    "Ejecuta `aeat auth login` para iniciar sesión de nuevo.",
                     f"The cached {label} session is stale or revoked. Run `aeat auth login` to sign in again.",
-                    f"La sessió desada de {label} està caducada o revocada. Executa `aeat auth login` per iniciar sessió de nou.",
-                    f"A tarolt {label} munkamenet lejart vagy visszavonva. Futtasd: `aeat auth login` az ujboli bejelentkezeshez.",
+                    f"La sessió desada de {label} està caducada o revocada. "
+                    "Executa `aeat auth login` per iniciar sessió de nou.",
+                    f"A tarolt {label} munkamenet lejart vagy visszavonva. "
+                    "Futtasd: `aeat auth login` az ujboli bejelentkezeshez.",
                 )
             )
             + "[/yellow]"
@@ -1327,7 +1328,8 @@ def logout(
                     "provider's cached session, so --provider would be ignored.",
                     "Passa --provider o --all, no ambdós: --all neteja la sessió desada "
                     "de cada proveïdor, així que --provider seria ignorat.",
-                    "Add at: --provider VAGY --all, ne mindkettot: az --all minden szolgáltató tárolt munkamenetet torli, igy a --provider figyelmen kivul maradna.",
+                    "Add at: --provider VAGY --all, ne mindkettot: az --all minden "
+                    "szolgáltató tárolt munkamenetet torli, igy a --provider figyelmen kivul maradna.",
                 )
             )
         )
@@ -1362,9 +1364,9 @@ def logout(
                 cleared_kinds.append(target_kind)
                 removed.extend(removed_for_kind)
     else:
-        # No --provider → clear whichever provider currently has a session
-        # on disk. This matches the operator's intuition: `aeat auth logout`
-        # clears the active session regardless of which provider produced it.
+        # No --provider clears whichever provider has a session on disk.
+        # This matches the operator's intuition: `aeat auth logout` clears
+        # the active session regardless of which provider produced it.
         try:
             persisted = _session.load(settings)
         except _session.CorruptAuthSessionError:
