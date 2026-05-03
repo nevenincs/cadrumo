@@ -30,15 +30,21 @@ from ...domain.filing._amendment import (
     make_amendment_id,
 )
 from ...domain.filing._errors import FilingAmendmentError, FilingAmendmentValidationError
+from ...domain.filing._protocols import CasillaSchemaProvider
 from ...domain.filing._schema import FilingDraft, FilingScalar, FilingValue
-from .runtime import FilingOperatorProfile, build_runtime_schema_provider
+from .runtime import FilingOperatorProfile
 
 _logger = get_logger(__name__)
 _REASONS_INPUT_KEY = "_reasons"
 _AMENDMENTS_DIRNAME = "amendments"
 
 
-def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmendment:
+def build_complementaria(
+    original,
+    updated_inputs: CasillaInputs,
+    *,
+    schema_provider: CasillaSchemaProvider,
+) -> FilingAmendment:
     """Build and persist an immutable amendment from ``original``."""
     from . import QUARTERLY_303_INPUT_KEY, build_draft
 
@@ -52,6 +58,7 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
         period=metadata["original_period"],
         profile_tax_id=original.profile_tax_id,
         updated_inputs=updated_inputs,
+        schema_provider=schema_provider,
     )
     delta = _compute_delta(
         original_values=original_draft.values,
@@ -208,6 +215,7 @@ def _build_updated_draft(
     period: str,
     profile_tax_id: str,
     updated_inputs: CasillaInputs,
+    schema_provider: CasillaSchemaProvider,
 ) -> FilingDraft:
     profile = FilingOperatorProfile(
         tax_id=profile_tax_id,
@@ -225,7 +233,7 @@ def _build_updated_draft(
         period=period,
         profile=profile,
         inputs=draft_inputs,
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=schema_provider,
     )
 
 

@@ -1008,8 +1008,8 @@ def build_complementaria_cmd(
             )
         )
     try:
-        amendment = build_complementaria(original, parsed_inputs)
-    except FilingAmendmentError as exc:
+        amendment = build_complementaria(original, parsed_inputs, schema_provider=_schema_provider())
+    except (FilingAmendmentError, FilingDraftError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     saved_amended_draft = _save_draft(amendment.amended_draft)
     amended_draft_id = amendment.amended_draft.draft_id
