@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .._identifiers import ModeloIdentifier
 from ._engine import SubmissionEngine
 from ._errors import SubmissionError, SubmissionPreflightError
 from ._models import SubmissionAttempt, SubmissionStatus, SubmittedFiling, make_submission_id
@@ -14,7 +15,6 @@ from ._protocols import (
     FilingDraftLike,
     FilingFinding,
     FilingFindingSeverity,
-    ModeloIdentifier,
 )
 from ._repository import (
     SubmissionRepository,
