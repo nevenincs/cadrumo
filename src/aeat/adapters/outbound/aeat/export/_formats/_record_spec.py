@@ -1,9 +1,9 @@
 """Fixed-width record-spec primitives for fichero-BOE export.
 
-Every concrete modelo module authors a tuple of
+Registry-backed modelo definitions provide tuples of
 :class:`RecordFieldSpec` entries describing the BOE *Diseño de
-registros* field layout. The encoders defined here produce the
-byte-exact output the AEAT portal expects via "importar datos".
+registros* field layout. The encoders defined here produce the byte-exact
+output the AEAT portal expects via "importar datos".
 
 Primitive-safety contract:
 
@@ -15,15 +15,15 @@ Primitive-safety contract:
 - :class:`RecordFieldSpec` enforces the RESERVED ↔ ``literal_value``
   invariant at construction time.
 - :func:`validate_record_specs` enforces monotonic
-  ``offset + length == next.offset`` across a module's spec tuple,
-  the entry gate for modelo schemas.
+  ``offset + length == next.offset`` across a spec tuple, the entry gate
+  for modelo schemas.
 
 Per-modelo encoding: most modelos use Windows-1252 or ISO-8859-1
 (Modelo 130 per Orden EHA/672/2007; Modelo 303 post-HAC/819/2024;
 etc.). A handful of annual informativas (190 / 347) historically used
-ISO-8859-15 for Euro-symbol compatibility. Concrete modelo modules
-pin the encoding explicitly via the
-:data:`FicheroBoeEncoding` literal.
+ISO-8859-15 for Euro-symbol compatibility. Registry-backed modelo
+definitions pin the encoding explicitly via the :data:`FicheroBoeEncoding`
+literal.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ deltas needed by some annual informativas.
 """
 
 DEFAULT_ENCODING: FicheroBoeEncoding = "cp1252"
-"""Default wire encoding when a modelo module does not pin one explicitly."""
+"""Default wire encoding when a registry definition does not pin one explicitly."""
 
 
 class FieldKind(StrEnum):
@@ -111,7 +111,7 @@ class SignedMode(StrEnum):
     """Sign-convention for a CURRENCY field.
 
     Different AEAT modelos use different conventions for negative
-    amounts in the fichero-BOE wire format. Concrete modelo modules
+    amounts in the fichero-BOE wire format. Registry-backed definitions
     declare the correct mode per field; the serialiser routes to
     :func:`encode_currency` accordingly. Modelo 130 keeps ``UNSIGNED``
     via the default; Modelo 303 (and later IVA modelos) declare
@@ -135,8 +135,8 @@ class RecordFieldSpec(BaseModel):
     """One fixed-width field in a fichero-BOE record.
 
     Strict / frozen / ``extra="forbid"`` per the project's
-    boundary-record mandate. Validated at module-import time when the
-    concrete ``RECORD_SPECS`` tuple is constructed via
+    boundary-record mandate. Validated when the concrete spec tuple is
+    constructed via
     :func:`record_field` and :func:`validate_record_specs`.
 
     Attributes:
@@ -490,9 +490,9 @@ def validate_record_specs(
 ) -> None:
     """Enforce the monotonic offset / length invariant for one segment.
 
-    Each concrete modelo module calls this at import time to guard
-    against hand-authoring off-by-one errors that would cascade
-    through every subsequent field. The checks are:
+    Registry-backed loaders call this before a filing layout can be used
+    to guard against off-by-one errors that would cascade through every
+    subsequent field. The checks are:
 
     - First field starts at offset 1 (BOE 1-based convention).
     - Fields are monotonically contiguous: no gaps, no overlaps.

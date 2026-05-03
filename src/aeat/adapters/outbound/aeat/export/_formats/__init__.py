@@ -1,23 +1,10 @@
-"""Fichero-BOE export formats per modelo.
+"""Shared fichero-BOE export primitives.
 
-Per-modelo serialisers for the AEAT "importar datos" fixed-width
-fichero-BOE format. The shared primitives live in
-:mod:`._record_spec`; concrete modelo modules
-(``modelo_{n}_{year}.py``) declare the on-wire layout as constants.
-
-Each ``modelo_{n}_{year}.py`` module exports:
-
-- ``RECORD_SPECS: tuple[RecordFieldSpec, ...]`` — field layout pinned
-  to the BOE *Diseño de registros* version.
-- A ``serialise`` callable produced by
-  :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
-  — emits the wire-encoding byte string the AEAT portal accepts.
-- A ``parse`` callable produced by
-  :func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`
-  — round-trip inverse.
-
-This module re-exports the shared primitives needed to author or
-consume per-modelo specs:
+The package intentionally does not commit per-modelo generated Python
+layouts. Registry-backed modelo definitions must provide the concrete
+field and segment declarations at runtime after legal-source validation.
+This module re-exports the shared primitives needed to validate and use
+those declarations:
 :class:`RecordFieldSpec`, :class:`SegmentSpec`, :class:`FieldKind`,
 :class:`Justification`, :class:`DateFmt`, :class:`SignedMode`,
 :func:`record_field`, :func:`encode_currency`, :func:`encode_date`,
