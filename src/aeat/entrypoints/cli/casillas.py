@@ -115,35 +115,6 @@ def extract(
     raise typer.Exit(code=2)
 
 
-@app.command(
-    name="hydrate",
-    help="Build targeted casilla catalogue projections from the central calculation registry.",
-)
-def hydrate(
-    modelo: str | None = typer.Option(None, "--modelo", help="Modelo code, e.g. 130."),
-    year: int | None = typer.Option(None, "--year", help="Fiscal year to materialize."),
-    period: str | None = typer.Option(None, "--period", help="Exact period, e.g. 2026Q1."),
-    write: bool = typer.Option(False, "--write", help="Persist generated catalogues to corpus/casillas."),
-    root: Path | None = typer.Option(None, "--root", help="Required output root when --write is used."),
-    all_targets: bool = typer.Option(False, "--all", help="Explicitly materialize every registered target."),
-) -> None:
-    """Build deterministic catalogue projections.
-
-    The command is check-only by default. Repository writes require
-    ``--write`` and an explicit target, or ``--all`` for the exceptional
-    full-tree case.
-    """
-    from ...domain.casillas._hydrate import run
-
-    try:
-        catalogues = run(modelo=modelo, year=year, period=period, write=write, root=root, all_targets=all_targets)
-    except ValueError as exc:
-        typer.secho(str(exc), fg=typer.colors.RED)
-        raise typer.Exit(code=2) from exc
-    action = "wrote" if write else "validated"
-    typer.echo(f"{action} {len(catalogues)} catalogue projection(s)")
-
-
 @app.command(name="translate", help="Validate catalogue inputs and report translation availability.")
 def translate(
     modelo: str = typer.Option(..., "--modelo", help="Stable modelo identifier, e.g. MODELO_130."),

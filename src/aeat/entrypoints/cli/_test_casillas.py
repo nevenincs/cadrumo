@@ -97,25 +97,9 @@ def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None
     assert "requires the bulk translator surface" in translate_result.stdout
 
 
-def test_hydrate_requires_explicit_target() -> None:
-    """Hydrate must not default to a repository-wide materialization."""
+def test_hydrate_command_is_not_app_facing() -> None:
+    """The legacy hydrate write path must not be reachable from the CLI."""
     result = runner.invoke(app, ["hydrate"])
 
     assert result.exit_code == 2
-    assert "modelo is required" in result.stdout
-
-
-def test_hydrate_targeted_check_does_not_write() -> None:
-    """Targeted hydrate defaults to validation-only projection building."""
-    result = runner.invoke(app, ["hydrate", "--modelo", "115", "--period", "2026Q1"])
-
-    assert result.exit_code == 0
-    assert "validated 1 catalogue projection(s)" in result.stdout
-
-
-def test_hydrate_write_requires_explicit_root() -> None:
-    """Hydrate writes must name the output root explicitly."""
-    result = runner.invoke(app, ["hydrate", "--modelo", "115", "--period", "2026Q1", "--write"])
-
-    assert result.exit_code == 2
-    assert "write requires an explicit root" in result.stdout
+    assert "No such command" in result.output

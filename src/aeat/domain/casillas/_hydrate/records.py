@@ -2,7 +2,7 @@ from typing import Any, cast
 
 from aeat.core.errors import AmbiguousPeriodError, MissingRulesetError
 from aeat.core.logging import get_logger
-from aeat.domain.calculations import get_calculation_registry
+from aeat.domain.calculations._registry import get_calculation_registry
 from aeat.domain.formulas import FiscalPeriod, Quarter, Ruleset
 from aeat.domain.modelos import ModeloCadence, ModeloCode, get_modelo
 

@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-from ._registry import (
-    CalculationCatalogueTarget,
-    CalculationRegistry,
-    get_calculation_registry,
+from .registry import (
+    RegistryCatalogues,
+    RegistrySnapshot,
+    RegistryValidator,
+    build_snapshot,
+    load_modelo_file,
+    load_registry_tree,
 )
 
 __all__ = [
-    "CalculationCatalogueTarget",
-    "CalculationRegistry",
-    "get_calculation_registry",
+    "RegistryCatalogues",
+    "RegistrySnapshot",
+    "RegistryValidator",
+    "build_snapshot",
+    "load_modelo_file",
+    "load_registry_tree",
 ]
