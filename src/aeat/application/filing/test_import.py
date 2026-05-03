@@ -8,17 +8,14 @@ fakes. Also covers the :func:`_normalise_period` canonicaliser.
 
 from __future__ import annotations
 
-from datetime import UTC
 from pathlib import Path
 
 import pytest
 
 from ...core.config import PROJECT_ROOT
-from ...core.i18n import Language, get_translation
 from ...domain.justificante import JustificanteParseError
 from . import (
     FilingImportError,
-    FilingValueKind,
     import_filing_from_justificante,
 )
 from ._import import _normalise_period
@@ -48,40 +45,20 @@ def test_runtime_schema_provider_requires_registry_snapshot() -> None:
 class TestImportFromJustificante:
     """End-to-end reconstruction on the committed fixture corpus."""
 
-    def test_modelo_130_reconstructs_draft_scaffold(self, schema_provider) -> None:
+    def test_modelo_130_requires_registry_snapshot(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
-        assert result.draft.modelo == "130"
-        assert result.draft.period == "2026Q1"
-        assert result.draft.profile_tax_id == "00000000T"
-        # The import path supplies no inputs, so every required-input casilla
-        # stays EMPTY; default/computed casillas still resolve to their
-        # deterministic fallback per the builder contract.
-        literal_kinds = {
-            value.casilla_id: value.kind
-            for value in result.draft.values
-            if value.kind in {FilingValueKind.EMPTY, FilingValueKind.LITERAL}
-        }
-        assert literal_kinds["01"] is FilingValueKind.EMPTY
-        assert literal_kinds["02"] is FilingValueKind.EMPTY
+        with pytest.raises(FilingImportError, match="validated registry snapshot"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
-    def test_modelo_130_emits_companion_submission(self, schema_provider) -> None:
+    def test_modelo_130_does_not_emit_companion_submission_without_registry(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
-        assert result.submission.draft_id == result.draft.draft_id
-        assert result.submission.modelo == "130"
-        assert result.submission.period == "2026Q1"
-        assert result.submission.justificante_csv == "ABCD1234EFGH5678"
-        assert result.submission.justificante_pdf_path == pdf.resolve()
-        assert result.submission.submitted_at.tzinfo is not None
-        assert result.submission.submitted_at.utcoffset() == UTC.utcoffset(None)
+        with pytest.raises(FilingImportError, match="legacy Python filing builders are disabled"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
-    def test_modelo_303_reconstructs_quarterly_period(self, schema_provider) -> None:
+    def test_modelo_303_requires_registry_snapshot(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_303_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
-        assert result.draft.modelo == "303"
-        assert result.draft.period == "2026Q1"
-        assert result.submission.justificante_csv == "ZZZZ9999YYYY8888"
+        with pytest.raises(FilingImportError, match="validated registry snapshot"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
@@ -97,14 +74,10 @@ class TestImportFromJustificante:
         with pytest.raises(JustificanteParseError, match="not found"):
             import_filing_from_justificante(missing, schema_provider=schema_provider)
 
-    def test_warnings_flag_empty_line_level_casillas(self, schema_provider) -> None:
+    def test_import_stops_before_empty_casilla_warning_projection(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
-        assert result.warnings
-        rendered = get_translation(result.warnings[0], Language.EN)
-        assert "casilla" in rendered.lower()
-        es_rendered = get_translation(result.warnings[0], Language.ES)
-        assert "casilla" in es_rendered.lower()
+        with pytest.raises(FilingImportError, match="validated registry snapshot"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
 
 class TestNormalisePeriod:

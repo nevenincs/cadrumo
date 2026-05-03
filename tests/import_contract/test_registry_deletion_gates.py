@@ -99,6 +99,17 @@ def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -
     assert "validated registry snapshots" in source
 
 
+def test_application_build_draft_cannot_dispatch_legacy_builders() -> None:
+    source = _source("src/aeat/application/filing/__init__.py")
+    assert "get_builder" not in source
+    assert "Modelo130Builder" not in source
+    assert "Modelo303Builder" not in source
+    assert "Modelo390Builder" not in source
+    builder = _function_node(source, "build_draft")
+    assert any(isinstance(stmt, ast.Raise) for stmt in builder.body)
+    assert "legacy Python filing builders are disabled" in source
+
+
 def test_application_testing_helpers_do_not_import_builder_static_schemas() -> None:
     source = _source("src/aeat/application/filing/testing.py")
     helper_source = _source("src/aeat/application/filing/_testing_static_schema.py")
