@@ -5,10 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
-from ...core.logging import get_logger
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
-    QUARTERLY_303_INPUT_KEY,
     SCHEMA_VERSION_DEFAULT,
     AmendmentKind,
     CasillaChange,
@@ -23,7 +21,6 @@ from ...domain.filing import (
     FilingAmendmentError,
     FilingAmendmentValidationError,
     FilingApprovalBasis,
-    FilingBuilder,
     FilingBuilderError,
     FilingComputationError,
     FilingDraft,
@@ -77,43 +74,6 @@ from .runtime import (
     filing_profile_from_autonomo,
     load_default_filing_profile,
 )
-
-_logger = get_logger(__name__)
-
-
-def _extract_quarterly_303(
-    modelo: str,
-    inputs: FilingInputs,
-) -> tuple[FilingDraft, ...] | None:
-    """Return the four quarterly 303 drafts, if the caller supplied them.
-
-    The helper returns ``None`` for every modelo other than 390,
-    and also when the reserved ``_quarterly_303`` key is absent.
-    Shape validation lives in the validated registry snapshot — this
-    function only pulls the tuple out of the inputs mapping so
-    the validator can be wired at :func:`build_draft` call time.
-    """
-    if modelo != "390":
-        return None
-    raw = inputs.get(QUARTERLY_303_INPUT_KEY)
-    if raw is None:
-        return None
-    if not isinstance(raw, tuple):
-        _logger.warning(
-            "quarterly_303 input has unexpected type %s; expected tuple — skipping",
-            type(raw).__name__,
-        )
-        return None
-    filtered: list[FilingDraft] = []
-    for entry in raw:
-        if isinstance(entry, FilingDraft):
-            filtered.append(entry)
-    if not filtered:
-        _logger.warning(
-            "quarterly_303 input tuple contained no FilingDraft entries — skipping",
-        )
-        return None
-    return tuple(filtered)
 
 
 def build_draft(
@@ -182,7 +142,6 @@ def validate_draft(
     validator = FilingValidator(
         schema_provider=schema_provider,
         deadline_checker=deadline_checker,
-        quarterly_303_drafts=None,
     )
     findings = validator.validate(draft)
     refreshed = apply_validation(draft, findings)
@@ -239,7 +198,6 @@ def utc_now() -> datetime:
 
 __all__ = [
     "APPROVAL_BASIS_VERSION",
-    "QUARTERLY_303_INPUT_KEY",
     "SCHEMA_VERSION_DEFAULT",
     "AmendmentKind",
     "CasillaChange",
@@ -261,7 +219,6 @@ __all__ = [
     "FilingAmendmentValidationError",
     "FilingApprovalBasis",
     "FilingApprovalStaleReason",
-    "FilingBuilder",
     "FilingBuilderError",
     "FilingComputationError",
     "FilingDraft",

@@ -46,14 +46,13 @@ def build_complementaria(
     schema_provider: CasillaSchemaProvider,
 ) -> FilingAmendment:
     """Build and persist an immutable amendment from ``original``."""
-    from . import QUARTERLY_303_INPUT_KEY, build_draft
+    from . import build_draft
 
     original_draft = _load_original_draft(original.draft_id)
     metadata = _resolve_original_metadata(original)
     amendment_kind = _resolve_amendment_kind(metadata["original_model"], metadata["original_period"])
     amended_draft = _build_updated_draft(
         build_draft=build_draft,
-        quarterly_key=QUARTERLY_303_INPUT_KEY,
         modelo=metadata["original_model"],
         period=metadata["original_period"],
         profile_tax_id=original.profile_tax_id,
@@ -210,7 +209,6 @@ def _period_uses_rectificativa(period: str) -> bool:
 def _build_updated_draft(
     *,
     build_draft,
-    quarterly_key: str,
     modelo: str,
     period: str,
     profile_tax_id: str,
@@ -224,10 +222,6 @@ def _build_updated_draft(
     )
     draft_inputs = dict(updated_inputs)
     draft_inputs.pop(_REASONS_INPUT_KEY, None)
-    if modelo == "390" and quarterly_key not in draft_inputs:
-        raise FilingAmendmentValidationError(
-            "modelo 390 amendments require _quarterly_303 with the four quarterly drafts"
-        )
     return build_draft(
         modelo=modelo,
         period=period,
