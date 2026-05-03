@@ -67,26 +67,3 @@ def test_303_formula_validator_still_detects_trace_divergence() -> None:
     )
     findings = FilingValidator(schema_provider=default_schema_provider()).validate(tampered)
     assert any(f.code == "formula-divergence" and f.casilla_id == "09" for f in findings)
-
-
-def test_390_quarterly_reconciliation_validator_still_detects_mismatch() -> None:
-    annual = synthesize_filing_draft(
-        modelo="390",
-        period="2025",
-        casilla_values={"109": Decimal("42.00")},
-        profile_tax_id="12345678Z",
-    )
-    quarterly = tuple(
-        synthesize_filing_draft(
-            modelo="303",
-            period=f"2025Q{quarter}",
-            casilla_values={"09": Decimal("100.00")},
-            profile_tax_id="12345678Z",
-        )
-        for quarter in (1, 2, 3, 4)
-    )
-    findings = FilingValidator(
-        schema_provider=default_schema_provider(),
-        quarterly_303_drafts=quarterly,
-    ).validate(annual)
-    assert any(f.code == "filing-390-303-mismatch" and f.casilla_id == "109" for f in findings)

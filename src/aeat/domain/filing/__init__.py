@@ -28,7 +28,6 @@ from ._amendment import (
     ModeloCode,
     make_amendment_id,
 )
-from ._builder import FilingBuilder
 from ._complementaria_repository import (
     FilingAmendmentRepository,
 )
@@ -90,7 +89,6 @@ __all__ = [
     "FilingAmendmentRepository",
     "FilingAmendmentValidationError",
     "FilingApprovalBasis",
-    "FilingBuilder",
     "FilingBuilderError",
     "FilingComputationError",
     "FilingDraft",

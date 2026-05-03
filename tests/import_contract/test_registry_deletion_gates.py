@@ -107,6 +107,8 @@ def test_application_build_draft_cannot_dispatch_legacy_builders() -> None:
     assert "Modelo303Builder" not in source
     assert "Modelo390Builder" not in source
     assert "QUARTERLY_303_INPUT_KEY" not in source
+    assert not hasattr(filing_package, "FilingBuilder")
+    assert "FilingBuilder" not in filing_package.__all__
     assert not hasattr(filing_package, "QUARTERLY_303_INPUT_KEY")
     builder = _function_node(source, "build_draft")
     assert any(isinstance(stmt, ast.Raise) for stmt in builder.body)
@@ -116,7 +118,12 @@ def test_application_build_draft_cannot_dispatch_legacy_builders() -> None:
 def test_domain_filing_package_does_not_export_legacy_builders() -> None:
     source = _source("src/aeat/domain/filing/__init__.py")
     filing_package = importlib.import_module("aeat.domain.filing")
+    legacy_builder_dir = _ROOT / "src/aeat/domain/filing/_builders"
+    legacy_builder_abc = _ROOT / "src/aeat/domain/filing/_builder.py"
+    assert not legacy_builder_dir.exists()
+    assert not legacy_builder_abc.exists()
     assert "from ._builders import" not in source
+    assert "from ._builder import" not in source
     assert "get_builder" not in source
     assert "Modelo130Builder" not in source
     assert "Modelo303Builder" not in source
@@ -127,6 +134,7 @@ def test_domain_filing_package_does_not_export_legacy_builders() -> None:
         "Modelo303Builder",
         "Modelo390Builder",
         "QUARTERLY_303_INPUT_KEY",
+        "FilingBuilder",
     ):
         assert not hasattr(filing_package, name)
         assert name not in filing_package.__all__
@@ -140,6 +148,16 @@ def test_application_testing_helpers_do_not_import_builder_static_schemas() -> N
     assert "_modelo_130_schema" not in source
     assert "_modelo_303_schema" not in source
     assert "_modelo_390_schema" not in source
+
+
+def test_filing_validator_does_not_own_model_specific_calculation_truth() -> None:
+    source = _source("src/aeat/domain/filing/_validator.py")
+    assert "quarterly_303_drafts" not in source
+    assert "_validate_quarterly_reconciliation" not in source
+    assert "_MODELO_390_QUARTERLY_MAP" not in source
+    assert "_MODELO_303_RATE_TRIPLES" not in source
+    assert "filing-390-303-mismatch" not in source
+    assert "filing-303-internal-mismatch" not in source
 
 
 def test_application_verification_cannot_import_legacy_formula_engine() -> None:
