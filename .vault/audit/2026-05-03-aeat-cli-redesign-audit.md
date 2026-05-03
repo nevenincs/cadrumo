@@ -561,3 +561,78 @@ Tape-driven gaps still pending typed scaffold (v7 simulator):
 Backend full sweep at cycle close: 31 new tests added (filter spec);
 broader sweep mirrors cycle-7 baseline plus the in-flight WIP's
 pre-existing failures.
+
+## Cycle 9 — 2026-05-03
+
+CLI-REDESIGN-012 | PARTIALLY-RESOLVED | MEDIUM | Typed `--set KEY=VALUE` edit-spec parser for v6 ledger / invoice / declaration `edit` commands
+The kent-n26 simulator tapes (v6 + v7) drive every record-mutation
+flow through repeated `--set KEY=VALUE` flags: ledger edit uses
+`category=`, `business.share=`, `reference=`, `comments=`, and
+`document.path=`; invoice edit uses `base=`, `iva.rate=`,
+`iva.amount=`, `iva.category=`, `retention.rate=`,
+`retention.amount=`, `payment.id=`, `reference=`, `comments=`,
+`document.path=`; declaration edit uses the dotted prefix
+`casilla.NN=` for per-casilla overrides. Until cycle 9 the
+application layer had no typed parser surface — the CLI argv layer
+would have had to hand-roll three independent parsers per scope and
+each call site would re-implement value coercion.
+
+`src/aeat/application/review/_edit.py` ships :class:`EditClause`
+(strict frozen pydantic key+raw-value record),
+:func:`parse_edit_clause` / :func:`parse_edit_clauses` (the raw
+`KEY=VALUE` parser with a typed :class:`EditParseError` carrying a
+stable scope-tagged reason code), two closed key enums
+(:class:`LedgerEditKey` covering five ledger fields,
+:class:`InvoiceEditKey` covering ten invoice fields), and three
+per-scope spec records (:class:`LedgerEditSpec` /
+:class:`InvoiceEditSpec` / :class:`DeclarationEditSpec`) with
+`from_strings(...)` factories. Per-key value coercion handles
+Decimal validation (`base`, `iva.rate`, `iva.amount`,
+`retention.rate`, `retention.amount`), share-range validation
+(`business.share` ∈ [0, 1]), `pathlib.Path` coercion
+(`document.path`), and casilla-id-shape validation (regex
+`casilla\.(\d{2,5})`). The declaration spec rejects any key that
+does not match the `casilla.NN` pattern outright.
+
+Forty-one unit tests in `test_edit.py` cover the parser substrate,
+the per-scope key catalogues, the per-key value coercion, the
+duplicate-key invariant, the cross-field consistency check, and
+verbatim-tape replay (`category=software --set business.share=1.0
+--set reference=invoice-1`, `base=120.00 --set iva.rate=21 --set
+iva.amount=25.20 --set payment.id=row_1_1`,
+`casilla.71=1200.00`).
+
+The `iva.category` field is currently typed as free-text — the
+closed catalogue is blocked on CLI-REDESIGN-002 (invoice schema).
+The `category` field on ledger edits is also free-text for the same
+reason; both will tighten to enum values once their domain audits
+ship. :class:`EditParseError` subclasses :class:`ValueError` for
+the same reason as cycle 8's :class:`FilterParseError`: the
+in-flight CLI restructure is mid-flight on the registry split, and
+binding a registry entry here would couple the parser to a moving
+surface.
+
+Cycle 9 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-004 (declaration export/verify) — RESOLVED.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-010 (auth provider catalogue) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-011 (typed --filter parser) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-012 (typed --set parser) —
+  PARTIALLY-RESOLVED via this cycle's typed surface.
+
+Tape-driven gaps still pending typed scaffold (v7 simulator):
+* `aeat app overview status --calendar --from DATE --to DATE` typed
+  period-range aggregator.
+* `aeat app invoice match --period PERIOD` typed match-result record.
+* `aeat app declaration approve --id ID --by REVIEWER --reason
+  REASON` review-history shape; backend audit needed.
+
+Backend full sweep at cycle close: 41 new tests (edit spec); the
+in-flight WIP's pre-existing failures continue to be unrelated.
