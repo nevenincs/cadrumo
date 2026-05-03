@@ -9,41 +9,43 @@ from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderAvailability,
     AuthProviderListing,
+    available_auth_providers,
     get_auth_provider,
-    implemented_auth_providers,
     list_auth_providers,
-    research_only_auth_providers,
+    unavailable_auth_providers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def test_availability_enum_carries_v6_canonical_values() -> None:
+def test_availability_enum_carries_provider_states() -> None:
     assert {item.value for item in AuthProviderAvailability} == {
-        "implemented",
-        "research-only",
+        "available",
+        "unavailable",
     }
 
 
-def test_catalogue_carries_v6_required_entries() -> None:
+def test_catalogue_carries_supported_entries() -> None:
     ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert ids == {"certificate", "clave_movil", "clave_permanente"}
+    assert ids == {"certificate", "clave-movil", "clave-permanente"}
 
 
-def test_implemented_providers_match_v6_adr_wording() -> None:
-    implemented = {entry.id for entry in implemented_auth_providers()}
-    assert implemented == {"certificate", "clave_movil"}
+def test_available_providers_are_configurable() -> None:
+    available = {entry.id for entry in available_auth_providers()}
+    assert available == {"certificate", "clave-movil"}
 
 
-def test_research_only_providers_match_v6_adr_wording() -> None:
-    research = {entry.id for entry in research_only_auth_providers()}
-    assert research == {"clave_permanente"}
+def test_unavailable_providers_are_listed_but_not_configurable() -> None:
+    unavailable = {entry.id for entry in unavailable_auth_providers()}
+    assert unavailable == {"clave-permanente"}
 
 
 def test_catalogue_partition_covers_every_listing() -> None:
-    implemented = list(implemented_auth_providers())
-    research = list(research_only_auth_providers())
-    assert sorted(entry.id for entry in implemented + research) == sorted(entry.id for entry in AUTH_PROVIDER_CATALOGUE)
+    available = list(available_auth_providers())
+    unavailable = list(unavailable_auth_providers())
+    assert sorted(entry.id for entry in available + unavailable) == sorted(
+        entry.id for entry in AUTH_PROVIDER_CATALOGUE
+    )
 
 
 def test_list_auth_providers_returns_catalogue() -> None:
@@ -53,8 +55,8 @@ def test_list_auth_providers_returns_catalogue() -> None:
 def test_get_auth_provider_returns_canonical_entry() -> None:
     entry = get_auth_provider("clave_permanente")
     assert isinstance(entry, AuthProviderListing)
-    assert entry.id == "clave_permanente"
-    assert entry.availability is AuthProviderAvailability.RESEARCH_ONLY
+    assert entry.id == "clave-permanente"
+    assert entry.availability is AuthProviderAvailability.UNAVAILABLE
     assert entry.label["es"]
     assert entry.description["es"]
 
@@ -89,7 +91,7 @@ def test_listing_rejects_blank_id() -> None:
         AuthProviderListing(
             id="",
             label=_label(),
-            availability=AuthProviderAvailability.IMPLEMENTED,
+            availability=AuthProviderAvailability.AVAILABLE,
             description=_description(),
         )
 
@@ -99,7 +101,7 @@ def test_listing_rejects_uppercase_id() -> None:
         AuthProviderListing(
             id="Certificate",
             label=_label(),
-            availability=AuthProviderAvailability.IMPLEMENTED,
+            availability=AuthProviderAvailability.AVAILABLE,
             description=_description(),
         )
 
@@ -110,7 +112,7 @@ def test_listing_rejects_label_without_authoritative_spanish() -> None:
         AuthProviderListing(
             id="certificate",
             label=bad_label,
-            availability=AuthProviderAvailability.IMPLEMENTED,
+            availability=AuthProviderAvailability.AVAILABLE,
             description=_description(),
         )
 
@@ -121,7 +123,7 @@ def test_listing_rejects_description_without_authoritative_spanish() -> None:
         AuthProviderListing(
             id="certificate",
             label=_label(),
-            availability=AuthProviderAvailability.IMPLEMENTED,
+            availability=AuthProviderAvailability.AVAILABLE,
             description=bad_desc,
         )
 

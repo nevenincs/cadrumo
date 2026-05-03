@@ -2,7 +2,7 @@
 
 These tests load the hand-curated synthetic filing corpus under
 ``tests/fixtures/filing_history/`` through the public loader and
-assert the schema invariants that issue #14 pins.
+assert the schema invariants required by the loader.
 """
 
 from __future__ import annotations

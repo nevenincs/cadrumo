@@ -1,11 +1,9 @@
 """Provider registry for the ``aeat auth`` CLI.
 
 The registry is the single source of truth for provider ordering,
-default resolution, and user-facing rendering. Only providers with a
-concrete :class:`aeat.application.auth.AuthProvider` implementation are
-listed here; unsupported kinds can still exist in lower-level contracts
-for compatibility, but the CLI must not advertise them as selectable
-auth paths.
+default resolution, and user-facing rendering. Only provider kinds that
+the CLI can build and describe are listed here. Other lower-level
+provider kinds are not selectable CLI paths.
 
 See :func:`build_provider`, :func:`describe`, and :func:`default_kind`
 for the three operations the registry mediates.
@@ -37,8 +35,8 @@ class UnknownProviderError(AeatError):
     """The requested provider kind is not registered."""
 
 
-class ProviderNotImplementedError(AeatError):
-    """The provider kind is known but no implementation has shipped yet."""
+class ProviderUnavailableError(AeatError):
+    """The provider kind is known but unavailable."""
 
 
 class ProviderRegistryEntry(BaseModel):
@@ -48,26 +46,22 @@ class ProviderRegistryEntry(BaseModel):
         kind: The :class:`aeat.application.auth.AuthProviderKind` enum
             member this row covers.
         label: User-facing label rendered by ``aeat auth`` listings.
-        implemented: ``True`` when a concrete provider factory exists.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     kind: AuthProviderKind
     label: str = Field(min_length=1)
-    implemented: bool
 
 
 REGISTRY: Sequence[ProviderRegistryEntry] = (
     ProviderRegistryEntry(
         kind=AuthProviderKind.CERTIFICATE,
         label="Certificate (FNMT)",
-        implemented=True,
     ),
     ProviderRegistryEntry(
         kind=AuthProviderKind.CLAVE_MOVIL,
         label="Cl@ve Móvil",
-        implemented=True,
     ),
 )
 
@@ -135,7 +129,7 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
 
     Raises:
         UnknownProviderError: When ``kind`` is not registered.
-        ProviderNotImplementedError: When a registry entry and the
+        ProviderUnavailableError: When a registry entry and the
             outbound provider factory drift apart; the CLI
             layer catches this and maps it to an actionable
             exit-code-2 message.
@@ -151,7 +145,7 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
             browser_session_factory=default_browser_session_factory,
         )
     except NotImplementedError as exc:
-        raise ProviderNotImplementedError(str(exc)) from exc
+        raise ProviderUnavailableError(str(exc)) from exc
 
 
 def describe(kind: AuthProviderKind, settings: Settings) -> AuthProviderDescription:

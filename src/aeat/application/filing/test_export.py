@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...core.i18n import Translatable
 from . import (
@@ -19,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _HEX_DIGEST = "a" * 64
+_EXPORT_PATH = Path("exports/m130-2026Q1.txt")
+_OTHER_EXPORT_PATH = Path("exports/x.txt")
 
 
 def _narrative() -> Translatable:
@@ -31,7 +34,7 @@ def _narrative() -> Translatable:
     return narrative
 
 
-def test_format_enum_carries_v6_canonical_values() -> None:
+def test_format_enum_carries_cli_values() -> None:
     assert DeclarationExportFormat.FICHERO_BOE.value == "fichero-boe"
 
 
@@ -45,7 +48,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
         modelo="130",
         period="2026Q1",
         format=DeclarationExportFormat.FICHERO_BOE,
-        output_path=Path("/tmp/m130-2026Q1.txt"),
+        output_path=_EXPORT_PATH,
         byte_size=512,
         file_sha256=_HEX_DIGEST,
         exported_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -53,7 +56,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
     )
     assert receipt.draft_id == "d-130-2026Q1"
     assert receipt.format is DeclarationExportFormat.FICHERO_BOE
-    assert receipt.output_path == Path("/tmp/m130-2026Q1.txt")
+    assert receipt.output_path == _EXPORT_PATH
     assert receipt.byte_size == 512
     assert receipt.file_sha256 == _HEX_DIGEST
     assert receipt.narrative["es"]
@@ -66,7 +69,7 @@ def test_export_result_rejects_uppercase_digest() -> None:
             modelo="130",
             period="2026Q1",
             format=DeclarationExportFormat.FICHERO_BOE,
-            output_path=Path("/tmp/x"),
+            output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
             file_sha256="A" * 64,
             exported_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -81,7 +84,7 @@ def test_export_result_rejects_non_hex_digest() -> None:
             modelo="130",
             period="2026Q1",
             format=DeclarationExportFormat.FICHERO_BOE,
-            output_path=Path("/tmp/x"),
+            output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
             file_sha256="z" * 64,
             exported_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -96,7 +99,7 @@ def test_export_result_rejects_narrative_without_authoritative_spanish() -> None
             modelo="130",
             period="2026Q1",
             format=DeclarationExportFormat.FICHERO_BOE,
-            output_path=Path("/tmp/x"),
+            output_path=_OTHER_EXPORT_PATH,
             byte_size=1,
             file_sha256=_HEX_DIGEST,
             exported_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -110,20 +113,20 @@ def test_export_result_is_frozen() -> None:
         modelo="130",
         period="2026Q1",
         format=DeclarationExportFormat.FICHERO_BOE,
-        output_path=Path("/tmp/x"),
+        output_path=_OTHER_EXPORT_PATH,
         byte_size=0,
         file_sha256=_HEX_DIGEST,
         exported_at=datetime(2026, 5, 3, tzinfo=UTC),
         narrative=_narrative(),
     )
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         receipt.byte_size = 1  # type: ignore[misc]
 
 
 def test_verify_result_match_carries_no_mismatched_casillas() -> None:
     verdict = DeclarationVerifyResult(
         draft_id="d-130-2026Q1",
-        file_path=Path("/tmp/m130-2026Q1.txt"),
+        file_path=_EXPORT_PATH,
         verdict=DeclarationVerifyVerdict.MATCH,
         mismatched_casillas=(),
         file_sha256=_HEX_DIGEST,
@@ -137,7 +140,7 @@ def test_verify_result_match_carries_no_mismatched_casillas() -> None:
 def test_verify_result_drift_lists_mismatched_casillas() -> None:
     verdict = DeclarationVerifyResult(
         draft_id="d",
-        file_path=Path("/tmp/x"),
+        file_path=_OTHER_EXPORT_PATH,
         verdict=DeclarationVerifyVerdict.DRIFT,
         mismatched_casillas=("01", "07"),
         file_sha256=None,
@@ -152,7 +155,7 @@ def test_verify_result_rejects_blank_casilla_ids() -> None:
     with pytest.raises(ValueError):
         DeclarationVerifyResult(
             draft_id="d",
-            file_path=Path("/tmp/x"),
+            file_path=_OTHER_EXPORT_PATH,
             verdict=DeclarationVerifyVerdict.DRIFT,
             mismatched_casillas=("", "07"),
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -164,7 +167,7 @@ def test_verify_result_rejects_padded_casilla_ids() -> None:
     with pytest.raises(ValueError):
         DeclarationVerifyResult(
             draft_id="d",
-            file_path=Path("/tmp/x"),
+            file_path=_OTHER_EXPORT_PATH,
             verdict=DeclarationVerifyVerdict.DRIFT,
             mismatched_casillas=(" 01 ",),
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -176,7 +179,7 @@ def test_verify_result_rejects_short_digest() -> None:
     with pytest.raises(ValueError):
         DeclarationVerifyResult(
             draft_id="d",
-            file_path=Path("/tmp/x"),
+            file_path=_OTHER_EXPORT_PATH,
             verdict=DeclarationVerifyVerdict.MATCH,
             file_sha256="abc",
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
@@ -188,7 +191,7 @@ def test_verify_result_rejects_narrative_without_authoritative_spanish() -> None
     with pytest.raises(ValueError):
         DeclarationVerifyResult(
             draft_id="d",
-            file_path=Path("/tmp/x"),
+            file_path=_OTHER_EXPORT_PATH,
             verdict=DeclarationVerifyVerdict.MISSING,
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative={"en": "missing es"},  # type: ignore[typeddict-item]

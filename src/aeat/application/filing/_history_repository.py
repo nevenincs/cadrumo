@@ -3,8 +3,8 @@
 Wraps the encrypted-envelope substrate's
 :class:`aeat.adapters.persistence.storage.Envelope` of
 :class:`aeat.domain.sync.WireFilingHistory` behind a small typed
-surface for the sync runner and any future consumer. Each modelo's
-filing history is persisted as its own envelope file
+surface for the sync runner and other consumers. Each modelo's filing
+history is persisted as its own envelope file
 (``<modelo>.envelope.json``) under
 :attr:`aeat.core.config.AeatSettings.aeat_filing_history_dir`, guarded
 by a per-modelo :func:`aeat.adapters.persistence.storage.exclusive_file_lock`.

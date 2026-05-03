@@ -58,7 +58,7 @@ class EditParseError(ReviewError):
 
 
 class ReviewKindReservedError(ReviewError):
-    """Raised when the CLI receives a reserved-but-not-implemented kind token.
+    """Raised when the CLI receives a reserved kind token.
 
     Carries the blocking reason returned by
     :func:`aeat.application.review._enums.reserved_kind_reason`.
@@ -77,6 +77,6 @@ class ReviewKindReservedError(ReviewError):
             reason: Human-readable explanation naming the blocking
                 upstream record type.
         """
-        super().__init__(f"--kind {token!r} is reserved but not yet emitted: {reason}")
+        super().__init__(f"--kind {token!r} is reserved and is not an emitted review kind: {reason}")
         self.token = token
         self.reason = reason

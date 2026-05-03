@@ -11,7 +11,7 @@ This module enforces the following invariants at collection time:
    because the helper enforces invariants on items it receives and
    filters in-place.
 2. No file containing a ``live_read`` or ``live_write`` item may import
-   any symbol in :data:`BANNED_LIVE_IMPORTS` (carried over from PR #160).
+   any symbol in :data:`BANNED_LIVE_IMPORTS`.
 3. ``live_read`` items are skipped unless ``AEAT_LIVE_TESTS_ENABLED`` is
    truthy; ``live_write`` items are dropped by the shared helper (see
    :mod:`tests._marker_hook`).

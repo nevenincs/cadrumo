@@ -1,7 +1,6 @@
-"""Typed records for the v6 declaration export / verify lifecycle.
+"""Typed records for the declaration export / verify lifecycle.
 
-The v6 CLI candidate exposes two primitives the application layer must
-back end-to-end:
+The CLI exposes two primitives the application layer must back end-to-end:
 
 - ``aeat app declaration export --output PATH`` writes an
   AEAT-compatible file (typically the fichero-BOE fixed-width payload
@@ -15,11 +14,10 @@ back end-to-end:
   is reported as a tuple of mismatched casilla identifiers so the CLI
   can render a deterministic table.
 
-This module ships the *typed surface* the CLI implementation team can
-render, persist, and JSON round-trip against — while the orchestration
-that drives the actual export-and-verify loop lands incrementally on
-top of the existing :mod:`aeat.adapters.outbound.aeat.export` format
-serialisers and deserialisers.
+The records are structured return values for renderers, persistence,
+and JSON round trips on top of the existing
+:mod:`aeat.adapters.outbound.aeat.export` format serialisers and
+deserialisers.
 
 The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are

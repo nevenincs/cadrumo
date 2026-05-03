@@ -12,10 +12,10 @@ from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderAvailability,
     AuthProviderListing,
+    available_auth_providers,
     get_auth_provider,
-    implemented_auth_providers,
     list_auth_providers,
-    research_only_auth_providers,
+    unavailable_auth_providers,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -40,7 +40,7 @@ class AuthProviderDescription(BaseModel):
         kind: Identifier of the provider.
         label: Human-readable provider name.
         configured: Whether the provider's required settings are present.
-        available: Whether a session can currently be established.
+        available: Whether a session can be established.
         identity_nif: NIF resolved by the provider, when known.
         subject: Subject DN or equivalent identity string.
         expires_on: Expiry date for the underlying credential.
@@ -139,8 +139,7 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     if description.kind == AuthProviderKind.CERTIFICATE:
         return (
             "Certificate auth is ready. The operator keeps the same CLI filing flow for "
-            "AEAT-backed reads, and future providers can plug into the same "
-            "commands without changing the workflow."
+            "AEAT-backed reads; every provider uses the same command workflow."
         )
     return (
         f"{description.label} is ready. The operator keeps the same CLI filing flow while "
@@ -155,10 +154,10 @@ __all__ = [
     "AuthProviderDescription",
     "AuthProviderKind",
     "AuthProviderListing",
+    "available_auth_providers",
     "describe_provider_operator_impact",
     "get_auth_provider",
-    "implemented_auth_providers",
     "list_auth_providers",
-    "research_only_auth_providers",
     "select_provider",
+    "unavailable_auth_providers",
 ]

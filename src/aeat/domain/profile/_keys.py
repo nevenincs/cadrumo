@@ -1,10 +1,9 @@
 """Schema-backed registry of editable taxpayer-profile keys.
 
-The v6 CLI redesign mandates a schema-backed profile editor — the
-operator must be able to discover editable keys, set / unset values,
-and validate completeness without bespoke per-command knowledge. The
-registry lives in the domain layer so every consumer (CLI, future
-TUI, programmatic clients) reads from the same source of truth.
+The operator can discover editable keys, set or unset values, and
+validate completeness without bespoke per-command knowledge. The
+registry lives in the domain layer so every consumer reads from the
+same source of truth.
 
 The registry is a tuple of strict :class:`ProfileKey` records. Each
 entry carries the canonical key path (dot-separated), a requirement
@@ -125,12 +124,7 @@ PROFILE_KEYS: tuple[ProfileKey, ...] = (
         hu="Bevallás-típus az exportfejlécekhez; alapértelmezett: I.",
     ),
 )
-"""Closed registry of editable taxpayer-profile keys.
-
-Mirrors the v6 CLI redesign packet's "Candidate Profile Keys"
-section. The CLI implementation team consumes this tuple directly
-rather than maintaining a parallel hardcoded list.
-"""
+"""Closed registry of editable taxpayer-profile keys."""
 
 
 _BY_KEY: dict[str, ProfileKey] = {entry.key: entry for entry in PROFILE_KEYS}

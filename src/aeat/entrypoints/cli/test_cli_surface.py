@@ -1,6 +1,6 @@
-"""Integration tests for the v6 ``aeat`` CLI surface.
+"""Integration tests for the user-facing ``aeat`` CLI.
 
-These tests assert that every v6 namespace exists, that the thin
+These tests assert that every command namespace exists, that the thin
 transport handlers route into the application layer, and that the
 JSON envelope matches the typed records the backend exposes. They
 do NOT exercise live AEAT, certificate auth, or any network surface.
@@ -59,7 +59,7 @@ def test_setup_help_lists_init_status_auth_profile() -> None:
         assert token in result.output
 
 
-def test_app_help_lists_singular_v6_domains() -> None:
+def test_app_help_lists_singular_domains() -> None:
     result = _invoke(["app", "--help"])
     assert result.exit_code == 0
     for token in ("overview", "ledger", "invoice", "declaration"):
@@ -68,21 +68,21 @@ def test_app_help_lists_singular_v6_domains() -> None:
         assert legacy not in result.output
 
 
-def test_setup_profile_help_carries_v6_subcommands() -> None:
+def test_setup_profile_help_carries_subcommands() -> None:
     result = _invoke(["setup", "profile", "--help"])
     assert result.exit_code == 0
     for token in ("use", "show", "list-keys", "get", "set", "unset", "validate", "list"):
         assert token in result.output
 
 
-def test_setup_auth_help_carries_v6_subcommands() -> None:
+def test_setup_auth_help_carries_subcommands() -> None:
     result = _invoke(["setup", "auth", "--help"])
     assert result.exit_code == 0
     for token in ("providers", "configure", "login", "status", "whoami", "logout"):
         assert token in result.output
 
 
-def test_app_declaration_help_carries_v6_subcommands() -> None:
+def test_app_declaration_help_carries_subcommands() -> None:
     result = _invoke(["app", "declaration", "--help"])
     assert result.exit_code == 0
     for token in ("calculate", "review", "status", "edit", "approve", "validate", "preview", "export", "verify"):
@@ -195,7 +195,7 @@ def test_setup_profile_list_renders_active_marker(monkeypatch: pytest.MonkeyPatc
 # ---------------------------------------------------------------------
 
 
-def test_setup_auth_providers_renders_v6_catalogue(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_setup_auth_providers_renders_catalogue(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
     result = _invoke(["--format", "json", "setup", "auth", "providers"])
     assert result.exit_code == 0
@@ -204,17 +204,16 @@ def test_setup_auth_providers_renders_v6_catalogue(monkeypatch: pytest.MonkeyPat
     assert "certificate" in ids
     assert any(pid.startswith("clave") and "movil" in pid for pid in ids)
     assert any(pid.startswith("clave") and "permanente" in pid for pid in ids)
-    research = [row for row in payload["providers"] if row["availability"] == "research-only"]
-    assert any("permanente" in row["id"] for row in research)
+    unavailable = [row for row in payload["providers"] if row["availability"] == "unavailable"]
+    assert any("permanente" in row["id"] for row in unavailable)
 
 
 def test_setup_auth_configure_refuses_research_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
-    # Look up the canonical research-only id from the application catalogue.
-    from aeat.application.auth import research_only_auth_providers
+    from aeat.application.auth import unavailable_auth_providers
 
-    research_id = research_only_auth_providers()[0].id
-    result = _invoke(["setup", "auth", "configure", "--provider", research_id])
+    unavailable_id = unavailable_auth_providers()[0].id
+    result = _invoke(["setup", "auth", "configure", "--provider", unavailable_id])
     assert result.exit_code == 2
 
 
@@ -232,9 +231,9 @@ def test_setup_auth_configure_clave_movil_round_trips(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    from aeat.application.auth import implemented_auth_providers
+    from aeat.application.auth import available_auth_providers
 
-    movil_id = next(p.id for p in implemented_auth_providers() if "movil" in p.id)
+    movil_id = next(p.id for p in available_auth_providers() if "movil" in p.id)
     assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z"]).exit_code == 0
     configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", movil_id])
     assert configure.exit_code == 0

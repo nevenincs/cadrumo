@@ -132,7 +132,7 @@ class TestListProviders:
         assert "Cl@ve Permanente" not in result.output
         assert "Cl@ve PIN" not in result.output
 
-    def test_configured_filter_hides_unshipped_providers(self, isolated_token_dir: Path) -> None:
+    def test_configured_filter_hides_unavailable_providers(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
         result = _runner.invoke(app, ["list-providers", "--configured"])
         assert result.exit_code == 0, result.output
@@ -149,8 +149,20 @@ class TestListProviders:
             AuthProviderKind.CERTIFICATE.value,
             AuthProviderKind.CLAVE_MOVIL.value,
         ]
-        assert payload[0]["implemented"] is True
-        assert payload[1]["implemented"] is True
+        expected_keys = {
+            "kind",
+            "label",
+            "configured",
+            "available",
+            "identity_nif",
+            "subject",
+            "expires_on",
+            "health_severity",
+            "days_until_expiry",
+            "health_summary",
+        }
+        assert set(payload[0]) == expected_keys
+        assert set(payload[1]) == expected_keys
 
 
 # ── registry / default resolution ────────────────────────────────────────────

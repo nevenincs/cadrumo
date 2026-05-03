@@ -265,7 +265,7 @@ def _indented_wrap(header: str, items: list[str]) -> str:
     roughly 65 characters (78 minus the subsequent-indent) would
     overflow on its own line. The current catalogue's longest
     identifier is ``suministros_home_office_internet`` at 32 chars —
-    comfortably within budget. Revisit this helper if a future
+    comfortably within budget. Revisit this helper when a
     :class:`aeat.domain.categories.SpendingCategory` id approaches 65
     characters.
 

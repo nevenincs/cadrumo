@@ -97,7 +97,7 @@ class _RealProbe:
             if context is not None:
                 try:
                     await context.close()
-                except Exception:  # Playwright context.close() exception surface is undocumented; teardown must not abort
+                except Exception:  # Playwright context.close() undocumented; teardown must not abort
                     logger.warning("browser_health: context.close() failed", exc_info=True)
             try:
                 await self._session.close()
@@ -204,7 +204,7 @@ def health_cmd(
 
     The command opens a real (or test-injected) browser session,
     navigates to :attr:`Settings.site_health_probe_url`, and classifies
-    the response. Exit codes follow the ADR-locked table.
+    the response. Exit codes are derived from the site-health status.
     """
     settings = Settings()
     url = settings.site_health_probe_url

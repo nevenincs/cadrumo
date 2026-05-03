@@ -46,7 +46,6 @@ from . import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-# Starting operator allowlist from the ADR.
 DEFAULT_ALLOWLIST: frozenset[DivergenceKind] = frozenset(
     {
         DivergenceKind.CASILLA_ADDED_WITH_DEFAULT,
