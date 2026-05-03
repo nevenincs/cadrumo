@@ -3,21 +3,19 @@
 The CLI exposes two primitives the application layer must back end-to-end:
 
 - ``aeat app declaration export --output PATH`` writes an
-  AEAT-compatible file (typically the fichero-BOE fixed-width payload
-  produced by :mod:`aeat.adapters.outbound.aeat.export._formats`) for an
-  approved :class:`aeat.domain.filing.FilingDraft` and reports the
-  byte-level summary the operator needs to track the artefact (output
-  path, draft identity, content hash, format).
+  AEAT-compatible file from a validated registry snapshot for an approved
+  :class:`aeat.domain.filing.FilingDraft` and reports the byte-level
+  summary the operator needs to track the artefact (output path, draft
+  identity, content hash, format).
 - ``aeat app declaration verify --file PATH`` re-reads a previously
   exported file and confirms that its casilla payload still matches
   the approved draft. The verdict is a closed enum; the diff (if any)
   is reported as a tuple of mismatched casilla identifiers so the CLI
   can render a deterministic table.
 
-The records are structured return values for renderers, persistence,
-and JSON round trips on top of the existing
-:mod:`aeat.adapters.outbound.aeat.export` format serialisers and
-deserialisers.
+The records are structured return values for renderers, persistence, and
+JSON round trips. Runtime export remains disabled until registry-backed
+schemas replace the deleted generated modules.
 
 The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are
@@ -54,8 +52,8 @@ class DeclarationExportFormat(StrEnum):
 
     Attributes:
         FICHERO_BOE: Fixed-width "importar datos" payload defined by
-            the AEAT *Diseño de registros* per modelo. Produced by
-            :mod:`aeat.adapters.outbound.aeat.export._formats`.
+            the AEAT *Diseño de registros* per modelo and validated
+            through the registry.
     """
 
     FICHERO_BOE = "fichero-boe"

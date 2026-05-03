@@ -1,13 +1,13 @@
-"""Fichero-BOE serialiser reading ``RECORD_SPECS`` from a modelo module.
+"""Fichero-BOE serialiser for registry-backed fixed-width specs.
 
-The serialiser is format-generic: one
-:func:`serialise` drives every modelo via its
-``RECORD_SPECS`` tuple. A concrete modelo module supplies:
+The serialiser is format-generic: one :func:`serialise` drives every
+modelo via a validated tuple of :class:`RecordFieldSpec` entries. A
+registry-backed filing layout supplies:
 
-- ``RECORD_SPECS``: the field layout (validated at import time).
-- ``RECORD_LENGTH``: content bytes excluding the CRLF terminator.
-- ``ENCODING``: per-modelo wire encoding.
-- ``REQUIRED_HEADER_FIELDS``: ``field_id`` values the draft MUST
+- field layout, validated before use.
+- content byte length excluding the CRLF terminator.
+- per-modelo wire encoding.
+- required header ``field_id`` values the draft MUST
   provide.
 
 The caller passes a :class:`aeat.application.filing.FilingDraft` plus
