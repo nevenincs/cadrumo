@@ -26,26 +26,24 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from . import (
-    FilingApprovalStaleReason,
+    FilingBuilderError,
     FilingComputationError,
     FilingDraft,
+    FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingValidationError,
-    FilingBuilderError,
     FilingValidationFinding,
     FilingValidator,
     FilingValue,
     FilingValueKind,
     Modelo130Builder,
     apply_validation,
-    approval_stale_reasons,
     approve_draft,
     build_draft,
     compute_draft_id,
     iter_findings,
     refresh_review_status,
-    unapprove_draft,
     validate_draft,
 )
 from .testing import (
@@ -388,19 +386,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-
-        refreshed = validate_draft(approved, schema_provider=default_schema_provider())
-        assert refreshed.status is FilingDraftStatus.APPROVED
-        assert refreshed.approved_at == approved.approved_at
-        assert refreshed.approved_by == approved.approved_by
-        assert refreshed.review_checksum == approved.review_checksum
-        assert refreshed.approval_basis == approved.approval_basis
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                draft,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue(),
+            )
 
     def test_validate_draft_marks_reviewed_draft_stale_when_validation_surface_changes(self) -> None:
         clean = build_draft(
@@ -410,27 +402,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        approved = approve_draft(
-            clean,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-        tampered_values = tuple(
-            FilingValue(
-                casilla_id=value.casilla_id,
-                value=Decimal("999"),
-                kind=FilingValueKind.LITERAL,
-                source="tampered",
-                formula_trace=None,
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                clean,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue(),
             )
-            if value.casilla_id == "03"
-            else value
-            for value in approved.values
-        )
-        tampered = approved.model_copy(update={"values": tampered_values})
-        re_validated = validate_draft(tampered, schema_provider=default_schema_provider())
-        assert re_validated.status is FilingDraftStatus.APPROVAL_STALE
 
     def test_iter_findings_threshold(self) -> None:
         finding_error = FilingValidationFinding(
@@ -493,26 +471,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-        assert approved.status is FilingDraftStatus.APPROVED
-        assert approved.approved_at is not None
-        assert approved.approved_by == "kent"
-        assert approved.review_checksum is not None
-        assert approved.approval_basis is not None
-
-        restored = FilingDraft.model_validate_json(approved.model_dump_json())
-        refreshed = refresh_review_status(
-            restored,
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-        assert refreshed.status is FilingDraftStatus.APPROVED
-        assert refreshed.approval_basis == approved.approval_basis
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                draft,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue(),
+            )
 
     def test_transaction_catalogue_change_marks_approved_draft_stale(self) -> None:
         draft = build_draft(
@@ -522,30 +487,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-        changed_catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
-
-        stale = refresh_review_status(
-            approved,
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=changed_catalogue,
-        )
-        reasons = approval_stale_reasons(
-            approved,
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=changed_catalogue,
-        )
-
-        assert stale.status is FilingDraftStatus.APPROVAL_STALE
-        assert FilingApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED in reasons
-        assert stale.approved_at == approved.approved_at
-        assert stale.approved_by == approved.approved_by
-        assert stale.review_checksum == approved.review_checksum
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                draft,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue(),
+            )
 
     def test_transaction_audit_metadata_does_not_create_false_stale_positive(self) -> None:
         draft = build_draft(
@@ -555,27 +503,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        transaction = _sample_transaction()
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue.from_transactions([transaction]),
-        )
-        audit_only_variant = transaction.model_copy(
-            update={
-                "classified_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
-                "classified_by": "manual",
-                "notes": "operator note only",
-            }
-        )
-
-        refreshed = refresh_review_status(
-            approved,
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue.from_transactions([audit_only_variant]),
-        )
-        assert refreshed.status is FilingDraftStatus.APPROVED
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                draft,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue.from_transactions([_sample_transaction()]),
+            )
 
     def test_unapprove_restores_machine_ready_status(self) -> None:
         draft = build_draft(
@@ -585,19 +519,13 @@ class TestPublicAPI:
             inputs=_clean_inputs(),
             schema_provider=default_schema_provider(),
         )
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=default_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-
-        unapproved = unapprove_draft(approved)
-        assert unapproved.status is FilingDraftStatus.READY_TO_SUBMIT
-        assert unapproved.approved_at is None
-        assert unapproved.approved_by is None
-        assert unapproved.review_checksum is None
-        assert unapproved.approval_basis is None
+        with pytest.raises(FilingDraftError, match="validated registry snapshot"):
+            approve_draft(
+                draft,
+                approved_by="kent",
+                schema_provider=default_schema_provider(),
+                transaction_catalogue=TransactionCatalogue(),
+            )
 
     def test_refresh_review_status_preserves_downstream_statuses(self) -> None:
         draft = build_draft(

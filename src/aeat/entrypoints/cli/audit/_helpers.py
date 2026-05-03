@@ -1,12 +1,4 @@
-"""Helpers for the ``aeat audit`` subcommand surface.
-
-Exposes a strict pydantic :class:`CitationCoverageReport` and the pure
-function :func:`validate_citation_coverage` that builds one from a
-:class:`aeat.domain.formulas._ruleset.Ruleset`. Public from
-:mod:`aeat.entrypoints.cli.audit` so the operator-facing command
-tree (where ``audit`` is a first-class root) and the structured
-``--json`` output schema can both depend on the same report shape.
-"""
+"""Legacy audit report schemas retained for migration-only tests."""
 
 from __future__ import annotations
 
@@ -15,12 +7,11 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....domain.formulas._ruleset import Ruleset
 from ....domain.modelos import ModeloCode
 
 
 class CitationCoverageReport(BaseModel):
-    """Per-ruleset citation coverage on ``computed=True`` casillas.
+    """Legacy citation coverage report shape retained for old fixtures.
 
     ``coverage_percent`` is a fraction in the closed interval ``[0.0, 1.0]``.
     ``missing_casillas`` is non-empty iff ``coverage_percent < 1.0``.
@@ -63,40 +54,11 @@ class CitationCoverageReport(BaseModel):
         return self.coverage_percent == 1.0
 
 
-def validate_citation_coverage(ruleset: Ruleset) -> CitationCoverageReport:
-    """Return a :class:`CitationCoverageReport` for ``ruleset``.
+def validate_citation_coverage(ruleset: object) -> CitationCoverageReport:
+    """Reject legacy ruleset citation coverage calculation."""
 
-    Walks every casilla on the ruleset; a casilla counts toward
-    ``total_computed`` only when ``computed=True``, and toward
-    ``with_citation`` only when its ``legal_basis`` tuple is non-empty.
-    The :class:`aeat.domain.formulas._casilla.CasillaDefinition`
-    validator guarantees these two counts are equal for every ruleset
-    that imports successfully — the gap path can only be observed via
-    fixtures built through pydantic's documented ``model_construct``
-    escape hatch.
-
-    Args:
-        ruleset: The ruleset to inspect.
-
-    Returns:
-        A frozen :class:`CitationCoverageReport` describing citation
-        coverage on ``ruleset``.
-    """
-    computed = tuple(c for c in ruleset.casillas if c.computed)
-    total = len(computed)
-    with_citation = sum(1 for c in computed if c.legal_basis)
-    missing = tuple(c.casilla_id for c in computed if not c.legal_basis)
-    coverage = 1.0 if total == 0 else with_citation / total
-    return CitationCoverageReport(
-        ruleset_id=ruleset.ruleset_id,
-        modelo=ruleset.modelo,
-        effective_from=ruleset.effective_from,
-        effective_to=ruleset.effective_to,
-        total_computed=total,
-        with_citation=with_citation,
-        coverage_percent=coverage,
-        missing_casillas=missing,
-    )
+    _ = ruleset
+    raise ValueError("legacy ruleset citation audits are disabled; use the registry")
 
 
 def aggregate_reports(reports: Iterable[CitationCoverageReport]) -> CitationCoverageReport:

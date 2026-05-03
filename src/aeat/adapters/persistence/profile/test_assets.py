@@ -14,8 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.formulas import AssetClass
-from ....domain.profile.assets import AmortizationEntry, AssetRecord, LibertadAmortizacionElection
+from ....domain.profile.assets import AssetClass, AssetRecord, LibertadAmortizacionElection
+from ....domain.profile.errors import AssetRecordError
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
 from .assets import load_amortization_ledger, load_assets, record_amortization, save_assets
 
@@ -72,16 +72,14 @@ def test_asset_persistence_is_encrypted_financial_envelope(tmp_path) -> None:
     assert "LEAK-CANARY-NAS" not in text
 
 
-def test_record_amortization_persists_real_ledger(tmp_path) -> None:
+def test_record_amortization_requires_registry_snapshot(tmp_path) -> None:
     asset = _asset("pc", AssetClass.ELECTRONICA_INFORMATICA)
 
-    record_amortization(asset, 2025, storage_dir=tmp_path)
-    ledger = load_amortization_ledger(storage_dir=tmp_path)
-
-    assert ledger.entries == (AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("2500.00")),)
+    with pytest.raises(AssetRecordError, match="validated registry snapshot"):
+        record_amortization(asset, 2025, storage_dir=tmp_path)
 
 
-def test_record_amortization_is_idempotent_for_existing_year(tmp_path) -> None:
+def test_record_amortization_does_not_write_when_registry_snapshot_is_missing(tmp_path) -> None:
     asset = AssetRecord(
         identifier="robot",
         description="robot",
@@ -91,8 +89,8 @@ def test_record_amortization_is_idempotent_for_existing_year(tmp_path) -> None:
         libertad_amortizacion=LibertadAmortizacionElection(enabled=True, legal_basis="LIS art. 12.5"),
     )
 
-    record_amortization(asset, 2025, storage_dir=tmp_path)
-    record_amortization(asset, 2025, storage_dir=tmp_path)
+    with pytest.raises(AssetRecordError, match="validated registry snapshot"):
+        record_amortization(asset, 2025, storage_dir=tmp_path)
     ledger = load_amortization_ledger(storage_dir=tmp_path)
 
-    assert ledger.entries == (AmortizationEntry(asset_id="robot", year=2025, amount=Decimal("12000.00")),)
+    assert ledger.entries == ()

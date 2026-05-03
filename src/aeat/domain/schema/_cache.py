@@ -7,8 +7,6 @@ emits ``min`` / ``max`` (not ``min_`` / ``max_``) in the on-disk JSON.
 
 from __future__ import annotations
 
-import json
-import os
 import re
 from pathlib import Path
 
@@ -54,47 +52,15 @@ def resolve_schema_cache_file(
 
 
 def save_modelo_to_cache(modelo: Modelo, root: Path, boe_ref: str) -> Path:
-    """Persist ``modelo`` under ``root`` keyed by ``boe_ref``.
+    """Reject legacy schema-cache writes.
 
-    Uses ``model_dump(mode="json", by_alias=True)`` and re-serialises
-    through :func:`json.dumps` with ``sort_keys=True`` so the on-disk
-    bytes diff cleanly across extraction runs.
-
-    Args:
-        modelo: Extracted :class:`Modelo` record.
-        root: Cache root directory.
-        boe_ref: BOE-A identifier used as the on-disk filename stem.
-
-    Returns:
-        Absolute path of the written JSON file.
+    Runtime modelo definitions now belong in the audited registry tree.
+    This helper remains importable during migration so old readers can be
+    identified, but it must never create filing-grade JSON artefacts.
     """
-    destination = resolve_schema_cache_file(modelo.modelo_code, boe_ref, root)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    payload = modelo.model_dump(mode="json", by_alias=True)
-    tmp = destination.with_suffix(destination.suffix + ".part")
-    try:
-        tmp.write_text(
-            json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        os.replace(tmp, destination)
-    except BaseException:
-        _logger.warning(
-            "schema cache write failed: modelo=%s boe_ref=%s path=%s",
-            modelo.modelo_code.value,
-            boe_ref,
-            destination,
-            exc_info=True,
-        )
-        tmp.unlink(missing_ok=True)
-        raise
-    _logger.debug(
-        "wrote schema cache modelo=%s boe_ref=%s path=%s",
-        modelo.modelo_code.value,
-        boe_ref,
-        destination,
-    )
-    return destination
+
+    del modelo, root, boe_ref
+    raise SchemaCacheError("schema cache writes are disabled; migrate definitions through registry/aeat")
 
 
 def load_modelo_from_cache(

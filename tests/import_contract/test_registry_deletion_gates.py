@@ -1,0 +1,177 @@
+"""Import-contract guards for registry teardown deletion gates."""
+
+from __future__ import annotations
+
+import ast
+from pathlib import Path
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _source(relative: str) -> str:
+    return (_ROOT / relative).read_text(encoding="utf-8")
+
+
+def _function_node(source: str, name: str) -> ast.FunctionDef:
+    module = ast.parse(source)
+    for node in module.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"function {name!r} not found")
+
+
+def test_declaration_export_no_longer_imports_generated_modules() -> None:
+    source = _source("src/aeat/application/filing/_export.py")
+    assert "adapters.outbound.aeat.export._formats import modelo_" not in source
+    assert "adapters.outbound.aeat.export._formats._serialise" not in source
+    assert "adapters.outbound.aeat.export._formats._deserialise" not in source
+
+
+@pytest.mark.parametrize("function_name", ["export_draft", "verify_export"])
+def test_declaration_export_functions_fail_before_runtime_work(function_name: str) -> None:
+    node = _function_node(_source("src/aeat/application/filing/_export.py"), function_name)
+    raises = [stmt for stmt in node.body if isinstance(stmt, ast.Raise)]
+    assert raises, f"{function_name} must fail closed until registry snapshots back it"
+    first_raise_index = node.body.index(raises[0])
+    imported_before_raise = [
+        stmt for stmt in node.body[:first_raise_index] if isinstance(stmt, ast.Import | ast.ImportFrom)
+    ]
+    assert imported_before_raise == []
+
+
+def test_schema_cache_writer_has_no_filesystem_write_path() -> None:
+    node = _function_node(_source("src/aeat/domain/schema/_cache.py"), "save_modelo_to_cache")
+    calls = [
+        child
+        for child in ast.walk(node)
+        if isinstance(child, ast.Call)
+        and isinstance(child.func, ast.Attribute)
+        and child.func.attr in {"mkdir", "write_text", "write_bytes", "replace", "open"}
+    ]
+    assert calls == []
+
+
+def test_casilla_catalogue_writers_have_no_filesystem_write_path() -> None:
+    source = _source("src/aeat/domain/casillas/catalogue.py")
+    for function_name in ("save_casillas", "write_extract_draft", "write_translate_draft", "_write_temp_catalogue"):
+        node = _function_node(source, function_name)
+        write_calls = [
+            child
+            for child in ast.walk(node)
+            if isinstance(child, ast.Call)
+            and isinstance(child.func, ast.Attribute)
+            and child.func.attr in {"mkdir", "write_text", "write_bytes", "open"}
+        ]
+        assert write_calls == [], f"{function_name} reintroduced a corpus writer"
+
+
+def test_public_hydrate_module_cannot_reach_legacy_ruleset_projection() -> None:
+    source = _source("src/aeat/domain/casillas/_hydrate/__init__.py")
+    assert "from .records import" not in source
+    assert "_hydrate_from_rulesets" not in source
+    assert "casilla hydrate is disabled" in source
+    hydrate_dir = _ROOT / "src/aeat/domain/casillas/_hydrate"
+    assert not (hydrate_dir / "records.py").exists()
+    assert not (hydrate_dir / "formulas.py").exists()
+    assert not (hydrate_dir / "metadata.py").exists()
+
+
+def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -> None:
+    source = _source("src/aeat/application/filing/runtime.py")
+    assert "domain.filing._builders" not in source
+    provider = _function_node(source, "build_runtime_schema_provider")
+    assert any(isinstance(stmt, ast.Raise) for stmt in provider.body)
+    assert "validated registry snapshots" in source
+
+
+def test_application_verification_cannot_import_legacy_formula_engine() -> None:
+    source = _source("src/aeat/application/verification/_verify.py")
+    assert "domain.formulas" not in source
+    verifier = _function_node(source, "verify_declaracion")
+    assert any(isinstance(stmt, ast.Raise) for stmt in verifier.body)
+    assert "validated registry snapshot" in source
+
+
+def test_filing_review_cannot_resolve_legacy_ruleset_registry() -> None:
+    source = _source("src/aeat/application/filing/_review.py")
+    assert "domain.formulas" not in source
+    assert "get_registry" not in source
+    resolver = _function_node(source, "_resolve_ruleset_id")
+    assert any(isinstance(stmt, ast.Raise) for stmt in resolver.body)
+    assert "validated registry snapshot" in source
+
+
+def test_filing_cli_cannot_resolve_legacy_formula_rulesets() -> None:
+    source = _source("src/aeat/entrypoints/cli/filing/__init__.py")
+    assert "domain.formulas" not in source
+    assert "get_registry" not in source
+    resolver = _function_node(source, "_resolve_ruleset_for_filing")
+    resolver_source = ast.get_source_segment(source, resolver)
+    assert resolver_source is not None
+    assert "_ = (filing_modelo, filing_period, filing_ejercicio)" in resolver_source
+
+
+def test_audit_cli_cannot_reach_legacy_rulesets() -> None:
+    source = _source("src/aeat/entrypoints/cli/audit/__init__.py")
+    helper_source = _source("src/aeat/entrypoints/cli/audit/_helpers.py")
+    assert "ALL_RULESETS" not in source
+    assert "domain.formulas" not in source
+    assert "Ruleset" not in helper_source
+    validator = _function_node(helper_source, "validate_citation_coverage")
+    assert any(isinstance(stmt, ast.Raise) for stmt in validator.body)
+
+
+def test_aggregation_models_do_not_import_legacy_formula_codes() -> None:
+    source = _source("src/aeat/application/aggregation/_models.py")
+    assert "domain.formulas" not in source
+    assert "class Quarter" in source
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "src/aeat/entrypoints/cli/data/ledgers/assets.py",
+        "src/aeat/entrypoints/cli/data/ledgers/anexo_d.py",
+    ],
+)
+def test_data_ledger_cli_modules_require_registry_snapshots(relative: str) -> None:
+    source = _source(relative)
+    assert "domain.formulas" not in source
+    assert "_rulesets" not in source
+    assert "validated registry snapshot" in source
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "src/aeat/domain/profile/__init__.py",
+        "src/aeat/domain/profile/inventory/__init__.py",
+        "src/aeat/domain/profile/assets/__init__.py",
+    ],
+)
+def test_profile_support_modules_do_not_import_legacy_formula_package(relative: str) -> None:
+    source = _source(relative)
+    assert "domain.formulas" not in source
+    assert "from ...formulas" not in source
+    assert "from ..formulas" not in source
+
+
+def test_calculation_registry_facade_cannot_import_legacy_rulesets() -> None:
+    source = _source("src/aeat/domain/calculations/_registry.py")
+    assert "domain.formulas" not in source
+    assert "ALL_RULESETS" not in source
+    assert "RulesetRegistry" not in source
+    assert "legacy calculation registry is disabled" in source
+
+
+def test_export_generator_cli_cannot_write_modules() -> None:
+    source = _source("src/aeat/adapters/outbound/aeat/export/_formats/_generate.py")
+    main = _function_node(source, "_main")
+    assert any(isinstance(stmt, ast.Raise) for stmt in main.body)
+    main_source = ast.get_source_segment(source, main)
+    assert main_source is not None
+    assert ".write_text(" not in main_source

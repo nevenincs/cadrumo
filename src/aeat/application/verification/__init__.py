@@ -1,18 +1,4 @@
-"""Round-trip calculation verification for imported declaración drafts.
-
-Turns an :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling` plus
-the project's formula engine output into an operator-readable verdict:
-``verified``, ``needs_review``, or ``unverifiable``. The module consumes
-:meth:`aeat.domain.formulas.Engine.audit_against` and classifies each
-discrepancy by cause — extraction unreliable, rounding, unmodelled rule,
-or correctness divergence — so the operator gets an actionable next step.
-
-Examples:
-    >>> from aeat.application.verification import verify_declaracion
-    >>> verdict = verify_declaracion(filing, ruleset=ruleset)
-    >>> verdict.status
-    <VerificationStatus.VERIFIED: 'VERIFIED'>
-"""
+"""Registry-gated verification records for imported declaración drafts."""
 
 from __future__ import annotations
 

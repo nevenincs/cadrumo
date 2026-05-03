@@ -16,11 +16,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ....application.filing import FilingDraftStatus, FilingOperatorProfile, approve_draft, build_draft
-from ....application.filing.runtime import build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
-from ....domain.transactions import TransactionCatalogue
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -105,49 +102,6 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
-def _write_original_submission(drafts_dir: Path, submissions_dir: Path) -> str:
-    from datetime import UTC, datetime
-
-    from ....domain.filing import FilingDraftRepository
-    from ....domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
-    from ....domain.submission._repository import SubmissionRepository
-
-    draft = build_draft(
-        modelo="130",
-        period="2024Q1",
-        profile=FilingOperatorProfile(
-            tax_id="00000000T",
-            display_name="CLI amendment subject",
-            applicable_modelos=("130",),
-        ),
-        inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
-        schema_provider=build_runtime_schema_provider(),
-    )
-    FilingDraftRepository(store_dir=drafts_dir).save(draft)
-
-    submitted_at = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
-    filing = SubmittedFiling(
-        submission_id="sub-cli-1",
-        draft_id=draft.draft_id,
-        modelo="130",
-        period="2024Q1",
-        profile_tax_id="00000000T",
-        status=SubmissionStatus.SUBMITTED,
-        justificante_csv="CSV-SUB-CLI-1",
-        submitted_at=submitted_at,
-        attempts=(
-            SubmissionAttempt(
-                attempt_id="sub-cli-1.1",
-                started_at=submitted_at,
-                ended_at=submitted_at,
-                status=SubmissionStatus.SUBMITTED,
-            ),
-        ),
-    )
-    SubmissionRepository(store_dir=submissions_dir).save(filing)
-    return "sub-cli-1"
-
-
 class TestFilingCLI:
     """Smoke coverage for ``aeat filing`` build, show, validate, list, import paths."""
 
@@ -174,9 +128,9 @@ class TestFilingCLI:
                 "Configured operator",
             ],
         )
-        assert result.exit_code == 0, result.output
-        produced = sorted(drafts_dir.glob("*.envelope.json"))
-        assert len(produced) == 1
+        assert result.exit_code != 0, result.output
+        assert "validated registry" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
 
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -192,13 +146,9 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        assert result.exit_code == 0, result.output
-        assert "Saved draft" in result.output
-        assert " -> " in result.output
-        assert "aeat review show" in result.output
-        assert "aeat review approve" in result.output
-        produced = sorted(drafts_dir.glob("*.envelope.json"))
-        assert len(produced) == 1
+        assert result.exit_code != 0, result.output
+        assert "validated registry" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -214,14 +164,9 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        assert build_result.exit_code == 0
-        produced = next(drafts_dir.glob("*.envelope.json"))
-
-        show_result = runner.invoke(app, ["show", str(produced)])
-        assert show_result.exit_code == 0
-
-        validate_result = runner.invoke(app, ["validate", str(produced)])
-        assert validate_result.exit_code == 0
+        assert build_result.exit_code != 0
+        assert "validated registry" in build_result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
 
     def test_validate_preserves_approval_for_unchanged_reviewed_draft(
         self,
@@ -230,40 +175,22 @@ class TestFilingCLI:
         transactions_dir: Path,
     ) -> None:
         del transactions_dir
-        draft = build_draft(
-            modelo="130",
-            period="2026Q1",
-            profile=FilingOperatorProfile(
-                tax_id="00000000T",
-                display_name="Kent",
-                applicable_modelos=("130",),
-            ),
-            inputs={"01": 12500, "02": 3500, "05": 400, "06": 0},
-            schema_provider=build_runtime_schema_provider(),
+        inputs = _write_inputs(tmp_path)
+        result = runner.invoke(
+            app,
+            [
+                "build",
+                "--modelo",
+                "130",
+                "--period",
+                "2026Q1",
+                "--inputs",
+                str(inputs),
+            ],
         )
-        approved = approve_draft(
-            draft,
-            approved_by="kent",
-            schema_provider=build_runtime_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
-        from ....domain.filing import FilingDraftRepository
-
-        repo = FilingDraftRepository(store_dir=drafts_dir)
-        repo.save(approved)
-        envelope_path = repo.envelope_path_for(approved.draft_id)
-
-        validate_result = runner.invoke(app, ["validate", str(envelope_path)])
-        assert validate_result.exit_code == 0, validate_result.output
-        assert "aeat submission preflight" in validate_result.output
-
-        refreshed = repo.load(approved.draft_id)
-        assert refreshed is not None
-        assert refreshed.status is FilingDraftStatus.APPROVED
-        assert refreshed.approved_at is not None
-        assert refreshed.approved_by == "kent"
-        assert refreshed.review_checksum is not None
-        assert refreshed.approval_basis is not None
+        assert result.exit_code != 0, result.output
+        assert "validated registry" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
 
     def test_list_filters_by_modelo(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -292,13 +219,10 @@ class TestFilingCLI:
             app,
             ["import", "--from-justificante", str(pdf)],
         )
-        assert result.exit_code == 0, result.output
-        drafts = sorted(drafts_dir.glob("*.envelope.json"))
-        submissions = sorted(submissions_dir.glob("*.json"))
-        assert len(drafts) == 1
-        assert len(submissions) == 1
-        assert "warning" in result.output.lower()
-        assert "Imported draft" in result.output
+        assert result.exit_code != 0, result.output
+        assert "validated registry" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert not list(submissions_dir.glob("*.json"))
 
     def test_import_rejects_missing_pdf(
         self,
@@ -326,7 +250,7 @@ class TestFilingCLI:
             ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code != 0, result.output
-        assert "100" in result.output
+        assert "validated registry" in result.output
         assert not list(drafts_dir.glob("*.envelope.json"))
         assert not list(submissions_dir.glob("*.json"))
 

@@ -38,7 +38,7 @@ from __future__ import annotations
 from datetime import date
 from textwrap import dedent
 
-from ._ingest import IngestedSpec, ingest_dr_spec_path
+from ._ingest import IngestedSpec
 from ._record_spec import (
     FieldKind,
     Justification,
@@ -232,31 +232,9 @@ def _collect_required_field_ids(ingested: IngestedSpec) -> frozenset[str]:
 
 
 def _main() -> None:
-    """CLI entrypoint for ``python -m ..._generate <json> <out.py>``.
+    """Reject legacy source generation from the app/runtime surface."""
 
-    Parses the JSON spec at ``json_path`` via
-    :func:`aeat.adapters.outbound.aeat.export._formats._ingest.ingest_dr_spec_path`
-    and writes the rendered module source to ``out_path``.
-    """
-    import argparse
-    from pathlib import Path
-
-    parser = argparse.ArgumentParser(
-        description="Generate a fichero-BOE schema module from a DR JSON fixture.",
-    )
-    parser.add_argument("json_path", type=Path, help="Path to the DR JSON fixture.")
-    parser.add_argument("out_path", type=Path, help="Path for the generated .py module.")
-    parser.add_argument(
-        "--identifier",
-        default=None,
-        help="Human-readable identifier (defaults to the xlsx filename).",
-    )
-    args = parser.parse_args()
-
-    ingested = ingest_dr_spec_path(args.json_path)
-    identifier = args.identifier or ingested["source"].get("xlsx", args.json_path.stem)
-    source = generate_module_source(ingested, module_identifier=identifier)
-    args.out_path.write_text(source, encoding="utf-8")
+    raise SystemExit("export module generation is disabled; migrate layouts through registry/aeat")
 
 
 __all__ = ["generate_module_source"]
