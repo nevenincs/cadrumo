@@ -63,7 +63,7 @@ class TemplateRevision(BaseModel):
         modelo: Stable modelo identifier (``"130"``, ``"303"``, ...).
         año: Tax year as a four-digit integer (2000-2099).
         revision: Intra-año revision tag (``"2025.01"``,
-            ``"2024.orden-819"``, ``"2021.legacy"``, ...).
+            ``"2024.orden-819"``, ...).
         detected_from: How this triple was resolved — ``"header"`` /
             ``"footer"`` / ``"filename"`` for auto-detection, or
             ``"explicit_override"`` for caller-supplied values.

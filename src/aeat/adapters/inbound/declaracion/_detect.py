@@ -35,16 +35,7 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
 
     1. If the PDF prints an ``Orden HAC/N/YYYY`` footer, use
        ``"{año}.orden-{N}"``.
-    2. Else, if the detected modelo has a modelo-specific revision tag rule
-       (currently only Modelo 100 — IRPF annual), apply it.
-    3. Else fall back to ``"{ejercicio}.01"``.
-
-    Modelo 100 (IRPF) does not carry an ``Orden HAC`` stamp on the
-    justificante PDF and publishes a stable per-year layout that we
-    identify by ejercicio. We mint ``"2021.legacy"`` for the 2021
-    column-split layout and ``"{ejercicio}.modern"`` for 2022 onwards.
-    These tags describe the resolved template identity only; they do not
-    bind a legacy Python extractor class.
+    2. Else fall back to ``"{ejercicio}.01"``.
 
     The fallback is deliberately narrow: the registry refuses to resolve
     any revision it has not explicitly registered, so a spurious fallback
@@ -75,8 +66,6 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
     orden_match = _ORDEN_HAC_RE.search(head_span) or _ORDEN_HAC_RE.search(tail)
     if orden_match is not None:
         revision = f"{orden_match.group('año')}.orden-{orden_match.group('number')}"
-    elif modelo == "100":
-        revision = _modelo_100_revision(int(ejercicio))
     else:
         revision = f"{ejercicio}.01"
 
@@ -86,18 +75,3 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
         revision=revision,
         detected_from="header",
     )
-
-
-def _modelo_100_revision(año: int) -> str:
-    """Map a Modelo 100 ejercicio to its layout-revision tag.
-
-    Modelo 100 rendered its justificante in a 2-column header layout
-    through tax year 2021 (``VALUE label VALUE2 label2``). The 2022
-    Renta Web redesign inverted the shape to the modern ``label VALUE CID``
-    line-oriented form used today. The revision tag is retained for
-    identity and diagnostics only; extractor dispatch is disabled until
-    validated registry snapshots provide the authority.
-    """
-    if año <= 2021:
-        return "2021.legacy"
-    return f"{año}.modern"
