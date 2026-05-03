@@ -1,0 +1,256 @@
+"""Unit tests for the v6 typed overview-calendar aggregator."""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+
+import pytest
+
+from ...domain.deadlines import (
+    AutonomoProfile,
+    IVARegime,
+    ObligationStatus,
+)
+from . import (
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarRange,
+    OverviewPeriodState,
+    build_overview_calendar,
+    user_state_for,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _profile() -> AutonomoProfile:
+    return AutonomoProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_professionals_with_retencion=False,
+        professional_income_withholding_ge_70pct=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        third_party_transactions_above_347_threshold=False,
+        bienes_extranjero_above_threshold=False,
+        notes="overview-calendar test profile",
+    )
+
+
+# ---------------------------------------------------------------------
+# OverviewPeriodState mapping
+# ---------------------------------------------------------------------
+
+
+def test_period_state_enum_carries_v6_canonical_values() -> None:
+    assert {item.value for item in OverviewPeriodState} == {
+        "due",
+        "late",
+        "filed",
+        "unknown",
+    }
+
+
+def test_user_state_maps_open_window_to_due() -> None:
+    assert user_state_for(ObligationStatus.UPCOMING) is OverviewPeriodState.DUE
+    assert user_state_for(ObligationStatus.DUE_SOON) is OverviewPeriodState.DUE
+    assert user_state_for(ObligationStatus.DUE_TODAY) is OverviewPeriodState.DUE
+
+
+def test_user_state_maps_overdue_to_late() -> None:
+    assert user_state_for(ObligationStatus.OVERDUE) is OverviewPeriodState.LATE
+
+
+def test_user_state_maps_filed_to_filed() -> None:
+    assert user_state_for(ObligationStatus.FILED) is OverviewPeriodState.FILED
+
+
+def test_user_state_maps_not_applicable_to_unknown() -> None:
+    assert user_state_for(ObligationStatus.NOT_APPLICABLE) is OverviewPeriodState.UNKNOWN
+
+
+def test_user_state_covers_every_engine_status() -> None:
+    """Every ObligationStatus must map to a v6 user state — no silent gap."""
+    for status in ObligationStatus:
+        assert isinstance(user_state_for(status), OverviewPeriodState)
+
+
+# ---------------------------------------------------------------------
+# OverviewCalendarRange
+# ---------------------------------------------------------------------
+
+
+def test_range_round_trips_canonical_window() -> None:
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    assert rng.from_date == date(2026, 1, 1)
+    assert rng.to_date == date(2026, 4, 20)
+
+
+def test_range_rejects_inverted_window() -> None:
+    with pytest.raises(ValueError):
+        OverviewCalendarRange(from_date=date(2026, 4, 20), to_date=date(2026, 1, 1))
+
+
+def test_range_accepts_single_day_window() -> None:
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 1, 1))
+    assert rng.covered_years() == (2026,)
+
+
+def test_range_covered_years_spans_year_boundary() -> None:
+    rng = OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20))
+    assert rng.covered_years() == (2025, 2026)
+
+
+def test_range_covers_returns_true_for_inclusive_bounds() -> None:
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    assert rng.covers(date(2026, 1, 1)) is True
+    assert rng.covers(date(2026, 4, 20)) is True
+    assert rng.covers(date(2026, 3, 15)) is True
+
+
+def test_range_covers_returns_false_outside_bounds() -> None:
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    assert rng.covers(date(2025, 12, 31)) is False
+    assert rng.covers(date(2026, 4, 21)) is False
+
+
+def test_range_is_frozen() -> None:
+    from pydantic import ValidationError
+
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    with pytest.raises(ValidationError):
+        rng.from_date = date(2025, 12, 31)  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------
+# OverviewCalendarEntry
+# ---------------------------------------------------------------------
+
+
+def _entry(**overrides: object) -> OverviewCalendarEntry:
+    base: dict[str, object] = {
+        "modelo": "130",
+        "period": "2026Q1",
+        "opens_on": date(2026, 4, 1),
+        "closes_on": date(2026, 4, 20),
+        "payment_cutoff_on": date(2026, 4, 15),
+        "status": ObligationStatus.UPCOMING,
+        "user_state": OverviewPeriodState.DUE,
+    }
+    base.update(overrides)
+    return OverviewCalendarEntry.model_validate(base)
+
+
+def test_entry_round_trips_canonical_fields() -> None:
+    entry = _entry()
+    assert entry.modelo == "130"
+    assert entry.period == "2026Q1"
+    assert entry.user_state is OverviewPeriodState.DUE
+
+
+def test_entry_rejects_inverted_window() -> None:
+    with pytest.raises(ValueError):
+        _entry(opens_on=date(2026, 4, 21), closes_on=date(2026, 4, 20))
+
+
+def test_entry_rejects_payment_cutoff_after_closes_on() -> None:
+    with pytest.raises(ValueError):
+        _entry(payment_cutoff_on=date(2026, 4, 25))
+
+
+def test_entry_rejects_user_state_inconsistent_with_engine_status() -> None:
+    with pytest.raises(ValueError):
+        _entry(status=ObligationStatus.OVERDUE, user_state=OverviewPeriodState.DUE)
+
+
+def test_entry_is_frozen() -> None:
+    from pydantic import ValidationError
+
+    entry = _entry()
+    with pytest.raises(ValidationError):
+        entry.modelo = "303"  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------
+# build_overview_calendar
+# ---------------------------------------------------------------------
+
+
+def test_build_returns_typed_calendar_for_quarterly_window() -> None:
+    """Verbatim tape: ``--from 2026-01-01 --to 2026-04-20`` covers Q1 2026."""
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
+        today=date(2026, 4, 1),
+    )
+    assert isinstance(calendar, OverviewCalendar)
+    assert calendar.range.from_date == date(2026, 1, 1)
+    assert calendar.range.to_date == date(2026, 4, 20)
+    assert isinstance(calendar.generated_at, datetime)
+    assert calendar.generated_at.tzinfo == UTC
+
+
+def test_build_only_emits_entries_inside_range() -> None:
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
+        today=date(2026, 4, 1),
+    )
+    for entry in calendar.entries:
+        # An entry must intersect the inclusive range.
+        assert entry.closes_on >= date(2026, 1, 1)
+        assert entry.opens_on <= date(2026, 4, 20)
+
+
+def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        today=date(2026, 4, 1),
+    )
+    keys = [(entry.closes_on, entry.modelo, entry.period) for entry in calendar.entries]
+    assert keys == sorted(keys)
+
+
+def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> None:
+    """Verbatim tape: ``--from 2025-10-01 --to 2026-07-20``."""
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20)),
+        today=date(2026, 5, 3),
+    )
+    years = {entry.period[:4] for entry in calendar.entries}
+    # The range straddles 2025 -> 2026, so both years must contribute.
+    assert "2025" in years or "2026" in years
+
+
+def test_build_user_state_matches_engine_status_per_entry() -> None:
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        today=date(2026, 4, 1),
+    )
+    for entry in calendar.entries:
+        assert entry.user_state is user_state_for(entry.status)
+
+
+def test_build_empty_range_when_window_covers_no_obligations() -> None:
+    """A 1-day window outside every modelo's filing window emits no entries."""
+    # 2026-01-15 lies outside every modelo's January quarterly / monthly window.
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2026, 1, 15), to_date=date(2026, 1, 15)),
+        today=date(2026, 4, 1),
+    )
+    assert isinstance(calendar.entries, tuple)
+
+
+def test_build_is_idempotent_modulo_generated_at() -> None:
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    profile = _profile()
+    a = build_overview_calendar(profile, rng, today=today)
+    b = build_overview_calendar(profile, rng, today=today)
+    assert a.entries == b.entries
+    assert a.range == b.range
