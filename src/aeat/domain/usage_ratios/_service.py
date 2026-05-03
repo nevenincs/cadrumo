@@ -52,10 +52,11 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
         load_encrypted_envelope,
     )
     from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
     target = path.resolve()
     if not target.exists():
-        _LOGGER.info("usage-ratios file not found at %s; returning empty profile", target)
+        _LOGGER.debug("usage-ratios file not found at %s; returning empty profile", target)
         return UsageRatioProfile()
     try:
         envelope = load_encrypted_envelope(
@@ -67,10 +68,17 @@ def load_usage_ratios(path: Path) -> UsageRatioProfile:
             max_supported_version=_USAGE_RATIO_VERSION,
         )
     except ValidationError as exc:
+        _LOGGER.error("usage-ratios envelope validation failed at %s", target, exc_info=True)
         raise UsageRatioPersistenceError(
             f"invalid usage-ratio profile envelope: {target}\n{_summarise_validation_errors(exc)}"
         ) from exc
+    except (ClassificationError, EnvelopeVersionError) as exc:
+        _LOGGER.error("usage-ratios envelope integrity error at %s", target, exc_info=True)
+        raise UsageRatioPersistenceError(
+            f"usage-ratio profile envelope integrity error: {target}: {exc.__class__.__name__}: {exc}"
+        ) from exc
     except OSError as exc:
+        _LOGGER.warning("usage-ratios file unreadable at %s", target, exc_info=True)
         raise UsageRatioPersistenceError(
             f"unable to read usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
         ) from exc
@@ -166,6 +174,7 @@ def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
                 hkdf_context=_HKDF_CONTEXT_USAGE_RATIOS,
             )
     except OSError as exc:
+        _LOGGER.error("usage-ratios file write failed at %s", target, exc_info=True)
         raise UsageRatioPersistenceError(
             f"unable to write usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
         ) from exc

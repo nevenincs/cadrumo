@@ -1,25 +1,13 @@
-"""Smoke tests for ``aeat setup`` Typer surface (#61)."""
+"""Smoke tests for the user-facing ``aeat setup`` surface."""
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import json
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.outbound.aeat.auth import CertificateBackend
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_master_key_provider,
-    override_secret_store,
-)
-from aeat.application.setup import SetupAnswers
-from aeat.core.i18n import Language
-from aeat.domain.deadlines import IVARegime
-from aeat.domain.profile import CCAA
 from aeat.entrypoints.cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -27,127 +15,96 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _runner = CliRunner()
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs-secret",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
+def _env(tmp_path: Path) -> dict[str, str]:
+    return {
+        "AEAT_SECRET_STORE_BACKEND": "unsecured",
+        "AEAT_ALLOW_UNENCRYPTED": "1",
+        "AEAT_RUNS_DIR": str(tmp_path / "runs"),
+        "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
+        "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
+        "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+    }
 
 
-def _seed_answers_file(tmp_path: Path) -> tuple[Path, SetupAnswers]:
-    cert = tmp_path / "cert.p12"
-    cert.write_bytes(b"x")
-    answers = SetupAnswers(
-        tax_id="12345678Z",
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_professionals_with_retencion=False,
-        professional_income_withholding_ge_70pct=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        third_party_transactions_above_347_threshold=False,
-        bienes_extranjero_above_threshold=False,
-        tax_residence_ccaa=CCAA.MADRID,
-        certificate_path=cert,
-        certificate_password_secret_var_name="AEAT_TEST_PW",
-        certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        default_language=Language.EN,
-        output_language=Language.HU,
-        aeat_drafts_dir=tmp_path / "drafts",
-        aeat_submissions_dir=tmp_path / "subs",
-        aeat_manuals_root=tmp_path / "manuals",
-        default_profile_path=tmp_path / "profile.json",
-    )
-    path = tmp_path / "answers.json"
-    path.write_text(answers.model_dump_json(), encoding="utf-8")
-    return path, answers
-
-
-def test_setup_help() -> None:
+def test_setup_help_is_user_scaffold() -> None:
     result = _runner.invoke(app, ["setup", "--help"])
+
     assert result.exit_code == 0
-    assert "env/.env" in result.output
-    assert "RENTA" in result.output
-    assert "CCAA" in result.output
+    assert "init" in result.output
+    assert "status" in result.output
+    assert "profile" in result.output
+    assert "auth" in result.output
+    assert "env/.env" not in result.output
 
 
-def test_setup_verify_help() -> None:
-    result = _runner.invoke(app, ["setup", "verify", "--help"])
+def test_setup_profile_help_exposes_review_and_validation() -> None:
+    result = _runner.invoke(app, ["setup", "profile", "--help"])
+
     assert result.exit_code == 0
-    assert "SetupAnswers" in result.output
-    assert "sin escribir" in result.output
+    for command in ("use", "set", "get", "unset", "show", "validate", "list", "keys"):
+        assert command in result.output
 
 
-def test_setup_show_help_mentions_renta_ccaa() -> None:
-    result = _runner.invoke(app, ["setup", "show", "--help"])
+def test_setup_auth_help_exposes_access_lifecycle() -> None:
+    result = _runner.invoke(app, ["setup", "auth", "--help"])
+
     assert result.exit_code == 0
-    assert "SetupAnswers" in result.output
-    assert "RENTA" in result.output
-    assert "CCAA" in result.output
+    for command in ("providers", "configure", "login", "status", "whoami", "logout"):
+        assert command in result.output
 
 
-def test_setup_show_roundtrip(tmp_path: Path) -> None:
-    path, _ = _seed_answers_file(tmp_path)
-    result = _runner.invoke(app, ["setup", "show", "--from", str(path)])
-    assert result.exit_code == 0
-    assert "12345678Z" in result.output
+def test_setup_profile_roundtrip(tmp_path: Path) -> None:
+    env = _env(tmp_path)
+    init = _runner.invoke(
+        app,
+        ["--format", "json", "setup", "init", "--name", "kent", "--activity", "design", "--tax-id", "12345678Z"],
+        env=env,
+    )
+    show = _runner.invoke(app, ["--format", "json", "setup", "profile", "show"], env=env)
+    validate = _runner.invoke(app, ["--format", "json", "setup", "profile", "validate"], env=env)
+
+    assert init.exit_code == 0, init.output
+    assert show.exit_code == 0, show.output
+    assert validate.exit_code == 0, validate.output
+    payload = json.loads(show.output)
+    assert payload["profile"]["name"] == "kent"
+    assert payload["profile"]["values"]["activity"] == "design"
+    assert payload["profile"]["values"]["tax.id"] == "12345678Z"
 
 
-def test_setup_non_interactive_runs_end_to_end(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AEAT_TEST_PW", "x")
-    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
-    path, answers = _seed_answers_file(tmp_path)
-    env_file = tmp_path / ".env"
+def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
+    env = _env(tmp_path)
+    missing = _runner.invoke(app, ["--format", "json", "setup", "status"], env=env)
+    _runner.invoke(
+        app,
+        ["setup", "init", "--name", "kent", "--activity", "design", "--tax-id", "12345678Z"],
+        env=env,
+    )
+    certificate = tmp_path / "cert.p12"
+    certificate.write_bytes(b"fixture")
+    _runner.invoke(
+        app,
+        ["setup", "auth", "configure", "--provider", "certificate", "--certificate", str(certificate)],
+        env=env,
+    )
+    _runner.invoke(app, ["setup", "auth", "login"], env=env)
+    ready = _runner.invoke(app, ["--format", "json", "setup", "status"], env=env)
+
+    assert missing.exit_code == 0, missing.output
+    assert json.loads(missing.output)["profile_ready"] is False
+    assert ready.exit_code == 0, ready.output
+    ready_payload = json.loads(ready.output)
+    assert ready_payload["profile_ready"] is True
+    assert ready_payload["auth_ready"] is True
+    assert ready_payload["next"] == "aeat app overview status"
+
+
+def test_setup_auth_rejects_research_only_provider(tmp_path: Path) -> None:
     result = _runner.invoke(
         app,
-        [
-            "setup",
-            "--env-file",
-            str(env_file),
-            "--non-interactive",
-            "--from",
-            str(path),
-        ],
+        ["setup", "auth", "configure", "--provider", "clave_permanente"],
+        env=_env(tmp_path),
     )
-    assert result.exit_code == 0, result.output
-    assert env_file.exists()
-    assert answers.default_profile_path.exists()
-    assert (tmp_path / "tax-residence.json").exists()
 
-
-def test_setup_non_interactive_requires_from(
-    tmp_path: Path,
-) -> None:
-    result = _runner.invoke(
-        app,
-        ["setup", "--env-file", str(tmp_path / ".env"), "--non-interactive"],
-    )
     assert result.exit_code != 0
-
-
-def test_setup_verify_reports_findings(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AEAT_TEST_PW", "x")
-    path, _ = _seed_answers_file(tmp_path)
-    result = _runner.invoke(app, ["setup", "verify", "--from", str(path)])
-    # Profile JSON not present → at least a WARNING, exit 0 or 2.
-    assert result.exit_code in (0, 2)
+    assert "research-only" in result.output

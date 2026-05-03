@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol, runtime_ch
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -66,6 +66,8 @@ from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
+    DecryptionError,
+    EncryptionError,
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,
@@ -228,6 +230,7 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
         # imply directory fsync on ext4 / xfs / etc.).
         fsync_parent_dir(target)
     except BaseException:
+        _log.error("master_key: atomic write failed target=%s", target, exc_info=True)
         with contextlib.suppress(OSError):
             os.unlink(tmp_path)
         raise
@@ -591,7 +594,7 @@ class FileFallbackMasterKeyProvider:
             )
         try:
             params = _KdfParameters.model_validate_json(raw_text)
-        except Exception as exc:
+        except (ValueError, ValidationError) as exc:
             raise MasterKeyUnavailableError(
                 f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
             ) from exc
@@ -603,13 +606,13 @@ class FileFallbackMasterKeyProvider:
         try:
             wire = base64.b64decode(self._master_key_path.read_bytes(), validate=True)
             blob = EncryptedBlob.from_wire(wire)
-        except Exception as exc:
+        except (OSError, ValueError, binascii.Error) as exc:
             raise MasterKeyUnavailableError(
                 f"failed to read wrapped master key at {self._master_key_path}: {exc}",
             ) from exc
         try:
             return decrypt_record(blob, key=kek, associated_data=b"aeat.master-key.v1")
-        except Exception as exc:
+        except (DecryptionError, EncryptionError) as exc:
             # Distinguish passphrase-mismatch from material-missing so
             # the CLI can render an actionable hint
             # (`aeat security recover --recovery-key` for forgotten
@@ -1133,7 +1136,7 @@ def migrate_master_key_kdf(
 
         try:
             legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
-        except Exception as exc:
+        except (ValueError, ValidationError) as exc:
             raise MasterKeyUnavailableError(
                 f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
             ) from exc
@@ -1146,7 +1149,7 @@ def migrate_master_key_kdf(
         try:
             wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
             blob = EncryptedBlob.from_wire(wire)
-        except Exception as exc:
+        except (OSError, ValueError, binascii.Error) as exc:
             raise MasterKeyUnavailableError(
                 f"failed to read wrapped master key at {master_key_path}: {exc}",
             ) from exc
@@ -1175,7 +1178,7 @@ def migrate_master_key_kdf(
         master_key: bytes
         try:
             master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
-        except Exception:
+        except (DecryptionError, EncryptionError):
             # Not a partial-migration state. Fall through to the
             # normal legacy-unwrap → re-wrap path. The next try-block
             # performs the legacy decrypt and surfaces a typed error
@@ -1203,7 +1206,7 @@ def migrate_master_key_kdf(
 
         try:
             master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
-        except Exception as exc:
+        except (DecryptionError, EncryptionError) as exc:
             raise MasterKeyUnavailableError(
                 "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
                 "or the file may be tampered with. The v1 store has not been modified.",

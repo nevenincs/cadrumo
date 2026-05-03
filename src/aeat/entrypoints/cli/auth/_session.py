@@ -18,7 +18,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....application.auth import AuthProviderKind
 from ....core.errors import AeatError
+from ....core.logging import get_logger
 from ._paths import storage_state_paths
+
+_logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ....core.config import Settings
@@ -85,6 +88,12 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
     if session.provider_kind is not kind_hint:
+        _logger.debug(
+            "_parse_single: provider_kind mismatch in %s (expected %s, got %s)",
+            metadata_path,
+            kind_hint.value,
+            session.provider_kind.value,
+        )
         raise CorruptAuthSessionError(
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         )
@@ -101,6 +110,7 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
     if kind is not None:
         paths = storage_state_paths(settings, kind)
         if not paths.metadata.exists():
+            _logger.debug("load: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.metadata, kind)
 
@@ -111,6 +121,7 @@ def load(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedA
         paths = storage_state_paths(settings, candidate)
         if paths.metadata.exists():
             return _parse_single(paths.metadata, candidate)
+    _logger.debug("load: no session metadata found for any registered provider")
     return None
 
 
@@ -143,6 +154,12 @@ def delete(settings: Settings, kind: AuthProviderKind | None = None) -> list[Pat
             except FileNotFoundError:
                 continue
             except OSError:
+                _logger.warning(
+                    "delete: failed to remove auth session file %s",
+                    candidate_path,
+                    exc_info=True,
+                )
                 continue
+            _logger.debug("delete: removed auth session file %s", candidate_path)
             removed.append(candidate_path)
     return removed

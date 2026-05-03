@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Annotated, cast
 
 import typer
+from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
@@ -44,6 +45,7 @@ from ....application.filing import (
 )
 from ....application.filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ....core.config import load_settings
+from ....core.errors import AmbiguousPeriodError, MissingRulesetError
 from ....core.i18n import Language, Translatable, get_translation
 from ....core.logging import get_logger
 from ....domain.justificante import JustificanteError
@@ -134,6 +136,7 @@ def _load_inputs(path: Path) -> dict[str, object]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
+        _logger.warning("_load_inputs: invalid JSON in %s", path, exc_info=True)
         raise typer.BadParameter(
             _msg(
                 _t(
@@ -297,6 +300,7 @@ def _parse_json_argument(raw: str) -> dict[str, object]:
     try:
         payload = json.loads(payload_text)
     except json.JSONDecodeError as exc:
+        _logger.warning("_parse_json_argument: invalid JSON in %r", raw, exc_info=True)
         raise typer.BadParameter(
             _msg(
                 _t(
@@ -476,7 +480,7 @@ def build(
     if profile is not None:
         try:
             operator_profile = load_default_filing_profile(profile, display_name=resolved_display_name)
-        except ValueError as exc:
+        except FilingDraftError as exc:
             raise typer.BadParameter(str(exc)) from exc
     elif (
         settings.aeat_default_profile_path is not None
@@ -485,7 +489,7 @@ def build(
     ):
         try:
             operator_profile = load_default_filing_profile(display_name=resolved_display_name)
-        except ValueError as exc:
+        except FilingDraftError as exc:
             raise typer.BadParameter(str(exc)) from exc
     else:
         operator_profile = FilingOperatorProfile(
@@ -493,6 +497,7 @@ def build(
             display_name=profile_name,
             applicable_modelos=(modelo,),
         )
+    _logger.info("filing build: starting draft build for Modelo %s period %s", modelo, period)
     try:
         draft = build_draft(
             modelo=modelo,
@@ -503,8 +508,16 @@ def build(
             fail_on_warning=settings.aeat_draft_fail_on_warning,
         )
     except FilingDraftError as exc:
+        _logger.warning("filing build: draft build failed for modelo %s period %s", modelo, period, exc_info=True)
         raise typer.BadParameter(str(exc)) from exc
     saved = _save_draft(draft)
+    _logger.info(
+        "filing build: draft %s saved for Modelo %s period %s (status=%s)",
+        draft.draft_id,
+        modelo,
+        period,
+        draft.status.value,
+    )
     typer.echo(
         _msg(
             _t(
@@ -524,6 +537,7 @@ def validate(
     draft_path: Annotated[Path, typer.Argument(help="Path to a draft JSON file")],
 ) -> None:
     """Re-validate an existing draft and rewrite it through the repository."""
+    _logger.info("filing validate: re-validating draft at %s", draft_path)
     draft = _load_draft(draft_path)
     refreshed = validate_draft(
         draft,
@@ -531,6 +545,11 @@ def validate(
     )
     refreshed = _refresh_persisted_draft(draft_path, refreshed)
     _draft_repository().save(refreshed)
+    _logger.info(
+        "filing validate: draft %s re-validated (status=%s)",
+        refreshed.draft_id,
+        refreshed.status.value,
+    )
     typer.echo(
         _msg(
             _t(
@@ -713,6 +732,7 @@ def import_(
 
 def _handle_justificante_import(from_justificante: Path) -> None:
     """Dispatch the justificante import path."""
+    _logger.info("filing import: importing from justificante %s", from_justificante)
     settings = load_settings()
     try:
         result = import_filing_from_justificante(
@@ -720,6 +740,7 @@ def _handle_justificante_import(from_justificante: Path) -> None:
             schema_provider=_schema_provider(),
         )
     except (FilingImportError, FilingDraftError, JustificanteError) as exc:
+        _logger.warning("filing import: justificante import failed for %s", from_justificante, exc_info=True)
         raise typer.BadParameter(str(exc)) from exc
 
     draft_path = _save_draft(result.draft)
@@ -728,6 +749,12 @@ def _handle_justificante_import(from_justificante: Path) -> None:
     submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
     submission_repository.save(result.submission)
     submission_path = submission_repository.envelope_path_for(result.submission.submission_id)
+    _logger.info(
+        "filing import: justificante import complete (draft=%s submission=%s warnings=%d)",
+        result.draft.draft_id,
+        result.submission.submission_id,
+        len(result.warnings),
+    )
 
     justificante_csv = result.submission.justificante_csv
     submission_id = result.submission.submission_id
@@ -782,6 +809,7 @@ def _handle_declaracion_import(
             año_override=año,
         )
     except DeclaracionParseError as exc:
+        _logger.warning("filing import: declaracion parse failed for %s", from_declaracion, exc_info=True)
         raise typer.BadParameter(str(exc)) from exc
 
     lang = _output_language()
@@ -901,12 +929,12 @@ def _resolve_ruleset_for_filing(
 
     try:
         period_obj = FiscalPeriod(year=int(filing_ejercicio), quarter=quarter)
-    except Exception:
+    except (ValueError, ValidationError):
         return None
 
     try:
         return get_registry().resolve(modelo=modelo_code, period=period_obj)
-    except Exception:
+    except (MissingRulesetError, AmbiguousPeriodError):
         return None
 
 

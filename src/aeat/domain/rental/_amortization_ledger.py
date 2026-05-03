@@ -20,8 +20,11 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.logging import get_logger
 from ._errors import AmortizationLedgerCapExceededError
 from ._models import RentalAmortizationLedgerEntry, RentalFinca, RentalIncomeRecord
+
+_logger = get_logger(__name__)
 
 ART_23_1_F_RATE: Decimal = Decimal("0.03")
 """3 % rate per LIRPF art. 23.1, párrafo f."""
@@ -108,6 +111,15 @@ def compute_amortization_for_year(
     capped = min(gross, remaining_cap)
     capped = _round_to_cents(capped)
     clamped = capped < gross
+    if clamped:
+        _logger.debug(
+            "amortization capped: finca_id=%s period=%d gross=%s cap_remaining=%s capped=%s",
+            finca.id,
+            income.period_year,
+            gross,
+            remaining_cap,
+            capped,
+        )
     if strict and clamped:
         raise AmortizationLedgerCapExceededError(
             "amortización accrual exceeds coste_adquisicion_construccion cap",

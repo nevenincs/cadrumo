@@ -161,7 +161,8 @@ def get_engine(settings: Settings | None = None) -> Engine:
             _log.info("aeat_storage_auto_migrate=true; running alembic upgrade head")
             try:
                 upgrade_to_head(engine)
-            except Exception:
+            except Exception:  # Alembic exception surface is undocumented; log+dispose+re-raise is correct boundary
+                _log.error("alembic upgrade head failed for url=%s", url, exc_info=True)
                 engine.dispose()
                 raise
         _engines[url] = engine

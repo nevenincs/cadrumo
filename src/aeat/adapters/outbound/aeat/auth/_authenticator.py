@@ -43,7 +43,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from playwright.async_api import Error as PlaywrightError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.logging import get_logger
 from ._providers import (
@@ -62,6 +63,8 @@ from .certificate import (
     CertificateBackend,
     CertificateBundle,
     CertificateHealth,
+    CertificateLoadError,
+    CertificateNifParseError,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
@@ -502,9 +505,11 @@ class AeatAuthenticator:
 
             try:
                 self._assert_context_marker(context, cert)
-            except Exception:
-                with contextlib.suppress(Exception):
+            except AeatLoginAssertionError:
+                try:
                     await context.close()
+                except Exception as _exc:  # Playwright context.close() exception surface is undocumented; log and continue
+                    log.debug("AeatAuthenticator: context.close after marker failure suppressed: %s", _exc)
                 await self._close_browser_session(session_like)
                 raise
 
@@ -524,8 +529,10 @@ class AeatAuthenticator:
             )
             assertion = await self._run_login_probe(context, provisional_session, target)
             if not assertion.is_valid:
-                with contextlib.suppress(Exception):
+                try:
                     await context.close()
+                except Exception as _exc:
+                    log.debug("AeatAuthenticator: context.close after failed probe suppressed: %s", _exc)
                 await self._close_browser_session(session_like)
                 raise AeatLoginAssertionError(
                     "fresh AEAT authentication did not produce a valid login assertion; "
@@ -544,15 +551,14 @@ class AeatAuthenticator:
             self._active_session = session
             try:
                 await self._capture_storage_state_locked(session)
-            except Exception:
+            except Exception:  # capture can raise AeatLoginAssertionError, OSError, or PlaywrightError; cleanup + re-raise
                 await self._drop_context()
                 await self._close_browser_session(session_like)
                 self._browser_session = None
                 self._active_session = None
                 raise
             log.info(
-                "AeatAuthenticator: authenticated nif=%s thumbprint=%s",
-                session.identity_nif,
+                "AeatAuthenticator: authenticated thumbprint=%s",
                 session.certificate_thumbprint,
             )
             return session
@@ -586,8 +592,7 @@ class AeatAuthenticator:
             ``authenticated_at`` + ``idle_deadline``.
         """
         log.info(
-            "AeatAuthenticator: reauthenticate old_nif=%s old_authenticated_at=%s",
-            session.identity_nif,
+            "AeatAuthenticator: reauthenticate old_authenticated_at=%s",
             session.authenticated_at.isoformat(),
         )
         # Delegate teardown to close() (itself lock-protected and
@@ -731,18 +736,31 @@ class AeatAuthenticator:
             os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = (
                 self._settings.aeat_certificate_password_secret.get_secret_value()
             )
+            backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
             health = certificate_health(
                 self._settings.aeat_certificate_path,
                 password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
-                backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
+                backend=backend,
                 friendly_name=self._settings.aeat_certificate_friendly_name,
             )
             identity_nif: str | None = None
             try:
-                identity_nif = extract_nif_from_subject(self.load_certificate())
-            except Exception:
+                identity_nif = extract_nif_from_subject(
+                    LoadedCertificate(
+                        subject=health.subject,
+                        issuer=health.issuer,
+                        not_before=health.not_before,
+                        not_after=health.not_after,
+                        serial_number=health.serial_number,
+                        sha256_thumbprint="",
+                        source_path=self._settings.aeat_certificate_path,
+                        friendly_name=self._settings.aeat_certificate_friendly_name,
+                        backend=backend,
+                    )
+                )
+            except CertificateNifParseError:
                 identity_nif = None
             return AuthProviderDescription(
                 kind=self.kind,
@@ -823,10 +841,13 @@ class AeatAuthenticator:
                 certificate_recognised = 200 <= status_code < 400
         except Exception as exc:
             error_message = f"{type(exc).__name__}: {exc}"
+            log.warning("AeatAuthenticator: login probe navigation failed for %s", target, exc_info=True)
         finally:
             if page is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await page.close()
+                except Exception as _exc:
+                    log.debug("AeatAuthenticator: probe page.close suppressed: %s", _exc)
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         handshake = session.handshake
@@ -949,8 +970,10 @@ class AeatAuthenticator:
             )
         except _PersistedSessionInvalidError:
             if context is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await context.close()
+                except Exception as _exc:
+                    log.debug("AeatAuthenticator: context.close after invalid persisted session suppressed: %s", _exc)
             if owns_session:
                 await self._close_browser_session(session_like)
             self._invalidate_persisted_state(
@@ -960,8 +983,10 @@ class AeatAuthenticator:
             raise
         except Exception as exc:
             if context is not None:
-                with contextlib.suppress(Exception):
+                try:
                     await context.close()
+                except Exception as _exc:
+                    log.debug("AeatAuthenticator: context.close after resume error suppressed: %s", _exc)
             if owns_session:
                 await self._close_browser_session(session_like)
             self._raise_invalid_persisted_state(
@@ -976,7 +1001,7 @@ class AeatAuthenticator:
         self._active_session = session
         try:
             await self._capture_storage_state_locked(session)
-        except Exception:
+        except Exception:  # capture can raise AeatLoginAssertionError, OSError, or PlaywrightError; cleanup + re-raise
             await self._drop_context()
             if owns_session:
                 await self._close_browser_session(session_like)
@@ -984,8 +1009,7 @@ class AeatAuthenticator:
             self._active_session = None
             raise
         log.info(
-            "AeatAuthenticator: resumed persisted session nif=%s thumbprint=%s",
-            session.identity_nif,
+            "AeatAuthenticator: resumed persisted session thumbprint=%s",
             session.certificate_thumbprint,
         )
         return session
@@ -1030,7 +1054,7 @@ class AeatAuthenticator:
         metadata: _PersistedSessionMetadata | None = None
         try:
             metadata = _PersistedSessionMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
-        except Exception as exc:
+        except (OSError, ValueError, ValidationError) as exc:
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 f"persisted metadata sidecar is malformed: {exc}",
@@ -1055,7 +1079,7 @@ class AeatAuthenticator:
         payload: Any = None
         try:
             payload = json.loads(raw.decode("utf-8"))
-        except Exception as exc:
+        except (ValueError, UnicodeDecodeError) as exc:
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 f"persisted storage_state is not valid JSON: {exc}",
@@ -1089,7 +1113,7 @@ class AeatAuthenticator:
         for candidate in (storage_state_path, metadata_path):
             try:
                 candidate.unlink(missing_ok=True)
-            except Exception as exc:
+            except OSError as exc:
                 log.warning(
                     "AeatAuthenticator: failed to remove invalid persisted session file %s: %s",
                     candidate,
@@ -1147,14 +1171,14 @@ class AeatAuthenticator:
     def _require_bundle(self) -> CertificateBundle:
         """Assemble a :class:`CertificateBundle` from ``settings``.
 
-        Raises :class:`ValueError` if the mandatory env-driven
+        Raises :class:`CertificateLoadError` if the mandatory env-driven
         fields are not configured. This is a structural precondition
         — callers should have verified env var presence before
         calling the authenticator.
         """
         path = self._settings.aeat_certificate_path
         if path is None:
-            raise ValueError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
+            raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
         return CertificateBundle(
             path=path,
             password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 — env var NAME, not a secret
@@ -1186,8 +1210,8 @@ class AeatAuthenticator:
             return
         try:
             await context.close()
-        except Exception as exc:
-            log.warning("AeatAuthenticator: context close failed: %s", exc)
+        except PlaywrightError:
+            log.warning("AeatAuthenticator: context close failed", exc_info=True)
 
     async def _close_browser_session(self, session: BrowserSessionLike | None) -> None:
         """Best-effort teardown of a :class:`BrowserSessionLike`.
@@ -1207,8 +1231,8 @@ class AeatAuthenticator:
             result = close()
             if asyncio.iscoroutine(result):
                 await result
-        except Exception as exc:
-            log.warning("AeatAuthenticator: browser session close failed: %s", exc)
+        except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
+            log.warning("AeatAuthenticator: browser session close failed", exc_info=True)
 
 
 class BrowserSessionFactory(Protocol):

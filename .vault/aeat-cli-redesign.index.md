@@ -17,11 +17,11 @@ Auto-generated index of all documents tagged with `#aeat-cli-redesign`.
 
 ### adr
 
-- `2026-05-02-aeat-cli-redesign-adr` - `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v5` | (**status:** `in progress`)
+- `2026-05-02-aeat-cli-redesign-adr` - `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `in progress`)
 
 ### reference
 
-- `2026-05-02-aeat-cli-redesign-reference` - `aeat-cli-redesign` reference: `user-cli-redesign-review-packet-v5`
+- `2026-05-02-aeat-cli-redesign-reference` - `aeat-cli-redesign` reference: `user-cli-redesign-review-packet-v6`
 
 ### research
 

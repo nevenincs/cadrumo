@@ -74,7 +74,7 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Marqueu aquesta casella per comunicar el cessament de l'activitat econòmica.",
+        "ca": "Marqueu aquesta casella per comunicar l'inici de l'activitat econòmica.",
         "en": "Tick this box to report the cessation of the economic activity.",
         "es": "Marque esta casilla para comunicar el cese de la actividad económica.",
         "hu": "Jelölje be a gazdasági tevékenység megszüntetésének bejelentéséhez."
@@ -159,134 +159,6 @@
       "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
       "source_page": 1,
       "source_section": "C. Régimen IVA",
-      "synthetic": false,
-      "validation": []
-    },
-    {
-      "casilla_id": "510",
-      "computed": false,
-      "data_type": "boolean",
-      "definition_reviewed_at": "2026-05-01",
-      "definition_reviewed_by": "human-codex",
-      "formula": null,
-      "help": {
-        "ca": "Marqueu si tributeu el rendimiento de la actividad por estimación directa (LIRPF art. 28).",
-        "en": "Tick if you compute business income under the direct estimation regime (LIRPF art. 28).",
-        "es": "Marque si tributa el rendimiento de la actividad por estimación directa (LIRPF art. 28).",
-        "hu": "Jelölje be, ha közvetlen becsléssel állapítja meg a jövedelmét (LIRPF 28. cikk)."
-      },
-      "label": {
-        "ca": "Règim d'estimació directa de l'IRPF",
-        "en": "Direct estimation IRPF regime",
-        "es": "Régimen de estimación directa del IRPF",
-        "hu": "Közvetlen becslésű IRPF-rendszer"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_037",
-      "period": "2024",
-      "references_casillas": [],
-      "references_rules": [],
-      "required": false,
-      "select_options": null,
-      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
-      "source_page": 1,
-      "source_section": "D. Régimen IRPF",
-      "synthetic": false,
-      "validation": []
-    },
-    {
-      "casilla_id": "608",
-      "computed": false,
-      "data_type": "boolean",
-      "definition_reviewed_at": "2026-05-01",
-      "definition_reviewed_by": "human-codex",
-      "formula": null,
-      "help": {
-        "ca": "Marqueu si tributeu per estimación objetiva (Ordre HFP/1359/2023, mòduls).",
-        "en": "Tick if you fall under the objective-estimation (modules) regime.",
-        "es": "Marque si tributa por estimación objetiva (Orden HFP/1359/2023, módulos).",
-        "hu": "Jelölje be, ha objektív becsléssel adózik (modulok)."
-      },
-      "label": {
-        "ca": "Règim d'estimació objectiva de l'IRPF (mòduls)",
-        "en": "Objective estimation (modules) IRPF regime",
-        "es": "Régimen de estimación objetiva del IRPF (módulos)",
-        "hu": "Objektív becslésű IRPF-rendszer (modulok)"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_037",
-      "period": "2024",
-      "references_casillas": [],
-      "references_rules": [],
-      "required": false,
-      "select_options": null,
-      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
-      "source_page": 1,
-      "source_section": "D. Régimen IRPF",
-      "synthetic": false,
-      "validation": []
-    },
-    {
-      "casilla_id": "700",
-      "computed": false,
-      "data_type": "text",
-      "definition_reviewed_at": "2026-05-01",
-      "definition_reviewed_by": "human-codex",
-      "formula": null,
-      "help": {
-        "ca": "Codi d'epígraf de l'Impost sobre Activitats Econòmiques que clasifica la actividad.",
-        "en": "Heading code of the Spanish economic-activities tax that classifies the activity.",
-        "es": "Código de epígrafe del Impuesto sobre Actividades Económicas que clasifica la actividad.",
-        "hu": "A spanyol gazdasági-tevékenység-adó tevékenységi kódja."
-      },
-      "label": {
-        "ca": "Epígraf IAE",
-        "en": "IAE heading (economic-activities tax)",
-        "es": "Epígrafe IAE",
-        "hu": "IAE tevékenységi kód"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_037",
-      "period": "2024",
-      "references_casillas": [],
-      "references_rules": [],
-      "required": false,
-      "select_options": null,
-      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
-      "source_page": 1,
-      "source_section": "E. Actividades económicas",
-      "synthetic": false,
-      "validation": []
-    },
-    {
-      "casilla_id": "800",
-      "computed": false,
-      "data_type": "date",
-      "definition_reviewed_at": "2026-05-01",
-      "definition_reviewed_by": "human-codex",
-      "formula": null,
-      "help": {
-        "ca": "Fecha desde la que produce efectos la presente declaració censal.",
-        "en": "Date from which this census declaration takes effect.",
-        "es": "Fecha desde la que produce efectos la presente declaración censal.",
-        "hu": "A bejelentés hatálybalépésének dátuma."
-      },
-      "label": {
-        "ca": "Data d'efectes",
-        "en": "Effective date",
-        "es": "Fecha de efectos",
-        "hu": "Hatálybalépés dátuma"
-      },
-      "llm_draft_provenance": null,
-      "modelo": "MODELO_037",
-      "period": "2024",
-      "references_casillas": [],
-      "references_rules": [],
-      "required": false,
-      "select_options": null,
-      "source_manual_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
-      "source_page": 1,
-      "source_section": "F. Datos finales",
       "synthetic": false,
       "validation": []
     }

@@ -18,6 +18,7 @@ from pathlib import Path
 
 from ...adapters.inbound.justificante import parse_justificante
 from ...core.config import load_settings
+from ...core.logging import get_logger
 from ...core.paths import resolve_record_json_path
 from ...domain.filing._amendment import (
     AmendmentKind,
@@ -32,6 +33,7 @@ from ...domain.filing._errors import FilingAmendmentError, FilingAmendmentValida
 from ...domain.filing._schema import FilingDraft, FilingScalar, FilingValue
 from .runtime import FilingOperatorProfile, build_runtime_schema_provider
 
+_logger = get_logger(__name__)
 _REASONS_INPUT_KEY = "_reasons"
 _AMENDMENTS_DIRNAME = "amendments"
 
@@ -79,6 +81,14 @@ def build_complementaria(original, updated_inputs: CasillaInputs) -> FilingAmend
         created_at=datetime.now(tz=UTC),
     )
     _persist_amendment(amendment)
+    _logger.info(
+        "built complementaria amendment_id=%s kind=%s modelo=%s period=%s changes=%d",
+        amendment.amendment_id,
+        amendment_kind.value,
+        metadata["original_model"],
+        metadata["original_period"],
+        len(delta),
+    )
     return amendment
 
 
@@ -94,6 +104,7 @@ def load_amendment(amendment_id: str) -> FilingAmendment:
     loaded = repository.load(amendment_id)
     if loaded is None:
         raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
+    _logger.debug("loaded amendment amendment_id=%s", amendment_id)
     return loaded
 
 
@@ -103,11 +114,14 @@ def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]
 
     target_dir = _amendments_dir()
     if not target_dir.exists():
+        _logger.debug("amendments directory absent — returning empty list")
         return ()
     repository = FilingAmendmentRepository(store_dir=target_dir)
-    return tuple(
+    results = tuple(
         amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
     )
+    _logger.debug("listed %d amendments modelo_filter=%s", len(results), modelo)
+    return results
 
 
 def _amendments_dir() -> Path:

@@ -3,7 +3,7 @@
 The loader is intentionally minimal: for 2025 it falls back to the hand-coded
 :data:`aeat.domain.vat.VAT_CATALOGUE_2025` when the Manual práctico IVA
 corpus has no extracted, year-keyed JSON catalogue on disk. The fallback is
-logged at INFO so operators notice the miss.
+logged so operators can see that the disk-backed corpus was not used.
 
 For any year other than 2025 the loader raises
 :exc:`aeat.domain.vat.VatCatalogueError`. When the on-disk extraction
@@ -56,7 +56,7 @@ def load_vat_rules_from_manual(
         raise VatCatalogueError(
             f"no VAT catalogue available for year={year}; supported fallback years: {sorted(_SUPPORTED_FALLBACK_YEARS)}"
         )
-    _logger.info(
+    _logger.warning(
         "load_vat_rules_from_manual: falling back to in-memory VAT_CATALOGUE_2025 for year=%d",
         year,
     )

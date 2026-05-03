@@ -88,8 +88,8 @@ class DefaultBrowserSession:
             finally:
                 try:
                     await self._playwright.stop()
-                except Exception as exc:
-                    logger.warning("DefaultBrowserSession: playwright stop failed: %s", exc)
+                except Exception:  # Playwright stop() exception surface is undocumented; teardown must not abort
+                    logger.warning("default_browser_session: playwright stop failed", exc_info=True)
                 self._closed = True
 
 

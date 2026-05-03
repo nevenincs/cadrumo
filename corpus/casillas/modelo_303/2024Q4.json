@@ -60,9 +60,7 @@
       "modelo": "MODELO_303",
       "period": "2024Q4",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2024.tipo_superreducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -89,16 +87,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(4% * 01)",
+        "expression": "(iva.rate_superreducido * 01)",
         "references_casillas": [
           "01"
         ]
       },
       "help": {
-        "ca": "Quota meritada al 4 %. Es calcula com (4% * 01). (Base legal: Llei, art. 91, BOE-A-1992-28740.)",
-        "en": "Output VAT at 4 % (01 x 0.04). Computed as (4% * 01). (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 4 %. Se calcula como (4% * 01). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04). Számítás: (4% * 01) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
+        "ca": "Quota meritada al 4 %. Es calcula com (iva.rate_superreducido * 01). (Base legal: Llei, art. 91, BOE-A-1992-28740.)",
+        "en": "Output VAT at 4 % (01 x 0.04). Computed as (iva.rate_superreducido * 01). (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 4 %. Se calcula como (iva.rate_superreducido * 01). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 4 %-on (01 x 0.04). Számítás: (iva.rate_superreducido * 01) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "ca": "Quota meritada al 4 %",
@@ -112,9 +110,7 @@
       "references_casillas": [
         "01"
       ],
-      "references_rules": [
-        "modelo_303.2024.cuota_superreducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -187,9 +183,7 @@
       "modelo": "MODELO_303",
       "period": "2024Q4",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2024.tipo_reducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -216,16 +210,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(10% * 04)",
+        "expression": "(iva.rate_reducido * 04)",
         "references_casillas": [
           "04"
         ]
       },
       "help": {
-        "ca": "Quota meritada al 10 %. Es calcula com (10% * 04). (Base legal: Llei, art. 91, BOE-A-1992-28740.)",
-        "en": "Output VAT at 10 % (04 x 0.10). Computed as (10% * 04). (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 10 %. Se calcula como (10% * 04). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10). Számítás: (10% * 04) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
+        "ca": "Quota meritada al 10 %. Es calcula com (iva.rate_reducido * 04). (Base legal: Llei, art. 91, BOE-A-1992-28740.)",
+        "en": "Output VAT at 10 % (04 x 0.10). Computed as (iva.rate_reducido * 04). (Legal basis: Ley, art. 91, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 10 %. Se calcula como (iva.rate_reducido * 04). (Base legal: Ley, art. 91, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 10 %-on (04 x 0.10). Számítás: (iva.rate_reducido * 04) (Jogalap: Ley, art. 91, BOE-A-1992-28740.)"
       },
       "label": {
         "ca": "Quota meritada al 10 %",
@@ -239,9 +233,7 @@
       "references_casillas": [
         "04"
       ],
-      "references_rules": [
-        "modelo_303.2024.cuota_reducido"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -314,9 +306,7 @@
       "modelo": "MODELO_303",
       "period": "2024Q4",
       "references_casillas": [],
-      "references_rules": [
-        "modelo_303.2024.tipo_general"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -343,16 +333,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(21% * 07)",
+        "expression": "(iva.rate_general * 07)",
         "references_casillas": [
           "07"
         ]
       },
       "help": {
-        "ca": "Quota meritada al 21 %. Es calcula com (21% * 07). (Base legal: Llei, art. 90, BOE-A-1992-28740.)",
-        "en": "Output VAT at 21 % (07 x 0.21). Computed as (21% * 07). (Legal basis: Ley, art. 90, BOE-A-1992-28740.)",
-        "es": "Cuota devengada al 21 %. Se calcula como (21% * 07). (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
-        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21). Számítás: (21% * 07) (Jogalap: Ley, art. 90, BOE-A-1992-28740.)"
+        "ca": "Quota meritada al 21 %. Es calcula com (iva.rate_general * 07). (Base legal: Llei, art. 90, BOE-A-1992-28740.)",
+        "en": "Output VAT at 21 % (07 x 0.21). Computed as (iva.rate_general * 07). (Legal basis: Ley, art. 90, BOE-A-1992-28740.)",
+        "es": "Cuota devengada al 21 %. Se calcula como (iva.rate_general * 07). (Base legal: Ley, art. 90, BOE-A-1992-28740.)",
+        "hu": "Fizetendő ÁFA 21 %-on (07 x 0.21). Számítás: (iva.rate_general * 07) (Jogalap: Ley, art. 90, BOE-A-1992-28740.)"
       },
       "label": {
         "ca": "Quota meritada al 21 %",
@@ -366,9 +356,7 @@
       "references_casillas": [
         "07"
       ],
-      "references_rules": [
-        "modelo_303.2024.cuota_general"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -411,7 +399,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -443,7 +431,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -475,7 +463,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -507,7 +495,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -539,7 +527,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -571,7 +559,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -603,7 +591,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -635,7 +623,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -667,7 +655,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -699,7 +687,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -731,7 +719,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -763,7 +751,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -795,7 +783,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -827,7 +815,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -859,7 +847,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -891,7 +879,7 @@
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": []
     },
@@ -943,14 +931,12 @@
         "42",
         "43"
       ],
-      "references_rules": [
-        "modelo_303.2024.total_deducible"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": [
         {
@@ -996,14 +982,12 @@
         "09",
         "44"
       ],
-      "references_rules": [
-        "modelo_303.2024.resultado_regimen_general"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
       "source_page": 1,
-      "source_section": "IVA deducible y resultado régimen general",
+      "source_section": "IVA deducible and resultado régimen general",
       "synthetic": false,
       "validation": [
         {
@@ -1043,9 +1027,7 @@
       "references_casillas": [
         "45"
       ],
-      "references_rules": [
-        "modelo_303.2024.suma_resultados"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -1130,9 +1112,7 @@
         "65",
         "64"
       ],
-      "references_rules": [
-        "modelo_303.2024.atribuible_estado"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -1211,9 +1191,7 @@
         "66",
         "67"
       ],
-      "references_rules": [
-        "modelo_303.2024.resultado"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",
@@ -1258,9 +1236,7 @@
       "references_casillas": [
         "69"
       ],
-      "references_rules": [
-        "modelo_303.2024.resultado_autoliquidacion"
-      ],
+      "references_rules": [],
       "required": false,
       "select_options": null,
       "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-2024.html",

@@ -6,9 +6,14 @@ from typing import Protocol
 
 from playwright.async_api import BrowserContext
 
+from .....core.errors import AeatError
 from .....core.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+class BrowserEvasionError(AeatError):
+    """Raised when browser evasion setup cannot be applied."""
 
 
 class EvasionStrategy(Protocol):
@@ -38,13 +43,13 @@ class PlaywrightStealthEvasion:
             context: The Playwright BrowserContext to patch.
 
         Raises:
-            RuntimeError: If the ``playwright-stealth`` package is not installed.
+            BrowserEvasionError: If the ``playwright-stealth`` package is not installed.
         """
         try:
             from playwright_stealth import Stealth
         except ImportError as e:
-            logger.error("playwright-stealth is not installed. Evasion failed.")
-            raise RuntimeError("playwright-stealth is required for this evasion strategy.") from e
+            logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
+            raise BrowserEvasionError("playwright-stealth is required for this evasion strategy.") from e
 
         await Stealth().apply_stealth_async(context)
-        logger.info("Successfully applied playwright-stealth evasion.")
+        logger.debug("playwright-stealth evasion applied")

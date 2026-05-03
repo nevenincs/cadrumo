@@ -10,31 +10,29 @@ const COMMAND_TREE = `aeat
 |   |   |-- whoami
 |   |   \\-- logout
 |   \\-- profile
-|       |-- create NAME
 |       |-- use NAME
 |       |-- show
+|       |-- keys
 |       |-- list-keys
 |       |-- get KEY
 |       |-- set KEY VALUE
 |       |-- unset KEY
 |       |-- validate
-|       \\-- edit
+|       \\-- list
 \\-- app
     |-- overview
-    |   |-- --calendar
-    |   \\-- --period PERIOD
+    |   |-- status [--calendar] [--period PERIOD]
+    |   \\-- next
     |-- ledger
-    |   |-- import PATH --provider PROVIDER [--verify] [--original PATH]
-    |   |-- list --filter KEY=VALUE
-    |   |-- show --id RECORD_ID
-    |   |-- edit --id RECORD_ID --set COLUMN=VALUE --skip true|false
-    |   \\-- split --id RECORD_ID --business SHARE --personal SHARE
+    |   |-- import PATH --provider PROVIDER [--verify] [--source PATH]
+    |   |-- review [--filter KEY=VALUE] [--id RECORD_ID]
+    |   \\-- edit --id RECORD_ID --set COLUMN=VALUE --skip true|false --split KEY=SHARE|clear
     |-- invoice
     |   |-- import PATH --kind issued|received
-    |   |-- list --filter KEY=VALUE
-    |   |-- show --id INVOICE_ID
+    |   |-- review [--filter KEY=VALUE] [--id INVOICE_ID]
     |   |-- edit --id INVOICE_ID --set COLUMN=VALUE
-    |   \\-- match
+    |   |-- match
+    |   \\-- verify
     \\-- declaration
         |-- calculate
         |-- review
@@ -47,7 +45,7 @@ const COMMAND_TREE = `aeat
         \\-- verify`;
 
 const HELP = {
-  root: `AEAT CLI v5 review surface.
+  root: `AEAT CLI v6 review surface.
 
 Usage:
   aeat --help
@@ -56,7 +54,7 @@ Usage:
 
 Commands:
   setup    Configure authentication, profile data, and local readiness.
-  app      Prepare ledger and invoice records, review declarations, and export verified local files.`,
+  app      Prepare ledger and invoice records, review declaration drafts, and export verified local files.`,
   setup: `Setup configures prerequisites for app work.
 
 Usage:
@@ -81,19 +79,20 @@ Usage:
   profile: `Profile manages taxpayer data through schema-backed keys.
 
 Usage:
-  aeat setup profile create NAME
   aeat setup profile use NAME
   aeat setup profile show
+  aeat setup profile keys
   aeat setup profile list-keys
   aeat setup profile get KEY
   aeat setup profile set KEY VALUE
   aeat setup profile unset KEY
   aeat setup profile validate
-  aeat setup profile edit`,
+  aeat setup profile list`,
   app: `App works from the active setup profile.
 
 Usage:
-  aeat app overview
+  aeat app overview status
+  aeat app overview next
   aeat app ledger --help
   aeat app invoice --help
   aeat app declaration --help`,
@@ -101,19 +100,19 @@ Usage:
 
 Usage:
   aeat app ledger import PATH --provider n26 --dry-run
-  aeat app ledger import PATH --provider n26 --verify --original PATH --verbose
-  aeat app ledger list --filter status=pending --filter period=2026-Q1
-  aeat app ledger show --id RECORD_ID
+  aeat app ledger import PATH --provider n26 --verify --source PATH --verbose
+  aeat app ledger review --filter status=pending --filter period=2026-Q1
+  aeat app ledger review --id RECORD_ID
   aeat app ledger edit --id RECORD_ID --set category=software --set business.share=1.0 --reason REASON
   aeat app ledger edit --id RECORD_ID --skip true --reason REASON
-  aeat app ledger split --id RECORD_ID --business 0.45 --personal 0.55 --reason REASON`,
+  aeat app ledger edit --id RECORD_ID --split business=0.45 --split personal=0.55 --reason REASON`,
   invoice: `Invoice owns issued and received invoice records, enrichment, and payment linkage.
 
 Usage:
   aeat app invoice import PATH --kind issued --dry-run
   aeat app invoice import PATH --kind received --dry-run
-  aeat app invoice list --filter status=pending --filter kind=received
-  aeat app invoice show --id INVOICE_ID
+  aeat app invoice review --filter status=pending --filter kind=received
+  aeat app invoice review --id INVOICE_ID
   aeat app invoice edit --id INVOICE_ID --set iva.rate=21 --set iva.category=general --reason REASON
   aeat app invoice match --period PERIOD`,
   declaration: `Declaration owns calculation, review, approval, validation, local export, verification, and corrective calculation flags.
@@ -122,12 +121,12 @@ Usage:
   aeat app declaration calculate --period PERIOD --modelo MODELO
   aeat app declaration review --period PERIOD --modelo MODELO --format table
   aeat app declaration status --filter status=pending
-  aeat app declaration edit --period PERIOD --modelo MODELO --set casilla.71=1200.00 --reason REASON
-  aeat app declaration approve --period PERIOD --modelo MODELO --reason REASON
-  aeat app declaration validate --period PERIOD --modelo MODELO
-  aeat app declaration export --period PERIOD --modelo MODELO --format boe --output PATH
-  aeat app declaration verify --period PERIOD --modelo MODELO --format json --output PATH
-  aeat app declaration calculate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID`,
+  aeat app declaration edit --id draft_MODELO_PERIOD --set casilla.71=1200.00 --reason REASON
+  aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON
+  aeat app declaration validate --id draft_MODELO_PERIOD
+  aeat app declaration export --id draft_MODELO_PERIOD --output PATH
+  aeat app declaration verify --id DRAFT_ID --file PATH
+  Correction work is modelled by calculating a new draft and comparing it against the previous approved/exported draft.`,
 };
 
 const PROFILE_KEYS = [
@@ -255,7 +254,7 @@ const TAPES = {
       "aeat setup auth configure --provider clave_movil",
       "aeat setup auth login",
       "aeat setup auth whoami",
-      "aeat setup profile create autonomo-2026",
+      "aeat setup init --name autonomo-2026",
       "aeat setup profile set tax.id 12345678Z",
       "aeat setup profile set tax.name Kent",
       "aeat setup profile set activity.label design",
@@ -269,7 +268,7 @@ const TAPES = {
     scenario: "authReady",
     commands: [
       "aeat setup profile list-keys",
-      "aeat setup profile create autonomo-2026",
+      "aeat setup init --name autonomo-2026",
       "aeat setup profile validate",
       "aeat setup profile set tax.id 12345678Z",
       "aeat setup profile set tax.name Kent",
@@ -286,10 +285,10 @@ const TAPES = {
     commands: [
       "aeat app ledger import ./downloads/n26-invoices.pdf --provider n26 --dry-run",
       "aeat app ledger import ./downloads/n26-jan.csv --provider n26 --dry-run",
-      "aeat app ledger import ./downloads/n26-jan.csv --provider n26 --verify --original ./downloads/n26-jan.pdf --verbose",
+      "aeat app ledger import ./downloads/n26-jan.csv --provider n26 --verify --source ./downloads/n26-jan.pdf --verbose",
       "aeat app ledger import ./downloads/n26-feb-mar.csv --provider n26 --dry-run",
-      "aeat app ledger import ./downloads/n26-feb-mar.csv --provider n26 --verify --original ./downloads/n26-feb-mar.pdf",
-      "aeat app ledger list --filter issue=gap --filter period=2026-Q1",
+      "aeat app ledger import ./downloads/n26-feb-mar.csv --provider n26 --verify --source ./downloads/n26-feb-mar.pdf",
+      "aeat app ledger review --filter issue=gap --filter period=2026-Q1",
     ],
   },
   duplicateWrongAccount: {
@@ -298,10 +297,10 @@ const TAPES = {
     commands: [
       "aeat app ledger import ./downloads/n26-business-q1.csv --provider n26 --verify",
       "aeat app ledger import ./downloads/n26-business-q1-copy.csv --provider n26 --verify --verbose",
-      "aeat app ledger list --filter issue=duplicate --filter period=2026-Q1",
+      "aeat app ledger review --filter issue=duplicate --filter period=2026-Q1",
       "aeat app ledger edit --id row_dup_002 --skip true --reason duplicate-file",
-      "aeat app ledger import ./downloads/n26-personal-q1.csv --provider n26 --verify --original ./downloads/n26-personal-q1.pdf",
-      "aeat app ledger list --filter import=import_003 --filter period=2026-Q1",
+      "aeat app ledger import ./downloads/n26-personal-q1.csv --provider n26 --verify --source ./downloads/n26-personal-q1.pdf",
+      "aeat app ledger review --filter import=import_003 --filter period=2026-Q1",
       "aeat app ledger edit --id row_personal_001 --skip true --reason personal-account",
       "aeat app ledger edit --id row_personal_001 --skip false --reason user-corrected-account",
       "aeat app ledger edit --id row_personal_001 --skip true --reason personal-account-confirmed",
@@ -311,17 +310,17 @@ const TAPES = {
     name: "Manual ledger record decisions",
     scenario: "messyQ1",
     commands: [
-      "aeat app ledger list --filter status=pending --filter period=2026-Q1",
-      "aeat app ledger show --id row_1042",
+      "aeat app ledger review --filter status=pending --filter period=2026-Q1",
+      "aeat app ledger review --id row_1042",
       "aeat app ledger edit --id row_1042 --set category=software --set business.share=1.0 --set reference=invoice-901 --set comments=invoice-reviewed --reason invoice",
       "aeat app ledger edit --id row_1043 --set category=design-services --set business.share=1.0 --set comments=client-payment --reason client-payment",
-      "aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment",
-      "aeat app ledger split --id row_1050 --clear --reason corrected-single-use",
-      "aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment-confirmed",
+      "aeat app ledger edit --id row_1050 --split business=0.45 --split personal=0.55 --reason mixed-card-payment",
+      "aeat app ledger edit --id row_1050 --split clear --reason corrected-single-use",
+      "aeat app ledger edit --id row_1050 --split business=0.45 --split personal=0.55 --reason mixed-card-payment-confirmed",
       "aeat app ledger edit --id row_1051 --skip true --reason private-expense",
       "aeat app ledger edit --id row_1051 --skip false --reason invoice-found",
       "aeat app ledger edit --id row_1051 --set category=supplies --set business.share=1.0 --set document.path=./receipts/receipt-901.pdf --reason invoice-found",
-      "aeat app ledger list --filter status=pending --filter period=2026-Q1",
+      "aeat app ledger review --filter status=pending --filter period=2026-Q1",
     ],
   },
   invoiceEnrichment: {
@@ -332,11 +331,11 @@ const TAPES = {
       "aeat app invoice import ./invoices/received-q1.csv --kind received --dry-run",
       "aeat app invoice import ./invoices/issued-q1.csv --kind issued",
       "aeat app invoice import ./invoices/received-q1.csv --kind received",
-      "aeat app invoice list --filter status=pending --filter kind=received",
-      "aeat app invoice show --id inv_2041",
+      "aeat app invoice review --filter status=pending --filter kind=received",
+      "aeat app invoice review --id inv_2041",
       "aeat app invoice edit --id inv_2041 --set base=120.00 --set iva.rate=21 --set iva.amount=25.20 --set iva.category=general --set retention.rate=15 --set payment.id=row_1042 --set comments=metadata-completed --reason invoice-review",
       "aeat app invoice match --period 2026-Q1",
-      "aeat app invoice list --filter status=pending --filter period=2026-Q1",
+      "aeat app invoice review --filter status=pending --filter period=2026-Q1",
     ],
   },
   blockedExport: {
@@ -345,63 +344,63 @@ const TAPES = {
     commands: [
       "aeat app declaration calculate --period 2026-Q1 --modelo 303",
       "aeat app declaration status --filter status=pending --period 2026-Q1 --modelo 303",
-      "aeat app declaration validate --period 2026-Q1 --modelo 303",
-      "aeat app declaration export --period 2026-Q1 --modelo 303 --format boe --output ./exports/2026-q1",
-      "aeat app ledger list --filter status=pending --filter period=2026-Q1",
-      "aeat app invoice list --filter status=pending --filter period=2026-Q1",
-      "aeat app declaration validate --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-validation.json",
+      "aeat app declaration validate --id draft_303_2026-Q1",
+      "aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1",
+      "aeat app ledger review --filter status=pending --filter period=2026-Q1",
+      "aeat app invoice review --filter status=pending --filter period=2026-Q1",
+      "aeat app declaration validate --id draft_303_2026-Q1 --format json --output ./exports/2026-q1-validation.json",
     ],
   },
   normalExport: {
     name: "Normal Modelo 303 local export path",
     scenario: "readyToApprove",
     commands: [
-      "aeat app overview --calendar --from 2026-01-01 --to 2026-04-20",
-      "aeat app overview --period 2026-Q1",
+      "aeat app overview status --calendar --from 2026-01-01 --to 2026-04-20",
+      "aeat app overview status --period 2026-Q1",
       "aeat app declaration calculate --period 2026-Q1 --modelo 303",
       "aeat app declaration review --period 2026-Q1 --modelo 303 --format table",
-      "aeat app declaration edit --period 2026-Q1 --modelo 303 --set casilla.71=1200.00 --reason manual-check",
+      "aeat app declaration edit --id draft_303_2026-Q1 --set casilla.71=1200.00 --reason manual-check",
       "aeat app declaration review --period 2026-Q1 --modelo 303 --format table",
-      "aeat app declaration approve --period 2026-Q1 --modelo 303 --reason reviewed-against-ledger",
-      "aeat app declaration validate --period 2026-Q1 --modelo 303",
-      "aeat app declaration preview --period 2026-Q1 --modelo 303 --format pdf",
-      "aeat app declaration export --period 2026-Q1 --modelo 303 --format boe --output ./exports/2026-q1",
-      "aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-verify.json",
+      "aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason reviewed-against-ledger",
+      "aeat app declaration validate --id draft_303_2026-Q1",
+      "aeat app declaration preview --id draft_303_2026-Q1",
+      "aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1",
+      "aeat app declaration verify --id draft_303_2026-Q1 --file ./exports/2026-q1-verify.json",
     ],
   },
   behindHistory: {
     name: "Behind with partial filing history",
     scenario: "kentN26",
     commands: [
-      "aeat app overview --calendar --from 2025-10-01 --to 2026-05-03",
-      "aeat app overview --period 2025-Q4",
+      "aeat app overview status --calendar --from 2025-10-01 --to 2026-05-03",
+      "aeat app overview status --period 2025-Q4",
       "aeat app ledger import ./downloads/n26-2025-q4.csv --provider n26 --dry-run",
       "aeat app ledger import ./downloads/n26-2025-q4.csv --provider n26 --verify",
       "aeat app ledger import ./downloads/n26-2026-jan-may.csv --provider n26 --verify --verbose",
-      "aeat app ledger list --filter issue=gap --filter period=2025-Q4",
-      "aeat app ledger list --filter status=pending --filter period=2025-Q4",
+      "aeat app ledger review --filter issue=gap --filter period=2025-Q4",
+      "aeat app ledger review --filter status=pending --filter period=2025-Q4",
       "aeat app ledger edit --id row_2201 --set category=aeat-tax-payment --set business.share=1.0 --set comments=prior-modelo-payment --reason prior-modelo-payment",
       "aeat app ledger edit --id row_2207 --skip true --reason not-business",
       "aeat app declaration calculate --period 2025-Q4 --modelo 303",
       "aeat app declaration status --filter status=pending --period 2025-Q4 --modelo 303",
-      "aeat app declaration validate --period 2025-Q4 --modelo 303 --format json --output ./exports/2025-q4-validation.json",
+      "aeat app declaration validate --id draft_303_2025-Q4 --format json --output ./exports/2025-q4-validation.json",
     ],
   },
   multiPeriod: {
     name: "Multi-period forgetfulness",
     scenario: "kentN26",
     commands: [
-      "aeat app overview --calendar --from 2025-10-01 --to 2026-07-20",
-      "aeat app overview --period 2025-Q4",
-      "aeat app overview --period 2026-Q1",
-      "aeat app overview --period 2026-Q2",
+      "aeat app overview status --calendar --from 2025-10-01 --to 2026-07-20",
+      "aeat app overview status --period 2025-Q4",
+      "aeat app overview status --period 2026-Q1",
+      "aeat app overview status --period 2026-Q2",
       "aeat app ledger import ./downloads/n26-2025-q4.csv --provider n26 --verify",
       "aeat app ledger import ./downloads/n26-2026-q1.csv --provider n26 --verify",
       "aeat app ledger import ./downloads/n26-2026-q2.csv --provider n26 --verify",
-      "aeat app ledger list --filter issue=gap --filter period=2026-Q1",
-      "aeat app ledger list --filter issue=gap --filter period=2026-Q2",
+      "aeat app ledger review --filter issue=gap --filter period=2026-Q1",
+      "aeat app ledger review --filter issue=gap --filter period=2026-Q2",
       "aeat app ledger edit --id row_3104 --set category=design-services --set business.share=1.0 --reason client-payment",
-      "aeat app ledger split --id row_3110 --business 0.60 --personal 0.40 --reason shared-subscription",
+      "aeat app ledger edit --id row_3110 --split business=0.60 --split personal=0.40 --reason shared-subscription",
       "aeat app invoice match --period 2026-Q1",
       "aeat app declaration calculate --period 2025-Q4 --modelo 303",
       "aeat app declaration calculate --period 2026-Q1 --modelo 303",
@@ -415,18 +414,18 @@ const TAPES = {
     name: "Corrective filing after new data",
     scenario: "correctionNeeded",
     commands: [
-      "aeat app overview --period 2026-Q1",
+      "aeat app overview status --period 2026-Q1",
       "aeat app invoice import ./late-file/invoice-2026-041.pdf --kind received --dry-run",
       "aeat app invoice import ./late-file/invoice-2026-041.pdf --kind received",
       "aeat app invoice edit --id inv_2041 --set base=320.00 --set iva.rate=21 --set iva.amount=67.20 --set payment.id=row_1141 --reason late-invoice",
       "aeat app ledger edit --id row_1141 --set category=supplies --set business.share=1.0 --set reference=inv_2041 --reason found-after-export",
       "aeat app invoice match --period 2026-Q1",
-      "aeat app declaration calculate --period 2026-Q1 --modelo 303 --amend --id 3031234567890",
-      "aeat app declaration review --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format table",
-      "aeat app declaration approve --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --reason amend-reviewed",
-      "aeat app declaration validate --period 2026-Q1 --modelo 303 --amend --id 3031234567890",
-      "aeat app declaration export --period 2026-Q1 --modelo 303 --amend --id 3031234567890 --format boe --output ./exports/2026-q1-amend",
-      "aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output ./exports/2026-q1-amend-verify.json",
+      "aeat app declaration calculate --period 2026-Q1 --modelo 303",
+      "aeat app declaration review --period 2026-Q1 --modelo 303 --format table",
+      "aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason recalculation-reviewed",
+      "aeat app declaration validate --id draft_303_2026-Q1",
+      "aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1-recalculated",
+      "aeat app declaration verify --id draft_303_2026-Q1 --file ./exports/2026-q1-recalculated-verify.json",
     ],
   },
 };
@@ -469,8 +468,8 @@ function baseState() {
     previewed: false,
     exported: false,
     verified: false,
-    amend: false,
-    amendId: "",
+    recalculation: false,
+    recalculationId: "",
     skippedRows: 0,
     splitRows: 0,
     stale: false,
@@ -567,7 +566,12 @@ function runSetup(tokens, flags) {
   const area = tokens[2];
   if (area === "status") return runSetupStatus();
   if (area === "init") {
+    state.profileName = flags.name || state.profileName || "default";
+    if (flags.activity && state.profileMissing > 0) state.profileMissing -= 1;
+    if (flags["tax-id"] && state.profileMissing > 0) state.profileMissing -= 1;
+    state.profileValid = state.profileMissing === 0;
     return ok(`Setup initialized.
+Profile: ${state.profileName}
 Local state: ready
 
 Next:
@@ -576,10 +580,10 @@ Next:
   aeat setup profile validate`);
   }
   if (area === "verify") {
-    return warn("`aeat setup verify` is not part of the v5 review surface. Use `aeat setup status` and `aeat setup profile validate`.");
+    return warn("`aeat setup verify` is not part of the v6 review surface. Use `aeat setup status` and `aeat setup profile validate`.");
   }
   if (area === "account") {
-    return warn("`account` is rejected in v5. Identity is shown through `aeat setup auth whoami` and `aeat setup profile show`.");
+    return warn("`account` is rejected in v6. Identity is shown through `aeat setup auth whoami` and `aeat setup profile show`.");
   }
   if (area === "auth") return runAuth(tokens, flags);
   if (area === "profile") return runProfile(tokens, flags);
@@ -611,7 +615,7 @@ clave_permanente: research only, not implemented in this simulator`);
     const provider = flags.provider;
     if (!provider) return error("Missing --provider certificate|clave_movil.");
     if (!["certificate", "clave_movil"].includes(provider)) {
-      return warn(`Provider not available in v5 simulator: ${provider}
+      return warn(`Provider not available in v6 simulator: ${provider}
 Implemented providers: certificate, clave_movil
 Research only: clave_permanente`);
     }
@@ -656,12 +660,15 @@ Tax id: ${state.profileValid ? "configured" : "unknown until profile validates"}
 
 function runProfile(tokens, flags) {
   const action = tokens[3];
-  if (action === "create" || action === "use") {
+  if (action === "create") {
+    return warn("`aeat setup init --name` is not canonical in v6. Use `aeat setup init --name NAME` for initial creation or `aeat setup profile use NAME` to select.");
+  }
+  if (action === "use") {
     const name = tokens[4];
-    if (!name) return error(`Usage: aeat setup profile ${action} NAME`);
+    if (!name) return error("Usage: aeat setup profile use NAME");
     state.profileName = name;
     state.profileValid = state.profileMissing === 0;
-    return ok(`${action === "create" ? "Profile created" : "Active profile selected"}.
+    return ok(`Active profile selected.
 Name: ${name}
 Valid: ${yesNo(state.profileValid)}`);
   }
@@ -670,9 +677,9 @@ Valid: ${yesNo(state.profileValid)}`);
 Name: ${state.profileName || "missing"}
 Valid: ${yesNo(state.profileValid)}
 Missing keys: ${state.profileMissing}
-Editable keys: run aeat setup profile list-keys`);
+Editable keys: run aeat setup profile keys`);
   }
-  if (action === "list-keys") {
+  if (action === "keys" || action === "list-keys") {
     return ok(PROFILE_KEYS.map(([key, stateLabel, description]) => `${key.padEnd(30)} ${stateLabel.padEnd(13)} ${description}`).join("\n"));
   }
   if (action === "get") {
@@ -708,10 +715,11 @@ Missing required keys: ${state.profileMissing}
 Valid: ${yesNo(state.profileValid)}`);
   }
   if (action === "edit") {
-    return ok(`Interactive profile editor
-Mode: schema-backed
-Keys: run aeat setup profile list-keys
-Simulator note: edit is represented here without opening an external editor.`);
+    return warn("`aeat setup profile edit` is not canonical in v6. Use `set`, `unset`, `show`, and `validate`.");
+  }
+  if (action === "list") {
+    return ok(`Configured profiles
+${state.profileName || "none"}\tactive`);
   }
   return error("Unknown profile command. Run `aeat setup profile --help`.");
 }
@@ -719,11 +727,11 @@ Simulator note: edit is represented here without opening an external editor.`);
 function runApp(tokens, flags) {
   const domain = tokens[2];
   if (["status", "next", "obligations", "calendar", "receipts", "sessions", "workspaces"].includes(domain)) {
-    return warn(`\`aeat app ${domain}\` is not part of the v5 design.
+    return warn(`\`aeat app ${domain}\` is not part of the v6 design.
 
 Use:
-  aeat app overview --calendar --from DATE --to DATE
-  aeat app overview --period PERIOD`);
+  aeat app overview status --calendar --from DATE --to DATE
+  aeat app overview status --period PERIOD`);
   }
   if (domain === "invoices") return warn("Use singular `aeat app invoice`.");
   if (!setupReady()) {
@@ -734,14 +742,17 @@ Next:
   aeat setup auth configure --provider certificate|clave_movil
   aeat setup profile validate`);
   }
-  if (domain === "overview") return runOverview(flags);
+  if (domain === "overview") return runOverview(tokens, flags);
   if (domain === "ledger") return runLedger(tokens, flags);
   if (domain === "invoice") return runInvoice(tokens, flags);
   if (domain === "declaration") return runDeclaration(tokens, flags);
   return error("Unknown app domain. Run `aeat app --help`.");
 }
 
-function runOverview(flags) {
+function runOverview(tokens, flags) {
+  const action = tokens[3] || "status";
+  if (action === "next") return ok(nextAction());
+  if (action !== "status") return error("Unknown overview command. Run `aeat app overview --help`.");
   if (flags.calendar) {
     state.overviewReady = true;
     return ok(`Overview calendar
@@ -773,20 +784,26 @@ Declaration stale: ${yesNo(state.stale)}`);
 function runLedger(tokens, flags) {
   const action = tokens[3];
   if (["statements", "transactions", "evidence", "source", "receipt"].includes(action)) {
-    return warn(`\`aeat app ledger ${action}\` is not canonical in v5.
+    return warn(`\`aeat app ledger ${action}\` is not canonical in v6.
 
 Use schema-backed record commands:
-  aeat app ledger list --filter status=pending
-  aeat app ledger show --id RECORD_ID
+  aeat app ledger review --filter status=pending
+  aeat app ledger review --id RECORD_ID
   aeat app ledger edit --id RECORD_ID --set reference=VALUE --set comments=VALUE --reason REASON`);
   }
   if (action === "import") return runLedgerImport(tokens, flags);
-  if (action === "list" || action === "search") return runLedgerList(action, flags);
-  if (action === "show") return runLedgerShow(flags);
+  if (action === "review") return runLedgerReview(flags);
+  if (action === "list" || action === "search" || action === "show") {
+    return warn(`\`aeat app ledger ${action}\` is not canonical in v6.
+
+Use:
+  aeat app ledger review --filter status=pending
+  aeat app ledger review --id RECORD_ID`);
+  }
   if (action === "edit") return runLedgerEdit(flags);
-  if (action === "split") return runLedgerSplit(flags);
+  if (action === "split") return warn("Standalone ledger split is not canonical in v6. Use `aeat app ledger edit --id RECORD_ID --split business=SHARE --split personal=SHARE --reason REASON`.");
   if (action === "exclude" || action === "restore") {
-    return warn(`\`aeat app ledger ${action}\` is not canonical in v5.
+    return warn(`\`aeat app ledger ${action}\` is not canonical in v6.
 
 Use:
   aeat app ledger edit --id RECORD_ID --skip true|false --reason REASON`);
@@ -797,7 +814,7 @@ Use:
 function runLedgerImport(tokens, flags) {
   const subcommand = tokens[4];
   if (["list", "verify", "gaps", "duplicates", "exclude", "restore"].includes(subcommand)) {
-    return warn(`\`aeat app ledger import ${subcommand}\` is not canonical in v5.
+    return warn(`\`aeat app ledger import ${subcommand}\` is not canonical in v6.
 
 Use import as the action:
   aeat app ledger import PATH --provider PROVIDER --verify
@@ -808,7 +825,7 @@ Use ledger edit for record decisions:
 
   const filePath = tokens[4];
   if (!filePath) return error("Usage: aeat app ledger import PATH --provider PROVIDER");
-  if (flags.statement) return warn("`--statement` is not canonical in v5. Use `--provider PROVIDER`.");
+  if (flags.statement) return warn("`--statement` is not canonical in v6. Use `--provider PROVIDER`.");
   if (!flags.provider) return error("Missing --provider PROVIDER.");
   if (/\.pdf$/i.test(filePath)) {
     return warn(`Statement import rejected before state change.
@@ -833,35 +850,37 @@ State changed: no`);
     state.importGaps = coverageGap;
   }
   resetDeclarationAfterInputChange();
+  const sourcePath = flags.source || flags.original || "not provided";
   const message = `Ledger import saved.
 Path: ${filePath}
 Provider: ${flags.provider}
 Imported batches: ${state.imports}
 Ledger records pending: ${state.ledgerPending}
 Verification: ${flags.verify ? "run" : "not requested"}
-Original file: ${flags.original || "not provided"}
+Source file: ${sourcePath}
 Gap diagnostics: ${flags.verify ? (coverageGap ? "possible missing coverage" : "no immediate gap signal") : "not run"}
 Duplicate diagnostics: ${flags.verify ? (duplicate ? "possible duplicate rows" : "no immediate duplicate signal") : "not run"}
 Verbose: ${yesNo(Boolean(flags.verbose))}`;
   return flags.verify && (duplicate || coverageGap) ? warn(message) : ok(message);
 }
 
-function runLedgerList(action, flags) {
+function runLedgerReview(flags) {
   if (flags["needs-review"]) {
-    return warn("This review shortcut is rejected in v5. Use `--filter status=pending`.");
+    return warn("This review shortcut is rejected in v6. Use `--filter status=pending`.");
   }
+  if (flags.id) return runLedgerRecordReview(flags);
   const filters = valuesOf(flags, "filter");
   const pending = filters.includes("status=pending") || state.ledgerPending > 0;
-  return (pending ? warn : ok)(`Ledger ${action}
+  return (pending ? warn : ok)(`Ledger review
 Filters: ${filters.length ? filters.join(", ") : "none"}
 Period: ${flags.period || state.period || "unknown"}
 Pending records: ${state.ledgerPending}
 Excluded records: ${state.ledgerExcluded}`);
 }
 
-function runLedgerShow(flags) {
+function runLedgerRecordReview(flags) {
   if (!flags.id) return error("Missing --id RECORD_ID.");
-  return ok(`Ledger record
+  return ok(`Ledger record review
 Id: ${flags.id}
 Status: ${state.ledgerPending > 0 ? "pending" : "approved"}
 Editable columns: category, business.share, reference, comments, period, modelo, invoice.id, document.path, skip
@@ -871,9 +890,24 @@ Use: aeat app ledger edit --id ${flags.id} --set column=value --reason REASON`);
 function runLedgerEdit(flags) {
   if (!flags.id) return error("Missing --id RECORD_ID.");
   const sets = valuesOf(flags, "set");
+  const splits = valuesOf(flags, "split");
   const skip = parseSkipFlag(flags.skip);
-  if (sets.length === 0 && skip === null) return error("Use one or more `--set column=value` edits or `--skip true|false`.");
-  if (skip !== null && !flags.reason) return error("Skipping or unskipping requires --reason REASON.");
+  if (sets.length === 0 && skip === null && splits.length === 0) return error("Use `--set`, `--skip true|false`, or `--split business=SHARE --split personal=SHARE`.");
+  if ((skip !== null || splits.length > 0) && !flags.reason) return error("Skip and split edits require --reason REASON.");
+  let splitMessage = "unchanged";
+  if (splits.includes("clear")) {
+    state.splitRows = Math.max(0, state.splitRows - 1);
+    splitMessage = "cleared";
+  } else if (splits.length > 0) {
+    const splitFields = Object.fromEntries(splits.map((item) => String(item).split("=")));
+    const business = Number(splitFields.business);
+    const personal = Number(splitFields.personal);
+    if (!Number.isFinite(business) || !Number.isFinite(personal)) return error("Split requires --split business=SHARE and --split personal=SHARE.");
+    const total = business + personal;
+    if (Math.abs(total - 1) > 0.0001) return error("Split shares must add up to 1.0.");
+    state.splitRows += 1;
+    splitMessage = `business=${business.toFixed(2)}, personal=${personal.toFixed(2)}`;
+  }
   state.ledgerPending = Math.max(0, state.ledgerPending - 1);
   if (sets.some((item) => /^document\.path=|^receipt\.path=/.test(item))) state.documents += 1;
   if (skip === true) {
@@ -890,46 +924,22 @@ function runLedgerEdit(flags) {
 Id: ${flags.id}
 Columns: ${sets.length ? sets.join(", ") : "none"}
 Skip: ${skip === null ? "unchanged" : String(skip)}
+Split: ${splitMessage}
 Reason: ${flags.reason || "not provided"}
 Remaining pending records: ${state.ledgerPending}
 Declaration state reset: yes`);
 }
 
-function runLedgerSplit(flags) {
-  if (!flags.id) return error("Missing --id RECORD_ID.");
-  if (flags.clear) {
-    state.splitRows = Math.max(0, state.splitRows - 1);
-    resetDeclarationAfterInputChange();
-    return ok(`Ledger split cleared.
-Id: ${flags.id}
-Source transaction preserved: yes
-Reason: ${flags.reason || "not provided"}`);
-  }
-  const business = Number(flags.business);
-  const personal = Number(flags.personal);
-  if (!Number.isFinite(business) || !Number.isFinite(personal)) return error("Split requires --business SHARE and --personal SHARE.");
-  const total = business + personal;
-  if (Math.abs(total - 1) > 0.0001) return error("Split shares must add up to 1.0.");
-  state.ledgerPending = Math.max(0, state.ledgerPending - 1);
-  state.splitRows += 1;
-  resetDeclarationAfterInputChange();
-  return ok(`Ledger record split.
-Id: ${flags.id}
-Business share: ${business.toFixed(2)}
-Personal share: ${personal.toFixed(2)}
-Total share: ${total.toFixed(2)}
-Source transaction preserved: yes
-Split metadata tracked: backend requirement
-Reason: ${flags.reason || "not provided"}`);
-}
-
 function runInvoice(tokens, flags) {
   const action = tokens[3];
   if (action === "import") return runInvoiceImport(tokens, flags);
-  if (action === "list" || action === "search") return runInvoiceList(action, flags);
-  if (action === "show") return runInvoiceShow(flags);
+  if (action === "review") return runInvoiceReview(flags);
+  if (action === "list" || action === "search" || action === "show") return warn(`\`aeat app invoice ${action}\` is not canonical in v6. Use \`aeat app invoice review\`.`);
   if (action === "edit") return runInvoiceEdit(flags);
   if (action === "match") return runInvoiceMatch(flags);
+  if (action === "verify") return ok(`Invoice links verified.
+Pending invoices: ${state.invoicePending}
+Metadata gaps: ${state.invoiceMetadataGaps}`);
   return error("Unknown invoice command. Run `aeat app invoice --help`.");
 }
 
@@ -954,10 +964,11 @@ Path: ${filePath}
 Pending invoices: ${state.invoicePending}`);
 }
 
-function runInvoiceList(action, flags) {
+function runInvoiceReview(flags) {
+  if (flags.id) return runInvoiceRecordReview(flags);
   const filters = valuesOf(flags, "filter");
   const pending = filters.includes("status=pending") || state.invoicePending > 0;
-  return (pending ? warn : ok)(`Invoice ${action}
+  return (pending ? warn : ok)(`Invoice review
 Filters: ${filters.length ? filters.join(", ") : "none"}
 Issued batches: ${state.issuedInvoices}
 Received batches: ${state.receivedInvoices}
@@ -965,9 +976,9 @@ Pending invoices: ${state.invoicePending}
 Metadata gaps: ${state.invoiceMetadataGaps}`);
 }
 
-function runInvoiceShow(flags) {
+function runInvoiceRecordReview(flags) {
   if (!flags.id) return error("Missing --id INVOICE_ID.");
-  return ok(`Invoice record
+  return ok(`Invoice record review
 Id: ${flags.id}
 Editable columns: kind, base, iva.rate, iva.amount, iva.category, retention.rate, payment.id, reference, comments
 Backend audit: retention and IVA category integration are CLI requirements, not fully proven backend capabilities.`);
@@ -1006,11 +1017,11 @@ Pending invoices: 0`);
 function runDeclaration(tokens, flags) {
   const action = tokens[3];
   if (["blockers", "evidence", "package", "correct", "amendment", "correction"].includes(action)) {
-    return warn(`\`aeat app declaration ${action}\` is rejected in v5.
+    return warn(`\`aeat app declaration ${action}\` is rejected in v6.
 
 Use:
   aeat app declaration status --filter status=pending
-  aeat app declaration calculate --period PERIOD --modelo MODELO --amend --id JUSTIFICANTE_ID`);
+  aeat app declaration calculate --period PERIOD --modelo MODELO`);
   }
   if (action === "calculate") return runDeclarationCalculate(flags);
   if (action === "review") return runDeclarationReview(flags);
@@ -1025,7 +1036,7 @@ Use:
 }
 
 function runDeclarationCalculate(flags) {
-  const amend = amendContext(flags);
+  const recalculation = Boolean(state.exported || state.verified || state.stale);
   state.period = flags.period || state.period || "2026-Q1";
   state.calculated = true;
   state.reviewed = false;
@@ -1035,15 +1046,11 @@ function runDeclarationCalculate(flags) {
   state.exported = false;
   state.verified = false;
   state.stale = false;
-  if (amend.enabled) {
-    state.amend = true;
-    state.amendId = amend.id;
-  }
+  state.recalculation = recalculation;
   return ok(`Declaration calculated.
 Period: ${state.period}
 Modelo: ${flags.modelo || "not provided"}
-Amends prior declaration: ${amend.enabled ? "yes" : "no"}
-Justificante id: ${amend.enabled ? amend.id : "not used"}
+Recalculation after previous export: ${yesNo(recalculation)}
 Pending ledger records: ${state.ledgerPending}
 Pending invoices: ${state.invoicePending}
 Summary:
@@ -1053,7 +1060,7 @@ Summary:
   result: simulated
 
 Next:
-  aeat app declaration review --period ${state.period} --modelo ${flags.modelo || "303"}${amend.enabled ? ` --amend --id ${amend.id}` : ""} --format table`);
+  aeat app declaration review --period ${state.period} --modelo ${flags.modelo || "303"} --format table`);
 }
 
 function runDeclarationReview(flags) {
@@ -1104,7 +1111,6 @@ Approval reset: yes`);
 }
 
 function runDeclarationApprove(flags) {
-  const amend = amendContext(flags);
   if (!state.reviewed) return warn("Review is required before approval.");
   if (state.ledgerPending > 0 || state.invoicePending > 0 || state.invoiceMetadataGaps > 0) {
     return warn(`Approval refused.
@@ -1117,13 +1123,12 @@ Invoice metadata gaps: ${state.invoiceMetadataGaps}`);
   return ok(`Declaration approved by human.
 Period: ${flags.period || state.period}
 Modelo: ${flags.modelo || "not provided"}
-Amends prior declaration: ${amend.enabled || state.amend ? "yes" : "no"}
-Justificante id: ${amend.id || state.amendId || "not used"}
+Recalculation after previous export: ${yesNo(state.recalculation)}
+Approved by: ${flags.by || "not provided"}
 Reason: ${flags.reason || "not provided"}`);
 }
 
 function runDeclarationValidate(flags) {
-  const amend = amendContext(flags);
   if (!state.approved) {
     if (flags.format === "json" && flags.output) {
       state.validationReport = true;
@@ -1138,8 +1143,7 @@ Reason: human approval is missing or unresolved work remains.`);
   return ok(`Declaration validated.
 Period: ${flags.period || state.period}
 Modelo: ${flags.modelo || "not provided"}
-Amends prior declaration: ${amend.enabled || state.amend ? "yes" : "no"}
-Justificante id: ${amend.id || state.amendId || "not used"}`);
+Report: ${flags.output || "not written"}`);
 }
 
 function runDeclarationPreview(flags) {
@@ -1151,31 +1155,27 @@ Filing artifact: no`);
 }
 
 function runDeclarationExport(flags) {
-  const amend = amendContext(flags);
   if (!state.validated) return warn("Export refused. Validate an approved current declaration first.");
   if (state.stale) return warn("Export refused. Declaration is stale after record changes.");
-  if (flags.format !== "boe") return warn("Use `--format boe` only where a modelo supports an AEAT-compatible local artifact.");
   if (!flags.output) return error("Export requires --output PATH.");
   state.exported = true;
   return ok(`Declaration exported.
 Period: ${flags.period || state.period}
 Modelo: ${flags.modelo || "not provided"}
-Format: boe
 Output: ${flags.output}
-Amends prior declaration: ${amend.enabled || state.amend ? "yes" : "no"}
-Justificante id: ${amend.id || state.amendId || "not used"}
+Recalculation after previous export: ${yesNo(state.recalculation)}
 Live submission: no`);
 }
 
 function runDeclarationVerify(flags) {
-  if (flags.export) return warn("`--export` is not valid on verify. Use declaration export --output PATH, then declaration verify --period PERIOD --modelo MODELO --format json --output PATH.");
+  if (flags.export) return warn("`--export` is not valid on verify. Use declaration export --output PATH, then declaration verify --id DRAFT_ID --file PATH.");
+  if (!flags.file) return error("Verify requires --file PATH.");
   if (!state.exported) return warn("No current exported declaration state. Run export first, or use validate --format json --output PATH for repair data.");
   state.verified = true;
   return ok(`Declaration verified.
 Period: ${flags.period || state.period || "unknown"}
 Modelo: ${flags.modelo || "not provided"}
-Format: ${flags.format || "table"}
-Output: ${flags.output || "not written"}
+File: ${flags.file}
 Manual AEAT upload remains outside this CLI design.`);
 }
 
@@ -1185,11 +1185,6 @@ function parseSkipFlag(value) {
   if (["true", "1"].includes(String(value).toLowerCase())) return true;
   if (["false", "0"].includes(String(value).toLowerCase())) return false;
   return null;
-}
-
-function amendContext(flags) {
-  if (!flags.amend) return { enabled: false, id: "" };
-  return { enabled: true, id: flags.id || "missing" };
 }
 
 function resetDeclarationAfterInputChange() {
@@ -1225,20 +1220,20 @@ function error(message) {
 function nextAction() {
   if (!state.authProvider) return "aeat setup auth configure --provider certificate|clave_movil";
   if (!state.authenticated) return "aeat setup auth login";
-  if (!state.profileName) return "aeat setup profile create NAME";
+  if (!state.profileName) return "aeat setup init --name NAME";
   if (!state.profileValid) return "aeat setup profile validate";
-  if (!state.overviewReady) return "aeat app overview --calendar --from DATE --to DATE";
+  if (!state.overviewReady) return "aeat app overview status --calendar --from DATE --to DATE";
   if (state.imports === 0) return "aeat app ledger import PATH --provider n26 --dry-run";
-  if (!state.importVerified) return "aeat app ledger import PATH --provider n26 --verify --original PATH";
-  if (state.ledgerPending > 0) return "aeat app ledger list --filter status=pending";
-  if (state.invoicePending > 0 || state.invoiceMetadataGaps > 0) return "aeat app invoice list --filter status=pending";
+  if (!state.importVerified) return "aeat app ledger import PATH --provider n26 --verify --source PATH";
+  if (state.ledgerPending > 0) return "aeat app ledger review --filter status=pending";
+  if (state.invoicePending > 0 || state.invoiceMetadataGaps > 0) return "aeat app invoice review --filter status=pending";
   if (!state.calculated || state.stale) return "aeat app declaration calculate --period PERIOD --modelo MODELO";
   if (!state.reviewed) return "aeat app declaration review --period PERIOD --modelo MODELO --format table";
-  if (!state.approved) return "aeat app declaration approve --period PERIOD --modelo MODELO --reason REASON";
-  if (!state.validated) return "aeat app declaration validate --period PERIOD --modelo MODELO";
-  if (!state.exported) return "aeat app declaration export --period PERIOD --modelo MODELO --format boe --output PATH";
-  if (!state.verified) return "aeat app declaration verify --period PERIOD --modelo MODELO --format json --output PATH";
-  return "aeat app overview --period PERIOD";
+  if (!state.approved) return "aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON";
+  if (!state.validated) return "aeat app declaration validate --id draft_MODELO_PERIOD";
+  if (!state.exported) return "aeat app declaration export --id draft_MODELO_PERIOD --output PATH";
+  if (!state.verified) return "aeat app declaration verify --id DRAFT_ID --file PATH";
+  return "aeat app overview status --period PERIOD";
 }
 
 function init() {
@@ -1362,7 +1357,7 @@ function renderState() {
     ["Stale", yesNo(state.stale)],
     ["Exported", yesNo(state.exported)],
     ["Verified", yesNo(state.verified)],
-    ["Amend flag", state.amendId || yesNo(state.amend)],
+    ["Recalculation", state.recalculationId || yesNo(state.recalculation)],
   ];
   ui.stateList.innerHTML = "";
   rows.forEach(([term, value]) => {
@@ -1439,7 +1434,7 @@ function runAudit() {
   if (!window.AeatAuditEngine) return;
   lastAudit = window.AeatAuditEngine.runAudit({
     runs: Number(ui.auditRuns.value) || 250,
-    seed: ui.auditSeed.value || "kent-n26-v5",
+    seed: ui.auditSeed.value || "kent-n26-v6",
   });
   renderAudit(lastAudit);
   ui.playAuditTapeBtn.disabled = false;
@@ -1470,7 +1465,7 @@ function playAuditTape() {
 function exportAudit() {
   if (!lastAudit) return;
   const markdown = [
-    "# AEAT CLI v5 audit findings",
+    "# AEAT CLI v6 audit findings",
     "",
     `Seed: \`${lastAudit.seed}\``,
     `Runs: \`${lastAudit.runs}\``,
@@ -1491,7 +1486,7 @@ function exportAudit() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "aeat-cli-v5-audit-findings.md";
+  link.download = "aeat-cli-v6-audit-findings.md";
   document.body.appendChild(link);
   link.click();
   link.remove();

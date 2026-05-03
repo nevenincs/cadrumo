@@ -140,6 +140,11 @@ def _check_replaced_by(entries: Mapping[Portal, PortalMetadata]) -> None:
         if target is None:
             continue
         if target not in entries:
+            _LOG.error(
+                "portal integrity: %s replaced_by %s which is not in registry",
+                portal.value,
+                target.value,
+            )
             raise PortalIntegrityError(f"portal {portal.value} replaced_by {target.value} which is not in the registry")
 
 
@@ -166,15 +171,18 @@ def _check_modelo_closure(entries: Mapping[Portal, PortalMetadata]) -> None:
 
     for code, portals in coverage.items():
         if not portals:
+            _LOG.error("portal integrity: modelo %s has no FILING/CENSUS portal entry", code.value)
             raise PortalIntegrityError(f"modelo {code.value} has no FILING/CENSUS portal entry")
         if code is ModeloCode.MODELO_037:
             if any(p.active for p in portals):
+                _LOG.error("portal integrity: modelo 037 must not have an active FILING/CENSUS portal")
                 raise PortalIntegrityError(
                     "modelo 037 must not have an active FILING/CENSUS portal "
                     "(suppressed 2025-02-03 by Orden HAC/1526/2024)"
                 )
         else:
             if not any(p.active for p in portals):
+                _LOG.error("portal integrity: modelo %s has no active FILING/CENSUS portal entry", code.value)
                 raise PortalIntegrityError(f"modelo {code.value} has no active FILING/CENSUS portal entry")
 
 
@@ -197,6 +205,11 @@ def _check_related_modelo_roundtrip(entries: Mapping[Portal, PortalMetadata]) ->
         if code is None:
             continue
         if code not in valid:
+            _LOG.error(
+                "portal integrity: portal %s related_modelo %r is not a known ModeloCode",
+                portal.value,
+                code,
+            )
             raise PortalIntegrityError(f"portal {portal.value} related_modelo {code!r} is not a known ModeloCode")
 
 
@@ -219,18 +232,26 @@ def _finalise_registry(
     materialised: dict[Portal, PortalMetadata] = {}
     for entry in entries:
         if entry.portal in materialised:
+            _LOG.error("portal registry: duplicate entry for portal %s", entry.portal.value)
             raise PortalIntegrityError(f"duplicate registry entry for portal {entry.portal.value}")
         materialised[entry.portal] = entry
     missing = set(Portal) - set(materialised)
     if missing:
         missing_values = sorted(p.value for p in missing)
+        _LOG.error("portal registry: missing entries for portals %s", missing_values)
         raise PortalIntegrityError(f"registry is missing entries for portals: {missing_values}")
     extra = set(materialised) - set(Portal)
     if extra:
         extra_values = sorted(p.value for p in extra)
+        _LOG.error("portal registry: unknown portals in entries %s", extra_values)
         raise PortalIntegrityError(f"registry contains unknown portals: {extra_values}")
     for key, metadata in materialised.items():
         if metadata.portal is not key:
+            _LOG.error(
+                "portal registry: entry for %s has mismatched portal field %s",
+                key.value,
+                metadata.portal.value,
+            )
             raise PortalIntegrityError(f"entry for {key.value} has mismatched portal {metadata.portal.value}")
     _check_replaced_by(materialised)
     _check_related_modelo_roundtrip(materialised)

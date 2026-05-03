@@ -23,7 +23,6 @@ caller.
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 import re
 from collections.abc import AsyncIterator
@@ -34,6 +33,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from bs4 import BeautifulSoup
 from playwright.async_api import BrowserContext, Page, Playwright, async_playwright
+from playwright.async_api import Error as PlaywrightError
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
@@ -228,10 +228,14 @@ async def _opened_browser_session(
         page = await context.new_page()
         yield page, context
     finally:
-        with contextlib.suppress(Exception):
+        try:
             await context.close()
-        with contextlib.suppress(Exception):
+        except Exception as _exc:
+            log.debug("_opened_browser_session: context.close suppressed: %s", _exc)
+        try:
             await browser_session.close()
+        except Exception as _exc:
+            log.debug("_opened_browser_session: browser_session.close suppressed: %s", _exc)
 
 
 async def walk_declarations_register(
@@ -273,7 +277,14 @@ async def walk_declarations_register(
         _context,
     ):
         await _drive_search(page, modelo=modelo, ejercicio=ejercicio)
-        return _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
+        results = _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
+    log.info(
+        "walk_declarations_register: found %d declaration(s) modelo=%s ejercicio=%d",
+        len(results),
+        modelo,
+        ejercicio,
+    )
+    return results
 
 
 async def _drive_search(
@@ -295,12 +306,16 @@ async def _drive_search(
             wait_until="networkidle",
             timeout=_NAVIGATION_TIMEOUT_MS,
         )
-    except Exception as exc:
+    except PlaywrightError as exc:
         raise SedeNavigationError(f"goto {_LISTING_URL!r} failed: {exc}") from exc
     await page.wait_for_timeout(1500)
 
     final_url = page.url
     if "/wlpl/SCEJ-MANT/CONSUL" not in final_url:
+        log.warning(
+            "declaraciones register did not load; session may have expired (final_url=%r)",
+            final_url,
+        )
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
             "session likely expired — run `aeat auth login` and retry",
@@ -312,7 +327,7 @@ async def _drive_search(
             state="visible",
             timeout=_FORM_INTERACTION_TIMEOUT_MS,
         )
-    except Exception as exc:
+    except PlaywrightError as exc:
         raise SedeNavigationError(
             "declaraciones register form did not render the 'Modelo (*)' "
             f"label within {_FORM_INTERACTION_TIMEOUT_MS}ms; "
@@ -338,7 +353,7 @@ async def _drive_search(
                 timeout=_FORM_INTERACTION_TIMEOUT_MS,
             )
         )
-    except Exception as exc:
+    except PlaywrightError as exc:
         raise SedeNavigationError(f"clicking Buscar failed: {exc}") from exc
     await page.wait_for_timeout(_BUSCAR_SETTLE_MS)
 
@@ -354,14 +369,14 @@ async def _select_combobox_value(
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
         await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
-    except Exception as exc:
+    except PlaywrightError as exc:
         raise SedeNavigationError(f"opening combobox after label {label_text!r} failed: {exc}") from exc
     await page.wait_for_timeout(400)
 
     target = page.locator(".z-comboitem-text").filter(has_text=option_match).first
     try:
         await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
-    except Exception as exc:
+    except PlaywrightError as exc:
         raise SedeNavigationError(f"selecting option {option_match!r} for {label_text!r} failed: {exc}") from exc
     await page.wait_for_timeout(300)
 
@@ -430,6 +445,7 @@ def _parse_listbox(
             # would manifest here. The grep guard at the
             # subpackage level catches forbidden mutation verbs
             # so this is structural-shape only.
+            log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
             continue
 
         try:
@@ -547,7 +563,7 @@ async def capture_declaration(
             ) as new_page_info:
                 await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
             cotejo_page = await new_page_info.value
-        except Exception as exc:
+        except PlaywrightError as exc:
             raise SedeNavigationError(
                 f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
             ) from exc
@@ -557,7 +573,7 @@ async def capture_declaration(
                 "domcontentloaded",
                 timeout=_NAVIGATION_TIMEOUT_MS,
             )
-        except Exception as exc:
+        except PlaywrightError as exc:
             raise SedeNavigationError(
                 f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
             ) from exc
@@ -596,6 +612,13 @@ async def capture_declaration(
         from ._schema import Expediente
 
         sha256 = hashlib.sha256(body).hexdigest()
+        log.info(
+            "capture_declaration: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
+            declaration.expediente_id,
+            csv,
+            len(body),
+            sha256[:16],
+        )
         return SedeCapture(
             expediente=Expediente(
                 expediente_id=declaration.expediente_id,

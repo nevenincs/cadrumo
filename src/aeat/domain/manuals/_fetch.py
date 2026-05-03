@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, ValidationError
 
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
@@ -183,7 +183,7 @@ def load_manifest(manifest_path: Path) -> FetchedManualPart:
         raise ManifestError(f"manifest not found: {manifest_path}")
     try:
         return FetchedManualPart.model_validate_json(manifest_path.read_text(encoding="utf-8"))
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         raise ManifestError(f"{manifest_path}: invalid manifest ({exc})") from exc
 
 
@@ -220,6 +220,7 @@ def fetch_manual_part(
     try:
         sha256, length = _stream_to_file(spec.source_pdf_url, pdf_path)
     except httpx.HTTPError as exc:
+        _logger.warning("manual fetch failed %s/%s/%s", manual_id.value, year, part.value, exc_info=True)
         raise ManifestError(f"download failed for {spec.source_pdf_url}: {exc}") from exc
 
     manifest = FetchedManualPart(
@@ -269,6 +270,18 @@ def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
             sha.update(chunk)
             length += len(chunk)
     if sha.hexdigest() != manifest.sha256:
+        _logger.error(
+            "manual pdf sha256 mismatch %s: computed=%s manifest=%s",
+            pdf_path,
+            sha.hexdigest(),
+            manifest.sha256,
+        )
         raise ManifestError(f"{pdf_path}: sha256 mismatch (got {sha.hexdigest()}, manifest {manifest.sha256})")
     if length != manifest.content_length:
+        _logger.error(
+            "manual pdf length mismatch %s: computed=%d manifest=%d",
+            pdf_path,
+            length,
+            manifest.content_length,
+        )
         raise ManifestError(f"{pdf_path}: content_length mismatch (got {length}, manifest {manifest.content_length})")

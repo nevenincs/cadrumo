@@ -150,7 +150,7 @@ class HttpxFallbackBackend(_CertBackend):
 
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             log.info(
-                "verify_handshake OK: url=%s status=%d elapsed_ms=%d thumbprint=%s",
+                "verify_handshake ok: url=%s status=%d elapsed_ms=%d thumbprint=%s",
                 url,
                 response.status_code,
                 elapsed_ms,
@@ -167,7 +167,7 @@ class HttpxFallbackBackend(_CertBackend):
         except (httpx.HTTPError, ssl.SSLError, OSError, ValueError) as exc:
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             log.warning(
-                "verify_handshake FAILED: url=%s elapsed_ms=%d error=%s",
+                "verify_handshake failed: url=%s elapsed_ms=%d error=%s",
                 url,
                 elapsed_ms,
                 exc,

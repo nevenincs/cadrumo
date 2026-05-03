@@ -20,6 +20,8 @@ from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
+from ...core.errors import AmbiguousPeriodError
+from ...core.logging import get_logger
 from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
 from ...domain.filing import (
     CasillaSchemaProvider,
@@ -33,6 +35,7 @@ from ...domain.formulas import FiscalPeriod, MissingRulesetError, Quarter, get_r
 from ...domain.modelos import ModeloCode
 from ...domain.transactions import Transaction, TransactionCatalogue
 
+_logger = get_logger(__name__)
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$")
 _REVIEW_STATUSES = frozenset(
     {
@@ -234,7 +237,7 @@ def approve_draft(
         category_profiles=category_profiles,
         transaction_catalogue_path=transaction_catalogue_path,
     )
-    return draft.model_copy(
+    updated = draft.model_copy(
         update={
             "status": FilingDraftStatus.APPROVED,
             "approved_at": timestamp,
@@ -244,6 +247,14 @@ def approve_draft(
             "updated_at": timestamp,
         }
     )
+    _logger.info(
+        "draft approved draft_id=%s modelo=%s period=%s approved_by=%s",
+        draft.draft_id,
+        draft.modelo,
+        draft.period,
+        normalized_approver,
+    )
+    return updated
 
 
 def unapprove_draft(
@@ -265,7 +276,7 @@ def unapprove_draft(
     """
 
     timestamp = unapproved_at or datetime.now(tz=UTC)
-    return draft.model_copy(
+    updated = draft.model_copy(
         update={
             "status": derive_validation_status(draft.findings),
             "approved_at": None,
@@ -275,6 +286,8 @@ def unapprove_draft(
             "updated_at": timestamp,
         }
     )
+    _logger.info("draft unapproved draft_id=%s modelo=%s period=%s", draft.draft_id, draft.modelo, draft.period)
+    return updated
 
 
 def refresh_review_status(
@@ -315,6 +328,11 @@ def refresh_review_status(
         cleared = _review_metadata_reset()
         if any(getattr(draft, key) != value for key, value in cleared.items()):
             cleared["updated_at"] = timestamp
+            _logger.debug(
+                "refresh: cleared stale approval metadata for downstream draft draft_id=%s status=%s",
+                draft.draft_id,
+                draft.status.value,
+            )
             return draft.model_copy(update=cleared)
         return draft
     if draft.status not in _REVIEW_STATUSES and not has_review_metadata:
@@ -330,6 +348,12 @@ def refresh_review_status(
         cleared["status"] = derive_validation_status(draft.findings)
         if any(getattr(draft, key) != value for key, value in cleared.items()):
             cleared["updated_at"] = timestamp
+            _logger.warning(
+                "refresh: incomplete approval metadata cleared draft_id=%s modelo=%s period=%s",
+                draft.draft_id,
+                draft.modelo,
+                draft.period,
+            )
             return draft.model_copy(update=cleared)
         return draft
 
@@ -342,7 +366,20 @@ def refresh_review_status(
     )
     next_status = FilingDraftStatus.APPROVAL_STALE if reasons else FilingDraftStatus.APPROVED
     if draft.status is next_status:
+        _logger.debug(
+            "refresh: no transition needed draft_id=%s status=%s",
+            draft.draft_id,
+            draft.status.value,
+        )
         return draft
+    if next_status is FilingDraftStatus.APPROVAL_STALE:
+        _logger.warning(
+            "draft approval marked stale draft_id=%s modelo=%s period=%s reasons=%s",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+            [r.value for r in reasons],
+        )
     return draft.model_copy(
         update={
             "status": next_status,
@@ -444,6 +481,7 @@ def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
 
     repository = TransactionCatalogueRepository(store_dir=path)
     if not repository.envelope_path.exists():
+        _logger.debug("transaction catalogue envelope not found at %s; using empty catalogue", repository.envelope_path)
         return TransactionCatalogue()
     return repository.load()
 
@@ -532,7 +570,8 @@ def _resolve_ruleset_id(modelo: str, period: str) -> str:
         return registry.resolve(modelo=modelo_code, period=fiscal_period).ruleset_id
     except MissingRulesetError:
         return "no-ruleset"
-    except Exception:
+    except AmbiguousPeriodError:
+        _logger.warning("unexpected error resolving ruleset modelo=%s period=%s", modelo, period, exc_info=True)
         return "unresolved-ruleset"
 
 

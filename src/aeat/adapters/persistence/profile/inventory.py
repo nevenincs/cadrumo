@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ....core.config import load_settings
+from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.errors import InventoryLedgerError
 from ....domain.profile.inventory import (
@@ -177,7 +178,7 @@ class InventoryLedgerRepository:
                 max_supported_version=_ENVELOPE_VERSION,
             )
             return envelope.payload
-        except Exception as exc:
+        except (OSError, AeatError) as exc:
             raise InventoryLedgerError(f"unable to load inventory ledger: {self.envelope_path}") from exc
 
     def save(self, document: InventoryLedgerDocument) -> None:

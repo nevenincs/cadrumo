@@ -79,9 +79,16 @@ def save_modelo_to_cache(modelo: Modelo, root: Path, boe_ref: str) -> Path:
         )
         os.replace(tmp, destination)
     except BaseException:
+        _logger.warning(
+            "schema cache write failed: modelo=%s boe_ref=%s path=%s",
+            modelo.modelo_code.value,
+            boe_ref,
+            destination,
+            exc_info=True,
+        )
         tmp.unlink(missing_ok=True)
         raise
-    _logger.info(
+    _logger.debug(
         "wrote schema cache modelo=%s boe_ref=%s path=%s",
         modelo.modelo_code.value,
         boe_ref,
@@ -112,10 +119,18 @@ def load_modelo_from_cache(
     """
     path = resolve_schema_cache_file(code, boe_ref, root)
     if not path.exists():
+        _logger.debug("schema cache miss: modelo=%s boe_ref=%s path=%s", code.value, boe_ref, path)
         raise SchemaCacheError(f"schema cache file not found: {path}")
     try:
         return Modelo.model_validate_json(path.read_text(encoding="utf-8"))
     except ValidationError as exc:
+        _logger.warning(
+            "schema cache validation failed: modelo=%s boe_ref=%s path=%s",
+            code.value,
+            boe_ref,
+            path,
+            exc_info=True,
+        )
         raise SchemaValidationError(
             f"{path}: cached schema failed validation ({exc})",
         ) from exc

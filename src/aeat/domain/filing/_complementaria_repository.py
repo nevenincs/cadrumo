@@ -153,6 +153,7 @@ class FilingAmendmentRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_AMENDMENT,
             )
+        _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, amendment.amendment_kind.value)
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the envelope for ``amendment_id``.
@@ -168,6 +169,7 @@ class FilingAmendmentRepository:
             if not target.exists():
                 return False
             target.unlink()
+        _log.debug("deleted filing amendment %s", amendment_id)
         return True
 
     def list_amendment_ids(self) -> tuple[str, ...]:
@@ -242,8 +244,8 @@ def migrate_legacy_amendments_to_repository(
             continue
         try:
             amendment = FilingAmendment.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError) as exc:
-            _log.warning("skipping unreadable legacy amendment %s: %s", path, exc)
+        except (ValidationError, OSError):
+            _log.warning("skipping unreadable legacy amendment %s", path, exc_info=True)
             errors += 1
             continue
         with exclusive_file_lock(repository.lock_target_for(amendment.amendment_id)):

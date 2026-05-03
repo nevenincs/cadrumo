@@ -10,16 +10,16 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total de registres d'operacions amb persones o entitats vinculades declarats en el model (Quadre I, art. 18 LIS).",
-        "en": "Total related-party operation records declared in the form (Cuadro I, art. 18 LIS).",
-        "es": "Total de registros de operaciones con personas o entidades vinculadas declarados en el modelo (Cuadro I, art. 18 LIS).",
-        "hu": "A bejelentésben szereplő kapcsolt-fél ügyletek rekordjainak száma (I. táblázat, LIS 18. cikk)."
+        "ca": "Total de registres d'operacions amb persones o entitats vinculades declarats.",
+        "en": "Total related-party transaction records declared.",
+        "es": "Total de registros de operaciones con personas o entidades vinculadas declarados.",
+        "hu": "A bejelentett kapcsolt vállalkozásokkal folytatott ügyletek rekordjainak száma."
       },
       "label": {
         "ca": "N.º registres — operacions amb persones o entitats vinculades",
-        "en": "Number of related-party transaction records",
+        "en": "Records — transactions with related parties",
         "es": "N.º registros — operaciones con personas o entidades vinculadas",
-        "hu": "Kapcsolt felekkel folytatott ügyletek rekordjainak száma"
+        "hu": "Kapcsolt vállalkozásokkal folytatott ügyletek rekordjainak száma"
       },
       "llm_draft_provenance": null,
       "modelo": "MODELO_232",
@@ -48,9 +48,9 @@
         "hu": "Az LIS 23. cikke szerinti kedvezményt igénylő ügyletek rekordjainak száma."
       },
       "label": {
-        "ca": "N.º registres — operacions amb actius intangibles (art. 23 LIS)",
-        "en": "Number of intangible-asset transaction records (LIS art. 23)",
-        "es": "N.º registros — operaciones con activos intangibles (art. 23 LIS)",
+        "ca": "N.º registres — operacions amb actius intangibles",
+        "en": "Records — intangible asset transactions",
+        "es": "N.º registros — operaciones con activos intangibles",
         "hu": "Immateriális eszközökkel kapcsolatos ügyletek rekordjainak száma"
       },
       "llm_draft_provenance": null,

@@ -206,12 +206,17 @@ def run_context(
                         payload=_step_payload(nested_step, label=entrypoint),
                         module=__name__,
                     )
-                except Exception as exc:
+                except Exception:
+                    # Best-effort emit: a recorder/sink failure here must
+                    # never shadow the yielded body's outcome. Broad catch
+                    # because the recorder swallows any sink-level disk /
+                    # serialisation error and re-raises an opaque type
+                    # (logged with traceback above).
                     _log.warning(
-                        "failed to record nested STEP_END (run=%s step=%s): %r",
+                        "failed to record nested STEP_END (run=%s step=%s)",
                         outer.run_id,
                         nested_step,
-                        exc,
+                        exc_info=True,
                     )
         finally:
             STEP_CONTEXT_VAR.reset(step_token)
@@ -259,10 +264,10 @@ def run_context(
                     payload=_step_payload(info.initial_step_id, label=entrypoint),
                     module=__name__,
                 )
-            except Exception as exc:
+            except Exception:
                 # A failed STEP_END emit must not mask the yielded
                 # exception (if any) nor the outcome we already set.
-                _log.warning("failed to record STEP_END for run %s: %r", info.run_id, exc)
+                _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
     finally:
         # If we were re-entered by ``replay_run``, label the persisted
         # trace with the original run id so ``aeat run show`` can tell a
@@ -292,11 +297,11 @@ def run_context(
                 replay_of=replay_of,
             )
             save_trace(trace)
-        except Exception as exc:
+        except Exception:
             # Persisting the trace is best-effort — a disk-full at exit
             # must never shadow the real exception the caller is
             # propagating. Log and move on.
-            _log.warning("failed to persist RunTrace for run %s: %r", info.run_id, exc)
+            _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
         finally:
             # Detach the sink BEFORE resetting the contextvars so a
             # trailing log record from another thread can't land on
@@ -304,14 +309,19 @@ def run_context(
             # ordering above.
             try:
                 root_logger.removeHandler(sink)
-            except Exception as exc:  # pragma: no cover - logging lock is infallible in practice
-                _log.warning("failed to detach sink for run %s: %r", info.run_id, exc)
+            except Exception:  # pragma: no cover - logging lock is infallible in practice
+                _log.warning("failed to detach sink for run %s", info.run_id, exc_info=True)
             STEP_CONTEXT_VAR.reset(step_token)
             RUN_CONTEXT_VAR.reset(run_token)
             try:
                 sink.close()
-            except Exception as exc:
-                _log.warning("failed to close sink for run %s: %r", info.run_id, exc)
+            except Exception:
+                # Sink teardown is infallible-by-policy: a close failure
+                # cannot be allowed to shadow the run's real outcome.
+                # Broad catch because the file-handle close path can
+                # surface OSError, ValueError, or RuntimeError depending
+                # on platform and sink lifecycle state.
+                _log.warning("failed to close sink for run %s", info.run_id, exc_info=True)
 
 
 __all__ = [

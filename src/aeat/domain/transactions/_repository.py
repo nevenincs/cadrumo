@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 from ...adapters.persistence.storage.envelope._envelope import (
@@ -115,16 +115,23 @@ class TransactionCatalogueRepository:
         """
         target = self.envelope_path
         if not target.exists():
+            _log.debug("transaction catalogue not found at %s; returning empty catalogue", target)
             return TransactionCatalogue()
-        envelope = load_encrypted_envelope(
-            target,
-            Envelope[TransactionCatalogue],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
-            max_supported_version=_TX_CATALOGUE_VERSION,
-        )
-        return envelope.payload
+        try:
+            envelope = load_encrypted_envelope(
+                target,
+                Envelope[TransactionCatalogue],
+                expected_class=SensitivityClass.FINANCIAL,
+                master_key_provider=_resolve_master_key_provider(),
+                hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
+                max_supported_version=_TX_CATALOGUE_VERSION,
+            )
+        except (ClassificationError, EnvelopeVersionError):
+            _log.error("transaction catalogue envelope integrity error at %s", target, exc_info=True)
+            raise
+        catalogue = envelope.payload
+        _log.debug("loaded transaction catalogue with %d entries from %s", len(catalogue.transactions), target)
+        return catalogue
 
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
@@ -147,6 +154,7 @@ class TransactionCatalogueRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_TX_CATALOGUE,
             )
+        _log.info("saved transaction catalogue with %d entries to %s", len(catalogue.transactions), self.envelope_path)
 
     def merge_raw_transactions(
         self,
@@ -187,13 +195,23 @@ class TransactionCatalogueRepository:
                 if tx_id in existing_ids:
                     skipped += 1
                     continue
-                direction = direction_resolver(raw)
-                transaction = Transaction.model_validate(
-                    {
-                        "raw": raw,
-                        "direction": direction,
-                    }
-                )
+                try:
+                    direction = direction_resolver(raw)
+                    transaction = Transaction.model_validate(
+                        {
+                            "raw": raw,
+                            "direction": direction,
+                        }
+                    )
+                except (ValueError, ValidationError):
+                    _log.error(
+                        "merge_raw_transactions: failed to process tx_id=%s from %s row=%d",
+                        tx_id,
+                        raw.provenance.source_path,
+                        raw.provenance.source_row_index,
+                        exc_info=True,
+                    )
+                    raise
                 new_transactions[tx_id] = transaction
                 existing_ids.add(tx_id)
                 imported += 1

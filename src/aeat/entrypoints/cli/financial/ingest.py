@@ -30,6 +30,7 @@ from ....adapters.inbound.financial.providers import (
     XlsxProvider,
     detect_provider,
 )
+from ....core.logging import get_logger
 from ....domain.transactions import RawTransaction
 from .._i18n import t, tr
 
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
     from ....domain.transactions import ImportSummary
 
 _CONSOLE = Console()
+_logger = get_logger(__name__)
 
 
 class ProviderChoice(StrEnum):
@@ -132,8 +134,10 @@ def ingest_cmd(
             :exc:`~aeat.adapters.inbound.financial.providers.FinancialProviderError`
             during ingest.
     """
+    _logger.info("financial ingest: starting ingest for %s (provider=%s)", path, provider.value)
     provider_impl = _resolve_provider(provider, path)
     if provider_impl is None:
+        _logger.warning("financial ingest: no provider can handle %s", path)
         typer.echo(
             tr(
                 t(
@@ -146,8 +150,15 @@ def ingest_cmd(
             err=True,
         )
         raise typer.Exit(code=2)
+    _logger.debug("financial ingest: resolved provider %s for %s", provider_impl.name, path)
     validation = provider_impl.validate_source(path)
     if not validation.is_valid:
+        _logger.warning(
+            "financial ingest: source validation failed for %s via %s (%d warning(s))",
+            path,
+            provider_impl.name,
+            len(validation.warnings),
+        )
         for warning in validation.warnings:
             typer.echo(
                 tr(
@@ -176,6 +187,12 @@ def ingest_cmd(
     try:
         transactions = tuple(provider_impl.ingest(path))
     except FinancialProviderError as exc:
+        _logger.warning(
+            "financial ingest: provider %s raised an error ingesting %s",
+            provider_impl.name,
+            path,
+            exc_info=True,
+        )
         typer.echo(
             tr(
                 t(
@@ -188,6 +205,12 @@ def ingest_cmd(
             err=True,
         )
         raise typer.Exit(code=2) from exc
+    _logger.info(
+        "financial ingest: ingested %d transaction(s) from %s via %s",
+        len(transactions),
+        path,
+        provider_impl.name,
+    )
 
     # --persist defaults: ON when stdout is a TTY (interactive
     # operator), OFF when piped (preserves the
@@ -195,7 +218,13 @@ def ingest_cmd(
     persist_resolved = persist if persist is not None else sys.stdout.isatty()
     summary: ImportSummary | None = None
     if persist_resolved:
+        _logger.debug("financial ingest: persisting %d transaction(s) to catalogue", len(transactions))
         summary = _persist_transactions(transactions, catalogue_dir=catalogue_dir)
+        _logger.info(
+            "financial ingest: catalogue updated (imported=%d skipped=%d)",
+            summary.imported,
+            summary.skipped,
+        )
 
     if output_json:
         for transaction in transactions:

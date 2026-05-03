@@ -53,8 +53,8 @@ def session_scope(engine: Engine | None = None) -> Iterator[Session]:
     try:
         yield session
         session.commit()
-    except Exception:
-        _log.debug("session_scope rolling back due to exception")
+    except Exception:  # rollback on any error then re-raise; SQLAlchemy exception surface is too broad to enumerate
+        _log.debug("session_scope rolling back due to exception", exc_info=True)
         session.rollback()
         raise
     finally:

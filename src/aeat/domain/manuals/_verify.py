@@ -184,6 +184,13 @@ def verify_manual_dir(
     try:
         manual = load_manual(manual_id, year, part, settings=resolved)
     except (ManualParseError, ManualNotFoundError, ManifestError) as exc:
+        _logger.warning(
+            "manual load failed %s/%s/%s",
+            manual_id.value,
+            year,
+            part.value,
+            exc_info=True,
+        )
         issues.append(
             ManualVerificationIssue(
                 level="error",
@@ -208,7 +215,7 @@ def verify_manual_dir(
         issues.extend(_section_multilingual_warnings(section))
     issues.extend(_cross_reference_issues(sections_tuple, known_ids))
 
-    _logger.info(
+    _logger.debug(
         "verify %s/%s/%s: %d issue(s)",
         manual_id.value,
         year,

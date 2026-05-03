@@ -137,6 +137,7 @@ def sanitize_pdf(
         # with the bytes already in hand) take the BytesIO path.
         pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
     except PikepdfError as exc:
+        _LOG.error("sanitize_pdf: pikepdf failed to open source sha=%s", source_sha[:16], exc_info=True)
         raise SanitizerSourceParseError(f"pikepdf could not parse source bytes: {exc}") from exc
 
     _refuse_if_signed(pdf)
@@ -176,6 +177,14 @@ def sanitize_pdf(
 
     output_bytes, flags = save_with_deterministic_flags(pdf)
     output_sha = hashlib.sha256(output_bytes).hexdigest()
+    _LOG.info(
+        "sanitize_pdf: completed source_sha=%s output_sha=%s replacements=%d surfaces=%d warnings=%d",
+        source_sha[:16],
+        output_sha[:16],
+        len(replacements),
+        len(surfaces),
+        len(warnings),
+    )
 
     return SanitizationResult(
         output_bytes=output_bytes,

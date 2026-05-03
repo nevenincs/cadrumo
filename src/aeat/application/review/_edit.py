@@ -42,6 +42,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ._errors import EditParseError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for edit records."""
 
@@ -52,28 +54,17 @@ _CASILLA_EDIT_RE = re.compile(r"^casilla\.(?P<casilla_id>\d{2,5})$")
 _DECIMAL_RE = re.compile(r"^-?\d+(\.\d+)?$")
 """Reject malformed decimals before constructor; ruff-friendly fast path."""
 
-
-class EditParseError(ValueError):
-    """Raised when ``--set KEY=VALUE`` cannot be parsed.
-
-    Subclasses :class:`ValueError` rather than the project's
-    :class:`AeatError` taxonomy for the same reason as
-    :class:`aeat.application.review.FilterParseError`: the in-flight
-    CLI restructure is mid-flight on the registry split. The CLI's
-    argv-validation layer re-raises this into a typed CLI error
-    envelope.
-
-    Attributes:
-        raw_token: The string the operator supplied.
-        reason: One of ``"missing-equals"``, ``"empty-key"``,
-            ``"empty-value"``, ``"unknown-key-{scope}"``,
-            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
-    """
-
-    def __init__(self, raw_token: str, *, reason: str) -> None:
-        super().__init__(f"cannot parse edit token {raw_token!r}: {reason}")
-        self.raw_token = raw_token
-        self.reason = reason
+__all__ = (
+    "DeclarationEditSpec",
+    "EditClause",
+    "EditParseError",
+    "InvoiceEditKey",
+    "InvoiceEditSpec",
+    "LedgerEditKey",
+    "LedgerEditSpec",
+    "parse_edit_clause",
+    "parse_edit_clauses",
+)
 
 
 class EditClause(BaseModel):
@@ -221,6 +212,7 @@ class LedgerEditKey(StrEnum):
     """
 
     CATEGORY = "category"
+    TREATMENT = "treatment"
     BUSINESS_SHARE = "business.share"
     REFERENCE = "reference"
     COMMENTS = "comments"
@@ -299,7 +291,7 @@ class LedgerEditSpec(BaseModel):
         comments: str | None = None
         document_path: Path | None = None
         for clause in clauses:
-            if clause.key == LedgerEditKey.CATEGORY:
+            if clause.key in {LedgerEditKey.CATEGORY, LedgerEditKey.TREATMENT}:
                 category = clause.raw_value
             elif clause.key == LedgerEditKey.BUSINESS_SHARE:
                 business_share = _coerce_share(clause, scope="ledger-business-share")
@@ -322,7 +314,7 @@ class LedgerEditSpec(BaseModel):
     def _enforce_clause_consistency(self) -> LedgerEditSpec:
         """Resolved fields must agree with the clauses tuple."""
         present = {clause.key for clause in self.clauses}
-        if (LedgerEditKey.CATEGORY in present) != (self.category is not None):
+        if (LedgerEditKey.CATEGORY in present or LedgerEditKey.TREATMENT in present) != (self.category is not None):
             raise ValueError("clauses[category] / category field disagree")
         if (LedgerEditKey.BUSINESS_SHARE in present) != (self.business_share is not None):
             raise ValueError("clauses[business.share] / business_share field disagree")

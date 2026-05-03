@@ -782,3 +782,60 @@ each new CLI command can land cohesively with its backend.
 
 Backend full sweep at cycle close: 11 new tests
 (`aeat.application.profile`); broader sweep unaffected.
+
+## Cycle 12 — 2026-05-03
+
+CLI-REDESIGN-FULL-V6 | RESOLVED | HIGH | Full v6 CLI surface delivered end-to-end
+The user expanded the directive to "deliver the full cli — obviously
+everything must exist in this worktree." Cycle 12 replaces HEAD's
+pre-v6 stub scaffold with the canonical v6 namespace tree
+(`aeat setup` / `aeat setup auth` / `aeat setup profile` /
+`aeat app overview` / `aeat app ledger` / `aeat app invoice` /
+`aeat app declaration`) and wires every command to a fully-implemented
+application-layer API.
+
+* `src/aeat/entrypoints/cli/__init__.py` is rewritten as a thin
+  Typer composition root that wires the v6 sub-app modules. Each
+  sub-app lives in its own `_v6_*.py` module
+  (`_v6_setup.py`, `_v6_overview.py`, `_v6_ledger.py`,
+  `_v6_invoice.py`, `_v6_declaration.py`) sharing the
+  `_v6_common.py` transport helpers (JSON envelope rendering, period
+  normaliser, repository accessors, state lookup). Every handler
+  body is < 30 lines and contains zero business logic — every
+  validation, mutation, schema decision, and persistence call routes
+  through the existing application APIs (cycle-3 ProfileKey
+  registry, cycle-7 AuthProviderListing catalogue, cycle-9 EditSpec,
+  cycle-8 FilterSpec, cycle-10 OverviewCalendar, cycle-6
+  DeclarationCalculateSummary, cycle-5 DeclarationExport/Verify,
+  cycle-11 validate_profile).
+* `src/aeat/application/user_cli.py` lands as the canonical state
+  layer: `UserCliState` (active profile, profiles map, auth state,
+  ledger / invoice review overlays, declaration pointers),
+  `UserCliStateRepository` (encrypted-envelope persistence), plus
+  pure-function mutation helpers (`set_active_profile`,
+  `set_profile_values`, `clear_profile_values`, `update_auth`,
+  `update_ledger_review`, `update_invoice_review`,
+  `update_declaration_pointer`).
+* `src/aeat/entrypoints/cli/test_v6_surface.py` ships 29
+  integration tests exercising the full v6 surface via Typer's
+  CliRunner: namespace coverage (root / setup / app / setup auth /
+  setup profile / app declaration), setup status / init / profile
+  validate / list-keys / set-get-unset round-trip / list, auth
+  providers (catalogue ids), configure refusal of research-only,
+  configure clave_movil round-trip with login / status / logout,
+  overview status (bare + calendar + dates-required), ledger import
+  (dry-run + persist) and review filters, invoice review filter
+  with case-folded `kind=`, invoice match per period, declaration
+  calculate persists draft + summary, verify rejects missing file.
+
+The CLI honours the two hard constraints:
+1. Every handler is pure transport — argv parsing, application call,
+   typed render. No filtering, derivation, formatting beyond
+   `_emit(payload, lines)`.
+2. Every call site references a fully-implemented backend — no
+   NotImplementedError, no stubs. Where the underlying contract
+   raises (e.g. `approve_draft` requires READY_TO_SUBMIT), the CLI
+   surfaces the typed error verbatim.
+
+Backend full sweep at cycle close: 29 new CLI integration tests
+(all green); broader application + domain sweep unaffected.

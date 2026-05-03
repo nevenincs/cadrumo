@@ -39,6 +39,11 @@ def _flush_or_wrap(session: Session, kind: str) -> None:
     try:
         session.flush()
     except IntegrityError as exc:
+        _log.warning(
+            "repository: integrity violation during %s",
+            kind,
+            exc_info=True,
+        )
         raise RepositoryError(f"integrity violation during {kind} operation: {exc.orig}") from exc
 
 

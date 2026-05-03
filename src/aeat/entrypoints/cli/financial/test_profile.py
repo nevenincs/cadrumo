@@ -21,7 +21,7 @@ from ....adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from .. import app as root_app
+from .profile import app as profile_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -61,7 +61,7 @@ def _isolate_usage_ratios_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
 
 def _invoke(*args: str):
-    return _RUNNER.invoke(root_app, ["financial", "profile", *args])
+    return _RUNNER.invoke(profile_app, [*args])
 
 
 def test_list_on_empty_profile_reports_no_ratios() -> None:

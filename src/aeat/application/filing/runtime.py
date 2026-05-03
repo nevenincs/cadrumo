@@ -38,6 +38,7 @@ from ...domain.filing._builders._modelo_130_schema import (
 )
 from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
 from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing._errors import FilingBuilderError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _SUPPORTED_FILING_MODELOS: tuple[str, ...] = ("130", "303", "390")
@@ -114,7 +115,7 @@ def load_default_filing_profile(
         The loaded :class:`FilingOperatorProfile`.
 
     Raises:
-        ValueError: When no default profile is configured or when the
+        FilingBuilderError: When no default profile is configured or when the
             resolved path does not exist on disk.
     """
     from ...core.config import load_settings
@@ -122,9 +123,11 @@ def load_default_filing_profile(
     settings = load_settings()
     target = path or settings.aeat_default_profile_path
     if target is None:
-        raise ValueError("no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH")
+        raise FilingBuilderError(
+            "no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH"
+        )
     if not target.exists():
-        raise ValueError(f"default filing profile not found: {target}")
+        raise FilingBuilderError(f"default filing profile not found: {target}")
     from ..setup._env_writer import load_profile_envelope
 
     profile = load_profile_envelope(target)

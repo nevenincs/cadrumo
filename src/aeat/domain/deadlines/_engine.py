@@ -124,6 +124,7 @@ class DeadlineEngine:
                 canonical windows are registered for ``year``.
         """
         reference_today = today or date.today()
+        _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         windows = _windows_for_year(year)
         if not windows:
             raise ScheduleComputationError(
@@ -157,6 +158,13 @@ class DeadlineEngine:
                 )
 
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
+        if not obligations:
+            _logger.debug(
+                "no filing obligations computed year=%d: profile has no applicable modelos",
+                year,
+            )
+        else:
+            _logger.debug("computed schedule year=%d obligations=%d", year, len(obligations))
         return Schedule(
             profile=profile,
             year=year,

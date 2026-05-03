@@ -154,6 +154,11 @@ def link_transaction(
     ):
         raise InvoiceLinkError(f"transaction_id must be a 64-character lowercase hex digest: {transaction_id!r}")
     if normalized_tx in invoice.linked_transaction_ids:
+        _LOGGER.debug(
+            "link_transaction: transaction=%s already linked to invoice=%s; skipping",
+            normalized_tx,
+            invoice_id,
+        )
         return catalogue
     updated_ids = (*invoice.linked_transaction_ids, normalized_tx)
     try:
@@ -224,6 +229,7 @@ def suggest_reconciliations(
                 )
             )
     suggestions.sort(key=lambda s: (-s.score, s.invoice_id, s.transaction_id))
+    _LOGGER.debug("suggest_reconciliations: %d candidate(s)", len(suggestions))
     return tuple(suggestions)
 
 
@@ -270,6 +276,11 @@ def verify_link_consistency(
                 )
             )
     inconsistencies.sort(key=lambda item: (item.invoice_id, item.transaction_id))
+    if inconsistencies:
+        _LOGGER.warning(
+            "verify_link_consistency: %d one-sided link(s) detected",
+            len(inconsistencies),
+        )
     return tuple(inconsistencies)
 
 
@@ -317,6 +328,7 @@ def link_transaction_bidirectional(
     from ..transactions._repository import TransactionCatalogueRepository
     from ._repository import InvoiceCatalogueRepository
 
+    _LOGGER.debug("bidirectional link: invoice=%s transaction=%s", invoice_id, transaction_id)
     invoice_repo = InvoiceCatalogueRepository(store_dir=invoices_dir)
     transaction_repo = TransactionCatalogueRepository(store_dir=transactions_dir)
     invoices_path = invoice_repo.envelope_path
@@ -336,6 +348,7 @@ def link_transaction_bidirectional(
         raise InvoiceLinkError(f"could not link transaction {transaction_id} to invoice {invoice_id}") from exc
 
     invoice_repo.save(updated_invoices)
+    _LOGGER.info("linked invoice=%s to transaction=%s", invoice_id, transaction_id)
     try:
         transaction_repo.save(updated_transactions)
     except TransactionError as exc:
@@ -375,6 +388,12 @@ def _rollback_invoice_file(
 
             fsync_parent_dir(invoices_path)
     except OSError as restore_exc:
+        _LOGGER.error(
+            "rollback failed invoice=%s transaction=%s; original transaction save error follows",
+            invoice_id,
+            transaction_id,
+            exc_info=cause,
+        )
         raise InvoiceLinkInconsistencyError(
             invoice_path=invoices_path,
             transactions_path=transactions_path,
@@ -385,10 +404,10 @@ def _rollback_invoice_file(
                 "catalogues are inconsistent and require manual repair"
             ),
         ) from restore_exc
-    _LOGGER.warning(
-        "rolled back invoice catalogue %s after transaction save failure (%s)",
+    _LOGGER.error(
+        "rolled back invoice catalogue %s after transaction save failure",
         invoices_path,
-        cause,
+        exc_info=cause,
     )
 
 

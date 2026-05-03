@@ -187,13 +187,20 @@ def exclusive_file_lock(
             if _try_lock(fd):
                 break
             if time.monotonic() >= deadline:
+                _log.warning(
+                    "exclusive_file_lock: timed out waiting for %s after %.2fs",
+                    lock_path,
+                    timeout,
+                )
                 raise LockAcquisitionError(
                     f"failed to acquire exclusive lock on {lock_path} within {timeout:.2f}s",
                 )
             time.sleep(retry_backoff)
+        _log.debug("exclusive_file_lock: acquired %s", lock_path)
         try:
             yield lock_path
         finally:
             _release_lock(fd)
+            _log.debug("exclusive_file_lock: released %s", lock_path)
     finally:
         os.close(fd)

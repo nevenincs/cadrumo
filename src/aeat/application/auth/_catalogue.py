@@ -22,7 +22,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable, require_authoritative
+from ...core.i18n import Translatable, TranslationError, require_authoritative
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
@@ -50,7 +50,7 @@ class AuthProviderListing(BaseModel):
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,
-            ``"clave_movil"``, ``"clave_permanente"``). The CLI passes
+            ``"clave-movil"``, ``"clave-permanente"``). The CLI passes
             this verbatim through ``--provider``; the configure /
             login commands resolve it against the backend registry.
         label: Multilingual display label, Spanish authoritative.
@@ -62,7 +62,7 @@ class AuthProviderListing(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
     label: Translatable
     availability: AuthProviderAvailability
     description: Translatable
@@ -73,7 +73,7 @@ class AuthProviderListing(BaseModel):
         """Reject listings whose label or description omits authoritative Spanish."""
         try:
             require_authoritative(value, domain="aeat")
-        except Exception as exc:
+        except TranslationError as exc:
             raise ValueError(str(exc)) from exc
         return value
 
@@ -175,13 +175,13 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
         description=_CERTIFICATE_DESCRIPTION,
     ),
     AuthProviderListing(
-        id="clave_movil",
+        id="clave-movil",
         label=_CLAVE_MOVIL_LABEL,
         availability=AuthProviderAvailability.IMPLEMENTED,
         description=_CLAVE_MOVIL_DESCRIPTION,
     ),
     AuthProviderListing(
-        id="clave_permanente",
+        id="clave-permanente",
         label=_CLAVE_PERMANENTE_LABEL,
         availability=AuthProviderAvailability.RESEARCH_ONLY,
         description=_CLAVE_PERMANENTE_DESCRIPTION,
@@ -209,13 +209,16 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 def get_auth_provider(provider_id: str) -> AuthProviderListing:
     """Resolve a provider id to its catalogue listing.
 
+    Supports both hyphens (canonical) and underscores (legacy alias).
+
     Raises:
         KeyError: When ``provider_id`` is not in the catalogue. The
             CLI's configure / login commands catch this and render
             an operator-facing "unknown provider" error.
     """
+    pid = provider_id.strip().lower().replace("_", "-")
     for entry in AUTH_PROVIDER_CATALOGUE:
-        if entry.id == provider_id:
+        if entry.id == pid:
             return entry
     raise KeyError(provider_id)
 

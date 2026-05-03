@@ -217,9 +217,10 @@ class DivergenceClassifier:
     def _wrap(self, payload: DivergencePayload, *, modelo: str | None) -> DivergenceRecord:
         classification = classify_kind(payload.kind)
         _LOGGER.debug(
-            "classified divergence kind=%s classification=%s",
+            "classified divergence kind=%s classification=%s modelo=%s",
             payload.kind.value,
             classification.value,
+            modelo,
         )
         return DivergenceRecord(
             record_id=uuid.uuid4().hex,

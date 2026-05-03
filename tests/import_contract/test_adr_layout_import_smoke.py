@@ -72,7 +72,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.application.auth",
     "aeat.entrypoints",
     "aeat.entrypoints.cli",
-    "aeat.entrypoints.mcp",
     "aeat.core",
     "aeat.core.errors",
     "aeat.core.i18n",

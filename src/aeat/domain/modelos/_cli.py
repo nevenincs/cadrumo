@@ -15,7 +15,6 @@ default :class:`rich.table.Table` render.
 
 from __future__ import annotations
 
-import contextlib
 import sys
 
 import typer
@@ -24,6 +23,7 @@ from rich.table import Table
 
 from ...core.click_context import json_output_requested
 from ...core.json_contract import OutputRootSchema, emit_json_success, register_schema
+from ...core.logging import get_logger
 from ..deadlines import AutonomoProfile, FilingObligation, IVARegime
 from ._categories import ModeloCadence, ModeloCategory, TaxpayerProfile
 from ._errors import UnknownModeloError
@@ -36,6 +36,7 @@ from ._registry import (
 )
 
 _CONSOLE = Console()
+_LOG = get_logger(__name__)
 
 
 @register_schema("modelos list")
@@ -71,8 +72,10 @@ def _ensure_utf8_streams() -> None:
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if callable(reconfigure):
-            with contextlib.suppress(ValueError, OSError):
+            try:
                 reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError) as exc:
+                _LOG.debug("stream utf-8 reconfigure skipped (%s): %s", getattr(stream, "name", repr(stream)), exc)
 
 
 app = typer.Typer(
@@ -319,6 +322,7 @@ def year_plan_command(
         try:
             metadata = get_modelo(obligation.modelo)
         except UnknownModeloError:
+            _LOG.debug("year-plan: skipping obligation for unregistered modelo %s", obligation.modelo)
             continue
         if not taxpayers.isdisjoint(metadata.applicability.mandatory_profiles) or not taxpayers.isdisjoint(
             metadata.applicability.optional_profiles

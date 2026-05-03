@@ -74,9 +74,9 @@
       "definition_reviewed_by": "human-codex",
       "formula": null,
       "help": {
-        "ca": "Total de béns immobles y derechos sobre ellos situados en el extranjero declarats (clave I).",
+        "ca": "Total de béns immobles y derechos sobre ellos situados en el extranjero declarades (clave I).",
         "en": "Total foreign real estate and rights thereon declared (key I).",
-        "es": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declarados (clave I).",
+        "es": "Total de bienes inmuebles y derechos sobre ellos situados en el extranjero declaradas (clave I).",
         "hu": "A bejelentett külföldi ingatlanok és ingatlanjogok száma (I kulcs)."
       },
       "label": {

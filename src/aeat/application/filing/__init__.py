@@ -110,6 +110,8 @@ from ._export import (
     DeclarationExportResult,
     DeclarationVerifyResult,
     DeclarationVerifyVerdict,
+    export_draft,
+    verify_export,
 )
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
@@ -150,12 +152,19 @@ def _extract_quarterly_303(
     if raw is None:
         return None
     if not isinstance(raw, tuple):
+        _logger.warning(
+            "quarterly_303 input has unexpected type %s; expected tuple — skipping",
+            type(raw).__name__,
+        )
         return None
     filtered: list[FilingDraft] = []
     for entry in raw:
         if isinstance(entry, FilingDraft):
             filtered.append(entry)
     if not filtered:
+        _logger.warning(
+            "quarterly_303 input tuple contained no FilingDraft entries — skipping",
+        )
         return None
     return tuple(filtered)
 
@@ -214,6 +223,14 @@ def build_draft(
     draft = apply_validation(raw_draft, findings)
     if fail_on_warning and any(f.severity is not FilingFindingSeverity.INFO for f in findings):
         raise FilingValidationError(f"Draft {draft.draft_id} has {len(findings)} blocking findings")
+    _logger.info(
+        "built draft draft_id=%s modelo=%s period=%s status=%s findings=%d",
+        draft.draft_id,
+        draft.modelo,
+        draft.period,
+        draft.status.value,
+        len(findings),
+    )
     return draft
 
 
@@ -285,7 +302,7 @@ def iter_findings(
     try:
         threshold = _SEVERITY_RANK[FilingFindingSeverity(severity_at_least)]
     except ValueError as exc:
-        raise ValueError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
+        raise FilingBuilderError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
             yield finding
@@ -354,6 +371,7 @@ __all__ = [
     "compute_review_checksum",
     "derive_validation_status",
     "describe_stale_reason",
+    "export_draft",
     "filing_profile_from_autonomo",
     "get_builder",
     "import_filing_from_justificante",
@@ -365,5 +383,5 @@ __all__ = [
     "refresh_review_status",
     "summarise_calculation",
     "unapprove_draft",
-    "validate_draft",
+    "verify_export",
 ]

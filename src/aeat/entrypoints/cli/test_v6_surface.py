@@ -1,0 +1,407 @@
+"""Integration tests for the v6 ``aeat`` CLI surface.
+
+These tests assert that every v6 namespace exists, that the thin
+transport handlers route into the application layer, and that the
+JSON envelope matches the typed records the backend exposes. They
+do NOT exercise live AEAT, certificate auth, or any network surface.
+
+Each test isolates state through ``AEAT_RUNS_DIR`` /
+``AEAT_FINANCIAL_TXS_DIR`` / ``AEAT_INVOICES_DIR`` /
+``AEAT_DRAFTS_DIR`` env vars set on a per-test ``tmp_path``, and
+through ``AEAT_SECRET_STORE_BACKEND=unsecured`` so the encrypted
+state envelope writes through the in-process plain-bytes backend.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from . import app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_RUNNER = CliRunner()
+
+
+def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
+    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
+    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+
+
+def _invoke(args: list[str]):
+    return _RUNNER.invoke(app, args)
+
+
+# ---------------------------------------------------------------------
+# Namespace surface
+# ---------------------------------------------------------------------
+
+
+def test_root_help_lists_setup_and_app_only() -> None:
+    result = _invoke(["--help"])
+    assert result.exit_code == 0
+    assert "setup" in result.output
+    assert "app" in result.output
+
+
+def test_setup_help_lists_init_status_auth_profile() -> None:
+    result = _invoke(["setup", "--help"])
+    assert result.exit_code == 0
+    for token in ("init", "status", "auth", "profile"):
+        assert token in result.output
+
+
+def test_app_help_lists_singular_v6_domains() -> None:
+    result = _invoke(["app", "--help"])
+    assert result.exit_code == 0
+    for token in ("overview", "ledger", "invoice", "declaration"):
+        assert token in result.output
+    for legacy in ("workspaces", "audits", "declarations"):
+        assert legacy not in result.output
+
+
+def test_setup_profile_help_carries_v6_subcommands() -> None:
+    result = _invoke(["setup", "profile", "--help"])
+    assert result.exit_code == 0
+    for token in ("use", "show", "list-keys", "get", "set", "unset", "validate", "list"):
+        assert token in result.output
+
+
+def test_setup_auth_help_carries_v6_subcommands() -> None:
+    result = _invoke(["setup", "auth", "--help"])
+    assert result.exit_code == 0
+    for token in ("providers", "configure", "login", "status", "whoami", "logout"):
+        assert token in result.output
+
+
+def test_app_declaration_help_carries_v6_subcommands() -> None:
+    result = _invoke(["app", "declaration", "--help"])
+    assert result.exit_code == 0
+    for token in ("calculate", "review", "status", "edit", "approve", "validate", "preview", "export", "verify"):
+        assert token in result.output
+
+
+# ---------------------------------------------------------------------
+# Setup namespace
+# ---------------------------------------------------------------------
+
+
+def test_setup_status_returns_typed_payload(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "setup", "status"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["active_profile"] is None
+    assert payload["profile_ready"] is False
+    assert payload["next_action"].startswith("aeat setup ")
+
+
+def test_setup_init_seeds_profile_and_activates(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "setup",
+            "init",
+            "--name",
+            "kent",
+            "--tax-id",
+            "12345678Z",
+            "--activity",
+            "design",
+        ]
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["active_profile"] == "kent"
+    assert payload["values"]["tax.id"] == "12345678Z"
+
+
+def test_setup_profile_validate_routes_through_application_api(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    init = _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"])
+    assert init.exit_code == 0
+    result = _invoke(["--format", "json", "setup", "profile", "validate"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["valid"] is True
+    assert "tax.id" in payload["present_required"]
+
+
+def test_setup_profile_validate_blocks_when_required_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    result = _invoke(["--format", "json", "setup", "profile", "validate"])
+    assert result.exit_code == 2
+
+
+def test_setup_profile_list_keys_renders_registry(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "setup", "profile", "list-keys"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    keys = {entry["key"] for entry in payload["keys"]}
+    assert "tax.id" in keys
+    assert "activity" in keys
+
+
+def test_setup_profile_set_get_unset_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    set_result = _invoke(["--format", "json", "setup", "profile", "set", "tax.id", "X1234567L"])
+    assert set_result.exit_code == 0
+    get_result = _invoke(["--format", "json", "setup", "profile", "get", "tax.id"])
+    assert get_result.exit_code == 0
+    assert json.loads(get_result.output)["value"] == "X1234567L"
+    assert _invoke(["setup", "profile", "unset", "tax.id"]).exit_code == 0
+
+
+def test_setup_profile_get_rejects_unknown_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    result = _invoke(["setup", "profile", "get", "fictional.key"])
+    assert result.exit_code != 0
+
+
+def test_setup_profile_list_renders_active_marker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    result = _invoke(["--format", "json", "setup", "profile", "list"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    # Field is named `active` (the active profile name) plus `profiles` (the list).
+    active = payload.get("active") or payload.get("active_profile")
+    assert active == "kent"
+    assert "kent" in payload["profiles"]
+
+
+# ---------------------------------------------------------------------
+# Auth namespace
+# ---------------------------------------------------------------------
+
+
+def test_setup_auth_providers_renders_v6_catalogue(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "setup", "auth", "providers"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    ids = {row["id"] for row in payload["providers"]}
+    assert "certificate" in ids
+    assert any(pid.startswith("clave") and "movil" in pid for pid in ids)
+    assert any(pid.startswith("clave") and "permanente" in pid for pid in ids)
+    research = [row for row in payload["providers"] if row["availability"] == "research-only"]
+    assert any("permanente" in row["id"] for row in research)
+
+
+def test_setup_auth_configure_refuses_research_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    # Look up the canonical research-only id from the application catalogue.
+    from aeat.application.auth import research_only_auth_providers
+
+    research_id = research_only_auth_providers()[0].id
+    result = _invoke(["setup", "auth", "configure", "--provider", research_id])
+    assert result.exit_code == 2
+
+
+def test_setup_auth_configure_certificate_requires_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["setup", "auth", "configure", "--provider", "certificate"])
+    assert result.exit_code != 0
+
+
+def test_setup_auth_configure_clave_movil_round_trips(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    from aeat.application.auth import implemented_auth_providers
+
+    movil_id = next(p.id for p in implemented_auth_providers() if "movil" in p.id)
+    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z"]).exit_code == 0
+    configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", movil_id])
+    assert configure.exit_code == 0
+    login = _invoke(["--format", "json", "setup", "auth", "login"])
+    assert login.exit_code == 0
+    status = _invoke(["--format", "json", "setup", "auth", "status"])
+    assert status.exit_code == 0
+    payload = json.loads(status.output)
+    assert payload["ready"] is True
+    assert _invoke(["setup", "auth", "logout"]).exit_code == 0
+
+
+# ---------------------------------------------------------------------
+# App namespace — overview / ledger / invoice / declaration
+# ---------------------------------------------------------------------
+
+
+def test_app_overview_status_bare_renders_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "app", "overview", "status"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["transactions"] == 0
+    assert payload["invoices"] == 0
+    assert payload["drafts"] == 0
+
+
+def test_app_overview_status_calendar_renders_period_table(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "status",
+            "--calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-04-30",
+        ]
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert "calendar" in payload
+    assert payload["calendar"]["range"]["from_date"] == "2026-01-01"
+
+
+def test_app_overview_status_calendar_requires_dates(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["app", "overview", "status", "--calendar"])
+    assert result.exit_code != 0
+
+
+def test_app_ledger_import_dry_run_does_not_persist(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    statement = tmp_path / "n26.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+    dry = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"])
+    assert dry.exit_code == 0
+    payload = json.loads(dry.output)
+    assert payload["dry_run"] is True
+    assert payload["imported"] == 0
+    after = _invoke(["--format", "json", "app", "overview", "status"])
+    assert json.loads(after.output)["transactions"] == 0
+
+
+def test_app_ledger_import_persists_and_review_lists_row(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    statement = tmp_path / "n26.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+    imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    assert imported.exit_code == 0
+    review = _invoke(["--format", "json", "app", "ledger", "review"])
+    assert review.exit_code == 0
+    payload = json.loads(review.output)
+    assert len(payload["rows"]) == 1
+    assert payload["rows"][0]["status"] in {"pending", "reviewed", "skipped"}
+
+
+def test_app_ledger_review_filter_rejects_unknown_key(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["app", "ledger", "review", "--filter", "kind=received"])
+    assert result.exit_code != 0
+
+
+def test_app_ledger_edit_skip_requires_reason(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["app", "ledger", "edit", "--id", "abc", "--skip", "true"])
+    # missing --reason ⇒ Typer exits non-zero
+    assert result.exit_code != 0
+
+
+def test_app_invoice_review_filter_kind_lowercase(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "app", "invoice", "review", "--filter", "kind=issued"])
+    assert result.exit_code == 0
+
+
+def test_app_invoice_match_period_renders_typed_result(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["--format", "json", "app", "invoice", "match", "--period", "2026-Q1"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["period"] == "2026Q1"
+    assert payload["matched"] == []
+    assert payload["unmatched"] == []
+
+
+def test_app_declaration_calculate_persists_draft(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    result = _invoke(["--format", "json", "app", "declaration", "calculate", "--period", "2026Q1", "--modelo", "130"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["draft"]["modelo"] == "130"
+    assert payload["draft"]["period"] == "2026Q1"
+    assert payload["summary"]["next_action"] in {
+        "review",
+        "approve",
+        "export",
+        "refresh-approval",
+        "amend",
+        "resolve-blockers",
+    }
+
+
+def test_app_declaration_verify_rejects_missing_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    result = _invoke(["app", "declaration", "verify", "--id", "fictional", "--file", str(tmp_path / "missing.bin")])
+    assert result.exit_code != 0

@@ -113,9 +113,8 @@ class PlaywrightContextBackend(_CertBackend):
                 f"{_MARKER_ATTR}={cert.sha256_thumbprint!r}."
             )
         log.info(
-            "Verified PLAYWRIGHT_CONTEXT: thumbprint=%s friendly_name=%s",
+            "verified playwright_context: thumbprint=%s",
             cert.sha256_thumbprint,
-            cert.friendly_name,
         )
 
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:

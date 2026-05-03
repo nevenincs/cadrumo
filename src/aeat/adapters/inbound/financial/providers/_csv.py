@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
+from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -35,6 +36,7 @@ from ._base import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_logger = get_logger(__name__)
 
 
 class CsvColumnMap(BaseModel):
@@ -137,7 +139,22 @@ REVOLUT_LAYOUT = CsvBankLayout(
     day_first_dates=False,
     decimal_separator=".",
 )
+N26_LAYOUT = CsvBankLayout(
+    bank_name="N26",
+    columns=CsvColumnMap(
+        booked_date=("date", "datum", "booking date", "transaction date"),
+        value_date=("value date", "valuta", "wertstellung"),
+        amount=("amount (eur)", "betrag (eur)", "amount", "betrag"),
+        currency=("currency", "wahrung", "waehrung"),
+        description=("payment reference", "reference", "description", "verwendungszweck", "transaction type"),
+        counterparty=("payee", "empfanger", "empfaenger", "counterparty", "partner name"),
+        external_id=("id", "transaction id", "reference id"),
+    ),
+    day_first_dates=False,
+    decimal_separator=".",
+)
 CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
+    N26_LAYOUT,
     BBVA_LAYOUT,
     SANTANDER_LAYOUT,
     CAIXABANK_LAYOUT,
@@ -206,10 +223,12 @@ class CsvProvider(FinancialProvider):
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict raw transactions from the CSV source."""
+        _logger.debug("csv_provider ingest: loading %s", path.name)
         rows, source_sha256, _, _ = self._load_rows(path)
         header_index, layout, headers, lookup = self._locate_header(rows)
         if layout is None or headers is None or lookup is None:
             raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
+        _logger.info("csv_provider ingest: matched layout=%s path=%s", layout.bank_name, path.name)
         data_rows = rows[header_index + 1 :]
         for source_row_index, row in enumerate(data_rows, start=header_index + 2):
             raw_fields = _row_to_mapping(headers, row)
@@ -237,6 +256,12 @@ class CsvProvider(FinancialProvider):
                 description = _required_value(raw_fields, lookup, layout.columns.description, "description")
                 counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
             except ValueError as exc:
+                _logger.warning(
+                    "csv_provider: parse error row=%d file=%s",
+                    source_row_index,
+                    path.name,
+                    exc_info=True,
+                )
                 raise InvalidFinancialSourceError(
                     f"CSV row {source_row_index} could not be parsed: {exc}",
                 ) from exc

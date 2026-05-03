@@ -29,7 +29,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from ...core.config import Settings, load_settings
 from ...core.i18n import Language, TranslationError, get_translation
@@ -112,7 +112,7 @@ def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
     raw = _read_text(chapters_path)
     try:
         return _CHAPTERS_ADAPTER.validate_json(raw)
-    except Exception as exc:  # pydantic ValidationError subclasses Exception
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{chapters_path}: chapter validation failed: {exc}") from exc
 
 
@@ -135,7 +135,7 @@ def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> M
     base_payload["chapters"] = [chapter.model_dump(mode="json") for chapter in chapters]
     try:
         return Manual.model_validate_json(json.dumps(base_payload))
-    except Exception as exc:
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{manual_path}: manual validation failed: {exc}") from exc
 
 
@@ -171,7 +171,7 @@ def load_manual(
         raise ManualNotFoundError(
             f"missing structure for {manual_id.value}/{year}/{part.value} under {part_root}",
         )
-    _logger.info("loading manual %s/%s/%s from %s", manual_id.value, year, part.value, part_root)
+    _logger.debug("loading manual %s/%s/%s from %s", manual_id.value, year, part.value, part_root)
     chapters = _load_chapters(chapters_path)
     return _load_manual_metadata(manual_path, chapters)
 
@@ -197,7 +197,7 @@ def load_section(part_root: Path, section_ref: SectionRef) -> Section:
     raw = _read_text(section_path)
     try:
         section = Section.model_validate_json(raw)
-    except Exception as exc:
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{section_path}: section validation failed: {exc}") from exc
     if section.section_id != section_ref.section_id:
         raise ManualParseError(

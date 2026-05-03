@@ -145,6 +145,7 @@ def compute_anexo_c_aggregates(
     """
     fincas = finca_repo.list_all()
     if not fincas:
+        _log.debug("anexo c: no fincas registered for period %d; returning zero aggregates", period_year)
         return AnexoCAggregates(
             period_year=period_year,
             casilla_0061=Decimal("0.00"),
@@ -181,6 +182,13 @@ def compute_anexo_c_aggregates(
             for attrib in contract_attribs:
                 contract_tier[attrib.contract_id] = attrib
         else:
+            _log.debug(
+                "anexo c: finca id=%s identifier=%s skipped (not active or non-arrendable use_type=%s) for period %d",
+                finca.id,
+                finca.identifier,
+                finca.use_type.value,
+                period_year,
+            )
             ingresos = gastos = amortization = reduccion_total = Decimal("0.00")
 
         imputacion = _compute_imputacion(
@@ -212,7 +220,7 @@ def compute_anexo_c_aggregates(
                 f"contract id={attrib.contract_id} references unknown finca id={attrib.finca_id}",
             )
 
-    return AnexoCAggregates(
+    aggregates = AnexoCAggregates(
         period_year=period_year,
         casilla_0061=_round_to_cents(casilla_0061),
         casilla_0066=_round_to_cents(casilla_0066),
@@ -222,6 +230,19 @@ def compute_anexo_c_aggregates(
         per_finca_attribution=finca_attribution,
         per_contract_tier=contract_tier,
     )
+    _log.debug(
+        "anexo c aggregates computed: period=%d fincas=%d contracts=%d "
+        "0061=%s 0066=%s 0072=%s 0078=%s 0085=%s",
+        period_year,
+        len(fincas),
+        len(contract_tier),
+        aggregates.casilla_0061,
+        aggregates.casilla_0066,
+        aggregates.casilla_0072,
+        aggregates.casilla_0078,
+        aggregates.casilla_0085,
+    )
+    return aggregates
 
 
 def _finca_is_active_for_period(finca: RentalFinca, period_year: int) -> bool:
@@ -258,6 +279,12 @@ def _aggregate_finca(
             continue
         income = income_repo.get_for_contract_period(contract.id, period_year)
         if income is None:
+            _log.debug(
+                "anexo c: no income record for contract_id=%s finca_id=%s period=%d; treating as zero",
+                contract.id,
+                finca.id,
+                period_year,
+            )
             contract_to_income[contract.id] = (contract, Decimal("0.00"), 0)
             continue
         contract_to_income[contract.id] = (contract, income.gross_rent_received, income.dias_alquilados)
@@ -329,6 +356,10 @@ def _existing_carry_forward() -> tuple[CarryForwardEntry, ...]:
     PR can add a ``rental_carry_forward`` table; this aggregator
     will then consult it. For now, returns an empty queue.
     """
+    _log.debug(
+        "anexo c: carry-forward persistence not yet implemented; "
+        "art. 23.1.a) cap excess from prior years is not consumed"
+    )
     return ()
 
 

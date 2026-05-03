@@ -1,4 +1,4 @@
-# AEAT CLI v5 design wireframe
+# AEAT CLI v6 design wireframe
 
 Status: review candidate, not approved for implementation.
 
@@ -39,7 +39,7 @@ aeat setup auth status
 aeat setup auth whoami
 aeat setup auth logout
 
-aeat setup profile create NAME
+aeat setup init --name NAME
 aeat setup profile use NAME
 aeat setup profile show
 aeat setup profile list-keys
@@ -47,7 +47,7 @@ aeat setup profile get KEY
 aeat setup profile set KEY VALUE
 aeat setup profile unset KEY
 aeat setup profile validate
-aeat setup profile edit
+aeat setup profile list
 ```
 
 ## App
@@ -65,13 +65,13 @@ aeat app declaration
 aeat app ledger import PATH --provider n26 --dry-run
   Validate a transaction file before saving records.
 
-aeat app ledger import PATH --provider n26 --verify --original PATH --verbose
+aeat app ledger import PATH --provider n26 --verify --source PATH --verbose
   Import records and run source-file, gap, duplicate, parser, and verbose diagnostics.
 
-aeat app ledger list --filter status=pending --filter period=2026-Q1
+aeat app ledger review --filter status=pending --filter period=2026-Q1
   List records or diagnostics using cohesive filters.
 
-aeat app ledger show --id row_1042 --verbose
+aeat app ledger review --id row_1042 --verbose
   Show one row, provenance, edit history, document links, and skip state.
 
 aeat app ledger edit --id row_1042 --set category=software --set business.share=1.0 --reason invoice
@@ -83,10 +83,10 @@ aeat app ledger edit --id row_1051 --skip true --reason private-expense
 aeat app ledger edit --id row_1051 --skip false --reason invoice-found
   Return a skipped row to review.
 
-aeat app ledger split --id row_1050 --business 0.45 --personal 0.55 --reason mixed-card-payment
-  Split one source row into normalized shares that add to 1.0.
+aeat app ledger edit --id row_1050 --split business=0.45 --split personal=0.55 --reason mixed-card-payment
+  Split one source row into share values that add to 1.0.
 
-aeat app ledger split --id row_1050 --clear --reason corrected-single-use
+aeat app ledger edit --id row_1050 --split clear --reason corrected-single-use
   Clear split metadata and return to the source row.
 ```
 
@@ -95,8 +95,8 @@ aeat app ledger split --id row_1050 --clear --reason corrected-single-use
 ```text
 aeat app invoice import PATH --kind issued --dry-run
 aeat app invoice import PATH --kind received --dry-run
-aeat app invoice list --filter status=pending --filter kind=received
-aeat app invoice show --id inv_2041 --verbose
+aeat app invoice review --filter status=pending --filter kind=received
+aeat app invoice review --id inv_2041 --verbose
 aeat app invoice edit --id inv_2041 --set base=120.00 --set iva.rate=21 --set iva.amount=25.20 --set iva.category=general --set retention.rate=15 --set payment.id=row_1042 --reason invoice-review
 aeat app invoice match --period 2026-Q1
 ```
@@ -116,40 +116,42 @@ aeat app declaration review --period 2026-Q1 --modelo 303 --format table
 aeat app declaration status --filter status=pending --period 2026-Q1 --modelo 303
   Show unresolved work.
 
-aeat app declaration edit --period 2026-Q1 --modelo 303 --set casilla.71=1200.00 --reason manual-check
+aeat app declaration edit --id draft_303_2026-Q1 --set casilla.71=1200.00 --reason manual-check
   Record a manual change and reset approval.
 
-aeat app declaration approve --period 2026-Q1 --modelo 303 --reason reviewed-against-ledger
+aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason reviewed-against-ledger
   Approve the reviewed declaration state.
 
-aeat app declaration validate --period 2026-Q1 --modelo 303
+aeat app declaration validate --id draft_303_2026-Q1
   Validate only after approval.
 
-aeat app declaration validate --period 2026-Q1 --modelo 303 --format json --output PATH
+aeat app declaration validate --id draft_303_2026-Q1 --format json --output PATH
   Write repair data when unresolved work remains.
 
-aeat app declaration preview --period 2026-Q1 --modelo 303 --format pdf
+aeat app declaration preview --id draft_303_2026-Q1
   Create a non-filing preview.
 
-aeat app declaration export --period 2026-Q1 --modelo 303 --format boe --output PATH
+aeat app declaration export --id draft_303_2026-Q1 --output PATH
   Write a local AEAT-compatible artifact.
 
-aeat app declaration verify --period 2026-Q1 --modelo 303 --format json --output PATH
-  Write verification audit output.
+aeat app declaration verify --id draft_303_2026-Q1 --file PATH
+  Verify the exported file against the approved local draft.
 ```
 
-## Amended Declaration
+## Recalculated Declaration
 
 ```text
-aeat app declaration calculate --period 2026-Q1 --modelo 303 --amend --id JUSTIFICANTE_ID
-aeat app declaration review --period 2026-Q1 --modelo 303 --amend --id JUSTIFICANTE_ID --format table
-aeat app declaration approve --period 2026-Q1 --modelo 303 --amend --id JUSTIFICANTE_ID --reason REASON
-aeat app declaration validate --period 2026-Q1 --modelo 303 --amend --id JUSTIFICANTE_ID
-aeat app declaration export --period 2026-Q1 --modelo 303 --amend --id JUSTIFICANTE_ID --format boe --output PATH
+aeat app declaration calculate --period 2026-Q1 --modelo 303
+aeat app declaration review --period 2026-Q1 --modelo 303 --format table
+aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason REASON
+aeat app declaration validate --id draft_303_2026-Q1
+aeat app declaration export --id draft_303_2026-Q1 --output PATH
+aeat app declaration verify --id draft_303_2026-Q1 --file PATH
 ```
 
-There is no corrective-filing noun, no amendment subcommand, no `--amendment`,
-and no separate CSV-code identity. The id is the AEAT justificante id.
+There is no corrective-filing noun, no amendment subcommand, no amendment flag,
+and no separate CSV-code identity in the user CLI. AEAT correction identity is
+backend/legal mapping, not a user command noun.
 
 ## Backend Audit Gates
 
@@ -161,4 +163,4 @@ and no separate CSV-code identity. The id is the AEAT justificante id.
 - Invoice retention, IVA category, document path, and payment linkage.
 - Declaration calculate output contract.
 - Export and verify output contracts.
-- AEAT justificante id behavior for amended declarations.
+- AEAT correction identity behavior for recalculated declaration drafts.

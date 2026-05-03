@@ -93,5 +93,5 @@ def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None
 
     assert extract_result.exit_code == 2
     assert translate_result.exit_code == 2
-    assert "issue-21" in extract_result.stdout
-    assert "issue-21" in translate_result.stdout
+    assert "requires the LLM client surface" in extract_result.stdout
+    assert "requires the bulk translator surface" in translate_result.stdout

@@ -40,7 +40,7 @@ from ._llm import (
     unregister_classifier,
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
-from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue, derive_transaction_id
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
     find_transaction,
@@ -98,6 +98,7 @@ __all__ = [
     "catalogue",
     "default_classification_choices",
     "default_prompt_spec",
+    "derive_transaction_id",
     "find_transaction",
     "is_classified",
     "link_invoice",

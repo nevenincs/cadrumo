@@ -10,6 +10,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.config import Settings
+from ...core.logging import get_logger
 from ._adapters import (
     divergences_pending,
     drafts_pending,
@@ -19,6 +20,8 @@ from ._adapters import (
 )
 from ._enums import ReviewItemKind, ReviewState, severity_rank
 from ._models import ReviewItem
+
+_logger = get_logger(__name__)
 
 
 class ReviewQueue:
@@ -81,4 +84,11 @@ class ReviewQueue:
         if modelo is not None:
             items = [item for item in items if item.modelo == modelo]
         items.sort(key=lambda item: (-severity_rank(item.severity), item.since, item.item_id))
-        return tuple(items)
+        result = tuple(items)
+        _logger.debug(
+            "review queue collected items=%d kinds=%s modelo=%s",
+            len(result),
+            sorted(k.value for k in kinds) if kinds is not None else "all",
+            modelo,
+        )
+        return result

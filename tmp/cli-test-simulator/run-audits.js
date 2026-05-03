@@ -5,7 +5,7 @@ const engine = require("./audit-engine.js");
 const args = parseArgs(process.argv.slice(2));
 const audit = engine.runAudit({
   runs: args.runs || 250,
-  seed: args.seed || "kent-n26-v5",
+  seed: args.seed || "kent-n26-v6",
 });
 
 const rendered = args.format === "md" || (args.out && args.out.toLowerCase().endsWith(".md"))
@@ -58,7 +58,7 @@ function metric(auditResult, label) {
 
 function renderMarkdown(auditResult) {
   const lines = [
-    "# Kent/N26 CLI v5 audit findings",
+    "# Kent/N26 CLI v6 audit findings",
     "",
     `Seed: \`${auditResult.seed}\``,
     `Runs: \`${auditResult.runs}\``,

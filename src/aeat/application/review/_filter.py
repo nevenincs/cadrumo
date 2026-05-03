@@ -36,34 +36,27 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.invoices import InvoiceKind
+from ._errors import FilterParseError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for filter records."""
 
-
-class FilterParseError(ValueError):
-    """Raised when ``--filter KEY=VALUE`` cannot be parsed.
-
-    Carries the raw token plus a stable reason code so the CLI can
-    render a per-language repair hint. Subclasses :class:`ValueError`
-    deliberately rather than the project's :class:`AeatError` taxonomy:
-    parser errors are re-raised by the caller's argv-validation layer
-    into a typed CLI error envelope; binding a registry entry here
-    would couple the parser to the in-flight CLI redesign's error-code
-    surface before that surface stabilises.
-
-    Attributes:
-        raw_token: The string the operator supplied (e.g.
-            ``"status="`` or ``"period: 2026-Q1"``).
-        reason: One of ``"missing-equals"``, ``"empty-key"``,
-            ``"empty-value"``, ``"unknown-key-{scope}"``,
-            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
-    """
-
-    def __init__(self, raw_token: str, *, reason: str) -> None:
-        super().__init__(f"cannot parse filter token {raw_token!r}: {reason}")
-        self.raw_token = raw_token
-        self.reason = reason
+__all__ = (
+    "DeclarationReviewFilterKey",
+    "DeclarationReviewFilterSpec",
+    "DeclarationReviewStatus",
+    "FilterClause",
+    "FilterParseError",
+    "InvoiceReviewFilterKey",
+    "InvoiceReviewFilterSpec",
+    "InvoiceReviewStatus",
+    "LedgerReviewFilterKey",
+    "LedgerReviewFilterSpec",
+    "LedgerReviewIssue",
+    "LedgerReviewStatus",
+    "parse_filter_clause",
+    "parse_filter_clauses",
+)
 
 
 class FilterClause(BaseModel):
@@ -192,6 +185,7 @@ class InvoiceReviewStatus(StrEnum):
     PENDING = "pending"
     REVIEWED = "reviewed"
     MATCHED = "matched"
+    PAID = "paid"
 
 
 class DeclarationReviewFilterKey(StrEnum):
