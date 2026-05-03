@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from ..justificante import parse_justificante
+from ..justificante import Justificante, parse_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
@@ -54,6 +54,17 @@ def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
 _FIXTURE_PAIRS = _committed_fixture_pairs()
 
 
+@pytest.fixture(scope="session")
+def _parsed_fixture_justificantes() -> dict[Path, Justificante]:
+    """Cache of ``parse_justificante`` results keyed by fixture PDF path.
+
+    Both round-trip tests below need the same parse for every fixture;
+    the legacy layout parsed each PDF twice. Hosting the cache as a
+    session-scoped fixture halves the parse cost on this directory.
+    """
+    return {pdf_path: parse_justificante(pdf_path) for pdf_path, _ in _FIXTURE_PAIRS}
+
+
 @pytest.mark.parametrize(
     ("pdf_path", "sidecar_path"),
     _FIXTURE_PAIRS,
@@ -62,9 +73,10 @@ _FIXTURE_PAIRS = _committed_fixture_pairs()
 def test_fixture_parses_through_justificante_parser(
     pdf_path: Path,
     sidecar_path: Path,
+    _parsed_fixture_justificantes: dict[Path, Justificante],
 ) -> None:
     """Every fixture round-trips through parse_justificante."""
-    parsed = parse_justificante(pdf_path)
+    parsed = _parsed_fixture_justificantes[pdf_path]
     assert parsed.modelo, f"modelo is empty for {pdf_path}"
     assert parsed.period, f"period is empty for {pdf_path}"
     assert parsed.csv, f"csv is empty for {pdf_path}"
@@ -80,9 +92,10 @@ def test_fixture_parses_through_justificante_parser(
 def test_fixture_synthetic_csv_and_nif_match_sidecar(
     pdf_path: Path,
     sidecar_path: Path,
+    _parsed_fixture_justificantes: dict[Path, Justificante],
 ) -> None:
     """Synthetic CSV / NIF parse out of the fixture matching the sidecar audit."""
-    parsed = parse_justificante(pdf_path)
+    parsed = _parsed_fixture_justificantes[pdf_path]
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
 
     synthetics_by_surface_label: dict[str, set[str]] = {}
