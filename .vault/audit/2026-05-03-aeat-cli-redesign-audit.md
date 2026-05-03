@@ -636,3 +636,75 @@ Tape-driven gaps still pending typed scaffold (v7 simulator):
 
 Backend full sweep at cycle close: 41 new tests (edit spec); the
 in-flight WIP's pre-existing failures continue to be unrelated.
+
+## Cycle 10 — 2026-05-03
+
+CLI-REDESIGN-013 | PARTIALLY-RESOLVED | MEDIUM | Typed `OverviewCalendar` aggregator for the v6 `overview status --calendar` flow
+The kent-n26 simulator tapes drive period discovery through
+`aeat app overview status --calendar --from DATE --to DATE`. The v6
+reference packet describes the calendar view as "due, late, filed,
+and unknown period state" — a closed 4-state user-facing taxonomy
+(distinct from the 6-state engine
+:class:`aeat.domain.deadlines.ObligationStatus`). Until cycle 10 the
+backend exposed `DeadlineEngine.compute(profile, year, today=…)` per
+year but no aggregator that walked a date window across years and
+emitted the typed table the CLI renders.
+
+`src/aeat/application/overview/__init__.py` ships the typed query
+record :class:`OverviewCalendarRange` (inclusive `from_date` /
+`to_date` with a model-validator rejecting inverted windows, plus
+`covered_years()` and `covers(date)` accessors), the per-row
+:class:`OverviewCalendarEntry` (modelo, period, opens_on, closes_on,
+payment_cutoff_on, engine status, precomputed user_state with a
+model-validator that enforces the user_state ↔ engine status
+mapping), the result wrapper :class:`OverviewCalendar`
+(range + entries + generated_at), the closed
+:class:`OverviewPeriodState` enum (`due` / `late` / `filed` /
+`unknown`), the :func:`user_state_for` mapping helper (its
+underlying table is a `MappingProxyType` so the runtime mapping
+cannot be mutated post-import), and the :func:`build_overview_calendar`
+aggregator that composes :class:`DeadlineEngine.compute` over each
+year the range spans, filters to obligations whose
+[opens_on, closes_on] intersects the range, attaches the user-state
+mapping, and orders by `(closes_on, modelo, period)`.
+
+Twenty-five unit tests in `test_calendar.py` cover the
+4-state enum vocabulary, the engine-status → user-state mapping
+(including the every-status-is-mapped guard), the range
+construction (inverted / single-day / cross-year-boundary cases,
+inclusive `covers(...)` semantics, frozen invariant), the entry
+construction (window inversion, payment-cutoff-after-close,
+user-state ↔ engine-status disagreement, frozen invariant), and the
+aggregator behaviour (typed return shape, range filtering,
+deterministic ordering, year-boundary handling, idempotency modulo
+`generated_at`, empty-range coverage). The aggregator is pure (no
+I/O, no mutation) so the CLI binding stays a thin transport layer.
+
+Cycle 10 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-004 (declaration export/verify) — RESOLVED.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-010 (auth provider catalogue) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-011 (typed --filter parser) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-012 (typed --set parser) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-013 (overview calendar aggregator) —
+  PARTIALLY-RESOLVED via this cycle's typed surface; the
+  per-period local-state overlay (FILED marker driven by stored
+  drafts, UNKNOWN driven by missing local data) lands once the
+  in-flight `application/user_cli.py` review-state surface
+  stabilises.
+
+Tape-driven gaps still pending typed scaffold (v7 simulator):
+* `aeat app invoice match --period PERIOD` typed match-result record.
+* `aeat app declaration approve --id ID --by REVIEWER --reason
+  REASON` typed approval-history shape.
+
+Backend full sweep at cycle close: 25 new tests (overview calendar);
+the in-flight WIP's pre-existing failures continue to be unrelated.
