@@ -287,8 +287,10 @@ def test_verify_handshake_returns_failure_on_tls_error(
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
-    # Unroutable TEST-NET-1 address: guaranteed to fail handshake quickly.
-    result = verify_handshake(loaded, "https://192.0.2.1:443/")
+    # Closed local port: connection refused, fails the handshake in milliseconds.
+    # The legacy TEST-NET-1 address (192.0.2.1) routed into a 20-second connect
+    # timeout on most networks.
+    result = verify_handshake(loaded, "https://127.0.0.1:1/")
     assert isinstance(result, HandshakeResult)
     assert result.success is False
     assert result.status_code == 0

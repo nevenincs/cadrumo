@@ -223,8 +223,16 @@ class TestMigration:
 
 
 class TestMigrationLockedPerCsv:
-    def test_migration_blocked_by_held_lock(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_migration_blocked_by_held_lock(
+        self,
+        store_dir: Path,
+        tmp_path: Path,
+        fast_lock_acquire,
+    ) -> None:
         from aeat.adapters.persistence.storage import exclusive_file_lock
+        from aeat.domain.justificante import _repository as _repo_module
+
+        fast_lock_acquire(_repo_module)
 
         legacy_dir = tmp_path / "legacy-justificantes"
         legacy_dir.mkdir()

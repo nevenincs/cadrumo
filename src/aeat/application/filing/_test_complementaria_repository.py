@@ -243,8 +243,16 @@ class TestMigration:
 
 
 class TestMigrationLockedPerAmendment:
-    def test_migration_blocked_by_held_lock(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_migration_blocked_by_held_lock(
+        self,
+        store_dir: Path,
+        tmp_path: Path,
+        fast_lock_acquire,
+    ) -> None:
         from ...adapters.persistence.storage import exclusive_file_lock
+        from ...domain.filing import _complementaria_repository as _repo_module
+
+        fast_lock_acquire(_repo_module)
 
         legacy_dir = tmp_path / "legacy-amendments"
         legacy_dir.mkdir()

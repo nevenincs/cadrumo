@@ -278,8 +278,16 @@ class TestMigrationLockedPerSubmission:
     """The migration helper holds the per-submission lock for the duration
     of each save."""
 
-    def test_migration_blocked_by_held_lock(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_migration_blocked_by_held_lock(
+        self,
+        store_dir: Path,
+        tmp_path: Path,
+        fast_lock_acquire,
+    ) -> None:
         from aeat.adapters.persistence.storage import exclusive_file_lock
+        from aeat.domain.submission import _repository as _repo_module
+
+        fast_lock_acquire(_repo_module)
 
         legacy_dir = tmp_path / "legacy-submissions"
         legacy_dir.mkdir()
