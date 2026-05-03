@@ -99,6 +99,11 @@ from ...domain.filing import (
     get_builder,
     make_amendment_id,
 )
+from ._calculate import (
+    DeclarationCalculateNextAction,
+    DeclarationCalculateSummary,
+    summarise_calculation,
+)
 from ._complementaria import build_complementaria, list_amendments, load_amendment
 from ._export import (
     DeclarationExportFormat,
@@ -304,6 +309,8 @@ __all__ = [
     "CasillaSchemaProvider",
     "DeadlineChecker",
     "DeadlineStatus",
+    "DeclarationCalculateNextAction",
+    "DeclarationCalculateSummary",
     "DeclarationExportFormat",
     "DeclarationExportResult",
     "DeclarationVerifyResult",
@@ -356,6 +363,7 @@ __all__ = [
     "load_default_filing_profile",
     "make_amendment_id",
     "refresh_review_status",
+    "summarise_calculation",
     "unapprove_draft",
     "validate_draft",
 ]
