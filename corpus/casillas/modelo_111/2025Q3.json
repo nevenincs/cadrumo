@@ -67,6 +67,38 @@
       "validation": []
     },
     {
+      "casilla_id": "03",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retencions rendiments del treball",
+        "en": "Work income withholdings",
+        "es": "Retenciones rendimientos del trabajo",
+        "hu": "Munkajövedelem levonás"
+      },
+      "label": {
+        "ca": "Retencions rendiments del treball",
+        "en": "Work income withholdings",
+        "es": "Retenciones rendimientos del trabajo",
+        "hu": "Munkajövedelem levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "I. Rendimientos del trabajo",
+      "synthetic": false,
+      "validation": []
+    },
+    {
       "casilla_id": "04",
       "computed": false,
       "data_type": "integer",
@@ -131,6 +163,38 @@
       "validation": []
     },
     {
+      "casilla_id": "06",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retencions activitats econòmiques",
+        "en": "Business income withholdings",
+        "es": "Retenciones actividades económicas",
+        "hu": "Gazdasági tev. levonás"
+      },
+      "label": {
+        "ca": "Retencions activitats econòmiques",
+        "en": "Business income withholdings",
+        "es": "Retenciones actividades económicas",
+        "hu": "Gazdasági tev. levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "II. Actividades económicas",
+      "synthetic": false,
+      "validation": []
+    },
+    {
       "casilla_id": "07",
       "computed": false,
       "data_type": "integer",
@@ -163,6 +227,85 @@
       "validation": []
     },
     {
+      "casilla_id": "08",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Percepcions premis",
+        "en": "Prize perceptions",
+        "es": "Percepciones premios",
+        "hu": "Nyeremény jövedelem"
+      },
+      "label": {
+        "ca": "Percepcions premis",
+        "en": "Prize perceptions",
+        "es": "Percepciones premios",
+        "hu": "Nyeremény jövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Premios",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "09",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(irpf.premios_rate * 08)",
+        "references_casillas": [
+          "08"
+        ]
+      },
+      "help": {
+        "ca": "Retencions premis. Es calcula com (irpf.premios_rate * 08). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Prize withholdings. Computed as (irpf.premios_rate * 08). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones premios. Se calcula como (irpf.premios_rate * 08). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Nyeremény levonás. Számítás: (irpf.premios_rate * 08) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+      },
+      "label": {
+        "ca": "Retencions premis",
+        "en": "Prize withholdings",
+        "es": "Retenciones premios",
+        "hu": "Nyeremény levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [
+        "08"
+      ],
+      "references_rules": [
+        "modelo_111.2025.retenciones_premios"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "III. Premios",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
       "casilla_id": "10",
       "computed": false,
       "data_type": "integer",
@@ -193,6 +336,85 @@
       "source_section": "Apartado IV — Ganancias patrimoniales",
       "synthetic": false,
       "validation": []
+    },
+    {
+      "casilla_id": "11",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Percepcions guanys patrimonials",
+        "en": "Capital gains perceptions",
+        "es": "Percepciones ganancias patrimoniales",
+        "hu": "Vagyonnyereség jövedelem"
+      },
+      "label": {
+        "ca": "Percepcions guanys patrimonials",
+        "en": "Capital gains perceptions",
+        "es": "Percepciones ganancias patrimoniales",
+        "hu": "Vagyonnyereség jövedelem"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "IV. Ganancias patrimoniales — aprovechamientos forestales",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "12",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(irpf.ganancias_arrendamiento_rate * 11)",
+        "references_casillas": [
+          "11"
+        ]
+      },
+      "help": {
+        "ca": "Retencions ganancias patrimoniales. Es calcula com (irpf.ganancias_arrendamiento_rate * 11). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Capital gains withholdings. Computed as (irpf.ganancias_arrendamiento_rate * 11). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Vagyonnyereség levonás. Számítás: (irpf.ganancias_arrendamiento_rate * 11) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+      },
+      "label": {
+        "ca": "Retencions ganancias patrimoniales",
+        "en": "Capital gains withholdings",
+        "es": "Retenciones ganancias patrimoniales",
+        "hu": "Vagyonnyereség levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [
+        "11"
+      ],
+      "references_rules": [
+        "modelo_111.2025.retenciones_ganancias_arrendamiento"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "IV. Ganancias patrimoniales — aprovechamientos forestales",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
     },
     {
       "casilla_id": "13",
@@ -259,6 +481,38 @@
       "validation": []
     },
     {
+      "casilla_id": "15",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retencions contraprestacions en espècie",
+        "en": "In-kind withholdings",
+        "es": "Retenciones contraprestaciones en especie",
+        "hu": "Természetbeni levonás"
+      },
+      "label": {
+        "ca": "Retencions contraprestacions en espècie",
+        "en": "In-kind withholdings",
+        "es": "Retenciones contraprestaciones en especie",
+        "hu": "Természetbeni levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "V. Contraprestaciones en especie",
+      "synthetic": false,
+      "validation": []
+    },
+    {
       "casilla_id": "16",
       "computed": false,
       "data_type": "integer",
@@ -321,6 +575,181 @@
       "source_section": "Apartado VI — Cesión derechos imagen",
       "synthetic": false,
       "validation": []
+    },
+    {
+      "casilla_id": "18",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "Retencions cessió d'imatge",
+        "en": "Image rights withholdings",
+        "es": "Retenciones cesión de imagen",
+        "hu": "Képmás-jog levonás"
+      },
+      "label": {
+        "ca": "Retencions cessió d'imatge",
+        "en": "Image rights withholdings",
+        "es": "Retenciones cesión de imagen",
+        "hu": "Képmás-jog levonás"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "VI. Cesión de derechos de imagen",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "28",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(03 + 06 + 09 + 12 + 15 + 18)",
+        "references_casillas": [
+          "03",
+          "06",
+          "09",
+          "12",
+          "15",
+          "18"
+        ]
+      },
+      "help": {
+        "ca": "Total retencions. Es calcula com (03 + 06 + 09 + 12 + 15 + 18). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Total withholdings. Computed as (03 + 06 + 09 + 12 + 15 + 18). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Total retenciones. Se calcula como (03 + 06 + 09 + 12 + 15 + 18). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Levonás összesen. Számítás: (03 + 06 + 09 + 12 + 15 + 18) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+      },
+      "label": {
+        "ca": "Total retencions",
+        "en": "Total withholdings",
+        "es": "Total retenciones",
+        "hu": "Levonás összesen"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [
+        "03",
+        "06",
+        "09",
+        "12",
+        "15",
+        "18"
+      ],
+      "references_rules": [
+        "modelo_111.2025.total_retenciones"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Liquidación",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        }
+      ]
+    },
+    {
+      "casilla_id": "29",
+      "computed": false,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": null,
+      "help": {
+        "ca": "A deduir: exclusivament en declaració complementària",
+        "en": "Prior-filing deduction (complementary filings only)",
+        "es": "A deducir: exclusivamente en declaración complementaria",
+        "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
+      },
+      "label": {
+        "ca": "A deduir: exclusivament en declaració complementària",
+        "en": "Prior-filing deduction (complementary filings only)",
+        "es": "A deducir: exclusivamente en declaración complementaria",
+        "hu": "Korábbi bevallásból levonás (kiegészítő bevallás)"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [],
+      "references_rules": [],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Liquidación",
+      "synthetic": false,
+      "validation": []
+    },
+    {
+      "casilla_id": "30",
+      "computed": true,
+      "data_type": "currency_eur",
+      "definition_reviewed_at": "2026-05-01",
+      "definition_reviewed_by": "human-codex",
+      "formula": {
+        "expression": "(28 - 29)",
+        "references_casillas": [
+          "28",
+          "29"
+        ]
+      },
+      "help": {
+        "ca": "Resultat a ingressar. Es calcula com (28 - 29). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Net amount payable. Computed as (28 - 29). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Resultado a ingresar. Se calcula como (28 - 29). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Fizetendő eredmény. Számítás: (28 - 29) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+      },
+      "label": {
+        "ca": "Resultat a ingressar",
+        "en": "Net amount payable",
+        "es": "Resultado a ingresar",
+        "hu": "Fizetendő eredmény"
+      },
+      "llm_draft_provenance": null,
+      "modelo": "MODELO_111",
+      "period": "2025Q3",
+      "references_casillas": [
+        "28",
+        "29"
+      ],
+      "references_rules": [
+        "modelo_111.2025.resultado_a_ingresar"
+      ],
+      "required": false,
+      "select_options": null,
+      "source_manual_url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025.html",
+      "source_page": 1,
+      "source_section": "Liquidación",
+      "synthetic": false,
+      "validation": [
+        {
+          "description": "Computed casilla — value must be derived by the rule engine, not user-supplied.",
+          "rule": "must_derive",
+          "value": true
+        },
+        {
+          "description": "Resultado a ingresar mensual/trimestral debe ser ≥ 0 (LIRPF arts. 99-101).",
+          "rule": "non_negative",
+          "value": 0
+        }
+      ]
     }
   ]
 }
