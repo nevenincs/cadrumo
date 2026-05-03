@@ -101,6 +101,15 @@ def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -
     assert "validated registry snapshots" in source
 
 
+def test_filing_runtime_does_not_derive_supported_modelos_in_python() -> None:
+    source = _source("src/aeat/application/filing/runtime.py")
+    projector = _function_node(source, "filing_profile_from_autonomo")
+    assert "_SUPPORTED_FILING_MODELOS" not in source
+    assert "applies_to" not in source
+    assert '("130", "303", "390")' not in source
+    assert "applicable_modelos=()" in ast.unparse(projector)
+
+
 def test_application_build_draft_cannot_dispatch_legacy_builders() -> None:
     source = _source("src/aeat/application/filing/__init__.py")
     filing_package = importlib.import_module("aeat.application.filing")
