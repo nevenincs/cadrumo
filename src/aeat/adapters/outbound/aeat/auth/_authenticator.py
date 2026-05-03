@@ -508,7 +508,7 @@ class AeatAuthenticator:
             except AeatLoginAssertionError:
                 try:
                     await context.close()
-                except Exception as _exc:  # Playwright context.close() exception surface is undocumented; log and continue
+                except Exception as _exc:  # Playwright context.close() undocumented; log and continue
                     log.debug("AeatAuthenticator: context.close after marker failure suppressed: %s", _exc)
                 await self._close_browser_session(session_like)
                 raise
@@ -551,7 +551,7 @@ class AeatAuthenticator:
             self._active_session = session
             try:
                 await self._capture_storage_state_locked(session)
-            except Exception:  # capture can raise AeatLoginAssertionError, OSError, or PlaywrightError; cleanup + re-raise
+            except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
                 await self._drop_context()
                 await self._close_browser_session(session_like)
                 self._browser_session = None
@@ -1001,7 +1001,7 @@ class AeatAuthenticator:
         self._active_session = session
         try:
             await self._capture_storage_state_locked(session)
-        except Exception:  # capture can raise AeatLoginAssertionError, OSError, or PlaywrightError; cleanup + re-raise
+        except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
             await self._drop_context()
             if owns_session:
                 await self._close_browser_session(session_like)

@@ -109,18 +109,23 @@ def list_cmd(
                 tr(
                     t(
                         "No se encontraron transacciones por debajo de ese umbral de confianza. "
-                        "Nota: las clasificaciones manuales tienen confianza 1.0 por defecto, así que --confidence-below "
+                        "Nota: las clasificaciones manuales tienen confianza 1.0 por defecto, "
+                        "así que --confidence-below "
                         "solo muestra resultados cuando un motor de reglas o un clasificador LLM ha asignado una "
-                        "puntuación menor (aún no implementado para transacciones).",
+                        "puntuación menor.",
                         "No transactions found below that confidence threshold. "
                         "Note: manual classifications default to confidence 1.0, so --confidence-below "
                         "only surfaces results when a rule engine or LLM classifier has assigned a "
-                        "lower score (not yet implemented for transactions).",
+                        "lower score.",
                         "No s'han trobat transaccions per sota d'aquest llindar de confiança. "
-                        "Nota: les classificacions manuals tenen confiança 1.0 per defecte, així que --confidence-below "
+                        "Nota: les classificacions manuals tenen confiança 1.0 per defecte, "
+                        "així que --confidence-below "
                         "només mostra resultats quan un motor de regles o un classificador LLM ha assignat una "
-                        "puntuació inferior (encara no implementat per a transaccions).",
-                        "Nincs talált tranzakció ezen bizonyossági küszöb alatt. Megjegyzes: a kézi osztályozások alapértelmezett bizonyossága 1.0, ezert a --confidence-below csak akkor mutat eredmenyt, ha egy szabály motor vagy LLM osztályozó alacsonyabb pontszámot rendelt hozzá (tranzakciokra még nem implementált).",
+                        "puntuació inferior.",
+                        "Nincs talált tranzakció ezen bizonyossági küszöb alatt. "
+                        "Megjegyzes: a kézi osztályozások alapértelmezett bizonyossága 1.0, "
+                        "ezert a --confidence-below csak akkor mutat eredmenyt, ha egy szabály motor vagy "
+                        "LLM osztályozó alacsonyabb pontszámot rendelt hozzá.",
                     )
                 )
             )
@@ -197,10 +202,13 @@ def build_cmd(
         typer.echo(
             tr(
                 t(
-                    f"el catálogo de transacciones ya existe en {target}; vuelve a ejecutar con --replace para sobrescribirlo",
+                    f"el catálogo de transacciones ya existe en {target}; "
+                    "vuelve a ejecutar con --replace para sobrescribirlo",
                     f"transaction catalogue already exists at {target}; rerun with --replace to overwrite it",
-                    f"el catàleg de transaccions ja existeix a {target}; torna a executar amb --replace per sobreescriure'l",
-                    f"a tranzakcio katalogus mar letezik itt: {target}; futtasd ujra --replace kapcsoloval a felulirashoz",
+                    f"el catàleg de transaccions ja existeix a {target}; "
+                    "torna a executar amb --replace per sobreescriure'l",
+                    f"a tranzakcio katalogus mar letezik itt: {target}; "
+                    "futtasd ujra --replace kapcsoloval a felulirashoz",
                 )
             ),
             err=True,
@@ -403,7 +411,8 @@ def classify_cmd(
                         "incoming payments should not be assigned an expense category",
                         "les categories de despesa només apliquen a transaccions sortints (despeses); "
                         "els ingressos no han de rebre cap categoria de despesa",
-                        "a költség kategóriák csak kimenő (költség) tranzakciokra alkalmazhatok; a bevetelek nem kaphatnak költség kategoriat",
+                        "a költség kategóriák csak kimenő (költség) tranzakciokra alkalmazhatok; "
+                        "a bevetelek nem kaphatnak költség kategoriat",
                     )
                 ),
                 err=True,
@@ -423,7 +432,8 @@ def classify_cmd(
                         "pass --as BUSINESS, PERSONAL, or MIXED before assigning a category",
                         "--category requereix primer una classificació negoci/personal; "
                         "passa --as BUSINESS, PERSONAL o MIXED abans d'assignar una categoria",
-                        "--category először üzleti/személyes osztalyozast igényel; add at: --as BUSINESS, PERSONAL vagy MIXED a kategória hozzárendelése előtt",
+                        "--category először üzleti/személyes osztalyozast igényel; "
+                        "add at: --as BUSINESS, PERSONAL vagy MIXED a kategória hozzárendelése előtt",
                     )
                 ),
                 err=True,
@@ -674,9 +684,11 @@ def classify_llm_cmd(
             typer.echo(
                 tr(
                     t(
-                        f"[{index - 1}/{total}] --max-total-seconds alcanzado; manteniendo {successes} clasificadas hasta ahora.",
+                        f"[{index - 1}/{total}] --max-total-seconds alcanzado; "
+                        f"manteniendo {successes} clasificadas hasta ahora.",
                         f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes} classified so far.",
-                        f"[{index - 1}/{total}] --max-total-seconds assolit; mantenint {successes} classificades fins ara.",
+                        f"[{index - 1}/{total}] --max-total-seconds assolit; "
+                        f"mantenint {successes} classificades fins ara.",
                         f"[{index - 1}/{total}] --max-total-seconds elérve; eddig {successes} osztályozva megtartva.",
                     )
                 ),

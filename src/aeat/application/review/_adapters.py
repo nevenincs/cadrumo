@@ -87,7 +87,7 @@ _CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
     BusinessClassification.MIXED: _t("mixto", "mixed", "mixt", "vegyes"),
     BusinessClassification.NOT_YET_PROCESSED: _t(
         "sin procesar",
-        "not yet processed",
+        "unprocessed",
         "sense processar",
         "feldolgozatlan",
     ),

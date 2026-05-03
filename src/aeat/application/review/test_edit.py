@@ -1,4 +1,4 @@
-"""Unit tests for the v6 typed ``--set KEY=VALUE`` parser."""
+"""Unit tests for the typed ``--set KEY=VALUE`` parser."""
 
 from __future__ import annotations
 
@@ -86,8 +86,8 @@ def test_edit_clause_is_frozen() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_ledger_spec_parses_v7_canonical_tape_invocation() -> None:
-    """Verbatim tape: ``--set category=software --set business.share=1.0 --set reference=invoice-1``."""
+def test_ledger_spec_parses_category_share_and_reference_together() -> None:
+    """Parse ledger category, share, and reference edits together."""
     spec = LedgerEditSpec.from_strings(
         [
             "category=software",
@@ -162,8 +162,8 @@ def test_ledger_spec_empty_returns_empty_spec() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_invoice_spec_parses_v7_canonical_tape_invocation() -> None:
-    """Verbatim tape: ``--set base=120.00 --set iva.rate=21 --set iva.amount=25.20 --set payment.id=row_1_1``."""
+def test_invoice_spec_parses_base_iva_and_payment_edits_together() -> None:
+    """Parse invoice base, IVA, and payment-id edits together."""
     spec = InvoiceEditSpec.from_strings(
         [
             "base=120.00",
@@ -237,8 +237,8 @@ def test_invoice_spec_empty_returns_empty_spec() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_declaration_spec_parses_v7_canonical_tape_invocation() -> None:
-    """Verbatim tape: ``--set casilla.71=1200.00``."""
+def test_declaration_spec_parses_casilla_override() -> None:
+    """Parse a declaration casilla override."""
     spec = DeclarationEditSpec.from_strings(["casilla.71=1200.00"])
     assert spec.casilla_edits == {"71": Decimal("1200.00")}
 
@@ -327,7 +327,7 @@ def test_declaration_spec_rejects_inconsistent_construction() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_ledger_edit_key_enum_carries_v6_canonical_values() -> None:
+def test_ledger_edit_key_enum_carries_cli_values() -> None:
     assert {item.value for item in LedgerEditKey} == {
         "category",
         "treatment",
@@ -338,7 +338,7 @@ def test_ledger_edit_key_enum_carries_v6_canonical_values() -> None:
     }
 
 
-def test_invoice_edit_key_enum_carries_v6_canonical_values() -> None:
+def test_invoice_edit_key_enum_carries_cli_values() -> None:
     assert {item.value for item in InvoiceEditKey} == {
         "base",
         "iva.rate",

@@ -1,6 +1,6 @@
-"""Typed diagnostic surface for the ledger-import use case.
+"""Typed diagnostic records for the ledger-import use case.
 
-The v6 CLI redesign specifies a closed catalogue of import
+The CLI uses a closed catalogue of import
 diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --verify``:
 
 - ``original-file`` — verifies an imported batch against the
@@ -18,10 +18,7 @@ diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --
 
 The CLI consumes :class:`LedgerImportDiagnostic` records via
 :func:`build_ledger_import_diagnostic` and renders them grouped
-by ``severity`` and ``kind``. The application use-case that
-emits them is implemented incrementally; this module ships the
-typed surface first so the CLI implementation team can render
-fixtures and tests against a stable schema.
+by ``severity`` and ``kind``.
 """
 
 from __future__ import annotations
@@ -35,7 +32,7 @@ from ...core.i18n import Translatable, TranslationError, require_authoritative
 
 
 class LedgerImportDiagnosticKind(StrEnum):
-    """Closed catalogue of v6 ledger-import diagnostic categories."""
+    """Closed catalogue of ledger-import diagnostic categories."""
 
     ORIGINAL_FILE = "original-file"
     GAP = "gap"

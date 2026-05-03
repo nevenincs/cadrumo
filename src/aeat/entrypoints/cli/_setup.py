@@ -21,7 +21,7 @@ from ...domain.profile import (
     PROFILE_KEYS,
     get_profile_key,
 )
-from ._v6_common import (
+from ._common import (
     _active_profile_or_exit,
     _bad,
     _description_for,
@@ -134,9 +134,9 @@ def setup_status(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------
 
 
-@auth_app.command("providers", help="List implemented and research-only AEAT auth providers.")
+@auth_app.command("providers", help="List AEAT auth providers available to this installation.")
 def auth_providers(ctx: typer.Context) -> None:
-    """Render the v6 provider catalogue."""
+    """Render the provider catalogue."""
     payload = {
         "providers": [
             {
@@ -155,7 +155,7 @@ def auth_providers(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@auth_app.command("configure", help="Configure an AEAT auth provider (refuses research-only providers).")
+@auth_app.command("configure", help="Configure an AEAT auth provider.")
 def auth_configure(
     ctx: typer.Context,
     provider: str = typer.Option(..., "--provider", help="Provider id (certificate / clave-movil)."),
@@ -164,13 +164,13 @@ def auth_configure(
     """Configure an AEAT auth provider via the application catalogue."""
     try:
         listing = get_auth_provider(provider.strip().lower())
-    except KeyError:
-        raise _bad(f"unknown provider {provider!r}; run `aeat setup auth providers`")
-    if listing.availability is AuthProviderAvailability.RESEARCH_ONLY:
+    except KeyError as exc:
+        raise _bad(f"unknown provider {provider!r}; run `aeat setup auth providers`") from exc
+    if listing.availability is AuthProviderAvailability.UNAVAILABLE:
         _emit(
             ctx,
-            {"error": "research-only", "provider": listing.id, "description": _description_for(listing)},
-            [f"error\tresearch-only\tprovider={listing.id}"],
+            {"error": "unavailable-provider", "provider": listing.id, "description": _description_for(listing)},
+            [f"error\tunavailable-provider\tprovider={listing.id}"],
         )
         _exit(2)
     if listing.id == "certificate" and file is None:
@@ -288,11 +288,11 @@ def profile_list_keys(ctx: typer.Context) -> None:
 
 @profile_app.command("get", help="Read one profile value.")
 def profile_get(ctx: typer.Context, key: str = typer.Argument(..., help="Profile key.")) -> None:
-    state, name = _active_profile_or_exit(ctx)
+    state, _name = _active_profile_or_exit(ctx)
     try:
         get_profile_key(key)
-    except KeyError:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`")
+    except KeyError as exc:
+        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
     record = state.active_profile_record()
     assert record is not None
     value = record.values.get(key, "")
@@ -307,9 +307,9 @@ def profile_set(
 ) -> None:
     try:
         get_profile_key(key)
-    except KeyError:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`")
-    state, name = _active_profile_or_exit(ctx)
+    except KeyError as exc:
+        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
+    _state_value, name = _active_profile_or_exit(ctx)
     updated = state_repository().update(lambda current: set_profile_values(current, name, {key: value}))
     record = updated.active_profile_record()
     assert record is not None
@@ -320,10 +320,10 @@ def profile_set(
 def profile_unset(ctx: typer.Context, key: str = typer.Argument(..., help="Profile key.")) -> None:
     try:
         get_profile_key(key)
-    except KeyError:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`")
-    state, name = _active_profile_or_exit(ctx)
-    updated = state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
+    except KeyError as exc:
+        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
+    _state_value, name = _active_profile_or_exit(ctx)
+    state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
     _emit(ctx, {"key": key}, [f"{key}\t(unset)"])
 
 

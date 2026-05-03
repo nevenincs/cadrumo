@@ -17,7 +17,7 @@ from ...domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from ._v6_common import (
+from ._common import (
     _bad,
     _canonical_period,
     _emit,
@@ -116,7 +116,7 @@ def ledger_review(
     try:
         spec = LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}") from exc
     catalogue = _load_transactions()
     state = _state()
     rows: list[Transaction] = list(catalogue.transactions.values())
@@ -202,7 +202,7 @@ def ledger_edit(
     try:
         spec = LedgerEditSpec.from_strings(sets)
     except EditParseError as exc:
-        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}") from exc
     fields: dict[str, str] = {}
     if spec.category is not None:
         fields["category"] = spec.category

@@ -11,14 +11,14 @@ from typing import Any
 
 import typer
 
+from ...application.aggregation._errors import AggregationError
 from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
+from ...core.errors import AeatError
 from ...core.i18n import Language, Translatable, get_translation
 from ...domain.deadlines import AutonomoProfile, IVARegime
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
-from ...application.aggregation._errors import AggregationError
-from ...core.errors import AeatError
 from ...domain.profile import ProfileKey
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
@@ -203,7 +203,6 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> d
     """Return a casilla -> value mapping aggregated from local catalogues."""
     inputs: dict[str, object] = {}
     if modelo == "303":
-        # Minimal 303 aggregation for v6 parity
         catalogue = _load_invoices()
         base_4 = Decimal("0")
         base_10 = Decimal("0")
@@ -214,7 +213,7 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> d
             if not inv.issued_at:
                 continue
             inv_period = _canonical_period(inv.issued_at.strftime("%Y-%m"))
-            if inv_period != period and not (period.endswith("Q") == False and inv_period.startswith(period)):
+            if inv_period != period and not (not period.endswith("Q") and inv_period.startswith(period)):
                 q_map = {
                     "Q1": ("01", "02", "03"),
                     "Q2": ("04", "05", "06"),
@@ -238,10 +237,7 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> d
                 rate = None
                 if review and "iva.rate" in review.fields:
                     rate_raw = review.fields["iva.rate"]
-                    if rate_raw.startswith("RATE_"):
-                        rate = rate_raw
-                    else:
-                        rate = f"RATE_{rate_raw.split('.')[0]}"
+                    rate = rate_raw if rate_raw.startswith("RATE_") else f"RATE_{rate_raw.split('.')[0]}"
                 else:
                     if inv.lines:
                         rate = (

@@ -53,10 +53,9 @@ class ReviewQueue:
             modelo: Optional modelo filter. When set, items whose
                 wrapped record has no modelo concept are excluded.
             state: ``ReviewState.PENDING`` (default) or
-                ``ReviewState.ALL``. ``ALL`` is reserved for a future
-                "show resolved too" mode and currently returns the same
-                set as ``PENDING`` because every adapter only emits
-                pending items today.
+                ``ReviewState.ALL``. ``ALL`` returns the same set as
+                ``PENDING`` while the adapters emit pending review
+                items.
             confidence_below: Optional decision-confidence threshold.
                 When set, the queue replaces the default
                 transactions-pending source with

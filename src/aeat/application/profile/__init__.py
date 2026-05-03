@@ -1,16 +1,15 @@
-"""Application-layer profile validation surface for the v6 CLI.
+"""Application-layer profile validation for the CLI.
 
-The v6 ADR mandates that ``aeat setup profile validate`` consumes the
-domain-layer :class:`aeat.domain.profile.ProfileKey` registry rather
-than carrying its own hardcoded list of mandatory keys. This module
-ships the typed validation result + factory the CLI calls; the CLI
-binding stays pure transport.
+``aeat setup profile validate`` consumes the domain-layer
+:class:`aeat.domain.profile.ProfileKey` registry rather than carrying
+its own hardcoded list of mandatory keys. This module exposes the typed
+validation result and factory the CLI calls; the CLI binding stays pure
+transport.
 
-The validation result reflects the cycle-3 registry partition:
 ``required`` keys block the operator from advancing to declaration
-work, ``optional`` keys are surfaced as informational presence /
-absence, and any key not in the registry is flagged as
-``unknown_keys`` so renderers can warn the operator about typos.
+work, ``optional`` keys are surfaced as informational presence or
+absence, and any key not in the registry is flagged as ``unknown_keys``
+so renderers can warn the operator about typos.
 """
 
 from __future__ import annotations
@@ -108,7 +107,7 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     render the catalogue without importing from the domain underscore
     module directly. The tuple is :data:`PROFILE_KEYS` itself; the
     function exists so the CLI binding has a stable application-layer
-    call site future cycles can wrap (e.g. with locale filtering).
+    call site.
     """
     return PROFILE_KEYS
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import json as _json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -14,7 +15,7 @@ from ...application.user_cli import (
     update_invoice_review,
 )
 from ...domain.invoices import Invoice, InvoiceCatalogue
-from ._v6_common import (
+from ._common import (
     _bad,
     _canonical_period,
     _emit,
@@ -51,10 +52,7 @@ def invoice_import(
         _emit(ctx, {"rows": len(rows), "dry_run": True}, [f"rows\t{len(rows)}", "dry_run\tyes"])
         return
     repo = _invoice_repo()
-    if repo.envelope_path.exists():
-        catalogue = repo.load()
-    else:
-        catalogue = InvoiceCatalogue()
+    catalogue = repo.load() if repo.envelope_path.exists() else InvoiceCatalogue()
     existing = dict(catalogue.invoices)
     imported = 0
     skipped = 0
@@ -123,7 +121,7 @@ def invoice_review(
     try:
         spec = InvoiceReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}") from exc
     catalogue = _load_invoices()
     state = _state()
     invoices = list(catalogue.values())
@@ -147,10 +145,8 @@ def invoice_review(
                         if rate_raw.startswith("RATE_"):
                             rate_decimal = Decimal(rate_raw[5:]) / Decimal("100")
                         else:
-                            try:
+                            with contextlib.suppress(InvalidOperation):
                                 rate_decimal = Decimal(rate_raw) / Decimal("100")
-                            except InvalidOperation:
-                                pass
                     if "iva.amount" in review.fields:
                         iva = Decimal(review.fields["iva.amount"])
                     elif rate_decimal is not None and base is not None:
@@ -193,10 +189,8 @@ def invoice_review(
                 if rate_raw.startswith("RATE_"):
                     rate_decimal = Decimal(rate_raw[5:]) / Decimal("100")
                 else:
-                    try:
+                    with contextlib.suppress(InvalidOperation):
                         rate_decimal = Decimal(rate_raw) / Decimal("100")
-                    except InvalidOperation:
-                        pass
             if "iva.amount" in review.fields:
                 iva = Decimal(review.fields["iva.amount"])
             elif rate_decimal is not None and base is not None:
@@ -245,7 +239,7 @@ def invoice_edit(
     try:
         spec = InvoiceEditSpec.from_strings(sets)
     except EditParseError as exc:
-        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}") from exc
     fields: dict[str, str] = {}
     for key, value in (
         ("base", spec.base),
@@ -295,7 +289,7 @@ def invoice_match(
         raise _bad("--invoice and --ledger must be provided together for manual matching")
 
     if invoice_id and ledger_id:
-        updated = state_repository().update(
+        state_repository().update(
             lambda state: update_invoice_review(
                 state,
                 invoice_id,

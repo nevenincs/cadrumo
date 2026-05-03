@@ -1,6 +1,6 @@
 """Storage-state path helpers for the ``aeat auth`` CLI.
 
-Each shipped auth provider owns its own sidecar file so two providers
+Each available auth provider owns its own sidecar file so two providers
 do not clobber each other's storage-state.
 """
 

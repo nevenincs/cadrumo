@@ -334,7 +334,7 @@ class ClaveMovilAuthProvider:
                             }
                         )
                         self._write_json_atomic(sidecar_path, refreshed_sidecar.model_dump(mode="json"))
-                    except Exception:  # sidecar write is best-effort; OSError/tempfile errors must not abort a valid session
+                    except Exception:  # sidecar write best-effort; OSError must not abort a valid session
                         log.warning(
                             "ClaveMovilAuthProvider: sidecar refresh write failed;"
                             " session valid but deadline not persisted",
@@ -347,7 +347,7 @@ class ClaveMovilAuthProvider:
                     assertion.error_message,
                 )
                 return session, assertion
-            except Exception:  # cleanup on any verify error then re-raise; Playwright+AeatError surface too broad to enumerate
+            except Exception:  # cleanup on verify error then re-raise; Playwright+AeatError undocumented
                 if context is not None:
                     try:
                         await context.close()
@@ -764,7 +764,7 @@ class ClaveMovilAuthProvider:
                 else None,
             )
             return refreshed
-        except Exception:  # cleanup on any resume error then re-raise; Playwright+AeatError surface too broad to enumerate
+        except Exception:  # cleanup on resume error then re-raise; Playwright+AeatError undocumented
             if context is not None:
                 try:
                     await context.close()

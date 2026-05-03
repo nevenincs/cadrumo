@@ -82,13 +82,13 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli.auth._registry.ProviderNotImplementedError",
+        "aeat.entrypoints.cli.auth._registry.ProviderUnavailableError",
         ErrorCode(
-            code="AUTH_CLI_AUTH_REGISTRY_PROVIDER_NOT_IMPLEMENTED",
+            code="AUTH_CLI_AUTH_REGISTRY_PROVIDER_UNAVAILABLE",
             category=ErrorCategory.AUTH,
-            default_message_es="El proveedor solicitado aun no tiene implementacion disponible.",
-            default_message_en="The provider kind is known but no implementation has shipped yet.",
-            default_message_hu="A kert szolgaltatohoz meg nincs megvalositas.",
+            default_message_es="El proveedor solicitado no esta disponible.",
+            default_message_en="The requested provider is not available.",
+            default_message_hu="A kert szolgaltato nem erheto el.",
             default_suggestion="aeat setup auth providers",
             retryable=False,
             runbook_id=None,

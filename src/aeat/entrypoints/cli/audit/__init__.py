@@ -1,19 +1,7 @@
-"""``aeat audit`` subcommand surface (dev-only).
+"""``aeat audit`` subcommand surface.
 
-This subpackage exposes the ``Typer`` apps that make up the ``aeat
-audit`` namespace. They are importable from
-:mod:`aeat.entrypoints.cli.audit` and fully testable via
-:class:`typer.testing.CliRunner`, but registration on the root ``aeat``
-``Typer`` app is intentionally deferred to a single follow-up commit
-to avoid collisions with parallel work on the error-code registry and
-the ``--json`` output contract.
-
-The ``audit`` namespace is intentionally non-default. Today it ships
-one dev-only command, ``aeat audit rulesets citations``, that walks
-the registered rulesets and reports per-modelo coverage of the
-mandatory-citation invariant. The namespace is forward-compatible with
-the operator-first command tree and will gain non-dev surfaces over
-time.
+The ``audit`` namespace walks registered rulesets and reports
+per-modelo coverage of mandatory invariants.
 """
 
 from __future__ import annotations
@@ -32,7 +20,7 @@ from ._helpers import (
 
 audit_app = typer.Typer(
     name="audit",
-    help="Audit helpers (dev-only).",
+    help="Audit helpers.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -108,12 +96,9 @@ def citations_cmd() -> None:
     ``computed=True`` casillas; exits with code ``0`` otherwise.
 
     The mandatory-citation validator on
-    :class:`aeat.domain.casillas.CasillaDefinition` guarantees that no
-    real ruleset can ever ship a gap — a gap can only appear via a
-    fixture built with pydantic's documented ``model_construct``
-    escape hatch. This command therefore serves as a defence-in-depth
-    audit surface and as the reporting tool used to prove a per-modelo
-    verify-roundtrip baseline.
+    :class:`aeat.domain.casillas.CasillaDefinition` rejects coverage
+    gaps during construction; this command reports the same invariant
+    across all registered rulesets.
 
     Raises:
         :exc:`typer.Exit`: With code ``1`` when any ruleset has a

@@ -1,13 +1,13 @@
-"""User-facing ``aeat`` CLI — v6 surface.
+"""User-facing ``aeat`` CLI.
 
-The v6 ADR mandates two top-level namespaces:
+The command tree exposes two top-level namespaces:
 
 - ``aeat setup`` — local prerequisites: profile, auth, status.
 - ``aeat app`` — operational tax work: overview, ledger, invoice,
   declaration.
 
-Every command in this package is a thin transport over a fully
-implemented backend API. The handler bodies parse argv, call into
+Every command in this package is a thin transport over the backend API.
+The handler bodies parse argv, call into
 ``aeat.application`` / ``aeat.domain``, and render the typed result.
 No business logic lives in the CLI layer: validation, mutation,
 schema-decision, and persistence all live behind the imported
@@ -18,25 +18,9 @@ from __future__ import annotations
 
 import typer
 
-from . import (
-    _v6_declaration as _declaration,
-)
-from . import (
-    _v6_invoice as _invoice,
-)
-from . import (
-    _v6_ledger as _ledger,
-)
-from . import (
-    _v6_overview as _overview,
-)
-from . import (
-    _v6_setup as _setup,
-)
-from . import (
-    casillas as casillas_module,
-)
-from ._v6_common import _FORMAT_TEXT
+from . import _declaration, _invoice, _ledger, _overview, _setup
+from . import casillas as casillas_module
+from ._common import _FORMAT_TEXT
 
 # ---------------------------------------------------------------------
 # Root app + callback

@@ -34,9 +34,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
             category=ErrorCategory.REFUSED,
-            default_message_es="Este modelo aun no tiene agregacion financiera.",
-            default_message_en="This modelo does not yet have financial aggregation support.",
-            default_message_hu="Ehhez a nyomtatvanyhoz meg nincs penzugyi osszesites.",
+            default_message_es="Este modelo no admite agregacion financiera.",
+            default_message_en="This modelo does not support financial aggregation.",
+            default_message_hu="Ez a nyomtatvany nem tamogat penzugyi osszesitest.",
             default_suggestion="aeat app declaration calculate --modelo 130 --period 2025-Q1",
             retryable=False,
             runbook_id=None,

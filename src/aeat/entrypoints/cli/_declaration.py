@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date as _date
 from pathlib import Path
 
 import typer
@@ -29,7 +28,7 @@ from ...application.user_cli import (
     state_repository,
     update_declaration_pointer,
 )
-from ._v6_common import (
+from ._common import (
     _FORMAT_JSON,
     _FORMAT_TABLE,
     _aggregate_filing_inputs,
@@ -143,9 +142,9 @@ def declaration_status(
     filters: list[str] = typer.Option([], "--filter", help="--filter status=…"),
 ) -> None:
     try:
-        spec = DeclarationReviewFilterSpec.from_strings(filters)
+        DeclarationReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}") from exc
     canonical_period = _canonical_period(period)
     canonical_modelo = modelo.strip()
     state = _state()
@@ -175,7 +174,7 @@ def declaration_edit(
     try:
         edit_spec = DeclarationEditSpec.from_strings(sets)
     except EditParseError as exc:
-        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}")
+        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}") from exc
     if not edit_spec.casilla_edits:
         raise _bad("declaration edit requires at least one --set casilla.NN=DECIMAL")
     draft = _draft_by_id(draft_id)

@@ -202,7 +202,7 @@ def approve_draft(
     """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
 
     Args:
-        draft: The draft to approve. Must currently be
+        draft: The draft to approve. Must be
             :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
@@ -218,7 +218,7 @@ def approve_draft(
 
     Raises:
         :exc:`aeat.domain.filing.FilingDraftError`: When
-            ``approved_by`` is blank or the draft is not currently in
+            ``approved_by`` is blank or the draft is not in
             :attr:`FilingDraftStatus.READY_TO_SUBMIT`.
     """
 

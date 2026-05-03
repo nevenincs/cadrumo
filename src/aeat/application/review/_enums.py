@@ -1,9 +1,9 @@
 """Closed enumerations for the unified review queue.
 
 Defines the kind, severity, and state taxonomy used by every
-:class:`aeat.application.review.ReviewItem`. Reserved-but-unimplemented
-``--kind`` tokens are tracked in :data:`_RESERVED_KINDS` and surfaced
-to callers via :func:`reserved_kind_reason`.
+:class:`aeat.application.review.ReviewItem`. Reserved ``--kind`` tokens
+are tracked in :data:`_RESERVED_KINDS` and surfaced to callers via
+:func:`reserved_kind_reason`.
 """
 
 from __future__ import annotations
@@ -16,16 +16,10 @@ from types import MappingProxyType
 class ReviewItemKind(StrEnum):
     """Stable identifier for the source of a review item.
 
-    The four members below cover every pending source the project
-    currently produces. Two future-only tokens are reserved at the
-    parser surface — ``classification`` (blocked on a
-    ``ClassificationDecision`` record type) and ``approval-stale``
-    (folded into the ``finding`` source once the ``APPROVAL_STALE``
-    draft status surfaced as a HIGH-severity finding row).
-
-    Both reserved tokens are recognised by the CLI but currently
-    rejected with a ``ReviewKindReservedError`` that names the
-    blocking dependency.
+    The four members below cover every pending source emitted by the
+    review queue. Additional parser tokens can be reserved without
+    becoming emitted item kinds; reserved tokens are rejected with a
+    ``ReviewKindReservedError`` that explains the accepted surface.
     """
 
     TRANSACTION = "transaction"
@@ -66,10 +60,9 @@ def severity_rank(severity: ReviewSeverity) -> int:
 class ReviewState(StrEnum):
     """Filter state for the review queue CLI.
 
-    ``PENDING`` (default) returns only items that currently want the
-    operator's attention. ``ALL`` is reserved for a future "show
-    resolved too" mode and is currently identical to ``PENDING``
-    because every adapter only emits pending items today.
+    ``PENDING`` (default) returns only items that want the operator's
+    attention. ``ALL`` uses the same adapter output while every review
+    adapter emits pending items.
     """
 
     PENDING = "pending"
@@ -83,15 +76,12 @@ class ReviewFormat(StrEnum):
     JSON = "json"
 
 
-# Reserved-but-unimplemented kind tokens accepted for parsing but
-# rejected by the CLI with a descriptive error.
+# Reserved kind tokens accepted for parsing but rejected by the CLI with
+# a descriptive error.
 _RESERVED_KINDS: Mapping[str, str] = MappingProxyType(
     {
-        "classification": "blocked on ClassificationDecision record",
-        "approval-stale": (
-            "now surfaced under --kind finding — "
-            "drafts with FilingDraftStatus.APPROVAL_STALE emit a HIGH-severity finding row"
-        ),
+        "classification": "classification decisions are not emitted review items",
+        "approval-stale": ("represented by --kind finding when drafts emit FilingDraftStatus.APPROVAL_STALE rows"),
     }
 )
 

@@ -1,8 +1,7 @@
-"""Typed ``--set KEY=VALUE`` parser for the v6 record-edit surface.
+"""Typed ``--set KEY=VALUE`` parser for record-edit commands.
 
-The v6 CLI redesign exposes ``--set KEY=VALUE`` on every ledger /
-invoice / declaration ``edit`` command. The simulator tapes capture
-the canonical grammar:
+The CLI exposes ``--set KEY=VALUE`` on every ledger / invoice /
+declaration ``edit`` command. The canonical grammar:
 
 - ledger:      ``--set category=software``, ``--set business.share=1.0``,
   ``--set reference=invoice-1``, ``--set comments=…``,
@@ -24,11 +23,10 @@ key catalogue, coerces each value to its typed shape (``Decimal``,
 accessors the orchestration layer reads instead of re-parsing strings
 at every edit-application call site.
 
-Cycle 9 ships only the parser + key catalogues + value coercion. The
-orchestration that applies an :class:`EditSpec` to a stored
+The orchestration that applies an :class:`EditSpec` to a stored
 :class:`aeat.domain.transactions.Transaction` /
 :class:`aeat.domain.invoices.Invoice` /
-:class:`aeat.domain.filing.FilingDraft` lives in the in-flight
+:class:`aeat.domain.filing.FilingDraft` lives in the
 ``application/user_cli.py`` review-state overlay.
 """
 
@@ -199,7 +197,7 @@ def _ensure_known_keys(
 
 
 class LedgerEditKey(StrEnum):
-    """Closed catalogue of v6 ``aeat app ledger edit --set`` keys.
+    """Closed catalogue of ``aeat app ledger edit --set`` keys.
 
     Attributes:
         CATEGORY: Spending / income category foreign-key id.
@@ -220,18 +218,16 @@ class LedgerEditKey(StrEnum):
 
 
 class InvoiceEditKey(StrEnum):
-    """Closed catalogue of v6 ``aeat app invoice edit --set`` keys.
+    """Closed catalogue of ``aeat app invoice edit --set`` keys.
 
     Attributes:
         BASE: Decimal taxable base amount.
         IVA_RATE: Decimal IVA percentage (``21`` / ``10`` / ``4`` /
-            ``0`` are the v6 codified rates; the parser accepts any
-            non-negative decimal so future rate changes do not need
-            a parser bump).
+            ``0`` are the supported rates; the parser accepts any
+            non-negative decimal so the grammar is not tied to a fixed
+            rate table).
         IVA_AMOUNT: Decimal IVA amount.
-        IVA_CATEGORY: Free-text IVA category (closed catalogue lives
-            on a domain audit; the parser accepts free text until
-            CLI-REDESIGN-002 ships).
+        IVA_CATEGORY: Free-text IVA category.
         RETENTION_RATE: Decimal IRPF retention percentage.
         RETENTION_AMOUNT: Decimal IRPF retention amount.
         PAYMENT_ID: Foreign-key transaction id linked as the payment.
@@ -258,7 +254,7 @@ class InvoiceEditKey(StrEnum):
 
 
 class LedgerEditSpec(BaseModel):
-    """Typed v6 ``aeat app ledger edit --set`` spec.
+    """Typed ``aeat app ledger edit --set`` spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -280,7 +276,7 @@ class LedgerEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerEditSpec:
-        """Parse v6 ``--set`` arguments into a typed ledger spec."""
+        """Parse ``--set`` arguments into a typed ledger spec."""
         clauses = parse_edit_clauses(raw)
         valid = {member.value for member in LedgerEditKey}
         _ensure_known_keys(clauses, scope="ledger", allowed=valid)
@@ -328,7 +324,7 @@ class LedgerEditSpec(BaseModel):
 
 
 class InvoiceEditSpec(BaseModel):
-    """Typed v6 ``aeat app invoice edit --set`` spec.
+    """Typed ``aeat app invoice edit --set`` spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -360,7 +356,7 @@ class InvoiceEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> InvoiceEditSpec:
-        """Parse v6 ``--set`` arguments into a typed invoice spec."""
+        """Parse ``--set`` arguments into a typed invoice spec."""
         clauses = parse_edit_clauses(raw)
         valid = {member.value for member in InvoiceEditKey}
         _ensure_known_keys(clauses, scope="invoice", allowed=valid)
@@ -433,7 +429,7 @@ class InvoiceEditSpec(BaseModel):
 
 
 class DeclarationEditSpec(BaseModel):
-    """Typed v6 ``aeat app declaration edit --set`` spec.
+    """Typed ``aeat app declaration edit --set`` spec.
 
     The declaration edit grammar uses the dotted prefix
     ``casilla.NN`` for casilla-value overrides — every key MUST match
@@ -454,7 +450,7 @@ class DeclarationEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> DeclarationEditSpec:
-        """Parse v6 ``--set`` arguments into a typed declaration spec."""
+        """Parse ``--set`` arguments into a typed declaration spec."""
         clauses = parse_edit_clauses(raw)
         _ensure_unique_keys(clauses, scope="declaration")
         casilla_edits: dict[str, Decimal] = {}

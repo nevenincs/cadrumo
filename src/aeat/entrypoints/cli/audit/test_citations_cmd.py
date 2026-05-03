@@ -1,9 +1,8 @@
 """Tests for ``aeat audit rulesets citations``.
 
 Exercises every code path of the citations subcommand via
-:class:`typer.testing.CliRunner` against ``audit_app`` directly — the
-command is not yet registered on the root ``aeat`` Typer. All tests
-use real
+:class:`typer.testing.CliRunner` against ``audit_app`` directly. All
+tests use real
 :class:`aeat.domain.formulas._ruleset.Ruleset`,
 :class:`aeat.domain.formulas._casilla.CasillaDefinition`, and
 :class:`aeat.domain.formulas._legal_citation.LegalCitation` instances;
@@ -114,9 +113,9 @@ def test_validate_citation_coverage_detects_simulated_gap() -> None:
 def test_validate_citation_coverage_handles_zero_computed() -> None:
     """A ruleset with no computed casillas reports 100% trivially.
 
-    Edge case: division-by-zero protection in the helper. No real
-    ruleset reaches this state today (every shipped ruleset has at
-    least one computed casilla), but the helper must not raise.
+    Edge case: division-by-zero protection in the helper. Registered
+    rulesets normally include at least one computed casilla, but the
+    helper must not raise.
     """
     base = MODELO_130_2025
     user_only_casillas = tuple(c for c in base.casillas if not c.computed)

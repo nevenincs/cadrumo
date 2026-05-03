@@ -978,9 +978,9 @@ def check_master_key_readiness(settings: Settings) -> Row:
         present = [p for p in (master_key, master_kdf, salt) if p.exists()]
         missing = [p for p in (master_key, master_kdf, salt) if not p.exists()]
         if not present:
-            # File-fallback artefacts not yet minted. For 'auto' this is
-            # benign when the OS keychain is reachable; for 'file' it
-            # means the substrate has not been provisioned.
+            # Missing file-fallback artefacts are benign for 'auto' when
+            # the OS keychain is reachable; for 'file' the substrate has
+            # not been provisioned.
             if backend == "file":
                 return Row(
                     section="master-key readiness",

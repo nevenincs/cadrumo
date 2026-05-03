@@ -1,4 +1,4 @@
-"""Unit tests for the v6 typed ``--filter KEY=VALUE`` parser."""
+"""Unit tests for the typed ``--filter KEY=VALUE`` parser."""
 
 from __future__ import annotations
 
@@ -155,7 +155,7 @@ def test_invoice_spec_parses_status_and_kind() -> None:
 
 
 def test_invoice_spec_case_folds_kind() -> None:
-    """The v6 CLI lowercases ``--filter kind=received``; InvoiceKind is uppercase."""
+    """The CLI lowercases ``--filter kind=received``; InvoiceKind is uppercase."""
     spec = InvoiceReviewFilterSpec.from_strings(["kind=ISSUED"])
     assert spec.kind is InvoiceKind.ISSUED
     spec = InvoiceReviewFilterSpec.from_strings(["kind=issued"])

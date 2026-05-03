@@ -14,10 +14,10 @@ positional arguments emitted first (in the declared order, without a
 Argument values whose name matches one of the secret-smelling
 substrings in :data:`_REDACT_NAME_SUBSTRINGS` are recorded as
 ``"***"`` rather than their literal value. This is a defensive shield:
-no currently wrapped CLI command accepts a secret on argv, but if one
-is added (e.g. ``--password``, ``--token``), the audit log must never
-capture the plaintext. Callers that need a value recorded verbatim
-must rename the parameter.
+wrapped CLI commands must not accept secrets on argv. If a command
+does expose a secret-like argument (e.g. ``--password``, ``--token``),
+the audit log must never capture the plaintext. Callers that need a
+value recorded verbatim must rename the parameter.
 
 Caveat — name-side redaction only: this shield does NOT inspect
 argument **values**. An operator who passes a token or a NIF in the
