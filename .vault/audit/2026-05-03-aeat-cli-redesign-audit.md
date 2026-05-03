@@ -197,3 +197,35 @@ Cycle 2 progress on the original 5 open gaps:
 The 5 open gaps remain the priority; cycle 3 will check whether
 the implementation team has begun any of them and re-verify the
 full backend test sweep.
+
+## Cycle 3 — 2026-05-03
+
+CLI-REDESIGN-003 | PARTIALLY-RESOLVED | HIGH | `ProfileKey` registry now lives in the domain layer
+The schema-backed profile editor mandated by the v6 ADR needs a
+canonical key registry. Cycle 3 ships a strict pydantic
+:class:`ProfileKey` record plus a closed `PROFILE_KEYS` tuple in
+`src/aeat/domain/profile/_keys.py`, exposed from
+`aeat.domain.profile`. Each entry carries a multilingual
+:class:`Translatable` description (Spanish authoritative, English
+/ Catalan / Hungarian filled out per the multilingual contract).
+Helper functions :func:`get_profile_key`,
+:func:`required_profile_keys`, and :func:`optional_profile_keys`
+cover the v6 candidate's `list-keys` / `get` / `validate` use
+cases. Eight unit tests in `test_keys.py` lock the registry shape
+(uniqueness, requirement partition, blank-key rejection,
+authoritative-Spanish enforcement). The CLI still owns the
+hardcoded `_PROFILE_KEY_ROWS` tuple in
+`src/aeat/entrypoints/cli/__init__.py`; the implementation team
+removes that on the CLI side and routes through the domain
+helpers — the audit prompt forbids editing CLI code.
+
+Cycle 3 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — no movement; OPEN.
+* CLI-REDESIGN-002 (invoice schema) — no movement; OPEN.
+* CLI-REDESIGN-003 (profile registry) — domain helper landed;
+  PARTIALLY-RESOLVED pending CLI migration.
+* CLI-REDESIGN-004 (declaration export/verify) — no movement; OPEN.
+* CLI-REDESIGN-005 (import diagnostics) — no movement; OPEN.
+
+Backend full sweep at cycle start: 3746 passed, 5 skipped
+(`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`).
