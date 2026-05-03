@@ -480,3 +480,84 @@ Tape-driven gaps still pending typed scaffold (v7 simulator):
 Backend full sweep at cycle close: 3802 passed, 5 skipped
 (`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
 `-m "not live"`).
+
+## Cycle 8 — 2026-05-03
+
+CLI-REDESIGN-011 | PARTIALLY-RESOLVED | MEDIUM | Typed `--filter KEY=VALUE` parser for the v6 ledger / invoice / declaration review surface
+The kent-n26 simulator tapes (v6 + v7) drive every record-list flow
+through repeated `--filter KEY=VALUE` flags: ledger review uses
+`status=`, `period=`, `issue=` (gap / duplicate / original-file /
+parser), and `import=`; invoice review uses `status=` and `kind=`
+(issued / received); declaration status uses `status=`. Until cycle 8
+the application layer had no typed parser surface — the existing
+:class:`aeat.application.review.ReviewQueue.collect` accepted
+positional `kinds`, `modelo`, `state`, and `confidence_below`
+parameters but no per-scope filter spec the CLI argv layer could
+build, validate, and pass through.
+
+`src/aeat/application/review/_filter.py` ships :class:`FilterClause`
+(strict frozen pydantic key+value record), :func:`parse_filter_clause`
+/ :func:`parse_filter_clauses` (the raw `KEY=VALUE` string parser
+with a typed :class:`FilterParseError` carrying a stable reason
+code), three closed key enums
+(:class:`LedgerReviewFilterKey` / :class:`InvoiceReviewFilterKey` /
+:class:`DeclarationReviewFilterKey`), three closed value-status
+enums (:class:`LedgerReviewStatus` /
+:class:`InvoiceReviewStatus` / :class:`DeclarationReviewStatus`)
+plus the issue-kind alias :class:`LedgerReviewIssue` (mirroring
+:class:`aeat.application.transactions.LedgerImportDiagnosticKind`
+verbatim), and three per-scope spec records
+(:class:`LedgerReviewFilterSpec` / :class:`InvoiceReviewFilterSpec` /
+:class:`DeclarationReviewFilterSpec`) with `from_strings` factories
+that bind the raw `--filter` argv into the typed shape and reject
+unknown keys, invalid values, and duplicate keys with scope-tagged
+parse errors. The invoice spec case-folds `kind=received` /
+`kind=issued` to the uppercase :class:`aeat.domain.invoices.InvoiceKind`
+canonical values so the v6 lowercase CLI grammar binds to the
+existing enum without changing it.
+
+Thirty-one unit tests in `test_filter.py` lock the parser substrate
+(empty/blank/missing-equals rejection, value trimming, key
+case-folding, frozen invariant), the per-scope key catalogues, the
+per-scope value validation (including the case-fold path for
+InvoiceKind), the duplicate-key invariant, and the cross-field
+consistency check that rejects directly-constructed specs whose
+`clauses` tuple disagrees with the typed accessors. Sweep-only
+failures in `aeat.adapters.outbound.aeat.browser.evasion` (bare
+`AeatError` raise from another agent's WIP) and
+`test_engine_logs_evaluation_info` (in-flight pytest-caplog ordering
+issue) are pre-existing baseline noise unrelated to this cycle's
+scope; cycle-8 changes do not introduce them.
+
+:class:`FilterParseError` deliberately subclasses
+:class:`ValueError` rather than the project's
+:class:`aeat.core.errors.AeatError` taxonomy — the in-flight CLI
+restructure is mid-flight on the registry split, and binding a
+registry entry here would couple the parser to a moving surface.
+The CLI's argv-validation layer re-raises into a typed CLI error
+envelope; the parser remains a structurally simple substrate.
+
+Cycle 8 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-004 (declaration export/verify) — RESOLVED.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED.
+* CLI-REDESIGN-009 (declaration calculate summary) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-010 (auth provider catalogue) —
+  PARTIALLY-RESOLVED.
+* CLI-REDESIGN-011 (typed --filter parser) —
+  PARTIALLY-RESOLVED via this cycle's typed surface; orchestration
+  binding into `ReviewQueue.collect` is the next layer.
+
+Tape-driven gaps still pending typed scaffold (v7 simulator):
+* `--set casilla.NN=VALUE` / `--set business.share=…` typed
+  dotted-path edit-spec parser per record class.
+* `aeat app overview status --calendar --from DATE --to DATE` typed
+  period-range aggregator.
+* `aeat app invoice match --period PERIOD` typed match-result record.
+
+Backend full sweep at cycle close: 31 new tests added (filter spec);
+broader sweep mirrors cycle-7 baseline plus the in-flight WIP's
+pre-existing failures.
