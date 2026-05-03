@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -21,9 +20,7 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.application.aggregation import (
-    AggregationCasillaMappingError,
     AggregationError,
-    AggregationMissingClassificationError,
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
     Period,
@@ -32,7 +29,7 @@ from aeat.application.aggregation import (
 )
 from aeat.application.aggregation._provider import FinancialFilingInputsProvider
 from aeat.application.workflow import FinancialThenJsonInputsProvider, JsonFileInputsProvider
-from aeat.domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
+from aeat.domain.categories import SpendingCategory
 from aeat.domain.deadlines import AutonomoProfile, IVARegime
 from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
 from aeat.domain.transactions import (
@@ -46,7 +43,6 @@ from aeat.domain.transactions import (
     set_classification,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.entrypoints.cli._schemas import SCHEMA_REGISTRY
 from aeat.entrypoints.cli.financial import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -213,25 +209,14 @@ def test_period_rejects_ambiguous_text() -> None:
         Period.model_validate("2025-Q5")
 
 
-def test_modelo_130_aggregation_produces_inputs_and_provenance(tmp_path: Path) -> None:
-    aggregation = aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2025-Q1")
+def test_financial_aggregation_refuses_casilla_projection_until_registry_coverage(tmp_path: Path) -> None:
+    with pytest.raises(AggregationUnsupportedModeloError) as exc_info:
+        aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2025-Q1")
 
-    assert aggregation.modelo == "130"
-    assert aggregation.casilla_values == {"01": Decimal("1000.00"), "02": Decimal("230.0000")}
-    assert [(row.casilla, row.category_id, row.subtotal) for row in aggregation.provenance] == [
-        ("01", None, Decimal("1000.00")),
-        ("02", "material_oficina", Decimal("200.00")),
-        ("02", "suministros_home_office_luz", Decimal("30.0000")),
-    ]
+    assert exc_info.value.context == {"modelo": "130", "period": "2025Q1"}
 
 
-def test_aggregation_outputs_stop_at_registry_boundary(tmp_path: Path) -> None:
-    aggregation = aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2025Q1")
-
-    assert aggregation.casilla_values == {"01": Decimal("1000.00"), "02": Decimal("230.0000")}
-
-
-def test_mixed_transaction_multiplies_business_pct_and_profile_ratio(tmp_path: Path) -> None:
+def test_mixed_transaction_does_not_bypass_registry_boundary(tmp_path: Path) -> None:
     home = _transaction(
         tmp_path,
         provider_id="mixed-home-electricity",
@@ -249,66 +234,13 @@ def test_mixed_transaction_multiplies_business_pct_and_profile_ratio(tmp_path: P
         reason="mixed home office supply",
     )
 
-    aggregation = aggregate_catalogue(catalogue, modelo="130", period="2025-Q1")
-
-    assert aggregation.casilla_values == {"02": Decimal("15.000000")}
-
-
-def test_modelo_130_refuses_computed_expense_mapping(tmp_path: Path) -> None:
-    office = _transaction(
-        tmp_path,
-        provider_id="office-supplies",
-        amount=Decimal("-200.00"),
-        booked_date=date(2025, 2, 2),
-        row_index=1,
-    )
-    catalogue = set_classification(
-        TransactionCatalogue.from_transactions([office]),
-        office.transaction_id,
-        classification=BusinessClassification.BUSINESS,
-        category_id=SpendingCategory.MATERIAL_OFICINA.value,
-        classified_by="manual",
-        reason="office supplies",
-    )
-    profile = CATEGORY_PROFILES_2025[SpendingCategory.MATERIAL_OFICINA]
-    computed_mapping = profile.casilla_mappings[0].model_copy(update={"casilla_code": "03"})
-    overridden_profile = profile.model_copy(update={"casilla_mappings": (computed_mapping,)})
-    profiles = {**CATEGORY_PROFILES_2025, SpendingCategory.MATERIAL_OFICINA: overridden_profile}
-
-    with pytest.raises(AggregationCasillaMappingError):
-        aggregate_catalogue(catalogue, modelo="130", period="2025-Q1", category_profiles=profiles)
+    with pytest.raises(AggregationUnsupportedModeloError):
+        aggregate_catalogue(catalogue, modelo="130", period="2025-Q1")
 
 
 def test_default_profiles_are_resolved_from_period_year(tmp_path: Path) -> None:
-    with pytest.raises(AggregationCasillaMappingError):
+    with pytest.raises(AggregationUnsupportedModeloError):
         aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2026-Q1")
-
-
-def test_category_with_multiple_modelo_130_mappings_is_refused(tmp_path: Path) -> None:
-    office = _transaction(
-        tmp_path,
-        provider_id="office-supplies",
-        amount=Decimal("-200.00"),
-        booked_date=date(2025, 2, 2),
-        row_index=1,
-    )
-    catalogue = set_classification(
-        TransactionCatalogue.from_transactions([office]),
-        office.transaction_id,
-        classification=BusinessClassification.BUSINESS,
-        category_id=SpendingCategory.MATERIAL_OFICINA.value,
-        classified_by="manual",
-        reason="office supplies",
-    )
-    profile = CATEGORY_PROFILES_2025[SpendingCategory.MATERIAL_OFICINA]
-    alternate_mapping = profile.casilla_mappings[0].model_copy(update={"casilla_code": "05"})
-    overridden_profile = profile.model_copy(
-        update={"casilla_mappings": (profile.casilla_mappings[0], alternate_mapping)}
-    )
-    profiles = {**CATEGORY_PROFILES_2025, SpendingCategory.MATERIAL_OFICINA: overridden_profile}
-
-    with pytest.raises(AggregationCasillaMappingError):
-        aggregate_catalogue(catalogue, modelo="130", period="2025-Q1", category_profiles=profiles)
 
 
 def test_unclassified_in_period_transaction_is_refused(tmp_path: Path) -> None:
@@ -321,7 +253,7 @@ def test_unclassified_in_period_transaction_is_refused(tmp_path: Path) -> None:
     )
     catalogue = TransactionCatalogue.from_transactions([transaction])
 
-    with pytest.raises(AggregationMissingClassificationError):
+    with pytest.raises(AggregationUnsupportedModeloError):
         aggregate_catalogue(catalogue, modelo="130", period="2025Q1")
 
 
@@ -335,7 +267,7 @@ def test_modelo_130_rejects_monthly_period(tmp_path: Path) -> None:
         aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2025-01")
 
 
-def test_cli_aggregate_json_round_trips(encrypted_store: Path, tmp_path: Path) -> None:
+def test_cli_aggregate_json_refuses_without_registry_coverage(encrypted_store: Path, tmp_path: Path) -> None:
     TransactionCatalogueRepository(store_dir=encrypted_store).save(_classified_catalogue(tmp_path))
 
     result = _RUNNER.invoke(
@@ -347,11 +279,9 @@ def test_cli_aggregate_json_round_trips(encrypted_store: Path, tmp_path: Path) -
         },
     )
 
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["command"] == "financial aggregate"
-    assert payload["result"]["casilla_values"] == {"01": "1000.00", "02": "230.0000"}
-    SCHEMA_REGISTRY["financial aggregate"].model_validate_json(json.dumps(payload["result"]))
+    assert result.exit_code != 0
+    assert isinstance(result.exception, AggregationUnsupportedModeloError)
+    assert result.exception.context == {"modelo": "130", "period": "2025Q1"}
 
 
 def test_workflow_inputs_provider_uses_financial_catalogue(
@@ -365,6 +295,5 @@ def test_workflow_inputs_provider_uses_financial_catalogue(
         fallback_provider=JsonFileInputsProvider(tmp_path / "missing-inputs.json"),
     )
 
-    inputs = provider.load_inputs(modelo="130", period="2025-Q1", profile=_profile())
-
-    assert inputs == {"01": Decimal("1000.00"), "02": Decimal("230.0000")}
+    with pytest.raises(AggregationUnsupportedModeloError):
+        provider.load_inputs(modelo="130", period="2025-Q1", profile=_profile())

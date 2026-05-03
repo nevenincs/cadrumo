@@ -1,11 +1,10 @@
-"""Aggregation of classified transactions into AEAT casilla inputs."""
+"""Financial aggregation boundaries for registry-backed AEAT filing inputs."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from ._errors import (
-    AggregationCasillaMappingError,
     AggregationCategoryCoverageError,
     AggregationError,
     AggregationMissingClassificationError,
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from ._provider import FinancialFilingInputsProvider
 
 __all__ = [
-    "AggregationCasillaMappingError",
     "AggregationCategoryCoverageError",
     "AggregationError",
     "AggregationMissingClassificationError",

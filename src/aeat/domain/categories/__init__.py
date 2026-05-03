@@ -3,9 +3,8 @@
 Owns the closed taxonomy of deductible autónomo spending categories
 (:class:`SpendingCategory`, :class:`SpendingCategoryFamily`), their
 explainable proportionality rules (:class:`ProportionalityRule`,
-:class:`ProportionalityKind`, :class:`StatutoryCapPeriod`), and the
-mapping from each category to the AEAT casillas it feeds
-(:class:`CasillaMapping`, :class:`CasillaMappingSign`).
+:class:`ProportionalityKind`, :class:`StatutoryCapPeriod`), and their
+legal citations.
 
 The :data:`CATEGORY_PROFILES_2025` registry is the curated
 hand-checked source of truth; :func:`load_category_profiles_from_manual`
@@ -19,7 +18,6 @@ BOE / Manual práctico stays intact.
 
 from __future__ import annotations
 
-from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._corpus import load_category_profiles_from_manual
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
@@ -42,8 +40,6 @@ from ._spending_category import (
 __all__ = [
     "CATEGORY_FAMILY_MEMBERS",
     "CATEGORY_PROFILES_2025",
-    "CasillaMapping",
-    "CasillaMappingSign",
     "CategoryCitation",
     "CategoryCitationSource",
     "CategoryProfile",
