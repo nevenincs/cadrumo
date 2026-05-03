@@ -16,8 +16,7 @@ variant. The module exists for two reasons:
   payload is the key AEAT correlates against the submission calendar.
 
 The 2025 schema mirrors the per-year-clone pattern used by the formulas
-rulesets at :mod:`aeat.domain.formulas._rulesets.modelo_130_2024` and
-:mod:`aeat.domain.formulas._rulesets.modelo_130_2025`.
+registry Modelo 130 definitions for the matching filing year.
 """
 
 from __future__ import annotations

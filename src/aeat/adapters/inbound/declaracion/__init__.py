@@ -7,7 +7,7 @@ value the extractor recovered. Downstream consumers:
 - :mod:`aeat.application.filing.build_draft` materialises a :class:`FilingDraft`
   from the extracted casillas via ``inputs={c.casilla_id: c.printed_value ...}``.
 - :mod:`aeat.application.verification.verify_declaracion` compares the re-derived
-  casillas against the printed ones via :class:`aeat.domain.formulas.Engine.audit_against`.
+  casillas against the printed ones via registry-backed audit.
 
 Public API:
 

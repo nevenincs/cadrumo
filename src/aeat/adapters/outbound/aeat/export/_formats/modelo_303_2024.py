@@ -27,17 +27,16 @@ Envelope shape:
     as CURRENCY (40 reclassifications) and ``DP30301_F010_DEVENGO_PER_ODO``
     is ALPHANUMERIC user-supplied rather than a RESERVED literal.
 
-Known ruleset-vs-schema gap:
-    Casillas 45, 64, 67, and 71 are declared by the Modelo 303 2024 formula
-    ruleset at :mod:`aeat.domain.formulas._rulesets.modelo_303_2024` but
-    have no corresponding ``RecordFieldSpec`` in this fixture. The
+Known registry-vs-schema gap:
+    Casillas 45, 64, 67, and 71 require registry-backed review before this
+    fixture can become filing-grade. They currently have no corresponding
+    ``RecordFieldSpec`` in this fixture. The
     ``_2``-suffix duplicates ``DP30303_CAS66_2`` at offset 323,
     ``DP30303_CAS110_2`` at offset 289, and ``DP30304_CAS80_2`` at offset
     370 are suspected mislabelings from the ``DR303e24.xlsx`` extraction —
     they occupy the 17-byte CURRENCY slots where the missing casillas
     belong. Resolving the gap requires cross-referencing the AEAT DR303
-    PDF column headers. The current state is locked by
-    ``test_ruleset_schema_coverage.py`` so the closure flip is audible.
+    PDF column headers and registry export definitions.
 
 Rate-row layouts:
     Régimen general at 4 %, 5 %, 10 %, and 21 %, plus recargo equivalencia

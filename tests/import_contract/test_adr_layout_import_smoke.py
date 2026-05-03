@@ -20,7 +20,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain.manuals",
     "aeat.domain.normatives",
     "aeat.domain.portals",
-    "aeat.domain.formulas",
     "aeat.domain.deadlines",
     "aeat.domain.schema",
     "aeat.domain.profile",
@@ -89,12 +88,12 @@ DELETED_ROOT_MODULES: tuple[str, ...] = (
     "aeat.auth",
     "aeat.errors",
     "aeat.formulas",
+    "aeat.domain.formulas",
     "aeat.submission",
 )
 
 CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.core.errors", "AeatError"),
-    ("aeat.domain.formulas", "FormulasError"),
     ("aeat.core.access_gate", "LiveSubmitForbiddenError"),
     ("aeat.adapters.outbound.aeat.auth", "AeatAuthenticator"),
     ("aeat.adapters.outbound.google", "GoogleAuthPath"),
