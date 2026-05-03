@@ -1,6 +1,6 @@
 """Curated AEAT casilla catalogues.
 
-Owns the strict pydantic models, JSON persistence helpers, and the
+Owns the strict pydantic models, JSON read helpers, and the
 verification flow for the curated casilla data committed under
 ``corpus/casillas/``. A casilla is one numbered field on an AEAT
 modelo (e.g. ``modelo 303`` casilla ``01``) and the catalogue is the
@@ -13,9 +13,8 @@ Public surface:
   immutable pydantic models.
 * :class:`CasillaDataType`, :class:`PeriodType`, :class:`ModeloCode`:
   the closed enumerations.
-* :func:`load_casillas`, :func:`save_casillas`, :func:`iter_casillas`,
-  :func:`verify_casillas`, :data:`DEFAULT_CASILLAS_ROOT`: the
-  catalogue persistence and verification helpers.
+* :func:`load_casillas`, :func:`iter_casillas`, :func:`verify_casillas`,
+  :data:`DEFAULT_CASILLAS_ROOT`: the catalogue read and verification helpers.
 * :exc:`CasillaError` and its concrete subtypes
   (:exc:`CasillaParseError`, :exc:`VerifyError`,
   :exc:`MissingFieldError`, :exc:`UnreviewedRecordError`,
@@ -24,7 +23,7 @@ Public surface:
 
 from __future__ import annotations
 
-from .catalogue import DEFAULT_CASILLAS_ROOT, iter_casillas, load_casillas, save_casillas, verify_casillas
+from .catalogue import DEFAULT_CASILLAS_ROOT, iter_casillas, load_casillas, verify_casillas
 from .errors import (
     CasillaError,
     CasillaParseError,
@@ -60,6 +59,5 @@ __all__ = [
     "VerifyError",
     "iter_casillas",
     "load_casillas",
-    "save_casillas",
     "verify_casillas",
 ]

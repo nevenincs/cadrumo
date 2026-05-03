@@ -1,4 +1,4 @@
-"""Typed IR, cache, errors, and runtime evaluate for AEAT modelo schemas.
+"""Typed IR, cache-read, errors, and runtime evaluate for AEAT modelo schemas.
 
 This subpackage owns the intermediate-representation (IR) types,
 cache I/O, error hierarchy, and the ``evaluate`` / ``validate_period_for_modelo``
@@ -23,7 +23,6 @@ from __future__ import annotations
 from ._cache import (
     load_modelo_from_cache,
     resolve_schema_cache_file,
-    save_modelo_to_cache,
 )
 from ._enums import (
     BinaryFormulaOp,
@@ -84,6 +83,5 @@ __all__ = (
     "evaluate",
     "load_modelo_from_cache",
     "resolve_schema_cache_file",
-    "save_modelo_to_cache",
     "validate_period_for_modelo",
 )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 from pathlib import Path
 
 import pytest
@@ -44,6 +45,11 @@ def test_declaration_export_functions_fail_before_runtime_work(function_name: st
 
 
 def test_schema_cache_writer_has_no_filesystem_write_path() -> None:
+    schema_package = importlib.import_module("aeat.domain.schema")
+    assert not hasattr(schema_package, "save_modelo_to_cache")
+    assert "save_modelo_to_cache" not in schema_package.__all__
+    package_source = _source("src/aeat/domain/schema/__init__.py")
+    assert "save_modelo_to_cache" not in package_source
     node = _function_node(_source("src/aeat/domain/schema/_cache.py"), "save_modelo_to_cache")
     calls = [
         child
@@ -56,6 +62,11 @@ def test_schema_cache_writer_has_no_filesystem_write_path() -> None:
 
 
 def test_casilla_catalogue_writers_have_no_filesystem_write_path() -> None:
+    casillas_package = importlib.import_module("aeat.domain.casillas")
+    assert not hasattr(casillas_package, "save_casillas")
+    assert "save_casillas" not in casillas_package.__all__
+    package_source = _source("src/aeat/domain/casillas/__init__.py")
+    assert "save_casillas" not in package_source
     source = _source("src/aeat/domain/casillas/catalogue.py")
     for function_name in ("save_casillas", "write_extract_draft", "write_translate_draft", "_write_temp_catalogue"):
         node = _function_node(source, function_name)
