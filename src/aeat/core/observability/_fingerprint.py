@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from pathlib import Path
 
 from ..config import Settings
@@ -22,11 +23,21 @@ from ..config import Settings
 
 def _file_sha256(path: Path) -> str:
     """Return the SHA-256 hex digest of a file's contents."""
-    h = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
+    last_error: PermissionError | None = None
+    for attempt in range(5):
+        try:
+            h = hashlib.sha256()
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(65536), b""):
+                    h.update(chunk)
+            return h.hexdigest()
+        except PermissionError as exc:
+            last_error = exc
+            if attempt == 4:
+                break
+            time.sleep(0.05)
+    assert last_error is not None
+    raise last_error
 
 
 def _hash_tree(
@@ -66,7 +77,11 @@ def _hash_tree(
                 rel = file_path.relative_to(root).as_posix()
             except ValueError:
                 continue
-            entries.append((rel, _file_sha256(file_path)))
+            try:
+                sha = _file_sha256(file_path)
+            except OSError as exc:
+                sha = f"unreadable:{type(exc).__name__}:{getattr(exc, 'errno', '')}"
+            entries.append((rel, sha))
     entries.sort()
     digest = hashlib.sha256()
     for rel, sha in entries:
@@ -84,8 +99,12 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
     channel that can change the effective configuration between record
     and replay:
 
-    1. The whole ``.vault/`` tree — architectural decisions, plans,
-       research, execution records.
+    1. The ``.vault/`` spec content — architectural decisions, plans,
+       research, execution records. ``.vault/data/`` is excluded:
+       it hosts the gitignored vaultspec-rag index (Qdrant database
+       files, embeddings cache) which mutates continuously under a
+       live RAG service and is not part of the canonical spec surface
+       a replay needs to gate on.
     2. ``settings.model_dump_json()`` — the currently-loaded Settings
        snapshot (includes env-var-sourced overrides).
     3. The raw bytes of ``env/.env`` if present — catches dotfile
@@ -106,7 +125,8 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
     """
     from ..config import PROJECT_ROOT
 
-    tree_digest = _hash_tree(vault_dir, excluded_dirs=frozenset())
+    excluded_vault_subtrees = frozenset({(vault_dir / "data").resolve()})
+    tree_digest = _hash_tree(vault_dir, excluded_dirs=excluded_vault_subtrees)
     settings_blob = settings.model_dump_json().encode("utf-8")
     env_path = PROJECT_ROOT / "env" / ".env"
     env_digest = _file_sha256(env_path) if env_path.exists() else hashlib.sha256(b"").hexdigest()
@@ -122,11 +142,13 @@ def compute_corpus_sha256(vault_dir: Path, settings: Settings) -> str:
 def compute_db_sha256(var_dir: Path) -> str:
     """Compute a deterministic fingerprint of the local ``var/`` state.
 
-    Excludes caches and self-referencing artefacts so the hash is
-    stable across observability writes and LLM/schema/status lookups
-    that would otherwise flap on every read. The curated list covers
-    every ``var/`` subdirectory that :class:`aeat.core.config.Settings`
-    treats as a cache, log, or replay-internal artefact:
+    Excludes caches, build artefacts, and self-referencing observability
+    outputs so the hash is stable across observability writes and
+    LLM/schema/status lookups that would otherwise flap on every read.
+    The curated list covers every ``var/`` subdirectory that
+    :class:`aeat.core.config.Settings` treats as a cache, log, or
+    replay-internal artefact, plus every ``var/`` subdirectory the
+    release / packaging pipeline materialises as a transient virtualenv:
 
     - ``var/runs/`` — observability's own output (self-reference).
     - ``var/browser-traces/`` — Playwright session traces.
@@ -135,6 +157,10 @@ def compute_db_sha256(var_dir: Path) -> str:
     - ``var/schema-cache/`` — derived Modelo schema cache.
     - ``var/status-cache/`` — AEAT status-reader cache.
     - ``var/backups/`` — storage layer backups (non-canonical copies).
+    - ``var/packaging-smoke/``, ``var/editable-smoke/`` — release
+      pipeline scratch virtualenvs (thousands of site-packages files).
+    - ``var/divergences/``, ``var/i18n/`` — release / i18n diff
+      artefacts; not part of the user-state surface.
 
     Core state (``var/aeat.db``, ``var/workflow-runs/``, ``var/inbox/``,
     ``var/drafts/``, ``var/filing-history/``, ``var/justificantes/``)
@@ -158,6 +184,10 @@ def compute_db_sha256(var_dir: Path) -> str:
                 "schema-cache",
                 "status-cache",
                 "backups",
+                "packaging-smoke",
+                "editable-smoke",
+                "divergences",
+                "i18n",
             )
         },
     )
