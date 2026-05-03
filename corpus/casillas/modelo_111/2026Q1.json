@@ -265,16 +265,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(19% * 08)",
+        "expression": "(irpf.premios_rate * 08)",
         "references_casillas": [
           "08"
         ]
       },
       "help": {
-        "ca": "Retencions premis. Es calcula com (19% * 08). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
-        "en": "Prize withholdings. Computed as (19% * 08). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Retenciones premios. Se calcula como (19% * 08). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Nyeremény levonás. Számítás: (19% * 08) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+        "ca": "Retencions premis. Es calcula com (irpf.premios_rate * 08). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Prize withholdings. Computed as (irpf.premios_rate * 08). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones premios. Se calcula como (irpf.premios_rate * 08). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Nyeremény levonás. Számítás: (irpf.premios_rate * 08) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "ca": "Retencions premis",
@@ -289,7 +289,7 @@
         "08"
       ],
       "references_rules": [
-        "modelo_111.2025.retenciones_premios"
+        "modelo_111.2026.retenciones_premios"
       ],
       "required": false,
       "select_options": null,
@@ -376,16 +376,16 @@
       "definition_reviewed_at": "2026-05-01",
       "definition_reviewed_by": "human-codex",
       "formula": {
-        "expression": "(19% * 11)",
+        "expression": "(irpf.ganancias_arrendamiento_rate * 11)",
         "references_casillas": [
           "11"
         ]
       },
       "help": {
-        "ca": "Retencions ganancias patrimoniales. Es calcula com (19% * 11). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
-        "en": "Capital gains withholdings. Computed as (19% * 11). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
-        "es": "Retenciones ganancias patrimoniales. Se calcula como (19% * 11). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
-        "hu": "Vagyonnyereség levonás. Számítás: (19% * 11) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
+        "ca": "Retencions ganancias patrimoniales. Es calcula com (irpf.ganancias_arrendamiento_rate * 11). (Base legal: Llei, art. 99-101, BOE-A-2006-20764; Reglament, art. 100, BOE-A-2007-6820; Reglament, art. 99, BOE-A-2007-6820.)",
+        "en": "Capital gains withholdings. Computed as (irpf.ganancias_arrendamiento_rate * 11). (Legal basis: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "es": "Retenciones ganancias patrimoniales. Se calcula como (irpf.ganancias_arrendamiento_rate * 11). (Base legal: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)",
+        "hu": "Vagyonnyereség levonás. Számítás: (irpf.ganancias_arrendamiento_rate * 11) (Jogalap: Ley, art. 99-101, BOE-A-2006-20764; Reglamento, art. 100, BOE-A-2007-6820; Reglamento, art. 99, BOE-A-2007-6820.)"
       },
       "label": {
         "ca": "Retencions ganancias patrimoniales",
@@ -400,7 +400,7 @@
         "11"
       ],
       "references_rules": [
-        "modelo_111.2025.retenciones_ganancias_arrendamiento"
+        "modelo_111.2026.retenciones_ganancias_arrendamiento"
       ],
       "required": false,
       "select_options": null,
@@ -649,7 +649,7 @@
         "18"
       ],
       "references_rules": [
-        "modelo_111.2025.total_retenciones"
+        "modelo_111.2026.total_retenciones"
       ],
       "required": false,
       "select_options": null,
@@ -730,7 +730,7 @@
         "29"
       ],
       "references_rules": [
-        "modelo_111.2025.resultado_a_ingresar"
+        "modelo_111.2026.resultado_a_ingresar"
       ],
       "required": false,
       "select_options": null,
