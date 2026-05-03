@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core.i18n import Translatable
 from . import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
@@ -16,13 +17,14 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _message() -> dict[str, str]:
-    return {
+def _message() -> Translatable:
+    message: Translatable = {
         "es": "Falta el mes 2026-03 en el archivo importado.",
         "en": "Month 2026-03 is missing from the imported file.",
         "ca": "Falta el mes 2026-03 al fitxer importat.",
         "hu": "A 2026-03 hónap hiányzik az importált fájlból.",
     }
+    return message
 
 
 def test_kind_enum_carries_v6_canonical_values() -> None:

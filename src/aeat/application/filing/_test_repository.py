@@ -324,8 +324,16 @@ class TestMigrationLockedPerDraft:
     each save. A concurrent writer that holds the same per-draft lock
     must surface :class:`LockAcquisitionError`."""
 
-    def test_migration_blocked_by_held_per_draft_lock(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_migration_blocked_by_held_per_draft_lock(
+        self,
+        store_dir: Path,
+        tmp_path: Path,
+        fast_lock_acquire,
+    ) -> None:
         from ...adapters.persistence.storage import exclusive_file_lock
+        from ...domain.filing import _repository as _repo_module
+
+        fast_lock_acquire(_repo_module)
 
         legacy_dir = tmp_path / "legacy-drafts"
         legacy_dir.mkdir()

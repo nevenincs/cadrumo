@@ -200,7 +200,7 @@ ignore = [
   "S105",
   "S106"
 ]
-"src/aeat/adapters/persistence/storage/_test_master_key.py" = [
+"src/aeat/adapters/persistence/storage/master_key/_test_master_key.py" = [
   "S101",
   "S105",
   "S106"
@@ -222,6 +222,15 @@ ignore = [
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
 "src/aeat/domain/modelos/_cli.py" = ["B008"]
 "src/aeat/domain/portals/_cli.py" = ["B008"]
+# Curated multilingual label/help strings carry verbatim AEAT/BOE wordings
+# that are routinely longer than 120 chars; line-wrapping a translation
+# corrupts the text. The script's tail also prints a one-line summary
+# when invoked directly.
+"src/aeat/domain/casillas/_hydrate.py" = ["E501", "T201"]
+# Curated multilingual help strings carry the same verbatim long-line
+# constraint at the corpus-alignment-test level; the docstring also
+# reuses the BOE-glossary union character ∪.
+"src/aeat/domain/casillas/test_corpus_rule_alignment.py" = ["E501", "RUF002"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.

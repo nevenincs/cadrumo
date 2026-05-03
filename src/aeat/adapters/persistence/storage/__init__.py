@@ -47,6 +47,9 @@ from ....core.corpus_manifest import (
     CorpusEntry,
     CorpusManifest,
     CorpusManifestDiff,
+    CorpusManifestDriftError,
+    CorpusManifestError,
+    CorpusManifestTamperError,
     assert_corpus_clean,
     build_corpus_manifest,
     load_corpus_manifest,
@@ -55,6 +58,7 @@ from ....core.corpus_manifest import (
     verify_corpus_manifest,
 )
 from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.locks_errors import LockAcquisitionError
 from ....core.redaction import (
     default_rules,
     default_rules_for,
@@ -115,15 +119,11 @@ from .errors import (
     BlobIntegrityError,
     BlobNotFoundError,
     ClassificationError,
-    CorpusManifestDriftError,
-    CorpusManifestError,
-    CorpusManifestTamperError,
     DecryptionError,
     EncryptionError,
     EnvelopeVersionError,
     KeyDerivationError,
     KeyringUnavailableError,
-    LockAcquisitionError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,
     MasterKeyMaterialMissingError,

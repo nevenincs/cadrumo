@@ -1,0 +1,215 @@
+"""Unit tests for the typed declaration-calculate summary surface."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+import pytest
+
+from ...core.i18n import Translatable
+from ...domain.filing import (
+    FilingDraft,
+    FilingDraftStatus,
+    FilingFindingSeverity,
+    FilingValidationFinding,
+    FilingValue,
+    FilingValueKind,
+    compute_draft_id,
+)
+from . import (
+    DeclarationCalculateNextAction,
+    DeclarationCalculateSummary,
+    summarise_calculation,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _hint() -> Translatable:
+    hint: Translatable = {
+        "es": "Rellena la casilla 03 antes de continuar.",
+        "en": "Fill casilla 03 before continuing.",
+    }
+    return hint
+
+
+def _finding_message(code: str) -> Translatable:
+    message: Translatable = {
+        "es": f"Hallazgo {code}.",
+        "en": f"Finding {code}.",
+    }
+    return message
+
+
+def _make_draft(
+    *,
+    status: FilingDraftStatus,
+    findings: tuple[FilingValidationFinding, ...] = (),
+    modelo: str = "130",
+    period: str = "2026Q1",
+) -> FilingDraft:
+    values = (
+        FilingValue(
+            casilla_id="01",
+            value=None,
+            kind=FilingValueKind.EMPTY,
+            source="test",
+        ),
+    )
+    schema_version = "v1"
+    profile_tax_id = "12345678Z"
+    draft_id = compute_draft_id(
+        modelo=modelo,
+        period=period,
+        profile_tax_id=profile_tax_id,
+        schema_version=schema_version,
+        values=values,
+    )
+    return FilingDraft(
+        draft_id=draft_id,
+        modelo=modelo,
+        period=period,
+        profile_tax_id=profile_tax_id,
+        status=status,
+        values=values,
+        findings=findings,
+        created_at=datetime(2026, 5, 3, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 3, tzinfo=UTC),
+        schema_version=schema_version,
+    )
+
+
+def _finding(severity: FilingFindingSeverity, code: str) -> FilingValidationFinding:
+    return FilingValidationFinding(
+        casilla_id=None,
+        severity=severity,
+        code=code,
+        message=_finding_message(code),
+    )
+
+
+def test_next_action_enum_carries_v6_canonical_values() -> None:
+    assert {item.value for item in DeclarationCalculateNextAction} == {
+        "resolve-blockers",
+        "review",
+        "approve",
+        "export",
+        "refresh-approval",
+        "amend",
+    }
+
+
+def test_clean_validated_draft_routes_to_review() -> None:
+    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
+    summary = summarise_calculation(draft)
+    assert summary.next_action is DeclarationCalculateNextAction.REVIEW
+    assert summary.blocker_count == 0
+    assert summary.warning_count == 0
+    assert summary.info_count == 0
+
+
+def test_ready_to_submit_clean_draft_routes_to_approve() -> None:
+    draft = _make_draft(status=FilingDraftStatus.READY_TO_SUBMIT)
+    summary = summarise_calculation(draft)
+    assert summary.next_action is DeclarationCalculateNextAction.APPROVE
+
+
+def test_approved_draft_routes_to_export() -> None:
+    draft = _make_draft(status=FilingDraftStatus.APPROVED)
+    summary = summarise_calculation(draft)
+    assert summary.next_action is DeclarationCalculateNextAction.EXPORT
+
+
+def test_approval_stale_routes_to_refresh_approval() -> None:
+    draft = _make_draft(status=FilingDraftStatus.APPROVAL_STALE)
+    summary = summarise_calculation(draft)
+    assert summary.next_action is DeclarationCalculateNextAction.REFRESH_APPROVAL
+
+
+def test_submitted_status_routes_to_amend() -> None:
+    draft = _make_draft(status=FilingDraftStatus.SUBMITTED)
+    summary = summarise_calculation(draft)
+    assert summary.next_action is DeclarationCalculateNextAction.AMEND
+
+
+def test_any_status_with_error_routes_to_resolve_blockers() -> None:
+    draft = _make_draft(
+        status=FilingDraftStatus.APPROVED,
+        findings=(_finding(FilingFindingSeverity.ERROR, "casilla-required-missing"),),
+    )
+    summary = summarise_calculation(draft, repair_hints=(_hint(),))
+    assert summary.next_action is DeclarationCalculateNextAction.RESOLVE_BLOCKERS
+    assert summary.blocker_count == 1
+    assert summary.repair_hints == (_hint(),)
+
+
+def test_summary_counts_findings_by_severity() -> None:
+    draft = _make_draft(
+        status=FilingDraftStatus.VALIDATED,
+        findings=(
+            _finding(FilingFindingSeverity.INFO, "i-1"),
+            _finding(FilingFindingSeverity.WARNING, "w-1"),
+            _finding(FilingFindingSeverity.WARNING, "w-2"),
+        ),
+    )
+    summary = summarise_calculation(draft)
+    assert summary.info_count == 1
+    assert summary.warning_count == 2
+    assert summary.blocker_count == 0
+    assert summary.next_action is DeclarationCalculateNextAction.REVIEW
+
+
+def test_repair_hints_required_for_resolve_blockers() -> None:
+    draft = _make_draft(
+        status=FilingDraftStatus.VALIDATED,
+        findings=(_finding(FilingFindingSeverity.ERROR, "blocker"),),
+    )
+    with pytest.raises(ValueError):
+        summarise_calculation(draft, repair_hints=())
+
+
+def test_repair_hints_rejected_outside_resolve_blockers() -> None:
+    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
+    with pytest.raises(ValueError):
+        summarise_calculation(draft, repair_hints=(_hint(),))
+
+
+def test_summary_rejects_narrative_without_authoritative_spanish() -> None:
+    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
+    bad_narrative: Translatable = {"en": "missing es"}  # type: ignore[typeddict-item]
+    with pytest.raises(ValueError):
+        summarise_calculation(draft, narrative=bad_narrative)
+
+
+def test_summary_rejects_repair_hint_without_authoritative_spanish() -> None:
+    bad_hint: Translatable = {"en": "no spanish"}  # type: ignore[typeddict-item]
+    with pytest.raises(ValueError):
+        DeclarationCalculateSummary(
+            draft_id="d",
+            modelo="130",
+            period="2026Q1",
+            status=FilingDraftStatus.VALIDATED,
+            blocker_count=1,
+            warning_count=0,
+            info_count=0,
+            next_action=DeclarationCalculateNextAction.RESOLVE_BLOCKERS,
+            repair_hints=(bad_hint,),
+            narrative={
+                "es": "Falta la casilla 03.",
+                "en": "Casilla 03 is missing.",
+            },
+            calculated_at=datetime(2026, 5, 3, tzinfo=UTC),
+        )
+
+
+def test_summary_is_frozen() -> None:
+    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
+    summary = summarise_calculation(draft)
+    with pytest.raises(Exception):
+        summary.blocker_count = 99  # type: ignore[misc]
+
+
+def test_calculated_at_defaults_to_draft_updated_at() -> None:
+    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
+    summary = summarise_calculation(draft)
+    assert summary.calculated_at == draft.updated_at
