@@ -367,3 +367,16 @@ def test_declaration_cli_does_not_project_invoice_values_to_modelo_casillas() ->
     assert "iva.rate" not in common_source
     for assignment in ('inputs["01"]', 'inputs["04"]', 'inputs["07"]', 'inputs["29"]'):
         assert assignment not in common_source
+
+
+def test_declaracion_extractor_registry_does_not_import_model_specific_extractors() -> None:
+    source = _source("src/aeat/adapters/inbound/declaracion/_extractors/__init__.py")
+    extractor_package = importlib.import_module("aeat.adapters.inbound.declaracion._extractors")
+    assert "_REGISTERED_CLASSES" not in source
+    assert "_REGISTRY" not in source
+    assert "from .modelo_" not in source
+    assert "from .._parsers.modelo_100" not in source
+    assert not hasattr(extractor_package, "_REGISTERED_CLASSES")
+    get_extractor = _function_node(source, "get_extractor")
+    assert any(isinstance(stmt, ast.Raise) for stmt in get_extractor.body)
+    assert "legacy Python extractor registry is disabled" in source

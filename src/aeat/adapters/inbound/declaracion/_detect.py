@@ -3,7 +3,8 @@
 AEAT prints the form code + año + period in a header / footer stamp.
 ``detect_template_revision`` peeks at the first page text; returns
 ``None`` on ambiguity so the caller can fall back to explicit
-``--modelo --año`` flags.
+``--modelo --año`` flags. Detection resolves template identity only; the
+revision tag does not bind a Python extractor class.
 """
 
 from __future__ import annotations
@@ -18,8 +19,8 @@ _HEADER_MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*(?P<modelo>\d{3}[A-Z]?)", re.
 _HEADER_EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*(?P<ejercicio>\d{4})", re.IGNORECASE)
 # Real AEAT declaraciones print ``Aprobado por Orden HAC/{number}/{año}`` on
 # the footer; when present it pins the template revision precisely. Absent,
-# we fall back to a ``{ejercicio}.01`` MVP sentinel — the registry then
-# decides whether the sentinel is registered.
+# we fall back to a ``{ejercicio}.01`` sentinel. Extractor dispatch remains
+# fail-closed until validated registry snapshots own supported revisions.
 _ORDEN_HAC_RE = re.compile(
     r"Orden\s+HAC/\s*(?P<number>\d+)\s*/\s*(?P<año>\d{4})",
     re.IGNORECASE,
@@ -34,20 +35,21 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
 
     1. If the PDF prints an ``Orden HAC/N/YYYY`` footer, use
        ``"{año}.orden-{N}"``.
-    2. Else, if the detected modelo has a modelo-specific revision rule
+    2. Else, if the detected modelo has a modelo-specific revision tag rule
        (currently only Modelo 100 — IRPF annual), apply it.
     3. Else fall back to ``"{ejercicio}.01"``.
 
     Modelo 100 (IRPF) does not carry an ``Orden HAC`` stamp on the
     justificante PDF and publishes a stable per-year layout that we
     identify by ejercicio. We mint ``"2021.legacy"`` for the 2021
-    column-split layout and ``"{ejercicio}.modern"`` for 2022 onwards;
-    the extractor registry binds exactly one class per revision.
+    column-split layout and ``"{ejercicio}.modern"`` for 2022 onwards.
+    These tags describe the resolved template identity only; they do not
+    bind a legacy Python extractor class.
 
     The fallback is deliberately narrow: the registry refuses to resolve
     any revision it has not explicitly registered, so a spurious fallback
     produces a readable ``NoExtractorRegisteredError`` rather than a silent
-    mis-extraction.
+    mis-extraction because extractor dispatch is fail-closed.
 
     The ``Ejercicio`` stamp is searched across the first two pages of
     the header cluster — some Modelo 100 pre-2022 justificantes print
@@ -92,9 +94,9 @@ def _modelo_100_revision(año: int) -> str:
     Modelo 100 rendered its justificante in a 2-column header layout
     through tax year 2021 (``VALUE label VALUE2 label2``). The 2022
     Renta Web redesign inverted the shape to the modern ``label VALUE CID``
-    line-oriented form used today. The revision tag drives extractor
-    dispatch; see the 2021/2022+ extractors under
-    ``src/aeat/adapters/inbound/declaracion/_parsers/modelo_100/``.
+    line-oriented form used today. The revision tag is retained for
+    identity and diagnostics only; extractor dispatch is disabled until
+    validated registry snapshots provide the authority.
     """
     if año <= 2021:
         return "2021.legacy"

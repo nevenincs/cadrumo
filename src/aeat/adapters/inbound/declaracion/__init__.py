@@ -34,10 +34,12 @@ from ._schema import (
 
 
 def registered_extractors() -> tuple[type[DeclaracionExtractor], ...]:
-    """Return all concrete declaración extractor classes registered for dispatch."""
-    from ._extractors import _REGISTERED_CLASSES
+    """Reject legacy inspection of Python-registered extractor classes."""
 
-    return _REGISTERED_CLASSES
+    raise DeclaracionParseError(
+        "declaracion extractor registry inspection requires validated registry snapshots; "
+        "legacy Python extractor registry is disabled"
+    )
 
 
 __all__ = [

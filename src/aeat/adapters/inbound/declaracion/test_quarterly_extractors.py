@@ -156,42 +156,17 @@ class TestModelo115V2025Extractor:
 
 
 class TestRegistryKnowsNewExtractors:
-    """The extractor registry exposes every shipped modelo / year key."""
+    """The legacy extractor registry is no longer an authority."""
 
-    def test_registry_lists_all_shipped_modelos(self) -> None:
-        """Every shipped (modelo, año, revision) key is registered."""
-        from ._extractors import _REGISTRY
+    def test_registry_dispatch_requires_registry_snapshot(self) -> None:
+        """Extractor dispatch refuses legacy Python-registered model tables."""
+        from ._errors import NoExtractorRegisteredError
+        from ._extractors import get_extractor
+        from ._schema import TemplateRevision
 
-        keys = set(_REGISTRY.keys())
-        # Censo (header-only MVP).
-        assert ("036", 2025, "2025.01") in keys
-        assert ("037", 2025, "2025.01") in keys
-        # Core quarterly-cadence modelos.
-        assert ("111", 2025, "2025.01") in keys
-        assert ("115", 2025, "2025.01") in keys
-        assert ("123", 2024, "2024.01") in keys
-        assert ("123", 2025, "2025.01") in keys
-        assert ("123", 2026, "2026.01") in keys
-        assert ("130", 2024, "2024.01") in keys
-        assert ("130", 2025, "2025.01") in keys
-        assert ("130", 2026, "2026.01") in keys
-        assert ("131", 2025, "2025.01") in keys
-        assert ("200", 2025, "2025.01") in keys
-        assert ("202", 2025, "2025.01") in keys
-        assert ("232", 2025, "2025.01") in keys
-        assert ("303", 2025, "2025.01") in keys
-        # Modelo 303 post-HAC/819/2024 revision.
-        assert ("303", 2024, "2024.orden-819") in keys
-        # Annual informative filings.
-        assert ("180", 2025, "2025.01") in keys
-        assert ("190", 2025, "2025.01") in keys
-        assert ("193", 2025, "2025.01") in keys
-        assert ("347", 2025, "2025.01") in keys
-        assert ("349", 2025, "2025.01") in keys
-        assert ("369", 2025, "2025.01") in keys
-        assert ("390", 2025, "2025.01") in keys
-        assert ("720", 2025, "2025.01") in keys
-        assert ("840", 2025, "2025.01") in keys
+        revision = TemplateRevision(modelo="TEST", año=2026, revision="registry-test")
+        with pytest.raises(NoExtractorRegisteredError, match="validated registry snapshots"):
+            get_extractor(revision)
 
 
 _MODELO_180_LABELS = {
@@ -1033,30 +1008,11 @@ class TestHeaderOnlyExtractors:
     """
 
     def test_no_modelo_remains_unconditionally_header_only(self) -> None:
-        """Every :class:`GenericDeclaracionExtractor` subclass has a content primitive.
+        """Legacy header-only registry inspection is disabled."""
+        from . import DeclaracionParseError, registered_extractors
 
-        Modelo 130 and Modelo 303 (v2025) extend
-        :class:`DeclaracionExtractor` directly with their own bespoke
-        casilla sets — this sentinel targets the generic base only,
-        which is the MVP pattern for every other modelo.
-        """
-        from ._extractors import _REGISTRY
-        from ._generic_extractor import GenericDeclaracionExtractor
-
-        header_only: list[str] = []
-        for (modelo, _a, _r), cls in _REGISTRY.items():
-            if not issubclass(cls, GenericDeclaracionExtractor):
-                continue
-            decimal = getattr(cls, "casilla_ids", ())
-            text = getattr(cls, "text_casilla_ids", ())
-            named = getattr(cls, "named_field_patterns", {})
-            if not decimal and not text and not named:
-                header_only.append(modelo)
-        assert not header_only, (
-            f"These GenericDeclaracionExtractor subclasses still expose no "
-            f"content primitive: {header_only}. "
-            f"Add casilla_ids, text_casilla_ids, or named_field_patterns."
-        )
+        with pytest.raises(DeclaracionParseError, match="validated registry snapshots"):
+            registered_extractors()
 
     def test_header_only_missing_nif_raises(self, tmp_path: Path) -> None:
         """A PDF with no NIF raises :exc:`DeclaracionParseError` even for header-only modelos."""
