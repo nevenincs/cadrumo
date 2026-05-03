@@ -262,3 +262,51 @@ Cycle 4 progress on remaining gaps:
 * CLI-REDESIGN-004 (declaration export/verify) — OPEN.
 * CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED via
   the typed surface; orchestration use-case still OPEN.
+
+## Cycle 5 — 2026-05-03
+
+CLI-REDESIGN-004 | PARTIALLY-RESOLVED | MEDIUM | Typed export receipt + verify verdict landed in `aeat.application.filing`
+The v6 candidate's `aeat app declaration export --output PATH` and
+`aeat app declaration verify --file PATH` flows need a strict typed
+return value the CLI can render and persist. Cycle 5 ships the typed
+surface so the CLI renderers and tests can target a stable schema
+without waiting for the orchestration-layer wiring on top of the
+existing `aeat.adapters.outbound.aeat.export._formats` serialisers.
+
+`src/aeat/application/filing/_export.py` exposes a strict pydantic
+:class:`DeclarationExportResult` (draft id, modelo, period, format,
+output path, byte size, lowercase hex SHA-256 digest, exported-at
+timestamp, multilingual narrative) plus a
+:class:`DeclarationVerifyResult` (draft id, file path, closed
+:class:`DeclarationVerifyVerdict` of `match` / `drift` / `missing`,
+mismatched casillas tuple, optional digest, verified-at timestamp,
+multilingual narrative). :class:`DeclarationExportFormat` is a closed
+enum currently exposing `fichero-boe`; new on-disk wire formats land
+as additional values. Thirteen unit tests in `test_export.py` lock the
+enum vocabularies, the digest hex / case validators, the
+authoritative-Spanish narrative contract, the frozen-record invariant,
+and the rejection of blank or padded casilla identifiers.
+
+The orchestration use-cases that turn an approved
+:class:`aeat.domain.filing.FilingDraft` into a fichero-BOE payload on
+disk and then re-parse the file for the verify path are the next
+layer; they live on top of the adapter-level
+`aeat.adapters.outbound.aeat.export._formats.serialise` and
+`deserialise` primitives that already exist, plus a casilla-diff
+helper. None of that touches the CLI facade and all of it can land
+incrementally on top of the typed scaffold without breaking the CLI
+renderer contract.
+
+Cycle 5 progress on remaining gaps:
+* CLI-REDESIGN-001 (ledger schema) — OPEN.
+* CLI-REDESIGN-002 (invoice schema) — OPEN.
+* CLI-REDESIGN-003 (profile registry) — PARTIALLY-RESOLVED on the
+  domain side from cycle 3; CLI migration still OPEN.
+* CLI-REDESIGN-004 (declaration export/verify) — PARTIALLY-RESOLVED
+  via the typed surface; orchestration use-case still OPEN.
+* CLI-REDESIGN-005 (import diagnostics) — PARTIALLY-RESOLVED via
+  the typed surface from cycle 4; orchestration use-case still OPEN.
+
+Backend full sweep at cycle close: 3774 passed, 5 skipped
+(`src/aeat/domain` + `src/aeat/application` + `src/aeat/core`,
+`-m "not live"`).
