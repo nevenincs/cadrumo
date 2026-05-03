@@ -174,6 +174,19 @@ def test_filing_validator_does_not_own_model_specific_calculation_truth() -> Non
     assert "filing-303-internal-mismatch" not in source
 
 
+def test_complementaria_builder_does_not_own_legacy_amendment_truth() -> None:
+    source = _source("src/aeat/application/filing/_complementaria.py")
+    builder = _function_node(source, "build_complementaria")
+    assert any(isinstance(stmt, ast.Raise) for stmt in builder.body)
+    assert "legacy Python amendment anchors are disabled" in source
+    assert "_liability_anchor" not in source
+    assert "_period_uses_rectificativa" not in source
+    assert "_validate_complementaria_liability" not in source
+    assert 'modelo == "130"' not in source
+    assert 'modelo == "303"' not in source
+    assert 'modelo == "390"' not in source
+
+
 def test_application_verification_cannot_import_legacy_formula_engine() -> None:
     source = _source("src/aeat/application/verification/_verify.py")
     assert "domain.formulas" not in source
