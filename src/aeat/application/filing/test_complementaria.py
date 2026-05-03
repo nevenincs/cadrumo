@@ -10,7 +10,6 @@ import pytest
 
 from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import (
-    QUARTERLY_303_INPUT_KEY,
     FilingAmendmentError,
     FilingBuilderError,
     FilingDraft,
@@ -140,12 +139,11 @@ class TestBuildComplementaria:
         original_draft = _draft("390", "2024", {"109": Decimal("8400.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-390")
-        quarterly = tuple(_draft("303", f"2024Q{quarter}", {"09": Decimal("2100.00")}) for quarter in (1, 2, 3, 4))
 
         with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
             build_complementaria(
                 original,
-                {"01": 2024, QUARTERLY_303_INPUT_KEY: quarterly},
+                {"01": 2024},
                 schema_provider=default_schema_provider(),
             )
         assert not (tmp_path / "submissions" / "amendments").exists()

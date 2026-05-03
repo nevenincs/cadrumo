@@ -101,13 +101,35 @@ def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -
 
 def test_application_build_draft_cannot_dispatch_legacy_builders() -> None:
     source = _source("src/aeat/application/filing/__init__.py")
+    filing_package = importlib.import_module("aeat.application.filing")
     assert "get_builder" not in source
     assert "Modelo130Builder" not in source
     assert "Modelo303Builder" not in source
     assert "Modelo390Builder" not in source
+    assert "QUARTERLY_303_INPUT_KEY" not in source
+    assert not hasattr(filing_package, "QUARTERLY_303_INPUT_KEY")
     builder = _function_node(source, "build_draft")
     assert any(isinstance(stmt, ast.Raise) for stmt in builder.body)
     assert "legacy Python filing builders are disabled" in source
+
+
+def test_domain_filing_package_does_not_export_legacy_builders() -> None:
+    source = _source("src/aeat/domain/filing/__init__.py")
+    filing_package = importlib.import_module("aeat.domain.filing")
+    assert "from ._builders import" not in source
+    assert "get_builder" not in source
+    assert "Modelo130Builder" not in source
+    assert "Modelo303Builder" not in source
+    assert "Modelo390Builder" not in source
+    for name in (
+        "get_builder",
+        "Modelo130Builder",
+        "Modelo303Builder",
+        "Modelo390Builder",
+        "QUARTERLY_303_INPUT_KEY",
+    ):
+        assert not hasattr(filing_package, name)
+        assert name not in filing_package.__all__
 
 
 def test_application_testing_helpers_do_not_import_builder_static_schemas() -> None:
