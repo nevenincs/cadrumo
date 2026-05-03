@@ -100,6 +100,12 @@ from ...domain.filing import (
     make_amendment_id,
 )
 from ._complementaria import build_complementaria, list_amendments, load_amendment
+from ._export import (
+    DeclarationExportFormat,
+    DeclarationExportResult,
+    DeclarationVerifyResult,
+    DeclarationVerifyVerdict,
+)
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
     FilingApprovalStaleReason,
@@ -298,6 +304,10 @@ __all__ = [
     "CasillaSchemaProvider",
     "DeadlineChecker",
     "DeadlineStatus",
+    "DeclarationExportFormat",
+    "DeclarationExportResult",
+    "DeclarationVerifyResult",
+    "DeclarationVerifyVerdict",
     "FilingAmendment",
     "FilingAmendmentError",
     "FilingAmendmentValidationError",
