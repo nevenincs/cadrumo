@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from ...core.config import PROJECT_ROOT
-from ..formulas._registry import RulesetRegistry, get_registry
 from . import load_casillas
 from .models import CasillaCatalogue
 
@@ -45,9 +44,3 @@ def corpus_catalogues(
         modelo, period = _modelo_period_for(path)
         rows.append((path, modelo, period, load_casillas(modelo, period)))
     return tuple(rows)
-
-
-@pytest.fixture(scope="session")
-def engine_registry() -> RulesetRegistry:
-    """The engine ruleset registry, built exactly once per session."""
-    return get_registry()

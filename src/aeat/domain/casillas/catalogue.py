@@ -15,7 +15,6 @@ can surface every problem in a single batch.
 from __future__ import annotations
 
 import json
-import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -219,87 +218,32 @@ def load_casillas(modelo: str, period: str, root: Path | None = None) -> Casilla
 
 
 def save_casillas(catalogue: CasillaCatalogue, root: Path | None = None) -> None:
-    """Persist a catalogue to its canonical JSON path.
-
-    Args:
-        catalogue: Catalogue to persist.
-        root: Optional corpus root override.
-
-    Raises:
-        CasillaParseError: If the catalogue fails verification.
-    """
-    errors = verify_casillas(catalogue)
-    if errors:
-        path = catalogue_path(catalogue.modelo, catalogue.period, root=root)
-        summary = "; ".join(str(error) for error in errors)
-        raise CasillaParseError(path, summary)
+    """Reject legacy casilla-corpus writes."""
 
     path = catalogue_path(catalogue.modelo, catalogue.period, root=root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = catalogue.model_dump(mode="json")
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
-    _log.debug("saved casilla catalogue to %s", path)
+    raise CasillaParseError(path, "casilla catalogue writes are disabled; migrate definitions through registry/aeat")
 
 
 def write_extract_draft(catalogue: CasillaCatalogue) -> Path:
-    """Write a draft extraction payload to a temporary JSON file.
+    """Reject legacy extraction draft writes."""
 
-    Args:
-        catalogue: Draft catalogue produced by an extraction pipeline.
-
-    Returns:
-        Path to the temporary JSON file.
-    """
     return _write_temp_catalogue(catalogue, suffix="extract")
 
 
 def write_translate_draft(catalogue: CasillaCatalogue) -> Path:
-    """Write a draft translation payload to a temporary JSON file.
+    """Reject legacy translation draft writes."""
 
-    Args:
-        catalogue: Draft catalogue produced by a translation pipeline.
-
-    Returns:
-        Path to the temporary JSON file.
-    """
     return _write_temp_catalogue(catalogue, suffix="translate")
 
 
 def _write_temp_catalogue(catalogue: CasillaCatalogue, *, suffix: str) -> Path:
-    """Persist a catalogue to a named temporary JSON file.
+    """Reject legacy temporary draft writes."""
 
-    Internal helper shared by the ``extract`` and ``translate`` draft
-    writers. Cleans up the partial file when serialisation fails so
-    the temp directory does not accumulate half-written drafts.
-    """
-    prefix = f"aeat-casillas-{catalogue.modelo.lower()}-{catalogue.period}-{suffix}-"
-    draft_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            suffix=".json",
-            prefix=prefix,
-            delete=False,
-        ) as handle:
-            draft_path = Path(handle.name)
-            json.dump(catalogue.model_dump(mode="json"), handle, indent=2, sort_keys=True, ensure_ascii=False)
-            handle.write("\n")
-    except (OSError, ValueError, TypeError):
-        if draft_path is not None:
-            _log.warning(
-                "draft serialisation failed for %s/%s suffix=%s; removing partial file %s",
-                catalogue.modelo,
-                catalogue.period,
-                suffix,
-                draft_path,
-                exc_info=True,
-            )
-            draft_path.unlink(missing_ok=True)
-        raise
-    assert draft_path is not None
-    _log.debug("wrote casilla draft file to %s", draft_path)
-    return draft_path
+    path = catalogue_path(catalogue.modelo, catalogue.period)
+    raise CasillaParseError(
+        path,
+        f"casilla {suffix} draft writes are disabled; migrate definitions through registry/aeat",
+    )
 
 
 def attach_draft_provenance(

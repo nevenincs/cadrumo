@@ -14,9 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.formulas import ValuationMethod
 from ....domain.profile.errors import InventoryLedgerError
-from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer
+from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
 from .inventory import load_inventory, record_movement, save_inventory
 

@@ -8,11 +8,11 @@ personal local state needed to parameterize RENTA verification.
 from __future__ import annotations
 
 from datetime import date
+from enum import StrEnum
 from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..formulas import CCAA
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
 from ._keys import (
     PROFILE_KEYS,
@@ -22,6 +22,27 @@ from ._keys import (
     optional_profile_keys,
     required_profile_keys,
 )
+
+
+class CCAA(StrEnum):
+    """Ordinary common-regime autonomous communities for residence profile data."""
+
+    ANDALUCIA = "andalucia"
+    ARAGON = "aragon"
+    ASTURIAS = "asturias"
+    BALEARES = "baleares"
+    CANARIAS = "canarias"
+    CANTABRIA = "cantabria"
+    CASTILLA_LA_MANCHA = "castilla_la_mancha"
+    CASTILLA_Y_LEON = "castilla_y_leon"
+    CATALUNA = "cataluna"
+    COMUNIDAD_VALENCIANA = "comunidad_valenciana"
+    EXTREMADURA = "extremadura"
+    GALICIA = "galicia"
+    LA_RIOJA = "la_rioja"
+    MADRID = "madrid"
+    MURCIA = "murcia"
+
 
 _FORAL_ALIASES = frozenset(
     {
@@ -124,10 +145,16 @@ def _normalize_region_token(raw: str) -> str:
 
 __all__ = [
     "CCAA",
+    "PROFILE_KEYS",
     "ForalRegimeError",
     "KentTaxResidence",
+    "ProfileKey",
+    "ProfileKeyRequirement",
     "ProfileNotConfiguredError",
     "ResidenceChange",
     "TaxResidenceProfileError",
+    "get_profile_key",
+    "optional_profile_keys",
     "parse_tax_region",
+    "required_profile_keys",
 ]

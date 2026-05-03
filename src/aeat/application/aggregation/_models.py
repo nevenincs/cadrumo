@@ -13,6 +13,7 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Any, Self
 
@@ -20,11 +21,21 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_seriali
 
 from ...domain.casillas import PeriodType
 from ...domain.deadlines import PeriodKind
-from ...domain.formulas._codes import Quarter
 from ._errors import AggregationPeriodError, t
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
+
+
+class Quarter(StrEnum):
+    """Calendar quarter token used by aggregation period parsing."""
+
+    Q1 = "Q1"
+    Q2 = "Q2"
+    Q3 = "Q3"
+    Q4 = "Q4"
+
+
 _QUARTER_MONTHS: dict[Quarter, tuple[int, int]] = {
     Quarter.Q1: (1, 3),
     Quarter.Q2: (4, 6),
@@ -43,8 +54,7 @@ class Period(BaseModel):
     Attributes:
         raw: Original string token after normalisation.
         year: Calendar year, inclusive [1990, 2100].
-        quarter: Optional :class:`aeat.domain.formulas._codes.Quarter`
-            for quarterly periods.
+        quarter: Optional quarter for quarterly periods.
         month: Optional 1-based month for monthly periods.
         kind: The :class:`aeat.domain.deadlines.PeriodKind` discriminator.
     """
@@ -243,4 +253,5 @@ __all__ = [
     "CasillaProvenance",
     "Period",
     "PeriodKind",
+    "Quarter",
 ]

@@ -35,8 +35,6 @@ from aeat.application.workflow import FinancialThenJsonInputsProvider, JsonFileI
 from aeat.domain.categories import CATEGORY_PROFILES_2025, SpendingCategory
 from aeat.domain.deadlines import AutonomoProfile, IVARegime
 from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
-from aeat.domain.formulas import Engine, FiscalPeriod, Quarter, get_registry
-from aeat.domain.modelos import ModeloCode
 from aeat.domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -227,17 +225,10 @@ def test_modelo_130_aggregation_produces_inputs_and_provenance(tmp_path: Path) -
     ]
 
 
-def test_aggregation_outputs_feed_formula_engine(tmp_path: Path) -> None:
-    aggregation = aggregate_catalogue(_classified_catalogue(tmp_path), modelo=ModeloCode.MODELO_130, period="2025Q1")
-    ruleset = get_registry().resolve(
-        modelo=ModeloCode.MODELO_130,
-        period=FiscalPeriod(year=2025, quarter=Quarter.Q1),
-    )
+def test_aggregation_outputs_stop_at_registry_boundary(tmp_path: Path) -> None:
+    aggregation = aggregate_catalogue(_classified_catalogue(tmp_path), modelo="130", period="2025Q1")
 
-    ledger = Engine().derive(ruleset=ruleset, inputs=aggregation.casilla_values)
-
-    assert ledger.value("03") == Decimal("770.0000")
-    assert ledger.value("04") == Decimal("154.000000")
+    assert aggregation.casilla_values == {"01": Decimal("1000.00"), "02": Decimal("230.0000")}
 
 
 def test_mixed_transaction_multiplies_business_pct_and_profile_ratio(tmp_path: Path) -> None:

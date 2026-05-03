@@ -1,48 +1,71 @@
 from pathlib import Path
 
-from ..models import CasillaCatalogue
-from .data import (
-    M190_CASILLAS,
-    M193_CASILLAS,
-    M232_CASILLAS,
-    M347_CASILLAS,
-    M349_CASILLAS,
-    M369_CASILLAS,
-    M720_CASILLAS,
-    M840_CASILLAS,
+from ...modelos import ModeloCode, get_modelo
+from ..models import CasillaCatalogue, CasillaRecord
+
+_IRPF_MANUAL_URL = (
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-{year}.html"
 )
-from .metadata import _source_url_for as _source_url_for
-from .records import (
-    CasillaRecord,
-    _hydrate_censal,
-    _hydrate_from_rulesets,
-    _hydrate_manual,
-    _hydrate_modelo_111,
+_IVA_MANUAL_URL = (
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/iva-{year}.html"
 )
+_SOCIEDADES_MANUAL_URL = (
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/"
+    "sociedades-{year}.html"
+)
+_CATEGORY_MANUAL_URL = {
+    "irpf": _IRPF_MANUAL_URL,
+    "iva": _IVA_MANUAL_URL,
+    "retenciones": _IRPF_MANUAL_URL,
+    "sociedades": _SOCIEDADES_MANUAL_URL,
+}
+_INFORMATIVA_MANUAL_OVERRIDES = {
+    "232": _SOCIEDADES_MANUAL_URL,
+    "347": _IVA_MANUAL_URL,
+    "349": _IVA_MANUAL_URL,
+}
+
+
+def _upstream_modelos(modelo: str) -> tuple[str, ...]:
+    upstream: list[str] = []
+    for code in ModeloCode:
+        meta = get_modelo(code.value)
+        if meta.caps_into is not None and meta.caps_into.value == modelo:
+            upstream.append(code.value)
+    return tuple(sorted(upstream))
+
+
+def _source_url_for(modelo: str, year: int) -> str:
+    """Return the reviewed source URL formerly used by hydrate alignment tests."""
+    meta = get_modelo(modelo)
+    template = _CATEGORY_MANUAL_URL.get(meta.category.value)
+    if template is not None:
+        return template.format(year=year)
+    if meta.category.value == "informativa":
+        for upstream_code in _upstream_modelos(modelo):
+            upstream_meta = get_modelo(upstream_code)
+            upstream_template = _CATEGORY_MANUAL_URL.get(upstream_meta.category.value)
+            if upstream_template is not None:
+                return upstream_template.format(year=year)
+        if meta.caps_into is not None:
+            downstream_meta = get_modelo(meta.caps_into.value)
+            downstream_template = _CATEGORY_MANUAL_URL.get(downstream_meta.category.value)
+            if downstream_template is not None:
+                return downstream_template.format(year=year)
+        override = _INFORMATIVA_MANUAL_OVERRIDES.get(modelo)
+        if override is not None:
+            return override.format(year=year)
+    for citation in meta.legal_basis:
+        url = getattr(citation, "url", None)
+        if url is not None:
+            return str(url).split("#", 1)[0]
+    return _IRPF_MANUAL_URL.format(year=year)
 
 
 def hydrate_catalogue(modelo: str, year: int) -> list[CasillaRecord]:
-    if modelo in {"036", "037"}:
-        return _hydrate_censal(modelo, year)
-    if modelo == "111":
-        return _hydrate_modelo_111(year)
-    if modelo == "232":
-        return _hydrate_manual(modelo, year, M232_CASILLAS)
-    if modelo == "369":
-        return _hydrate_manual(modelo, year, M369_CASILLAS, period_id="1T")
-    if modelo == "720":
-        return _hydrate_manual(modelo, year, M720_CASILLAS)
-    if modelo == "190":
-        return _hydrate_manual(modelo, year, M190_CASILLAS)
-    if modelo == "193":
-        return _hydrate_manual(modelo, year, M193_CASILLAS)
-    if modelo == "347":
-        return _hydrate_manual(modelo, year, M347_CASILLAS)
-    if modelo == "349":
-        return _hydrate_manual(modelo, year, M349_CASILLAS, period_id="1M")
-    if modelo == "840":
-        return _hydrate_manual(modelo, year, M840_CASILLAS)
-    return _hydrate_from_rulesets(modelo, year)
+    """Reject legacy casilla projection from rulesets/manual tables."""
+
+    raise ValueError(f"casilla hydrate is disabled for modelo {modelo} year {year}; use registry/aeat")
 
 
 def materialize_catalogues(

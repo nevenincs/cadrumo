@@ -8,7 +8,7 @@ explicitly via :class:`aeat.domain.profile.errors.LIFOForbiddenError`.
 
 Public functions:
     :func:`parse_valuation_method` — coerce user input into a
-    :class:`aeat.domain.formulas.ValuationMethod`, refusing LIFO.
+    :class:`ValuationMethod`, refusing LIFO.
     :func:`compute_inventory_valuation` — value closing stock and
     COGS for one ledger.
     :func:`compute_inventory_variation` — signed Anexo D ``0155``
@@ -25,7 +25,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...formulas import ValuationMethod
 from ..errors import InventoryLedgerError, LIFOForbiddenError
 
 SCHEMA_VERSION = "1"
@@ -52,6 +51,14 @@ class MovementKind(StrEnum):
     PURCHASE = "purchase"
     COGS = "cogs"
     COUNT = "count"
+
+
+class ValuationMethod(StrEnum):
+    """Supported inventory valuation methods."""
+
+    FIFO = "fifo"
+    PMP = "pmp"
+    COSTE_MEDIO = "coste_medio"
 
 
 class MovementRecord(BaseModel):
@@ -153,8 +160,7 @@ class InventoryLedger(BaseModel):
     Attributes:
         actividad_id: Activity identifier the ledger is keyed by.
         year: Calendar year the ledger covers.
-        valuation_method: :class:`aeat.domain.formulas.ValuationMethod`
-            (FIFO, PMP, or coste medio; LIFO is forbidden).
+        valuation_method: FIFO, PMP, or coste medio; LIFO is forbidden.
         opening_stock: Aggregate VAT-exclusive opening valuation.
         opening_layers: Per-layer breakdown of opening stock; when
             non-empty must value-balance with ``opening_stock``.
@@ -221,7 +227,7 @@ def parse_valuation_method(raw: str) -> ValuationMethod:
         raw: User input (case- and separator-insensitive).
 
     Returns:
-        The matching :class:`aeat.domain.formulas.ValuationMethod` member.
+        The matching :class:`ValuationMethod` member.
 
     Raises:
         LIFOForbiddenError: When the input normalises to ``"lifo"``.
@@ -499,6 +505,7 @@ __all__ = [
     "MovementKind",
     "MovementRecord",
     "StockLayer",
+    "ValuationMethod",
     "compute_anexo_d_inventory_variation",
     "compute_inventory_valuation",
     "compute_inventory_variation",

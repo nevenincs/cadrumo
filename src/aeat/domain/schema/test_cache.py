@@ -93,10 +93,18 @@ def test_resolve_schema_cache_file_rejects_dirty_ref(tmp_path: Path) -> None:
         resolve_schema_cache_file(ModeloCode.MODELO_130, "../etc/passwd", tmp_path)
 
 
-def test_cache_round_trip(tmp_path: Path) -> None:
+def test_cache_write_is_disabled(tmp_path: Path) -> None:
     modelo = _make_modelo()
-    written = save_modelo_to_cache(modelo, root=tmp_path, boe_ref="BOE-A-SYNTHETIC")
-    assert written.exists()
+    with pytest.raises(SchemaCacheError, match="registry/aeat"):
+        save_modelo_to_cache(modelo, root=tmp_path, boe_ref="BOE-A-SYNTHETIC")
+    assert not list(tmp_path.rglob("*.json"))
+
+
+def test_cache_read_round_trip(tmp_path: Path) -> None:
+    modelo = _make_modelo()
+    path = resolve_schema_cache_file(ModeloCode.MODELO_130, "BOE-A-SYNTHETIC", tmp_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(modelo.model_dump_json(by_alias=True), encoding="utf-8")
     restored = load_modelo_from_cache(ModeloCode.MODELO_130, "BOE-A-SYNTHETIC", tmp_path)
     assert restored == modelo
 

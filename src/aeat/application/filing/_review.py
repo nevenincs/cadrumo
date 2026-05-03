@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -20,7 +19,6 @@ from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
-from ...core.errors import AmbiguousPeriodError
 from ...core.logging import get_logger
 from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
 from ...domain.filing import (
@@ -31,12 +29,9 @@ from ...domain.filing import (
     FilingDraftStatus,
     derive_validation_status,
 )
-from ...domain.formulas import FiscalPeriod, MissingRulesetError, Quarter, get_registry
-from ...domain.modelos import ModeloCode
 from ...domain.transactions import Transaction, TransactionCatalogue
 
 _logger = get_logger(__name__)
-_PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:Q(?P<quarter>[1-4]))?$")
 _REVIEW_STATUSES = frozenset(
     {
         FilingDraftStatus.APPROVED,
@@ -558,30 +553,8 @@ def _schema_formula_fingerprint(
 
 
 def _resolve_ruleset_id(modelo: str, period: str) -> str:
-    fiscal_period = _parse_fiscal_period(period)
-    if fiscal_period is None:
-        return "unresolved-period"
-    try:
-        modelo_code = ModeloCode(modelo)
-    except ValueError:
-        return "unregistered-modelo"
-    registry = get_registry()
-    try:
-        return registry.resolve(modelo=modelo_code, period=fiscal_period).ruleset_id
-    except MissingRulesetError:
-        return "no-ruleset"
-    except AmbiguousPeriodError:
-        _logger.warning("unexpected error resolving ruleset modelo=%s period=%s", modelo, period, exc_info=True)
-        return "unresolved-ruleset"
-
-
-def _parse_fiscal_period(period: str) -> FiscalPeriod | None:
-    match = _PERIOD_RE.fullmatch(period)
-    if match is None:
-        return None
-    quarter_raw = match.group("quarter")
-    quarter = Quarter(f"Q{quarter_raw}") if quarter_raw is not None else None
-    return FiscalPeriod(year=int(match.group("year")), quarter=quarter)
+    _ = (modelo, period)
+    raise FilingDraftError("approval basis requires a validated registry snapshot; legacy rulesets are disabled")
 
 
 def _sha256_payload(payload: object) -> str:

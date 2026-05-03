@@ -136,9 +136,14 @@ def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None
     """Older payloads that omit optional fields must still round-trip cleanly."""
     root = tmp_path / "casillas"
     catalogue = CasillaCatalogue(modelo="MODELO_130", period="2025Q4", records=(_record(),))
-    save_casillas(catalogue, root=root)
+    path = root / "modelo_130" / "2025Q4.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(catalogue.model_dump(mode="json"), indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
     reloaded = load_casillas("MODELO_130", "2025Q4", root=root)
-    payload = (root / "modelo_130" / "2025Q4.json").read_text(encoding="utf-8")
+    payload = path.read_text(encoding="utf-8")
 
     assert reloaded == catalogue
     assert reloaded.records[0].llm_draft_provenance is None
@@ -146,6 +151,13 @@ def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None
     assert '"definition_reviewed_at"' in payload
     assert '"reviewed_by"' not in payload
     assert '"reviewed_at"' not in payload
+
+
+def test_save_casillas_is_disabled(tmp_path: Path) -> None:
+    catalogue = CasillaCatalogue(modelo="MODELO_130", period="2025Q4", records=(_record(),))
+    with pytest.raises(CasillaParseError, match="registry/aeat"):
+        save_casillas(catalogue, root=tmp_path)
+    assert not list(tmp_path.rglob("*.json"))
 
 
 def test_llm_provenance_is_optional_but_strict() -> None:

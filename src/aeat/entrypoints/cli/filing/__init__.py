@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Annotated, cast
 
 import typer
-from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
@@ -45,8 +44,7 @@ from ....application.filing import (
 )
 from ....application.filing.runtime import build_runtime_schema_provider, load_default_filing_profile
 from ....core.config import load_settings
-from ....core.errors import AmbiguousPeriodError, MissingRulesetError
-from ....core.i18n import Language, Translatable, get_translation
+from ....core.i18n import get_translation
 from ....core.logging import get_logger
 from ....domain.justificante import JustificanteError
 from ....domain.submission import SubmissionEngine
@@ -910,32 +908,10 @@ def _resolve_ruleset_for_filing(
     filing_period: str,
     filing_ejercicio: str,
 ):
-    """Resolve the ruleset for the filing's (modelo, period). None when absent."""
-    from ....domain.formulas import FiscalPeriod, Quarter, get_registry
-    from ....domain.modelos import ModeloCode
+    """Reject legacy ruleset resolution from the CLI import path."""
 
-    try:
-        modelo_code = ModeloCode(filing_modelo)
-    except (KeyError, ValueError):
-        return None
-
-    quarter = None
-    quarter_token = filing_period[4:] if len(filing_period) >= 6 else ""
-    if quarter_token.startswith("Q") and len(quarter_token) == 2 and quarter_token[1].isdigit():
-        try:
-            quarter = Quarter(f"Q{int(quarter_token[1])}")
-        except (KeyError, ValueError):
-            quarter = None
-
-    try:
-        period_obj = FiscalPeriod(year=int(filing_ejercicio), quarter=quarter)
-    except (ValueError, ValidationError):
-        return None
-
-    try:
-        return get_registry().resolve(modelo=modelo_code, period=period_obj)
-    except (MissingRulesetError, AmbiguousPeriodError):
-        return None
+    _ = (filing_modelo, filing_period, filing_ejercicio)
+    return None
 
 
 def _handle_borrador_import(
@@ -943,197 +919,10 @@ def _handle_borrador_import(
     *,
     año: int | None,
 ) -> None:
-    """Dispatch the Modelo 100 (Renta) import path."""
-    from ....adapters.inbound.borrador import BorradorParseError, parse_borrador
-    from ....adapters.inbound.borrador._tarifa import validate_tarifa_estatal
-    from ....adapters.persistence.profile import require_tax_residence
-    from ....domain.formulas import MODELO_100_SUMMARY_2025, compute_cuota_autonomica_general
+    """Reject Renta import verification until registry snapshots exist."""
 
-    residence = require_tax_residence()
-
-    try:
-        filing = parse_borrador(from_borrador, año_override=año)
-    except BorradorParseError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    typer.echo(
-        _msg(
-            _t(
-                f"Modelo 100 Renta {filing.ejercicio} procesado "
-                f"({filing.artefact_kind.value}). "
-                f"{len(filing.values)} casillas del bloque resumen extraídas.",
-                f"Parsed Modelo 100 Renta {filing.ejercicio} "
-                f"({filing.artefact_kind.value}). "
-                f"{len(filing.values)} summary-block casillas extracted.",
-                f"Modelo 100 Renta {filing.ejercicio} processat "
-                f"({filing.artefact_kind.value}). "
-                f"{len(filing.values)} caselles del bloc resum extretes.",
-                f"Modelo 100 Renta {filing.ejercicio} feldolgozva "
-                f"({filing.artefact_kind.value}). "
-                f"{len(filing.values)} osszegzo blokk rovat kinyerve.",
-            )
-        )
-    )
-    if filing.csv is not None:
-        typer.echo(f"CSV: {filing.csv}")
-    typer.echo(
-        _msg(
-            _t(
-                f"CCAA de residencia fiscal: {residence.ccaa.value}",
-                f"Tax residence CCAA: {residence.ccaa.value}",
-                f"CCAA de residència fiscal: {residence.ccaa.value}",
-                f"Adoilletosegi CCAA: {residence.ccaa.value}",
-            )
-        )
-    )
-
-    # Verify against the partial summary ruleset.
-    from ....domain.formulas import Engine
-
-    provided: dict[str, Decimal] = {
-        v.casilla_id: v.printed_value for v in filing.values if isinstance(v.printed_value, Decimal)
-    }
-    engine = Engine()
-    report = engine.audit_against(
-        ruleset=MODELO_100_SUMMARY_2025,
-        provided=provided,
-        tolerance=Decimal("0.01"),
-    )
-    ruleset_clean = report.is_clean()
-    ruleset_id = MODELO_100_SUMMARY_2025.ruleset_id
-    if ruleset_clean:
-        typer.echo(
-            _msg(
-                _t(
-                    f"Estado de verificación: VERIFIED (ruleset={ruleset_id})",
-                    f"Verification status: VERIFIED (ruleset={ruleset_id})",
-                    f"Estat de verificació: VERIFIED (ruleset={ruleset_id})",
-                    f"Verifikalas allapota: VERIFIED (ruleset={ruleset_id})",
-                )
-            )
-        )
-    else:
-        n = len(report.discrepancies)
-        typer.echo(
-            _msg(
-                _t(
-                    f"Estado de verificación: NEEDS_REVIEW — {n} discrepancias",
-                    f"Verification status: NEEDS_REVIEW — {n} discrepancies",
-                    f"Estat de verificació: NEEDS_REVIEW — {n} discrepàncies",
-                    f"Verifikalas allapota: NEEDS_REVIEW — {n} elteres",
-                )
-            )
-        )
-        casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
-        expected_label = _msg(_t("esperado", "expected", "esperat", "várható"))
-        actual_label = _msg(_t("real", "actual", "real", "tényleges"))
-        for d in report.discrepancies:
-            typer.echo(
-                f"  - {casilla_label} {d.casilla_id}: "
-                f"{expected_label} {d.computed_value}, {actual_label} {d.user_value}, delta {d.delta}"
-            )
-
-    # Tarifa progresiva estatal post-validator — checks that the extracted
-    # cuota íntegra estatal (0550, 0560) matches the tarifa-derived value
-    # when the corresponding base liquidable casilla (0545, 0555) is present.
-    tarifa_ejercicio = filing.ejercicio
-    tarifa_ejercicio_int = int(filing.ejercicio)
-    try:
-        tarifa_findings = validate_tarifa_estatal(
-            ejercicio=tarifa_ejercicio,
-            base_liquidable_general=provided.get("0545"),
-            base_liquidable_ahorro=provided.get("0555"),
-            cuota_estatal_general=provided.get("0550"),
-            cuota_estatal_ahorro=provided.get("0560"),
-        )
-    except ValueError as exc:
-        typer.echo(
-            _msg(
-                _t(
-                    f"Tarifa progresiva: omitida ({exc})",
-                    f"Tarifa progresiva: skipped ({exc})",
-                    f"Tarifa progressiva: omesa ({exc})",
-                    f"Progressziv tarifa: kihagyva ({exc})",
-                )
-            )
-        )
-        tarifa_findings = ()
-
-    if tarifa_findings:
-        n = len(tarifa_findings)
-        typer.echo(
-            _msg(
-                _t(
-                    f"Tarifa progresiva: {n} discrepancias frente a la escala IRPF estatal {tarifa_ejercicio}",
-                    f"Tarifa progresiva: {n} discrepancies vs. IRPF estatal scale {tarifa_ejercicio}",
-                    f"Tarifa progressiva: {n} discrepàncies enfront de l'escala IRPF estatal {tarifa_ejercicio}",
-                    f"Progressziv tarifa: {n} elteres az allami IRPF skalahoz {tarifa_ejercicio} kepest",
-                )
-            )
-        )
-        casilla_label = _msg(_t("casilla", "casilla", "casella", "rovat"))
-        from_base_label = _msg(_t("desde base", "from base", "des de base", "alapbol"))
-        for finding in tarifa_findings:
-            typer.echo(
-                f"  - {casilla_label} {finding.casilla_id} ({from_base_label} {finding.base_casilla_id}): "
-                f"tarifa {finding.expected_cuota} vs. {finding.actual_cuota}"
-                f" (delta {finding.delta})"
-            )
-    elif ruleset_clean:
-        typer.echo(
-            _msg(
-                _t(
-                    f"Tarifa progresiva: cuota íntegra estatal consistente con la escala IRPF {tarifa_ejercicio}",
-                    f"Tarifa progresiva: cuota íntegra estatal consistent with IRPF {tarifa_ejercicio} scale",
-                    f"Tarifa progressiva: quota íntegra estatal coherent amb l'escala IRPF {tarifa_ejercicio}",
-                    f"Progressziv tarifa: az allami teljes ado konzisztens az IRPF skalaval {tarifa_ejercicio}",
-                )
-            )
-        )
-
-    base_autonomica = provided.get("0545")
-    cuota_autonomica = provided.get("0551")
-    if base_autonomica is not None and cuota_autonomica is not None:
-        expected_autonomica = compute_cuota_autonomica_general(
-            base_autonomica,
-            residence.ccaa,
-            año=tarifa_ejercicio_int,
-        )
-        delta = abs(expected_autonomica - cuota_autonomica)
-        if delta <= Decimal("0.01"):
-            typer.echo(
-                _msg(
-                    _t(
-                        "Tarifa autonómica: cuota íntegra general consistente "
-                        f"con la escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
-                        "Tarifa autonómica: cuota íntegra general consistent "
-                        f"with {residence.ccaa.value} IRPF {tarifa_ejercicio} scale",
-                        "Tarifa autonòmica: quota íntegra general coherent "
-                        f"amb l'escala IRPF {tarifa_ejercicio} de {residence.ccaa.value}",
-                        "Autonom tarifa: az altalanos teljes ado osszhangban van "
-                        f"a(z) {residence.ccaa.value} IRPF {tarifa_ejercicio} skalaval",
-                    )
-                )
-            )
-        else:
-            typer.echo(
-                _msg(
-                    _t(
-                        "Tarifa autonómica: discrepancia en la casilla 0551 "
-                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
-                        f"frente a extraído {cuota_autonomica} (delta {delta})",
-                        "Tarifa autonómica: discrepancy for casilla 0551 "
-                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
-                        f"vs. extracted {cuota_autonomica} (delta {delta})",
-                        "Tarifa autonòmica: discrepància a la casella 0551 "
-                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
-                        f"davant extret {cuota_autonomica} (delta {delta})",
-                        "Autonom tarifa: elteres az 0551 mezonek "
-                        f"({residence.ccaa.value}): tarifa {expected_autonomica} "
-                        f"vs. kinyert {cuota_autonomica} (delta {delta})",
-                    )
-                )
-            )
+    _ = (from_borrador, año)
+    raise typer.BadParameter("Modelo 100 import verification requires validated registry snapshots")
 
 
 @complementaria_app.command("build")
@@ -1195,9 +984,11 @@ def build_complementaria_cmd(
         raise typer.BadParameter(
             _msg(
                 _t(
-                    f"el modelo del payload {modelo!r} no coincide con el modelo del envío original {original.modelo!r}",
+                    "el modelo del payload "
+                    f"{modelo!r} no coincide con el modelo del envío original {original.modelo!r}",
                     f"payload modelo {modelo!r} does not match original submission modelo {original.modelo!r}",
-                    f"el model del payload {modelo!r} no coincideix amb el model de l'enviament original {original.modelo!r}",
+                    "el model del payload "
+                    f"{modelo!r} no coincideix amb el model de l'enviament original {original.modelo!r}",
                     f"a hasznos teher modelje {modelo!r} nem egyezik az eredeti beadas modeljevel {original.modelo!r}",
                 )
             )
@@ -1206,10 +997,13 @@ def build_complementaria_cmd(
         raise typer.BadParameter(
             _msg(
                 _t(
-                    f"el período del payload {period!r} no coincide con el período del envío original {original.period!r}",
+                    "el período del payload "
+                    f"{period!r} no coincide con el período del envío original {original.period!r}",
                     f"payload period {period!r} does not match original submission period {original.period!r}",
-                    f"el període del payload {period!r} no coincideix amb el període de l'enviament original {original.period!r}",
-                    f"a hasznos teher idoszaka {period!r} nem egyezik az eredeti beadas idoszakaval {original.period!r}",
+                    "el període del payload "
+                    f"{period!r} no coincideix amb el període de l'enviament original {original.period!r}",
+                    "a hasznos teher idoszaka "
+                    f"{period!r} nem egyezik az eredeti beadas idoszakaval {original.period!r}",
                 )
             )
         )

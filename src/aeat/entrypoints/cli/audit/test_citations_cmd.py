@@ -1,33 +1,16 @@
-"""Tests for ``aeat audit rulesets citations``.
-
-Exercises every code path of the citations subcommand via
-:class:`typer.testing.CliRunner` against ``audit_app`` directly. All
-tests use real
-:class:`aeat.domain.formulas._ruleset.Ruleset`,
-:class:`aeat.domain.formulas._casilla.CasillaDefinition`, and
-:class:`aeat.domain.formulas._legal_citation.LegalCitation` instances;
-the gap-path fixtures use pydantic's documented ``model_construct``
-escape hatch to assemble a "missing-citation" casilla without
-bypassing every other validator on the model.
-"""
+"""Tests for the disabled ``aeat audit rulesets citations`` command."""
 
 from __future__ import annotations
 
-import io
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from ....domain.casillas import CasillaDataType
-from ....domain.formulas._casilla import CasillaDefinition
-from ....domain.formulas._rulesets import MODELO_130_2025, MODELO_303_2025
-from . import (
-    aggregate_reports,
-    audit_app,
-    validate_citation_coverage,
-)
-from ._helpers import CitationCoverageReport
+from ....domain.modelos import ModeloCode
+from . import audit_app
+from ._helpers import CitationCoverageReport, aggregate_reports, validate_citation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -37,176 +20,67 @@ def _runner() -> CliRunner:
     return CliRunner()
 
 
-def test_citations_cmd_happy_path_exits_zero() -> None:
-    """Every registered ruleset has 100% coverage; exit code is 0."""
+def _report(
+    ruleset_id: str,
+    *,
+    modelo: ModeloCode | None = ModeloCode.MODELO_130,
+    missing: tuple[str, ...] = (),
+) -> CitationCoverageReport:
+    total = 2
+    with_citation = total - len(missing)
+    return CitationCoverageReport(
+        ruleset_id=ruleset_id,
+        modelo=modelo,
+        effective_from=date(2025, 1, 1),
+        effective_to=None,
+        total_computed=total,
+        with_citation=with_citation,
+        coverage_percent=with_citation / total,
+        missing_casillas=missing,
+    )
+
+
+def test_citations_cmd_requires_registry_snapshot() -> None:
     runner = _runner()
     result = runner.invoke(audit_app, ["rulesets", "citations"])
-    assert result.exit_code == 0, result.output
-    assert "modelo_130.2025" in result.output
-    assert "modelo_303.2025" in result.output
-    assert "aggregate" in result.output
-    assert "GAP" not in result.output
-    assert "OK " in result.output
+
+    assert result.exit_code == 1, result.output
+    assert "legacy ruleset audits are disabled" in result.output
+    assert "use the registry" in result.output
 
 
-def test_citations_cmd_renders_spanish_diacritics() -> None:
-    """Spanish modelo / casilla rendering survives a non-ASCII path.
-
-    The audit-CLI reports include ruleset_id strings that don't carry
-    diacritics, but a regression elsewhere could allow a ruleset author
-    to introduce a non-ASCII identifier. We probe the encoding-safety
-    of the command's output stream by writing a control sample through
-    a UTF-8-backed buffer and confirming the framing characters
-    survive.
-
-    A previous regression surfaced a Windows cp1252 crash on non-ASCII
-    output. The ``_reconfigure_utf8`` helper invoked at command entry
-    guards against that path.
-    """
-    runner = _runner()
-    result = runner.invoke(audit_app, ["rulesets", "citations"])
-    assert result.exit_code == 0, result.output
-    rendered = result.output.encode("utf-8").decode("utf-8")
-    assert "OK " in rendered
-    probe = io.StringIO()
-    probe.write("artículo 110 — agrícolas, ganaderas, forestales y pesqueras\n")
-    assert "artículo" in probe.getvalue()
-
-
-def test_validate_citation_coverage_detects_simulated_gap() -> None:
-    """The helper returns a non-100% report when a casilla is missing.
-
-    This is the only documented way to construct a casilla with empty
-    ``legal_basis`` and ``computed=True``: pydantic's
-    ``model_construct`` skips the validator stack. We use it here to
-    prove the audit reporter's gap path independently of the
-    validator's protection. A real ruleset can never reach this state
-    via normal construction.
-    """
-    bypassed = CasillaDefinition.model_construct(
-        casilla_id="99",
-        label={"es": "x", "en": "x", "hu": "x"},
-        computed=True,
-        data_type=CasillaDataType.CURRENCY_EUR,
-        legal_basis=(),
-        notes_es=None,
-    )
-    base = MODELO_130_2025
-    augmented_casillas = (*base.casillas, bypassed)
-    mutated = base.model_construct(
-        ruleset_id=base.ruleset_id,
-        modelo=base.modelo,
-        variant=base.variant,
-        effective_from=base.effective_from,
-        effective_to=base.effective_to,
-        casillas=augmented_casillas,
-        formulas=base.formulas,
-        parameters=base.parameters,
-        legal_citations=base.legal_citations,
-    )
-    report = validate_citation_coverage(mutated)
-    assert report.coverage_percent < 1.0
-    assert "99" in report.missing_casillas
-    assert report.is_complete is False
-
-
-def test_validate_citation_coverage_handles_zero_computed() -> None:
-    """A ruleset with no computed casillas reports 100% trivially.
-
-    Edge case: division-by-zero protection in the helper. Registered
-    rulesets normally include at least one computed casilla, but the
-    helper must not raise.
-    """
-    base = MODELO_130_2025
-    user_only_casillas = tuple(c for c in base.casillas if not c.computed)
-    mutated = base.model_construct(
-        ruleset_id=base.ruleset_id,
-        modelo=base.modelo,
-        variant=base.variant,
-        effective_from=base.effective_from,
-        effective_to=base.effective_to,
-        casillas=user_only_casillas,
-        formulas=(),
-        parameters=base.parameters,
-        legal_citations=base.legal_citations,
-    )
-    report = validate_citation_coverage(mutated)
-    assert report.total_computed == 0
-    assert report.with_citation == 0
-    assert report.coverage_percent == 1.0
-    assert report.missing_casillas == ()
+def test_validate_citation_coverage_rejects_legacy_rulesets() -> None:
+    with pytest.raises(ValueError, match="legacy ruleset citation audits are disabled"):
+        validate_citation_coverage(object())
 
 
 def test_citation_coverage_report_is_strict_frozen() -> None:
-    """Confirms the report model contract: strict + frozen + extra=forbid."""
-    report = validate_citation_coverage(MODELO_130_2025)
+    report = _report("modelo_130.2025")
+
     with pytest.raises(ValidationError):
         report.coverage_percent = 0.0  # type: ignore[misc]
 
 
 def test_aggregate_report_includes_every_missing_casilla() -> None:
-    """Aggregate prefixes missing-casilla ids with the contributing ruleset."""
-    base = MODELO_130_2025
-    bypassed = CasillaDefinition.model_construct(
-        casilla_id="50",
-        label={"es": "x", "en": "x", "hu": "x"},
-        computed=True,
-        data_type=CasillaDataType.CURRENCY_EUR,
-        legal_basis=(),
-        notes_es=None,
-    )
-    mutated = base.model_construct(
-        ruleset_id=base.ruleset_id,
-        modelo=base.modelo,
-        variant=base.variant,
-        effective_from=base.effective_from,
-        effective_to=base.effective_to,
-        casillas=(*base.casillas, bypassed),
-        formulas=base.formulas,
-        parameters=base.parameters,
-        legal_citations=base.legal_citations,
-    )
-    reports = (validate_citation_coverage(mutated),)
-    aggregate = aggregate_reports(reports)
+    aggregate = aggregate_reports((_report("modelo_130.2025", missing=("50",)),))
+
     assert aggregate.is_complete is False
-    assert any("50" in m for m in aggregate.missing_casillas)
+    assert aggregate.missing_casillas == ("modelo_130.2025:50",)
 
 
 def test_aggregate_single_modelo_preserves_modelo() -> None:
-    """When every input shares a modelo, the aggregate carries it."""
-    reports = (validate_citation_coverage(MODELO_130_2025),)
-    aggregate = aggregate_reports(reports)
-    assert aggregate.modelo == MODELO_130_2025.modelo
+    aggregate = aggregate_reports((_report("modelo_130.2025"),))
+
+    assert aggregate.modelo == ModeloCode.MODELO_130
 
 
 def test_aggregate_mixed_modelos_yields_none_modelo() -> None:
-    """A mixed-modelo aggregate sets ``modelo`` to ``None``.
-
-    Picking an arbitrary "representative" modelo from a mixed bag
-    would mislead any downstream consumer that filters by modelo.
-    """
-    reports = (
-        validate_citation_coverage(MODELO_130_2025),
-        validate_citation_coverage(MODELO_303_2025),
+    aggregate = aggregate_reports(
+        (
+            _report("modelo_130.2025", modelo=ModeloCode.MODELO_130),
+            _report("modelo_303.2025", modelo=ModeloCode.MODELO_303),
+        )
     )
-    aggregate = aggregate_reports(reports)
+
     assert aggregate.modelo is None
     assert aggregate.is_complete is True
-
-
-def test_aggregate_with_none_modelo_renders_as_all() -> None:
-    """The CLI line for a multi-modelo aggregate renders 'modelo all'."""
-    from . import _render_line
-
-    aggregate_like = CitationCoverageReport(
-        ruleset_id="aggregate",
-        modelo=None,
-        effective_from=MODELO_130_2025.effective_from,
-        effective_to=MODELO_130_2025.effective_to,
-        total_computed=10,
-        with_citation=10,
-        coverage_percent=1.0,
-        missing_casillas=(),
-    )
-    rendered = _render_line(aggregate_like)
-    assert "modelo all" in rendered
