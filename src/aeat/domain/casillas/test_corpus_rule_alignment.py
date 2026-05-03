@@ -1,22 +1,12 @@
-"""Lock the corpus / rule-engine alignment in CI.
+"""Lock non-authoritative casilla corpus structural integrity in CI.
 
 Every committed casilla catalogue under ``corpus/casillas/`` must be
-internally consistent and aligned with the rule engine's registry.
-The 13+ invariants below are enforced over a single session-scoped
-parse of every catalogue (see ``conftest.py``); each test consumes
-the shared ``corpus_catalogues`` / ``engine_registry`` fixtures
-rather than re-walking the directory.
+internally consistent. The registry, not this corpus, owns legal and
+calculation alignment. These tests consume the shared
+``corpus_catalogues`` fixture rather than re-walking the directory.
 
 Invariants:
 
-* Every formula declared in the rule-engine ruleset for a given
-  ``(modelo, year)`` is reflected in the matching corpus record's
-  ``references_rules`` tuple.
-* Every ``references_rules`` entry resolves to a real
-  ``formula_id`` in the engine registry.
-* For every corpus record marked ``computed=True``, the matching
-  engine formula's casilla refs equal the record's
-  ``references_casillas`` tuple.
 * Every record carries authoritative Spanish text on ``label`` /
   ``help``, intra-catalogue references resolve, the reference graph
   is acyclic, and structural shape is uniform within a year.
@@ -29,81 +19,12 @@ from pathlib import Path
 import pytest
 
 from ...core.config import PROJECT_ROOT
-from ..formulas._formula import FormulaDefinition, iter_casilla_refs
-from ..formulas._registry import RulesetRegistry
 from . import load_casillas
 from .models import CasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _Catalogues = tuple[tuple[Path, str, str, CasillaCatalogue], ...]
-
-
-def _collect_refs(formula: object) -> list[str]:
-    seen: list[str] = []
-    for casilla_id in iter_casilla_refs(formula):
-        if casilla_id not in seen:
-            seen.append(casilla_id)
-    return seen
-
-
-def test_every_engine_formula_has_corpus_link(
-    corpus_catalogues: _Catalogues,
-    engine_registry: RulesetRegistry,
-) -> None:
-    """Every (modelo, year) formula must be referenced in the corpus."""
-    rs_by_key: dict[tuple[str, int], list] = {}
-    for rs in engine_registry.rulesets:
-        rs_by_key.setdefault((rs.modelo.value, rs.effective_from.year), []).append(rs)
-
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        modelo_code = modelo.removeprefix("MODELO_")
-        year = int(period[:4])
-        rulesets = rs_by_key.get((modelo_code, year), [])
-        if not rulesets:
-            continue
-        by_id = {r.casilla_id: r for r in catalogue.records}
-        for rs in rulesets:
-            for f in rs.formulas:
-                rec = by_id.get(f.casilla_id)
-                if rec is None:
-                    failures.append(
-                        f"{modelo} {period} cas {f.casilla_id}: corpus has no record but engine "
-                        f"defines formula {f.formula_id!r}"
-                    )
-                    continue
-                if f.formula_id not in rec.references_rules:
-                    failures.append(
-                        f"{modelo} {period} cas {f.casilla_id}: corpus references_rules missing "
-                        f"engine formula {f.formula_id!r} (got {list(rec.references_rules)})"
-                    )
-
-    if failures:
-        msg = "Corpus is missing rule-engine cross-links:\n" + "\n".join(f" - {f}" for f in failures)
-        pytest.fail(msg)
-
-
-def test_no_dangling_rule_references_in_corpus(
-    corpus_catalogues: _Catalogues,
-    engine_registry: RulesetRegistry,
-) -> None:
-    """Every references_rules entry must resolve to an engine formula_id."""
-    known_formula_ids = {f.formula_id for rs in engine_registry.rulesets for f in rs.formulas}
-
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        for rec in catalogue.records:
-            for ref in rec.references_rules:
-                if ref not in known_formula_ids:
-                    failures.append(
-                        f"{modelo} {period} cas {rec.casilla_id}: dangling references_rules "
-                        f"entry {ref!r} (no matching formula in engine registry)"
-                    )
-
-    if failures:
-        msg = "Corpus has dangling rule-engine references:\n" + "\n".join(f" - {f}" for f in failures)
-        pytest.fail(msg)
 
 
 def test_every_corpus_record_has_authoritative_label_and_help(
@@ -136,60 +57,6 @@ def test_corpus_internal_casilla_refs_resolve(corpus_catalogues: _Catalogues) ->
                     )
     if failures:
         msg = "Corpus has dangling intra-catalogue references:\n" + "\n".join(f" - {f}" for f in failures)
-        pytest.fail(msg)
-
-
-def test_every_computed_record_has_at_least_one_rule_link(corpus_catalogues: _Catalogues) -> None:
-    """A computed casilla must point at the rule formula that derives it."""
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        for rec in catalogue.records:
-            if rec.computed and not rec.references_rules:
-                # Modelo 190 totals (19/20/21) aggregate manually-curated input
-                # rows and have no engine-side formula; allow them by exception.
-                if modelo == "MODELO_190" and rec.casilla_id in {"19", "20", "21"}:
-                    continue
-                failures.append(f"{modelo} {period} cas {rec.casilla_id}: computed=True but no references_rules")
-    if failures:
-        msg = "Computed corpus records missing rule links:\n" + "\n".join(f" - {f}" for f in failures)
-        pytest.fail(msg)
-
-
-def test_computed_records_match_engine_formula_refs(
-    corpus_catalogues: _Catalogues,
-    engine_registry: RulesetRegistry,
-) -> None:
-    """A corpus computed record's casilla refs must match the engine's primary formula."""
-    primary_formula: dict[tuple[str, int, str], FormulaDefinition] = {}
-    summary_formula: dict[tuple[str, int, str], FormulaDefinition] = {}
-    for rs in engine_registry.rulesets:
-        target = summary_formula if rs.variant == "summary" else primary_formula
-        for f in rs.formulas:
-            target[(rs.modelo.value, rs.effective_from.year, f.casilla_id)] = f
-
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        modelo_code = modelo.removeprefix("MODELO_")
-        year = int(period[:4])
-        for rec in catalogue.records:
-            if not rec.computed:
-                continue
-            key = (modelo_code, year, rec.casilla_id)
-            f = primary_formula.get(key) or summary_formula.get(key)
-            if f is None:
-                # Some corpus computed records aggregate manual data
-                # (e.g. modelo 190 totals). Skip if no engine formula.
-                continue
-            engine_refs = _collect_refs(f.formula)
-            corpus_refs = list(rec.references_casillas)
-            if corpus_refs != engine_refs:
-                failures.append(
-                    f"{modelo} {period} cas {rec.casilla_id}: references_casillas mismatch — "
-                    f"corpus={corpus_refs} engine={engine_refs}"
-                )
-
-    if failures:
-        msg = "Corpus references_casillas diverge from engine:\n" + "\n".join(f" - {f}" for f in failures)
         pytest.fail(msg)
 
 
@@ -304,39 +171,6 @@ def test_corpus_data_type_is_uniform_per_casilla(corpus_catalogues: _Catalogues)
         pytest.fail("Corpus data_type drift:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-def test_corpus_label_es_is_uniform_per_casilla(corpus_catalogues: _Catalogues) -> None:
-    """A casilla's authoritative Spanish label must not drift across periods."""
-    from collections import defaultdict
-
-    seen: dict[tuple[str, str], set[str]] = defaultdict(set)
-    for _path, modelo, _period, catalogue in corpus_catalogues:
-        for rec in catalogue.records:
-            seen[(modelo, rec.casilla_id)].add(rec.label["es"])
-    failures = [
-        f"{modelo} cas {cid}: label drift {sorted(labels)}" for (modelo, cid), labels in seen.items() if len(labels) > 1
-    ]
-    if failures:
-        pytest.fail("Corpus label.es drift:\n" + "\n".join(f" - {f}" for f in failures))
-
-
-def test_corpus_references_rules_is_uniform_within_year(corpus_catalogues: _Catalogues) -> None:
-    """All periods within a single fiscal year must agree on references_rules."""
-    from collections import defaultdict
-
-    seen: dict[tuple[str, str, str], set[tuple[str, ...]]] = defaultdict(set)
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        year = period[:4]
-        for rec in catalogue.records:
-            seen[(modelo, year, rec.casilla_id)].add(tuple(rec.references_rules))
-    failures = [
-        f"{modelo} {year} cas {cid}: references_rules drift = {sorted(variants)}"
-        for (modelo, year, cid), variants in seen.items()
-        if len(variants) > 1
-    ]
-    if failures:
-        pytest.fail("Corpus references_rules drift within year:\n" + "\n".join(f" - {f}" for f in failures))
-
-
 def test_corpus_must_derive_validation_aligns_with_computed_flag(corpus_catalogues: _Catalogues) -> None:
     """``computed=True`` ↔ ``must_derive`` validation rule (both directions)."""
     failures: list[str] = []
@@ -424,40 +258,8 @@ def test_corpus_committed_records_are_canonical_not_drafts(corpus_catalogues: _C
         pytest.fail("Corpus contains non-canonical records:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-def test_corpus_casilla_id_set_matches_engine_ruleset(
-    corpus_catalogues: _Catalogues,
-    engine_registry: RulesetRegistry,
-) -> None:
-    """For each (modelo, year), the corpus' casilla IDs must be a superset of the engine ruleset's IDs.
-
-    The corpus may carry additional manually-curated user-input casillas
-    that the engine does not formula-derive (e.g., the M111 augmentation
-    perceptor / percepción rows). What it must NOT do is omit any ID
-    the engine declares — that would mean the engine derives a casilla
-    the corpus has no record of.
-    """
-    rs_by_key: dict[tuple[str, int], list] = {}
-    for rs in engine_registry.rulesets:
-        rs_by_key.setdefault((rs.modelo.value, rs.effective_from.year), []).append(rs)
-
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        modelo_code = modelo.removeprefix("MODELO_")
-        year = int(period[:4])
-        rulesets = rs_by_key.get((modelo_code, year), [])
-        if not rulesets:
-            continue
-        engine_ids = {c.casilla_id for rs in rulesets for c in rs.casillas}
-        corpus_ids = {r.casilla_id for r in catalogue.records}
-        missing = engine_ids - corpus_ids
-        if missing:
-            failures.append(f"{modelo} {period}: engine ruleset declares casillas not in corpus: {sorted(missing)}")
-    if failures:
-        pytest.fail("Corpus is missing casillas that the engine declares:\n" + "\n".join(f" - {f}" for f in failures))
-
-
-def test_corpus_casilla_ids_match_extractor_for_non_ruleset_modelos() -> None:
-    """For modelos without a rule engine ruleset (190 / 193 / 347 / 349 / 840),
+def test_corpus_casilla_ids_match_extractor_for_extractor_backed_modelos() -> None:
+    """For extractor-backed modelos (190 / 193 / 347 / 349 / 840),
     the corpus casilla ID set must exactly match the registered extractor's
     ``casilla_ids ∪ text_casilla_ids``.
 

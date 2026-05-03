@@ -1,28 +1,21 @@
-"""Asset ledger for actividad economica amortization tracking.
+"""Asset ledger records for actividad economica amortization tracking.
 
 Provides the strict, frozen pydantic v2 records that back the
-LIRPF / LIS art. 12 lineal amortization computation:
+registry-backed amortization workflow:
 :class:`AssetRecord` (a depreciable asset affected to an economic
 activity), :class:`AmortizationLedger` (the recorded per-asset / per-
-year accruals), and :class:`LibertadAmortizacionElection` (the LIS
-art. 12 accelerated-amortization opt-in). The annual computation is
-exposed via :func:`compute_amortization_for_year` and aggregated for
-Anexo D casilla ``0173`` by
-:func:`compute_anexo_d_amortization_aggregate`.
+year accruals), and :class:`LibertadAmortizacionElection`.
 """
 
 from __future__ import annotations
 
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.logging import get_logger
-from ...formulas import LIS_ART_12_LINEAL_TABLE, AssetClass
-from ..errors import AssetRecordError, BasisCapExceededError
-
-_logger = get_logger(__name__)
+from ..errors import AssetRecordError
 
 SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
@@ -31,6 +24,44 @@ _CENT = Decimal("0.01")
 _ONE = Decimal("1")
 _ZERO = Decimal("0.00")
 _HUNDRED = Decimal("100")
+
+
+class AssetClass(StrEnum):
+    """Asset category token retained for encrypted user-ledger records."""
+
+    OBRA_CIVIL_GENERAL = "obra_civil.general"
+    OBRA_CIVIL_PAVIMENTOS = "obra_civil.pavimentos"
+    OBRA_CIVIL_INFRA_MINERAS = "obra_civil.infraestructuras_obras_mineras"
+    CENTRALES_HIDRAULICAS = "centrales.hidraulicas"
+    CENTRALES_NUCLEARES = "centrales.nucleares"
+    CENTRALES_CARBON = "centrales.carbon"
+    CENTRALES_RENOVABLES = "centrales.renovables"
+    CENTRALES_OTRAS = "centrales.otras"
+    EDIFICIOS_INDUSTRIALES = "edificios.industriales"
+    EDIFICIOS_ESCOMBRERAS = "edificios.escombreras"
+    EDIFICIOS_ALMACENES = "edificios.almacenes_depositos"
+    EDIFICIOS_COMERCIALES = "edificios.comerciales_administrativos_servicios_viviendas"
+    INSTALACIONES_SUBESTACIONES = "instalaciones.subestaciones_redes"
+    INSTALACIONES_CABLES = "instalaciones.cables"
+    INSTALACIONES_RESTO = "instalaciones.resto"
+    MAQUINARIA_GENERAL = "maquinaria.general"
+    MAQUINARIA_MEDICOS = "maquinaria.equipos_medicos"
+    TRANSPORTE_LOCOMOTORAS = "transporte.locomotoras_vagones_traccion"
+    TRANSPORTE_BUQUES_AERONAVES = "transporte.buques_aeronaves"
+    TRANSPORTE_INTERNO = "transporte.interno"
+    TRANSPORTE_EXTERNO = "transporte.externo"
+    TRANSPORTE_AUTOCAMIONES = "transporte.autocamiones"
+    MOBILIARIO_GENERAL = "mobiliario.general"
+    MOBILIARIO_LENCERIA = "mobiliario.lenceria"
+    MOBILIARIO_CRISTALERIA = "mobiliario.cristaleria"
+    MOBILIARIO_UTILES = "mobiliario.utiles_herramientas"
+    MOBILIARIO_MOLDES = "mobiliario.moldes_matrices_modelos"
+    MOBILIARIO_OTROS = "mobiliario.otros_enseres"
+    ELECTRONICA_GENERAL = "electronica.equipos_electronicos"
+    ELECTRONICA_INFORMATICA = "electronica.equipos_tratamiento_informacion"
+    ELECTRONICA_SOFTWARE = "electronica.sistemas_programas_informaticos"
+    PRODUCCIONES_AUDIOVISUALES = "producciones.audiovisuales"
+    OTROS_ELEMENTOS = "otros.elementos"
 
 
 class LibertadAmortizacionElection(BaseModel):
@@ -63,8 +94,8 @@ class AssetRecord(BaseModel):
     Attributes:
         identifier: Stable natural key chosen by the operator.
         description: Free-text human description.
-        asset_class: :class:`aeat.domain.formulas.AssetClass` slot driving the
-            LIS art. 12.1.a coefficient lookup.
+        asset_class: Asset class token. Legal coefficients are supplied by
+            registry definitions, not this record module.
         acquisition_date: Date the asset was acquired.
         cost_basis: Depreciable basis. Strictly positive.
         taxable_base: Invoice taxable base (VAT-exclusive). When set,
@@ -225,46 +256,10 @@ class AssetsLedgerDocument(BaseModel):
 
 
 def compute_amortization_for_year(asset: AssetRecord, year: int, ledger: AmortizationLedger) -> Decimal:
-    """Compute allowable amortization for one asset and year.
+    """Reject legacy asset amortization calculation."""
 
-    Applies LIS art. 12.1.a lineal coefficients via
-    :data:`aeat.domain.formulas.LIS_ART_12_LINEAL_TABLE`, with a libertad-de-
-    amortización fast-path when :attr:`AssetRecord.libertad_amortizacion`
-    is enabled. Always quantises to euro-cents (half-up) and clamps
-    the result at the remaining cost basis.
-
-    Args:
-        asset: Asset to compute.
-        year: Calendar year being filed.
-        ledger: Existing recorded amortization.
-
-    Returns:
-        Allowable amortization for the year, capped at remaining basis.
-
-    Raises:
-        BasisCapExceededError: If an existing ledger already exceeds basis.
-    """
-    if year < asset.acquisition_date.year:
-        return _ZERO
-    cumulative = _cumulative_for_asset(ledger, asset.identifier, up_to_year=year - 1)
-    if cumulative > asset.cost_basis:
-        raise BasisCapExceededError(
-            f"asset {asset.identifier!r} already exceeds its cost basis",
-            context={
-                "asset_id": asset.identifier,
-                "cost_basis": str(asset.cost_basis),
-                "cumulative": str(cumulative),
-            },
-        )
-    remaining = asset.cost_basis - cumulative
-    if remaining <= _ZERO:
-        return _ZERO
-    if asset.libertad_amortizacion.enabled:
-        limit = asset.libertad_amortizacion.amount_limit or remaining
-        return _quantize(min(limit, remaining))
-    annual = asset.cost_basis * _annual_rate(asset)
-    prorated = annual * Decimal(_days_used(asset, year)) / Decimal("365")
-    return _quantize(min(prorated, remaining))
+    _ = (asset, year, ledger)
+    raise AssetRecordError("asset amortization requires a validated registry snapshot")
 
 
 def compute_anexo_d_amortization_aggregate(
@@ -274,68 +269,15 @@ def compute_anexo_d_amortization_aggregate(
     ledger: AmortizationLedger | None = None,
     actividad_id: str | None = None,
 ) -> Decimal:
-    """Compute Anexo D normal casilla ``0173`` from assets.
+    """Reject legacy Anexo D asset amortization aggregation."""
 
-    Sums :func:`compute_amortization_for_year` across every asset
-    (optionally filtered to ``actividad_id``), weighted by
-    :attr:`AssetRecord.allocation_ratio`.
-
-    Args:
-        year: Calendar year being filed.
-        assets: Asset records to aggregate.
-        ledger: Existing :class:`AmortizationLedger`. Defaults to an
-            empty ledger.
-        actividad_id: When set, restricts the aggregate to assets
-            allocated to that activity (or with no activity).
-
-    Returns:
-        Aggregate amortization for the year, quantised to cents.
-    """
-    resolved_ledger = ledger if ledger is not None else AmortizationLedger()
-    total = _ZERO
-    for asset in assets:
-        if actividad_id is not None and asset.actividad_id not in {None, actividad_id}:
-            continue
-        amount = compute_amortization_for_year(asset, year, resolved_ledger)
-        total += amount * asset.allocation_ratio
-    return _quantize(total)
+    _ = (year, assets, ledger, actividad_id)
+    raise AssetRecordError("asset amortization aggregation requires a validated registry snapshot")
 
 
 def _annual_rate(asset: AssetRecord) -> Decimal:
-    table_row = _table_row_for(asset.asset_class)
-    if asset.useful_life_years is not None:
-        rate = _ONE / Decimal(asset.useful_life_years)
-        max_rate = table_row.coef_max_pct / _HUNDRED
-        if rate > max_rate:
-            raise AssetRecordError(
-                "useful_life_years would exceed the LIS art. 12.1.a maximum coefficient",
-                context={
-                    "asset_id": asset.identifier,
-                    "asset_class": asset.asset_class.value,
-                    "useful_life_years": str(asset.useful_life_years),
-                    "max_rate": str(max_rate),
-                },
-            )
-        if asset.useful_life_years > table_row.period_max_years:
-            raise AssetRecordError(
-                "useful_life_years would exceed the LIS art. 12.1.a maximum period",
-                context={
-                    "asset_id": asset.identifier,
-                    "asset_class": asset.asset_class.value,
-                    "useful_life_years": str(asset.useful_life_years),
-                    "period_max_years": str(table_row.period_max_years),
-                },
-            )
-        return rate
-    return table_row.coef_max_pct / _HUNDRED
-
-
-def _table_row_for(asset_class: AssetClass):
-    for category in LIS_ART_12_LINEAL_TABLE:
-        if category.asset_class is asset_class:
-            return category
-    _logger.warning("lis coefficient missing for asset_class=%s", asset_class.value)
-    raise AssetRecordError(f"missing LIS art. 12.1.a coefficient for {asset_class.value}")
+    _ = asset
+    raise AssetRecordError("asset amortization rates require a validated registry snapshot")
 
 
 def _days_used(asset: AssetRecord, year: int) -> int:
@@ -379,6 +321,7 @@ def _quantize(value: Decimal) -> Decimal:
 __all__ = [
     "AmortizationEntry",
     "AmortizationLedger",
+    "AssetClass",
     "AssetRecord",
     "LibertadAmortizacionElection",
     "compute_amortization_for_year",

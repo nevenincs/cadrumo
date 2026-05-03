@@ -1,21 +1,19 @@
-"""Orchestrator turning a parsed declaración into a verification verdict.
+"""Registry-gated declaration verification boundary.
 
-Bridges :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling` and
-:meth:`aeat.domain.formulas.Engine.audit_against`, classifies every raw
-discrepancy by cause, derives a single-word
-:class:`aeat.application.verification.VerificationStatus`, and composes
-a multilingual narrative for the operator's UI.
+Parsed declaración verification is filing-grade calculation work. Until
+that path is backed by validated registry snapshots, the public entry
+point fails closed instead of reaching legacy rulesets.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionFiling
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
-from ...domain.formulas import Discrepancy, Engine, Ruleset
 from ._schema import (
     ClassifiedDiscrepancy,
     DiscrepancyCause,
@@ -39,10 +37,17 @@ _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
 """Extractor warning codes that mark a casilla extraction as low-confidence."""
 
 
+class _DiscrepancyLike(Protocol):
+    casilla_id: str
+    computed_value: Decimal
+    user_value: Decimal
+    delta: Decimal
+
+
 def verify_declaracion(
     declaracion: DeclaracionFiling,
     *,
-    ruleset: Ruleset | None,
+    ruleset: object | None,
     tolerance: Decimal = _DEFAULT_TOLERANCE,
 ) -> VerificationVerdict:
     """Compare the printed casilla values against engine-derived ones.
@@ -50,9 +55,8 @@ def verify_declaracion(
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        ruleset: The :class:`aeat.domain.formulas.Ruleset` to audit
-            against; ``None`` short-circuits to a verdict with status
-            :attr:`aeat.application.verification.VerificationStatus.UNVERIFIABLE`.
+        ruleset: Legacy placeholder argument kept while call sites are
+            migrated to registry snapshots.
         tolerance: Maximum absolute delta between printed and computed
             values to still count as a match. Defaults to ``0.01`` (one
             cent).
@@ -64,67 +68,15 @@ def verify_declaracion(
         the coverage fraction, a multilingual narrative, and the UTC
         timestamp the verdict was produced.
     """
-    if ruleset is None:
-        _logger.debug(
-            "no ruleset for modelo=%s period=%s — returning UNVERIFIABLE verdict",
-            declaracion.modelo,
-            declaracion.period,
-        )
-        return _unverifiable_verdict(declaracion)
-
-    provided: dict[str, Decimal] = {}
-    for value in declaracion.values:
-        if isinstance(value.printed_value, Decimal):
-            provided[value.casilla_id] = value.printed_value
-
-    engine = Engine()
-    report = engine.audit_against(
-        ruleset=ruleset,
-        provided=provided,
-        tolerance=tolerance,
-    )
-
-    unreliable_ids = {
-        w.casilla_id for w in declaracion.warnings if w.casilla_id is not None and w.code in _UNRELIABLE_WARNING_CODES
-    }
-    ruleset_casillas = {c.casilla_id for c in ruleset.casillas}
-
-    classified = tuple(
-        _classify_discrepancy(
-            d,
-            unreliable_ids=unreliable_ids,
-            ruleset_casillas=ruleset_casillas,
-            tolerance=tolerance,
-        )
-        for d in report.discrepancies
-    )
-
-    coverage = _compute_coverage(declaracion, ruleset_casillas)
-    status = _derive_status(classified, coverage)
-    narrative = _compose_narrative(declaracion, status, classified, coverage)
-
-    _logger.info(
-        "verified declaracion modelo=%s period=%s status=%s discrepancies=%d coverage=%.2f",
-        declaracion.modelo,
-        declaracion.period,
-        status.value,
-        len(classified),
-        coverage,
-    )
-    return VerificationVerdict(
-        modelo=declaracion.modelo,
-        period=declaracion.period,
-        ruleset_id=ruleset.ruleset_id,
-        status=status,
-        discrepancies=classified,
-        coverage=coverage,
-        narrative=narrative,
-        verified_at=datetime.now(tz=UTC),
+    _ = (declaracion, ruleset, tolerance)
+    raise ValueError(
+        "declaracion verification requires a validated registry snapshot; "
+        "legacy formula rulesets are disabled",
     )
 
 
 def _classify_discrepancy(
-    discrepancy: Discrepancy,
+    discrepancy: _DiscrepancyLike,
     *,
     unreliable_ids: set[str],
     ruleset_casillas: set[str],
@@ -149,7 +101,10 @@ def _classify_discrepancy(
                 f"Casilla {casilla_id}: el extractor ha marcado este valor como poco fiable. Revisa manualmente el PDF."
             ),
             en=(f"Casilla {casilla_id}: the extractor flagged this value as low-confidence. Review the PDF manually."),
-            ca=(f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. Revisa manualment el PDF."),
+            ca=(
+                f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. "
+                "Revisa manualment el PDF."
+            ),
             hu=(f"{casilla_id} casilla: az extraktor alacsony magabiztosságúnak jelölte. Ellenőrizd a PDF-et kézzel."),
         )
     elif casilla_id not in ruleset_casillas:

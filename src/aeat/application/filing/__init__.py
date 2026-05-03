@@ -1,53 +1,4 @@
-"""Filing draft generation engine for AEAT modelos.
-
-The :mod:`aeat.application.filing` subpackage owns the typed public API for
-building, validating, and inspecting :class:`FilingDraft`
-records — the project's single answer to *"what does the system
-actually produce?"*.
-
-Public API discipline: callers from outside this subpackage MUST
-import only from :mod:`aeat.application.filing`. The concrete builders under
-:mod:`aeat.domain.filing._builders` are private; consumers select a
-builder via :func:`build_draft` instead.
-
-Example:
-    ```python
-    from decimal import Decimal
-
-    from . import (
-        FilingDraft,
-        FilingDraftStatus,
-        build_draft,
-        iter_findings,
-    )
-    from .runtime import (
-        FilingOperatorProfile,
-        build_runtime_schema_provider,
-    )
-
-    profile = FilingOperatorProfile(
-        tax_id="00000000T",
-        display_name="Autónomo Demo",
-        applicable_modelos=("130",),
-    )
-    inputs = {
-        "01": Decimal("12500.00"),  # Ingresos
-        "02": Decimal("3500.00"),   # Gastos
-        "05": Decimal("400.00"),    # Retenciones
-        "06": Decimal("0.00"),      # Pagos fraccionados anteriores
-    }
-    draft: FilingDraft = build_draft(
-        modelo="130",
-        period="2026Q1",
-        profile=profile,
-        inputs=inputs,
-        schema_provider=build_runtime_schema_provider(),
-    )
-    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
-    for finding in iter_findings(draft, severity_at_least="ERROR"):
-        ...
-    ```
-"""
+"""Typed filing draft API guarded by registry-backed runtime providers."""
 
 from __future__ import annotations
 
@@ -88,15 +39,11 @@ from ...domain.filing import (
     FilingValidator,
     FilingValue,
     FilingValueKind,
-    Modelo130Builder,
-    Modelo303Builder,
-    Modelo390Builder,
     ModeloCode,
     ModeloIdentity,
     apply_validation,
     compute_draft_id,
     derive_validation_status,
-    get_builder,
     make_amendment_id,
 )
 from ._calculate import (
@@ -142,7 +89,7 @@ def _extract_quarterly_303(
 
     The helper returns ``None`` for every modelo other than 390,
     and also when the reserved ``_quarterly_303`` key is absent.
-    Shape validation lives in :class:`Modelo390Builder` — this
+    Shape validation lives in the validated registry snapshot — this
     function only pulls the tuple out of the inputs mapping so
     the validator can be wired at :func:`build_draft` call time.
     """
@@ -179,59 +126,36 @@ def build_draft(
     deadline_checker: DeadlineChecker | None = None,
     fail_on_warning: bool = False,
 ) -> FilingDraft:
-    """Build, validate, and return a :class:`FilingDraft`.
+    """Reject draft construction until validated registry snapshots exist.
 
     Args:
-        modelo: Stable modelo string ID (e.g. ``"130"``).
-        period: Period identifier (e.g. ``"2026Q1"``).
-        profile: Taxpayer profile the draft is built for.
-        inputs: Mapping of casilla ID → raw input value.
-        schema_provider: Resolves the casilla collection for
-            ``modelo``.
-        deadline_checker: Optional deadline check Protocol implementation
-            forwarded to the validator.
-        fail_on_warning: When ``True``, the call raises
-            :class:`FilingValidationError` if any finding is at
-            ``WARNING`` severity or above. Defaults to ``False``;
-            callers can also opt in via the
-            ``AEAT_DRAFT_FAIL_ON_WARNING`` setting.
-
-    Returns:
-        A frozen :class:`FilingDraft` with findings populated and
-        the status promoted by :func:`apply_validation`.
+        modelo: Stable modelo string ID.
+        period: Period identifier.
+        profile: Taxpayer profile the draft would be built for.
+        inputs: Raw filing inputs.
+        schema_provider: Registry-backed casilla schema provider placeholder.
+        deadline_checker: Optional deadline checker placeholder.
+        fail_on_warning: Retained for API compatibility; ignored while the
+            registry-backed builder is unavailable.
 
     Raises:
-        FilingBuilderError: When no builder is registered for
-            ``modelo``.
-        FilingValidationError: When ``fail_on_warning`` is true
-            and the validator surfaces a non-INFO finding.
+        FilingBuilderError: Always, until a validated registry snapshot builder
+            replaces the legacy Python filing builders.
     """
-    builder = get_builder(modelo)
-    raw_draft = builder.build(
-        period=period,
-        profile=profile,
-        inputs=inputs,
-        schema_provider=schema_provider,
+
+    _ = (
+        modelo,
+        period,
+        profile,
+        inputs,
+        schema_provider,
+        deadline_checker,
+        fail_on_warning,
     )
-    quarterly_303_drafts = _extract_quarterly_303(modelo, inputs)
-    validator = FilingValidator(
-        schema_provider=schema_provider,
-        deadline_checker=deadline_checker,
-        quarterly_303_drafts=quarterly_303_drafts,
+    raise FilingBuilderError(
+        "filing draft construction requires a validated registry snapshot; "
+        "legacy Python filing builders are disabled"
     )
-    findings = validator.validate(raw_draft)
-    draft = apply_validation(raw_draft, findings)
-    if fail_on_warning and any(f.severity is not FilingFindingSeverity.INFO for f in findings):
-        raise FilingValidationError(f"Draft {draft.draft_id} has {len(findings)} blocking findings")
-    _logger.info(
-        "built draft draft_id=%s modelo=%s period=%s status=%s findings=%d",
-        draft.draft_id,
-        draft.modelo,
-        draft.period,
-        draft.status.value,
-        len(findings),
-    )
-    return draft
 
 
 def validate_draft(
@@ -355,9 +279,6 @@ __all__ = [
     "FilingValue",
     "FilingValueKind",
     "JustificanteImportResult",
-    "Modelo130Builder",
-    "Modelo303Builder",
-    "Modelo390Builder",
     "ModeloCode",
     "ModeloIdentity",
     "apply_validation",
@@ -373,7 +294,6 @@ __all__ = [
     "describe_stale_reason",
     "export_draft",
     "filing_profile_from_autonomo",
-    "get_builder",
     "import_filing_from_justificante",
     "iter_findings",
     "list_amendments",

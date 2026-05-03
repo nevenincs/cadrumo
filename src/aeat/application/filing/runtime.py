@@ -1,8 +1,8 @@
 """Production runtime helpers for :mod:`aeat.application.filing`.
 
-Exposes the concrete profile and schema-provider implementations used
-by the CLI and workflow surfaces, backed by the same in-tree filing
-schemas the builders execute against today.
+Exposes concrete profile helpers used by the CLI and workflow surfaces.
+The production schema provider is intentionally fail-closed until it is
+backed by validated registry snapshots.
 
 The filing runtime must not depend on
 :mod:`aeat.application.filing.testing`; this module is the production
@@ -18,8 +18,8 @@ Key entry points:
   profile shape.
 * :func:`load_default_filing_profile` — loads the configured default
   profile JSON and returns a runtime profile.
-* :func:`build_runtime_schema_provider` — assembles the production
-  :class:`StaticCasillaSchemaProvider` for modelos 130 / 303 / 390.
+* :func:`build_runtime_schema_provider` — rejects legacy static schema
+  providers until registry-backed snapshots are available.
 """
 
 from __future__ import annotations
@@ -29,15 +29,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.deadlines import AutonomoProfile, applies_to
-from ...domain.filing._builders._modelo_130_schema import (
-    MODELO_130_SCHEMA,
-    CasillaSource,
-    StaticCasillaCollection,
-    StaticCasillaSchema,
-    StaticCasillaSchemaProvider,
-)
-from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
+from ...domain.filing import CasillaSchemaProvider
 from ...domain.filing._errors import FilingBuilderError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -134,53 +126,22 @@ def load_default_filing_profile(
     return filing_profile_from_autonomo(profile, display_name=display_name)
 
 
-def build_runtime_schema_provider() -> StaticCasillaSchemaProvider:
-    """Return the production filing schema provider.
+def build_runtime_schema_provider() -> CasillaSchemaProvider:
+    """Reject legacy production filing schemas.
 
-    The provider is backed by the current filing-engine collections for
-    modelos 130, 303, and 390. This keeps the runtime on the exact
-    schema the builders and validator understand today, while avoiding
-    any import dependency on the test-only helper module.
-
-    Returns:
-        A :class:`StaticCasillaSchemaProvider` with one collection per
-        supported modelo.
+    Filing-grade draft creation must be backed by validated registry
+    snapshots. The previous provider imported model-specific static
+    builder schemas, which shadowed the central registry and allowed
+    production calculation paths to run without legal-source closure.
     """
 
-    return StaticCasillaSchemaProvider(
-        collections={
-            "130": _clone_collection(MODELO_130_SCHEMA),
-            "303": _clone_collection(MODELO_303_SCHEMA),
-            "390": _clone_collection(MODELO_390_SCHEMA),
-        }
-    )
-
-
-def _clone_collection(collection: StaticCasillaCollection) -> StaticCasillaCollection:
-    """Deep-copy a :class:`StaticCasillaCollection` for runtime use."""
-    return StaticCasillaCollection(
-        schema_version=collection.schema_version,
-        casillas=tuple(
-            StaticCasillaSchema(
-                id=casilla.id,
-                value_type=casilla.value_type,
-                required=casilla.required,
-                formula_inputs=casilla.formula_inputs,
-                min_value=casilla.min_value,
-                max_value=casilla.max_value,
-                default=casilla.default,
-                description=casilla.description,
-                sources=casilla.sources,
-                valid_from=casilla.valid_from,
-                valid_to=casilla.valid_to,
-            )
-            for casilla in collection.casillas
-        ),
+    raise FilingBuilderError(
+        "runtime filing schema provider requires validated registry snapshots; "
+        "legacy static filing schemas are disabled",
     )
 
 
 __all__ = [
-    "CasillaSource",
     "FilingOperatorProfile",
     "build_runtime_schema_provider",
     "filing_profile_from_autonomo",

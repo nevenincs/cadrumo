@@ -1,11 +1,9 @@
 """Public synthetic-fixture helpers for :mod:`aeat.application.filing`.
 
-This module exposes the synthetic Modelo 130 casilla schema and a
-small profile / deadline-checker pair so that downstream tests can
-exercise :func:`aeat.application.filing.build_draft` end-to-end without
-reaching into private builder internals. These helpers are
-intentionally test-grade — they will be replaced once the real
-casilla DB, modelo catalogue, and deadline engine land on ``main``.
+This module exposes synthetic schema fixtures and profile/deadline helpers so
+downstream tests can exercise application filing workflows without reaching
+into private builder internals. These helpers are test-grade only and are not a
+filing-grade legal authority.
 """
 
 from __future__ import annotations
@@ -15,14 +13,6 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from ...core.errors import FilingFixtureError, FixtureProvisioningError
-from ...domain.filing._builders._modelo_130_schema import (
-    MODELO_130_SCHEMA,
-    StaticCasillaCollection,
-    StaticCasillaSchema,
-    StaticCasillaSchemaProvider,
-)
-from ...domain.filing._builders._modelo_303_schema import MODELO_303_SCHEMA
-from ...domain.filing._builders._modelo_390_schema import MODELO_390_SCHEMA
 from ._testing_loader import SYNTHETIC_FIXTURES_ROOT, load_filing_history
 from ._testing_schema import (
     FilingRecord,
@@ -31,6 +21,14 @@ from ._testing_schema import (
     FixtureCasilla,
     FixtureScalar,
     compute_record_id,
+)
+from ._testing_static_schema import (
+    MODELO_130_SCHEMA,
+    MODELO_303_SCHEMA,
+    MODELO_390_SCHEMA,
+    StaticCasillaCollection,
+    StaticCasillaSchema,
+    StaticCasillaSchemaProvider,
 )
 from ._testing_synthesize import (
     synthesize_filing_draft,

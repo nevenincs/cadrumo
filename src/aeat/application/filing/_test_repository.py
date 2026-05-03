@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -30,27 +31,22 @@ from ...domain.filing._repository import (
     migrate_legacy_drafts_to_repository,
 )
 from ...domain.filing._schema import FilingDraft
-from . import build_draft
-from .runtime import FilingOperatorProfile, build_runtime_schema_provider
+from .testing import synthesize_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> FilingOperatorProfile:
-    return FilingOperatorProfile(
-        tax_id="00000000T",
-        display_name="Test Autónomo",
-        applicable_modelos=("130", "303", "390"),
-    )
-
-
 def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft:
-    return build_draft(
+    return synthesize_filing_draft(
         modelo="130",
         period=period,
-        profile=_profile(),
-        inputs={"01": ingresos, "02": 3500, "05": 400, "06": 0},
-        schema_provider=build_runtime_schema_provider(),
+        casilla_values={
+            "01": Decimal(ingresos),
+            "02": Decimal("3500"),
+            "05": Decimal("400"),
+            "06": Decimal("0"),
+        },
+        profile_tax_id="00000000T",
     )
 
 

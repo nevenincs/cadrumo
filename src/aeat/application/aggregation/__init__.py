@@ -12,7 +12,7 @@ from ._errors import (
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
 )
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
 from ._service import aggregate_catalogue
 
 if TYPE_CHECKING:
@@ -30,6 +30,7 @@ __all__ = [
     "FinancialFilingInputsProvider",
     "Period",
     "PeriodKind",
+    "Quarter",
     "aggregate_catalogue",
 ]
 
