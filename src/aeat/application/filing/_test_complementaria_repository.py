@@ -34,27 +34,22 @@ from ...domain.filing._complementaria_repository import (
     FilingAmendmentRepository,
     migrate_legacy_amendments_to_repository,
 )
-from . import build_draft
-from .runtime import FilingOperatorProfile, build_runtime_schema_provider
+from .testing import synthesize_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> FilingOperatorProfile:
-    return FilingOperatorProfile(
-        tax_id="00000000T",
-        display_name="Test Autónomo",
-        applicable_modelos=("130",),
-    )
-
-
 def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
-    amended_draft = build_draft(
+    amended_draft = synthesize_filing_draft(
         modelo="130",
         period="2026Q1",
-        profile=_profile(),
-        inputs={"01": 13000, "02": 3500, "05": 400, "06": 0},
-        schema_provider=build_runtime_schema_provider(),
+        casilla_values={
+            "01": Decimal("13000"),
+            "02": Decimal("3500"),
+            "05": Decimal("400"),
+            "06": Decimal("0"),
+        },
+        profile_tax_id="00000000T",
     )
     return FilingAmendment(
         amendment_id=amendment_id,

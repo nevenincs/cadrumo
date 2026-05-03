@@ -1,8 +1,4 @@
-"""Unit tests for the filing complementaria / amendment engine.
-
-Exercises :func:`aeat.application.filing.build_complementaria` and the
-companion repository surface for Modelo 130, 303, and 390 amendments.
-"""
+"""Unit tests for complementaria registry-boundary behaviour."""
 
 from __future__ import annotations
 
@@ -15,28 +11,20 @@ import pytest
 from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import (
     QUARTERLY_303_INPUT_KEY,
-    AmendmentKind,
     FilingAmendmentError,
-    FilingAmendmentValidationError,
+    FilingBuilderError,
     FilingDraft,
     build_complementaria,
-    build_draft,
-    list_amendments,
     load_amendment,
 )
-from .testing import SyntheticProfile, default_schema_provider
+from .testing import default_schema_provider, synthesize_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path):
-    """Install an :class:`EphemeralMasterKeyProvider` for the test sandbox.
-
-    Required so the :class:`FilingDraftRepository` and
-    :class:`FilingAmendmentRepository` ciphertext-at-rest writes succeed
-    without touching a real OS keychain.
-    """
+    """Install an ephemeral master key provider for encrypted test stores."""
     from ...adapters.persistence.storage import (
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,
@@ -62,14 +50,6 @@ def _patch_master_key(tmp_path: Path):
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
-
-
-def _profile(*modelos: str) -> SyntheticProfile:
-    return SyntheticProfile(
-        tax_id="00000000T",
-        display_name="Synthetic amendment test profile",
-        applicable_modelos=modelos,
-    )
 
 
 def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: FilingDraft) -> None:
@@ -108,71 +88,33 @@ def _submitted_filing(draft: FilingDraft, *, submission_id: str = "sub-1") -> Su
     )
 
 
-def _build_130_draft(*, ingresos: str, gastos: str = "3500.00", retenciones: str = "400.00") -> FilingDraft:
-    return build_draft(
-        modelo="130",
-        period="2024Q1",
-        profile=_profile("130"),
-        inputs={
-            "01": Decimal(ingresos),
-            "02": Decimal(gastos),
-            "05": Decimal(retenciones),
-            "06": Decimal("0.00"),
-        },
-        schema_provider=default_schema_provider(),
-    )
-
-
-def _build_303_draft(*, period: str, base_21: str, deducible_29: str = "200.00") -> FilingDraft:
-    return build_draft(
-        modelo="303",
+def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraft:
+    return synthesize_filing_draft(
+        modelo=modelo,
         period=period,
-        profile=_profile("303", "390"),
-        inputs={
-            "07": Decimal(base_21),
-            "29": Decimal(deducible_29),
-        },
-        schema_provider=default_schema_provider(),
-    )
-
-
-def _build_390_draft(*, year: int, quarterly: tuple[FilingDraft, ...]) -> FilingDraft:
-    return build_draft(
-        modelo="390",
-        period=str(year),
-        profile=_profile("303", "390"),
-        inputs={"01": year, QUARTERLY_303_INPUT_KEY: quarterly},
-        schema_provider=default_schema_provider(),
+        casilla_values=casillas,
+        profile_tax_id="00000000T",
     )
 
 
 class TestBuildComplementaria:
-    def test_modelo_130_delta_computation(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        original_draft = _build_130_draft(ingresos="12500.00")
+    def test_modelo_130_requires_registry_snapshot(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        original_draft = _draft("130", "2024Q1", {"01": Decimal("12500.00"), "07": Decimal("1400.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft)
 
-        amendment = build_complementaria(
-            original,
-            {
-                "01": Decimal("13000.00"),
-                "02": Decimal("3500.00"),
-                "05": Decimal("400.00"),
-                "06": Decimal("0.00"),
-                "_reasons": {"01": "Late income invoice received after original filing."},
-            },
-            schema_provider=default_schema_provider(),
-        )
-
-        by_casilla = {change.casilla_code: change for change in amendment.delta}
-        assert amendment.amendment_kind is AmendmentKind.COMPLEMENTARIA
-        assert by_casilla["01"].old_value == Decimal("12500.00")
-        assert by_casilla["01"].new_value == Decimal("13000.00")
-        assert by_casilla["01"].reason == "Late income invoice received after original filing."
-        assert by_casilla["07"].old_value == Decimal("1400.0000")
-        assert by_casilla["07"].new_value == Decimal("1500.0000")
-        assert load_amendment(amendment.amendment_id) == amendment
-        assert list_amendments(modelo="130") == (amendment,)
+        with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
+            build_complementaria(
+                original,
+                {
+                    "01": Decimal("13000.00"),
+                    "02": Decimal("3500.00"),
+                    "05": Decimal("400.00"),
+                    "06": Decimal("0.00"),
+                },
+                schema_provider=default_schema_provider(),
+            )
+        assert not (tmp_path / "submissions" / "amendments").exists()
 
     def test_load_amendment_rejects_traversal_id(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         submissions_dir = tmp_path / "submissions"
@@ -181,70 +123,29 @@ class TestBuildComplementaria:
         with pytest.raises(FilingAmendmentError, match="simple filename token"):
             load_amendment("../escape")
 
-    def test_complementaria_cannot_reduce_liability(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        original_draft = _build_130_draft(ingresos="12500.00")
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
-        original = _submitted_filing(original_draft, submission_id="sub-reduce")
-
-        with pytest.raises(FilingAmendmentValidationError, match="cannot reduce liability"):
-            build_complementaria(
-                original,
-                {
-                    "01": Decimal("12000.00"),
-                    "02": Decimal("3500.00"),
-                    "05": Decimal("400.00"),
-                    "06": Decimal("0.00"),
-                },
-                schema_provider=default_schema_provider(),
-            )
-
-    def test_modelo_303_pre_rectificativa_is_complementaria(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        original_draft = _build_303_draft(period="2024Q2", base_21="10000.00")
+    def test_modelo_303_requires_registry_snapshot(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        original_draft = _draft("303", "2024Q2", {"69": Decimal("1900.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-303")
 
-        amendment = build_complementaria(
-            original,
-            {
-                "07": Decimal("11000.00"),
-                "29": Decimal("200.00"),
-                "_reasons": {"07": "Additional taxable turnover discovered during closing review."},
-            },
-            schema_provider=default_schema_provider(),
-        )
+        with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
+            build_complementaria(
+                original,
+                {"07": Decimal("11000.00"), "29": Decimal("200.00")},
+                schema_provider=default_schema_provider(),
+            )
+        assert not (tmp_path / "submissions" / "amendments").exists()
 
-        by_casilla = {change.casilla_code: change for change in amendment.delta}
-        assert amendment.amendment_kind is AmendmentKind.COMPLEMENTARIA
-        assert by_casilla["69"].old_value is not None
-        assert by_casilla["69"].new_value > by_casilla["69"].old_value
-
-    def test_modelo_390_builds_sustitutiva(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        quarterly_original = tuple(
-            _build_303_draft(period=f"2024Q{quarter}", base_21="10000.00") for quarter in (1, 2, 3, 4)
-        )
-        original_draft = _build_390_draft(year=2024, quarterly=quarterly_original)
+    def test_modelo_390_requires_registry_snapshot(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        original_draft = _draft("390", "2024", {"109": Decimal("8400.00")})
         _persist_original_draft(monkeypatch, tmp_path, original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-390")
+        quarterly = tuple(_draft("303", f"2024Q{quarter}", {"09": Decimal("2100.00")}) for quarter in (1, 2, 3, 4))
 
-        quarterly_updated = (
-            _build_303_draft(period="2024Q1", base_21="10000.00"),
-            _build_303_draft(period="2024Q2", base_21="11000.00"),
-            _build_303_draft(period="2024Q3", base_21="10000.00"),
-            _build_303_draft(period="2024Q4", base_21="10000.00"),
-        )
-        amendment = build_complementaria(
-            original,
-            {
-                "01": 2024,
-                QUARTERLY_303_INPUT_KEY: quarterly_updated,
-                "_reasons": {"109": "Annual total updated after revising Q2 quarterly VAT return."},
-            },
-            schema_provider=default_schema_provider(),
-        )
-
-        assert amendment.amendment_kind is AmendmentKind.SUSTITUTIVA
-        assert any(change.casilla_code == "109" for change in amendment.delta)
+        with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
+            build_complementaria(
+                original,
+                {"01": 2024, QUARTERLY_303_INPUT_KEY: quarterly},
+                schema_provider=default_schema_provider(),
+            )
+        assert not (tmp_path / "submissions" / "amendments").exists()
