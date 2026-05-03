@@ -108,7 +108,7 @@ def register(code: ErrorCode) -> ErrorCode:
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.adapters.inbound.pdf._errors.PdfFilingImportError",
+        "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
             category=ErrorCategory.ERROR,

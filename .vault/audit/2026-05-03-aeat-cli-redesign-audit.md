@@ -158,3 +158,42 @@ is closed.
 This audit is a single-cycle snapshot. The hourly recurring
 audit job will replay this scope and append delta findings as
 the backend evolves.
+
+## Cycle 2 — 2026-05-03
+
+CLI-REDESIGN-007 | RESOLVED | LOW | Duplicate `PdfFilingImportError` class identity
+A parallel-agent refactor left two `PdfFilingImportError` class
+definitions: one in `src/aeat/adapters/inbound/pdf/_errors.py` and
+one in `src/aeat/domain/justificante/_errors.py`. Both subclass
+`AeatError`, so both required a registry entry — but only one was
+present, and which one was registered alternated between cycles.
+Cycle 2 consolidates: the canonical class lives in
+`aeat.domain.justificante._errors`, and
+`aeat.adapters.inbound.pdf._errors` is a re-export only. The
+error registry points at the canonical domain path.
+
+CLI-REDESIGN-008 | RESOLVED | LOW | Missing `CasillaDataType` re-export from `domain.schema._enums`
+The `_enums.py` docstring documented a re-export of
+`CasillaDataType` from `aeat.domain.casillas.models`, but the
+actual re-export had been removed during a parallel refactor.
+Three modules under `aeat.domain.schema` (`_models.py`,
+`_cache.py`, the schema `__init__.py`) imported it from this
+module and failed at collection time. Restored the re-export
+inside `_enums.py` and added `__all__` so future churn won't
+silently drop it again.
+
+Cycle 2 progress on the original 5 open gaps:
+* CLI-REDESIGN-001 (ledger schema) — no backend movement;
+  still OPEN.
+* CLI-REDESIGN-002 (invoice schema) — no backend movement;
+  still OPEN.
+* CLI-REDESIGN-003 (profile registry) — no backend movement;
+  still OPEN.
+* CLI-REDESIGN-004 (declaration export/verify) — no backend
+  movement; still OPEN.
+* CLI-REDESIGN-005 (import diagnostics) — no backend movement;
+  still OPEN.
+
+The 5 open gaps remain the priority; cycle 3 will check whether
+the implementation team has begun any of them and re-verify the
+full backend test sweep.
