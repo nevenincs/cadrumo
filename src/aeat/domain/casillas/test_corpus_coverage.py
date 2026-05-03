@@ -4,7 +4,7 @@ Locks two invariants:
 
 * Every registered declaración extractor has a corresponding casilla
   catalogue committed under ``corpus/casillas/`` for every period
-  the modelo's cadence requires (mandated 2023–2026 at minimum).
+  the modelo's cadence requires (mandated 2023-2026 at minimum).
 * Every casilla the extractor claims to read is actually defined
   in that catalogue.
 
@@ -21,17 +21,23 @@ from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
 from ...adapters.inbound.declaracion._generic_extractor import GenericDeclaracionExtractor
 from ..modelos import UnknownModeloError, get_modelo
 from ..modelos._categories import ModeloCadence
-from . import CasillaParseError, load_casillas
+from .models import CasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_corpus_fully_covers_implemented_extractors() -> None:
+def test_corpus_fully_covers_implemented_extractors(
+    corpus_catalogues: tuple[tuple[object, str, str, CasillaCatalogue], ...],
+) -> None:
     """Every registered extractor must have full corpus coverage.
 
     1. A valid JSON must exist for every period defined by the modelo's cadence and extractor year.
     2. Every casilla expected by the extractor must be defined in the corpus.
     """
+    by_key: dict[tuple[str, str], CasillaCatalogue] = {
+        (modelo, period): catalogue for _path, modelo, period, catalogue in corpus_catalogues
+    }
+
     failures: list[str] = []
 
     for cls in _REGISTERED_CLASSES:
@@ -67,22 +73,20 @@ def test_corpus_fully_covers_implemented_extractors() -> None:
             else:
                 periods = [str(y)]
 
+            modelo_label = f"MODELO_{modelo_code}"
             for period in periods:
-                try:
-                    catalogue = load_casillas(f"MODELO_{modelo_code}", period)
-                except CasillaParseError as exc:
-                    msg = f"Missing or invalid corpus for MODELO_{modelo_code} {period} ({cls.__name__}): {exc}"
-                    failures.append(msg)
+                catalogue = by_key.get((modelo_label, period))
+                if catalogue is None:
+                    failures.append(f"Missing or invalid corpus for {modelo_label} {period} ({cls.__name__})")
                     continue
 
                 corpus_casilla_ids = {record.casilla_id for record in catalogue.records}
                 missing_casillas = required_casillas - corpus_casilla_ids
                 if missing_casillas:
-                    msg = (
-                        f"Corpus for MODELO_{modelo_code} {period} is missing casillas "
+                    failures.append(
+                        f"Corpus for {modelo_label} {period} is missing casillas "
                         f"required by {cls.__name__}: {sorted(missing_casillas)}"
                     )
-                    failures.append(msg)
 
     if failures:
         msg = "Corpus coverage is incomplete. The following gaps must be filled:\n" + "\n".join(
