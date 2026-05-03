@@ -20,7 +20,6 @@ from . import (
 )
 from ._import import _normalise_period
 from .runtime import build_runtime_schema_provider
-from .testing import default_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -29,8 +28,8 @@ _FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 
 @pytest.fixture(scope="module")
 def schema_provider():
-    """Build the test schema provider once per module."""
-    return default_schema_provider()
+    """Return a placeholder provider; build_draft fails before using it."""
+    return object()
 
 
 def test_runtime_schema_provider_requires_registry_snapshot() -> None:
