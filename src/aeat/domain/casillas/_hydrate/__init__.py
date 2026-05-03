@@ -86,21 +86,20 @@ def run(
     all_targets: bool = False,
     root: Path | None = None,
 ) -> tuple[CasillaCatalogue, ...]:
-    """Build, and optionally persist, deterministic corpus projections.
+    """Build deterministic corpus projections without repository writes.
 
-    The default is check-only. Repository writes require ``write=True``
-    and an explicit target, or ``all_targets=True`` for the exceptional
-    full-tree materialization case.
+    The legacy write path is disabled. Filing-grade casilla definitions now
+    belong in the central registry and reviewed TOML data, not in generated
+    corpus projections.
     """
     from ...modelos import MODELO_REGISTRY
-    from ..catalogue import save_casillas
 
     if not all_targets and modelo is None:
         raise ValueError("modelo is required unless all_targets=True")
     if not all_targets and year is None and period is None:
         raise ValueError("year or period is required unless all_targets=True")
-    if write and root is None:
-        raise ValueError("write requires an explicit root")
+    if write or root is not None:
+        raise ValueError("casilla hydrate writes are disabled; migrate definitions through registry/aeat")
 
     catalogues: list[CasillaCatalogue] = []
     if all_targets:
@@ -111,7 +110,4 @@ def run(
         assert modelo is not None
         catalogues.extend(materialize_catalogues(modelo=modelo, year=year, period=period))
 
-    if write:
-        for catalogue in catalogues:
-            save_casillas(catalogue, root=root)
     return tuple(catalogues)

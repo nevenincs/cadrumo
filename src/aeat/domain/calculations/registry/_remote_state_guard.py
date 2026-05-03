@@ -1,0 +1,185 @@
+"""Fail-closed guard for live AEAT cross-reference surfaces."""
+
+from __future__ import annotations
+
+from typing import Literal
+from urllib.parse import urlparse
+
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from ._errors import RegistryValidationError
+
+CrossReferenceClassification = Literal[
+    "open_simulator",
+    "integration_test_service",
+    "static_official_only",
+    "forbidden_stateful_surface",
+]
+RemoteOperationKind = Literal["http", "browser_action", "local_workbook"]
+RemoteGuardDecision = Literal["allowed", "blocked"]
+
+_READ_ONLY_HTTP_METHODS = {"GET", "HEAD", "OPTIONS"}
+_AEAT_HOST_SUFFIXES = (
+    "agenciatributaria.gob.es",
+    "aeat.es",
+)
+_FORBIDDEN_TOKENS = (
+    "post",
+    "submit",
+    "send",
+    "commit",
+    "save",
+    "sign",
+    "payment",
+    "debit",
+    "amend",
+    "cancel",
+    "delete",
+    "presentar",
+    "presentacion",
+    "enviar",
+    "guardar",
+    "firmar",
+    "pagar",
+    "domiciliar",
+    "modificar",
+    "anular",
+    "cancelar",
+    "subsanar",
+    "borrador",
+    "predeclaracion",
+)
+
+
+class RemoteStateGuardModel(BaseModel):
+    """Strict frozen base for remote-state guard records."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class RemoteStateGuardPolicy(RemoteStateGuardModel):
+    """Policy attached to a live/static AEAT cross-reference decision."""
+
+    id: str
+    classification: CrossReferenceClassification
+    allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
+    synthetic_data_allowed: bool
+    requires_authentication: bool
+    requires_aeat_authorization: bool
+
+    @model_validator(mode="after")
+    def _validate_policy(self) -> RemoteStateGuardPolicy:
+        if self.classification in {"open_simulator", "integration_test_service"} and not self.allowed_hosts:
+            raise ValueError("live cross-reference policy must declare allowed hosts")
+        if self.classification == "open_simulator" and self.requires_authentication:
+            raise ValueError("open simulator policy must not require authentication")
+        if self.classification == "static_official_only" and self.synthetic_data_allowed:
+            raise ValueError("static official documentation cannot accept synthetic remote data")
+        if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
+            raise ValueError("forbidden stateful surface cannot accept synthetic remote data")
+        return self
+
+    @field_validator("allowed_hosts")
+    @classmethod
+    def _validate_hosts(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for host in value:
+            parsed = urlparse(f"https://{host}")
+            if not parsed.hostname or parsed.hostname != host.lower():
+                raise ValueError(f"invalid allowed host {host!r}")
+            if not _is_aeat_host(host):
+                raise ValueError(f"allowed host is not an AEAT host: {host!r}")
+        return value
+
+
+class RemoteOperation(RemoteStateGuardModel):
+    """One candidate browser/network/local operation before execution."""
+
+    kind: RemoteOperationKind
+    method: str | None = None
+    url: AnyUrl | None = None
+    action: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_operation(self) -> RemoteOperation:
+        if self.kind == "http" and (self.method is None or self.url is None):
+            raise ValueError("http operation requires method and url")
+        if self.kind == "browser_action" and self.action is None:
+            raise ValueError("browser action requires action text")
+        if self.kind == "local_workbook" and (self.method is not None or self.url is not None):
+            raise ValueError("local workbook operation must not declare remote method or url")
+        return self
+
+
+class RemoteStateGuardResult(RemoteStateGuardModel):
+    """Decision returned by the remote-state guard."""
+
+    decision: RemoteGuardDecision
+    reason: str
+    policy_id: str
+
+
+def assert_remote_operation_allowed(
+    policy: RemoteStateGuardPolicy,
+    operation: RemoteOperation,
+) -> RemoteStateGuardResult:
+    """Return an allowed decision or raise for forbidden AEAT remote state."""
+
+    result = evaluate_remote_operation(policy, operation)
+    if result.decision == "blocked":
+        raise RegistryValidationError(result.reason)
+    return result
+
+
+def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
+    """Evaluate one operation against the fail-closed remote-state guard."""
+
+    if operation.kind == "local_workbook":
+        return RemoteStateGuardResult(
+            decision="allowed",
+            reason="local workbook parity does not touch AEAT remote state",
+            policy_id=policy.id,
+        )
+    if policy.classification in {"static_official_only", "forbidden_stateful_surface"}:
+        return _blocked(policy, f"{policy.classification} does not allow live AEAT operations")
+    if operation.kind == "http":
+        return _evaluate_http(policy, operation)
+    return _evaluate_browser_action(policy, operation)
+
+
+def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
+    method = (operation.method or "").upper()
+    if method not in _READ_ONLY_HTTP_METHODS:
+        return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
+    assert operation.url is not None
+    host = operation.url.host
+    if host is None or host.lower() not in policy.allowed_hosts:
+        return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
+    text = f"{operation.url} {operation.action or ''}".lower()
+    token = _first_forbidden_token(text)
+    if token is not None:
+        return _blocked(policy, f"AEAT remote state token {token!r} is forbidden")
+    return RemoteStateGuardResult(decision="allowed", reason="read-only AEAT operation allowed", policy_id=policy.id)
+
+
+def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
+    text = operation.action or ""
+    token = _first_forbidden_token(text.lower())
+    if token is not None:
+        return _blocked(policy, f"AEAT browser action token {token!r} is forbidden")
+    return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
+
+
+def _blocked(policy: RemoteStateGuardPolicy, reason: str) -> RemoteStateGuardResult:
+    return RemoteStateGuardResult(decision="blocked", reason=reason, policy_id=policy.id)
+
+
+def _first_forbidden_token(value: str) -> str | None:
+    for token in _FORBIDDEN_TOKENS:
+        if token in value:
+            return token
+    return None
+
+
+def _is_aeat_host(host: str) -> bool:
+    normalized = host.lower()
+    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in _AEAT_HOST_SUFFIXES)
