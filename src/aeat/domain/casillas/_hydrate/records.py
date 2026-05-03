@@ -2,8 +2,9 @@ from typing import Any, cast
 
 from aeat.core.errors import AmbiguousPeriodError, MissingRulesetError
 from aeat.core.logging import get_logger
-from aeat.domain.formulas import FiscalPeriod, Quarter, Ruleset, get_registry
-from aeat.domain.modelos import ModeloCode
+from aeat.domain.calculations import get_calculation_registry
+from aeat.domain.formulas import FiscalPeriod, Quarter, Ruleset
+from aeat.domain.modelos import ModeloCadence, ModeloCode, get_modelo
 
 from .constants import _HTTP_URL_ADAPTER, REVIEWED_AT, REVIEWED_BY
 from .data import CENSAL_CASILLAS, M111_AUGMENT
@@ -19,6 +20,7 @@ from .models import CasillaRecord, FormulaReference, _Casilla
 
 _logger = get_logger(__name__)
 
+
 def _section_for(modelo: str) -> str:
     if modelo in {"100", "200"}:
         return "Liquidación"
@@ -28,25 +30,26 @@ def _section_for(modelo: str) -> str:
         return "Censo"
     return "General"
 
+
 def _get_ruleset_periods(modelo: str, year: int) -> list[str]:
-    registry = get_registry()
+    registry = get_calculation_registry()
     code = ModeloCode(modelo)
-    out: set[str] = set()
-    for r in registry.rulesets:
-        if r.modelo == code:
-            if r.effective_from.year <= year and (r.effective_to is None or r.effective_to.year >= year):
-                # We assume standard periods for now or derive from ruleset_id if possible
-                # The hydrate logic seems to expect "1T", "0A" etc.
-                if "summary" in r.ruleset_id:
-                    out.add("0A")
-                elif "303" in r.ruleset_id or "130" in r.ruleset_id or "131" in r.ruleset_id:
-                     out.update({"1T", "2T", "3T", "4T"})
-                else:
-                     out.add("0A")
-    return sorted(list(out))
+    if not any(
+        r.modelo == code and r.effective_from.year <= year and (r.effective_to is None or r.effective_to.year >= year)
+        for r in registry.rulesets
+    ):
+        return []
+
+    cadence = get_modelo(modelo).cadence
+    if cadence == ModeloCadence.QUARTERLY:
+        return ["1T", "2T", "3T", "4T"]
+    if cadence == ModeloCadence.MONTHLY:
+        return [f"{month}M" for month in range(1, 13)]
+    return ["0A"]
+
 
 def _get_ruleset(modelo: str, year: int, period_id: str) -> Ruleset | None:
-    registry = get_registry()
+    registry = get_calculation_registry()
     code = ModeloCode(modelo)
     quarter = None
     if period_id.endswith("T"):
@@ -58,10 +61,11 @@ def _get_ruleset(modelo: str, year: int, period_id: str) -> Ruleset | None:
         variant = "summary"
 
     try:
-        return registry.resolve(modelo=code, period=period, variant=variant)
+        return registry.resolve_ruleset(modelo=code, period=period, variant=variant)
     except (MissingRulesetError, AmbiguousPeriodError):
         _logger.debug("no ruleset for modelo=%s period_id=%s year=%s variant=%s", modelo, period_id, year, variant)
         return None
+
 
 def _canonical_period(year: int, period_id: str) -> str:
     if period_id == "0A":
@@ -72,6 +76,7 @@ def _canonical_period(year: int, period_id: str) -> str:
         # e.g. "1M" -> "2025-01"
         return f"{year}-{period_id[:-1].zfill(2)}"
     return f"{year}{period_id}"
+
 
 def _hydrate_from_rulesets(modelo: str, year: int) -> list[CasillaRecord]:
     records: list[CasillaRecord] = []
@@ -109,6 +114,7 @@ def _hydrate_from_rulesets(modelo: str, year: int) -> list[CasillaRecord]:
             )
     return records
 
+
 def _hydrate_censal(modelo: str, year: int) -> list[CasillaRecord]:
     records: list[CasillaRecord] = []
     languages = _supported_language_codes()
@@ -143,6 +149,7 @@ def _hydrate_censal(modelo: str, year: int) -> list[CasillaRecord]:
         )
     return records
 
+
 def _hydrate_manual(modelo: str, year: int, data: tuple[_Casilla, ...], period_id: str = "0A") -> list[CasillaRecord]:
     records: list[CasillaRecord] = []
     languages = _supported_language_codes()
@@ -153,10 +160,7 @@ def _hydrate_manual(modelo: str, year: int, data: tuple[_Casilla, ...], period_i
         helps = c.help_for_languages(languages)
         formula_obj = None
         if c.formula_expression:
-            formula_obj = FormulaReference(
-                expression=c.formula_expression,
-                references_casillas=c.formula_refs
-            )
+            formula_obj = FormulaReference(expression=c.formula_expression, references_casillas=c.formula_refs)
         records.append(
             CasillaRecord(
                 synthetic=False,
@@ -182,6 +186,7 @@ def _hydrate_manual(modelo: str, year: int, data: tuple[_Casilla, ...], period_i
             )
         )
     return records
+
 
 def _hydrate_modelo_111(year: int) -> list[CasillaRecord]:
     # 1. Start with ruleset-driven records
