@@ -63,7 +63,9 @@ RULESET: Ruleset = Ruleset(
     effective_from=_EFFECTIVE_FROM,
     effective_to=_EFFECTIVE_TO,
     casillas=_CASILLAS_2025,
-    formulas=_FORMULAS_2025,
+    formulas=tuple(
+        f.model_copy(update={"formula_id": f.formula_id.replace(".2025.", ".2026.")}) for f in _FORMULAS_2025
+    ),
     parameters=_PARAMETERS,
     legal_citations=_CITATIONS_2025,
 )
