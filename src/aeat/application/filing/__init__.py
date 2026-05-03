@@ -21,7 +21,6 @@ from ...domain.filing import (
     FilingAmendmentError,
     FilingAmendmentValidationError,
     FilingApprovalBasis,
-    FilingBuilder,
     FilingBuilderError,
     FilingComputationError,
     FilingDraft,
@@ -143,7 +142,6 @@ def validate_draft(
     validator = FilingValidator(
         schema_provider=schema_provider,
         deadline_checker=deadline_checker,
-        quarterly_303_drafts=None,
     )
     findings = validator.validate(draft)
     refreshed = apply_validation(draft, findings)
@@ -221,7 +219,6 @@ __all__ = [
     "FilingAmendmentValidationError",
     "FilingApprovalBasis",
     "FilingApprovalStaleReason",
-    "FilingBuilder",
     "FilingBuilderError",
     "FilingComputationError",
     "FilingDraft",
