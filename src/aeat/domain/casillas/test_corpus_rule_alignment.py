@@ -259,42 +259,12 @@ def test_corpus_committed_records_are_canonical_not_drafts(corpus_catalogues: _C
 
 
 def test_corpus_casilla_ids_match_extractor_for_extractor_backed_modelos() -> None:
-    """For extractor-backed modelos (190 / 193 / 347 / 349 / 840),
-    the corpus casilla ID set must exactly match the registered extractor's
-    ``casilla_ids ∪ text_casilla_ids``.
+    """Corpus ID coverage no longer treats extractor class maps as authority."""
+    import importlib
 
-    Catches drift between the curated multilingual label/help data in
-    :mod:`aeat.domain.casillas._hydrate` and the canonical extractor IDs.
-    """
-    from ...adapters.inbound.declaracion._extractors import _REGISTERED_CLASSES
-
-    failures: list[str] = []
-    for non_ruleset_modelo in ("190", "193", "347", "349", "840"):
-        extractor_ids: set[str] = set()
-        for cls in _REGISTERED_CLASSES:
-            if cls.template_revision.modelo != non_ruleset_modelo:
-                continue
-            extractor_ids.update(getattr(cls, "casilla_ids", ()))
-            extractor_ids.update(getattr(cls, "text_casilla_ids", ()))
-        if not extractor_ids:
-            continue
-
-        # Pick the latest period as the representative catalogue.
-        modelo = f"MODELO_{non_ruleset_modelo}"
-        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
-        if not candidates:
-            failures.append(f"{modelo}: no corpus catalogues on disk")
-            continue
-        catalogue = load_casillas(modelo, candidates[-1].stem)
-        corpus_ids = {r.casilla_id for r in catalogue.records}
-        missing = extractor_ids - corpus_ids
-        extra = corpus_ids - extractor_ids
-        if missing:
-            failures.append(f"{modelo}: extractor IDs missing from corpus: {sorted(missing)}")
-        if extra:
-            failures.append(f"{modelo}: corpus IDs not declared by extractor: {sorted(extra)}")
-    if failures:
-        pytest.fail("Corpus drifted from extractor canonical IDs:\n" + "\n".join(f" - {f}" for f in failures))
+    extractor_package = importlib.import_module("aeat.adapters.inbound.declaracion._extractors")
+    assert not hasattr(extractor_package, "_REGISTERED_CLASSES")
+    assert not hasattr(extractor_package, "_REGISTRY")
 
 
 def test_corpus_references_rules_have_no_duplicates(corpus_catalogues: _Catalogues) -> None:

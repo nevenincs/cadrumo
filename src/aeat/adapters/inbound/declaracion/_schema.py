@@ -52,11 +52,12 @@ class ExtractionStatus(StrEnum):
 
 
 class TemplateRevision(BaseModel):
-    """One AEAT template revision (``modelo``, ``año``, intra-año revision).
+    """Detected or caller-resolved declaration template identity.
 
-    Identifies a single layout variant of a Modelo PDF. The
-    :func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`
-    registry is keyed on the ``(modelo, año, revision)`` triple.
+    Identifies modelo, ejercicio, and revision tag discovered during
+    detection. It is not a key into a live Python extractor registry;
+    legacy registry dispatch is disabled until declaration extraction is
+    backed by validated registry snapshots.
 
     Attributes:
         modelo: Stable modelo identifier (``"130"``, ``"303"``, ...).
