@@ -84,6 +84,7 @@ class InvoiceCatalogueRepository:
 
         target = self.envelope_path
         if not target.exists():
+            _log.debug("no invoice catalogue on disk at %s, returning empty", target)
             return InvoiceCatalogue()
         envelope = load_encrypted_envelope(
             target,
@@ -129,6 +130,7 @@ class InvoiceCatalogueRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_INVOICE_CATALOGUE,
             )
+        _log.debug("saved invoice catalogue (%d invoices) to %s", len(catalogue.invoices), self.envelope_path)
 
 
 __all__ = [

@@ -14,7 +14,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core.errors import RulesetValidationError
-from ...core.i18n import Translatable, require_authoritative
+from ...core.i18n import Translatable, TranslationError, require_authoritative
 from ..casillas import CasillaDataType
 from ..modelos import LegalCitation
 
@@ -51,7 +51,7 @@ class CasillaDefinition(BaseModel):
             raise ValueError(f"invalid casilla id: {self.casilla_id!r}")
         try:
             require_authoritative(self.label, domain="aeat")
-        except Exception as exc:
+        except TranslationError as exc:
             raise ValueError(str(exc)) from exc
         return self
 

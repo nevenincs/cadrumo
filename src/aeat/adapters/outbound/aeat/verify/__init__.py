@@ -26,6 +26,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Protocol, cast
 
+from playwright.async_api import Error as PlaywrightError
+
+from .....core.errors import AeatError
 from .....core.logging import get_logger
 from .....domain.justificante._errors import JustificanteVerificationError
 
@@ -140,7 +143,7 @@ async def verify_csv(
         try:
             session, playwright_owner = await DEFAULT_BROWSER_SESSION_FACTORY()
             own_browser = True
-        except Exception as exc:
+        except (PlaywrightError, AeatError) as exc:
             raise JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
 
     try:
@@ -154,7 +157,7 @@ async def verify_csv(
             try:
                 await page.fill("input[name*='csv' i]", csv)
                 await page.press("input[name*='csv' i]", "Enter")
-            except Exception:
+            except PlaywrightError:
                 await page.keyboard.type(csv)
                 await page.keyboard.press("Enter")
             body = (await page.content()).lower()

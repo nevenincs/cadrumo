@@ -127,6 +127,7 @@ class SubmissionRepository:
         """
         target = self.envelope_path_for(submission_id)
         if not target.exists():
+            _log.debug("submission envelope not found for id %s", submission_id)
             return None
         envelope = load_encrypted_envelope(
             target,
@@ -159,6 +160,12 @@ class SubmissionRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_SUBMISSION,
             )
+        _log.info(
+            "saved submission envelope for id %s modelo=%s status=%s",
+            filing.submission_id,
+            filing.modelo,
+            filing.status,
+        )
 
     def delete(self, submission_id: str) -> bool:
         """Remove the envelope for ``submission_id``.
@@ -168,11 +175,14 @@ class SubmissionRepository:
         """
         target = self.envelope_path_for(submission_id)
         if not self._store_dir.exists():
+            _log.debug("delete: store dir absent; nothing to delete for id %s", submission_id)
             return False
         with exclusive_file_lock(self.lock_target_for(submission_id)):
             if not target.exists():
+                _log.debug("delete: envelope not found for id %s", submission_id)
                 return False
             target.unlink()
+        _log.info("deleted submission envelope for id %s", submission_id)
         return True
 
     def list_submission_ids(self) -> tuple[str, ...]:
@@ -196,7 +206,15 @@ class SubmissionRepository:
     def iter_submissions(self) -> Iterator[SubmittedFiling]:
         """Yield every persisted submission, in lexicographic id order."""
         for submission_id in self.list_submission_ids():
-            payload = self.load(submission_id)
+            try:
+                payload = self.load(submission_id)
+            except (ClassificationError, EnvelopeVersionError):
+                _log.warning(
+                    "iter_submissions: skipping submission id=%s due to envelope error",
+                    submission_id,
+                    exc_info=True,
+                )
+                continue
             if payload is not None:
                 yield payload
 
@@ -248,8 +266,8 @@ def migrate_legacy_submissions_to_repository(
             continue
         try:
             filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError) as exc:
-            _log.warning("skipping unreadable legacy submission %s: %s", path, exc)
+        except (ValidationError, OSError):
+            _log.warning("skipping unreadable legacy submission %s", path, exc_info=True)
             errors += 1
             continue
         with exclusive_file_lock(repository.lock_target_for(filing.submission_id)):

@@ -141,8 +141,19 @@ def set_classification(
         transaction.classification_confidence,
     )
     if proposed_signature == current_signature:
+        _LOGGER.debug(
+            "set_classification: skipping idempotent re-classify for transaction %s (classification=%s)",
+            transaction_id,
+            classification.value,
+        )
         history = transaction.classification_history
     else:
+        _LOGGER.info(
+            "set_classification: updating transaction %s classification=%s classified_by=%s",
+            transaction_id,
+            classification.value,
+            normalised_classified_by,
+        )
         prior_snapshot = snapshot_classification_state(transaction, fallback_at=now)
         history = (*transaction.classification_history, prior_snapshot)
 
@@ -237,4 +248,5 @@ def _validate_transaction_update(payload: dict[str, object], *, context: str) ->
     try:
         return Transaction.model_validate(payload)
     except ValidationError as exc:
+        _LOGGER.error("transaction update validation failed: %s", context, exc_info=True)
         raise TransactionCatalogueError(context) from exc

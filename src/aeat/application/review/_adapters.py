@@ -225,6 +225,7 @@ def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
     store_dir = settings.aeat_financial_txs_dir.resolve()
     repository = TransactionCatalogueRepository(store_dir=store_dir)
     if not repository.envelope_path.exists():
+        _LOGGER.debug("transactions catalogue envelope absent at %s", repository.envelope_path)
         return None
     try:
         return repository.load()
@@ -299,6 +300,7 @@ def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
     store_dir = settings.aeat_invoices_dir.resolve()
     repository = InvoiceCatalogueRepository(store_dir=store_dir)
     if not repository.envelope_path.exists():
+        _LOGGER.debug("invoices catalogue envelope absent at %s", repository.envelope_path)
         return None
     try:
         return repository.load()

@@ -32,7 +32,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .....core.classification import SensitivityClass
 from .....core.locks import fsync_parent_dir
@@ -178,6 +178,7 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:
+        _log.error("envelope: atomic write failed target=%s", target, exc_info=True)
         tmp_path.unlink(missing_ok=True)
         raise
 
@@ -411,6 +412,7 @@ def save_encrypted_envelope(
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:
+        _log.error("envelope: atomic encrypted write failed target=%s", target, exc_info=True)
         tmp_path.unlink(missing_ok=True)
         raise
 
@@ -521,7 +523,8 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     # already ciphertext-at-rest; nothing to do.
     try:
         CipherEnvelope.model_validate_json(raw)
-    except Exception:  # noqa: S110 - any parse failure means "not yet ciphertext"
+    except (ValidationError, ValueError):
+        # Any parse failure (bad JSON, schema mismatch) means "not yet ciphertext".
         pass
     else:
         return False

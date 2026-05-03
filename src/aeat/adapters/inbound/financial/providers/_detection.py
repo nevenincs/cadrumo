@@ -13,11 +13,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .....core.logging import get_logger
 from ._base import FinancialProvider
 from ._csv import CsvProvider
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
+
+_logger = get_logger(__name__)
 
 
 def detect_provider(path: Path) -> FinancialProvider | None:
@@ -38,7 +41,9 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     providers = _ordered_candidates(path)
     for provider in providers:
         if provider.validate_source(path).is_valid:
+            _logger.debug("detect_provider: matched %s for %s", provider.name, path.name)
             return provider
+    _logger.warning("detect_provider: no provider matched %s", path.name)
     return None
 
 
@@ -56,6 +61,7 @@ def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     try:
         head = path.read_bytes()[:256]
     except OSError:
+        _logger.warning("detect_provider: cannot read file header for sniffing path=%s", path, exc_info=True)
         return (CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
     upper_head = head.upper()
     if head.startswith(b"%PDF"):

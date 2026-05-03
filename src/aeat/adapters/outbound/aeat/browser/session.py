@@ -16,6 +16,9 @@ from playwright.async_api import (
     Response,
 )
 from playwright.async_api import (
+    Error as PlaywrightError,
+)
+from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
@@ -97,7 +100,7 @@ class BrowserSession:
                 raise BrowserError(
                     "BrowserSession already owns a live browser; call close() before create_context() again"
                 )
-            logger.info("Launching browser with channel: %s", self.settings.aeat_browser_channel)
+            logger.info("launching browser channel=%s", self.settings.aeat_browser_channel)
             try:
                 proxy: ProxySettings | None = None
                 if self.settings.aeat_proxy_url:
@@ -151,10 +154,10 @@ class BrowserSession:
                     await self._close_browser_locked()
                 except BrowserError as cleanup_error:
                     logger.warning(
-                        "Failed to close partially created browser after context failure: %s",
+                        "failed to close partially created browser after context failure: %s",
                         cleanup_error,
                     )
-                logger.error("Failed to create browser context: %s", exc)
+                logger.error("failed to create browser context", exc_info=True)
                 raise BrowserError(f"Failed to create browser context: {exc}") from exc
 
     async def close(self) -> None:
@@ -200,8 +203,20 @@ class BrowserSession:
         try:
             response = await page.goto(url)
         except PlaywrightTimeoutError as exc:
+            logger.warning(
+                "browser navigate: timeout url=%s exc_type=%s",
+                url,
+                type(exc).__name__,
+                exc_info=True,
+            )
             raise SiteHealthError(status=self._build_unreachable_status(url, exc)) from exc
-        except Exception as exc:
+        except PlaywrightError as exc:
+            logger.warning(
+                "browser navigate: transport error url=%s exc_type=%s",
+                url,
+                type(exc).__name__,
+                exc_info=True,
+            )
             raise SiteHealthError(status=self._build_unreachable_status(url, exc)) from exc
 
         http_status = response.status if response is not None else 599
@@ -253,6 +268,6 @@ class BrowserSession:
         try:
             await browser.close()
         except Exception as exc:
-            logger.warning("Failed to close retained browser: %s", exc)
+            logger.warning("failed to close retained browser", exc_info=True)
             raise BrowserError("Failed to close retained browser") from exc
         self._browser = None

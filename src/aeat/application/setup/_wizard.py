@@ -177,8 +177,8 @@ class SetupWizard:
                 summary = first_run_runner.run_read_only()
                 log.info("setup: first-run read-only summary: %s", summary)
                 completed.append(SetupStep.FIRST_RUN)
-            except Exception as exc:  # pragma: no cover - runner-specific
-                log.warning("setup: first-run read-only check failed: %s", exc)
+            except Exception:  # pragma: no cover — runner surface is pluggable; any failure degrades to skipped
+                log.warning("setup: first-run read-only check failed", exc_info=True)
                 skipped.append(SetupStep.FIRST_RUN)
 
         # DONE.

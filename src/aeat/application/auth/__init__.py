@@ -96,6 +96,27 @@ class AuthProvider(Protocol):
         ...
 
 
+def select_provider(
+    kind: AuthProviderKind,
+    *,
+    settings: Any,
+    browser_session_factory: Any | None = None,
+) -> AuthProvider:
+    """Return the concrete outbound auth provider for ``kind``.
+
+    The application package owns the selection contract; the concrete
+    implementations stay in the outbound adapter layer and are imported
+    lazily to avoid an application/adapter import cycle at module load.
+    """
+    from ...adapters.outbound.aeat.auth import select_provider as _select_provider
+
+    return _select_provider(
+        kind,
+        settings=settings,
+        browser_session_factory=browser_session_factory,
+    )
+
+
 def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
     """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
 
@@ -139,4 +160,5 @@ __all__ = [
     "implemented_auth_providers",
     "list_auth_providers",
     "research_only_auth_providers",
+    "select_provider",
 ]

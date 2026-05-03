@@ -108,6 +108,7 @@ def compute_or_passthrough(
         and ledger_repo is not None
     )
     if not repositories_present:
+        _log.debug("anexo c provider: no repositories supplied; passthrough for period %d", period_year)
         return AnexoCMergeReport(
             register_used=False,
             aggregates=None,
@@ -121,6 +122,7 @@ def compute_or_passthrough(
     assert ledger_repo is not None
 
     if not finca_repo.list_all():
+        _log.debug("anexo c provider: no fincas in register; passthrough for period %d", period_year)
         return AnexoCMergeReport(
             register_used=False,
             aggregates=None,
@@ -151,6 +153,14 @@ def compute_or_passthrough(
             overridden[casilla_id] = (provided_value, derived_value)
         effective[casilla_id] = derived_value
 
+    if overridden:
+        _log.warning(
+            "anexo c provider: register-derived values override provided casillas for period %d: %s",
+            period_year,
+            sorted(overridden.keys()),
+        )
+    else:
+        _log.debug("anexo c provider: register merged for period %d; no casilla conflicts", period_year)
     return AnexoCMergeReport(
         register_used=True,
         aggregates=aggregates,

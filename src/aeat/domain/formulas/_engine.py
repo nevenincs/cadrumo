@@ -113,6 +113,12 @@ class Engine:
                         on_date=on_date,
                     )
                 except (ArithmeticError, ValueError) as exc:
+                    _log.error(
+                        "formula evaluation failed ruleset=%s casilla=%s",
+                        ruleset.ruleset_id,
+                        casilla_id,
+                        exc_info=True,
+                    )
                     raise EvaluationError(f"ruleset={ruleset.ruleset_id} casilla={casilla_id}: {exc}") from exc
 
                 values[casilla_id] = value
@@ -133,7 +139,7 @@ class Engine:
             ruleset_id=ruleset.ruleset_id,
             entries=tuple(entries),
         )
-        _log.info(
+        _log.debug(
             "derived ruleset=%s entries=%d",
             ruleset.ruleset_id,
             len(ledger.entries),
@@ -193,7 +199,16 @@ class Engine:
                         ruleset_id=entry.ruleset_id,
                     )
                 )
-        return AuditReport(ledger=ledger, discrepancies=tuple(discrepancies))
+        report = AuditReport(ledger=ledger, discrepancies=tuple(discrepancies))
+        if report.discrepancies:
+            _log.warning(
+                "audit_against ruleset=%s found %d discrepancy(-ies)",
+                ruleset.ruleset_id,
+                len(report.discrepancies),
+            )
+        else:
+            _log.debug("audit_against ruleset=%s: no discrepancies", ruleset.ruleset_id)
+        return report
 
     # -- internal helpers --------------------------------------------
 
@@ -243,6 +258,7 @@ class Engine:
             num = self._evaluate_operand(operand.operands[0], values=values, ruleset=ruleset, on_date=on_date)
             den = self._evaluate_operand(operand.operands[1], values=values, ruleset=ruleset, on_date=on_date)
             if den == _ZERO:
+                _log.error("division by zero in formula evaluation ruleset=%s", ruleset.ruleset_id)
                 raise EvaluationError("division by zero")
             return (num / den).quantize(operand.quantize, rounding=ROUND_HALF_UP)
         if isinstance(operand, MinFormula):
@@ -269,6 +285,11 @@ class Engine:
             for bracket in operand.brackets:
                 if bracket.upper_inclusive is None or probe <= bracket.upper_inclusive:
                     return bracket.value
+            _log.error(
+                "brackets exhausted without a match ruleset=%s probe=%s",
+                ruleset.ruleset_id,
+                probe,
+            )
             raise EvaluationError("brackets exhausted without a match")
         if isinstance(operand, RoundFormula):
             inner = self._evaluate_operand(operand.operands[0], values=values, ruleset=ruleset, on_date=on_date)

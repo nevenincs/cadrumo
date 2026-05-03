@@ -12,10 +12,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ....core.logging import get_logger
 from ._detect import detect_template_revision
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._extractors import get_extractor
 from ._schema import DeclaracionFiling, TemplateRevision
+
+_logger = get_logger(__name__)
 
 
 def parse_declaracion(
@@ -63,9 +66,23 @@ def parse_declaracion(
         template_revision_override=template_revision_override,
         año_override=año_override,
     )
+    _logger.debug(
+        "parse_declaracion: path=%s modelo=%s año=%s revision=%s source=%s",
+        path.name,
+        template.modelo,
+        template.año,
+        template.revision,
+        template.detected_from,
+    )
 
     extractor = get_extractor(template)
     filing = extractor.extract(path)
+    _logger.info(
+        "parse_declaracion: parsed %s modelo=%s año=%s",
+        path.name,
+        template.modelo,
+        template.año,
+    )
     return filing
 
 

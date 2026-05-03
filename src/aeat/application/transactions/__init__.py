@@ -15,10 +15,13 @@ from ._diagnostics import (
     LedgerImportDiagnosticSeverity,
     build_ledger_import_diagnostic,
 )
+from ._import import LedgerImportResult, import_ledger_with_diagnostics
 
 __all__ = [
     "LedgerImportDiagnostic",
     "LedgerImportDiagnosticKind",
     "LedgerImportDiagnosticSeverity",
+    "LedgerImportResult",
     "build_ledger_import_diagnostic",
+    "import_ledger_with_diagnostics",
 ]

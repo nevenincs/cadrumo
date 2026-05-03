@@ -420,7 +420,7 @@ class BoeOrdenExtractor:
         # Pass 1 — declarations and blocks.
         current_block: str | None = None
         for page_number, raw_line in annex_lines:
-            line = raw_line.strip()
+            line = raw_line.strip().replace("Â¿", "¿")
             if not line:
                 continue
             block_match = _BLOCK_RE.match(raw_line)

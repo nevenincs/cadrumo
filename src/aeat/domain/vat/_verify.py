@@ -96,7 +96,7 @@ def verify_catalogue(catalogue: VATCatalogue) -> VatVerificationReport:
                     )
                 )
 
-    _logger.info("verify_catalogue produced %d issue(s)", len(issues))
+    _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return VatVerificationReport(issues=tuple(issues))
 
 

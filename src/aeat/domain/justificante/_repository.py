@@ -173,6 +173,7 @@ class JustificanteRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
             )
+        _log.debug("saved justificante metadata for csv=%s", justificante.csv)
 
     def delete(self, csv: str) -> bool:
         """Remove the metadata envelope for ``csv``.
@@ -191,6 +192,7 @@ class JustificanteRepository:
             if not target.exists():
                 return False
             target.unlink()
+        _log.debug("deleted justificante metadata for csv=%s", csv)
         return True
 
     def list_csvs(self) -> tuple[str, ...]:
@@ -273,8 +275,8 @@ def migrate_legacy_justificantes_to_repository(
             continue
         try:
             justificante = Justificante.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError) as exc:
-            _log.warning("skipping unreadable legacy justificante %s: %s", path, exc)
+        except (ValidationError, OSError):
+            _log.warning("skipping unreadable legacy justificante %s", path, exc_info=True)
             errors += 1
             continue
         with exclusive_file_lock(repository.lock_target_for(justificante.csv)):

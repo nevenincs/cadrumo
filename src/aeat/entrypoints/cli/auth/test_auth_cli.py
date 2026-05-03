@@ -13,8 +13,7 @@ from typer.testing import CliRunner
 
 from ....application.auth import AuthProviderKind
 from ....core.config import Settings
-from .. import app
-from . import _registry, _session
+from . import _registry, _session, app
 from ._paths import storage_state_paths
 from ._render import render_status_line
 
@@ -126,7 +125,7 @@ class TestListProviders:
 
     def test_table_lists_every_kind(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "list-providers"])
+        result = _runner.invoke(app, ["list-providers"])
         assert result.exit_code == 0, result.output
         assert "Certificate (FNMT)" in result.output
         assert "Cl@ve Móvil" in result.output
@@ -135,7 +134,7 @@ class TestListProviders:
 
     def test_configured_filter_hides_unshipped_providers(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "list-providers", "--configured"])
+        result = _runner.invoke(app, ["list-providers", "--configured"])
         assert result.exit_code == 0, result.output
         # No provider is configured with an empty token dir, so the table has no data rows.
         assert "Cl@ve Permanente" not in result.output
@@ -143,7 +142,7 @@ class TestListProviders:
 
     def test_json_round_trips_descriptions(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "list-providers", "--json"])
+        result = _runner.invoke(app, ["list-providers", "--json"])
         assert result.exit_code == 0, result.output
         payload = _unwrap_result(result.output)
         assert [row["kind"] for row in payload] == [
@@ -216,14 +215,14 @@ class TestLogin:
 
     def test_login_unsupported_provider_exits_2(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "login", "--provider", "clave_permanente"])
+        result = _runner.invoke(app, ["login", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
         assert "certificate" in result.output
         assert "clave_movil" in result.output
 
     def test_login_unknown_provider_rejected(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "login", "--provider", "nope"])
+        result = _runner.invoke(app, ["login", "--provider", "nope"])
         assert result.exit_code != 0
         assert "unknown provider" in result.output or "nope" in result.output
 
@@ -232,7 +231,7 @@ class TestLogin:
         isolated_token_dir: Path,
     ) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "login"])
+        result = _runner.invoke(app, ["login"])
         assert result.exit_code != 0
         # Typer's Rich error panel wraps the message across multiple
         # lines with `│` borders and inserts ANSI colour escapes. Strip
@@ -247,7 +246,7 @@ class TestLogin:
         del isolated_token_dir
         result = _runner.invoke(
             app,
-            ["auth", "login", "--provider", "clave_movil", "--non-interactive"],
+            ["login", "--provider", "clave_movil", "--non-interactive"],
         )
         assert result.exit_code == 2
         assert "interactive" in result.output
@@ -261,7 +260,7 @@ class TestStatus:
 
     def test_no_session_prints_friendly_hint(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "status"])
+        result = _runner.invoke(app, ["status"])
         assert result.exit_code == 0, result.output
         assert "no active session" in result.output
         assert "aeat auth login" in result.output
@@ -273,7 +272,7 @@ class TestStatus:
             authenticated_at=now - timedelta(minutes=5),
             idle_deadline=now + timedelta(minutes=10),
         )
-        result = _runner.invoke(app, ["auth", "status"])
+        result = _runner.invoke(app, ["status"])
         assert result.exit_code == 0, result.output
         # Status line now renders the registry label (e.g. "Certificate (FNMT)")
         # rather than the raw enum value so Kent sees the same name the
@@ -288,7 +287,7 @@ class TestStatus:
             authenticated_at=now - timedelta(hours=2),
             idle_deadline=now - timedelta(minutes=5),
         )
-        result = _runner.invoke(app, ["auth", "status"])
+        result = _runner.invoke(app, ["status"])
         assert result.exit_code == 0, result.output
         assert "expired" in result.output
         assert "aeat auth login" in result.output
@@ -300,7 +299,7 @@ class TestStatus:
             authenticated_at=now - timedelta(minutes=2),
             idle_deadline=now + timedelta(minutes=15),
         )
-        result = _runner.invoke(app, ["auth", "status", "--json"])
+        result = _runner.invoke(app, ["status", "--json"])
         assert result.exit_code == 0, result.output
         payload = _unwrap_result(result.output)
         assert payload["identity_nif"] == "12345678Z"
@@ -314,7 +313,7 @@ class TestStatus:
             authenticated_at=now - timedelta(minutes=1),
             idle_deadline=now + timedelta(minutes=5),
         )
-        result = _runner.invoke(app, ["auth", "status", "--provider", "clave_permanente"])
+        result = _runner.invoke(app, ["status", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
         assert "certificate" in result.output
         assert "clave_movil" in result.output
@@ -328,7 +327,7 @@ class TestLogout:
 
     def test_logout_without_session_is_noop(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "logout"])
+        result = _runner.invoke(app, ["logout"])
         assert result.exit_code == 0, result.output
         assert "No active session" in result.output
 
@@ -344,7 +343,7 @@ class TestLogout:
         assert paths.storage_state.exists()
         assert paths.metadata.exists()
 
-        result = _runner.invoke(app, ["auth", "logout"])
+        result = _runner.invoke(app, ["logout"])
         assert result.exit_code == 0, result.output
         assert "Signed out of" in result.output
         assert not paths.storage_state.exists()
@@ -360,7 +359,7 @@ class TestLogout:
         settings = _isolated_settings()
         paths = storage_state_paths(settings)
 
-        result = _runner.invoke(app, ["auth", "logout", "--all"])
+        result = _runner.invoke(app, ["logout", "--all"])
         assert result.exit_code == 0, result.output
         assert not paths.storage_state.exists()
         assert not paths.metadata.exists()
@@ -372,7 +371,7 @@ class TestLogout:
             authenticated_at=now - timedelta(minutes=1),
             idle_deadline=now + timedelta(minutes=10),
         )
-        result = _runner.invoke(app, ["auth", "logout", "--json"])
+        result = _runner.invoke(app, ["logout", "--json"])
         assert result.exit_code == 0, result.output
         payload = _unwrap_result(result.output)
         assert len(payload["removed_paths"]) == 2
@@ -387,7 +386,7 @@ class TestLogout:
         settings = _isolated_settings()
         paths = storage_state_paths(settings)
 
-        result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_permanente"])
+        result = _runner.invoke(app, ["logout", "--provider", "clave_permanente"])
         assert result.exit_code == 2, result.output
         assert "certificate" in result.output
         assert "clave_movil" in result.output
@@ -396,7 +395,7 @@ class TestLogout:
 
     def test_logout_rejects_provider_and_all_together(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
-        result = _runner.invoke(app, ["auth", "logout", "--provider", "clave_movil", "--all"])
+        result = _runner.invoke(app, ["logout", "--provider", "clave_movil", "--all"])
         # Typer maps BadParameter to exit code 2.
         assert result.exit_code != 0
         assert "--all" in result.output or "both" in result.output
@@ -411,7 +410,7 @@ class TestLogout:
         paths.storage_state.write_text("{}", encoding="utf-8")
         paths.metadata.write_text("{not valid json", encoding="utf-8")
 
-        result = _runner.invoke(app, ["auth", "logout", "--provider", "certificate"])
+        result = _runner.invoke(app, ["logout", "--provider", "certificate"])
         assert result.exit_code == 0, result.output
         assert not paths.storage_state.exists()
         assert not paths.metadata.exists()
@@ -477,7 +476,6 @@ class TestConfigure:
         result = _runner.invoke(
             app,
             [
-                "auth",
                 "configure",
                 "--provider",
                 "clave_movil",
@@ -514,7 +512,6 @@ class TestConfigure:
         result = _runner.invoke(
             app,
             [
-                "auth",
                 "configure",
                 "--dni-nie",
                 "12345678Z",

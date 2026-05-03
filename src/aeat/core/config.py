@@ -349,7 +349,7 @@ class Settings(BaseSettings):
     aeat_manuals_review_required: bool = Field(
         default=True,
         description=(
-            "When True, 'aeat manual verify' rejects any Manual/Section/Rule record "
+            "When True, manual corpus verification rejects any Manual/Section/Rule record "
             "missing definition-review metadata; when False the rejection is downgraded to a warning"
         ),
     )
@@ -463,7 +463,7 @@ class Settings(BaseSettings):
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat auth login` / `status` when "
+            "Default auth provider for `aeat setup auth login` / `status` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -473,7 +473,7 @@ class Settings(BaseSettings):
     aeat_clave_movil_dni_nie: str | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat auth login --provider clave_movil`. "
+            "Taxpayer DNI/NIE for `aeat setup auth login` using Clave Movil. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. Not a "
             "secret on its own — the Cl@ve app on the operator's phone is "
@@ -576,7 +576,7 @@ class Settings(BaseSettings):
         default=None,
         description=(
             "Optional path to a JSON file with the default AutonomoProfile "
-            "loaded by `aeat deadlines` when --profile is omitted"
+            "loaded by the filing-deadline engine when a profile path is omitted"
         ),
     )
     aeat_deadline_due_soon_days: int = Field(
@@ -780,6 +780,16 @@ class Settings(BaseSettings):
         """Treat blank env vars for optional secret fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
+        return value
+
+    @field_validator("aeat_certificate_backend", mode="before")
+    @classmethod
+    def _certificate_backend_accepts_adapter_enum_values(cls, value: object) -> object:
+        """Accept legacy adapter enum names while storing settings-shape values."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"playwright_context", "httpx_fallback"}:
+                return normalized
         return value
 
     @field_validator("aeat_status_detail_url_template")

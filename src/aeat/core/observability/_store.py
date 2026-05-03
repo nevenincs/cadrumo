@@ -27,8 +27,11 @@ from typing import TYPE_CHECKING, Any
 from pydantic import ValidationError
 
 from ..config import Settings, load_settings
+from ..logging import get_logger
 from ._errors import RunTraceValidationError
 from ._models import RunEvent, RunTrace
+
+_logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ..classification import RedactionRule
@@ -146,6 +149,12 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=_diagnostic_rules())
     target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
+    _logger.info(
+        "save_trace: persisted run trace for run_id=%s outcome=%s at %s",
+        trace.run_id,
+        trace.outcome.value,
+        target,
+    )
     return target
 
 
@@ -320,6 +329,11 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
         try:
             trace = RunTrace.model_validate_json(trace_path.read_text(encoding="utf-8"))
         except ValidationError:
+            _logger.warning(
+                "iter_runs: skipping run directory %s — trace.json failed strict validation",
+                entry.name,
+                exc_info=True,
+            )
             continue
         pairs.append((entry.name, trace))
     pairs.sort(key=lambda item: item[1].started_at, reverse=True)

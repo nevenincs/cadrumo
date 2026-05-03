@@ -149,19 +149,24 @@ class FilingHistoryRepository:
         """
         safe_repository_id(modelo, context="modelo")
         self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target_for(modelo)):
-            envelope = Envelope[WireFilingHistory](
-                schema_version=_HISTORY_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=history,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path_for(modelo),
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
-            )
+        try:
+            with exclusive_file_lock(self.lock_target_for(modelo)):
+                envelope = Envelope[WireFilingHistory](
+                    schema_version=_HISTORY_ENVELOPE_VERSION,
+                    written_at=datetime.now(UTC),
+                    classification=SensitivityClass.AUDIT,
+                    payload=history,
+                )
+                save_encrypted_envelope(
+                    envelope,
+                    self.envelope_path_for(modelo),
+                    master_key_provider=_resolve_master_key_provider(),
+                    hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
+                )
+        except OSError:
+            _log.error("failed to save filing history modelo=%s", modelo, exc_info=True)
+            raise
+        _log.debug("saved filing history modelo=%s", modelo)
 
     def delete(self, modelo: str) -> bool:
         """Remove the filing-history envelope for ``modelo``.
@@ -176,10 +181,15 @@ class FilingHistoryRepository:
         target = self.envelope_path_for(modelo)
         if not self._store_dir.exists():
             return False
-        with exclusive_file_lock(self.lock_target_for(modelo)):
-            if not target.exists():
-                return False
-            target.unlink()
+        try:
+            with exclusive_file_lock(self.lock_target_for(modelo)):
+                if not target.exists():
+                    return False
+                target.unlink()
+        except OSError:
+            _log.error("failed to delete filing history modelo=%s", modelo, exc_info=True)
+            raise
+        _log.info("deleted filing history modelo=%s", modelo)
         return True
 
     def list_modelos(self) -> tuple[str, ...]:
@@ -204,8 +214,10 @@ class FilingHistoryRepository:
         """Yield ``(modelo, history)`` tuples for every persisted modelo."""
         for modelo in self.list_modelos():
             payload = self.load(modelo)
-            if payload is not None:
-                yield modelo, payload
+            if payload is None:
+                _log.debug("iter_histories: envelope for modelo=%s returned no payload; skipping", modelo)
+                continue
+            yield modelo, payload
 
 
 def migrate_legacy_filing_history_to_repository(
@@ -262,34 +274,39 @@ def migrate_legacy_filing_history_to_repository(
         modelo = path.stem
         try:
             history = WireFilingHistory.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError) as exc:
-            _log.warning("skipping unreadable legacy filing history %s: %s", path, exc)
+        except (ValidationError, OSError):
+            _log.warning("skipping unreadable legacy filing history %s", path, exc_info=True)
             errors += 1
             continue
         try:
             safe_repository_id(modelo, context="modelo")
-        except ValueError as exc:
-            _log.warning("skipping unsafe modelo filename %s: %s", path, exc)
+        except ValueError:
+            _log.warning("skipping unsafe modelo filename %s", path, exc_info=True)
             errors += 1
             continue
-        with exclusive_file_lock(repository.lock_target_for(modelo)):
-            target = repository.envelope_path_for(modelo)
-            if not overwrite and target.exists():
-                skipped += 1
-                continue
-            envelope = Envelope[WireFilingHistory](
-                schema_version=_HISTORY_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=history,
-            )
-            save_encrypted_envelope(
-                envelope,
-                target,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
-            )
-            imported += 1
+        try:
+            with exclusive_file_lock(repository.lock_target_for(modelo)):
+                target = repository.envelope_path_for(modelo)
+                if not overwrite and target.exists():
+                    skipped += 1
+                    continue
+                envelope = Envelope[WireFilingHistory](
+                    schema_version=_HISTORY_ENVELOPE_VERSION,
+                    written_at=datetime.now(UTC),
+                    classification=SensitivityClass.AUDIT,
+                    payload=history,
+                )
+                save_encrypted_envelope(
+                    envelope,
+                    target,
+                    master_key_provider=_resolve_master_key_provider(),
+                    hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
+                )
+                imported += 1
+        except OSError:
+            _log.error("failed to migrate filing history for modelo=%s path=%s", modelo, path, exc_info=True)
+            errors += 1
+            continue
     _log.info(
         "migrated legacy filing history from %s into %s: imported=%d skipped=%d errors=%d",
         legacy_dir,

@@ -182,6 +182,7 @@ class LiveSyncRunner:
         try:
             await self._cert.preload_into_browser_context(self._session)
         except Exception as exc:
+            _LOGGER.error("sync: certificate preload failed", exc_info=True)
             raise SyncError(f"Failed to preload certificate: {exc}") from exc
 
         records: list[DivergenceRecord] = []
@@ -203,7 +204,7 @@ class LiveSyncRunner:
 
         finished_at = datetime.now(tz=UTC)
         _LOGGER.info(
-            "sync run finished modelo=%s auto_heal=%d escalate=%d benign=%d",
+            "sync run finished modelo=%s auto_healed=%d escalate=%d benign=%d",
             modelo,
             len(plan.auto_heal),
             len(plan.escalate),
@@ -230,7 +231,9 @@ class LiveSyncRunner:
         local_obj = self._local.load_modelo(modelo)
         if not isinstance(local_obj, WireModeloDefinition):
             raise WireValidationError(f"Local modelo snapshot for {modelo} is not a WireModeloDefinition")
-        return self._classifier.diff_modelo(local=local_obj, live=live)
+        records = self._classifier.diff_modelo(local=local_obj, live=live)
+        _LOGGER.debug("modelo diff complete modelo=%s divergences=%d", modelo, len(records))
+        return records
 
     async def _run_portal_manifest(self) -> tuple[DivergenceRecord, ...]:
         raw = await self._fetch_with_retry(lambda: self._fetcher.fetch_portal_manifest_raw(session=self._session))
@@ -238,7 +241,9 @@ class LiveSyncRunner:
         local_obj = self._local.load_portal_manifest()
         if not isinstance(local_obj, WirePortalManifest):
             raise WireValidationError("Local portal manifest is not a WirePortalManifest")
-        return self._classifier.diff_portal_manifest(local=local_obj, live=live)
+        records = self._classifier.diff_portal_manifest(local=local_obj, live=live)
+        _LOGGER.debug("portal manifest diff complete divergences=%d", len(records))
+        return records
 
     async def _run_filing_history(
         self,
@@ -252,7 +257,9 @@ class LiveSyncRunner:
         local_obj = self._local.load_filing_history(modelo)
         if not isinstance(local_obj, WireFilingHistory):
             raise WireValidationError(f"Local filing history for {modelo} is not a WireFilingHistory")
-        return self._classifier.diff_filing_history(local=local_obj, live=live)
+        records = self._classifier.diff_filing_history(local=local_obj, live=live)
+        _LOGGER.debug("filing history diff complete modelo=%s divergences=%d", modelo, len(records))
+        return records
 
     async def _fetch_with_retry[T](self, operation: Callable[[], Awaitable[T]]) -> T:
         """Retry an async fetch with exponential backoff up to ``retry_max``.
@@ -269,11 +276,11 @@ class LiveSyncRunner:
                 raise
             except Exception as exc:
                 last_exc = exc
-                _LOGGER.warning(
-                    "fetch attempt %d/%d failed: %s",
+                _LOGGER.debug(
+                    "fetch attempt %d/%d failed",
                     attempt,
                     self._retry_max,
-                    exc,
+                    exc_info=True,
                 )
                 if attempt == self._retry_max:
                     break

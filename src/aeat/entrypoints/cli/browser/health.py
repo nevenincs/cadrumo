@@ -97,13 +97,16 @@ class _RealProbe:
             if context is not None:
                 try:
                     await context.close()
-                except Exception:
-                    logger.exception("browser_health: context.close() failed")
+                except Exception:  # Playwright context.close() exception surface is undocumented; teardown must not abort
+                    logger.warning("browser_health: context.close() failed", exc_info=True)
             try:
                 await self._session.close()
-            except Exception:
-                logger.exception("browser_health: session.close() failed")
-            await self._playwright.stop()
+            except Exception:  # BrowserSession.close() may surface Playwright errors; teardown must not abort
+                logger.warning("browser_health: session.close() failed", exc_info=True)
+            try:
+                await self._playwright.stop()
+            except Exception:  # Playwright stop() exception surface is undocumented; teardown must not abort
+                logger.warning("browser_health: playwright.stop() failed", exc_info=True)
 
 
 async def _default_probe_factory(settings: Settings) -> HealthProbeLike:

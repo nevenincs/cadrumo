@@ -129,7 +129,7 @@ def _provider_label(kind: AuthProviderKind) -> str:
 
     try:
         return _registry.get_entry(kind).label
-    except Exception:
+    except KeyError:
         return kind.value
 
 

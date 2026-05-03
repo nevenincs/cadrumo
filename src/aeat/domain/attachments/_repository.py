@@ -158,7 +158,7 @@ class AttachmentStore(BaseModel):
             _write_once_bytes(target, data)
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to write attachment blob: {target}") from exc
-        _LOGGER.info("stored attachment blob %s (%d bytes)", digest, len(data))
+        _LOGGER.debug("stored attachment blob %s (%d bytes)", digest, len(data))
         return digest
 
     def put_file(self, source: Path) -> tuple[str, int]:
@@ -210,7 +210,7 @@ class AttachmentStore(BaseModel):
             target = self.blob_path(digest)
             _commit_write_once(tmp_path, target)
             tmp_path = None
-            _LOGGER.info("stored attachment blob %s (%d bytes)", digest, bytes_size)
+            _LOGGER.debug("stored attachment blob %s (%d bytes)", digest, bytes_size)
             return digest, bytes_size
         except OSError as exc:
             if tmp_path is not None:
@@ -329,7 +329,7 @@ class AttachmentStore(BaseModel):
                 )
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to write attachment manifest: {target}") from exc
-        _LOGGER.info("wrote attachment manifest %s", attachment.attachment_id)
+        _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load and validate the manifest for ``attachment_id``.
@@ -427,6 +427,7 @@ def _commit_write_once(tmp_path: Path, target: Path) -> None:
         if target.exists():
             tmp_path.unlink(missing_ok=True)
             return
+        _LOGGER.debug("os.link unsupported for %s; falling back to os.replace", target)
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
         return

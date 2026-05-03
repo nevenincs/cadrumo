@@ -86,7 +86,16 @@ class FilingValidator:
         findings.extend(self._validate_formula_traces(draft, collection))
         findings.extend(self._validate_deadline(draft))
         findings.extend(self._validate_quarterly_reconciliation(draft))
-        return tuple(findings)
+        result = tuple(findings)
+        errors = sum(1 for f in result if f.severity is FilingFindingSeverity.ERROR)
+        _logger.debug(
+            "validated draft modelo=%s period=%s errors=%d total_findings=%d",
+            draft.modelo,
+            draft.period,
+            errors,
+            len(result),
+        )
+        return result
 
     # ── individual rules ─────────────────────────────────────────
 
@@ -177,6 +186,12 @@ class FilingValidator:
         for value in draft.values:
             casilla = collection.get(value.casilla_id)
             if casilla is None:
+                _logger.debug(
+                    "formula trace check: casilla=%s in draft=%s not found in collection schema_version=%s; skipping",
+                    value.casilla_id,
+                    draft.draft_id,
+                    collection.schema_version,
+                )
                 continue
             if not casilla.formula_inputs:
                 if value.formula_trace:
@@ -231,6 +246,11 @@ class FilingValidator:
         """
         quarterly = self._quarterly_303_drafts
         if quarterly is None or draft.modelo != "390":
+            _logger.debug(
+                "quarterly reconciliation skipped modelo=%s quarterly_drafts_provided=%s",
+                draft.modelo,
+                quarterly is not None,
+            )
             return []
         out: list[FilingValidationFinding] = []
         by_id = {v.casilla_id: v for v in draft.values}
@@ -239,6 +259,11 @@ class FilingValidator:
         for annual_casilla, source_casilla in _MODELO_390_QUARTERLY_MAP.items():
             annual_value = by_id.get(annual_casilla)
             if annual_value is None:
+                _logger.debug(
+                    "390 reconciliation: annual casilla=%s absent from draft=%s; skipping",
+                    annual_casilla,
+                    draft.draft_id,
+                )
                 continue
             annual_decimal = _value_as_decimal(annual_value)
             if annual_decimal is None:
@@ -320,6 +345,7 @@ class FilingValidator:
 
     def _validate_deadline(self, draft: FilingDraft) -> list[FilingValidationFinding]:
         if self._deadline_checker is None:
+            _logger.debug("deadline check skipped: no deadline_checker provided for modelo=%s", draft.modelo)
             return []
         status = self._deadline_checker.check(draft.modelo, draft.period)
         if not status.is_overdue:

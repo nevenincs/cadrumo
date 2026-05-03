@@ -10,6 +10,7 @@ contract.
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 import os
 from datetime import UTC, datetime, timedelta
@@ -57,13 +58,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
 
-def _build_bundle(
-    tmp_path: Path,
+def _serialise_pkcs12(
     *,
-    subject_attrs: list[x509.NameAttribute] | None = None,
-    not_valid_after: datetime | None = None,
-) -> Path:
-    """Generate a real self-signed PKCS#12 bundle."""
+    subject_attrs: list[x509.NameAttribute] | None,
+    not_valid_after: datetime | None,
+) -> bytes:
+    """Generate a real self-signed PKCS#12 bundle and return its bytes."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     attrs = subject_attrs or [
         x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
@@ -82,15 +82,46 @@ def _build_bundle(
         .not_valid_after(not_valid_after or (now + timedelta(days=365)))
         .sign(key, hashes.SHA256())
     )
-    pfx_bytes = pkcs12.serialize_key_and_certificates(
+    return pkcs12.serialize_key_and_certificates(
         name=b"test-cert",
         key=key,
         cert=cert,
         cas=None,
         encryption_algorithm=serialization.BestAvailableEncryption(SECRET_PASSPHRASE.encode()),
     )
+
+
+@functools.cache
+def _default_pkcs12_bytes() -> bytes:
+    """Cache the default-subject PKCS#12 bytes for the lifetime of the process.
+
+    RSA-2048 keygen + PKCS#12 serialise costs ~0.5-1 s per call. The
+    13+ ``test_resume_from_storage_state*`` tests and several other
+    cert-bearing tests in this module all want the default subject
+    (NIF 12345678Z) and the default validity window; computing the
+    bytes once and writing them to each test's ``tmp_path`` brings
+    the per-test fixed cost down to a single ``write_bytes`` call.
+    """
+    return _serialise_pkcs12(subject_attrs=None, not_valid_after=None)
+
+
+def _build_bundle(
+    tmp_path: Path,
+    *,
+    subject_attrs: list[x509.NameAttribute] | None = None,
+    not_valid_after: datetime | None = None,
+) -> Path:
+    """Generate a real self-signed PKCS#12 bundle on disk.
+
+    Default-argument calls are served from the cached bytes built by
+    :func:`_default_pkcs12_bytes`; custom subjects or expiries always
+    regenerate.
+    """
     out = tmp_path / "bundle.p12"
-    out.write_bytes(pfx_bytes)
+    if subject_attrs is None and not_valid_after is None:
+        out.write_bytes(_default_pkcs12_bytes())
+        return out
+    out.write_bytes(_serialise_pkcs12(subject_attrs=subject_attrs, not_valid_after=not_valid_after))
     return out
 
 

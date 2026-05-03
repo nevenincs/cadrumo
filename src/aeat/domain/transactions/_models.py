@@ -292,6 +292,7 @@ class Transaction(BaseModel):
     invoice_id: str | None = None
     category_id: str | None = None
     notes: str = ""
+    source_import_id: str | None = None
     classified_at: datetime | None = None
     classified_by: str = Field(default="auto", min_length=1)
     classification_reason: str = ""
@@ -336,6 +337,9 @@ class Transaction(BaseModel):
         history = payload.get("classification_history")
         if history is not None:
             payload["classification_history"] = _coerce_history(history)
+        if "source_import_id" in payload and isinstance(payload["source_import_id"], str):
+            normalized_import_id = payload["source_import_id"].strip()
+            payload["source_import_id"] = normalized_import_id if normalized_import_id else None
         payload["transaction_id"] = derived
         return payload
 

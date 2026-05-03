@@ -42,9 +42,9 @@ def load_category_profiles_from_manual(year: int) -> Mapping[SpendingCategory, C
 
     try:
         load_manual(ManualId.RENTA, 2025, ManualPart.PARTE_1)
-    except (ManualNotFoundError, ManualParseError) as exc:
-        _log.info("falling back to hardcoded category registry: %s", exc)
+    except (ManualNotFoundError, ManualParseError):
+        _log.warning("falling back to hardcoded category registry year=%d", year, exc_info=True)
         return CATEGORY_PROFILES_2025
 
-    _log.info("structured manual available, returning curated 2025 registry until extractor lands")
+    _log.debug("structured manual available, returning curated 2025 registry until extractor lands")
     return CATEGORY_PROFILES_2025

@@ -136,6 +136,10 @@ class JsonlRunSink(logging.Handler):
                 handle.write(line)
                 handle.flush()
         except Exception:
+            # Stdlib logging.Handler.emit contract: any emit-side failure
+            # must route through handleError(record) so the application is
+            # never killed by a logging path. Broad catch is mandated by
+            # the cpython logging module's documented protocol.
             self.handleError(record)
 
     def _open(self) -> TextIO:

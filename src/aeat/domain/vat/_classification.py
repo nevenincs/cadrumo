@@ -641,7 +641,20 @@ def classify_vat(criteria: VATClassificationCriteria) -> VATClassification:
         if category is None:
             # R05 — domestic-by-rate-tier; pick the right DOMESTIC_*.
             tier = criteria.rate_tier if criteria.rate_tier is not None else VATRateKind.GENERAL
+            if criteria.rate_tier is None:
+                _logger.debug(
+                    "classify_vat: R05 rate_tier is None; defaulting to GENERAL "
+                    "(issuer=%s customer=%s kind=%s)",
+                    criteria.issuer_residency.value,
+                    criteria.customer_residency.value,
+                    criteria.kind.value,
+                )
             category = _RATE_TIER_TO_CATEGORY.get(tier, VATCategory.DOMESTIC_GENERAL_21)
+            if category is VATCategory.DOMESTIC_GENERAL_21 and tier not in _RATE_TIER_TO_CATEGORY:
+                _logger.debug(
+                    "classify_vat: R05 tier=%s not in mapping; fell back to DOMESTIC_GENERAL_21",
+                    tier.value if hasattr(tier, "value") else tier,
+                )
         rate = _resolve_rate_for_category(criteria, category)
         requires_rc = category in {
             VATCategory.DOMESTIC_REVERSE_CHARGE,
@@ -660,7 +673,13 @@ def classify_vat(criteria: VATClassificationCriteria) -> VATClassification:
             notes=rule.description,
         )
 
-    _logger.debug("classify_vat: no rule matched; returning UNKNOWN sentinel")
+    _logger.debug(
+        "classify_vat: no rule matched issuer=%s customer=%s kind=%s direction=%s; returning UNKNOWN",
+        criteria.issuer_residency.value,
+        criteria.customer_residency.value,
+        criteria.kind.value,
+        criteria.direction.value,
+    )
     return VATClassification(
         category=VATCategory.UNKNOWN,
         rate=None,

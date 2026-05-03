@@ -11,6 +11,8 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import AeatError
+from ...core.i18n import Translatable
+from ._models import WorkflowAbortReason
 
 
 class WorkflowError(AeatError):
@@ -36,3 +38,33 @@ class WorkflowAbortedError(WorkflowError):
     This exception is reserved for callers that prefer raising over
     inspecting (e.g. a future cron runner that wants a non-zero exit).
     """
+
+
+class WorkflowAbortSignal(WorkflowError):  # noqa: N818 - internal control-flow signal, not a public Error
+    """Internal control-flow signal raised by stage methods to bail out.
+
+    Named ``WorkflowAbortSignal`` deliberately (rather than
+    ``WorkflowAbortSignalError``) because the engine treats it as a
+    transient control-flow vehicle, not as a public error type — it
+    never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
+    :meth:`WorkflowEngine._drive` always catches it and materialises the
+    :class:`aeat.application.workflow.WorkflowResult`. Subclasses
+    :class:`WorkflowError` so the project-wide error-hierarchy rule
+    still holds and the registry can bind a stable
+    ``INTERNAL_WORKFLOW_ABORT_SIGNAL`` code for telemetry.
+
+    Attributes:
+        reason: The :class:`WorkflowAbortReason` that classifies the bailout.
+        summary: Human-readable :class:`Translatable` summary surfaced on
+            the resulting :class:`WorkflowResult`.
+    """
+
+    def __init__(
+        self,
+        *,
+        reason: WorkflowAbortReason,
+        summary: Translatable,
+    ) -> None:
+        super().__init__(reason.value)
+        self.reason = reason
+        self.summary = summary

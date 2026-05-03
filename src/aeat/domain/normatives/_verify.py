@@ -67,6 +67,12 @@ def verify_catalogue(
             try:
                 rendered = cite(reference, articulo)
             except Exception as exc:  # pragma: no cover - defensive
+                _logger.warning(
+                    "cite() raised for reference %s articulo %s",
+                    reference.id,
+                    articulo,
+                    exc_info=True,
+                )
                 issues.append(
                     NormativeVerificationIssue(
                         level="error",
@@ -86,7 +92,7 @@ def verify_catalogue(
                     )
                 )
 
-    _logger.info("verify_catalogue produced %d issue(s)", len(issues))
+    _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return NormativeVerificationReport(issues=tuple(issues))
 
 

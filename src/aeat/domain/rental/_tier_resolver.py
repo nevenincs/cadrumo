@@ -36,9 +36,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.logging import get_logger
 from ._enums import ReduccionTier
 from ._errors import TierResolutionError
 from ._models import RentalContract, RentalFinca
+
+_logger = get_logger(__name__)
 
 LEY_12_2023_IN_FORCE_DATE: date = date(2023, 5, 26)
 """Entry-into-force date of Ley 12/2023 (BOE-A-2023-12203). Contracts
@@ -166,18 +169,38 @@ def resolve_reduccion(
             contract data).
     """
     if period_year < ejercicio_amendment_year:
+        _logger.debug(
+            "reduccion tier: pre-amendment flat 60%% for contract_id=%s period=%d",
+            contract.id,
+            period_year,
+        )
         return _PRE_AMENDMENT
     if contract.contract_celebration_date < LEY_12_2023_IN_FORCE_DATE:
+        _logger.debug(
+            "reduccion tier: DT-38 grandfathered 60%% for contract_id=%s (celebration %s)",
+            contract.id,
+            contract.contract_celebration_date.isoformat(),
+        )
         return _DT_38
     if not contract.lau_17_6_compliant:
+        _logger.debug("reduccion tier: FORFEIT (LAU 17.6 non-compliant) for contract_id=%s", contract.id)
         return _FORFEIT_LAU_17_6
     if _qualifies_for_tier_90(contract, finca):
+        _logger.debug("reduccion tier: TIER_90 for contract_id=%s finca_id=%s", contract.id, finca.id)
         return _TIER_90
     tier_70 = _resolve_tier_70(contract, finca)
     if tier_70 is not None:
+        _logger.debug(
+            "reduccion tier: %s for contract_id=%s finca_id=%s",
+            tier_70.tier.value,
+            contract.id,
+            finca.id,
+        )
         return tier_70
     if _qualifies_for_tier_60_rehab(contract):
+        _logger.debug("reduccion tier: TIER_60_REHAB for contract_id=%s", contract.id)
         return _TIER_60_REHAB
+    _logger.debug("reduccion tier: TIER_50 (fallback) for contract_id=%s", contract.id)
     return _TIER_50
 
 
@@ -193,6 +216,7 @@ def _qualifies_for_tier_90(contract: RentalContract, finca: RentalFinca) -> bool
     if contract.prior_contract_last_rent <= Decimal("0"):
         return False
     if contract.initial_rent < Decimal("0"):
+        _logger.warning("tier resolver: negative initial_rent for contract_id=%s", contract.id)
         raise TierResolutionError("initial_rent must be non-negative")
     rebaja_ratio = (contract.prior_contract_last_rent - contract.initial_rent) / contract.prior_contract_last_rent
     return rebaja_ratio > PRIOR_RENT_REBAJA_THRESHOLD

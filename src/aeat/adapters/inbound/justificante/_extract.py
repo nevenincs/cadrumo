@@ -417,7 +417,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     parsed_at = datetime.now(tz=UTC)
 
     try:
-        return Justificante(
+        record = Justificante(
             csv=csv_value,
             modelo=modelo,
             period=period,
@@ -434,3 +434,11 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         )
     except ValidationError as exc:
         raise JustificanteParseError(f"failed to validate Justificante for {pdf_path}: {exc}") from exc
+    _logger.info(
+        "extract_justificante: parsed modelo=%s period=%s ejercicio=%s csv=%s",
+        modelo,
+        period,
+        ejercicio,
+        csv_value,
+    )
+    return record

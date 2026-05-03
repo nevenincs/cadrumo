@@ -50,7 +50,10 @@ from ...core.errors import (
     render_error_json,
     render_error_text,
 )
+from ...core.logging import get_logger
 from ._context import json_output_requested
+
+_log = get_logger(__name__)
 
 _UNDER_TEST: ContextVar[bool] = ContextVar("aeat_cli_error_boundary_under_test", default=False)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
@@ -179,6 +182,11 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                 raise
             if _UNDER_TEST.get():
                 raise
+            _log.error(
+                "command_error_boundary: unexpected exception in %s",
+                getattr(callback, "__name__", repr(callback)),
+                exc_info=True,
+            )
             _emit_error_and_exit(CliUnexpectedBoundaryError(error))
 
     _WRAPPED_CALLBACKS[id(callback)] = _wrapped

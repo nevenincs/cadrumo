@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
+from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import async_playwright
 
 from .....core.config import load_settings
@@ -20,12 +21,12 @@ async def run_health_check() -> None:
         BrowserError: If the health check fails.
     """
     settings = load_settings()
-    logger.info("Starting BrowserHealthCheck...")
+    logger.info("browser health check starting")
 
     try:
         async with async_playwright() as p:
-            logger.info(
-                "Launching browser (channel=%s, headless=%s)...",
+            logger.debug(
+                "launching browser channel=%s headless=%s",
                 settings.aeat_browser_channel,
                 settings.aeat_browser_headless,
             )
@@ -36,17 +37,18 @@ async def run_health_check() -> None:
             context = await browser.new_context()
             page = await context.new_page()
 
-            logger.info("Navigating to https://example.com for smoke test...")
+            logger.debug("navigating to https://example.com for smoke test")
             response = await page.goto("https://example.com", wait_until="domcontentloaded")
 
             if not response or not response.ok:
                 raise BrowserError(f"Smoke test failed. Status: {response.status if response else 'Unknown'}")
 
-            logger.info("Smoke test successful. Page title: %s", await page.title())
+            logger.info("browser health check passed title=%s", await page.title())
             await browser.close()
-            logger.info("BrowserHealthCheck passed.")
-    except Exception as e:
-        logger.error("BrowserHealthCheck failed: %s", e)
+    except BrowserError:
+        raise
+    except PlaywrightError as e:
+        logger.error("browser health check failed", exc_info=True)
         raise BrowserError(f"BrowserHealthCheck failed: {e}") from e
 
 

@@ -18,8 +18,11 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.logging import get_logger
 from ...formulas import LIS_ART_12_LINEAL_TABLE, AssetClass
 from ..errors import AssetRecordError, BasisCapExceededError
+
+_logger = get_logger(__name__)
 
 SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
@@ -331,6 +334,7 @@ def _table_row_for(asset_class: AssetClass):
     for category in LIS_ART_12_LINEAL_TABLE:
         if category.asset_class is asset_class:
             return category
+    _logger.warning("lis coefficient missing for asset_class=%s", asset_class.value)
     raise AssetRecordError(f"missing LIS art. 12.1.a coefficient for {asset_class.value}")
 
 

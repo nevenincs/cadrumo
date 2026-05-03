@@ -1,7 +1,7 @@
 """CLI tests for the ``aeat data ledgers`` command surface.
 
 Exercises the assets, inventory, and Anexo D sub-apps end-to-end via
-:class:`typer.testing.CliRunner` against the root ``aeat`` Typer app,
+:class:`typer.testing.CliRunner` against a local wrapper app,
 using an in-memory ephemeral master key so persistence round-trips run
 against a real on-disk encrypted store inside ``tmp_path``.
 """
@@ -12,14 +12,40 @@ import json
 from collections.abc import Iterator
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 from .....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
-from ... import app
+from ..._errors import decorate_typer_app
+from . import anexo_d as anexo_d_module
+from . import assets as assets_module
+from . import inventory as inventory_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
+
+
+def _build_ledgers_test_app() -> typer.Typer:
+    """Mount developer ledger apps without exposing retired user-root commands."""
+
+    test_app = typer.Typer(name="ledgers", no_args_is_help=True)
+
+    @test_app.callback()
+    def _main(
+        ctx: typer.Context,
+        json_output: bool = typer.Option(False, "--json", help="Emit command output as JSON."),
+    ) -> None:
+        ctx.ensure_object(dict)["json_output"] = json_output
+
+    test_app.add_typer(assets_module.app, name="assets")
+    test_app.add_typer(inventory_module.app, name="inventory")
+    test_app.add_typer(anexo_d_module.app, name="anexo-d")
+    decorate_typer_app(test_app)
+    return test_app
+
+
+app = _build_ledgers_test_app()
 
 
 @pytest.fixture(autouse=True)
@@ -37,8 +63,6 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "assets",
             "add",
             "pc-2024",
@@ -63,11 +87,11 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
     assert add_payload["command"] == "data ledgers assets add"
     assert add_payload["result"]["asset"]["cost_basis"] == "1105.00"
 
-    listed = _RUNNER.invoke(app, ["--json", "data", "ledgers", "assets", "list", "--storage-dir", storage])
+    listed = _RUNNER.invoke(app, ["--json", "assets", "list", "--storage-dir", storage])
     assert listed.exit_code == 0, listed.output
     assert json.loads(listed.output)["result"][0]["identifier"] == "pc-2024"
 
-    shown = _RUNNER.invoke(app, ["--json", "data", "ledgers", "assets", "show", "pc-2024", "--storage-dir", storage])
+    shown = _RUNNER.invoke(app, ["--json", "assets", "show", "pc-2024", "--storage-dir", storage])
     assert shown.exit_code == 0, shown.output
     assert json.loads(shown.output)["result"]["asset"]["vat_amount"] == "210.00"
 
@@ -75,8 +99,6 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "assets",
             "amortization",
             "preview",
@@ -95,8 +117,6 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "assets",
             "amortization",
             "apply",
@@ -115,8 +135,6 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "assets",
             "amortization",
             "apply",
@@ -135,8 +153,6 @@ def test_data_ledgers_assets_vat_add_list_show_and_amortization_json(tmp_path) -
 def test_data_ledgers_refuses_duplicate_assets(tmp_path) -> None:
     storage = str(tmp_path)
     args = [
-        "data",
-        "ledgers",
         "assets",
         "add",
         "pc",
@@ -163,8 +179,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
     create = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "create",
             "retail",
@@ -189,8 +203,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
     purchase = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "movement",
             "add",
@@ -221,8 +233,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
     sale = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "movement",
             "add",
@@ -250,8 +260,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "inventory",
             "valuation",
             "preview",
@@ -272,8 +280,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
     lifo = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "create",
             "bad",
@@ -293,8 +299,6 @@ def test_data_ledgers_inventory_refuses_inconsistent_opening_layers(tmp_path) ->
     result = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "create",
             "retail",
@@ -322,8 +326,6 @@ def test_data_ledgers_anexo_d_preview_uses_ledgers(tmp_path) -> None:
     asset = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "assets",
             "add",
             "pc",
@@ -345,8 +347,6 @@ def test_data_ledgers_anexo_d_preview_uses_ledgers(tmp_path) -> None:
     inventory = _RUNNER.invoke(
         app,
         [
-            "data",
-            "ledgers",
             "inventory",
             "create",
             "retail",
@@ -370,8 +370,6 @@ def test_data_ledgers_anexo_d_preview_uses_ledgers(tmp_path) -> None:
         app,
         [
             "--json",
-            "data",
-            "ledgers",
             "anexo-d",
             "preview",
             "--modelo",

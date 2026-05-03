@@ -172,9 +172,8 @@ class Modelo390Builder(FilingBuilder):
             values=ordered,
         )
         _logger.debug(
-            "Built Modelo 390 draft %s for profile %s ejercicio %d",
+            "built modelo 390 draft draft_id=%s ejercicio=%d",
             draft_id,
-            profile.tax_id,
             ejercicio,
         )
         return FilingDraft(

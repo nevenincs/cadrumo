@@ -86,7 +86,7 @@ def restrict_file_permissions(path: Path) -> None:
                 path,
                 result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
             )
-        except Exception as exc:
+        except Exception:
             # Catch Exception (not just OSError) so the docstring's
             # "every error is swallowed" contract truly holds. The
             # candidates that have actually been observed are
@@ -99,9 +99,9 @@ def restrict_file_permissions(path: Path) -> None:
             # not in the catch list because ``os.environ.get``
             # returns ``None`` rather than raising on a missing key.
             _log.warning(
-                "restrict_file_permissions: best-effort hardening failed on %s: %s",
+                "restrict_file_permissions: best-effort hardening failed on %s",
                 path,
-                exc,
+                exc_info=True,
             )
         return
     if os.name != "posix":

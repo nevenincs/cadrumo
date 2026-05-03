@@ -20,7 +20,10 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from ...core.logging import get_logger
 from ._i18n import t, tr
+
+_logger = get_logger(__name__)
 
 SCRATCH_FOLDER_NAME = "aeat-scratch"
 """Drive folder name used as the parent for all scratch resources."""
@@ -96,6 +99,7 @@ def _find_or_create_folder(drive: Any, name: str) -> str:
     )
     existing = dedup_existing_resource(name, FOLDER_MIME, response.get("files", []))
     if existing:
+        _logger.debug("_find_or_create_folder: reusing existing folder %r (id=%s)", name, existing)
         return existing
     created = (
         drive.files()
@@ -105,6 +109,7 @@ def _find_or_create_folder(drive: Any, name: str) -> str:
         )
         .execute()
     )
+    _logger.debug("_find_or_create_folder: created new folder %r (id=%s)", name, created["id"])
     return str(created["id"])
 
 
@@ -126,6 +131,7 @@ def _find_or_create_workspace_doc(
     )
     existing = dedup_existing_resource(name, mime, response.get("files", []))
     if existing:
+        _logger.debug("_find_or_create_workspace_doc: reusing existing doc %r (id=%s)", name, existing)
         return existing
     created = (
         drive.files()
@@ -135,6 +141,7 @@ def _find_or_create_workspace_doc(
         )
         .execute()
     )
+    _logger.debug("_find_or_create_workspace_doc: created new doc %r (id=%s)", name, created["id"])
     return str(created["id"])
 
 
@@ -193,9 +200,11 @@ def bootstrap() -> None:
         )
         raise typer.Exit(code=1)
 
+    _logger.info("bootstrap: starting scratch resource provisioning for project %s", settings.google_cloud_project)
     try:
         creds = get_credentials_for_scopes(REQUIRED_ADC_SCOPES)
     except Exception as exc:
+        _logger.warning("bootstrap: failed to obtain ADC credentials", exc_info=True)
         console.print(
             "[red]"
             + tr(
@@ -222,11 +231,13 @@ def bootstrap() -> None:
 
     drive = build_drive_service(creds)
 
+    _logger.debug("bootstrap: credentials obtained; locating or creating scratch resources")
     try:
         folder_id = _find_or_create_folder(drive, SCRATCH_FOLDER_NAME)
         sheet_id = _find_or_create_workspace_doc(drive, SCRATCH_SHEET_NAME, SHEET_MIME, folder_id)
         doc_id = _find_or_create_workspace_doc(drive, SCRATCH_DOC_NAME, DOC_MIME, folder_id)
     except Exception as exc:
+        _logger.warning("bootstrap: Drive resource creation failed", exc_info=True)
         text = repr(exc).lower()
         if "storagequotaexceeded" in text or "storage quota" in text:
             console.print(
@@ -274,6 +285,12 @@ def bootstrap() -> None:
         raise
 
     resources = ScratchResources(folder_id=folder_id, sheet_id=sheet_id, doc_id=doc_id)
+    _logger.info(
+        "bootstrap: scratch resources ready (folder=%s sheet=%s doc=%s)",
+        folder_id,
+        sheet_id,
+        doc_id,
+    )
     _persist_ids(resources)
 
     table = Table(title="aeat bootstrap", show_lines=False, header_style="bold")

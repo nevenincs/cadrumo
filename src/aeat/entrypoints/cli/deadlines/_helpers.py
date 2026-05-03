@@ -11,12 +11,16 @@ from pathlib import Path
 import typer
 
 from ....core.config import load_settings
+from ....core.errors import AeatError
+from ....core.logging import get_logger
 from ....domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     ProfileError,
 )
 from .._i18n import t, tr
+
+_logger = get_logger(__name__)
 
 
 def resolve_profile_path(explicit: Path | None) -> Path:
@@ -73,7 +77,8 @@ def load_profile(path: Path) -> AutonomoProfile:
 
     try:
         return load_profile_envelope(path)
-    except Exception as exc:  # pragma: no cover - defensive: covered by tests
+    except (OSError, ValueError, AeatError) as exc:  # pragma: no cover - defensive: covered by tests
+        _logger.error("load_profile: failed to load profile envelope at %s", path, exc_info=True)
         raise ProfileError(f"invalid profile envelope at {path}: {exc}") from exc
 
 

@@ -30,12 +30,12 @@ from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ..logging import get_logger
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
-_log = get_logger(__name__)
+_logger = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _MANIFEST_VERSION = 1
@@ -258,6 +258,7 @@ def build_corpus_manifest(
         )
     raw_entries.sort(key=lambda entry: entry.relative_path)
     entries = tuple(raw_entries)
+    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(entries), corpus_root)
     body = _canonical_manifest_body(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
@@ -265,6 +266,12 @@ def build_corpus_manifest(
         entries=entries,
     )
     manifest_sha256 = hashlib.sha256(body).hexdigest()
+    _logger.debug(
+        "build_corpus_manifest: built manifest for %r with %d entries (sha256=%s)",
+        corpus_root_name,
+        len(entries),
+        manifest_sha256[:12],
+    )
     return CorpusManifest(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
@@ -343,8 +350,10 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
         from ..locks import fsync_parent_dir
 
         fsync_parent_dir(resolved)
+        _logger.debug("save_corpus_manifest: wrote manifest to %s", resolved)
     except OSError:
         tmp_path.unlink(missing_ok=True)
+        _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
 
 
@@ -368,7 +377,8 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
     raw = target.read_text(encoding="utf-8")
     try:
         manifest = CorpusManifest.model_validate_json(raw)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
+        _logger.error("load_corpus_manifest: structurally invalid manifest at %s", target, exc_info=True)
         raise CorpusManifestError(f"manifest at {target} is structurally invalid: {exc}") from exc
     if manifest.manifest_version > _MANIFEST_VERSION:
         raise CorpusManifestError(
@@ -383,10 +393,20 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
     )
     expected_sha256 = hashlib.sha256(body).hexdigest()
     if manifest.manifest_sha256 != expected_sha256:
+        _logger.error(
+            "load_corpus_manifest: tamper detected in manifest at %s (recorded sha256 does not match body)",
+            target,
+        )
         raise CorpusManifestTamperError(
             f"manifest at {target}: recorded manifest_sha256 does not match the body digest "
             "(an attacker may have edited the manifest body without recomputing the digest).",
         )
+    _logger.debug(
+        "load_corpus_manifest: loaded %r with %d entries from %s",
+        manifest.corpus_root_name,
+        len(manifest.entries),
+        target,
+    )
     return manifest
 
 
@@ -405,10 +425,18 @@ def assert_corpus_clean(corpus_root: Path) -> None:
     manifest = load_corpus_manifest(manifest_path_for(corpus_root))
     diff = verify_corpus_manifest(corpus_root, manifest=manifest)
     if not diff.is_clean:
+        _logger.warning(
+            "assert_corpus_clean: drift detected in %r (added=%d removed=%d changed=%d)",
+            manifest.corpus_root_name,
+            len(diff.added),
+            len(diff.removed),
+            len(diff.changed),
+        )
         raise CorpusManifestDriftError(
             f"corpus drift in {manifest.corpus_root_name!r}: "
             f"added={list(diff.added)} removed={list(diff.removed)} changed={list(diff.changed)}",
         )
+    _logger.debug("assert_corpus_clean: corpus %r is clean", manifest.corpus_root_name)
 
 
 __all__ = [

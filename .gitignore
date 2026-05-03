@@ -237,6 +237,48 @@ corpus/manuals/**/source.html/
 .idea/
 .vscode/
 
+# Note: `.vaultspec/rules/rules/aeat-project-mandates.md` is the project's
+# custom mandate rule; it is force-added to git (`git add -f`) despite the
+# vaultspec-managed ignore above, so every workstation + agent reads the
+# same mandates after running `uv run vaultspec-core install`.
+
+# vaultspec-core writes 0-byte `.lock` sentinels next to every file it
+# manages (.gitignore.lock, .mcp.json.lock, .pre-commit-config.yaml.lock,
+# .vaultspec/providers{.json,}.lock). It also regenerates
+# .pre-commit-config.yaml on every install even though the project uses
+# prek (which reads prek.toml exclusively). Upstream install forgets to
+# gitignore all of these. Ignore here until fixed upstream. uv.lock is
+# unaffected — no leading dot.
+/.*.lock
+/.vaultspec/*.lock
+/.pre-commit-config.yaml
+
+# Scratch / ad-hoc workspace / temp
+scratch/*
+tmp/
+temp/
+cache/
+
+
+# Root-level safety net for common ad-hoc output patterns that tend to
+# appear when agents shortcut past the scratch/ convention. Narrow,
+# leading-slash patterns so nothing nested gets hidden.
+/out.*
+/*_issues.json
+/*_issues.txt
+/issues_*.json
+/issues_*.txt
+/open_issues.json
+/parsed_issues.txt
+
+# Playwright MCP session capture output
+.playwright-mcp/
+
+# Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
+# agent workspaces). Same role as scratch/ — ephemeral, never in git.
+/.tmp/
+
+
 # >>> vaultspec-managed (do not edit this block) >>>
 .agents/
 .claude/
@@ -256,46 +298,3 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 # <<< vaultspec-managed <<<
-
-# Note: `.vaultspec/rules/rules/aeat-project-mandates.md` is the project's
-# custom mandate rule; it is force-added to git (`git add -f`) despite the
-# vaultspec-managed ignore above, so every workstation + agent reads the
-# same mandates after running `uv run vaultspec-core install`.
-
-# vaultspec-core writes 0-byte `.lock` sentinels next to every file it
-# manages (.gitignore.lock, .mcp.json.lock, .pre-commit-config.yaml.lock,
-# .vaultspec/providers{.json,}.lock). It also regenerates
-# .pre-commit-config.yaml on every install even though the project uses
-# prek (which reads prek.toml exclusively). Upstream install forgets to
-# gitignore all of these. Ignore here until fixed upstream. uv.lock is
-# unaffected — no leading dot.
-/.*.lock
-/.vaultspec/*.lock
-/.pre-commit-config.yaml
-
-# Scratch / ad-hoc workspace
-#
-# Canonical home for PM triage dumps, one-off parsers, gh-issue exports,
-# and any other ephemeral output. Nothing under scratch/ ever enters git.
-# Authored artifacts belong in `.vault/` via the vaultspec pipeline
-# (research → adr → plan → exec → audit), never at the repo root.
-scratch/*
-!scratch/README.md
-
-# Root-level safety net for common ad-hoc output patterns that tend to
-# appear when agents shortcut past the scratch/ convention. Narrow,
-# leading-slash patterns so nothing nested gets hidden.
-/out.*
-/*_issues.json
-/*_issues.txt
-/issues_*.json
-/issues_*.txt
-/open_issues.json
-/parsed_issues.txt
-
-# Playwright MCP session capture output
-.playwright-mcp/
-
-# Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
-# agent workspaces). Same role as scratch/ — ephemeral, never in git.
-/.tmp/

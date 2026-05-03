@@ -22,7 +22,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import PROJECT_ROOT, load_settings
-from ...core.i18n import require_authoritative
+from ...core.i18n import TranslationError, require_authoritative
 from ...core.logging import get_logger
 from .errors import (
     CasillaParseError,
@@ -94,12 +94,28 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
     errors: list[VerifyError] = []
     review_required = load_settings().aeat_casillas_review_required
     valid_ids = {record.casilla_id for record in catalogue.records}
+    _log.debug(
+        "verifying casilla catalogue %s/%s (%d records)",
+        catalogue.modelo,
+        catalogue.period,
+        len(catalogue.records),
+    )
+
+    def _record_error(err: VerifyError) -> None:
+        _log.debug(
+            "casilla verify error %s/%s casilla=%s: %s",
+            err.modelo,
+            err.period,
+            err.casilla_id,
+            err.message,
+        )
+        errors.append(err)
 
     for record in catalogue.records:
         try:
             require_authoritative(record.label, domain="aeat")
-        except Exception as exc:
-            errors.append(
+        except TranslationError as exc:
+            _record_error(
                 MissingFieldError(
                     modelo=record.modelo,
                     period=record.period,
@@ -109,8 +125,8 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
             )
         try:
             require_authoritative(record.help, domain="aeat")
-        except Exception as exc:
-            errors.append(
+        except TranslationError as exc:
+            _record_error(
                 MissingFieldError(
                     modelo=record.modelo,
                     period=record.period,
@@ -121,7 +137,7 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
 
         if review_required:
             if not record.definition_reviewed_by.strip():
-                errors.append(
+                _record_error(
                     UnreviewedRecordError(
                         modelo=record.modelo,
                         period=record.period,
@@ -130,7 +146,7 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
                     )
                 )
             if record.definition_reviewed_at is None:
-                errors.append(
+                _record_error(
                     UnreviewedRecordError(
                         modelo=record.modelo,
                         period=record.period,
@@ -141,7 +157,7 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
 
         for reference in record.references_casillas:
             if reference not in valid_ids:
-                errors.append(
+                _record_error(
                     CrossReferenceError(
                         modelo=record.modelo,
                         period=record.period,
@@ -150,6 +166,13 @@ def verify_casillas(catalogue: CasillaCatalogue) -> tuple[VerifyError, ...]:
                     )
                 )
 
+    if errors:
+        _log.warning(
+            "casilla catalogue %s/%s failed verification: %d error(s)",
+            catalogue.modelo,
+            catalogue.period,
+            len(errors),
+        )
     return tuple(errors)
 
 
@@ -179,6 +202,7 @@ def load_casillas(modelo: str, period: str, root: Path | None = None) -> Casilla
     if not path.exists():
         raise CasillaParseError(path, "catalogue file does not exist")
 
+    _log.debug("loading casilla catalogue %s/%s from %s", modelo, period, path)
     try:
         catalogue = CasillaCatalogue.model_validate_json(path.read_text(encoding="utf-8"))
     except ValidationError as exc:
@@ -190,6 +214,7 @@ def load_casillas(modelo: str, period: str, root: Path | None = None) -> Casilla
     if errors:
         summary = "; ".join(str(error) for error in errors)
         raise CasillaParseError(path, summary)
+    _log.debug("loaded casilla catalogue %s/%s (%d records)", modelo, period, len(catalogue.records))
     return catalogue
 
 
@@ -213,7 +238,7 @@ def save_casillas(catalogue: CasillaCatalogue, root: Path | None = None) -> None
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = catalogue.model_dump(mode="json")
     path.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
-    _log.info("saved casilla catalogue to %s", path)
+    _log.debug("saved casilla catalogue to %s", path)
 
 
 def write_extract_draft(catalogue: CasillaCatalogue) -> Path:
@@ -260,12 +285,20 @@ def _write_temp_catalogue(catalogue: CasillaCatalogue, *, suffix: str) -> Path:
             draft_path = Path(handle.name)
             json.dump(catalogue.model_dump(mode="json"), handle, indent=2, sort_keys=True, ensure_ascii=False)
             handle.write("\n")
-    except Exception:
+    except (OSError, ValueError, TypeError):
         if draft_path is not None:
+            _log.warning(
+                "draft serialisation failed for %s/%s suffix=%s; removing partial file %s",
+                catalogue.modelo,
+                catalogue.period,
+                suffix,
+                draft_path,
+                exc_info=True,
+            )
             draft_path.unlink(missing_ok=True)
         raise
     assert draft_path is not None
-    _log.info("wrote casilla draft file to %s", draft_path)
+    _log.debug("wrote casilla draft file to %s", draft_path)
     return draft_path
 
 

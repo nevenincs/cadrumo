@@ -23,7 +23,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.i18n import Translatable, require_authoritative
+from ...core.i18n import Translatable, TranslationError, require_authoritative
 from ...domain.filing import (
     FilingDraft,
     FilingDraftStatus,
@@ -115,7 +115,7 @@ class DeclarationCalculateSummary(BaseModel):
         """Reject narratives that omit the authoritative Spanish key."""
         try:
             require_authoritative(value, domain="aeat")
-        except Exception as exc:
+        except TranslationError as exc:
             raise ValueError(str(exc)) from exc
         return value
 
@@ -129,7 +129,7 @@ class DeclarationCalculateSummary(BaseModel):
         for hint in value:
             try:
                 require_authoritative(hint, domain="aeat")
-            except Exception as exc:
+            except TranslationError as exc:
                 raise ValueError(str(exc)) from exc
         return value
 

@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from pydantic import ValidationError
+
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_record_json_path
@@ -92,8 +94,20 @@ class SubmissionEngine:
         except ValueError as exc:
             raise SubmissionError(str(exc)) from exc
         if not target.exists():
+            _logger.debug("submission not found for id %s", submission_id)
             raise SubmissionError(f"no persisted submission with id {submission_id!r}")
-        return SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
+        try:
+            filing = SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
+        except (OSError, ValueError, ValidationError) as exc:
+            _logger.error(
+                "submission record validation failed: id=%s path=%s",
+                submission_id,
+                target,
+                exc_info=True,
+            )
+            raise SubmissionError(f"submission record at {target} failed validation") from exc
+        _logger.debug("loaded submission id=%s modelo=%s status=%s", submission_id, filing.modelo, filing.status)
+        return filing
 
     def list_submissions(
         self,
@@ -120,8 +134,8 @@ class SubmissionEngine:
         for path in sorted(target_dir.glob("*.json")):
             try:
                 filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-            except Exception as exc:  # pragma: no cover - defensive
-                _logger.warning("engine: skipping unreadable record %s: %s", path, exc)
+            except (OSError, ValueError, ValidationError):  # pragma: no cover - defensive
+                _logger.warning("engine skipping unreadable record %s", path, exc_info=True)
                 continue
             if modelo is not None and filing.modelo != modelo:
                 continue
@@ -129,4 +143,10 @@ class SubmissionEngine:
                 continue
             results.append(filing)
         results.sort(key=lambda f: f.submitted_at, reverse=True)
+        _logger.debug(
+            "list_submissions: returned %d records (modelo=%s status=%s)",
+            len(results),
+            modelo,
+            status,
+        )
         return tuple(results)

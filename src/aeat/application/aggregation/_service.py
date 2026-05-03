@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core.logging import get_logger
 from ...domain.categories import (
     CasillaMapping,
     CategoryProfile,
@@ -39,6 +40,8 @@ from ._errors import (
     t,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+
+_logger = get_logger(__name__)
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
@@ -155,12 +158,20 @@ def aggregate_catalogue(
             key=lambda item: (item[0][0], item[0][1] or ""),
         )
     )
-    return CasillaAggregation(
+    result = CasillaAggregation(
         modelo=modelo_code.value,
         period=resolved_period,
         casilla_values=totals,
         provenance=provenance,
     )
+    _logger.debug(
+        "aggregated catalogue modelo=%s period=%s in_period=%d casillas=%d",
+        modelo_code.value,
+        resolved_period.raw,
+        len(in_period),
+        len(totals),
+    )
+    return result
 
 
 def _category_profiles_for_year(year: int) -> Mapping[SpendingCategory, CategoryProfile]:

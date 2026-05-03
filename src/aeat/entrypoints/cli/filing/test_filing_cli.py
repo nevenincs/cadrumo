@@ -21,7 +21,7 @@ from ....application.filing.runtime import build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
 from ....domain.transactions import TransactionCatalogue
-from .. import app
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -161,7 +161,6 @@ class TestFilingCLI:
         result = runner.invoke(
             app,
             [
-                "filing",
                 "build",
                 "--modelo",
                 "130",
@@ -184,7 +183,6 @@ class TestFilingCLI:
         result = runner.invoke(
             app,
             [
-                "filing",
                 "build",
                 "--modelo",
                 "130",
@@ -207,7 +205,6 @@ class TestFilingCLI:
         build_result = runner.invoke(
             app,
             [
-                "filing",
                 "build",
                 "--modelo",
                 "130",
@@ -220,10 +217,10 @@ class TestFilingCLI:
         assert build_result.exit_code == 0
         produced = next(drafts_dir.glob("*.envelope.json"))
 
-        show_result = runner.invoke(app, ["filing", "show", str(produced)])
+        show_result = runner.invoke(app, ["show", str(produced)])
         assert show_result.exit_code == 0
 
-        validate_result = runner.invoke(app, ["filing", "validate", str(produced)])
+        validate_result = runner.invoke(app, ["validate", str(produced)])
         assert validate_result.exit_code == 0
 
     def test_validate_preserves_approval_for_unchanged_reviewed_draft(
@@ -256,7 +253,7 @@ class TestFilingCLI:
         repo.save(approved)
         envelope_path = repo.envelope_path_for(approved.draft_id)
 
-        validate_result = runner.invoke(app, ["filing", "validate", str(envelope_path)])
+        validate_result = runner.invoke(app, ["validate", str(envelope_path)])
         assert validate_result.exit_code == 0, validate_result.output
         assert "aeat submission preflight" in validate_result.output
 
@@ -273,7 +270,6 @@ class TestFilingCLI:
         runner.invoke(
             app,
             [
-                "filing",
                 "build",
                 "--modelo",
                 "130",
@@ -283,7 +279,7 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        result = runner.invoke(app, ["filing", "list", "--modelo", "130"])
+        result = runner.invoke(app, ["list", "--modelo", "130"])
         assert result.exit_code == 0
 
     def test_import_persists_draft_and_submission(
@@ -294,7 +290,7 @@ class TestFilingCLI:
         pdf = _JUSTIFICANTE_FIXTURES / "modelo_130_2026Q1.pdf"
         result = runner.invoke(
             app,
-            ["filing", "import", "--from-justificante", str(pdf)],
+            ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code == 0, result.output
         drafts = sorted(drafts_dir.glob("*.envelope.json"))
@@ -313,7 +309,7 @@ class TestFilingCLI:
         missing = tmp_path / "nowhere.pdf"
         result = runner.invoke(
             app,
-            ["filing", "import", "--from-justificante", str(missing)],
+            ["import", "--from-justificante", str(missing)],
         )
         assert result.exit_code != 0, result.output
         assert not list(drafts_dir.glob("*.envelope.json"))
@@ -327,7 +323,7 @@ class TestFilingCLI:
         pdf = _JUSTIFICANTE_FIXTURES / "modelo_100_2025A.pdf"
         result = runner.invoke(
             app,
-            ["filing", "import", "--from-justificante", str(pdf)],
+            ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code != 0, result.output
         assert "100" in result.output
@@ -346,7 +342,7 @@ class TestFilingCLI:
         subcommand.
         """
         del runner_disabled
-        result = runner.invoke(app, ["filing", "complementaria", "submit", "amd-1"])
+        result = runner.invoke(app, ["complementaria", "submit", "amd-1"])
         # Click/Typer returns 2 for an unknown subcommand.
         assert result.exit_code == 2, result.output
         assert "no such command" in result.output.lower()

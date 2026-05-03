@@ -44,5 +44,5 @@ def extract_text_pdfplumber(pdf_path: Path) -> str:
     except JustificanteParseError:
         raise
     except Exception as exc:  # pragma: no cover - defensive
-        _logger.warning("pdfplumber failed to open %s: %s", pdf_path, exc)
+        _logger.error("pdfplumber failed to open %s", pdf_path, exc_info=True)
         raise JustificanteParseError(f"pdfplumber failed to open {pdf_path}: {exc}") from exc

@@ -22,6 +22,7 @@ import hashlib
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import async_playwright
 
 from .....core.config import Settings
@@ -96,7 +97,7 @@ async def walk_expedientes_tree(
             page = await context.new_page()
             try:
                 await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
-            except Exception as exc:
+            except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
             await _expand_matching_branches(page, modelo=modelo)
@@ -104,10 +105,17 @@ async def walk_expedientes_tree(
             expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
             if modelo is not None:
                 expedientes = tuple(e for e in expedientes if e.modelo == modelo)
+            log.info(
+                "walk_expedientes_tree: found %d expediente(s) modelo=%s",
+                len(expedientes),
+                modelo,
+            )
             return expedientes
         finally:
-            with contextlib.suppress(Exception):
+            try:
                 await context.close()
+            except Exception as _exc:
+                log.debug("walk_expedientes_tree: context.close suppressed: %s", _exc)
             await browser_session.close()
 
 
@@ -153,21 +161,31 @@ async def resolve_justificante_ref(
             # per-year endpoint without this is fine when cookies are
             # fresh but fails intermittently after idle periods.
             page = await context.new_page()
-            with contextlib.suppress(Exception):
+            try:
                 await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            except Exception as _exc:
+                log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
             try:
                 await page.goto(detail_url, wait_until="domcontentloaded")
-            except Exception as exc:
+            except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
             html = await page.content()
-            return parse_expediente_detail(
+            ref = parse_expediente_detail(
                 html,
                 expediente_id=expediente.expediente_id,
                 base_url=_SEDE_BASE,
             )
+            log.info(
+                "resolve_justificante_ref: resolved CSV=%s expediente=%s",
+                ref.csv,
+                expediente.expediente_id,
+            )
+            return ref
         finally:
-            with contextlib.suppress(Exception):
+            try:
                 await context.close()
+            except Exception as _exc:
+                log.debug("resolve_justificante_ref: context.close suppressed: %s", _exc)
             await browser_session.close()
 
 
@@ -212,11 +230,13 @@ async def capture_justificante(
         )
         try:
             page = await context.new_page()
-            with contextlib.suppress(Exception):
+            try:
                 await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            except Exception as _exc:
+                log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
             try:
                 await page.goto(detail_url, wait_until="domcontentloaded")
-            except Exception as exc:
+            except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
             detail_html = await page.content()
             ref = parse_expediente_detail(
@@ -235,6 +255,13 @@ async def capture_justificante(
             if "pdf" not in content_type.lower():
                 raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
             sha256 = hashlib.sha256(body).hexdigest()
+            log.info(
+                "capture_justificante: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
+                expediente.expediente_id,
+                ref.csv,
+                len(body),
+                sha256[:16],
+            )
             return SedeCapture(
                 expediente=expediente,
                 ref=ref,
@@ -243,8 +270,10 @@ async def capture_justificante(
                 captured_at=datetime.now(UTC),
             )
         finally:
-            with contextlib.suppress(Exception):
+            try:
                 await context.close()
+            except Exception as _exc:
+                log.debug("capture_justificante: context.close suppressed: %s", _exc)
             await browser_session.close()
 
 
@@ -289,7 +318,7 @@ async def _snapshot_html(page: object) -> str:
                 await wait_for_load_state("domcontentloaded", timeout=2_000)
         try:
             return await content()
-        except Exception as exc:
+        except PlaywrightError as exc:
             last_exc = exc
             await _asyncio.sleep(0.5)
     raise SedeNavigationError(f"failed to snapshot page HTML after 8 attempts: {last_exc!r}")
@@ -332,6 +361,7 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
             modelo,
         )
         if not clicked:
+            log.debug("_expand_matching_branches: no mostrarListado anchor found for modelo=%s", modelo)
             return
     else:
         await evaluate(

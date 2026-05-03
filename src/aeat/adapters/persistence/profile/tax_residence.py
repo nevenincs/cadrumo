@@ -10,6 +10,7 @@ order, falling back to ``~/.config/aeat/tax-residence.json``.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 from collections.abc import Mapping
@@ -38,12 +39,13 @@ def default_path() -> Path:
         Filesystem path for the profile JSON file.
     """
 
-    try:
+    configured: Path | None = None
+    # Broad suppress: load_settings() can raise ValidationError, OSError,
+    # ValueError, or any .env-parser error; every failure means "use OS default".
+    with contextlib.suppress(Exception):
         from ....core.config import load_settings
 
         configured = load_settings().aeat_tax_residence_profile_path
-    except Exception:
-        configured = None
     if configured is not None:
         return configured
     return _default_path(os.environ, os.name)

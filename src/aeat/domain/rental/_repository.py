@@ -97,6 +97,7 @@ class RentalFincaRepository:
                 ),
             ).scalar_one_or_none()
         if row is None:
+            _log.debug("rental_finca: inserting new finca identifier=%s", record.identifier)
             row = _orm.RentalFincaRow(
                 identifier=record.identifier,
                 address=record.address,
@@ -113,6 +114,7 @@ class RentalFincaRepository:
             )
             self._session.add(row)
         else:
+            _log.debug("rental_finca: updating finca id=%s identifier=%s", record.id, record.identifier)
             row.identifier = record.identifier
             row.address = record.address
             row.valor_catastral_total = record.valor_catastral_total
@@ -136,6 +138,7 @@ class RentalFincaRepository:
         row = self._session.get(_orm.RentalFincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
+        _log.debug("rental_finca: deleting id=%d", record_id)
         self._session.delete(row)
         _flush_or_wrap(self._session, "rental_finca")
 
@@ -146,6 +149,12 @@ class RentalFincaRepository:
         try:
             use_type = UseType(row.use_type)
         except ValueError as exc:
+            _log.error(
+                "rental_finca id=%s has unknown use_type=%r",
+                row.id,
+                row.use_type,
+                exc_info=True,
+            )
             raise RepositoryError(
                 f"rental_finca id={row.id} has unknown use_type={row.use_type!r}",
             ) from exc
@@ -459,6 +468,12 @@ class RentalExpenseRepository:
         try:
             category = ExpenseCategory(row.category)
         except ValueError as exc:
+            _log.error(
+                "rental_expense id=%s has unknown category=%r",
+                row.id,
+                row.category,
+                exc_info=True,
+            )
             raise RepositoryError(
                 f"rental_expense id={row.id} has unknown category={row.category!r}",
             ) from exc

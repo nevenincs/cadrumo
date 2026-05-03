@@ -89,7 +89,17 @@ class LLMClient:
             temperature=request.temperature if request.temperature is not None else 0.0,
             timeout_s=self.settings.aeat_llm_default_timeout_s,
         )
-        completion = await adapter.complete(provider_request)
+        try:
+            completion = await adapter.complete(provider_request)
+        except Exception:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise at this boundary
+            _LOGGER.error(
+                "llm request failed provider=%s model=%s request_id=%s",
+                provider.value,
+                model,
+                request_id,
+                exc_info=True,
+            )
+            raise
         response = LLMResponse(
             text=completion.text,
             provider=provider,
@@ -108,7 +118,13 @@ class LLMClient:
         )
         self.cache.write(request, response)
         self.usage_recorder.record(self.usage_recorder.build_record(response, self.prompt_id, self.caller))
-        _LOGGER.info("completed llm request", extra={"provider": provider.value, "model": completion.model})
+        _LOGGER.info(
+            "llm request completed provider=%s model=%s input_tokens=%d output_tokens=%d",
+            provider.value,
+            completion.model,
+            completion.input_tokens,
+            completion.output_tokens,
+        )
         return response
 
     def _default_provider(self) -> LLMProvider:

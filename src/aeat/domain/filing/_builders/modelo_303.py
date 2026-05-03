@@ -142,9 +142,8 @@ class Modelo303Builder(FilingBuilder):
             values=ordered_values,
         )
         _logger.debug(
-            "Built Modelo 303 draft %s for profile %s period %s",
+            "built modelo 303 draft draft_id=%s period=%s",
             draft_id,
-            profile.tax_id,
             period,
         )
         return FilingDraft(

@@ -330,6 +330,7 @@ def test_declaration_spec_rejects_inconsistent_construction() -> None:
 def test_ledger_edit_key_enum_carries_v6_canonical_values() -> None:
     assert {item.value for item in LedgerEditKey} == {
         "category",
+        "treatment",
         "business.share",
         "reference",
         "comments",

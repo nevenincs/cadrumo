@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ._errors import SubmissionPreflightError
 from ._protocols import (
@@ -110,7 +111,7 @@ class Preflight:
             SubmissionPreflightError: If any gate fails. The exception
                 message identifies the failing gate.
         """
-        _logger.info(
+        _logger.debug(
             "preflight start: draft_id=%s modelo=%s period=%s",
             draft.draft_id,
             draft.modelo,
@@ -119,26 +120,26 @@ class Preflight:
 
         status_value = _enum_value(draft.status)
         if status_value != DraftStatus.APPROVED.value:
-            _logger.info("preflight gate-1 FAIL: draft status=%s", draft.status)
+            _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
             if status_value == DraftStatus.APPROVAL_STALE.value:
                 raise SubmissionPreflightError("draft approval is stale; review and approve the draft again")
             raise SubmissionPreflightError(f"draft not approved for submission (status={status_value})")
-        _logger.info("preflight gate-1 OK: draft is APPROVED")
+        _logger.debug("preflight gate-1 ok: draft is approved")
 
         error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "ERROR")
         if error_findings:
-            _logger.info(
-                "preflight gate-2 FAIL: %d ERROR-severity findings",
+            _logger.debug(
+                "preflight gate-2 fail: %d error-severity findings",
                 len(error_findings),
             )
             raise SubmissionPreflightError(
                 f"draft has {len(error_findings)} ERROR-severity finding(s); resolve them before submission"
             )
-        _logger.info("preflight gate-2 OK: no ERROR findings")
+        _logger.debug("preflight gate-2 ok: no error findings")
 
         if not self.deadline_checker.is_window_open(draft.modelo, draft.period, today):
-            _logger.info(
-                "preflight gate-3 FAIL: deadline window closed for %s %s on %s",
+            _logger.debug(
+                "preflight gate-3 fail: deadline window closed for %s %s on %s",
                 draft.modelo,
                 draft.period,
                 today,
@@ -146,16 +147,16 @@ class Preflight:
             raise SubmissionPreflightError(
                 f"deadline window for modelo {draft.modelo} period {draft.period} is not open on {today.isoformat()}"
             )
-        _logger.info("preflight gate-3 OK: deadline window is open")
+        _logger.debug("preflight gate-3 ok: deadline window is open")
 
         try:
             description = self.auth_provider.describe()
-        except Exception as exc:
-            _logger.info("preflight gate-4 FAIL: auth provider describe raised %r", exc)
+        except AeatError as exc:
+            _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
             raise SubmissionPreflightError(f"auth provider failed to describe itself: {exc}") from exc
         if not description.configured or not description.available:
-            _logger.info(
-                "preflight gate-4 FAIL: auth provider unavailable kind=%s configured=%s available=%s",
+            _logger.debug(
+                "preflight gate-4 fail: auth provider unavailable kind=%s configured=%s available=%s",
                 description.kind,
                 description.configured,
                 description.available,
@@ -165,10 +166,9 @@ class Preflight:
                 f"(configured={description.configured} available={description.available}). "
                 f"{_describe_provider_operator_impact(description)}"
             )
-        _logger.info(
-            "preflight gate-4 OK: auth provider ready (kind=%s subject=%s expires_on=%s)",
+        _logger.debug(
+            "preflight gate-4 ok: auth provider ready (kind=%s expires_on=%s)",
             description.kind,
-            description.subject,
             description.expires_on,
         )
 

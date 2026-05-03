@@ -19,3 +19,7 @@ class TransactionPersistenceError(TransactionCatalogueError):
 
 class TransactionNotFoundError(TransactionCatalogueError):
     """Raised when a catalogue lookup targets a missing transaction."""
+
+
+class LLMClassifierError(TransactionError):
+    """Raised when an LLM classification attempt fails."""

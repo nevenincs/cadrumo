@@ -42,20 +42,20 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.logging import get_logger
 from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
+from ._errors import LLMClassifierError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
 from ._models import Transaction
+
+_logger = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")
 _DEFAULT_TIMEOUT_SECONDS = 120.0
 _REASON_MAX_LENGTH = 2048
-
-
-class LLMClassifierError(Exception):
-    """Raised when an LLM classification attempt fails."""
 
 
 # ── response model ────────────────────────────────────────────────
@@ -406,6 +406,7 @@ class SubprocessLLMClassifier:
         prompt = self.spec.render(transaction)
         resolved_binary = shutil.which(self.command[0])
         if resolved_binary is None:
+            _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
             raise LLMClassifierError(f"{self.name} CLI not found on PATH: {self.command[0]}")
 
         output_file: Path | None = None
@@ -430,6 +431,12 @@ class SubprocessLLMClassifier:
             stdin_input = prompt
 
         try:
+            _logger.debug(
+                "llm classify: spawning %s argv=%s transaction_id=%s",
+                self.name,
+                argv[0],
+                transaction.transaction_id,
+            )
             try:
                 completed = subprocess.run(  # noqa: S603 — explicit command list, trusted binary.
                     argv,
@@ -441,13 +448,27 @@ class SubprocessLLMClassifier:
                     check=False,
                 )
             except subprocess.TimeoutExpired as exc:
+                _logger.warning(
+                    "llm classify: %s timed out after %ss for transaction %s",
+                    self.name,
+                    self.timeout_seconds,
+                    transaction.transaction_id,
+                    exc_info=True,
+                )
                 raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
             except OSError as exc:
                 # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
                 # CreateProcess errors). Translate so the --all CLI loop can
                 # skip this one transaction and continue on the next.
+                _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
                 raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
             if completed.returncode != 0:
+                _logger.warning(
+                    "llm classify: %s exited with returncode=%d for transaction %s",
+                    self.name,
+                    completed.returncode,
+                    transaction.transaction_id,
+                )
                 raise LLMClassifierError(
                     f"{self.name} CLI exited with {completed.returncode}: "
                     f"{(completed.stderr or completed.stdout)[:400]!r}"
@@ -455,8 +476,17 @@ class SubprocessLLMClassifier:
             try:
                 output = output_file.read_text(encoding="utf-8") if output_file else completed.stdout
             except OSError as exc:
+                _logger.error("llm classify: %s output file unreadable", self.name, exc_info=True)
                 raise LLMClassifierError(f"{self.name} CLI output file unreadable: {exc}") from exc
-            return parse_response(output, spec=self.spec)
+            response = parse_response(output, spec=self.spec)
+            _logger.debug(
+                "llm classify: %s returned classification=%s confidence=%s for transaction %s",
+                self.name,
+                response.classification.value,
+                response.confidence,
+                transaction.transaction_id,
+            )
+            return response
         finally:
             if output_file is not None:
                 output_file.unlink(missing_ok=True)
@@ -650,6 +680,11 @@ def resolve_classifier(
         # Test-only builders registered via register_classifier may not take
         # the alias/minimum_tier kwargs. Fall back to the simple form so the
         # dependency-injected concrete classifiers keep working.
+        _logger.debug(
+            "resolve_classifier: builder for provider %r does not accept alias/minimum_tier kwargs; "
+            "falling back to simple form",
+            provider,
+        )
         return builder(model=model, spec=spec)
 
 

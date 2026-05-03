@@ -20,6 +20,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from ....core.errors import EvaluationError
 from ...modelos import LegalCitationSource, ModeloCode
 from .._ruleset import ParameterTable, ParameterValue, Ruleset
 from ._common import (
@@ -387,4 +388,4 @@ def compute_casilla_13_minoracion(previous_year_rendimiento_neto: Decimal) -> De
     for step in _CASILLA_13_BRACKETS:
         if step.upper_inclusive is None or probe <= step.upper_inclusive:
             return step.value
-    raise RuntimeError("casilla 13 brackets exhausted without match")
+    raise EvaluationError("casilla 13 brackets exhausted without match")

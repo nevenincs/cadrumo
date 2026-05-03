@@ -15,11 +15,14 @@ from pathlib import Path
 import typer
 
 from ....core.config import load_settings
+from ....core.logging import get_logger
 from ....domain.transactions import (
     TransactionCatalogue,
     TransactionError,
 )
 from .._i18n import t, tr
+
+_logger = get_logger(__name__)
 
 
 def catalogue_dir() -> Path:
@@ -58,6 +61,7 @@ def load_catalogue_or_empty() -> TransactionCatalogue:
     try:
         return repo.load()
     except TransactionError as exc:
+        _logger.warning("load_catalogue_or_empty: catalogue load failed at %s", repo.envelope_path, exc_info=True)
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
@@ -76,6 +80,7 @@ def load_catalogue_required() -> TransactionCatalogue:
     try:
         catalogue = repo.load()
     except TransactionError as exc:
+        _logger.warning("load_catalogue_required: catalogue load failed at %s", repo.envelope_path, exc_info=True)
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
     if len(catalogue) == 0 and not repo.envelope_path.exists():

@@ -154,6 +154,7 @@ class FilingDraftRepository:
                 master_key_provider=_resolve_master_key_provider(),
                 hkdf_context=_HKDF_CONTEXT_FILING_DRAFT,
             )
+        _log.debug("saved filing draft modelo=%s period=%s", draft.modelo, draft.period)
 
     def delete(self, draft_id: str) -> bool:
         """Remove the envelope for ``draft_id``.
@@ -170,6 +171,7 @@ class FilingDraftRepository:
             if not target.exists():
                 return False
             target.unlink()
+        _log.debug("deleted filing draft %s", draft_id)
         return True
 
     def list_draft_ids(self) -> tuple[str, ...]:
@@ -254,8 +256,8 @@ def migrate_legacy_drafts_to_repository(
             continue
         try:
             draft = FilingDraft.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError) as exc:
-            _log.warning("skipping unreadable legacy draft %s: %s", path, exc)
+        except (ValidationError, OSError):
+            _log.warning("skipping unreadable legacy draft %s", path, exc_info=True)
             errors += 1
             continue
         with exclusive_file_lock(repository.lock_target_for(draft.draft_id)):

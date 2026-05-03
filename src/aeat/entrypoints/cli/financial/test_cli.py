@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .. import app as root_app
+from . import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -33,9 +33,8 @@ def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_financial_ingest_json_stream() -> None:
     """``aeat financial ingest --output-json`` emits one JSON line per record."""
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "ingest",
             str(_FIXTURES / "synthetic-transactions.csv"),
             "--provider",
@@ -52,9 +51,8 @@ def test_financial_ingest_json_stream() -> None:
 def test_financial_ingest_json_stream_for_n26_pdf() -> None:
     """``aeat financial ingest --output-json`` auto-detects N26 PDF statements."""
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "ingest",
             str(_FIXTURES / "n26" / "n26-savings-2025-01.pdf"),
             "--provider",
@@ -72,7 +70,7 @@ def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
     """The CLI aborts before ingest when source validation fails."""
     source = tmp_path / "invalid.csv"
     source.write_text("foo,bar\n1,2\n", encoding="utf-8")
-    result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
+    result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
     assert "validation error" in result.output.lower()
 
@@ -84,7 +82,7 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
         "Fecha operación,Importe,Concepto\nNOT-A-DATE,-12.34,Subscription\n",
         encoding="utf-8",
     )
-    result = _RUNNER.invoke(root_app, ["financial", "ingest", str(source)])
+    result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
     assert "ingest error" in result.output.lower()
 
@@ -115,9 +113,8 @@ def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
     catalogue_dir = tmp_path / "catalogue"
     try:
         result = _RUNNER.invoke(
-            root_app,
+            financial_app,
             [
-                "financial",
                 "ingest",
                 str(_FIXTURES / "synthetic-transactions.csv"),
                 "--provider",
@@ -140,9 +137,8 @@ def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
         # Re-import the same file: idempotency yields imported=0,
         # skipped=2 against the existing catalogue.
         result_b = _RUNNER.invoke(
-            root_app,
+            financial_app,
             [
-                "financial",
                 "ingest",
                 str(_FIXTURES / "synthetic-transactions.csv"),
                 "--provider",
@@ -163,9 +159,8 @@ def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
 def test_financial_ingest_no_persist_preserves_pipe_workflow(tmp_path: Path) -> None:
     """``--no-persist`` keeps the legacy stdout-only pipe behaviour intact."""
     result = _RUNNER.invoke(
-        root_app,
+        financial_app,
         [
-            "financial",
             "ingest",
             str(_FIXTURES / "synthetic-transactions.csv"),
             "--provider",

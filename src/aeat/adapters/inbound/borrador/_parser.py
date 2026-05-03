@@ -11,9 +11,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ....core.logging import get_logger
 from ._detect import detect_artefact_kind
 from ._extractors import get_extractor
 from ._schema import ArtefactKind, BorradorFiling
+
+_logger = get_logger(__name__)
 
 
 def parse_borrador(
@@ -44,9 +47,18 @@ def parse_borrador(
     path = Path(pdf_path)
 
     artefact_kind = artefact_kind_override or detect_artefact_kind(path)
+    año = año_override or 2025
+    _logger.debug("parse_borrador: path=%s kind=%s año=%d", path.name, artefact_kind, año)
 
-    extractor = get_extractor(año_override or 2025)  # MVP supports 2025 only
-    return extractor.extract(path, artefact_kind)
+    extractor = get_extractor(año)  # MVP supports 2025 only
+    result = extractor.extract(path, artefact_kind)
+    _logger.info(
+        "parse_borrador: parsed %s kind=%s año=%d",
+        path.name,
+        artefact_kind,
+        año,
+    )
+    return result
 
 
 __all__ = ["parse_borrador"]

@@ -9,8 +9,11 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
+from ...core.logging import get_logger
 from ._errors import WireValidationError
 from ._wire import WirePayloadBase
+
+_logger = get_logger(__name__)
 
 
 class WireValidator:
@@ -38,6 +41,11 @@ class WireValidator:
         try:
             return schema.model_validate_json(raw)
         except ValidationError as exc:
+            _logger.warning(
+                "wire payload failed validation against %s",
+                schema.__name__,
+                exc_info=True,
+            )
             raise WireValidationError(
                 f"Wire payload failed strict validation against {schema.__name__}: {exc}"
             ) from exc

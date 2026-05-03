@@ -236,6 +236,7 @@ class SecretStore:
             os.replace(tmp_path, target)
             fsync_parent_dir(target)
         except OSError:
+            _log.error("secret_store: atomic index write failed target=%s", target, exc_info=True)
             tmp_path.unlink(missing_ok=True)
             raise
 
@@ -339,11 +340,11 @@ class SecretStore:
             with contextlib.suppress(BlobNotFoundError):
                 try:
                     self._blob_store.delete(old_ref)
-                except (BlobIntegrityError, OSError) as exc:
+                except (BlobIntegrityError, OSError):
                     _log.warning(
-                        "stale secret-store blob cleanup failed: digest=%s error=%s",
+                        "stale secret-store blob cleanup failed: digest=%s",
                         existing.blob_sha256_plaintext_hex,
-                        exc,
+                        exc_info=True,
                     )
         return blob_ref
 
@@ -399,11 +400,11 @@ class SecretStore:
             with contextlib.suppress(BlobNotFoundError):
                 try:
                     self._blob_store.delete(blob_ref)
-                except (BlobIntegrityError, OSError) as exc:
+                except (BlobIntegrityError, OSError):
                     _log.warning(
-                        "secret-store blob cleanup on delete failed: digest=%s error=%s",
+                        "secret-store blob cleanup on delete failed: digest=%s",
                         entry.blob_sha256_plaintext_hex,
-                        exc,
+                        exc_info=True,
                     )
 
     def list_digests(self) -> Iterable[str]:

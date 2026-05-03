@@ -21,6 +21,7 @@ from .....application.auth import (
 )
 from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
+    CertificateNifParseError,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
@@ -165,7 +166,7 @@ def describe_certificate_provider(
     )
     try:
         identity_nif = extract_nif_from_subject(cert)
-    except Exception:
+    except CertificateNifParseError:
         identity_nif = None
     return AuthProviderDescription(
         kind=AuthProviderKind.CERTIFICATE,

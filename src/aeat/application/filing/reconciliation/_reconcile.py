@@ -22,6 +22,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ....core.i18n import Translatable
+from ....core.logging import get_logger
 from ._kind import FilingDivergenceKind
 from ._schema import (
     FieldMismatch,
@@ -30,6 +31,8 @@ from ._schema import (
     ReconciliationReport,
     ReconciliationStatus,
 )
+
+_logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ....domain.filing import FilingDraft
@@ -81,6 +84,12 @@ def reconcile(
     )
 
     if justificante is None:
+        _logger.debug(
+            "reconciliation not-yet-found draft_id=%s modelo=%s period=%s",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+        )
         return ReconciliationReport(
             status=ReconciliationStatus.NOT_YET_FOUND,
             draft_ref=draft_ref,
@@ -164,9 +173,23 @@ def reconcile(
     if mismatches:
         status = ReconciliationStatus.DIVERGENT
         narrative = _narrative_divergent(draft, remote, mismatches)
+        _logger.warning(
+            "reconciliation divergent draft_id=%s modelo=%s period=%s mismatches=%d",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+            len(mismatches),
+        )
     else:
         status = ReconciliationStatus.MATCH
         narrative = _narrative_match(draft, remote)
+        _logger.info(
+            "reconciliation matched draft_id=%s modelo=%s period=%s csv=%s",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+            remote.csv,
+        )
 
     return ReconciliationReport(
         status=status,
@@ -277,7 +300,11 @@ def _narrative_not_yet_found(draft: FilingDraft) -> Translatable:
         f"Az AEAT-nál nincs bejegyzés a {draft.modelo} modellről a "
         f"{draft.period} időszakra. Ellenőrizd, valóban benyújtottad-e."
     )
-    return Translatable(es=es, en=en, hu=hu)
+    ca = (
+        f"L'AEAT no té constància del model {draft.modelo} del període "
+        f"{draft.period}. Assegura't d'haver-lo presentat correctament."
+    )
+    return Translatable(es=es, en=en, hu=hu, ca=ca)
 
 
 def _narrative_match(draft: FilingDraft, remote: JustificanteRefSummary) -> Translatable:
@@ -285,7 +312,8 @@ def _narrative_match(draft: FilingDraft, remote: JustificanteRefSummary) -> Tran
     es = f"Modelo {draft.modelo} {draft.period}: coincide con lo registrado en AEAT (CSV {remote.csv})."
     en = f"Modelo {draft.modelo} {draft.period}: matches AEAT's record (CSV {remote.csv})."
     hu = f"{draft.modelo} modell {draft.period}: egyezik az AEAT bejegyzésével (CSV {remote.csv})."
-    return Translatable(es=es, en=en, hu=hu)
+    ca = f"Model {draft.modelo} {draft.period}: coincideix amb el que està registrat a l'AEAT (CSV {remote.csv})."
+    return Translatable(es=es, en=en, hu=hu, ca=ca)
 
 
 def _narrative_divergent(
@@ -298,7 +326,8 @@ def _narrative_divergent(
     es = f"Modelo {draft.modelo} {draft.period}: divergencia frente a AEAT (CSV {remote.csv}) en: {fields}."
     en = f"Modelo {draft.modelo} {draft.period}: divergence vs AEAT (CSV {remote.csv}) in: {fields}."
     hu = f"{draft.modelo} modell {draft.period}: eltérés az AEAT-hez képest (CSV {remote.csv}) mezők: {fields}."
-    return Translatable(es=es, en=en, hu=hu)
+    ca = f"Model {draft.modelo} {draft.period}: divergència respecte l'AEAT (CSV {remote.csv}) en: {fields}."
+    return Translatable(es=es, en=en, hu=hu, ca=ca)
 
 
 __all__ = ["reconcile"]

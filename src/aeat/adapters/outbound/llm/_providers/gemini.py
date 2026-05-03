@@ -11,9 +11,12 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.logging import get_logger
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+
+_logger = get_logger(__name__)
 
 
 class _GeminiPart(BaseModel):
@@ -128,8 +131,25 @@ class GeminiAdapter(_ProviderAdapter):
                 },
             )
         if response.status_code == 429:
+            _logger.warning(
+                "gemini: rate limit response status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
             raise_rate_limit("Gemini rate limit exceeded.", response.headers.get("retry-after"))
+        if response.status_code >= 500:
+            _logger.error(
+                "gemini: server error status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
+            raise LLMProviderError(f"Gemini API failure ({response.status_code}).")
         if response.status_code >= 400:
+            _logger.warning(
+                "gemini: client error status=%d model=%s",
+                response.status_code,
+                request.model,
+            )
             raise LLMProviderError(f"Gemini API failure ({response.status_code}).")
         parsed = _GeminiResponse.model_validate_json(response.text)
         text = "".join(part.text or "" for part in parsed.candidates[0].content.parts).strip()

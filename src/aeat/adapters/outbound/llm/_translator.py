@@ -15,10 +15,13 @@ from collections.abc import Callable, Sequence
 
 from ....core.config import Settings
 from ....core.i18n import normalize_language_code
+from ....core.logging import get_logger
 from ._client import LLMClient
 from ._errors import LLMRateLimitError
 from ._models import LLMRequest, PromptRegistry, Translation
 from ._prompts import render_prompt
+
+_log = get_logger(__name__)
 
 
 class Translator:
@@ -213,4 +216,10 @@ class BulkTranslator:
                 if attempt > self.max_retries:
                     raise
                 retry_after = exc.retry_after_seconds or min(2**attempt, 8)
+                _log.warning(
+                    "translator: rate limit hit attempt=%d/%d retry_after=%.2fs",
+                    attempt,
+                    self.max_retries,
+                    retry_after,
+                )
                 await asyncio.sleep(retry_after + (secrets.randbelow(26) / 100))
