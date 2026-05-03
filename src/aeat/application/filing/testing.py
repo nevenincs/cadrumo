@@ -1,9 +1,9 @@
-"""Public synthetic-fixture helpers for :mod:`aeat.application.filing`.
+"""Public fixture helpers for :mod:`aeat.application.filing`.
 
-This module exposes synthetic schema fixtures and profile/deadline helpers so
-downstream tests can exercise application filing workflows without reaching
-into private builder internals. These helpers are test-grade only and are not a
-filing-grade legal authority.
+This module exposes profile/deadline helpers and draft construction helpers so
+tests can exercise application filing workflows without reaching into private
+builder internals. It deliberately does not expose modelo-specific casilla
+schemas or formulas.
 """
 
 from __future__ import annotations
@@ -22,35 +22,10 @@ from ._testing_schema import (
     FixtureScalar,
     compute_record_id,
 )
-from ._testing_static_schema import (
-    MODELO_130_SCHEMA,
-    MODELO_303_SCHEMA,
-    MODELO_390_SCHEMA,
-    StaticCasillaCollection,
-    StaticCasillaSchema,
-    StaticCasillaSchemaProvider,
-)
 from ._testing_synthesize import (
     synthesize_filing_draft,
     synthesize_filing_draft_from_decimals,
 )
-
-
-def default_schema_provider() -> StaticCasillaSchemaProvider:
-    """Return a provider seeded with the synthetic 130/303/390 schemas.
-
-    Returns:
-        A frozen :class:`StaticCasillaSchemaProvider` wiring the
-        three hand-curated collections used by the test suite and
-        the ``aeat.application.filing`` public docstring examples.
-    """
-    return StaticCasillaSchemaProvider(
-        collections={
-            "130": MODELO_130_SCHEMA,
-            "303": MODELO_303_SCHEMA,
-            "390": MODELO_390_SCHEMA,
-        }
-    )
 
 
 class SyntheticProfile(BaseModel):
@@ -91,9 +66,6 @@ class SyntheticDeadlineChecker(BaseModel):
 
 
 __all__ = [
-    "MODELO_130_SCHEMA",
-    "MODELO_303_SCHEMA",
-    "MODELO_390_SCHEMA",
     "SYNTHETIC_FIXTURES_ROOT",
     "FilingFixtureError",
     "FilingRecord",
@@ -102,14 +74,10 @@ __all__ = [
     "FixtureCasilla",
     "FixtureProvisioningError",
     "FixtureScalar",
-    "StaticCasillaCollection",
-    "StaticCasillaSchema",
-    "StaticCasillaSchemaProvider",
     "SyntheticDeadlineChecker",
     "SyntheticDeadlineStatus",
     "SyntheticProfile",
     "compute_record_id",
-    "default_schema_provider",
     "load_filing_history",
     "synthesize_filing_draft",
     "synthesize_filing_draft_from_decimals",

@@ -1,10 +1,4 @@
-"""Workflow inputs provider backed by the persisted transaction catalogue.
-
-Bridges the :class:`aeat.domain.transactions.TransactionCatalogueRepository`
-to :class:`aeat.application.filing` consumers by aggregating classified
-transactions into casilla totals on demand via
-:func:`aeat.application.aggregation.aggregate_catalogue`.
-"""
+"""Workflow inputs provider boundary for persisted transaction catalogues."""
 
 from __future__ import annotations
 
@@ -21,12 +15,11 @@ _logger = get_logger(__name__)
 
 
 class FinancialFilingInputsProvider:
-    """Concrete workflow inputs provider for financial transaction aggregation.
+    """Concrete workflow inputs provider for transaction-derived filing inputs.
 
     Loads the catalogue from a
     :class:`aeat.domain.transactions.TransactionCatalogueRepository`
-    and delegates aggregation to
-    :func:`aeat.application.aggregation.aggregate_catalogue`.
+    and delegates to the registry-backed aggregation boundary.
     """
 
     def __init__(self, *, repository: TransactionCatalogueRepository) -> None:
@@ -44,7 +37,7 @@ class FinancialFilingInputsProvider:
         modelo: str,
         period: str,
     ) -> CasillaAggregation:
-        """Return the full casilla ledger for ``modelo`` and ``period``.
+        """Return the full registry-backed ledger for ``modelo`` and ``period``.
 
         Args:
             modelo: Modelo identifier (e.g. ``"130"``).
@@ -52,8 +45,8 @@ class FinancialFilingInputsProvider:
                 :class:`aeat.application.aggregation.Period`.
 
         Returns:
-            The :class:`CasillaAggregation` produced by
-            :func:`aeat.application.aggregation.aggregate_catalogue`.
+            The :class:`CasillaAggregation` produced by the aggregation
+            boundary.
         """
 
         return aggregate_catalogue(self._repository.load(), modelo=modelo, period=period)
@@ -72,7 +65,7 @@ class FinancialFilingInputsProvider:
         period: str,
         profile: AutonomoProfile,
     ) -> Mapping[str, Decimal]:
-        """Return :class:`~decimal.Decimal` casilla values for the draft builder.
+        """Return :class:`~decimal.Decimal` filing values for the draft builder.
 
         Args:
             modelo: Modelo identifier.
@@ -81,7 +74,7 @@ class FinancialFilingInputsProvider:
                 future per-profile filtering).
 
         Returns:
-            A frozen mapping of casilla code to summed
+            A frozen mapping of filing field code to
             :class:`~decimal.Decimal` value.
         """
 

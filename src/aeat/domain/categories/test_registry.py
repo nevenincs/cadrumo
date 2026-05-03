@@ -2,9 +2,8 @@
 
 Verifies the curated 2025 registry covers every
 :class:`~aeat.domain.categories.SpendingCategory`, that every profile
-carries at least one citation, that every casilla mapping resolves
-against the committed corpus, and that the manual-loader entry point
-returns the curated registry surface.
+carries at least one citation, and that the manual-loader entry point returns
+the curated registry surface.
 
 Locks the conservative encodings for known edge categories
 (hardware as full-deductible, vehicle fuel without a default ratio,
@@ -18,7 +17,6 @@ from decimal import Decimal
 
 import pytest
 
-from ..casillas import ModeloCode, load_casillas
 from . import CATEGORY_PROFILES_2025, SpendingCategory, load_category_profiles_from_manual
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -34,18 +32,6 @@ def test_every_profile_has_at_least_one_citation() -> None:
     """Explainable category profiles must carry at least one citation."""
 
     assert all(profile.proportionality.citations for profile in CATEGORY_PROFILES_2025.values())
-
-
-def test_every_mapping_points_to_real_public_casillas() -> None:
-    """Every referenced casilla code must exist in the committed public corpus."""
-
-    valid_codes = {
-        ModeloCode.MODELO_130: {record.casilla_id for record in load_casillas("MODELO_130", "2025Q4").records},
-        ModeloCode.MODELO_303: {record.casilla_id for record in load_casillas("MODELO_303", "2025Q4").records},
-    }
-    for profile in CATEGORY_PROFILES_2025.values():
-        for mapping in profile.casilla_mappings:
-            assert mapping.casilla_code in valid_codes[mapping.modelo]
 
 
 def test_load_category_profiles_from_manual_returns_2025_registry() -> None:

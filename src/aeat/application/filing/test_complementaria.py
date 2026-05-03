@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+from ...domain.filing import CasillaSchemaProvider
 from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import (
     FilingAmendmentError,
@@ -16,7 +18,7 @@ from . import (
     build_complementaria,
     load_amendment,
 )
-from .testing import default_schema_provider, synthesize_filing_draft
+from .testing import synthesize_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -96,6 +98,10 @@ def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraf
     )
 
 
+def _schema_provider() -> CasillaSchemaProvider:
+    return cast("CasillaSchemaProvider", object())
+
+
 class TestBuildComplementaria:
     def test_modelo_130_requires_registry_snapshot(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         original_draft = _draft("130", "2024Q1", {"01": Decimal("12500.00"), "07": Decimal("1400.00")})
@@ -111,7 +117,7 @@ class TestBuildComplementaria:
                     "05": Decimal("400.00"),
                     "06": Decimal("0.00"),
                 },
-                schema_provider=default_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert not (tmp_path / "submissions" / "amendments").exists()
 
@@ -131,7 +137,7 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {"07": Decimal("11000.00"), "29": Decimal("200.00")},
-                schema_provider=default_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert not (tmp_path / "submissions" / "amendments").exists()
 
@@ -144,6 +150,6 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {"01": 2024},
-                schema_provider=default_schema_provider(),
+                schema_provider=_schema_provider(),
             )
         assert not (tmp_path / "submissions" / "amendments").exists()

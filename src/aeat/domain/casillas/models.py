@@ -64,7 +64,7 @@ class CasillaDataType(StrEnum):
 
 
 class PeriodType(StrEnum):
-    """Supported filing cadences for category-to-casilla mappings.
+    """Supported filing cadences for casilla catalogues.
 
     Attributes:
         QUARTERLY: Quarterly cadence (e.g. ``2025Q4``).

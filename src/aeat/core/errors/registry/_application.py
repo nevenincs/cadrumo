@@ -69,19 +69,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.aggregation._errors.AggregationCasillaMappingError",
-        ErrorCode(
-            code="REFUSED_FINANCIAL_AGGREGATION_CASILLA_MAPPING",
-            category=ErrorCategory.REFUSED,
-            default_message_es="No hay mapeo de casilla util para la agregacion.",
-            default_message_en="No usable casilla mapping exists for the aggregation.",
-            default_message_hu="Nincs hasznalhato casilla-lekepezes az osszesiteshez.",
-            default_suggestion="aeat app ledger review",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.review._errors.ReviewError",
         ErrorCode(
             code="ERROR_REVIEW",

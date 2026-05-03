@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
-from . import FilingBuilderError, FilingValidator, FilingValue, FilingValueKind, build_draft
-from .testing import SyntheticProfile, default_schema_provider, synthesize_filing_draft
+from ...domain.filing import CasillaSchemaProvider
+from . import FilingBuilderError, build_draft
+from .testing import SyntheticProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -18,6 +20,10 @@ def _profile() -> SyntheticProfile:
         display_name="Registry boundary IVA test",
         applicable_modelos=("303", "390"),
     )
+
+
+def _schema_provider() -> CasillaSchemaProvider:
+    return cast("CasillaSchemaProvider", object())
 
 
 @pytest.mark.parametrize(
@@ -38,32 +44,5 @@ def test_modelo_build_draft_requires_registry_snapshot(
             period=period,
             profile=_profile(),
             inputs=inputs,
-            schema_provider=default_schema_provider(),
+            schema_provider=_schema_provider(),
         )
-
-
-def test_303_formula_validator_still_detects_trace_divergence() -> None:
-    draft = synthesize_filing_draft(
-        modelo="303",
-        period="2025Q1",
-        casilla_values={"07": Decimal("10000.00"), "09": Decimal("9999.00")},
-        profile_tax_id="12345678Z",
-    )
-    tampered = draft.model_copy(
-        update={
-            "values": tuple(
-                FilingValue(
-                    casilla_id=v.casilla_id,
-                    value=v.value,
-                    kind=FilingValueKind.LITERAL,
-                    source="tampered",
-                    formula_trace=None,
-                )
-                if v.casilla_id == "09"
-                else v
-                for v in draft.values
-            )
-        }
-    )
-    findings = FilingValidator(schema_provider=default_schema_provider()).validate(tampered)
-    assert any(f.code == "formula-divergence" and f.casilla_id == "09" for f in findings)

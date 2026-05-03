@@ -19,9 +19,6 @@ The substrate exposes:
   :class:`CustomerResidency`, :class:`CustomerTaxStatus`,
   :class:`TransactionKind`, :class:`InvoiceDirection`) plus the deterministic
   resolver :func:`classify_vat` returning :class:`VATClassification`.
-* The :data:`MODELO_303_CASILLA_MAPPING` bridge from
-  ``(VATCategory, InvoiceDirection)`` to Modelo 303 casilla contributions,
-  with the lookup helper :func:`lookup_modelo_303_contribution`.
 
 Callers from outside this subpackage must import exclusively from
 :mod:`aeat.domain.vat` and must not reach into private modules.
@@ -42,12 +39,6 @@ from ._classification import (
 )
 from ._corpus import load_vat_rules_from_manual
 from ._lookup import cite, lookup_rate
-from ._modelo_303_mapping import (
-    MODELO_303_CASILLA_MAPPING,
-    CasillaRole,
-    Modelo303Contribution,
-    lookup_modelo_303_contribution,
-)
 from ._rates import VAT_RATE_TABLE
 from ._schema import (
     EUMemberState,
@@ -72,17 +63,14 @@ from .errors import (
 )
 
 __all__ = [
-    "MODELO_303_CASILLA_MAPPING",
     "VAT_CATALOGUES_BY_YEAR",
     "VAT_CATALOGUE_2025",
     "VAT_RATE_TABLE",
-    "CasillaRole",
     "CustomerResidency",
     "CustomerTaxStatus",
     "EUMemberState",
     "InvoiceDirection",
     "IssuerResidency",
-    "Modelo303Contribution",
     "TransactionKind",
     "VATCatalogue",
     "VATCategory",
@@ -104,7 +92,6 @@ __all__ = [
     "cite",
     "classify_vat",
     "load_vat_rules_from_manual",
-    "lookup_modelo_303_contribution",
     "lookup_rate",
     "resolve_catalogue",
     "verify_catalogue",

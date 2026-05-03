@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -9,6 +11,10 @@ import pytest
 
 from ...domain.transactions import TransactionCatalogue
 from . import (
+    SCHEMA_VERSION_DEFAULT,
+    CasillaCollection,
+    CasillaSchema,
+    CasillaSchemaProvider,
     FilingBuilderError,
     FilingDraft,
     FilingDraftError,
@@ -16,8 +22,6 @@ from . import (
     FilingFindingSeverity,
     FilingValidationFinding,
     FilingValidator,
-    FilingValue,
-    FilingValueKind,
     approve_draft,
     build_draft,
     compute_draft_id,
@@ -29,7 +33,6 @@ from .testing import (
     SyntheticDeadlineChecker,
     SyntheticDeadlineStatus,
     SyntheticProfile,
-    default_schema_provider,
     synthesize_filing_draft,
 )
 
@@ -54,6 +57,51 @@ def _draft() -> FilingDraft:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _TestCasillaSchema:
+    id: str
+    value_type: str = "decimal"
+    required: bool = False
+    formula_inputs: tuple[str, ...] = ()
+    min_value: float | int | None = None
+    max_value: float | int | None = None
+    default: object | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _TestCasillaCollection:
+    casillas: tuple[CasillaSchema, ...] = ()
+    schema_version: str = SCHEMA_VERSION_DEFAULT
+
+    def __iter__(self) -> object:
+        return iter(self.casillas)
+
+    def get(self, casilla_id: str) -> CasillaSchema | None:
+        for casilla in self.casillas:
+            if casilla.id == casilla_id:
+                return casilla
+        return None
+
+    def all(self) -> Sequence[CasillaSchema]:
+        return self.casillas
+
+
+@dataclass(frozen=True, slots=True)
+class _TestSchemaProvider:
+    collection: CasillaCollection
+
+    def get_collection(self, modelo: str) -> CasillaCollection:
+        del modelo
+        return self.collection
+
+
+def _schema_provider(
+    *casillas: CasillaSchema,
+    schema_version: str = SCHEMA_VERSION_DEFAULT,
+) -> CasillaSchemaProvider:
+    return _TestSchemaProvider(_TestCasillaCollection(casillas=casillas, schema_version=schema_version))
+
+
 def test_build_draft_requires_validated_registry_snapshot() -> None:
     with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
         build_draft(
@@ -61,14 +109,62 @@ def test_build_draft_requires_validated_registry_snapshot() -> None:
             period="2026Q1",
             profile=_profile(),
             inputs={"01": Decimal("12500.00")},
-            schema_provider=default_schema_provider(),
+            schema_provider=_schema_provider(),
         )
 
 
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
     draft = _draft()
-    refreshed = validate_draft(draft, schema_provider=default_schema_provider())
+    refreshed = validate_draft(draft, schema_provider=_schema_provider())
     assert refreshed.draft_id == draft.draft_id
+
+
+def test_validator_reports_schema_version_mismatch_without_model_specific_schema() -> None:
+    draft = _draft()
+    findings = FilingValidator(schema_provider=_schema_provider(schema_version="registry-test-v2")).validate(draft)
+    assert any(f.code == "filing-schema-version-mismatch" for f in findings)
+
+
+def test_validator_reports_required_missing_without_model_specific_schema() -> None:
+    draft = synthesize_filing_draft(
+        modelo="TEST",
+        period="2026Q1",
+        casilla_values={},
+        status=FilingDraftStatus.DRAFT,
+        profile_tax_id="12345678Z",
+    )
+    findings = FilingValidator(
+        schema_provider=_schema_provider(_TestCasillaSchema(id="required", required=True))
+    ).validate(draft)
+    assert any(f.code == "casilla-required-missing" and f.casilla_id == "required" for f in findings)
+
+
+def test_validator_reports_range_violation_without_model_specific_schema() -> None:
+    draft = synthesize_filing_draft(
+        modelo="TEST",
+        period="2026Q1",
+        casilla_values={"bounded": Decimal("-1")},
+        status=FilingDraftStatus.DRAFT,
+        profile_tax_id="12345678Z",
+    )
+    findings = FilingValidator(
+        schema_provider=_schema_provider(_TestCasillaSchema(id="bounded", min_value=0))
+    ).validate(draft)
+    assert any(f.code == "casilla-out-of-range" and f.casilla_id == "bounded" for f in findings)
+
+
+def test_validator_reports_formula_divergence_without_model_specific_schema() -> None:
+    draft = synthesize_filing_draft(
+        modelo="TEST",
+        period="2026Q1",
+        casilla_values={"computed": Decimal("10")},
+        status=FilingDraftStatus.DRAFT,
+        profile_tax_id="12345678Z",
+    )
+    findings = FilingValidator(
+        schema_provider=_schema_provider(_TestCasillaSchema(id="computed", formula_inputs=("input-a", "input-b")))
+    ).validate(draft)
+    assert any(f.code == "formula-divergence" and f.casilla_id == "computed" for f in findings)
 
 
 def test_compute_draft_id_excludes_findings_and_status() -> None:
@@ -105,38 +201,12 @@ def test_iter_findings_threshold() -> None:
         list(iter_findings(draft, severity_at_least="HUGE"))
 
 
-def test_validator_still_checks_real_schema_records() -> None:
-    draft = _draft().model_copy(
-        update={
-            "values": (
-                FilingValue(
-                    casilla_id="01",
-                    value=Decimal("-1"),
-                    kind=FilingValueKind.LITERAL,
-                    source="test",
-                    formula_trace=None,
-                ),
-                FilingValue(
-                    casilla_id="02",
-                    value=Decimal("3500.00"),
-                    kind=FilingValueKind.LITERAL,
-                    source="test",
-                    formula_trace=None,
-                ),
-            )
-        }
-    )
-    validator = FilingValidator(schema_provider=default_schema_provider())
-    findings = validator.validate(draft)
-    assert any(f.code == "casilla-out-of-range" and f.casilla_id == "01" for f in findings)
-
-
 def test_approve_requires_registry_snapshot() -> None:
     with pytest.raises(FilingDraftError, match="validated registry snapshot"):
         approve_draft(
             _draft(),
             approved_by="kent",
-            schema_provider=default_schema_provider(),
+            schema_provider=_schema_provider(),
             transaction_catalogue=TransactionCatalogue(),
         )
 
@@ -153,7 +223,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     )
     refreshed = refresh_review_status(
         draft,
-        schema_provider=default_schema_provider(),
+        schema_provider=_schema_provider(),
         transaction_catalogue=TransactionCatalogue(),
     )
     assert refreshed.status is FilingDraftStatus.SUBMITTED
@@ -164,7 +234,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
 
 def test_deadline_validator_still_reports_overdue_status() -> None:
     findings = FilingValidator(
-        schema_provider=default_schema_provider(),
+        schema_provider=_schema_provider(),
         deadline_checker=SyntheticDeadlineChecker(
             status=SyntheticDeadlineStatus(
                 due_date=date(2026, 4, 20),

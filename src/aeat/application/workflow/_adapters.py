@@ -33,7 +33,6 @@ from ...domain.deadlines import (
 )
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ...domain.sync import ModeloIdentifier as SyncModeloIdentifier
-from ..aggregation._errors import AggregationUnsupportedModeloError
 from ..filing import (
     CasillaSchemaProvider,
     FilingDraft,
@@ -225,14 +224,13 @@ class JsonFileInputsProvider:
 
 
 class FinancialThenJsonInputsProvider:
-    """Prefer financial-aggregation inputs and fall back to a JSON file.
+    """Use financial inputs when present and otherwise read a JSON file.
 
     Wraps an optional ``_FinancialInputsProvider`` (typically
     :class:`aeat.application.aggregation._provider.FinancialFilingInputsProvider`)
-    and a :class:`JsonFileInputsProvider` fallback. The financial path is
-    skipped silently when no catalogue exists or when the requested
-    modelo is not supported by the aggregator (signalled by
-    :exc:`aeat.application.aggregation.AggregationUnsupportedModeloError`).
+    and a :class:`JsonFileInputsProvider` fallback. If a catalogue is
+    present, financial aggregation errors are propagated so coverage
+    gaps cannot be hidden by manual inputs.
     """
 
     def __init__(
@@ -269,15 +267,7 @@ class FinancialThenJsonInputsProvider:
         if not self._financial_provider.has_catalogue():
             _logger.debug("transaction catalogue absent; using json fallback modelo=%s period=%s", modelo, period)
             return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
-        try:
-            return self._financial_provider.load_inputs(modelo=modelo, period=period, profile=profile)
-        except AggregationUnsupportedModeloError:
-            _logger.debug(
-                "financial aggregation not supported for modelo=%s period=%s; falling back to manual inputs",
-                modelo,
-                period,
-            )
-            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
+        return self._financial_provider.load_inputs(modelo=modelo, period=period, profile=profile)
 
 
 def default_engine(

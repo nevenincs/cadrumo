@@ -6,8 +6,6 @@ from decimal import Decimal
 from types import MappingProxyType
 
 from ...core.i18n import Translatable
-from ..casillas import ModeloCode, PeriodType
-from ._casilla_mapping import CasillaMapping, CasillaMappingSign
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
     CategoryCitation,
@@ -29,23 +27,6 @@ _AEAT_RETA = (
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/"
     "irpf-2025/7-cumplimentacion-irpf/7_4-rendimientos-actividades-economicas/7_4_2-regimen-estimacion-directa/"
     "7_4_2_3-gastos-fiscalmente-deducibles/cotizaciones-reta.html"
-)
-
-_EXPENSE_IRPF = (
-    CasillaMapping(
-        modelo=ModeloCode.MODELO_130,
-        period_type=PeriodType.QUARTERLY,
-        casilla_code="01",
-        sign=CasillaMappingSign.CREDIT,
-    ),
-)
-_COARSE_IVA = (
-    CasillaMapping(
-        modelo=ModeloCode.MODELO_303,
-        period_type=PeriodType.QUARTERLY,
-        casilla_code="04",
-        sign=CasillaMappingSign.CREDIT,
-    ),
 )
 
 
@@ -104,7 +85,6 @@ def _profile(
     category: SpendingCategory,
     label: Translatable,
     proportionality: ProportionalityRule,
-    casilla_mappings: tuple[CasillaMapping, ...],
     vat_hint: VatCategory | None,
 ) -> CategoryProfile:
     """Build a category profile."""
@@ -113,7 +93,6 @@ def _profile(
         category=category,
         display_label=label,
         proportionality=proportionality,
-        casilla_mappings=casilla_mappings,
         vat_hint=vat_hint,
     )
 
@@ -361,7 +340,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
                 "Se mantiene un perfil conservador hasta distinguir colegiación obligatoria de cuotas voluntarias."
             ),
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.CUOTAS_AUTONOMOS_SS: _profile(
@@ -372,7 +350,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_RETA,
             notes_es="Deducibilidad íntegra como gasto del titular cuando corresponde a la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.MUTUALIDAD_ALTERNATIVA: _profile(
@@ -383,7 +360,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_RETA,
             notes_es="Se alinea con las cotizaciones obligatorias del profesional cuando sustituye al RETA.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.ARRENDAMIENTO_LOCAL: _profile(
@@ -394,7 +370,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_LOCAL_RENT,
             notes_es="Deducible íntegramente cuando el inmueble está totalmente afecto a la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO: _profile(
@@ -412,7 +387,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             ),
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.IBI_LOCAL_AFECTO: _profile(
@@ -423,7 +397,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_TAXES,
             notes_es="Deducible para inmuebles afectos no excluidos expresamente por la norma.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: _profile(
@@ -435,7 +408,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: _profile(
@@ -447,7 +419,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS: _profile(
@@ -459,7 +430,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET: _profile(
@@ -471,7 +441,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Se reutiliza la regla legal de suministros de vivienda parcialmente afecta.",
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TELEFONIA_MOVIL: _profile(
@@ -482,7 +451,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_TELEFONIA_MOVIL,
             notes_es="La deducción exige acreditar uso profesional exclusivo o una línea separada.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TELEFONIA_FIJA: _profile(
@@ -494,7 +462,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Cuando la línea está integrada en la vivienda afecta se aplica la regla de suministros.",
             default_ratio=Decimal("0.30"),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MATERIAL_OFICINA: _profile(
@@ -505,7 +472,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="Gasto corriente deducible cuando existe vinculación con la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SOFTWARE_SUSCRIPCION: _profile(
@@ -516,7 +482,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="Tratamiento de servicio exterior recurrente siempre que el uso sea profesional.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.HARDWARE_AMORTIZABLE: _profile(
@@ -530,7 +495,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
                 "cuantitativo depende de la amortización fiscal."
             ),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MOBILIARIO_AMORTIZABLE: _profile(
@@ -543,7 +507,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
                 "Sin prorrata especial de proporcionalidad; la deducción material depende de la tabla de amortización."
             ),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.REPARACIONES_CONSERVACION: _profile(
@@ -554,7 +517,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_GENERAL_EXPENSES,
             notes_es="Deducible como gasto de mantenimiento cuando no incrementa el valor del activo.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_COMBUSTIBLE: _profile(
@@ -567,7 +529,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
                 "El turismo ordinario exige afectación exclusiva; no se fija una ratio por defecto en este sustrato."
             ),
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_MANTENIMIENTO: _profile(
@@ -578,7 +539,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_VEHICLE,
             notes_es="Los gastos accesorios siguen la afectación exclusiva del vehículo principal cuando procede.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_SEGURO: _profile(
@@ -589,7 +549,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_VEHICLE,
             notes_es="El seguro acompaña la afectación exclusiva exigida para el turismo ordinario.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.VEHICULO_PEAJE: _profile(
@@ -600,7 +559,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_VEHICLE,
             notes_es="El peaje sigue el mismo criterio de afectación exclusiva que el resto del uso del vehículo.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_PARKING: _profile(
@@ -611,7 +569,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_VEHICLE,
             notes_es="El estacionamiento acompaña la misma prueba de afectación exclusiva del vehículo.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MANUTENCION_DIETAS_NACIONAL: _profile(
@@ -623,7 +580,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Requiere pago electrónico y consumo en hostelería; el límite sin pernocta es inferior.",
             statutory_cap_eur_per_day=Decimal("53.34"),
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO: _profile(
@@ -639,7 +595,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             notes_es="Requiere pago electrónico y consumo en hostelería; el límite sin pernocta es inferior.",
             statutory_cap_eur_per_day=Decimal("91.35"),
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.ASESORIA_FISCAL: _profile(
@@ -650,7 +605,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_PROFESSIONAL_SERVICES,
             notes_es="Servicio profesional ordinario directamente correlacionado con la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ASESORIA_JURIDICA: _profile(
@@ -661,7 +615,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_PROFESSIONAL_SERVICES,
             notes_es="Deducible cuando el servicio jurídico se refiere a la actividad económica.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ASESORIA_CONTABLE: _profile(
@@ -672,7 +625,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_PROFESSIONAL_SERVICES,
             notes_es="Servicio profesional ordinario necesario para el cumplimiento formal.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.PUBLICIDAD_MARKETING: _profile(
@@ -683,7 +635,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="Gasto de promoción deducible cuando persigue la obtención de ingresos.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.FORMACION_PROFESIONAL: _profile(
@@ -694,7 +645,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="La formación debe guardar relación con la actividad o con su actualización profesional.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VIAJES_TRANSPORTE: _profile(
@@ -705,7 +655,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="Deducible cuando el desplazamiento se realiza por razón de la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VIAJES_ALOJAMIENTO: _profile(
@@ -716,7 +665,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_OTHER_SERVICES,
             notes_es="El alojamiento exige acreditar la finalidad profesional del desplazamiento.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SEGUROS_RESPONSABILIDAD_CIVIL: _profile(
@@ -727,7 +675,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_GENERAL_EXPENSES,
             notes_es="Seguro directamente vinculado al ejercicio profesional.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SEGUROS_SALUD_AUTONOMO: _profile(
@@ -746,7 +693,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             statutory_cap_eur=Decimal("500"),
             statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.GASTOS_BANCARIOS: _profile(
@@ -757,7 +703,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_FINANCIAL,
             notes_es="Comisiones y costes bancarios deducibles cuando la cuenta está vinculada a la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.GASTOS_FINANCIEROS: _profile(
@@ -768,7 +713,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_FINANCIAL,
             notes_es="Intereses y financiación deducibles cuando se contraen para la actividad.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SUMINISTROS_CLIENTE_DIRECTOS: _profile(
@@ -783,7 +727,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_GENERAL_EXPENSES,
             notes_es="Consumos directamente incorporados a la prestación o entrega al cliente.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUBCONTRATACION: _profile(
@@ -794,7 +737,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_PROFESSIONAL_SERVICES,
             notes_es="Coste directo deducible cuando la subcontrata interviene en la actividad del contribuyente.",
         ),
-        casilla_mappings=_EXPENSE_IRPF + _COARSE_IVA,
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES: _profile(
@@ -805,7 +747,6 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             citations=_CIT_TAXES,
             notes_es="Incluye tributos locales o tasas no estatales no sancionadoras asociados a elementos afectos.",
         ),
-        casilla_mappings=_EXPENSE_IRPF,
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
 }

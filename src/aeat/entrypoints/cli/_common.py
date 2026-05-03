@@ -11,14 +11,12 @@ from typing import Any
 
 import typer
 
-from ...application.aggregation._errors import AggregationError
 from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
-from ...core.errors import AeatError
 from ...core.i18n import Language, Translatable, get_translation
 from ...domain.deadlines import AutonomoProfile, IVARegime
 from ...domain.filing import FilingDraft, FilingDraftRepository
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
@@ -200,81 +198,6 @@ def _draft_by_id(draft_id: str) -> FilingDraft:
 
 
 def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> dict[str, object]:
-    """Return a casilla -> value mapping aggregated from local catalogues."""
-    inputs: dict[str, object] = {}
-    if modelo == "303":
-        catalogue = _load_invoices()
-        base_4 = Decimal("0")
-        base_10 = Decimal("0")
-        base_21 = Decimal("0")
-        deducible = Decimal("0")
-
-        for inv in catalogue.values():
-            if not inv.issued_at:
-                continue
-            inv_period = _canonical_period(inv.issued_at.strftime("%Y-%m"))
-            if inv_period != period and not (not period.endswith("Q") and inv_period.startswith(period)):
-                q_map = {
-                    "Q1": ("01", "02", "03"),
-                    "Q2": ("04", "05", "06"),
-                    "Q3": ("07", "08", "09"),
-                    "Q4": ("10", "11", "12"),
-                }
-                match = False
-                for q_suffix, months in q_map.items():
-                    if period.endswith(q_suffix) and inv.issued_at.strftime("%m") in months:
-                        match = True
-                        break
-                if not match:
-                    continue
-
-            review = state.invoice_reviews.get(inv.invoice_id)
-            base = inv.base_total
-            if review and "base" in review.fields:
-                base = Decimal(review.fields["base"])
-
-            if inv.kind is InvoiceKind.ISSUED:
-                rate = None
-                if review and "iva.rate" in review.fields:
-                    rate_raw = review.fields["iva.rate"]
-                    rate = rate_raw if rate_raw.startswith("RATE_") else f"RATE_{rate_raw.split('.')[0]}"
-                else:
-                    if inv.lines:
-                        rate = (
-                            inv.lines[0].iva_rate.value
-                            if hasattr(inv.lines[0].iva_rate, "value")
-                            else str(inv.lines[0].iva_rate)
-                        )
-
-                if rate == "RATE_21":
-                    base_21 += base
-                elif rate == "RATE_10":
-                    base_10 += base
-                elif rate == "RATE_4":
-                    base_4 += base
-            else:
-                iva = inv.iva_total
-                if review and "iva.amount" in review.fields:
-                    iva = Decimal(review.fields["iva.amount"])
-                deducible += iva
-
-        inputs["01"] = base_4
-        inputs["04"] = base_10
-        inputs["07"] = base_21
-        inputs["29"] = deducible
-
-    elif modelo == "130":
-        from ...application.aggregation import aggregate_catalogue
-        from ...domain.modelos import ModeloCode
-
-        try:
-            agg = aggregate_catalogue(
-                _load_transactions(),
-                modelo=ModeloCode.MODELO_130,
-                period=period,
-            )
-            inputs.update(agg.casilla_values)
-        except (AggregationError, AeatError, OSError):
-            pass
-
-    return inputs
+    """Return filing inputs aggregated from registry-approved sources."""
+    del modelo, period, state
+    return {}
