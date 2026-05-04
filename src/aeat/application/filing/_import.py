@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from ...adapters.inbound.justificante import parse_justificante
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.filing import CasillaSchemaProvider, FilingBuilderError, FilingDraft, FilingImportError
 from ...domain.justificante import Justificante
@@ -42,20 +41,7 @@ _CANONICAL_QUARTER_RE = re.compile(r"^\d{4}Q[1-4]$")
 _CANONICAL_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 _CANONICAL_ANNUAL_RE = re.compile(r"^\d{4}A$")
 
-_EMPTY_CASILLA_WARNING: Translatable = {
-    "es": (
-        "Los valores de casilla detallados no se extraen del justificante: "
-        "rellénalos con `aeat filing build` o editando el borrador."
-    ),
-    "en": (
-        "Line-level casilla values are not carried in the justificante PDF; "
-        "fill them in via `aeat filing build` or by editing the draft JSON."
-    ),
-    "hu": (
-        "A justificante PDF nem hordozza a soronkénti casilla értékeket; "
-        "töltsd ki őket `aeat filing build` paranccsal vagy a piszkozatban."
-    ),
-}
+_EMPTY_CASILLA_WARNING: str = "filing.import.empty_casilla_warning"
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,7 +65,7 @@ class JustificanteImportResult:
 
     draft: FilingDraft
     submission: SubmittedFiling
-    warnings: tuple[Translatable, ...]
+    warnings: tuple[str, ...]
 
 
 def import_filing_from_justificante(
@@ -133,7 +119,7 @@ def import_filing_from_justificante(
         raise FilingImportError(f"cannot import modelo {justificante.modelo!r}: {exc}") from exc
 
     submission = _build_submission_record(justificante=justificante, draft=draft)
-    warnings: tuple[Translatable, ...] = (_EMPTY_CASILLA_WARNING,)
+    warnings: tuple[str, ...] = (_EMPTY_CASILLA_WARNING,)
     _logger.debug(
         "imported justificante csv=%s modelo=%s period=%s → draft_id=%s submission_id=%s",
         justificante.csv,

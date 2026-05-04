@@ -12,6 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.transactions import TransactionCatalogue
 from ...domain.transactions._models import derive_transaction_id
@@ -64,10 +65,7 @@ def import_ledger_with_diagnostics(
             build_ledger_import_diagnostic(
                 kind=LedgerImportDiagnosticKind.PARSER,
                 severity=LedgerImportDiagnosticSeverity.WARNING,
-                message={
-                    "es": "El archivo de origen no contiene transacciones válidas.",
-                    "en": "The source file contains no valid transactions.",
-                },
+                message=Translatable("transactions.import.message_185962"),
                 source_path=source_path,
             )
         )
@@ -84,10 +82,7 @@ def import_ledger_with_diagnostics(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
                     severity=LedgerImportDiagnosticSeverity.INFO,
-                    message={
-                        "es": "Transacción duplicada ya presente en el libro mayor.",
-                        "en": "Duplicate transaction already in ledger.",
-                    },
+                    message=Translatable("transactions.import.message_082074"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
                 )
@@ -98,10 +93,7 @@ def import_ledger_with_diagnostics(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
                     severity=LedgerImportDiagnosticSeverity.WARNING,
-                    message={
-                        "es": "Transacción duplicada detectada dentro del archivo importado.",
-                        "en": "Duplicate transaction detected within imported file.",
-                    },
+                    message=Translatable("transactions.import.message_053465"),
                     source_path=source_path,
                     affected_transaction_ids=(tx_id,),
                 )
@@ -123,10 +115,7 @@ def import_ledger_with_diagnostics(
                     build_ledger_import_diagnostic(
                         kind=LedgerImportDiagnosticKind.GAP,
                         severity=LedgerImportDiagnosticSeverity.WARNING,
-                        message={
-                            "es": "Posible hueco en el historial: más de 35 días entre transacciones.",
-                            "en": "Potential gap: more than 35 days between transactions.",
-                        },
+                        message=Translatable("transactions.import.message_829073"),
                         source_path=source_path,
                     )
                 )
@@ -135,28 +124,22 @@ def import_ledger_with_diagnostics(
     # Original file check
     if original_source_path and original_source_path.exists():
         try:
-            original_size = original_source_path.stat().st_size
+            original_source_path.stat().st_size
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
                     severity=LedgerImportDiagnosticSeverity.INFO,
-                    message={
-                        "es": f"Archivo original verificado ({original_size} bytes).",
-                        "en": f"Original file verified ({original_size} bytes).",
-                    },
+                    message=Translatable("transactions.import.verified"),
                     source_path=original_source_path,
                 )
             )
-        except OSError as exc:
+        except OSError:
             _logger.warning("could not read original file %s", original_source_path, exc_info=True)
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.ORIGINAL_FILE,
                     severity=LedgerImportDiagnosticSeverity.WARNING,
-                    message={
-                        "es": f"No se pudo leer el archivo original: {exc}",
-                        "en": f"Could not read original file: {exc}",
-                    },
+                    message=Translatable("transactions.import.unreadable"),
                     source_path=original_source_path,
                 )
             )

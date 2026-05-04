@@ -1,0 +1,617 @@
+auth:
+  test_catalogue:
+    label: Certificat
+    description: Descripció
+  catalogue:
+    certificate_label: Certificat digital
+    certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
+      altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
+    clave_movil_label: Cl@ve Móvil
+    clave_movil_description: Autenticació amb aprovació push al mòbil del titular
+      registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
+    clave_permanente_label: Cl@ve Permanente
+    clave_permanente_description: Autenticació amb usuari, contrasenya reforçada i
+      codi SMS de Cl@ve Permanente. No està disponible en aquesta instal·lació, així
+      que ``configure`` i ``login`` es rebutgen.
+  init:
+    t_054274: 'Propòsit:'
+    t_497682: 'Acció:'
+    t_591049: 'Origen:'
+    t_002588: 'Navegador:'
+    t_427109: 'Èxit:'
+    t_539673: 'Següent:'
+    t_674931: el teu DNI/NIE
+    t_305382: ' i '
+    t_781191: 'f"proveïdor desconegut {raw!r}; valors vàlids: {valid}'
+    t_306449: 'f"proveïdor no admès {raw!r}; valors vàlids: {valid}'
+    t_251084: 'f"el JSON del client OAuth Desktop no existeix: {json_path}'
+    t_001180: 'f"la clau del compte de servei no existeix: {service_account_json}'
+    t_779238: Settings no té `env_file` configurat; no es pot escriure la configuració
+      del proveïdor.
+    t_527810: "f\"Settings.env_file té una forma no admesa ({type(env_file).__name__});\
+      \ \"\n                \"no es pot determinar on persistir la configuració del\
+      \ proveïdor."
+    t_181508: "f\"`aeat auth configure --provider {provider}` no s'admet. \"\n   \
+      \                 \"Executa `aeat setup` per al proveïdor de certificat."
+    t_992296: "\\nConfigura l'inici de sessió Cl@ve Móvil per a la Seu Electrònica\
+      \ de l'AEAT.\\n\"\n                    \"Cada inici envia una notificació push\
+      \ a l'aplicació Cl@ve al teu mòbil; \"\n                    \"toques 'Aprovar'\
+      \ per autenticar-te. Aquest pas només desa les dades que \"\n              \
+      \      \"l'AEAT necessita per activar aquest push."
+    t_975420: --dni-nie és obligatori amb --non-interactive
+    t_153369: Introdueix el teu DNI o NIE
+    t_322375: --dni-fecha és obligatori amb --prefer-non-qr per a una identitat DNI
+    t_822466: Introdueix la data de validesa impresa al teu DNI (YYYY-MM-DD)
+    t_573144: --nie-soporte és obligatori amb --prefer-non-qr per a una identitat
+      NIE
+    t_771056: Introdueix el número de suport imprès al teu document NIE
+    t_196449: la data de validesa del DNI
+    t_818366: el número de suport del NIE
+    t_873287: la preferència de push directe
+    t_137998: la preferència de codi QR
+    t_716469: Cl@ve Móvil com a proveïdor per defecte
+    t_824025: f"Desat {human_list} a {env_file}.
+    t_565569: Executa `aeat auth login` per iniciar sessió amb Cl@ve Móvil.
+    t_539921: "f\"el proveïdor {kind.value} requereix un pas d'aprovació interactiu;\
+      \ \"\n                \"no es pot executar amb --non-interactive"
+    t_418939: 'f"l''autenticació AEAT ha fallat: {exc}'
+    t_547085: f"Signed in as {session.identity_nif} via {label}
+    t_098262: "f\"Sessió iniciada com a {session.identity_nif} via {label}. \"\n \
+      \                   f\"La sessió expira en aproximadament {remaining_minutes}m."
+    t_158225: 'f"la sonda AEAT ha fallat: {exc}'
+    t_327962: f"Sessió iniciada com a {refreshed.identity_nif} via {label}. L'AEAT
+      ha acceptat la sessió desada.
+    t_578352: "f\"La sessió desada de {label} està caducada o revocada. \"\n     \
+      \               \"Executa `aeat auth login` per iniciar sessió de nou."
+    t_758194: por lo que --provider sería ignorado.
+    t_166580: No s'ha trobat sessió activa. Res a netejar.
+    t_482912: f"Sessió tancada a {labels[0]}.
+    t_673587: f"Sessió tancada a {joined}.
+    t_954326: 'Propòsit:'
+    t_714790: 'Acció:'
+    t_322689: 'Origen:'
+    t_853374: 'Navegador:'
+    t_105867: 'Èxit:'
+    t_351011: 'Següent:'
+    t_686896: 'f"proveïdor desconegut {raw!r}; valors vàlids: {valid}'
+    t_151679: 'f"proveïdor no admès {raw!r}; valors vàlids: {valid}'
+    t_263360: 'f"el JSON del client OAuth Desktop no existeix: {json_path}'
+    t_352935: 'f"la clau del compte de servei no existeix: {service_account_json}'
+    t_178097: Settings no té `env_file` configurat; no es pot escriure la configuració
+      del proveïdor.
+    t_589739: "f\"Settings.env_file té una forma no admesa ({type(env_file).__name__});\
+      \ \"\n                \"no es pot determinar on persistir la configuració del\
+      \ proveïdor."
+    t_549784: "f\"`aeat auth configure --provider {provider}` no s'admet. \"\n   \
+      \                 \"Executa `aeat setup` per al proveïdor de certificat."
+    t_201308: "\\nConfigura l'inici de sessió Cl@ve Móvil per a la Seu Electrònica\
+      \ de l'AEAT.\\n\"\n                    \"Cada inici envia una notificació push\
+      \ a l'aplicació Cl@ve al teu mòbil; \"\n                    \"toques 'Aprovar'\
+      \ per autenticar-te. Aquest pas només desa les dades que \"\n              \
+      \      \"l'AEAT necessita per activar aquest push."
+    t_833547: --dni-nie és obligatori amb --non-interactive
+    t_834743: Introdueix el teu DNI o NIE
+    t_386762: --dni-fecha és obligatori amb --prefer-non-qr per a una identitat DNI
+    t_958045: Introdueix la data de validesa impresa al teu DNI (YYYY-MM-DD)
+    t_479907: --nie-soporte és obligatori amb --prefer-non-qr per a una identitat
+      NIE
+    t_944378: Introdueix el número de suport imprès al teu document NIE
+    t_994186: el teu DNI/NIE
+    t_316510: la data de validesa del DNI
+    t_770369: el número de suport del NIE
+    t_912253: la preferència de push directe
+    t_725014: la preferència de codi QR
+    t_542731: Cl@ve Móvil com a proveïdor per defecte
+    t_497666: 'and '
+    t_637763: f"Desat {human_list} a {env_file}.
+    t_370466: Executa `aeat auth login` per iniciar sessió amb Cl@ve Móvil.
+    t_273946: "f\"el proveïdor {kind.value} requereix un pas d'aprovació interactiu;\
+      \ \"\n                \"no es pot executar amb --non-interactive"
+    t_938392: 'f"l''autenticació AEAT ha fallat: {exc}'
+    t_092134: f"Signed in as {session.identity_nif} via {label}
+    t_941077: "f\"Sessió iniciada com a {session.identity_nif} via {label}. \"\n \
+      \                   f\"La sessió expira en aproximadament {remaining_minutes}m."
+    t_908949: 'f"la sonda AEAT ha fallat: {exc}'
+    t_888711: f"Sessió iniciada com a {refreshed.identity_nif} via {label}. L'AEAT
+      ha acceptat la sessió desada.
+    t_906241: "f\"La sessió desada de {label} està caducada o revocada. \"\n     \
+      \               \"Executa `aeat auth login` per iniciar sessió de nou."
+    t_950022: por lo que --provider sería ignorado.
+    t_594919: No s'ha trobat sessió activa. Res a netejar.
+    t_186277: f"Sessió tancada a {labels[0]}.
+    t_979591: f"Sessió tancada a {joined}.
+filing:
+  test_export:
+    narrative: Fitxer exportat a /tmp/m130-2026Q1.txt.
+  init:
+    t_539673: 'Següent:'
+    t_495047: '[avís]'
+    t_049231: casella
+    t_499410: esperat
+    t_729108: real
+    t_305241: causa
+    t_405647: 'f"fitxer d''entrades no trobat: {path}'
+    t_319976: 'f"JSON no vàlid a {path}: {exc}'
+    t_944632: f"el fitxer d'entrades {path} ha de contenir un objecte JSON
+    t_369842: f"input key must be string
+    t_841363: 'f"tipus de valor no admès per a la casella {key!r}: {type(value).__name__}'
+    t_549739: 'f"fitxer d''esborrany no trobat: {path}'
+    t_587954: 'f"fitxer d''esborrany no reconegut: {path}; s''esperava <draft_id>.envelope.json.'
+    t_749072: 'f"sobre d''esborrany no trobat: {path}'
+    t_126681: 'f"JSON de complementària no vàlid {raw!r}: {exc}'
+    t_855364: el payload de complementària ha de ser un objecte JSON
+    t_484757: f"updated input key must be a string
+    t_447605: 'f"tipus de valor de complementària no admès per a {key!r}: {type(value).__name__}'
+    t_235839: f"Esborrany desat {draft.draft_id} -> {saved}
+    t_901821: f"Esborrany re-validat {refreshed.draft_id} (estat={refreshed.status.value})
+    t_750547: 'f"estat desconegut {status!r}; vàlids: {valid_statuses}'
+    t_004067: --from-borrador
+    t_053773: només una marca --from-* alhora
+    t_851234: f"Esborrany importat {draft_id} des de justificant {justificante_csv}
+      -> {draft_path}
+    t_617275: f"Enviament desat {submission_id} -> {submission_path}
+    t_643377: 'f"CCAA de residència fiscal: {residence.ccaa.value}'
+    t_833360: "f\"Modelo {filing.modelo} {filing.period} declaració processada \"\n\
+      \                f\"(plantilla {filing.template_revision.revision}). \"\n  \
+      \              f\"{extracted} de {total} caselles extretes."
+    t_751717: 'f"Estat d''extracció: {filing.extraction_status.value}'
+    t_028818: 'f"[avisos] {len(filing.warnings)}:'
+    t_976753: 'f"Estat de verificació: {verdict.status.value}'
+    t_973810: La importació del Model 100 requereix un snapshot de registre validat
+    t_255799: el payload de complementària ha d'incloure 'original_submission_id'
+      no buit
+    t_228758: el payload de complementària ha d'incloure l'objecte 'updated_inputs
+    t_200471: reasons' ha de ser un objecte JSON de casella -> motiu
+    t_447877: "el model del payload \"\n                    f\"{modelo!r} no coincideix\
+      \ amb el model de l'enviament original {original.modelo!r}"
+    t_691257: "el període del payload \"\n                    f\"{period!r} no coincideix\
+      \ amb el període de l'enviament original {original.period!r}"
+    t_891106: f"Esborrany complementària desat {amended_draft_id} -> {saved_amended_draft}
+    t_799855: 'f"fitxer d''entrades no trobat: {path}'
+    t_353235: 'f"JSON no vàlid a {path}: {exc}'
+    t_139225: f"el fitxer d'entrades {path} ha de contenir un objecte JSON
+    t_645353: f"input key must be string
+    t_479580: 'f"tipus de valor no admès per a la casella {key!r}: {type(value).__name__}'
+    t_719978: 'f"fitxer d''esborrany no trobat: {path}'
+    t_410741: 'f"fitxer d''esborrany no reconegut: {path}; s''esperava <draft_id>.envelope.json.'
+    t_772310: 'f"sobre d''esborrany no trobat: {path}'
+    t_351011: 'Següent:'
+    t_647650: 'f"JSON de complementària no vàlid {raw!r}: {exc}'
+    t_130629: el payload de complementària ha de ser un objecte JSON
+    t_536885: f"updated input key must be a string
+    t_685385: 'f"tipus de valor de complementària no admès per a {key!r}: {type(value).__name__}'
+    t_819520: f"Esborrany desat {draft.draft_id} -> {saved}
+    t_569422: f"Esborrany re-validat {refreshed.draft_id} (estat={refreshed.status.value})
+    t_410025: 'f"estat desconegut {status!r}; vàlids: {valid_statuses}'
+    t_652733: --from-borrador
+    t_343266: només una marca --from-* alhora
+    t_177065: f"Esborrany importat {draft_id} des de justificant {justificante_csv}
+      -> {draft_path}
+    t_655133: f"Enviament desat {submission_id} -> {submission_path}
+    t_141095: '[avís]'
+    t_208082: 'f"CCAA de residència fiscal: {residence.ccaa.value}'
+    t_515456: "f\"Modelo {filing.modelo} {filing.period} declaració processada \"\n\
+      \                f\"(plantilla {filing.template_revision.revision}). \"\n  \
+      \              f\"{extracted} de {total} caselles extretes."
+    t_977837: 'f"Estat d''extracció: {filing.extraction_status.value}'
+    t_418958: 'f"[avisos] {len(filing.warnings)}:'
+    t_805103: casella
+    t_677464: 'f"Estat de verificació: {verdict.status.value}'
+    t_068995: esperat
+    t_190116: real
+    t_790289: causa
+    t_647538: La importació del Model 100 requereix un snapshot de registre validat
+    t_597994: el payload de complementària ha d'incloure 'original_submission_id'
+      no buit
+    t_076424: el payload de complementària ha d'incloure l'objecte 'updated_inputs
+    t_679229: reasons' ha de ser un objecte JSON de casella -> motiu
+    t_248734: "el model del payload \"\n                    f\"{modelo!r} no coincideix\
+      \ amb el model de l'enviament original {original.modelo!r}"
+    t_810643: "el període del payload \"\n                    f\"{period!r} no coincideix\
+      \ amb el període de l'enviament original {original.period!r}"
+    t_091089: f"Esborrany complementària desat {amended_draft_id} -> {saved_amended_draft}
+review:
+  adapters:
+    t_041224: ingrés
+    t_311773: despesa
+    t_376309: negoci
+    t_377446: personal
+    t_011227: mixt
+    t_638342: sense aparellar
+    t_823110: vençuda
+    t_455073: pagament pendent
+    t_308487: parcialment pagada
+    t_712789: 'ca: str'
+    t_918533: traspàs intern
+    t_373752: sense processar
+    t_626817: processada sense classificar
+    t_425725: omesa per regla
+    t_866317: validació fallida
+    t_603694: '[{state}] {direction} {amount} {currency}: {description}'
+    t_364641: reason
+    t_594612: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_229397: esborrany no preparat per enviar (estat={status})
+    t_964513: aprovació caducada — cal una nova revisió (estat=APPROVAL_STALE)
+    t_540950: 'ca: str'
+    t_968325: ingrés
+    t_629803: despesa
+    t_135562: traspàs intern
+    t_142007: negoci
+    t_870243: personal
+    t_619063: mixt
+    t_754183: sense processar
+    t_791512: processada sense classificar
+    t_607122: omesa per regla
+    t_352338: validació fallida
+    t_551826: sense aparellar
+    t_167733: vençuda
+    t_298389: pagament pendent
+    t_352928: parcialment pagada
+    t_170461: '[{state}] {direction} {amount} {currency}: {description}'
+    t_189155: reason
+    t_122028: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_397611: esborrany no preparat per enviar (estat={status})
+    t_787894: aprovació caducada — cal una nova revisió (estat=APPROVAL_STALE)
+transactions:
+  test_diagnostics:
+    message: Falta el mes 2026-03 al fitxer importat.
+profile:
+  test_keys:
+    description_105989: x
+    description_490119: x
+cli:
+  bootstrap:
+    t_115877: Recurs
+    t_558798: ID
+    t_490630: carpeta scratch
+    t_478529: full scratch
+    t_301797: document scratch
+    t_107758: 'bootstrap: GOOGLE_CLOUD_PROJECT és buit a env/.env'
+    t_465133: 'f"bootstrap: credencials no disponibles: {exc}'
+    t_436721: Configura GOOGLE_APPLICATION_CREDENTIALS o executa `just gcloud-auth`.
+    t_107956: 'bootstrap: no es poden crear recursos de Drive amb les credencials
+      actives.'
+    t_378702: "Els comptes de servei en comptes Google de consum (no Workspace) tenen\
+      \ quota zero \"\n                        \"d'emmagatzematge a Drive i no poden\
+      \ ser propietaris de fitxers."
+    t_912574: "Run `aeat oauth-client init` to create an OAuth Desktop client + \"\
+      \n                        \"`just gcloud-auth`"
+    t_791600: 'bootstrap: env/.env actualitzat. Torna a executar `aeat doctor` per
+      verificar.'
+    t_682855: 'bootstrap: GOOGLE_CLOUD_PROJECT és buit a env/.env'
+    t_078117: 'f"bootstrap: credencials no disponibles: {exc}'
+    t_524692: Configura GOOGLE_APPLICATION_CREDENTIALS o executa `just gcloud-auth`.
+    t_457020: 'bootstrap: no es poden crear recursos de Drive amb les credencials
+      actives.'
+    t_272641: "Els comptes de servei en comptes Google de consum (no Workspace) tenen\
+      \ quota zero \"\n                        \"d'emmagatzematge a Drive i no poden\
+      \ ser propietaris de fitxers."
+    t_047210: "Run `aeat oauth-client init` to create an OAuth Desktop client + \"\
+      \n                        \"`just gcloud-auth`"
+    t_011711: Recurs
+    t_673036: ID
+    t_630898: carpeta scratch
+    t_762170: full scratch
+    t_115599: document scratch
+    t_488785: 'bootstrap: env/.env actualitzat. Torna a executar `aeat doctor` per
+      verificar.'
+  normatives:
+    t_663483: id
+    t_685100: tipus
+    t_130420: número
+    t_853221: títol curt
+    t_022643: articles
+    t_603642: etiquetes
+    t_033405: número
+    t_021549: títol
+    t_412680: cita
+    t_284896: resultats de verificació
+    t_123721: nivell
+    t_621240: codi
+    t_469146: referència
+    t_884332: missatge
+    t_400377: títol
+    t_674439: publicat_a
+    t_589274: revisat_per
+    t_445972: última_revisió
+    t_527335: f"{count} normativa/-es
+    t_208308: (sense articles codificats)
+    t_198005: 'f"la verificació ha fallat: {exc}'
+    t_449672: ✓ verificació correcta
+    t_708509: id
+    t_484866: tipus
+    t_532988: número
+    t_033361: títol curt
+    t_849756: articles
+    t_232960: etiquetes
+    t_360736: f"{count} normativa/-es
+    t_329493: tipus
+    t_896602: número
+    t_528486: títol
+    t_032146: publicat_a
+    t_888840: etiquetes
+    t_628053: revisat_per
+    t_596645: última_revisió
+    t_506342: (sense articles codificats)
+    t_876125: articles
+    t_956665: número
+    t_908462: títol
+    t_300148: cita
+    t_688044: 'f"la verificació ha fallat: {exc}'
+    t_838663: ✓ verificació correcta
+    t_757078: resultats de verificació
+    t_668112: nivell
+    t_253101: codi
+    t_311779: referència
+    t_756958: missatge
+  oauth:
+    t_069252: 'Pas següent:'
+    t_409941: 'Obre aquesta URL en un navegador:'
+    t_230163: Executa `aeat oauth-client init --json <camí>` després de descarregar
+      el JSON per escriure env/.env.
+    t_389131: 'f"el fitxer json no existeix: {json_path}'
+    t_825524: 'f"no s''ha pogut analitzar el json: {exc}'
+    t_901667: f"copiat el JSON del client OAuth a {stable_client_path}
+    t_788993: _JSON en env/.env
+    t_784359: executa `just gcloud-auth`
+    t_516471: 'Obre aquesta URL en un navegador:'
+    t_068820: Executa `aeat oauth-client init --json <camí>` després de descarregar
+      el JSON per escriure env/.env.
+    t_603335: 'f"el fitxer json no existeix: {json_path}'
+    t_977712: 'f"no s''ha pogut analitzar el json: {exc}'
+    t_011367: f"copiat el JSON del client OAuth a {stable_client_path}
+    t_119877: _JSON en env/.env
+    t_379147: 'Pas següent:'
+    t_822917: executa `just gcloud-auth`
+  test_no_hardcoded_user_strings:
+    t_915315: hola
+    t_342476: ca
+    t_535146: ca
+    t_182298: hola
+  attachments:
+    t_367843: --source-reference no pot ser buit
+    t_576293: --mime-type no pot ser buit
+    t_668551: No s'han trobat adjunts.
+    t_456518: 'f"--metadata ha de tenir el format clau=valor: {raw!r}'
+    t_782346: 'f"--metadata clau no pot ser buida: {raw!r}'
+    t_847558: 'f"--metadata valor no pot ser buit: {raw!r}'
+    t_924712: 'f"--metadata clau repetida: {key!r}'
+    t_847658: --source-reference no pot ser buit
+    t_813758: --mime-type no pot ser buit
+    t_397885: No s'han trobat adjunts.
+    t_693468: 'f"--metadata ha de tenir el format clau=valor: {raw!r}'
+    t_146769: 'f"--metadata clau no pot ser buida: {raw!r}'
+    t_973889: 'f"--metadata valor no pot ser buit: {raw!r}'
+    t_094739: 'f"--metadata clau repetida: {key!r}'
+  cloud:
+    t_090770: GOOGLE_CLOUD_PROJECT és buit a env/.env
+    t_445360: f"{count} funció/-ns
+    t_020102: f"{count} servei(s)
+    t_638870: f"{count} cubell(s)
+    t_339951: f"{count} objecte(s)
+    t_626960: GOOGLE_CLOUD_PROJECT és buit a env/.env
+    t_776970: f"{count} funció/-ns
+    t_829017: f"{count} servei(s)
+    t_742684: f"{count} cubell(s)
+    t_754075: f"{count} objecte(s)
+  docs:
+    t_946853: el text no pot ser buit
+    t_489738: f"afegits {len(text)} caràcters a l'índex {end_index}
+    t_890669: f"reemplaçades {occurrences} ocurrència(es)
+    t_771049: el text no pot ser buit
+    t_372230: f"afegits {len(text)} caràcters a l'índex {end_index}
+    t_327883: f"reemplaçades {occurrences} ocurrència(es)
+  doctor:
+    t_279934: f"{n} comprovació(ns) requerida(es) fallant
+    t_836703: totes les comprovacions requerides correctes
+    t_480369: f"{n} comprovació(ns) requerida(es) fallant
+    t_599915: totes les comprovacions requerides correctes
+  drive:
+    t_812324: f"cap fitxer de Drive coincideix amb el nom {name!r}.
+    t_081792: "f\"{len(files)} fitxers de Drive coincideixen amb el nom {name!r};\
+      \ \"\n                    f\"afina visitant la interfície de Drive i utilitzant\
+      \ un nom únic. Coincidències: {match_ids!r}"
+    t_546944: f"{target} ja existeix. Passa --overwrite per reemplaçar-lo.
+    t_687155: f"escrit {target} ({byte_count} bytes)
+    t_851653: 'f"el fitxer local no existeix: {local}'
+    t_940486: f"eliminat {file_id}
+    t_291305: f"enviat a la paperera {file_id}
+    t_054217: f"cap fitxer de Drive coincideix amb el nom {name!r}.
+    t_189509: "f\"{len(files)} fitxers de Drive coincideixen amb el nom {name!r};\
+      \ \"\n                    f\"afina visitant la interfície de Drive i utilitzant\
+      \ un nom únic. Coincidències: {match_ids!r}"
+    t_821830: f"{target} ja existeix. Passa --overwrite per reemplaçar-lo.
+    t_226571: f"escrit {target} ({byte_count} bytes)
+    t_351741: 'f"el fitxer local no existeix: {local}'
+    t_090079: f"eliminat {file_id}
+    t_737010: f"enviat a la paperera {file_id}
+  registry:
+    t_407997: line
+    t_899563: line
+  i18n:
+    t_399040: '**kwargs'
+    t_540950: 'ca: str'
+ledgers:
+  inventory:
+    t_050404: obertura
+    t_260715: tancament
+    t_853976: No hi ha llibres d'inventari.
+    t_651428: 'f"Llibre d''inventari creat: {actividad} {year}.'
+    t_135732: 'f"Moviment d''inventari registrat: {movement_id}.'
+    t_451750: 'f"decimal no vàlid: {raw}'
+    t_121323: 'f"data no vàlida: {raw}'
+    t_352942: No hi ha llibres d'inventari.
+    t_979405: obertura
+    t_090463: 'f"Llibre d''inventari creat: {actividad} {year}.'
+    t_531632: 'f"Moviment d''inventari registrat: {movement_id}.'
+    t_067126: tancament
+    t_047048: 'f"decimal no vàlid: {raw}'
+    t_740982: 'f"data no vàlida: {raw}'
+deadlines:
+  next:
+    t_234598: tanca
+    t_027622: 'f"no hi ha obligacions properes per a {year}: totes les entrades han
+      vençut'
+    t_688927: 'f"no hi ha obligacions properes per a {year}: totes les entrades han
+      vençut'
+    t_744197: tanca
+  list:
+    t_542331: f"{n} obligació/-ns
+    t_125112: f"{n} obligació/-ns
+  helpers:
+    t_492787: no s'ha proporcionat camí del perfil; passa --profile PATH o defineix
+      AEAT_DEFAULT_PROFILE_PATH a env/.env
+    t_751621: no s'ha proporcionat camí del perfil; passa --profile PATH o defineix
+      AEAT_DEFAULT_PROFILE_PATH a env/.env
+financial:
+  ingest:
+    t_122870: ingerits
+    t_698715: registre(s) via
+    t_433516: persistits
+    t_314937: 'f"rebutjat: cap proveïdor pot processar {path}'
+    t_503694: 'f"error de validació: {warning}'
+    t_118103: 'f"avís: {warning}'
+    t_301335: 'f"error d''ingesta: {exc}'
+    t_032626: f"ingerits {len(transactions)} registre(s) via {provider_impl.name}
+    t_865065: 'f"rebutjat: cap proveïdor pot processar {path}'
+    t_845188: 'f"error de validació: {warning}'
+    t_985130: 'f"avís: {warning}'
+    t_965742: 'f"error d''ingesta: {exc}'
+    t_480489: f"ingerits {len(transactions)} registre(s) via {provider_impl.name}
+    t_434310: ingerits
+    t_591400: registre(s) via
+    t_860156: persistits
+  txs:
+    t_457577: simulació
+    t_080819: persistit
+    t_222454: classificades
+    t_315628: fallides
+    t_727361: "No transactions found below that confidence threshold. \"\n       \
+      \                 \"Note: manual classifications default to confidence 1.0"
+    t_537014: No s'han trobat transaccions.
+    t_834955: "f\"el catàleg de transaccions ja existeix a {target}; \"\n        \
+      \            \"torna a executar amb --replace per sobreescriure'l"
+    t_578483: f"construïdes {len(catalogue)} transacció/-ns a {target}
+    t_280845: 'f"transacció no trobada: {transaction_id}'
+    t_627061: --reason
+    t_652583: 'f"valor --pct no vàlid: {pct}'
+    t_140855: --pct només es pot fer servir juntament amb --as MIXED; omet --pct per
+      a classificacions no-MIXED
+    t_485520: "les categories de despesa només apliquen a transaccions sortints (despeses);\
+      \ \"\n                        \"els ingressos no han de rebre cap categoria\
+      \ de despesa"
+    t_498874: "--category requires a business/private classification first; \"\n \
+      \                       \"pass --as BUSINESS"
+    t_481849: --all és mútuament exclusiu amb un argument transaction-id.
+    t_971537: Passa un argument transaction-id o utilitza --all.
+    t_712952: --max-total-seconds ha de ser estrictament positiu.
+    t_192763: Cap transacció seleccionada per a la classificació LLM.
+    t_737405: "f\"[{index - 1}/{total}] --max-total-seconds assolit; \"\n        \
+      \                f\"mantenint {successes} classificades fins ara."
+    t_368309: 'f"{prefix} error de {provider}: {exc}'
+    t_168103: 'f"{prefix} error en persistir: {exc}'
+    t_272460: 'f"error en el desament final: {exc}'
+    t_428267: ' (aturat a --max-total-seconds)'
+    t_461729: 'f"transacció no trobada: {transaction_id}'
+    t_004844: 'f"valor --confidence-below no vàlid: {value}'
+    t_929822: --confidence-below ha d'estar dins del rang inclusiu 0..1
+    t_578676: 'f"valor --confidence no vàlid: {value}'
+    t_380463: --confidence ha d'estar dins del rang inclusiu 0..1
+    t_245971: "No transactions found below that confidence threshold. \"\n       \
+      \                 \"Note: manual classifications default to confidence 1.0"
+    t_121365: No s'han trobat transaccions.
+    t_199417: "f\"el catàleg de transaccions ja existeix a {target}; \"\n        \
+      \            \"torna a executar amb --replace per sobreescriure'l"
+    t_700793: f"construïdes {len(catalogue)} transacció/-ns a {target}
+    t_217036: 'f"transacció no trobada: {transaction_id}'
+    t_384718: --reason
+    t_475858: 'f"valor --pct no vàlid: {pct}'
+    t_492743: --pct només es pot fer servir juntament amb --as MIXED; omet --pct per
+      a classificacions no-MIXED
+    t_757092: "les categories de despesa només apliquen a transaccions sortints (despeses);\
+      \ \"\n                        \"els ingressos no han de rebre cap categoria\
+      \ de despesa"
+    t_091408: "--category requires a business/private classification first; \"\n \
+      \                       \"pass --as BUSINESS"
+    t_532646: --all és mútuament exclusiu amb un argument transaction-id.
+    t_074603: Passa un argument transaction-id o utilitza --all.
+    t_338582: --max-total-seconds ha de ser estrictament positiu.
+    t_184654: Cap transacció seleccionada per a la classificació LLM.
+    t_917316: "f\"[{index - 1}/{total}] --max-total-seconds assolit; \"\n        \
+      \                f\"mantenint {successes} classificades fins ara."
+    t_725301: 'f"{prefix} error de {provider}: {exc}'
+    t_735916: 'f"{prefix} error en persistir: {exc}'
+    t_044885: 'f"error en el desament final: {exc}'
+    t_510476: simulació
+    t_594729: persistit
+    t_222239: ' (aturat a --max-total-seconds)'
+    t_341377: classificades
+    t_577243: fallides
+    t_268130: 'f"transacció no trobada: {transaction_id}'
+    t_993328: 'f"valor --confidence-below no vàlid: {value}'
+    t_725396: --confidence-below ha d'estar dins del rang inclusiu 0..1
+    t_410287: 'f"valor --confidence no vàlid: {value}'
+    t_065677: --confidence ha d'estar dins del rang inclusiu 0..1
+  invoices:
+    t_939792: No s'han trobat factures.
+    t_538928: 'f"factura no trobada: {invoice_id}'
+    t_366680: 'f"factura no trobada després d''actualitzar: {invoice_id}'
+    t_205790: Sense suggeriments de conciliació.
+    t_413996: 'f"omès {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}'
+    t_553082: 'f"el desament final ha fallat; no s''han persistit canvis: {exc}'
+    t_313284: f"aplicades {applied} de {len(suggestions)} suggeriments.
+    t_769483: Els catàlegs de factures i transaccions són coherents.
+    t_424939: No hi ha factures sense aparellar.
+    t_969951: f"catàleg de factures no trobat a {repository.envelope_path}
+    t_151516: No s'han trobat factures.
+    t_346820: 'f"factura no trobada: {invoice_id}'
+    t_950400: 'f"factura no trobada després d''actualitzar: {invoice_id}'
+    t_395612: Sense suggeriments de conciliació.
+    t_238826: 'f"omès {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}'
+    t_486268: 'f"el desament final ha fallat; no s''han persistit canvis: {exc}'
+    t_403031: f"aplicades {applied} de {len(suggestions)} suggeriments.
+    t_515965: Els catàlegs de factures i transaccions són coherents.
+    t_188960: No hi ha factures sense aparellar.
+    t_241070: f"catàleg de factures no trobat a {repository.envelope_path}
+  profile:
+    t_120774: No hi ha ràtios d'ús configurades.
+    t_699908: f"establert {category.value} = {_format_decimal(ratio)}
+    t_329069: f"no hi ha cap ràtio configurada per a {key}
+    t_766299: f"eliminat {category.value}
+    t_928044: f"{category.value!r} no accepta una ràtio d'ús\n{_format_eligible_list()}
+    t_315053: 'f"ràtio no vàlida: {raw!r}'
+    t_421626: f"la ràtio ha de ser finita (rebuda {ratio})
+    t_203663: f"ratio must be in [0
+    t_695847: No hi ha ràtios d'ús configurades.
+    t_407379: f"establert {category.value} = {_format_decimal(ratio)}
+    t_344840: f"no hi ha cap ràtio configurada per a {key}
+    t_620920: f"eliminat {category.value}
+    t_538938: f"{category.value!r} no accepta una ràtio d'ús\n{_format_eligible_list()}
+    t_338721: 'f"ràtio no vàlida: {raw!r}'
+    t_323949: f"la ràtio ha de ser finita (rebuda {ratio})
+    t_496708: f"ratio must be in [0
+  catalogue:
+    t_361804: f"catàleg de transaccions no trobat a {repo.envelope_path}
+    t_854600: f"catàleg de transaccions no trobat a {repo.envelope_path}
+aggregation:
+  errors:
+    t_266857: 'hu: str'
+    t_066157: 'hu: str'
+  models:
+    t_492196: YYYY-MM o YYYY.
+    t_944805: YYYY-MM o YYYY.
+setup:
+  wizard:
+    t_266857: 'hu: str'
+    t_724914: Adoilletosegi CCAA a RENTA-hoz
+    t_066157: 'hu: str'
+    t_365267: Adoilletosegi CCAA a RENTA-hoz
+llm:
+  init:
+    t_271736: f"Falta la variable de prompt {exc.args[0]!r}.
+    t_172682: f"eliminats {n} fitxer(s) de cau
+    t_398390: f"Falta la variable de prompt {exc.args[0]!r}.
+    t_029483: f"eliminats {n} fitxer(s) de cau
+i18n:
+  test_diacritic_consistency:
+    t_535146: ca

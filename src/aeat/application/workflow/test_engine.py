@@ -433,7 +433,7 @@ class TestAbortReasons:
             findings=(
                 FilingFinding(
                     severity=FilingFindingSeverity.ERROR,
-                    message={"en": "missing casilla 03"},
+                    message="translation",
                 ),
             ),
         )

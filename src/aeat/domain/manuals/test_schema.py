@@ -67,7 +67,7 @@ def _rule(rule_id: str = "renta-2025-parte1-cap5-sec2-rule0001", kind: RuleKind 
         chapter_id="cap5",
         section_id="sec2",
         kind=kind,
-        statement={"es": "Regla de prueba", "en": "Test rule", "hu": "Teszt szabály"},
+        statement="manuals.test_schema.statement_121189",
         applies_when=None,
         references_casillas=("MODELO_130:01",),
         references_sections=(),
@@ -83,8 +83,8 @@ def _section(section_id: str = "sec2") -> Section:
     return Section(
         section_id=section_id,
         chapter_id="cap5",
-        title={"es": "Sección de prueba"},
-        summary={"es": "Resumen de prueba"},
+        title="manuals.test_schema.title_208795",
+        summary="manuals.test_schema.summary_179171",
         prose=(Paragraph(paragraph_id="p1", text="Texto", page=140),),
         rules=(),
         references_sections=(),
@@ -98,8 +98,8 @@ def _section(section_id: str = "sec2") -> Section:
 def _chapter() -> Chapter:
     return Chapter(
         chapter_id="cap5",
-        title={"es": "Capítulo 5"},
-        summary={"es": "Resumen"},
+        title="manuals.test_schema.title_472764",
+        summary="manuals.test_schema.summary_685481",
         sections=(SectionRef(section_id="sec2", relative_path="structure/sections/cap5/sec2.json"),),
     )
 
@@ -109,8 +109,8 @@ def _manual() -> Manual:
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_1,
-        title={"es": "Manual práctico Renta 2025 Parte 1"},
-        summary={"es": "Resumen"},
+        title="manuals.test_schema.title_935553",
+        summary="manuals.test_schema.summary_685481",
         source_pdf_url=AnyHttpUrl(
             "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/"
             "IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
@@ -144,7 +144,7 @@ class TestStrictSchema:
                 chapter_id="cap5",
                 section_id="sec2",
                 kind=RuleKind.OBLIGATION,
-                statement={"en": "English only"},
+                statement="translation",
                 applies_when=None,
                 references_casillas=(),
                 references_sections=(),
@@ -166,7 +166,7 @@ class TestStrictSchema:
                 chapter_id="cap5",
                 section_id="sec2",
                 kind=RuleKind.OBLIGATION,
-                statement={"es": "Regla"},
+                statement="manuals.test_schema.statement_994536",
                 applies_when=None,
                 references_casillas=("not-a-modelo-id",),
                 references_sections=(),
@@ -188,7 +188,7 @@ class TestStrictSchema:
                 chapter_id="cap5",
                 section_id="sec2",
                 kind=RuleKind.OBLIGATION,
-                statement={"es": "Regla"},
+                statement="manuals.test_schema.statement_994536",
                 applies_when=None,
                 references_casillas=(),
                 references_sections=(),
@@ -199,33 +199,6 @@ class TestStrictSchema:
                 definition_reviewed_at=date(2026, 4, 12),
             )
 
-    def test_section_rejects_missing_spanish_title(self) -> None:
-        """A section with a title lacking 'es' must fail validation."""
-        with pytest.raises(ValidationError):
-            Section(
-                section_id="sec2",
-                chapter_id="cap5",
-                title={"en": "English only"},
-                summary={"es": "Resumen"},
-                prose=(),
-                rules=(),
-                references_sections=(),
-                references_legal_acts=(),
-                source=_section_source(),
-                definition_reviewed_by="gw",
-                definition_reviewed_at=date(2026, 4, 12),
-            )
-
-    def test_chapter_rejects_missing_spanish_title(self) -> None:
-        """Chapters must carry an 'es' title."""
-        with pytest.raises(ValidationError):
-            Chapter(
-                chapter_id="cap5",
-                title={},
-                summary={"es": "Resumen"},
-                sections=(),
-            )
-
     def test_manual_rejects_year_below_2000(self) -> None:
         """Year bounds guard against obviously bogus values."""
         with pytest.raises(ValidationError):
@@ -233,8 +206,8 @@ class TestStrictSchema:
                 manual_id=ManualId.RENTA,
                 year=1999,
                 part=ManualPart.PARTE_1,
-                title={"es": "Manual"},
-                summary={"es": "Resumen"},
+                title="manuals.test_schema.title_421077",
+                summary="manuals.test_schema.summary_685481",
                 source_pdf_url=AnyHttpUrl("https://example.com/x.pdf"),
                 source_html_url=None,
                 fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),

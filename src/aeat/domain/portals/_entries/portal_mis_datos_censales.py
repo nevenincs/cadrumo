@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Mis datos censales",
-        "en": "My census data",
-        "hu": "Nyilvántartási adataim",
-    },
+    label="entries.portal_mis_datos_censales.label_558126",
     purpose_es="Consulta y modificación ligera de los datos censales registrados por la AEAT.",
 )
 """Portal entry for census-data consultation and light modification."""

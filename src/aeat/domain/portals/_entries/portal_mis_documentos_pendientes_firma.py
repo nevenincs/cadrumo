@@ -24,11 +24,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Documentos pendientes de firma",
-        "en": "Documents awaiting signature",
-        "hu": "Aláírásra váró dokumentumok",
-    },
+    label="entries.portal_mis_documentos_pendientes_firma.label_128262",
     purpose_es="Portafirmas: documentos en espera de firma electrónica del contribuyente.",
 )
 """Portal entry for the portafirmas (documents awaiting electronic signature)."""

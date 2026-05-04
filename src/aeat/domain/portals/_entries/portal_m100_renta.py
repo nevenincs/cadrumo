@@ -30,11 +30,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_100,
-    label={
-        "es": "Modelo 100 — IRPF declaración anual",
-        "en": "Modelo 100 — Annual personal income tax",
-        "hu": "100-as űrlap — Éves személyi jövedelemadó",
-    },
+    label="entries.portal_m100_renta.label_331643",
     purpose_es="Presentación de la declaración anual del IRPF (Renta).",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""

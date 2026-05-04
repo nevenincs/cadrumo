@@ -77,7 +77,7 @@ class TestImportFromJustificante:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
-        assert result.warnings[0]["en"].startswith("Line-level casilla values")
+        assert result.warnings[0].startswith("Line-level casilla values")
 
 
 class TestNormalisePeriod:

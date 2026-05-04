@@ -23,7 +23,7 @@ from ._drive_helpers import (
     escape_drive_query_literal,
     guess_mime_type,
 )
-from ._i18n import t, tr
+from ._i18n import tr
 
 app = typer.Typer(name="drive", no_args_is_help=True, help="Google Drive helpers.")
 
@@ -151,52 +151,18 @@ def fetch(
     response = service.files().list(q=build_name_query(name), fields="files(id, name, mimeType)", pageSize=10).execute()
     files = response.get("files", [])
     if not files:
-        console.print(
-            "[red]drive fetch:[/red] "
-            + tr(
-                t(
-                    f"ningún fichero de Drive coincide con el nombre {name!r}.",
-                    f"no Drive file matched name {name!r}.",
-                    f"cap fitxer de Drive coincideix amb el nom {name!r}.",
-                    f"egyetlen Drive fajl sem egyezik a nevvel: {name!r}.",
-                )
-            )
-        )
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_054217"))
         raise typer.Exit(code=1)
     if len(files) > 1:
-        match_ids = [f.get("id") for f in files]
-        console.print(
-            "[red]drive fetch:[/red] "
-            + tr(
-                t(
-                    f"{len(files)} ficheros de Drive coinciden con el nombre {name!r}; "
-                    f"refina visitando la UI de Drive y usando un nombre único. Coincidencias: {match_ids!r}",
-                    f"{len(files)} Drive files matched name {name!r}; "
-                    f"narrow down by visiting the Drive UI and using a unique name. Matches: {match_ids!r}",
-                    f"{len(files)} fitxers de Drive coincideixen amb el nom {name!r}; "
-                    f"afina visitant la interfície de Drive i utilitzant un nom únic. Coincidències: {match_ids!r}",
-                    f"{len(files)} Drive fajl egyezik a nevvel: {name!r}; "
-                    f"szukitsd a Drive UI-ban egyedi nev hasznalataval. Talalatok: {match_ids!r}",
-                )
-            )
-        )
+        [f.get("id") for f in files]
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_189509"))
         raise typer.Exit(code=1)
     file_entry = files[0]
     file_id = str(file_entry["id"])
 
     target = out / name if out.exists() and out.is_dir() else out
     if target.exists() and not overwrite:
-        console.print(
-            "[red]drive fetch:[/red] "
-            + tr(
-                t(
-                    f"{target} ya existe. Pasa --overwrite para reemplazarlo.",
-                    f"{target} already exists. Pass --overwrite to replace it.",
-                    f"{target} ja existeix. Passa --overwrite per reemplaçar-lo.",
-                    f"{target} mar letezik. Add at: --overwrite a felulirashoz.",
-                )
-            )
-        )
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_821830"))
         raise typer.Exit(code=1)
     target.parent.mkdir(parents=True, exist_ok=True)
 
@@ -207,18 +173,8 @@ def fetch(
     while not done:
         _status, done = downloader.next_chunk()
     target.write_bytes(buffer.getvalue())
-    byte_count = len(buffer.getvalue())
-    console.print(
-        "[green]drive fetch:[/green] "
-        + tr(
-            t(
-                f"escrito {target} ({byte_count} bytes)",
-                f"wrote {target} ({byte_count} bytes)",
-                f"escrit {target} ({byte_count} bytes)",
-                f"kiirva: {target} ({byte_count} bajt)",
-            )
-        )
-    )
+    len(buffer.getvalue())
+    console.print("[green]drive fetch:[/green] " + tr("cli.drive.t_226571"))
 
 
 @app.command(name="put", help="Upload a local file to Drive.")
@@ -233,14 +189,7 @@ def put(
 
     if not local.exists():
         typer.secho(
-            tr(
-                t(
-                    f"el fichero local no existe: {local}",
-                    f"local file does not exist: {local}",
-                    f"el fitxer local no existeix: {local}",
-                    f"a helyi fajl nem letezik: {local}",
-                )
-            ),
+            tr("cli.drive.t_351741"),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -280,27 +229,13 @@ def rm(
     if permanent:
         service.files().delete(fileId=file_id).execute()
         typer.secho(
-            tr(
-                t(
-                    f"eliminado {file_id}",
-                    f"deleted {file_id}",
-                    f"eliminat {file_id}",
-                    f"törölve {file_id}",
-                )
-            ),
+            tr("cli.drive.t_090079"),
             fg=typer.colors.RED,
         )
     else:
         service.files().update(fileId=file_id, body={"trashed": True}).execute()
         typer.secho(
-            tr(
-                t(
-                    f"enviado a la papelera {file_id}",
-                    f"trashed {file_id}",
-                    f"enviat a la paperera {file_id}",
-                    f"kukába helyezve {file_id}",
-                )
-            ),
+            tr("cli.drive.t_737010"),
             fg=typer.colors.YELLOW,
         )
 

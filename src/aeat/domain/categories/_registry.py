@@ -30,10 +30,10 @@ _AEAT_RETA = (
 )
 
 
-def _label(es: str, en: str, hu: str) -> Translatable:
+def _label(message: str) -> Translatable:
     """Build a multilingual label payload."""
 
-    return {"es": es, "en": en, "hu": hu}
+    return Translatable(message)
 
 
 def _citation(
@@ -45,7 +45,6 @@ def _citation(
     quote_es: str,
 ) -> CategoryCitation:
     """Build a citation with a compact Spanish quote."""
-
     return CategoryCitation(
         source=source,
         reference=reference,
@@ -332,364 +331,338 @@ _CIT_HOME_RENT = (
 _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
     SpendingCategory.CUOTAS_COLEGIALES: _profile(
         category=SpendingCategory.CUOTAS_COLEGIALES,
-        label=_label("Cuotas colegiales", "Professional association fees", "Szakmai kamarai díjak"),
+        label=_label("categories.registry.cuotas_colegiales"),
         proportionality=_rule(
-            kind=ProportionalityKind.NON_DEDUCTIBLE,
-            citations=_CIT_GENERAL_EXPENSES,
-            notes_es=(
-                "Se mantiene un perfil conservador hasta distinguir colegiación obligatoria de cuotas voluntarias."
-            ),
+            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            citations=(_CIT_GENERAL_EXPENSES[0],),
+            notes_es="Suscripción necesaria para el ejercicio de la actividad profesional.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.CUOTAS_AUTONOMOS_SS: _profile(
         category=SpendingCategory.CUOTAS_AUTONOMOS_SS,
-        label=_label("Cuotas RETA", "Self-employed social security", "Önálló vállalkozói társadalombiztosítás"),
+        label=_label("categories.registry.cuotas_reta"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_RETA,
-            notes_es="Deducibilidad íntegra como gasto del titular cuando corresponde a la actividad.",
+            notes_es="Cotizaciones al RETA del titular de la actividad.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.MUTUALIDAD_ALTERNATIVA: _profile(
         category=SpendingCategory.MUTUALIDAD_ALTERNATIVA,
-        label=_label("Mutualidad alternativa", "Alternative mutual scheme", "Alternatív szakmai biztosító"),
+        label=_label("categories.registry.mutualidad_alternativa"),
         proportionality=_rule(
-            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_RETA,
-            notes_es="Se alinea con las cotizaciones obligatorias del profesional cuando sustituye al RETA.",
+            notes_es="Las cuotas de mutualidades alternativas al RETA son gasto en lugar de reducción en base imponible.",
+            statutory_cap_eur=Decimal("15000"),
+            statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.ARRENDAMIENTO_LOCAL: _profile(
         category=SpendingCategory.ARRENDAMIENTO_LOCAL,
-        label=_label("Arrendamiento de local", "Business premises rent", "Üzlethelyiség bérleti díja"),
+        label=_label("categories.registry.arrendamiento_local"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_LOCAL_RENT,
-            notes_es="Deducible íntegramente cuando el inmueble está totalmente afecto a la actividad.",
+            notes_es="Alquiler del local afecto exclusivamente a la actividad.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO: _profile(
         category=SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
-        label=_label(
-            "Arrendamiento de vivienda afecta",
-            "Partially allocated dwelling rent",
-            "Részben üzleti célra használt lakás bérleti díja",
-        ),
+        label=_label("categories.registry.arrendamiento_vivienda_afecta"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_RENT,
-            notes_es=(
-                "Perfil conservador basado en la proporción de superficie afecta y sujeto a justificación reforzada."
-            ),
+            notes_es="Regla especial: 30% del porcentaje de afectación.",
             default_ratio=Decimal("0.30"),
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.IBI_LOCAL_AFECTO: _profile(
         category=SpendingCategory.IBI_LOCAL_AFECTO,
-        label=_label("IBI del local afecto", "Business premises property tax", "Üzlethelyiség ingatlanadója"),
+        label=_label("categories.registry.ibi_local_afecto"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_TAXES,
-            notes_es="Deducible para inmuebles afectos no excluidos expresamente por la norma.",
+            notes_es="IBI y tasas municipales sobre inmuebles de uso exclusivo.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: _profile(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
-        label=_label("Suministro home office: luz", "Home-office electricity", "Otthoni iroda villany"),
+        label=_label("categories.registry.home_office_luz"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
-            notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
+            notes_es="Electricidad de vivienda afecta: 30% de la proporción m2.",
             default_ratio=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA: _profile(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
-        label=_label("Suministro home office: agua", "Home-office water", "Otthoni iroda víz"),
+        label=_label("categories.registry.home_office_agua"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
-            notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
+            notes_es="Agua de vivienda afecta: 30% de la proporción m2.",
             default_ratio=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS: _profile(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
-        label=_label("Suministro home office: gas", "Home-office gas", "Otthoni iroda gáz"),
+        label=_label("categories.registry.home_office_gas"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
-            notes_es="Aplicar el 30% sobre la proporción entre superficie afecta y superficie total.",
+            notes_es="Gas de vivienda afecta: 30% de la proporción m2.",
             default_ratio=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET: _profile(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
-        label=_label("Suministro home office: internet", "Home-office internet", "Otthoni iroda internet"),
+        label=_label("categories.registry.home_office_internet"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+            kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
-            notes_es="Se reutiliza la regla legal de suministros de vivienda parcialmente afecta.",
+            notes_es="Internet de vivienda afecta: 30% de la proporción m2.",
             default_ratio=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TELEFONIA_MOVIL: _profile(
         category=SpendingCategory.TELEFONIA_MOVIL,
-        label=_label("Telefonía móvil", "Mobile phone service", "Mobiltelefon-szolgáltatás"),
+        label=_label("categories.registry.telefonia_movil"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_TELEFONIA_MOVIL,
-            notes_es="La deducción exige acreditar uso profesional exclusivo o una línea separada.",
+            notes_es="Requiere línea independiente dedicada en exclusiva a la actividad.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TELEFONIA_FIJA: _profile(
         category=SpendingCategory.TELEFONIA_FIJA,
-        label=_label("Telefonía fija", "Fixed-line phone service", "Vezetékes telefon"),
+        label=_label("categories.registry.telefonia_fija"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
-            citations=_CIT_HOME_SUPPLIES,
-            notes_es="Cuando la línea está integrada en la vivienda afecta se aplica la regla de suministros.",
-            default_ratio=Decimal("0.30"),
+            kind=ProportionalityKind.FULL_DEDUCTIBLE,
+            citations=_CIT_GENERAL_EXPENSES,
+            notes_es="Gastos de telefonía fija en local afecto.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MATERIAL_OFICINA: _profile(
         category=SpendingCategory.MATERIAL_OFICINA,
-        label=_label("Material de oficina", "Office supplies", "Irodaszerek"),
+        label=_label("categories.registry.material_oficina"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
-            citations=_CIT_OTHER_SERVICES,
-            notes_es="Gasto corriente deducible cuando existe vinculación con la actividad.",
+            citations=_CIT_GENERAL_EXPENSES,
+            notes_es="Consumibles de oficina ordinarios.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SOFTWARE_SUSCRIPCION: _profile(
         category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-        label=_label("Suscripción software", "Software subscription", "Szoftver-előfizetés"),
+        label=_label("categories.registry.software_suscripcion"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
-            citations=_CIT_OTHER_SERVICES,
-            notes_es="Tratamiento de servicio exterior recurrente siempre que el uso sea profesional.",
+            citations=_CIT_GENERAL_EXPENSES,
+            notes_es="Licencias SaaS, cloud y herramientas digitales.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.HARDWARE_AMORTIZABLE: _profile(
         category=SpendingCategory.HARDWARE_AMORTIZABLE,
-        label=_label("Hardware amortizable", "Depreciable hardware", "Amortizálható hardver"),
+        label=_label("categories.registry.hardware_amortizable"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_AMORTIZATION,
-            notes_es=(
-                "Sin prorrata especial de proporcionalidad; el reconocimiento "
-                "cuantitativo depende de la amortización fiscal."
-            ),
+            notes_es="Equipos informáticos. Deducible vía amortización plurianual.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MOBILIARIO_AMORTIZABLE: _profile(
         category=SpendingCategory.MOBILIARIO_AMORTIZABLE,
-        label=_label("Mobiliario amortizable", "Depreciable furniture", "Amortizálható bútor"),
+        label=_label("categories.registry.mobiliario_amortizable"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_AMORTIZATION,
-            notes_es=(
-                "Sin prorrata especial de proporcionalidad; la deducción material depende de la tabla de amortización."
-            ),
+            notes_es="Muebles y enseres. Deducible vía amortización plurianual.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.REPARACIONES_CONSERVACION: _profile(
         category=SpendingCategory.REPARACIONES_CONSERVACION,
-        label=_label("Reparaciones y conservación", "Repairs and maintenance", "Javítás és karbantartás"),
+        label=_label("categories.registry.reparaciones_conservacion"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_GENERAL_EXPENSES,
-            notes_es="Deducible como gasto de mantenimiento cuando no incrementa el valor del activo.",
+            notes_es="Mantenimiento de bienes de inversión afectos.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_COMBUSTIBLE: _profile(
         category=SpendingCategory.VEHICULO_COMBUSTIBLE,
-        label=_label("Vehículo: combustible", "Vehicle fuel", "Jármű üzemanyag"),
+        label=_label("categories.registry.vehiculo_combustible"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_VEHICLE,
-            notes_es=(
-                "El turismo ordinario exige afectación exclusiva; no se fija una ratio por defecto en este sustrato."
-            ),
+            notes_es="Presunción de no afectación salvo prueba fehaciente (IRPF).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_MANTENIMIENTO: _profile(
         category=SpendingCategory.VEHICULO_MANTENIMIENTO,
-        label=_label("Vehículo: mantenimiento", "Vehicle maintenance", "Jármű karbantartás"),
+        label=_label("categories.registry.vehiculo_mantenimiento"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_VEHICLE,
-            notes_es="Los gastos accesorios siguen la afectación exclusiva del vehículo principal cuando procede.",
+            notes_es="Presunción de no afectación salvo prueba fehaciente (IRPF).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_SEGURO: _profile(
         category=SpendingCategory.VEHICULO_SEGURO,
-        label=_label("Vehículo: seguro", "Vehicle insurance", "Járműbiztosítás"),
+        label=_label("categories.registry.vehiculo_seguro"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_VEHICLE,
-            notes_es="El seguro acompaña la afectación exclusiva exigida para el turismo ordinario.",
+            notes_es="Presunción de no afectación salvo prueba fehaciente (IRPF).",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.VEHICULO_PEAJE: _profile(
         category=SpendingCategory.VEHICULO_PEAJE,
-        label=_label("Vehículo: peajes", "Vehicle tolls", "Jármű útdíjak"),
+        label=_label("categories.registry.vehiculo_peaje"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_VEHICLE,
-            notes_es="El peaje sigue el mismo criterio de afectación exclusiva que el resto del uso del vehículo.",
+            notes_es="Presunción de no afectación salvo prueba fehaciente (IRPF).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VEHICULO_PARKING: _profile(
         category=SpendingCategory.VEHICULO_PARKING,
-        label=_label("Vehículo: parking", "Vehicle parking", "Jármű parkolás"),
+        label=_label("categories.registry.vehiculo_parking"),
         proportionality=_rule(
-            kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
+            kind=ProportionalityKind.REQUIRES_EXCLUSIVE_USE,
             citations=_CIT_VEHICLE,
-            notes_es="El estacionamiento acompaña la misma prueba de afectación exclusiva del vehículo.",
+            notes_es="Presunción de no afectación salvo prueba fehaciente (IRPF).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.MANUTENCION_DIETAS_NACIONAL: _profile(
         category=SpendingCategory.MANUTENCION_DIETAS_NACIONAL,
-        label=_label("Dietas de manutención nacionales", "Domestic meal allowances", "Belföldi étkezési költségek"),
+        label=_label("categories.registry.manutencion_nacional"),
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_DIETAS,
-            notes_es="Requiere pago electrónico y consumo en hostelería; el límite sin pernocta es inferior.",
-            statutory_cap_eur_per_day=Decimal("53.34"),
+            notes_es="Límite reglamentario: 53,34 EUR/día (con pernocta), 26,67 EUR/día (sin). Pago electrónico obligatorio.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO: _profile(
         category=SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO,
-        label=_label(
-            "Dietas de manutención en el extranjero",
-            "Foreign meal allowances",
-            "Külföldi étkezési költségek",
-        ),
+        label=_label("categories.registry.manutencion_extranjero"),
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_DIETAS,
-            notes_es="Requiere pago electrónico y consumo en hostelería; el límite sin pernocta es inferior.",
-            statutory_cap_eur_per_day=Decimal("91.35"),
+            notes_es="Límite reglamentario: 91,35 EUR/día (con pernocta), 48,08 EUR/día (sin). Pago electrónico obligatorio.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.ASESORIA_FISCAL: _profile(
         category=SpendingCategory.ASESORIA_FISCAL,
-        label=_label("Asesoría fiscal", "Tax advisory", "Adótanácsadás"),
+        label=_label("categories.registry.asesoria_fiscal"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_PROFESSIONAL_SERVICES,
-            notes_es="Servicio profesional ordinario directamente correlacionado con la actividad.",
+            notes_es="Gastos por servicios de gestoría y asesoramiento.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ASESORIA_JURIDICA: _profile(
         category=SpendingCategory.ASESORIA_JURIDICA,
-        label=_label("Asesoría jurídica", "Legal advisory", "Jogi tanácsadás"),
+        label=_label("categories.registry.asesoria_juridica"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_PROFESSIONAL_SERVICES,
-            notes_es="Deducible cuando el servicio jurídico se refiere a la actividad económica.",
+            notes_es="Honorarios de abogados y procuradores por asuntos vinculados a la actividad.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.ASESORIA_CONTABLE: _profile(
         category=SpendingCategory.ASESORIA_CONTABLE,
-        label=_label("Asesoría contable", "Accounting advisory", "Könyvelési tanácsadás"),
+        label=_label("categories.registry.asesoria_contable"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_PROFESSIONAL_SERVICES,
-            notes_es="Servicio profesional ordinario necesario para el cumplimiento formal.",
+            notes_es="Servicios de contabilidad y teneduría de libros.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.PUBLICIDAD_MARKETING: _profile(
         category=SpendingCategory.PUBLICIDAD_MARKETING,
-        label=_label("Publicidad y marketing", "Advertising and marketing", "Reklám és marketing"),
+        label=_label("categories.registry.publicidad_marketing"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_OTHER_SERVICES,
-            notes_es="Gasto de promoción deducible cuando persigue la obtención de ingresos.",
+            notes_es="Relaciones públicas, campañas publicitarias y promocionales.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.FORMACION_PROFESIONAL: _profile(
         category=SpendingCategory.FORMACION_PROFESIONAL,
-        label=_label("Formación profesional", "Professional training", "Szakmai képzés"),
+        label=_label("categories.registry.formacion_profesional"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_OTHER_SERVICES,
-            notes_es="La formación debe guardar relación con la actividad o con su actualización profesional.",
+            notes_es="Asistencia a cursos, congresos y seminarios vinculados a la actividad.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VIAJES_TRANSPORTE: _profile(
         category=SpendingCategory.VIAJES_TRANSPORTE,
-        label=_label("Viajes y transporte", "Travel and transport", "Utazás és közlekedés"),
+        label=_label("categories.registry.viajes_transporte"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_OTHER_SERVICES,
-            notes_es="Deducible cuando el desplazamiento se realiza por razón de la actividad.",
+            notes_es="Billetes de avión, tren y transporte público por desplazamientos profesionales.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.VIAJES_ALOJAMIENTO: _profile(
         category=SpendingCategory.VIAJES_ALOJAMIENTO,
-        label=_label("Viajes y alojamiento", "Travel lodging", "Utazási szállás"),
+        label=_label("categories.registry.viajes_alojamiento"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_OTHER_SERVICES,
-            notes_es="El alojamiento exige acreditar la finalidad profesional del desplazamiento.",
+            notes_es="Hoteles y alojamiento por desplazamientos profesionales (sin límite como las dietas).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SEGUROS_RESPONSABILIDAD_CIVIL: _profile(
         category=SpendingCategory.SEGUROS_RESPONSABILIDAD_CIVIL,
-        label=_label("Seguro de responsabilidad civil", "Liability insurance", "Felelősségbiztosítás"),
+        label=_label("categories.registry.seguros_rc"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_GENERAL_EXPENSES,
-            notes_es="Seguro directamente vinculado al ejercicio profesional.",
+            notes_es="Primas de seguros exigidos para el ejercicio de la actividad profesional.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SEGUROS_SALUD_AUTONOMO: _profile(
         category=SpendingCategory.SEGUROS_SALUD_AUTONOMO,
-        label=_label(
-            "Seguro de salud del autónomo",
-            "Self-employed health insurance",
-            "Vállalkozói egészségbiztosítás",
-        ),
+        label=_label("categories.registry.seguros_salud"),
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_HEALTH_INSURANCE,
-            notes_es=(
-                "Tope anual por persona asegurada; el límite asciende a 1.500 euros por persona con discapacidad."
-            ),
+            notes_es="Límite 500 EUR anuales (1.500 EUR con discapacidad) para titular, cónyuge e hijos menores de 25.",
             statutory_cap_eur=Decimal("500"),
             statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         ),
@@ -697,55 +670,51 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
     ),
     SpendingCategory.GASTOS_BANCARIOS: _profile(
         category=SpendingCategory.GASTOS_BANCARIOS,
-        label=_label("Gastos bancarios", "Bank charges", "Bankköltségek"),
+        label=_label("categories.registry.gastos_bancarios"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_FINANCIAL,
-            notes_es="Comisiones y costes bancarios deducibles cuando la cuenta está vinculada a la actividad.",
+            notes_es="Comisiones de mantenimiento, tarjetas y TPV de cuentas vinculadas a la actividad.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.GASTOS_FINANCIEROS: _profile(
         category=SpendingCategory.GASTOS_FINANCIEROS,
-        label=_label("Gastos financieros", "Financing expenses", "Finanszírozási költségek"),
+        label=_label("categories.registry.gastos_financieros"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_FINANCIAL,
-            notes_es="Intereses y financiación deducibles cuando se contraen para la actividad.",
+            notes_es="Intereses de préstamos y pólizas de crédito afectos a la actividad.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
     SpendingCategory.SUMINISTROS_CLIENTE_DIRECTOS: _profile(
         category=SpendingCategory.SUMINISTROS_CLIENTE_DIRECTOS,
-        label=_label(
-            "Suministros directos al cliente",
-            "Direct client supplies",
-            "Ügyfélhez közvetlenül kapcsolódó anyagok",
-        ),
+        label=_label("categories.registry.suministros_cliente_directos"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_GENERAL_EXPENSES,
-            notes_es="Consumos directamente incorporados a la prestación o entrega al cliente.",
+            notes_es="Costes directos refacturados o incorporados al servicio del cliente (servidores, APIs, materiales).",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.SUBCONTRATACION: _profile(
         category=SpendingCategory.SUBCONTRATACION,
-        label=_label("Subcontratación", "Subcontracting", "Alvállalkozás"),
+        label=_label("categories.registry.subcontratacion"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_PROFESSIONAL_SERVICES,
-            notes_es="Coste directo deducible cuando la subcontrata interviene en la actividad del contribuyente.",
+            notes_es="Trabajos realizados por otros profesionales para incorporar a proyectos de clientes.",
         ),
         vat_hint=VatCategory.GENERAL,
     ),
     SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES: _profile(
         category=SpendingCategory.TRIBUTOS_FISCALMENTE_DEDUCIBLES,
-        label=_label("Tributos fiscalmente deducibles", "Deductible taxes", "Levonható adók"),
+        label=_label("categories.registry.tributos_deducibles"),
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_TAXES,
-            notes_es="Incluye tributos locales o tasas no estatales no sancionadoras asociados a elementos afectos.",
+            notes_es="IAE, IAE autonómico y tasas no penalizadoras que recaigan sobre la actividad.",
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),

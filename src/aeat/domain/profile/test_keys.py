@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.i18n import Translatable
 from . import (
     PROFILE_KEYS,
     ProfileKey,
@@ -35,8 +36,8 @@ def test_get_profile_key_returns_canonical_record() -> None:
     assert isinstance(entry, ProfileKey)
     assert entry.key == "tax.id"
     assert entry.requirement is ProfileKeyRequirement.REQUIRED
-    assert entry.description["es"]
-    assert entry.description["en"]
+    assert entry.description
+    assert entry.description
 
 
 def test_get_profile_key_raises_keyerror_for_unknown_key() -> None:
@@ -46,7 +47,7 @@ def test_get_profile_key_raises_keyerror_for_unknown_key() -> None:
 
 def test_every_entry_carries_authoritative_spanish_description() -> None:
     for entry in PROFILE_KEYS:
-        assert entry.description.get("es", "").strip(), f"{entry.key}: missing description.es"
+        assert entry.description.strip(), f"{entry.key}: missing description.es"
 
 
 def test_profile_key_rejects_blank_keys() -> None:
@@ -54,7 +55,7 @@ def test_profile_key_rejects_blank_keys() -> None:
         ProfileKey(
             key="",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description={"es": "x", "en": "x", "ca": "x", "hu": "x"},
+            description=Translatable("profile.test_keys.description_490119"),
         )
 
 
@@ -63,7 +64,7 @@ def test_profile_key_rejects_padded_keys() -> None:
         ProfileKey(
             key=" tax.id ",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description={"es": "x", "en": "x", "ca": "x", "hu": "x"},
+            description=Translatable("profile.test_keys.description_490119"),
         )
 
 
@@ -72,5 +73,5 @@ def test_profile_key_rejects_descriptions_without_authoritative_spanish() -> Non
         ProfileKey(
             key="x",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description={"en": "english only"},  # type: ignore[typeddict-item]
+            description=Translatable("translation"),
         )

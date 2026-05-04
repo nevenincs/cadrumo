@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ._protocols import (
     CasillaCollection,
@@ -96,20 +97,7 @@ class FilingValidator:
                 casilla_id=None,
                 severity=FilingFindingSeverity.WARNING,
                 code="filing-schema-version-mismatch",
-                message={
-                    "es": (
-                        f"Versión de esquema del borrador {draft.schema_version!r} "
-                        f"no coincide con la actual {collection.schema_version!r}"
-                    ),
-                    "en": (
-                        f"Draft schema version {draft.schema_version!r} differs from "
-                        f"current {collection.schema_version!r}"
-                    ),
-                    "hu": (
-                        f"A piszkozat sémaverziója {draft.schema_version!r} "
-                        f"eltér a jelenlegitől {collection.schema_version!r}"
-                    ),
-                },
+                message=Translatable("filing.validation.schema_mismatch"),
                 references_rules=(),
             )
         ]
@@ -127,11 +115,7 @@ class FilingValidator:
                         casilla_id=casilla.id,
                         severity=FilingFindingSeverity.ERROR,
                         code="casilla-required-missing",
-                        message={
-                            "es": f"Casilla obligatoria {casilla.id} sin valor",
-                            "en": f"Required casilla {casilla.id} has no value",
-                            "hu": f"A kötelező rovat {casilla.id} hiányzik",
-                        },
+                        message=Translatable("filing.validation.required_missing"),
                         references_rules=(),
                     )
                 )
@@ -158,11 +142,7 @@ class FilingValidator:
             casilla_id=casilla_id,
             severity=FilingFindingSeverity.ERROR,
             code="casilla-out-of-range",
-            message={
-                "es": f"Casilla {casilla_id} fuera de rango ({direction})",
-                "en": f"Casilla {casilla_id} out of range ({direction})",
-                "hu": f"A {casilla_id} rovat tartományon kívül ({direction})",
-            },
+            message=Translatable("filing.validation.out_of_range"),
             references_rules=(),
         )
 
@@ -197,11 +177,7 @@ class FilingValidator:
             casilla_id=casilla_id,
             severity=FilingFindingSeverity.ERROR,
             code="formula-divergence",
-            message={
-                "es": f"Divergencia de fórmula en casilla {casilla_id}",
-                "en": f"Formula divergence on casilla {casilla_id}",
-                "hu": f"Képlet eltérés a {casilla_id} rovaton",
-            },
+            message=Translatable("filing.validation.formula_divergence"),
             references_rules=(),
         )
 
@@ -217,14 +193,11 @@ class FilingValidator:
                 casilla_id=None,
                 severity=FilingFindingSeverity.ERROR,
                 code="filing-deadline-missed",
-                message={
-                    "es": (f"Plazo de presentación del modelo {draft.modelo} vencido ({status.due_date.isoformat()})"),
-                    "en": (f"Filing deadline for modelo {draft.modelo} has passed ({status.due_date.isoformat()})"),
-                    "hu": (f"A {draft.modelo} modell beadási határideje lejárt ({status.due_date.isoformat()})"),
-                },
+                message=Translatable("filing.validation.deadline_missed"),
                 references_rules=(),
             )
         ]
+
 
 def apply_validation(
     draft: FilingDraft,

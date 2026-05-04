@@ -28,11 +28,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_303,
-    label={
-        "es": "Modelo 303 — IVA autoliquidación",
-        "en": "Modelo 303 — Periodic VAT self-assessment",
-        "hu": "303-as űrlap — Időszakos IVA-önbevallás",
-    },
+    label="entries.portal_m303_iva_autoliquidacion.label_847914",
     purpose_es="Autoliquidación periódica del Impuesto sobre el Valor Añadido (IVA).",
 )
 """Portal entry for Modelo 303 (periodic VAT self-assessment)."""

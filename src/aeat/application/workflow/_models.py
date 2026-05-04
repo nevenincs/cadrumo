@@ -17,7 +17,6 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...core.i18n import Translatable
 from ...domain.deadlines import FilingObligation
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -130,7 +129,7 @@ class WorkflowStep(BaseModel):
     started_at: datetime
     ended_at: datetime | None = None
     success: bool | None = None
-    summary: Translatable
+    summary: str
     details: dict[str, str] | None = None
     site_health_alert: SiteHealthAlert | None = None
 
@@ -178,7 +177,7 @@ class WorkflowResult(BaseModel):
     draft_id: str | None = None
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]
-    summary: Translatable
+    summary: str
 
     @model_validator(mode="after")
     def _check_terminal_consistency(self) -> WorkflowResult:

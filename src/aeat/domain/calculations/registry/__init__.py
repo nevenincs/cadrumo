@@ -18,17 +18,22 @@ from ._remote_state_guard import (
 )
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    ApplicationLinkDefinition,
     CasillaDefinition,
     DataBindingDefinition,
+    ExtractionProfileDefinition,
     FormulaDefinition,
     FormulaExpression,
     LegalReference,
+    LiveCrossReferenceDecision,
     ModeloDefinition,
     ModeloRevision,
     ParameterDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     SourceReference,
+    VerificationExpectationDefinition,
+    WorkbookParityReference,
 )
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
@@ -54,11 +59,14 @@ from ._workbook_parity import (
 )
 
 __all__ = [
+    "ApplicationLinkDefinition",
     "CasillaDefinition",
     "DataBindingDefinition",
+    "ExtractionProfileDefinition",
     "FormulaDefinition",
     "FormulaExpression",
     "LegalReference",
+    "LiveCrossReferenceDecision",
     "ModeloDefinition",
     "ModeloRevision",
     "ParameterDefinition",
@@ -78,11 +86,13 @@ __all__ = [
     "SourceReference",
     "SyntheticInputSet",
     "SyntheticInputValue",
+    "VerificationExpectationDefinition",
     "WorkbookArtefactReport",
     "WorkbookBackendVerificationReport",
     "WorkbookCellRef",
     "WorkbookModeloCoverage",
     "WorkbookParityComparison",
+    "WorkbookParityReference",
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",

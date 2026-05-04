@@ -14,7 +14,7 @@ import typer
 from rich.console import Console
 
 from ....domain.deadlines import next_deadline
-from .._i18n import t, tr
+from .._i18n import tr
 from ._helpers import build_engine, load_profile, resolve_profile_path
 
 _CONSOLE = Console()
@@ -39,17 +39,10 @@ def next_obligation(
     schedule = engine.compute(loaded_profile, year)
     obligation = next_deadline(schedule)
     if obligation is None:
-        msg = tr(
-            t(
-                f"no hay obligaciones próximas para {year}: todas las entradas están vencidas",
-                f"no upcoming obligations for {year}: every entry is overdue",
-                f"no hi ha obligacions properes per a {year}: totes les entrades han vençut",
-                f"nincs közelgő kötelezettség {year} évre: minden bejegyzés lejárt",
-            )
-        )
+        msg = tr("deadlines.next.t_688927")
         _CONSOLE.print(f"[yellow]{msg}[/yellow]")
         raise typer.Exit(code=0)
-    closes_label = tr(t("cierra", "closes", "tanca", "lezárul"))
+    closes_label = tr("deadlines.next.t_744197")
     _CONSOLE.print(
         f"[bold cyan]{obligation.modelo}[/bold cyan] {obligation.period} - "
         f"{closes_label} {obligation.closes_on.isoformat()} ({obligation.status.value})"

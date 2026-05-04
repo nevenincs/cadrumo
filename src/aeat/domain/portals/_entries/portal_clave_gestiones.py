@@ -19,11 +19,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CLAVE_PERMANENTE,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Gestiones Cl@ve PIN",
-        "en": "Cl@ve PIN self-service",
-        "hu": "Cl@ve PIN önkiszolgáló",
-    },
+    label="entries.portal_clave_gestiones.label_802490",
     purpose_es="Gestiones Cl@ve: registro, recuperación y renovación de contraseñas.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve self-service page."""

@@ -27,11 +27,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_349,
-    label={
-        "es": "Modelo 349 — Operaciones intracomunitarias",
-        "en": "Modelo 349 — Intra-EU transactions",
-        "hu": "349-es űrlap — Közösségen belüli ügyletek",
-    },
+    label="entries.portal_m349_intracomunitarias.label_740192",
     purpose_es="Declaración recapitulativa de entregas y adquisiciones intracomunitarias (VAT VIES).",
 )
 """Portal entry for Modelo 349 (intra-EU recapitulative VAT statement)."""

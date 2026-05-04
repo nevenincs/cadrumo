@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable
 from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderAvailability,
@@ -57,8 +56,8 @@ def test_get_auth_provider_returns_canonical_entry() -> None:
     assert isinstance(entry, AuthProviderListing)
     assert entry.id == "clave-permanente"
     assert entry.availability is AuthProviderAvailability.UNAVAILABLE
-    assert entry.label["es"]
-    assert entry.description["es"]
+    assert entry.label
+    assert entry.description
 
 
 def test_get_auth_provider_raises_keyerror_for_unknown() -> None:
@@ -66,33 +65,13 @@ def test_get_auth_provider_raises_keyerror_for_unknown() -> None:
         get_auth_provider("not.a.provider")
 
 
-def _label() -> Translatable:
-    label: Translatable = {
-        "es": "Certificado",
-        "en": "Certificate",
-        "ca": "Certificat",
-        "hu": "Tanúsítvány",
-    }
-    return label
-
-
-def _description() -> Translatable:
-    description: Translatable = {
-        "es": "Descripción",
-        "en": "Description",
-        "ca": "Descripció",
-        "hu": "Leírás",
-    }
-    return description
-
-
 def test_listing_rejects_blank_id() -> None:
     with pytest.raises(ValueError):
         AuthProviderListing(
             id="",
-            label=_label(),
+            label="label",
             availability=AuthProviderAvailability.AVAILABLE,
-            description=_description(),
+            description="desc",
         )
 
 
@@ -100,31 +79,9 @@ def test_listing_rejects_uppercase_id() -> None:
     with pytest.raises(ValueError):
         AuthProviderListing(
             id="Certificate",
-            label=_label(),
+            label="label",
             availability=AuthProviderAvailability.AVAILABLE,
-            description=_description(),
-        )
-
-
-def test_listing_rejects_label_without_authoritative_spanish() -> None:
-    bad_label: Translatable = {"en": "english only"}  # type: ignore[typeddict-item]
-    with pytest.raises(ValueError):
-        AuthProviderListing(
-            id="certificate",
-            label=bad_label,
-            availability=AuthProviderAvailability.AVAILABLE,
-            description=_description(),
-        )
-
-
-def test_listing_rejects_description_without_authoritative_spanish() -> None:
-    bad_desc: Translatable = {"en": "english only"}  # type: ignore[typeddict-item]
-    with pytest.raises(ValueError):
-        AuthProviderListing(
-            id="certificate",
-            label=_label(),
-            availability=AuthProviderAvailability.AVAILABLE,
-            description=bad_desc,
+            description="desc",
         )
 
 
@@ -136,7 +93,7 @@ def test_listing_is_frozen() -> None:
         entry.id = "changed"  # type: ignore[misc]
 
 
-def test_every_entry_carries_authoritative_spanish_strings() -> None:
+def test_every_entry_carries_strings() -> None:
     for entry in AUTH_PROVIDER_CATALOGUE:
-        assert entry.label.get("es", "").strip(), f"{entry.id}: missing label.es"
-        assert entry.description.get("es", "").strip(), f"{entry.id}: missing description.es"
+        assert entry.label.strip(), f"{entry.id}: missing label"
+        assert entry.description.strip(), f"{entry.id}: missing description"

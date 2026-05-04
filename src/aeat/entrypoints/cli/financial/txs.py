@@ -36,7 +36,7 @@ from ....domain.transactions import (
     resolve_classifier,
     set_classification,
 )
-from .._i18n import t, tr
+from .._i18n import tr
 from ._catalogue import (
     catalogue_repository,
     load_catalogue_or_empty,
@@ -105,41 +105,9 @@ def list_cmd(
     )
     if not transactions:
         if threshold is not None and len(catalogue) > 0:
-            typer.echo(
-                tr(
-                    t(
-                        "No se encontraron transacciones por debajo de ese umbral de confianza. "
-                        "Nota: las clasificaciones manuales tienen confianza 1.0 por defecto, "
-                        "así que --confidence-below "
-                        "solo muestra resultados cuando un motor de reglas o un clasificador LLM ha asignado una "
-                        "puntuación menor.",
-                        "No transactions found below that confidence threshold. "
-                        "Note: manual classifications default to confidence 1.0, so --confidence-below "
-                        "only surfaces results when a rule engine or LLM classifier has assigned a "
-                        "lower score.",
-                        "No s'han trobat transaccions per sota d'aquest llindar de confiança. "
-                        "Nota: les classificacions manuals tenen confiança 1.0 per defecte, "
-                        "així que --confidence-below "
-                        "només mostra resultats quan un motor de regles o un classificador LLM ha assignat una "
-                        "puntuació inferior.",
-                        "Nincs talált tranzakció ezen bizonyossági küszöb alatt. "
-                        "Megjegyzes: a kézi osztályozások alapértelmezett bizonyossága 1.0, "
-                        "ezert a --confidence-below csak akkor mutat eredmenyt, ha egy szabály motor vagy "
-                        "LLM osztályozó alacsonyabb pontszámot rendelt hozzá.",
-                    )
-                )
-            )
+            typer.echo(tr("financial.txs.t_245971"))
         else:
-            typer.echo(
-                tr(
-                    t(
-                        "No se encontraron transacciones.",
-                        "No transactions found.",
-                        "No s'han trobat transaccions.",
-                        "Nincs talált tranzakció.",
-                    )
-                )
-            )
+            typer.echo(tr("financial.txs.t_121365"))
         return
     typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tcategory\tconfidence\tnarrative")
     for transaction in sorted(
@@ -200,17 +168,7 @@ def build_cmd(
     target = repo.envelope_path
     if target.exists() and not replace:
         typer.echo(
-            tr(
-                t(
-                    f"el catálogo de transacciones ya existe en {target}; "
-                    "vuelve a ejecutar con --replace para sobrescribirlo",
-                    f"transaction catalogue already exists at {target}; rerun with --replace to overwrite it",
-                    f"el catàleg de transaccions ja existeix a {target}; "
-                    "torna a executar amb --replace per sobreescriure'l",
-                    f"a tranzakcio katalogus mar letezik itt: {target}; "
-                    "futtasd ujra --replace kapcsoloval a felulirashoz",
-                )
-            ),
+            tr("financial.txs.t_199417"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -220,16 +178,7 @@ def build_cmd(
     except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
-    typer.echo(
-        tr(
-            t(
-                f"construidas {len(catalogue)} transacción/-es en {target}",
-                f"built {len(catalogue)} transaction(s) into {target}",
-                f"construïdes {len(catalogue)} transacció/-ns a {target}",
-                f"epitve {len(catalogue)} tranzakcio ide: {target}",
-            )
-        )
-    )
+    typer.echo(tr("financial.txs.t_700793"))
 
 
 @app.command(name="show", help="Show one stored transaction as JSON.")
@@ -250,14 +199,7 @@ def show_cmd(
     transaction = find_transaction(catalogue, transaction_id)
     if transaction is None:
         typer.echo(
-            tr(
-                t(
-                    f"transacción no encontrada: {transaction_id}",
-                    f"transaction not found: {transaction_id}",
-                    f"transacció no trobada: {transaction_id}",
-                    f"tranzakcio nem talalhato: {transaction_id}",
-                )
-            ),
+            tr("financial.txs.t_217036"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -345,27 +287,13 @@ def classify_cmd(
     current = find_transaction(catalogue, transaction_id)
     if current is None:
         typer.echo(
-            tr(
-                t(
-                    f"transacción no encontrada: {transaction_id}",
-                    f"transaction not found: {transaction_id}",
-                    f"transacció no trobada: {transaction_id}",
-                    f"tranzakcio nem talalhato: {transaction_id}",
-                )
-            ),
+            tr("financial.txs.t_217036"),
             err=True,
         )
         raise typer.Exit(code=2)
     if classification is None and category is None and not reason and pct is None and confidence is None:
         typer.echo(
-            tr(
-                t(
-                    "no se solicitaron cambios; pasa --as, --category, --reason, --pct o --confidence",
-                    "no changes requested; pass --as, --category, --reason, --pct, or --confidence",
-                    "no s'han sol·licitat canvis; passa --as, --category, --reason, --pct o --confidence",
-                    "nem kértél változtatást; adj át: --as, --category, --reason, --pct vagy --confidence",
-                )
-            ),
+            tr("financial.txs.t_384718"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -373,14 +301,7 @@ def classify_cmd(
         business_pct = Decimal(pct) if pct is not None else None
     except InvalidOperation as exc:
         typer.echo(
-            tr(
-                t(
-                    f"valor --pct no válido: {pct}",
-                    f"invalid --pct value: {pct}",
-                    f"valor --pct no vàlid: {pct}",
-                    f"ervenytelen --pct ertek: {pct}",
-                )
-            ),
+            tr("financial.txs.t_475858"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
@@ -388,14 +309,7 @@ def classify_cmd(
     effective_classification = classification if classification is not None else current.business_classification
     if classification is not None and classification is not BusinessClassification.MIXED and business_pct is not None:
         typer.echo(
-            tr(
-                t(
-                    "--pct solo se puede usar junto con --as MIXED; omite --pct para clasificaciones no-MIXED",
-                    "--pct can only be used together with --as MIXED; omit --pct for non-MIXED classifications",
-                    "--pct només es pot fer servir juntament amb --as MIXED; omet --pct per a classificacions no-MIXED",
-                    "--pct csak --as MIXED mellett hasznalhato; nem-MIXED osztalyozasoknal hagyd el a --pct kapcsolót",
-                )
-            ),
+            tr("financial.txs.t_492743"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -403,18 +317,7 @@ def classify_cmd(
     if effective_category is not None:
         if current.direction is not TransactionDirection.OUTGOING:
             typer.echo(
-                tr(
-                    t(
-                        "las categorías de gasto solo aplican a transacciones salientes (gastos); "
-                        "los ingresos no deben recibir una categoría de gasto",
-                        "spending categories apply only to outgoing expense transactions; "
-                        "incoming payments should not be assigned an expense category",
-                        "les categories de despesa només apliquen a transaccions sortints (despeses); "
-                        "els ingressos no han de rebre cap categoria de despesa",
-                        "a költség kategóriák csak kimenő (költség) tranzakciokra alkalmazhatok; "
-                        "a bevetelek nem kaphatnak költség kategoriat",
-                    )
-                ),
+                tr("financial.txs.t_757092"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -424,18 +327,7 @@ def classify_cmd(
             BusinessClassification.MIXED,
         }:
             typer.echo(
-                tr(
-                    t(
-                        "--category requiere primero una clasificación negocio/personal; "
-                        "pasa --as BUSINESS, PERSONAL o MIXED antes de asignar una categoría",
-                        "--category requires a business/private classification first; "
-                        "pass --as BUSINESS, PERSONAL, or MIXED before assigning a category",
-                        "--category requereix primer una classificació negoci/personal; "
-                        "passa --as BUSINESS, PERSONAL o MIXED abans d'assignar una categoria",
-                        "--category először üzleti/személyes osztalyozast igényel; "
-                        "add at: --as BUSINESS, PERSONAL vagy MIXED a kategória hozzárendelése előtt",
-                    )
-                ),
+                tr("financial.txs.t_091408"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -596,40 +488,19 @@ def classify_llm_cmd(
 
     if all_pending and transaction_id is not None:
         typer.echo(
-            tr(
-                t(
-                    "--all es mutuamente excluyente con un argumento transaction-id.",
-                    "--all is mutually exclusive with a transaction-id argument.",
-                    "--all és mútuament exclusiu amb un argument transaction-id.",
-                    "--all es a transaction-id argumentum kölcsönösen kizárják egymást.",
-                )
-            ),
+            tr("financial.txs.t_532646"),
             err=True,
         )
         raise typer.Exit(code=2)
     if not all_pending and transaction_id is None:
         typer.echo(
-            tr(
-                t(
-                    "Pasa un argumento transaction-id o usa --all.",
-                    "Pass a transaction-id argument or use --all.",
-                    "Passa un argument transaction-id o utilitza --all.",
-                    "Adj át egy transaction-id argumentumot vagy használd: --all.",
-                )
-            ),
+            tr("financial.txs.t_074603"),
             err=True,
         )
         raise typer.Exit(code=2)
     if max_total_seconds is not None and max_total_seconds <= 0:
         typer.echo(
-            tr(
-                t(
-                    "--max-total-seconds debe ser estrictamente positivo.",
-                    "--max-total-seconds must be strictly positive.",
-                    "--max-total-seconds ha de ser estrictament positiu.",
-                    "--max-total-seconds szigorúan pozitív kell legyen.",
-                )
-            ),
+            tr("financial.txs.t_338582"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -659,16 +530,7 @@ def classify_llm_cmd(
     catalogue = load_catalogue_required()
     targets = _select_llm_targets(catalogue, transaction_id=transaction_id, all_pending=all_pending)
     if not targets:
-        typer.echo(
-            tr(
-                t(
-                    "Ninguna transacción seleccionada para clasificación LLM.",
-                    "No transactions selected for LLM classification.",
-                    "Cap transacció seleccionada per a la classificació LLM.",
-                    "Nincs kiválasztott tranzakció LLM osztalyozashoz.",
-                )
-            )
-        )
+        typer.echo(tr("financial.txs.t_184654"))
         return
 
     total = len(targets)
@@ -682,33 +544,17 @@ def classify_llm_cmd(
         if max_total_seconds is not None and time.monotonic() - started >= max_total_seconds:
             stopped_early = True
             typer.echo(
-                tr(
-                    t(
-                        f"[{index - 1}/{total}] --max-total-seconds alcanzado; "
-                        f"manteniendo {successes} clasificadas hasta ahora.",
-                        f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes} classified so far.",
-                        f"[{index - 1}/{total}] --max-total-seconds assolit; "
-                        f"mantenint {successes} classificades fins ara.",
-                        f"[{index - 1}/{total}] --max-total-seconds elérve; eddig {successes} osztályozva megtartva.",
-                    )
-                ),
+                tr("financial.txs.t_917316"),
                 err=True,
             )
             break
         prefix = f"[{index}/{total} {target.transaction_id[:16]}]"
         try:
             response = classifier.classify(target)
-        except LLMClassifierError as exc:
+        except LLMClassifierError:
             failures += 1
             typer.echo(
-                tr(
-                    t(
-                        f"{prefix} error de {provider}: {exc}",
-                        f"{prefix} {provider} error: {exc}",
-                        f"{prefix} error de {provider}: {exc}",
-                        f"{prefix} {provider} hiba: {exc}",
-                    )
-                ),
+                tr("financial.txs.t_725301"),
                 err=True,
             )
             continue
@@ -739,17 +585,10 @@ def classify_llm_cmd(
                     notes=combined_reason,
                 )
                 dirty = True
-            except TransactionError as exc:
+            except TransactionError:
                 failures += 1
                 typer.echo(
-                    tr(
-                        t(
-                            f"{prefix} error al persistir: {exc}",
-                            f"{prefix} persist error: {exc}",
-                            f"{prefix} error en persistir: {exc}",
-                            f"{prefix} mentési hiba: {exc}",
-                        )
-                    ),
+                    tr("financial.txs.t_735916"),
                     err=True,
                 )
                 continue
@@ -758,36 +597,19 @@ def classify_llm_cmd(
     if not dry_run and dirty:
         try:
             repo.save(updated_catalogue)
-        except TransactionError as exc:
+        except TransactionError:
             failures += successes
             successes = 0
             typer.echo(
-                tr(
-                    t(
-                        f"error en el guardado final: {exc}",
-                        f"final save error: {exc}",
-                        f"error en el desament final: {exc}",
-                        f"végső mentési hiba: {exc}",
-                    )
-                ),
+                tr("financial.txs.t_044885"),
                 err=True,
             )
 
-    if dry_run:
-        tail = tr(t("simulación", "dry-run", "simulació", "próbafutás"))
-    else:
-        tail = tr(t("persistido", "persisted", "persistit", "elmentve"))
+    tail = tr("financial.txs.t_510476") if dry_run else tr("financial.txs.t_594729")
     if stopped_early:
-        tail += tr(
-            t(
-                " (detenido en --max-total-seconds)",
-                " (stopped at --max-total-seconds)",
-                " (aturat a --max-total-seconds)",
-                " (--max-total-seconds-nél leállt)",
-            )
-        )
-    classified_label = tr(t("clasificadas", "classified", "classificades", "osztályozva"))
-    failed_label = tr(t("fallidas", "failed", "fallides", "sikertelen"))
+        tail += tr("financial.txs.t_222239")
+    classified_label = tr("financial.txs.t_341377")
+    failed_label = tr("financial.txs.t_577243")
     typer.echo(f"{successes} {classified_label} / {failures} {failed_label} / {tail}")
     if failures and successes == 0:
         raise typer.Exit(code=2)
@@ -962,14 +784,7 @@ def _select_llm_targets(
         transaction = find_transaction(catalogue, transaction_id)
         if transaction is None:
             typer.echo(
-                tr(
-                    t(
-                        f"transacción no encontrada: {transaction_id}",
-                        f"transaction not found: {transaction_id}",
-                        f"transacció no trobada: {transaction_id}",
-                        f"tranzakcio nem talalhato: {transaction_id}",
-                    )
-                ),
+                tr("financial.txs.t_268130"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -991,27 +806,13 @@ def _parse_confidence_threshold(value: str | None) -> Decimal | None:
         threshold = Decimal(value)
     except InvalidOperation as exc:
         typer.echo(
-            tr(
-                t(
-                    f"valor --confidence-below no válido: {value}",
-                    f"invalid --confidence-below value: {value}",
-                    f"valor --confidence-below no vàlid: {value}",
-                    f"ervenytelen --confidence-below ertek: {value}",
-                )
-            ),
+            tr("financial.txs.t_993328"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
         typer.echo(
-            tr(
-                t(
-                    "--confidence-below debe estar dentro del rango inclusivo 0..1",
-                    "--confidence-below must be within the inclusive 0..1 range",
-                    "--confidence-below ha d'estar dins del rang inclusiu 0..1",
-                    "--confidence-below a 0..1 zárt intervallumon belul kell legyen",
-                )
-            ),
+            tr("financial.txs.t_725396"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -1032,27 +833,13 @@ def _parse_confidence_option(value: str | None) -> Decimal | None:
         resolved = Decimal(value)
     except InvalidOperation as exc:
         typer.echo(
-            tr(
-                t(
-                    f"valor --confidence no válido: {value}",
-                    f"invalid --confidence value: {value}",
-                    f"valor --confidence no vàlid: {value}",
-                    f"ervenytelen --confidence ertek: {value}",
-                )
-            ),
+            tr("financial.txs.t_410287"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not _CONFIDENCE_MIN <= resolved <= _CONFIDENCE_MAX:
         typer.echo(
-            tr(
-                t(
-                    "--confidence debe estar dentro del rango inclusivo 0..1",
-                    "--confidence must be within the inclusive 0..1 range",
-                    "--confidence ha d'estar dins del rang inclusiu 0..1",
-                    "--confidence a 0..1 zárt intervallumon belul kell legyen",
-                )
-            ),
+            tr("financial.txs.t_065677"),
             err=True,
         )
         raise typer.Exit(code=2)

@@ -9,9 +9,9 @@ Every record is declared with ``ConfigDict(strict=True, frozen=True)`` per
 the project pydantic mandate.
 
 Note:
-    Translatable string fields (``name``, ``label``) are plain :class:`str`
+    str string fields (``name``, ``label``) are plain :class:`str`
     today. Once the shared multilingual primitive lands, these fields will be
-    migrated to the :class:`~aeat.core.i18n.Translatable` shape.
+    migrated to the :class:`~aeat.core.i18n.str` shape.
 """
 
 from __future__ import annotations

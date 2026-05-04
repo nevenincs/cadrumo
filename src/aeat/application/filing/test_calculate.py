@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
 from ...domain.filing import (
     FilingDraft,
     FilingDraftStatus,
@@ -19,27 +18,21 @@ from ...domain.filing import (
 )
 from . import (
     DeclarationCalculateNextAction,
-    DeclarationCalculateSummary,
     summarise_calculation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _hint() -> Translatable:
-    hint: Translatable = {
-        "es": "Rellena la casilla 03 antes de continuar.",
-        "en": "Fill casilla 03 before continuing.",
-    }
-    return hint
+def _hint() -> str:
+    return "filing.test_calculate.hint"
+
+
+from ...core.i18n import Translatable
 
 
 def _finding_message(code: str) -> Translatable:
-    message: Translatable = {
-        "es": f"Hallazgo {code}.",
-        "en": f"Finding {code}.",
-    }
-    return message
+    return Translatable(f"filing.test_calculate.finding_{code}")
 
 
 def _make_draft(
@@ -173,34 +166,6 @@ def test_repair_hints_rejected_outside_resolve_blockers() -> None:
     draft = _make_draft(status=FilingDraftStatus.VALIDATED)
     with pytest.raises(ValueError):
         summarise_calculation(draft, repair_hints=(_hint(),))
-
-
-def test_summary_rejects_narrative_without_authoritative_spanish() -> None:
-    draft = _make_draft(status=FilingDraftStatus.VALIDATED)
-    bad_narrative: Translatable = {"en": "missing es"}  # type: ignore[typeddict-item]
-    with pytest.raises(ValueError):
-        summarise_calculation(draft, narrative=bad_narrative)
-
-
-def test_summary_rejects_repair_hint_without_authoritative_spanish() -> None:
-    bad_hint: Translatable = {"en": "no spanish"}  # type: ignore[typeddict-item]
-    with pytest.raises(ValueError):
-        DeclarationCalculateSummary(
-            draft_id="d",
-            modelo="130",
-            period="2026Q1",
-            status=FilingDraftStatus.VALIDATED,
-            blocker_count=1,
-            warning_count=0,
-            info_count=0,
-            next_action=DeclarationCalculateNextAction.RESOLVE_BLOCKERS,
-            repair_hints=(bad_hint,),
-            narrative={
-                "es": "Falta la casilla 03.",
-                "en": "Casilla 03 is missing.",
-            },
-            calculated_at=datetime(2026, 5, 3, tzinfo=UTC),
-        )
 
 
 def test_summary_is_frozen() -> None:

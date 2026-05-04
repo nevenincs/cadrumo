@@ -21,7 +21,7 @@ from datetime import date
 import typer
 
 from ....adapters.outbound.llm import LLMCache, LLMClient, LLMRequest, PromptRegistry, Translator, UsageRecorder
-from .._i18n import t, tr
+from .._i18n import tr
 
 app = typer.Typer(name="llm", no_args_is_help=True, help="LLM helpers.")
 cache_app = typer.Typer(name="cache", no_args_is_help=True, help="LLM cache helpers.")
@@ -74,16 +74,7 @@ def complete(
     try:
         prompt = definition.template.format_map(_parse_inputs(inputs or []))
     except KeyError as exc:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"Falta la variable de prompt {exc.args[0]!r}.",
-                    f"Missing prompt variable {exc.args[0]!r}.",
-                    f"Falta la variable de prompt {exc.args[0]!r}.",
-                    f"Hiányzó prompt változó {exc.args[0]!r}.",
-                )
-            )
-        ) from exc
+        raise typer.BadParameter(tr("llm.init.t_398390")) from exc
     client = LLMClient(prompt_id=definition.id)
     response = asyncio.run(client.complete(LLMRequest(prompt=prompt, language=language)))
     typer.echo(response.text)
@@ -122,17 +113,8 @@ def cache_stats() -> None:
 def cache_prune() -> None:
     """Delete cached LLM responses and report the count removed."""
 
-    n = LLMCache().prune()
-    typer.echo(
-        tr(
-            t(
-                f"eliminados {n} fichero(s) de caché",
-                f"removed {n} cache file(s)",
-                f"eliminats {n} fitxer(s) de cau",
-                f"törölve {n} gyorsítótár fájl",
-            )
-        )
-    )
+    LLMCache().prune()
+    typer.echo(tr("llm.init.t_029483"))
 
 
 @app.command(name="usage")

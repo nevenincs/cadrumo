@@ -12,7 +12,6 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
 from . import (
     VAT_CATALOGUE_2025,
     VATCategory,
@@ -57,7 +56,7 @@ def test_cite_domestic_general_mentions_ley_37_1992() -> None:
 
 def test_regulation_without_citation_raises() -> None:
     """Constructing a :class:`VATRegulation` with zero citations must fail."""
-    translatable: Translatable = {"es": "x", "en": "x", "hu": "x"}
+    translatable: str = "vat.test_rules.translatable"
     with pytest.raises(ValidationError):
         VATRegulation(
             category=VATCategory.UNKNOWN,
@@ -76,8 +75,8 @@ def test_regulation_without_citation_raises() -> None:
 
 def test_regulation_missing_spanish_raises() -> None:
     """The multilingual invariant rejects missing 'es' keys."""
-    translatable_es_ok: Translatable = {"es": "x", "en": "x", "hu": "x"}
-    missing_es: Translatable = {"en": "x", "hu": "x"}
+    translatable_es_ok: str = "vat.test_rules.translatable_es_ok"
+    missing_es: str = "translation"
     citation = VatCitation(
         source=VatCitationSource.LEY_37_1992,
         article="Art. 90.Uno",

@@ -29,11 +29,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_115,
-    label={
-        "es": "Modelo 115 — Retenciones arrendamientos urbanos",
-        "en": "Modelo 115 — Withholdings on urban rentals",
-        "hu": "115-ös űrlap — Városi bérleti forrásadók",
-    },
+    label="entries.portal_m115_retenciones_arrendamientos.label_841139",
     purpose_es=(
         "Autoliquidación periódica de retenciones e ingresos a cuenta "
         "sobre rendimientos de arrendamiento de inmuebles urbanos."

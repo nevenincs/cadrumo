@@ -22,7 +22,6 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core.i18n import Translatable
 from ._kind import FilingDivergenceKind
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
@@ -152,7 +151,7 @@ class ReconciliationReport(BaseModel):
     justificante: JustificanteRefSummary | None
     mismatches: tuple[FieldMismatch, ...] = ()
     reconciled_at: datetime
-    narrative: Translatable
+    narrative: str
     mode: Literal["read"] = "read"
 
 

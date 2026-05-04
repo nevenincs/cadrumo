@@ -18,7 +18,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core.i18n import Translatable
 from ..pdf._shared import ExtractedCasilla
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -89,7 +88,7 @@ class ExtractionWarning(BaseModel):
         code: Short stable identifier for the warning class
             (``"casilla-not-found"``, ``"value-unparseable"``,
             ``"ambiguous-label"``, ...).
-        message: Translatable human-readable description.
+        message: str human-readable description.
         primitive_attempted: Which extraction primitive produced the
             warning — ``"acroform"`` / ``"label_regex"`` / ``"bbox"`` /
             ``"ocr"`` / ``"merged"``.
@@ -99,7 +98,7 @@ class ExtractionWarning(BaseModel):
 
     casilla_id: str | None
     code: str = Field(min_length=1)
-    message: Translatable
+    message: str
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
 
 

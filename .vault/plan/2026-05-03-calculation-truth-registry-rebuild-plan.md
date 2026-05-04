@@ -150,10 +150,55 @@ production-readiness definition above.
 | 17 | 720 | Foreign assets declaration, asset classes, thresholds, reporting conditions, record layouts, legal evidence, export linkage. | Modelo metadata duplicates, declaration extractor truth, standalone casilla projections. | Classify official live/static surface; if no Open simulator or authorized Integration test exists, use static official documentation only and guard all remote state. |
 | 18 | 840 | IAE declaration, census/tax activity data, municipality/activity conditions, source/legal evidence, filing linkage. | Modelo metadata duplicates, declaration extractor truth, censal hydrate data. | Classify official live/static surface; if no Open simulator or authorized Integration test exists, use static official documentation only and guard all remote state. |
 | 19 | 036 | Censal declaration, identity/activity/tax-regime registration sections, official source layout, legal basis, filing linkage. | Censal hydrate tables, declaration extractor truth, modelo metadata duplicates. | Classify official live/static surface; authenticated census modification/presentation surfaces are forbidden unless AEAT publishes an official test mode with synthetic data. |
-| 20 | 037 | Simplified censal declaration if reviewed official evidence exists; otherwise explicit removal from filing-grade support. | Censal hydrate tables, declaration extractor truth, any implied support without official evidence. | Classify official live/static surface; retired or unsupported current surfaces fail closed and cannot be demoed as filing-capable. |
+| 20 | 037 | Simplified censal declaration if reviewed official evidence exists; otherwise explicit removal from filing-grade support. | Censal hydrate tables, declaration extractor truth, any implied support without official evidence. | Classify official live/static surface; if current filing-grade evidence is absent, remove app entry points and retain only evidence-backed historical records. |
 | 21 | 100 | Renta universe: source governance, summary, anexos, income types, reductions, minimos, bases, cuotas, CCAA rules, rental, amortization, deductions, borrador/declaration linkage, export or filing linkage. | All Renta rulesets, Renta helper modules, CCAA hardcoding, rental legal-calculation authority, borrador/extractor casilla truth. | Research Renta WEB Open as read-only cross-reference evidence; authenticated Renta WEB/borrador/data-fiscal flows are forbidden for synthetic calculation tests. |
 
 ## Tasks
+
+- `Mandatory per-step quality and sanitization gate`
+  - [ ] Apply this gate to every phase item, wave item, file-level cleanup item,
+     schema change, TOML change, test change, CLI change, execution record, and
+     review record before marking the item complete.
+  - [ ] Search every touched runtime file, TOML file, test file, fixture helper,
+     CLI surface, and vault execution artefact for development-condition
+     metadata. Remove language about local work conditions, temporary branches,
+     phases as implementation trivia, wave mechanics, loop mechanics, review
+     process, migration mechanics, issue numbers, ticket numbers, PR numbers,
+     pull requests, commit ids, transient dates, personal notes, or agent
+     process.
+  - [ ] Remove migration and compatibility vocabulary from runtime code and
+     tests unless the domain object is genuinely a user-facing legal amendment,
+     filing correction, data import, or storage-format evolution. Banned
+     architecture-cleanup vocabulary includes `legacy`, `shim`, `compat`,
+     `back-compat`, `migration`, `migrated`, `deprecated`, `temporary`,
+     `phase`, `wave`, `loop`, `ADR`, `PR`, `issue`, `ticket`, `epic`, and
+     numbered project references.
+  - [ ] Remove numbered vault references and development-flow references from
+     runtime code, tests, TOML, CLI help, docstrings, comments, and fixtures.
+     Vault documents may keep their own dates and titles, but runtime surfaces
+     must not explain themselves by pointing at vault process artefacts.
+  - [ ] Remove hardcoded support metadata introduced only by the rebuild process:
+     development status enums, disabled placeholders, dormant branches,
+     compatibility aliases, old import aliases, one-off support flags, migration
+     provenance, generated provenance, hydrate provenance, and any fallback
+     whose only purpose is to keep old callers alive.
+  - [ ] Verify comments and docstrings describe stable product behaviour only:
+     what the module does, what legal/source authority it consumes, what it
+     validates, and what it refuses. They must not describe why the current
+     development pass changed something or which plan step caused it.
+  - [ ] Verify tests exercise current behaviour through committed registry data
+     and public APIs. Tests must not assert previous architecture, transition
+     paths, migration steps, deprecated surfaces, old names, or compatibility
+     survival.
+  - [ ] Run static discovery over touched files for the banned vocabulary and
+     metadata patterns. Any hit must be removed or justified as stable domain
+     language before the item is complete.
+  - [ ] Extend `tests/import_contract/test_runtime_authority_hard_cut.py` when a
+     new forbidden metadata embedding or old authority pattern is discovered, so
+     the same class of drift cannot re-enter the repository.
+  - [ ] Run `git diff --check`, focused tests for the touched module, focused
+     import-contract tests, `ruff`, and `ty` for every completed batch. A batch
+     with sanitization drift is not complete even if behaviour tests pass.
 
 - `Phase 0` Live and workbook parity infrastructure buildout
   - [x] Create the workbook/live parity backend under the calculation registry
@@ -257,27 +302,422 @@ production-readiness definition above.
      debit, amendment, cancellation, and document submission.
   - [x] Implement read-only registry inspection and verification CLI commands.
 
-- `Phase 2` Repository shape, shared data, and global deletion gates
-  - [ ] Create `registry/aeat/legal/` for reviewed legal and official-source
-     catalogues.
-  - [ ] Create `registry/aeat/modelos/` for one TOML file per supported modelo.
+- `Phase 1B` Registry schema closure before module replacement
+  - [x] Add explicit schema objects for extraction profiles. A modelo revision
+     must be able to declare parser surfaces, observed artefact kinds, target
+     casillas, confidence requirements, coverage expectations, and source/legal
+     evidence for extraction without making extractors filing authorities.
+  - [x] Add explicit schema objects for live/static AEAT cross-reference
+     decisions. A modelo revision must declare whether its official comparison
+     surface is read-only Open simulator, authorized integration/test service,
+     static official documentation only, or absent from filing-grade support.
+     The decision must carry source refs, legal refs where applicable, guard
+     policy, allowed methods, forbidden actions, and verification tests.
+  - [x] Add explicit schema objects for workbook parity references. A modelo
+     revision must declare official workbook coverage, workbook hash, formula
+     discovery result, runner availability, synthetic fixture ids, output cells,
+     tolerances, and unsupported coverage gaps.
+  - [x] Add explicit schema objects for verification expectations. A modelo
+     revision must declare expected computed casillas, tolerances, rounding
+     policy, coverage thresholds, discrepancy classification rules, and trace
+     requirements.
+  - [x] Add explicit schema objects for application linkage. A modelo revision
+     must declare which filing, review, verification, export, deadline, portal,
+     extractor, and workflow surfaces consume the snapshot. Missing application
+     linkage is a validation failure for filing-grade support.
+  - [ ] Add explicit schema objects for support/removal decisions. If a modelo,
+     revision, export, extraction surface, or filing path lacks official
+     evidence, the registry must represent that by absence from filing-grade
+     support and by deletion from app entry points, not by disabled placeholders
+     or compatibility states.
+  - [x] Extend TOML loading so every new schema object is parsed from
+     `registry/aeat/modelos/*.toml` with strict no-extra validation and no local
+     legal/source catalogues.
+  - [ ] Extend registry validation so extraction profiles, live/static
+     cross-reference decisions, workbook parity refs, verification
+     expectations, application links, and support/removal decisions all resolve
+     legal/source evidence and cannot reference unknown casillas, formulas,
+     parameters, bindings, relations, export fields, or corpus artefacts.
+     - [x] Validate extraction profiles, live/static cross-reference decisions,
+        workbook parity refs, verification expectations, and application links.
+     - [ ] Validate support/removal decisions after their schema is introduced.
+  - [ ] Extend snapshot building so consumers receive typed subviews for
+     calculation, filing schema, extraction, verification, export, deadlines,
+     portals, workbook parity, and live/static AEAT cross-reference.
+     - [x] Add typed snapshot maps for extraction profiles, live/static
+        cross-reference decisions, workbook parity refs, verification
+        expectations, and application links.
+     - [ ] Add or verify typed consumer subviews for deadline and portal
+        consumption.
+  - [ ] Extend the registry CLI so operators can inspect and verify schema
+     closure per modelo/revision: legal closure, source closure, calculation
+     closure, extraction closure, export closure, application-link closure,
+     workbook parity coverage, and remote-state guard policy.
+  - [x] Add behavioural tests for the closed schema. Tests must load committed
+     registry TOML and verify real validation/runtime behaviour; they must not
+     define their own modelo, casilla, legal, source, extraction, or export
+     schema authority.
+  - [ ] Re-run registry validation, runtime calculation tests, workbook/live
+     parity tests, filing schema projection tests, verification tests, export
+     tests, import-contract tests, `ruff`, and `ty` before starting any further
+     model wave or deleting additional old authorities.
+
+- `Phase 2` Central authority buildout and scattered-authority replacement
+  - [ ] Establish the central registry backend as the only filing-grade
+     authority for modelo identity, modelo revisions, casilla definitions,
+     formulas, legal references, source references, parameters, data bindings,
+     temporal applicability, extraction profiles, export layouts, and
+     verification expectations.
+  - [ ] Replace old scattered definition gates with one registry validation
+     pipeline. Application, CLI, filing, verification, export, portal,
+     deadline, VAT, category, rental, and extractor code must ask the registry
+     for validated snapshots instead of checking their own support lists,
+     supported years, casilla sets, formula targets, or filing availability.
+  - [ ] Make the registry validation pipeline the only approval gate before
+     calculation, review, approval, export, filing draft creation, workbook
+     parity, and live/static AEAT cross-reference.
+  - [ ] Define the module handoff contract for every old scattered authority:
+     identify the old definition, implement the replacement registry schema or
+     TOML field, wire the consuming module to the validated snapshot, verify the
+     replacement behaviour, then delete the old definition and its authority
+     gate.
+  - [ ] Complete `registry/aeat/legal/` as the reviewed legal and
+     official-source catalogue root. The directory exists, but it is not
+     complete until BOE references, AEAT manual references, official
+     record-design references, negative citation controls, and source integrity
+     metadata cover every supported modelo wave.
+  - [ ] Complete `registry/aeat/modelos/` as the one-file-per-modelo definition
+     root. The directory exists, but it is not complete until every supported
+     modelo has a reviewed TOML file and every evidence-backed removal is
+     reflected by deletion from filing-grade app entry points.
   - [x] Create validation commands that load every catalogue and every completed
      modelo snapshot in one run.
   - [ ] Delete or hard-quarantine hydrate write paths, casilla corpus writers,
      schema cache writers, BOE extraction writers, export module generation,
      and DR fixture promotion paths from app-facing workflows.
+  - [ ] Delete transient local scripts and one-off migration helpers from the
+     repository root before any commit. They are never plan artefacts, registry
+     artefacts, or runtime support code.
   - [ ] Replace public app calculation entry points so they require validated
      registry snapshots before calculation, review, approval, export, or filing
      draft creation.
+  - [ ] Replace filing test-synthesis entry points with registry-driven fixture
+     construction. Tests may pass input values, but they must not define their
+     own modelo, revision, casilla, formula, legal, or source schema authority.
+  - [ ] Replace workflow draft-input parsing so raw casilla input is accepted
+     only after the target registry snapshot validates that those casillas
+     exist and are legal for the selected period.
+  - [ ] Replace verification and reconciliation entry points so extracted
+     casilla values are compared only against a validated snapshot. Missing
+     snapshot coverage fails hard instead of becoming an extractor-owned
+     casilla truth surface.
   - [ ] Add import-contract tests proving no filing-grade path can reach old
      ruleset registries, model-specific filing builders, generated export
      modules, or hydrate writers.
   - [ ] Add repository-wide checks that fail on process metadata, issue numbers,
      wave names, PR references, hydrate provenance, generated provenance, or
      transient development commentary inside runtime modules and registry TOML.
+  - [x] Add repository-wide checks that fail when tests instantiate
+     filing-grade `ModeloDefinition`, `ModeloRevision`, `CasillaDefinition`,
+     legal catalogue, source catalogue, or TOML schema authority outside
+     committed registry fixtures.
+  - [ ] Add repository-wide checks that fail when runtime modules hardcode legal
+     rates, thresholds, supported filing years, supported revision ids, formula
+     targets, modelo-to-casilla maps, or filing-grade export bindings outside
+     registry TOML.
   - [ ] Add repository-wide remote-state checks proving live AEAT
      cross-reference code cannot post, present, sign, save server-side state,
      pay, direct debit, amend, cancel, or submit documents to AEAT.
+
+### Teardown Replacement Contract
+
+Teardown is the removal of old scattered definitions and authority gates after
+their responsibilities have moved into the central registry backend. It is not
+deletion-only work and it is not a disabled-state mechanism. The old authority
+is removed only as part of a module-specific rebuild record. Each record must
+name the old scattered definition, the old gate, the replacement schema/TOML
+field, the replacement files, the consuming public APIs, the application links,
+the deletion list, the verification commands, and remaining gaps for that
+concrete module. The plan must not classify modules into abstract lifecycle
+states as a substitute for implementation.
+
+If official evidence is absent or contradictory, the affected filing-grade
+surface is removed from supported registry data and from app entry points. No
+disabled placeholder, compatibility alias, shim, legacy import path, or dormant
+runtime branch remains.
+
+No wave can be marked complete by deletion alone. A wave is complete only when
+the replacement owner is present, validated, tested, linked to the relevant
+application surface, and the old authority has been deleted.
+
+| Old authority being removed | Replacement owner | Required rebuild before deletion |
+| --- | --- | --- |
+| Hardcoded modelo catalogue and `ModeloCode` decisions | `registry/aeat/modelos/*.toml` plus registry modelo lookup | Modelo identity, title, cadence, revision windows, and filing availability are loaded from registry data. |
+| Portal-to-modelo applicability | Registry portal/source bindings plus read-only portal catalogue plumbing | Portal modules describe endpoints only; registry data owns which modelo/revision can use them and the allowed read-only cross-reference surface. |
+| Deadline and period applicability hardcoding | Registry temporal applicability plus deadline calculator | Python calculates dates from registry periods; it does not own supported years, cadences, period selectors, or filing applicability. |
+| VAT rates and `declares_in_modelos` mappings | Registry parameters and factual VAT bindings | VAT modules classify factual events; legal rates, effective dates, modelo bindings, and casilla targets come from registry snapshots. |
+| Category-to-casilla mappings | Registry data bindings | Category modules classify expenses and income facts; registry bindings decide if a fact populates a modelo revision. |
+| Rental-to-Modelo-100 casilla mappings and passthroughs | Registry algorithm/data bindings for Modelo 100 | Rental modules produce factual ledgers and traceable aggregates; Modelo 100 registry definitions own target casillas and legal treatment. |
+| Filing builders, import normalizers, complementaria helpers, and test synthesizers | Application filing plumbing over validated `RegistrySnapshot` | Draft creation, amendments, complementarias, imports, and synthetic fixtures require snapshot validation first and fail on coverage gaps. |
+| Verification and reconciliation casilla assumptions | Snapshot-backed reconciliation | Extracted artefact values are observations only; expected casillas, computed targets, tolerances, and coverage come from the snapshot. |
+| Borrador, declaración, justificante extractor casilla targets | Registry extraction profiles plus observed-value parser plumbing | Extractors identify observed values only; they cannot certify completeness, formulas, or filing validity. |
+| Export record specs and generated export layouts | Registry export layouts plus generic encoders | Encoders can format fields; offsets, literals, casilla bindings, signedness, padding, record ids, and layout selection resolve from registry definitions. |
+| Hydrate, generation, schema-cache, BOE-promotion, and DR-promotion paths | Reviewed registry source material and human-authored registry definitions | Runtime and app CLI cannot write legal-rule truth. Any discovery tool output is evidence only and cannot be imported as executable authority. |
+
+- `Phase 2A` Discovered residual authority teardown ledger
+  - [ ] `src/aeat/domain/modelos`: replace the hardcoded `ModeloCode` authority
+     with registry-backed modelo identity and lookup. Surviving
+     Python may expose typed identifiers, but it must not own the supported
+     modelo catalogue.
+  - [ ] `src/aeat/domain/portals`: move filing/census portal-to-modelo
+     applicability into registry-backed portal bindings or source-backed
+     registry metadata. Portal modules may describe read-only portal endpoints,
+     but they must not define filing-grade modelo support, retirement carve-outs,
+     or legal applicability.
+  - [ ] `src/aeat/domain/deadlines`: move modelo cadence, period applicability,
+     deadline windows, and filing-year support into registry temporal
+     applicability. Deadline code becomes a pure calculator over registry
+     effective periods and calendar rules.
+  - [ ] `src/aeat/domain/vat`: remove hardcoded VAT fallback years,
+     `declares_in_modelos` mappings, and VAT-to-modelo/casilla authority.
+     VAT modules may classify factual VAT events; legal rates, effective dates,
+     and declaration bindings belong in registry parameters and bindings.
+  - [ ] `src/aeat/domain/categories`: remove category-to-modelo/casilla mapping
+     authority. Category modules may classify facts; registry bindings decide
+     whether and how facts populate a modelo revision.
+  - [ ] `src/aeat/domain/rental`: remove rental-to-Modelo-100 casilla authority
+     and passthrough behaviour. Rental modules may calculate factual rental
+     ledgers and traceable aggregates; Modelo 100 decides target casillas and
+     legal filing treatment through registry bindings and algorithm bindings.
+  - [ ] `src/aeat/application/filing`: remove any filing builder, testing
+     synthesizer, import normalizer, complementaria helper, or export wrapper
+     that can construct a filing-grade draft without a validated registry
+     snapshot.
+  - [ ] `src/aeat/application/workflow`: remove draft stages that accept
+     arbitrary raw casilla dictionaries as implicit truth. Workflow orchestration
+     must load the snapshot first, validate inputs against the snapshot, and
+     fail before draft creation on coverage gaps.
+  - [ ] `src/aeat/application/verification`: keep only reconciliation plumbing
+     that consumes extracted values and a validated snapshot. It must not infer
+     the supported casilla set, tolerance policy, or computed targets outside
+     the registry.
+  - [ ] `src/aeat/adapters/inbound/borrador`: remove hardcoded Modelo 100
+     summary casilla target lists as filing-grade truth. Borrador extraction may
+     read a registry-provided extraction profile or remain a non-authoritative
+     parser that cannot certify coverage.
+  - [ ] `src/aeat/adapters/inbound/declaracion` and justificante extractors:
+     classify extracted modelo and casilla values as observed artefact data
+     only. They cannot define model support, casilla completeness, calculation
+     targets, or filing validity.
+  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats`: remove old
+     model-specific export layouts and generated-record authority. Generic
+     encoders may remain, but offsets, casilla bindings, record ids, literals,
+     signedness, padding, and layout selection must resolve from registry export
+     layouts.
+  - [ ] `src/aeat/entrypoints/cli`: remove commands and help text that expose
+     old casilla/schema/hydrate/generation flows or imply filing-grade support
+     without registry verification. CLI surfaces must inspect, validate, and
+     run snapshots only.
+  - [ ] `tests` and `tests/import_contract`: remove legacy fixtures that define
+     modelo/casilla schemas, generated rule files, migration state, or previous
+     architecture expectations. Tests must exercise committed registry data and
+     real runtime behaviour.
+  - [ ] `corpus`: classify every retained BOE, AEAT manual, official workbook,
+     record-design, PDF, HTML, and fixture artefact as source evidence,
+     behavioural test fixture, or archive-only material. Corpus files must not
+     be read as runtime legal truth except through reviewed registry source
+     references.
+
+- `Phase 2B` File-level scattered-authority cleanup guardrail
+  - [ ] `src/aeat/domain/modelos/_codes.py`: move supported modelo identity,
+     names, and retirement decisions into `registry/aeat/modelos/*.toml`; keep
+     only registry-backed identifier helpers or delete the module.
+  - [ ] `src/aeat/domain/modelos/__init__.py`: export registry-backed modelo
+     lookup APIs only; remove enum-style catalogue authority.
+  - [ ] `src/aeat/domain/modelos/test_codes.py`: replace enum-member assertions
+     with committed-registry lookup behaviour tests.
+  - [ ] `src/aeat/domain/modelos/test_smoke.py`: replace hardcoded modelo smoke
+     expectations with registry load and validation checks.
+  - [ ] `src/aeat/domain/portals/_metadata.py`: replace `ModeloCode` coupling
+     with registry modelo ids and portal binding references.
+  - [ ] `src/aeat/domain/portals/_registry.py`: remove portal coverage gates
+     that decide filing-grade modelo support; validate only portal catalogue
+     integrity and defer applicability to registry snapshots.
+  - [ ] `src/aeat/domain/portals/_entries/_common.py`: replace
+     `related_modelo=ModeloCode.*` construction with registry id/binding data.
+  - [ ] `src/aeat/domain/portals/_entries/portal_m*.py`: remove per-entry
+     modelo support authority; each filing/census portal entry must be linked
+     through registry portal bindings or remain endpoint metadata only.
+  - [ ] `src/aeat/domain/portals/test_modelo_cross_reference.py`: replace
+     `ModeloCode` coverage tests with registry portal-binding validation tests.
+  - [ ] `src/aeat/domain/portals/test_metadata.py`: replace `ModeloCode`
+     fixture construction with registry-backed metadata validation.
+  - [ ] `src/aeat/domain/portals/test_registry.py`: verify endpoint catalogue
+     behaviour and registry binding closure; do not assert support from portal
+     entries alone.
+  - [ ] `src/aeat/domain/deadlines/_calendar.py`: move modelo cadence, filing
+     windows, and supported periods into registry temporal applicability.
+  - [ ] `src/aeat/domain/deadlines/_applies.py`: remove hardcoded profile-to-
+     modelo applicability gates; consume registry applicability and factual
+     profile bindings.
+  - [ ] `src/aeat/domain/deadlines/_engine.py`: keep date computation plumbing
+     only; input must be validated registry temporal data.
+  - [ ] `src/aeat/domain/deadlines/_models.py`: remove fields or enums that
+     imply supported modelo catalogues outside registry data.
+  - [ ] `src/aeat/domain/deadlines/test_applies.py`: replace hardcoded
+     applicability cases with registry-backed applicability behaviour.
+  - [ ] `src/aeat/domain/deadlines/test_calendar.py`: replace fixed modelo
+     deadline expectations with registry temporal fixtures loaded from TOML.
+  - [ ] `src/aeat/domain/deadlines/test_engine.py`: verify calculator behaviour
+     over registry temporal inputs, not built-in support lists.
+  - [ ] `src/aeat/domain/vat/_catalogue.py`: move legal VAT rates, effective
+     dates, and `declares_in_modelos` authority into registry parameters and
+     bindings.
+  - [ ] `src/aeat/domain/vat/_corpus.py`: remove hardcoded fallback years and
+     runtime fallback catalogue authority.
+  - [ ] `src/aeat/domain/vat/_rates.py`: ensure rate lookup consumes registry
+     parameters or factual VAT data only; no legal rate constants remain here.
+  - [ ] `src/aeat/domain/vat/_lookup.py`: convert lookup to factual
+     classification over registry-provided rates/bindings.
+  - [ ] `src/aeat/domain/vat/_schema.py`: remove schema fields that make VAT
+     records own modelo/casilla declaration targets.
+  - [ ] `src/aeat/domain/vat/_verify.py`: validate factual VAT catalogue
+     integrity only; registry validates legal declaration binding closure.
+  - [ ] `src/aeat/domain/vat/test_*.py`: replace tests that encode VAT rates,
+     model mappings, or fallback years with registry-backed behaviour tests.
+  - [ ] `src/aeat/domain/categories/_registry.py`: remove category-to-casilla
+     and category-to-modelo authority; keep factual category classification.
+  - [ ] `src/aeat/domain/categories/_corpus.py`: remove fallback-to-hardcoded
+     category registry behaviour for filing-grade decisions.
+  - [ ] `src/aeat/domain/categories/_profile.py`: ensure category profile data
+     cannot decide modelo applicability or casilla targets.
+  - [ ] `src/aeat/domain/categories/_proportionality.py`: keep factual
+     proportionality calculations only; legal treatment must be registry-bound.
+  - [ ] `src/aeat/domain/categories/test_*.py`: replace filing-target
+     assertions with factual-classification tests plus registry binding tests.
+  - [ ] `src/aeat/domain/rental/_anexo_c_aggregator.py`: keep factual rental
+     aggregate calculation; remove Modelo 100 target casilla authority.
+  - [ ] `src/aeat/domain/rental/anexo_c_provider.py`: remove passthrough and
+     Modelo 100 merge authority; registry algorithm/data bindings must own the
+     filing treatment.
+  - [ ] `src/aeat/domain/rental/_amortization_ledger.py`: keep factual
+     amortization ledger behaviour and move filing/legal target use to registry
+     algorithm bindings.
+  - [ ] `src/aeat/domain/rental/_expense_rollup.py`: keep factual rollups only;
+     remove any implied Modelo 100 casilla ownership.
+  - [ ] `src/aeat/domain/rental/_tier_resolver.py`: keep factual tier
+     resolution only; legal filing consequences must be registry-bound.
+  - [ ] `src/aeat/domain/rental/_test_*.py`: test factual rental behaviour and
+     registry algorithm binding integration, not caller-supplied casilla
+     passthroughs.
+  - [ ] `src/aeat/application/filing/runtime.py`: replace collection projection
+     with snapshot subviews that include revision, filing period, extraction,
+     verification, export, and application linkage closure.
+  - [ ] `src/aeat/application/filing/__init__.py`: ensure `build_draft` and
+     related public APIs require validated snapshots and cannot construct
+     filing-grade drafts from old schema providers.
+  - [ ] `src/aeat/application/filing/_calculate.py`: keep summary rendering
+     logic only; no next-action or status gate may substitute for registry
+     validation.
+  - [ ] `src/aeat/application/filing/_import.py`: normalize imported values only
+     after snapshot selection validates modelo, period, and casilla ids.
+  - [ ] `src/aeat/application/filing/_export.py`: resolve export layouts from
+     registry snapshots; remove old layout/spec selection paths.
+  - [ ] `src/aeat/application/filing/_complementaria.py`: require registry
+     snapshot and official linkage before amendment/complementaria handling.
+  - [ ] `src/aeat/application/filing/_review.py`: review only snapshot-backed
+     drafts and registry trace outputs.
+  - [ ] `src/aeat/application/filing/_testing_schema.py`: remove test-owned
+     modelo/casilla schema authority; fixture schemas must come from committed
+     registry TOML.
+  - [ ] `src/aeat/application/filing/_testing_synthesize.py`: synthesize inputs
+     against registry snapshots only; do not encode model-specific schemas in
+     test helpers.
+  - [ ] `src/aeat/application/filing/testing.py`: expose test helpers that load
+     real registry data rather than migration-era fixtures.
+  - [ ] `src/aeat/application/filing/reconciliation/_reconcile.py`: compare
+     values through registry verification expectations, not local casilla
+     assumptions.
+  - [ ] `src/aeat/application/filing/test_*.py`: rewrite filing tests to load
+     committed registry TOML and exercise current runtime behaviour only.
+  - [ ] `src/aeat/application/workflow/_adapters.py`: accept raw input payloads
+     only after registry snapshot validation; remove implicit nested casilla
+     truth handling.
+  - [ ] `src/aeat/application/workflow/_engine.py`: make workflow draft,
+     review, approval, and export stages depend on validated registry snapshots.
+  - [ ] `src/aeat/application/workflow/_models.py`: remove workflow status or
+     stage fields that encode old catalogue/support gates.
+  - [ ] `src/aeat/application/workflow/_protocols.py`: replace raw schema
+     provider protocols with snapshot-backed input/provider protocols.
+  - [ ] `src/aeat/application/workflow/test_*.py`: verify workflow orchestration
+     over registry snapshots, not hardcoded model/casilla dictionaries.
+  - [ ] `src/aeat/application/verification/_schema.py`: align discrepancy and
+     coverage schema with registry verification expectations.
+  - [ ] `src/aeat/application/verification/_verify.py`: remove local tolerance,
+     coverage, expected-casilla, and classification authority; consume snapshot
+     verification subviews.
+  - [ ] `src/aeat/application/verification/test_verify.py`: load registry TOML
+     and assert actual verification behaviour against snapshot expectations.
+  - [ ] `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`:
+     replace hardcoded summary casilla list with registry extraction profile
+     data or reduce the file to observed-value parsing only.
+  - [ ] `src/aeat/adapters/inbound/borrador/_parser.py`: require registry
+     extraction profile when caller asks for coverage or filing-grade use.
+  - [ ] `src/aeat/adapters/inbound/borrador/_schema.py`: mark parsed values as
+     observations and remove any implied Modelo 100 completeness authority.
+  - [ ] `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`: test
+     parser behaviour against registry extraction profiles, not hardcoded
+     summary rules.
+  - [ ] `src/aeat/adapters/inbound/declaracion/_parser.py`: parse observed
+     modelo/casilla values only; registry validates support and completeness.
+  - [ ] `src/aeat/adapters/inbound/declaracion/_schema.py`: ensure declaration
+     schema cannot represent filing-grade model completeness by itself.
+  - [ ] `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`: test
+     parser boundaries without encoding model support or casilla truth.
+  - [ ] `src/aeat/adapters/inbound/justificante/_extract.py`: keep receipt
+     extraction as observed artefact data; no support or formula authority.
+  - [ ] `src/aeat/adapters/inbound/justificante/_parser.py`: same observed-data
+     boundary as extract; registry owns filing-grade interpretation.
+  - [ ] `src/aeat/adapters/inbound/justificante/test_extract_modelos.py`:
+     verify observed extraction only and move support checks to registry tests.
+  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`:
+     remove model-specific layout authority; keep generic field-format
+     primitives only.
+  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_serialise.py`:
+     serialize registry export layout subviews only.
+  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`:
+     deserialize into observed field/casilla values and let registry validate
+     layout meaning.
+  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/test_*.py`: test
+     generic encoder/decoder behaviour plus registry layout integration, not
+     hardcoded modelo layouts.
+  - [ ] `src/aeat/entrypoints/cli/registry.py`: expose schema-closure,
+     model-closure, source/legal, extraction, verification, export, workbook,
+     and remote-state guard validation commands.
+  - [ ] `src/aeat/entrypoints/cli/filing/__init__.py`: require registry
+     snapshots for calculate, import, verify, review, approve, and export
+     commands.
+  - [ ] `src/aeat/entrypoints/cli/_declaration.py`: remove command behaviour
+     that edits or exports casillas without registry snapshot validation.
+  - [ ] `src/aeat/entrypoints/cli/deadlines/*.py`: consume registry temporal
+     applicability and remove CLI-level model support gates.
+  - [ ] `src/aeat/entrypoints/cli/categories.py`: expose factual category tools
+     only; no filing target or casilla implication.
+  - [ ] `src/aeat/entrypoints/cli/test_registry_cli.py`: assert registry
+     closure commands over committed TOML.
+  - [ ] `src/aeat/entrypoints/cli/filing/test_filing_cli.py`: assert filing CLI
+     refuses coverage gaps and succeeds only through validated snapshots.
+  - [ ] `tests/import_contract/test_runtime_authority_hard_cut.py`: extend
+     guards for every removed file/module authority in this Phase 2B list.
+  - [ ] `tests/import_contract/application/filing/test_testing.py`: remove
+     migration/test-owned casilla schema expectations and use committed registry
+     data.
+  - [ ] `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_*.py`:
+     classify generators as parser fixtures only; they cannot define legal
+     schema, casilla completeness, formulas, or model support.
+  - [ ] `tests/fixtures/financial/n26/_generate.py` and
+     `tests/fixtures/justificantes/_generate.py`: keep fixture generation
+     outside registry authority and guard against generated legal-rule imports.
 
 - `Phase 3` Shared legal/source catalogue migration
   - [ ] Migrate BOE normative references from `corpus/normatives` into reviewed
@@ -919,8 +1359,9 @@ production-readiness definition above.
   - [ ] Research and verify the official AEAT and BOE basis for simplified censal
      declaration, historical support, retirement, and transition to Modelo 036.
   - [ ] Classify the Modelo 037 live AEAT cross-reference surface and add
-     remote-state guard tests; retired, unsupported, authenticated, or stateful
-     surfaces fail closed and cannot be demoed as filing-capable.
+     remote-state guard tests. If current filing-grade evidence is absent,
+     remove Modelo 037 filing app entry points and keep only historical
+     evidence records that cannot be invoked as filing support.
   - [ ] Write `registry/aeat/modelos/037.toml` with every reviewed historical or
      retired revision, casilla or record definition, validation rule, legal
      reference, source reference, and filing-history linkage.

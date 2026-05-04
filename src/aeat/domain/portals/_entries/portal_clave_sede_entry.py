@@ -19,11 +19,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Acceso Cl@ve en la Sede",
-        "en": "Cl@ve gateway on Sede",
-        "hu": "Cl@ve beléptető oldal a székhelyen",
-    },
+    label="entries.portal_clave_sede_entry.label_975912",
     purpose_es="Punto de entrada a Cl@ve desde la Sede Electrónica (redirige a clave.gob.es).",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Sede Cl@ve gateway page."""

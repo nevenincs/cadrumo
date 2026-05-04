@@ -46,6 +46,17 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
     assert snapshot.revision.id == "2019-y-siguientes"
     assert "rd-439-2007:art-110" in snapshot.legal
     assert "aeat-dr-130-2019-v12" in snapshot.sources
+    assert tuple(snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
+    assert tuple(snapshot.live_cross_references) == ("modelo-130-static-official",)
+    assert tuple(snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
+    assert tuple(snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
+    assert set(snapshot.application_links) == {
+        "modelo-130-calculation",
+        "modelo-130-extractor",
+        "modelo-130-filing",
+        "modelo-130-portal-cross-reference",
+        "modelo-130-verification",
+    }
 
 
 def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
@@ -121,3 +132,33 @@ def test_validator_rejects_missing_legal_reference() -> None:
 
     with pytest.raises(RegistryValidationError, match="unknown legal id"):
         RegistryValidator(missing_legal, source_root=PROJECT_ROOT).validate_modelo(modelo)
+
+
+def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    profile = revision.extraction_profiles[0].model_copy(update={"target_casillas": ("missing",)})
+    mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
+
+    with pytest.raises(RegistryValidationError, match=r"extraction profile .* unknown casilla"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_requires_application_link_for_extraction_profile() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    links = tuple(link for link in revision.application_links if link.surface != "extractor")
+    mutated = revision.model_copy(update={"application_links": links})
+
+    with pytest.raises(RegistryValidationError, match="extraction profiles require an extractor application link"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_requires_application_link_for_formulas() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    links = tuple(link for link in revision.application_links if link.surface != "calculation")
+    mutated = revision.model_copy(update={"application_links": links})
+
+    with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))

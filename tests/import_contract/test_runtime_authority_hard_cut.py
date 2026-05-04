@@ -98,10 +98,15 @@ BANNED_TEST_SCHEMA_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("test-owned modelo object", re.compile(r"\bModeloDefinition\s*\(")),
     ("test-owned modelo revision object", re.compile(r"\bModeloRevision\s*\(")),
     ("test-owned casilla object", re.compile(r"\bCasillaDefinition\s*\(")),
+    ("test-owned legal reference object", re.compile(r"\bLegalReference\s*\(")),
+    ("test-owned source reference object", re.compile(r"\bSourceReference\s*\(")),
+    ("test-owned registry catalogue object", re.compile(r"\bRegistryCatalogues\s*\(")),
     ("test-owned wire modelo object", re.compile(r"\bWireModeloDefinition\s*\(")),
     ("test-owned wire casilla object", re.compile(r"\bWireCasilla\s*\(")),
     ("test-owned modelo TOML", re.compile(r"^\s*\[modelo\]\s*$", re.MULTILINE)),
     ("test-owned casilla TOML", re.compile(r"^\s*\[\[revisions\.[^\]]+\.casillas\]\]\s*$", re.MULTILINE)),
+    ("test-owned legal TOML", re.compile(r"^\s*\[legal\.", re.MULTILINE)),
+    ("test-owned source TOML", re.compile(r"^\s*\[sources\.", re.MULTILINE)),
 )
 
 
@@ -136,7 +141,7 @@ def test_deleted_casilla_authority_paths_do_not_exist(path: Path) -> None:
     assert not path.exists(), f"{path.relative_to(PROJECT_ROOT)} must not be restored"
 
 
-def test_runtime_authority_surfaces_do_not_encode_process_or_legacy_metadata() -> None:
+def test_runtime_authority_surfaces_do_not_encode_process_or_obsolete_metadata() -> None:
     failures: list[str] = []
 
     for path in _authority_files():

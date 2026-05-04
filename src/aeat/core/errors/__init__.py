@@ -9,9 +9,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, ClassVar
 
-if TYPE_CHECKING:
-    from ..i18n import Translatable
-
 
 class AeatError(Exception):
     """Base exception for all AEAT domain errors."""
@@ -32,7 +29,7 @@ class AeatError(Exception):
         *,
         context: Mapping[str, object] | None = None,
         suggestion: str | None = None,
-        translated_message: Translatable | None = None,
+        translated_message: str | None = None,
     ) -> None:
         """Construct a domain error with optional structured metadata.
 
@@ -50,7 +47,7 @@ class AeatError(Exception):
             super().__init__(message)
         self.context: dict[str, object] | None = dict(context) if context is not None else None
         self.suggestion: str | None = suggestion
-        self.translated_message: Translatable | None = translated_message
+        self.translated_message: str | None = translated_message
 
 
 class AeatObservabilityError(AeatError):

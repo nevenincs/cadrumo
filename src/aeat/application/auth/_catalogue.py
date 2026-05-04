@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-from ...core.i18n import Translatable, TranslationError, require_authoritative
+from pydantic import BaseModel, ConfigDict, Field
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
@@ -34,134 +32,38 @@ class AuthProviderListing(BaseModel):
             ``"clave-movil"``, ``"clave-permanente"``). The CLI passes
             this verbatim through ``--provider``; the configure /
             login commands resolve it against the backend registry.
-        label: Multilingual display label, Spanish authoritative.
+        label: Translation key for display label.
         availability: Closed :class:`AuthProviderAvailability`.
-        description: Multilingual one-paragraph operator-facing
+        description: Translation key for one-paragraph operator-facing
             description.
     """
 
     model_config = _STRICT_FROZEN
 
     id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
-    label: Translatable
+    label: str = Field(min_length=1)
     availability: AuthProviderAvailability
-    description: Translatable
-
-    @field_validator("label", "description")
-    @classmethod
-    def _require_authoritative(cls, value: Translatable) -> Translatable:
-        """Reject listings whose label or description omits authoritative Spanish."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
-        return value
-
-
-_CERTIFICATE_LABEL: Translatable = {
-    "es": "Certificado digital",
-    "en": "Digital certificate",
-    "ca": "Certificat digital",
-    "hu": "Digitális tanúsítvány",
-}
-
-_CERTIFICATE_DESCRIPTION: Translatable = {
-    "es": (
-        "Autenticación basada en un certificado X.509 (FNMT-RCM u "
-        "otra autoridad reconocida). Compatible con todos los flujos "
-        "de la sede electrónica."
-    ),
-    "en": ("X.509 client certificate authentication (FNMT-RCM or any recognised authority). Supports every Sede flow."),
-    "ca": (
-        "Autenticació basada en certificat X.509 (FNMT-RCM o una "
-        "altra autoritat reconeguda). Compatible amb tots els fluxos "
-        "de la seu electrònica."
-    ),
-    "hu": (
-        "X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy "
-        "más elismert hatóság). A Sede minden folyamatát támogatja."
-    ),
-}
-
-_CLAVE_MOVIL_LABEL: Translatable = {
-    "es": "Cl@ve Móvil",
-    "en": "Cl@ve Móvil",
-    "ca": "Cl@ve Móvil",
-    "hu": "Cl@ve Móvil",
-}
-
-_CLAVE_MOVIL_DESCRIPTION: Translatable = {
-    "es": (
-        "Autenticación con aprobación push en el móvil del titular "
-        "registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y "
-        "el dispositivo emparejado."
-    ),
-    "en": (
-        "Push-approval authentication via the holder's phone "
-        "registered with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, "
-        "and a paired device."
-    ),
-    "ca": (
-        "Autenticació amb aprovació push al mòbil del titular "
-        "registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el "
-        "dispositiu vinculat."
-    ),
-    "hu": (
-        "Cl@ve-rendszerben regisztrált mobilon megjelenő "
-        "push-jóváhagyásos hitelesítés. DNI/NIE, Cl@ve-regisztráció és "
-        "párosított készülék szükséges."
-    ),
-}
-
-_CLAVE_PERMANENTE_LABEL: Translatable = {
-    "es": "Cl@ve Permanente",
-    "en": "Cl@ve Permanente",
-    "ca": "Cl@ve Permanente",
-    "hu": "Cl@ve Permanente",
-}
-
-_CLAVE_PERMANENTE_DESCRIPTION: Translatable = {
-    "es": (
-        "Autenticación con usuario, contraseña reforzada y código SMS "
-        "de Cl@ve Permanente. No está disponible en esta instalación; "
-        "``configure`` y ``login`` se rechazan."
-    ),
-    "en": (
-        "Username + reinforced-password + SMS authentication via "
-        "Cl@ve Permanente. Not available in this installation, so "
-        "``configure`` and ``login`` refuse the provider."
-    ),
-    "ca": (
-        "Autenticació amb usuari, contrasenya reforçada i codi SMS de "
-        "Cl@ve Permanente. No està disponible en aquesta instal·lació, "
-        "així que ``configure`` i ``login`` es rebutgen."
-    ),
-    "hu": (
-        "Cl@ve Permanente felhasználónév + megerősített jelszó + "
-        "SMS-kód alapú hitelesítés. Ebben a telepítésben nem érhető el, "
-        "ezért a ``configure`` és ``login`` parancsokat elutasítja."
-    ),
-}
+    description: str = Field(min_length=1)
 
 
 AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="certificate",
-        label=_CERTIFICATE_LABEL,
+        label="auth.catalogue.certificate_label",
         availability=AuthProviderAvailability.AVAILABLE,
-        description=_CERTIFICATE_DESCRIPTION,
+        description="auth.catalogue.certificate_description",
     ),
     AuthProviderListing(
         id="clave-movil",
-        label=_CLAVE_MOVIL_LABEL,
+        label="auth.catalogue.clave_movil_label",
         availability=AuthProviderAvailability.AVAILABLE,
-        description=_CLAVE_MOVIL_DESCRIPTION,
+        description="auth.catalogue.clave_movil_description",
     ),
     AuthProviderListing(
         id="clave-permanente",
-        label=_CLAVE_PERMANENTE_LABEL,
+        label="auth.catalogue.clave_permanente_label",
         availability=AuthProviderAvailability.UNAVAILABLE,
-        description=_CLAVE_PERMANENTE_DESCRIPTION,
+        description="auth.catalogue.clave_permanente_description",
     ),
 )
 """Catalogue of auth provider entries in display order."""

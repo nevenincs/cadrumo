@@ -29,11 +29,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     related_modelo=ModeloCode.MODELO_100,
-    label={
-        "es": "Renta Web — Borrador IRPF",
-        "en": "Renta Web — IRPF pre-filled draft",
-        "hu": "Renta Web — IRPF előzetes vázlat",
-    },
+    label="entries.portal_renta_web_borrador.label_255206",
     purpose_es="Acceso al borrador y servicio Renta Web para la declaración del IRPF.",
     notes_es=("Ruta WebLogic: puede rotar entre campañas Renta.",),
 )

@@ -28,11 +28,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_123,
-    label={
-        "es": "Modelo 123 — Retenciones capital mobiliario",
-        "en": "Modelo 123 — Withholdings on movable capital",
-        "hu": "123-as űrlap — Tőkejövedelem forrásadói",
-    },
+    label="entries.portal_m123_retenciones_capital.label_392660",
     purpose_es=(
         "Autoliquidación periódica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario."
     ),

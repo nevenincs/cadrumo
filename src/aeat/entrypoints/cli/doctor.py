@@ -51,7 +51,7 @@ from ...adapters.outbound.google import (
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import PROJECT_ROOT, Settings
 from ...core.logging import get_logger
-from ._i18n import t, tr
+from ._i18n import tr
 
 _log = get_logger(__name__)
 
@@ -1148,29 +1148,7 @@ def doctor() -> None:
     console.print(render_table(rows))
     failing_required = [r for r in rows if r.required and r.state in (State.MISSING, State.PARTIAL, State.WARN)]
     if failing_required:
-        n = len(failing_required)
-        console.print(
-            "[red]doctor: "
-            + tr(
-                t(
-                    f"{n} comprobación(es) requerida(s) fallando",
-                    f"{n} required check(s) failing",
-                    f"{n} comprovació(ns) requerida(es) fallant",
-                    f"{n} kötelező ellenőrzés sikertelen",
-                )
-            )
-            + "[/]"
-        )
+        len(failing_required)
+        console.print("[red]doctor: " + tr("cli.doctor.t_480369") + "[/]")
         raise typer.Exit(code=1)
-    console.print(
-        "[green]doctor: "
-        + tr(
-            t(
-                "todas las comprobaciones requeridas correctas",
-                "all required checks passing",
-                "totes les comprovacions requerides correctes",
-                "minden kötelező ellenőrzés sikeres",
-            )
-        )
-        + "[/]"
-    )
+    console.print("[green]doctor: " + tr("cli.doctor.t_599915") + "[/]")

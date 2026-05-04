@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -70,8 +69,11 @@ def _build_settings(tmp_path: Path) -> Settings:
     )
 
 
+from ...core.i18n import Translatable
+
+
 def _summary(text: str = "demo") -> Translatable:
-    return {"es": text, "en": text, "hu": text}
+    return Translatable("translation")
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -363,7 +365,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
-    summary_en = items[0].summary.get("en", "")
+    summary_en = items[0].summary
     assert "DRAFT" in summary_en
 
 
@@ -385,7 +387,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
     assert items[0].draft_id == "d_stale"
-    summary_en = items[0].summary.get("en", "")
+    summary_en = items[0].summary
     assert "APPROVAL_STALE" in summary_en
     assert items[0].drill_command.startswith("aeat review show ")
 

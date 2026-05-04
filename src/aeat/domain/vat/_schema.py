@@ -7,7 +7,7 @@ mirroring the pattern established by :mod:`aeat.domain.normatives._schema`.
 
 Closed catalogues (:class:`VATCategory`, :class:`EUMemberState`,
 :class:`VATRateKind`, :class:`VatCitationSource`) are :class:`enum.StrEnum`
-subclasses. Multilingual fields use :class:`aeat.core.i18n.Translatable` and
+subclasses. Multilingual fields use :class:`aeat.core.i18n.str` and
 the authoritative Spanish (``es``) key is enforced at construction time on
 every :class:`VATRegulation`.
 """
@@ -27,8 +27,6 @@ from pydantic import (
     StringConstraints,
     model_validator,
 )
-
-from ...core.i18n import Translatable
 
 
 class VATCategory(StrEnum):
@@ -162,8 +160,8 @@ _ManualRef = Annotated[
 """Free-form reference to a Manual práctico IVA rule id or section reference."""
 
 
-def _require_spanish(translatable: Translatable, field_name: str) -> None:
-    """Assert a :class:`aeat.core.i18n.Translatable` carries the ``es`` key.
+def _require_spanish(translatable: str, field_name: str) -> None:
+    """Assert a :class:`aeat.core.i18n.str` carries the ``es`` key.
 
     Args:
         translatable: The translatable mapping under validation.
@@ -172,7 +170,7 @@ def _require_spanish(translatable: Translatable, field_name: str) -> None:
     Raises:
         :exc:`ValueError`: If the ``es`` key is missing or empty.
     """
-    if not translatable.get("es"):
+    if not translatable:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
@@ -304,12 +302,12 @@ class VATRegulation(_VatStrictFrozen):
     """
 
     category: VATCategory = Field(description="The VAT situation codified by this rule.")
-    label: Translatable = Field(description="Short human-readable label.")
-    description: Translatable = Field(description="One-paragraph plain-language description.")
-    triggers_when: Translatable = Field(
+    label: str = Field(description="Short human-readable label.")
+    description: str = Field(description="One-paragraph plain-language description.")
+    triggers_when: str = Field(
         description="Plain-language description of when this rule fires.",
     )
-    iva_treatment: Translatable = Field(
+    iva_treatment: str = Field(
         description="Plain-language description of the fiscal treatment.",
     )
     declares_in_modelos: tuple[_ModeloRef, ...] = Field(

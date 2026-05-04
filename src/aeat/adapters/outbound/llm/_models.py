@@ -9,8 +9,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.i18n import normalize_language_code
-
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
 
@@ -65,7 +63,7 @@ class LLMRequest(BaseModel):
 
         if value is None:
             return None
-        return normalize_language_code(value)
+        return value
 
 
 class LLMResponse(BaseModel):
@@ -235,7 +233,7 @@ class Translation(BaseModel):
     def validate_translation_language(cls, value: str) -> str:
         """Validate translation language codes."""
 
-        return normalize_language_code(value)
+        return value
 
 
 class CacheKey(BaseModel):

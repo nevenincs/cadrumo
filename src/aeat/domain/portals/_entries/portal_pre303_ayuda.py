@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     related_modelo=ModeloCode.MODELO_303,
-    label={
-        "es": "Pre303 — Ayuda IVA prefilled",
-        "en": "Pre303 — Pre-filled VAT helper",
-        "hu": "Pre303 — Előzetes IVA kitöltő segéd",
-    },
+    label="entries.portal_pre303_ayuda.label_935129",
     purpose_es="Servicio de ayuda Pre303: prefilled de casillas del Modelo 303 a partir de libros registro y SII.",
 )
 """Portal entry for the Pre303 pre-filled VAT helper (Modelo 303 borrador)."""

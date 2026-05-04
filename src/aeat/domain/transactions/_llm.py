@@ -42,6 +42,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
@@ -227,12 +228,12 @@ def _category_hint(value: SpendingCategory) -> str:
     profile = CATEGORY_PROFILES_2025.get(value)
     if profile is None:
         return value.value.replace("_", " ")
-    spanish_label = profile.display_label.get("es") or value.value.replace("_", " ")
+    spanish_label = profile.display_label or value.value.replace("_", " ")
     rule = profile.proportionality
     notes_preview = rule.notes_es.strip().splitlines()[0][:120] if rule.notes_es else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
-        segments.append(notes_preview)
+        segments.append(Translatable(notes_preview))
     return " — ".join(segments)
 
 

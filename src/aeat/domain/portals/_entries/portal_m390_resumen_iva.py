@@ -27,11 +27,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_390,
-    label={
-        "es": "Modelo 390 — Resumen anual IVA",
-        "en": "Modelo 390 — Annual VAT summary",
-        "hu": "390-es űrlap — Éves IVA-összefoglaló",
-    },
+    label="entries.portal_m390_resumen_iva.label_101607",
     purpose_es="Declaración-resumen anual del IVA (complementa a las autoliquidaciones periódicas del Modelo 303).",
 )
 """Portal entry for Modelo 390 (annual VAT summary)."""

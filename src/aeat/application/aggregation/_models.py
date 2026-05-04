@@ -19,7 +19,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
 from ...domain.deadlines import PeriodKind
-from ._errors import AggregationPeriodError, t
+from ._errors import AggregationPeriodError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
@@ -82,11 +82,7 @@ class Period(BaseModel):
             match = _PERIOD_RE.fullmatch(text)
             if match is None:
                 raise AggregationPeriodError(
-                    translated_message=t(
-                        "Periodo no valido. Usa YYYY-Qn, YYYYQn, YYYY-MM o YYYY.",
-                        "Invalid period. Use YYYY-Qn, YYYYQn, YYYY-MM, or YYYY.",
-                        "Ervenytelen idoszak. Hasznald: YYYY-Qn, YYYYQn, YYYY-MM vagy YYYY.",
-                    ),
+                    translated_message="aggregation.models.t_944805",
                     context={"period": data},
                 )
             year = int(match.group("year"))

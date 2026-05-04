@@ -54,9 +54,31 @@ def build_snapshot(
             for field in record.fields:
                 legal_ids.update(field.legal_refs)
                 source_ids.update(field.source_refs)
+    for profile in revision.extraction_profiles:
+        legal_ids.update(profile.legal_refs)
+        source_ids.update(profile.source_refs)
+    for cross_reference in revision.live_cross_references:
+        legal_ids.update(cross_reference.legal_refs)
+        source_ids.update(cross_reference.source_refs)
+    for workbook in revision.workbook_parity_refs:
+        legal_ids.update(workbook.legal_refs)
+        source_ids.update(workbook.source_refs)
+    for expectation in revision.verification_expectations:
+        legal_ids.update(expectation.legal_refs)
+        source_ids.update(expectation.source_refs)
+    for link in revision.application_links:
+        legal_ids.update(link.legal_refs)
+        source_ids.update(link.source_refs)
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
         legal={ref: catalogues.legal[ref] for ref in sorted(legal_ids)},
         sources={ref: catalogues.sources[ref] for ref in sorted(source_ids)},
+        extraction_profiles={profile.id: profile for profile in revision.extraction_profiles},
+        live_cross_references={
+            cross_reference.id: cross_reference for cross_reference in revision.live_cross_references
+        },
+        workbook_parity_refs={workbook.id: workbook for workbook in revision.workbook_parity_refs},
+        verification_expectations={expectation.id: expectation for expectation in revision.verification_expectations},
+        application_links={link.id: link for link in revision.application_links},
     )
