@@ -908,7 +908,7 @@ def _resolve_ruleset_for_filing(
     filing_period: str,
     filing_ejercicio: str,
 ):
-    """Reject legacy ruleset resolution from the CLI import path."""
+    """Return no formula source until registry-backed verification is wired."""
 
     _ = (filing_modelo, filing_period, filing_ejercicio)
     return None
