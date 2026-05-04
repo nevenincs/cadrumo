@@ -238,19 +238,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.inbound.declaracion._errors.NoExtractorRegisteredError",
-        ErrorCode(
-            code="ERROR_DECLARACION_NO_EXTRACTOR_REGISTERED",
-            category=ErrorCategory.ERROR,
-            default_message_es="No hay un extractor registrado para la plantilla detectada.",
-            default_message_en="Raised when no concrete extractor exists for the detected template.",
-            default_message_hu="A felismert sablonhoz nincs regisztralt kinyero.",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError",
         ErrorCode(
             code="ERROR_DECLARACION_TEMPLATE_NOT_DETECTED",

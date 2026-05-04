@@ -3,9 +3,8 @@
 Detection resolves a
 :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
 from document content and caller overrides. That tuple is a detected
-template identity only; it no longer selects a legacy Python extractor
-registry entry. Extractor dispatch fails closed until declaration parsing
-is backed by validated registry snapshots.
+template identity only. Casilla-complete extraction requires validated
+registry snapshots.
 """
 
 from __future__ import annotations
@@ -15,7 +14,6 @@ from pathlib import Path
 from ....core.logging import get_logger
 from ._detect import detect_template_revision
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
-from ._extractors import get_extractor
 from ._schema import DeclaracionFiling, TemplateRevision
 
 _logger = get_logger(__name__)
@@ -33,7 +31,8 @@ def parse_declaracion(
     Resolves the
     :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
     triple by combining auto-detection with any caller-supplied
-    overrides, then enters the fail-closed extractor dispatch boundary.
+    overrides, then requires a validated registry-backed extraction
+    implementation.
 
     Args:
         pdf_path: Path to the declaración PDF.
@@ -49,12 +48,10 @@ def parse_declaracion(
         :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
             When auto-detection fails and the caller did not supply both
             ``modelo_override`` and ``año_override``.
-        :exc:`aeat.adapters.inbound.declaracion._errors.NoExtractorRegisteredError`:
-            When extractor dispatch requires validated registry snapshots.
         :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
             For other parse errors (PDF not found, empty text, required
             header field missing, override conflicts with detected
-            metadata).
+            metadata, or missing registry-backed extraction coverage).
     """
     path = Path(pdf_path)
 
@@ -73,15 +70,10 @@ def parse_declaracion(
         template.detected_from,
     )
 
-    extractor = get_extractor(template)
-    filing = extractor.extract(path)
-    _logger.info(
-        "parse_declaracion: parsed %s modelo=%s año=%s",
-        path.name,
-        template.modelo,
-        template.año,
+    raise DeclaracionParseError(
+        "declaracion extraction requires validated registry snapshots "
+        f"for modelo={template.modelo} año={template.año} revision={template.revision}"
     )
-    return filing
 
 
 def _resolve_template(

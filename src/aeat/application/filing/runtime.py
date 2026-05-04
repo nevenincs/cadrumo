@@ -1,8 +1,7 @@
 """Production runtime helpers for :mod:`aeat.application.filing`.
 
 Exposes concrete profile helpers used by the CLI and workflow surfaces.
-The production schema provider is intentionally fail-closed until it is
-backed by validated registry snapshots.
+The production schema provider requires validated registry snapshots.
 
 The filing runtime must not depend on
 :mod:`aeat.application.filing.testing`; this module is the production
@@ -18,8 +17,7 @@ Key entry points:
   profile shape without deriving legal filing obligations.
 * :func:`load_default_filing_profile` — loads the configured default
   profile JSON and returns a runtime profile.
-* :func:`build_runtime_schema_provider` — rejects legacy static schema
-  providers until registry-backed snapshots are available.
+* :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 """
 
 from __future__ import annotations
@@ -133,17 +131,15 @@ def load_default_filing_profile(
 
 
 def build_runtime_schema_provider() -> CasillaSchemaProvider:
-    """Reject legacy production filing schemas.
+    """Require registry-owned production filing schemas.
 
     Filing-grade draft creation must be backed by validated registry
-    snapshots. The previous provider imported model-specific static
-    builder schemas, which shadowed the central registry and allowed
-    production calculation paths to run without legal-source closure.
+    snapshots. Model-specific static builder schemas are not an
+    authority for production calculation paths.
     """
 
     raise FilingBuilderError(
-        "runtime filing schema provider requires validated registry snapshots; "
-        "legacy static filing schemas are disabled",
+        "runtime filing schema provider requires validated registry snapshots; static filing schemas are unavailable",
     )
 
 

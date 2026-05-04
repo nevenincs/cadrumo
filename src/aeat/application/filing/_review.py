@@ -554,7 +554,7 @@ def _schema_formula_fingerprint(
 
 def _resolve_ruleset_id(modelo: str, period: str) -> str:
     _ = (modelo, period)
-    raise FilingDraftError("approval basis requires a validated registry snapshot; legacy rulesets are disabled")
+    raise FilingDraftError("approval basis requires a validated registry snapshot; formula rulesets are unavailable")
 
 
 def _sha256_payload(payload: object) -> str:

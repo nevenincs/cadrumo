@@ -136,7 +136,7 @@ def test_classified_by_accepts_only_whitelisted_shapes() -> None:
         )
 
 
-def test_business_classification_rejects_legacy_unclassified_literal() -> None:
+def test_business_classification_rejects_unclassified_literal() -> None:
     """`BusinessClassification("UNCLASSIFIED")` must raise."""
     with pytest.raises(ValueError):
         BusinessClassification("UNCLASSIFIED")

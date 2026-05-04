@@ -19,8 +19,7 @@ _HEADER_MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*(?P<modelo>\d{3}[A-Z]?)", re.
 _HEADER_EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*(?P<ejercicio>\d{4})", re.IGNORECASE)
 # Real AEAT declaraciones print ``Aprobado por Orden HAC/{number}/{año}`` on
 # the footer; when present it pins the template revision precisely. Absent,
-# we fall back to a ``{ejercicio}.01`` sentinel. Extractor dispatch remains
-# fail-closed until validated registry snapshots own supported revisions.
+# we fall back to a ``{ejercicio}.01`` sentinel.
 _ORDEN_HAC_RE = re.compile(
     r"Orden\s+HAC/\s*(?P<number>\d+)\s*/\s*(?P<año>\d{4})",
     re.IGNORECASE,
@@ -37,10 +36,8 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
        ``"{año}.orden-{N}"``.
     2. Else fall back to ``"{ejercicio}.01"``.
 
-    The fallback is deliberately narrow: the registry refuses to resolve
-    any revision it has not explicitly registered, so a spurious fallback
-    produces a readable ``NoExtractorRegisteredError`` rather than a silent
-    mis-extraction because extractor dispatch is fail-closed.
+    The fallback is deliberately narrow: the registry must refuse any
+    revision it has not explicitly registered.
 
     The ``Ejercicio`` stamp is searched across the first two pages of
     the header cluster — some Modelo 100 pre-2022 justificantes print
@@ -50,7 +47,7 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
     pages = extract_pages_text(pdf_path)
     if not pages:
         return None
-    # Union of pages 1-2 header region — 2021 legacy Modelo 100 PDFs print
+    # Union of pages 1-2 header region: some Modelo 100 PDFs print
     # the ``Ejercicio YYYY`` stamp on page 2, not page 1.
     head_span = "\n".join(pages[: min(2, len(pages))])[:4000]
     tail = pages[-1][-2000:]
