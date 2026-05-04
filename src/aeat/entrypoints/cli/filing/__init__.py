@@ -14,16 +14,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, cast
 
 import typer
+from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
-from ....application.auth import AuthProviderDescription, AuthProviderKind
 from ....application.filing import (
     FilingAmendment,
     FilingAmendmentError,
@@ -46,8 +45,9 @@ from ....application.filing.runtime import build_runtime_schema_provider, load_d
 from ....core.config import load_settings
 from ....core.i18n import get_translation
 from ....core.logging import get_logger
+from ....core.paths import resolve_record_json_path
 from ....domain.justificante import JustificanteError
-from ....domain.submission import SubmissionEngine
+from ....domain.submission import SubmissionError, SubmittedFiling
 from .._i18n import output_language as _output_language
 from .._i18n import t as _t
 from .._i18n import tr as _msg
@@ -78,39 +78,23 @@ def _drafts_dir() -> Path:
     return path
 
 
-def _submission_engine() -> SubmissionEngine:
-    """Return a submission engine instance for amendment commands."""
-
-    class _OpenDeadlineChecker:
-        """Always-open deadline stub used by amendment commands."""
-
-        def is_window_open(self, modelo: str, period: str, today: date) -> bool:
-            """Return ``True`` unconditionally — amendments bypass the deadline gate."""
-            return True
-
-    class _CliAuthProvider:
-        """Minimal auth-provider stub satisfying the submission preflight protocol."""
-
-        kind = AuthProviderKind.CERTIFICATE
-
-        def describe(self) -> AuthProviderDescription:
-            """Return a synthetic CLI-side provider description."""
-            return AuthProviderDescription(
-                kind=self.kind,
-                label="CLI certificate provider",
-                configured=True,
-                available=True,
-                identity_nif="12345678Z",
-                subject="CN=cli-provider",
-                expires_on=date(2099, 12, 31),
-                health_summary="OK:26800",
-            )
-
-    return SubmissionEngine(
-        auth_provider=_CliAuthProvider(),
-        deadline_checker=_OpenDeadlineChecker(),
-        settings=load_settings(),
-    )
+def _load_submission_record(submission_id: str) -> SubmittedFiling:
+    """Read a persisted submission record for amendment assembly."""
+    settings = load_settings()
+    try:
+        target = resolve_record_json_path(
+            settings.aeat_submissions_dir,
+            submission_id,
+            context="submission id",
+        )
+    except ValueError as exc:
+        raise SubmissionError(str(exc)) from exc
+    if not target.exists():
+        raise SubmissionError(f"no persisted submission with id {submission_id!r}")
+    try:
+        return SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise SubmissionError(f"submission record at {target} failed validation") from exc
 
 
 def _schema_provider():
@@ -691,7 +675,7 @@ def import_(
 
     ``--from-borrador`` parses a Modelo 100 (Renta) artefact (borrador,
     predeclaración, or declaración); extracts the summary-block casillas
-    and chains verification against the partial Modelo 100 ruleset.
+    and chains verification against registry snapshots.
     """
     provided = sum(bool(flag) for flag in (from_justificante, from_declaracion, from_borrador))
     if provided == 0:
@@ -798,7 +782,7 @@ def _handle_declaracion_import(
 ) -> None:
     """Dispatch the declaración import path."""
     from ....adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
-    from ....application.verification import verify_declaracion
+    from ....application.verification import VerificationError, verify_declaracion
 
     try:
         filing = parse_declaracion(
@@ -872,12 +856,10 @@ def _handle_declaracion_import(
             rendered = get_translation(warning.message, lang)
             typer.echo(f"  - {casilla_label} {warning.casilla_id or '-'}: {rendered}")
 
-    ruleset = _resolve_ruleset_for_filing(
-        filing_modelo=filing.modelo,
-        filing_period=filing.period,
-        filing_ejercicio=filing.ejercicio,
-    )
-    verdict = verify_declaracion(filing, ruleset=ruleset)
+    try:
+        verdict = verify_declaracion(filing)
+    except VerificationError as exc:
+        raise typer.BadParameter(str(exc)) from exc
     typer.echo(
         _msg(
             _t(
@@ -902,18 +884,6 @@ def _handle_declaracion_import(
         )
 
 
-def _resolve_ruleset_for_filing(
-    *,
-    filing_modelo: str,
-    filing_period: str,
-    filing_ejercicio: str,
-):
-    """Return no formula source until registry-backed verification is wired."""
-
-    _ = (filing_modelo, filing_period, filing_ejercicio)
-    return None
-
-
 def _handle_borrador_import(
     from_borrador: Path,
     *,
@@ -922,7 +892,16 @@ def _handle_borrador_import(
     """Reject Renta import verification until registry snapshots exist."""
 
     _ = (from_borrador, año)
-    raise typer.BadParameter("Modelo 100 import verification requires validated registry snapshots")
+    raise typer.BadParameter(
+        _msg(
+            _t(
+                "La importación de Modelo 100 requiere un snapshot de registro validado",
+                "Modelo 100 import requires a validated registry snapshot",
+                "La importació del Model 100 requereix un snapshot de registre validat",
+                "A 100-as modell importalasa validalt registry snapshotot igenyel",
+            )
+        )
+    )
 
 
 @complementaria_app.command("build")
@@ -978,8 +957,7 @@ def build_complementaria_cmd(
             )
         parsed_inputs["_reasons"] = _parse_amendment_inputs(cast(Mapping[str, object], reasons))
 
-    engine = _submission_engine()
-    original = engine.load_submission(original_submission_id)
+    original = _load_submission_record(original_submission_id)
     if original.modelo != modelo:
         raise typer.BadParameter(
             _msg(

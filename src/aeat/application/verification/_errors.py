@@ -15,7 +15,7 @@ from ...core.errors import AeatError
 class VerificationError(AeatError):
     """Raised on catastrophic verification failures.
 
-    Reserved for unrecoverable conditions (corrupt ruleset, broken engine
+    Reserved for unrecoverable conditions (corrupt registry data, broken engine
     contract, missing core dependency). Discrepancies between the printed
     casilla values and the engine-derived values are not exceptions; they
     surface as

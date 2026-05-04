@@ -1,4 +1,4 @@
-"""Registry-gated verification records for imported declaración drafts."""
+"""Registry-backed verification records for imported declaracion drafts."""
 
 from __future__ import annotations
 

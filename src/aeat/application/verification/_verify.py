@@ -1,19 +1,26 @@
-"""Registry-gated declaration verification boundary.
-
-Parsed declaración verification is filing-grade calculation work. Until
-that path is backed by validated registry snapshots, verification is not
-available.
-"""
+"""Registry-backed declaration verification."""
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import re
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionFiling
 from ...core.i18n import Translatable
 from ...core.logging import get_logger
+from ...core.paths import PROJECT_ROOT
+from ...domain.calculations.registry import (
+    RegistrySnapshot,
+    RegistrySnapshotError,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+)
+from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
     DiscrepancyCause,
@@ -44,19 +51,27 @@ class _DiscrepancyLike(Protocol):
     delta: Decimal
 
 
+@dataclass(frozen=True, slots=True)
+class _Discrepancy:
+    casilla_id: str
+    computed_value: Decimal
+    user_value: Decimal
+    delta: Decimal
+
+
 def verify_declaracion(
     declaracion: DeclaracionFiling,
     *,
-    ruleset: object | None,
+    registry_root: Path | None = None,
     tolerance: Decimal = _DEFAULT_TOLERANCE,
 ) -> VerificationVerdict:
-    """Compare the printed casilla values against engine-derived ones.
+    """Compare the printed casilla values against a registry snapshot.
 
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        ruleset: Calculation source placeholder until registry snapshots
-            reach this boundary.
+        registry_root: Optional registry root override. Defaults to
+            ``registry/aeat`` under the repository root.
         tolerance: Maximum absolute delta between printed and computed
             values to still count as a match. Defaults to ``0.01`` (one
             cent).
@@ -68,24 +83,130 @@ def verify_declaracion(
         the coverage fraction, a multilingual narrative, and the UTC
         timestamp the verdict was produced.
     """
-    _ = (declaracion, ruleset, tolerance)
-    raise ValueError(
-        "declaracion verification requires a validated registry snapshot; formula rulesets are unavailable",
+    snapshot = _load_snapshot(declaracion, registry_root=registry_root)
+    extracted = _decimal_extracted_values(declaracion)
+    inputs = {
+        casilla.id: extracted[casilla.id]
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind != "computed" and casilla.id in extracted
+    }
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": _filing_period_date(declaracion.period, declaracion.ejercicio)},
     )
+    unreliable_ids = {
+        warning.casilla_id
+        for warning in declaracion.warnings
+        if warning.casilla_id is not None and warning.code in _UNRELIABLE_WARNING_CODES
+    }
+    registry_casillas = {casilla.id for casilla in snapshot.revision.casillas}
+    discrepancies: list[ClassifiedDiscrepancy] = []
+    for casilla_id, actual in sorted(extracted.items()):
+        expected = result.values.get(casilla_id, actual)
+        delta = actual - expected
+        if abs(delta) <= tolerance and casilla_id not in unreliable_ids and casilla_id in registry_casillas:
+            continue
+        discrepancies.append(
+            _classify_discrepancy(
+                _Discrepancy(
+                    casilla_id=casilla_id,
+                    computed_value=expected,
+                    user_value=actual,
+                    delta=delta,
+                ),
+                unreliable_ids=unreliable_ids,
+                registry_casillas=registry_casillas,
+                tolerance=tolerance,
+            )
+        )
+    classified = tuple(discrepancies)
+    coverage = _compute_coverage(declaracion, registry_casillas)
+    status = _derive_status(classified, coverage)
+    return VerificationVerdict(
+        modelo=declaracion.modelo,
+        period=declaracion.period,
+        registry_snapshot_id=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
+        status=status,
+        discrepancies=classified,
+        coverage=coverage,
+        narrative=_compose_narrative(declaracion, status, classified, coverage),
+        verified_at=datetime.now(tz=UTC),
+    )
+
+
+def _load_snapshot(declaracion: DeclaracionFiling, *, registry_root: Path | None) -> RegistrySnapshot:
+    try:
+        filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
+        modelos, catalogues = load_registry_tree(registry_root or PROJECT_ROOT / "registry" / "aeat")
+        modelo = next((candidate for candidate in modelos if candidate.id == declaracion.modelo), None)
+        if modelo is None:
+            raise VerificationError(f"modelo {declaracion.modelo!r} is not present in the calculation registry")
+        return build_snapshot(
+            modelo,
+            catalogues,
+            source_root=PROJECT_ROOT,
+            filing_year=filing_year,
+            period=registry_period,
+        )
+    except RegistrySnapshotError as exc:
+        raise VerificationError(f"declaracion verification failed registry snapshot validation: {exc}") from exc
+
+
+def _decimal_extracted_values(declaracion: DeclaracionFiling) -> dict[str, Decimal]:
+    extracted: dict[str, Decimal] = {}
+    for value in declaracion.values:
+        printed = value.printed_value
+        if isinstance(printed, Decimal):
+            extracted[value.casilla_id] = printed
+        elif isinstance(printed, int) and not isinstance(printed, bool):
+            extracted[value.casilla_id] = Decimal(printed)
+    return extracted
+
+
+_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
+_MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
+_ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
+_RAW_QUARTER_RE = re.compile(r"^(?P<quarter>[1-4])T$")
+
+
+def _registry_period(period: str, ejercicio: str | None) -> tuple[int, str]:
+    if match := _QUARTER_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), f"{match.group('quarter')}T"
+    if match := _MONTH_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), match.group("month")
+    if match := _ANNUAL_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), "0A"
+    if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
+        return int(ejercicio), f"{match.group('quarter')}T"
+    raise RegistrySnapshotError(f"cannot map declaracion period {period!r}")
+
+
+def _filing_period_date(period: str, ejercicio: str | None) -> date:
+    filing_year, registry_period = _registry_period(period, ejercicio)
+    if registry_period == "1T":
+        return date(filing_year, 3, 31)
+    if registry_period == "2T":
+        return date(filing_year, 6, 30)
+    if registry_period == "3T":
+        return date(filing_year, 9, 30)
+    if registry_period in {"4T", "0A"}:
+        return date(filing_year, 12, 31)
+    return date(filing_year, int(registry_period), 1)
 
 
 def _classify_discrepancy(
     discrepancy: _DiscrepancyLike,
     *,
     unreliable_ids: set[str],
-    ruleset_casillas: set[str],
+    registry_casillas: set[str],
     tolerance: Decimal,
 ) -> ClassifiedDiscrepancy:
     """Assign one of the four :class:`DiscrepancyCause` categories.
 
     The classifier prefers extraction-unreliability over rounding so that
     a casilla flagged by the extractor is never silently classified as a
-    rounding miss. Casillas absent from the ruleset are routed to
+    rounding miss. Casillas absent from the registry snapshot are routed to
     :attr:`DiscrepancyCause.UNMODELLED_RULE` regardless of delta size.
     """
     casilla_id = discrepancy.casilla_id
@@ -105,13 +226,13 @@ def _classify_discrepancy(
             ),
             hu=(f"{casilla_id} casilla: az extraktor alacsony magabiztosságúnak jelölte. Ellenőrizd a PDF-et kézzel."),
         )
-    elif casilla_id not in ruleset_casillas:
+    elif casilla_id not in registry_casillas:
         cause = DiscrepancyCause.UNMODELLED_RULE
         rationale = Translatable(
-            es=(f"Casilla {casilla_id}: el ruleset no contempla esta casilla. Se acepta el valor extraído."),
-            en=(f"Casilla {casilla_id}: the ruleset has no formula for it. Extracted value accepted as-is."),
-            ca=(f"Casella {casilla_id}: el ruleset no contempla aquesta casella. S'accepta el valor extret."),
-            hu=(f"{casilla_id} casilla: a ruleset nem ismeri. A kinyert érték elfogadva."),
+            es=(f"Casilla {casilla_id}: el registro no contempla esta casilla. Se acepta el valor extraido."),
+            en=(f"Casilla {casilla_id}: the registry does not include it. Extracted value accepted as-is."),
+            ca=(f"Casella {casilla_id}: el registre no contempla aquesta casella. S'accepta el valor extret."),
+            hu=(f"{casilla_id} casilla: a registry nem ismeri. A kinyert ertek elfogadva."),
         )
     elif abs_delta < 10 * tolerance:
         cause = DiscrepancyCause.ROUNDING
@@ -124,10 +245,10 @@ def _classify_discrepancy(
     else:
         cause = DiscrepancyCause.CORRECTNESS_DIVERGENCE
         rationale = Translatable(
-            es=(f"Casilla {casilla_id}: diferencia significativa ({abs_delta} €). Revisa el PDF o el ruleset."),
-            en=(f"Casilla {casilla_id}: material divergence ({abs_delta} €). Review the PDF or the ruleset."),
-            ca=(f"Casella {casilla_id}: diferència significativa ({abs_delta} €). Revisa el PDF o el ruleset."),
-            hu=(f"{casilla_id} casilla: jelentős eltérés ({abs_delta} €). Ellenőrizd a PDF-et vagy a ruleset-et."),
+            es=(f"Casilla {casilla_id}: diferencia significativa ({abs_delta} EUR). Revisa el PDF o el registro."),
+            en=(f"Casilla {casilla_id}: material divergence ({abs_delta} EUR). Review the PDF or the registry."),
+            ca=(f"Casella {casilla_id}: diferencia significativa ({abs_delta} EUR). Revisa el PDF o el registre."),
+            hu=(f"{casilla_id} casilla: jelentos elteres ({abs_delta} EUR). Ellenorizd a PDF-et vagy a registryt."),
         )
 
     return ClassifiedDiscrepancy(
@@ -142,19 +263,19 @@ def _classify_discrepancy(
 
 def _compute_coverage(
     declaracion: DeclaracionFiling,
-    ruleset_casillas: set[str],
+    registry_casillas: set[str],
 ) -> float:
-    """Return the fraction of ruleset casillas the extraction supplied.
+    """Return the fraction of registry casillas the extraction supplied.
 
-    Returns ``0.0`` when the ruleset itself defines no casillas; this
+    Returns ``0.0`` when the registry snapshot defines no casillas; this
     keeps the downstream coverage threshold in :func:`_derive_status`
     well-defined.
     """
-    if not ruleset_casillas:
+    if not registry_casillas:
         return 0.0
     provided_ids = {v.casilla_id for v in declaracion.values}
-    covered = ruleset_casillas & provided_ids
-    return len(covered) / len(ruleset_casillas)
+    covered = registry_casillas & provided_ids
+    return len(covered) / len(registry_casillas)
 
 
 def _derive_status(
@@ -165,7 +286,7 @@ def _derive_status(
 
     Returns :attr:`VerificationStatus.NEEDS_REVIEW` when any discrepancy
     has a blocking cause (extraction-unreliable or
-    correctness-divergence) or when ruleset coverage drops below 30%;
+    correctness-divergence) or when registry coverage drops below 30%;
     otherwise :attr:`VerificationStatus.VERIFIED`.
     """
     blocking = {
@@ -225,37 +346,6 @@ def _compose_narrative(
             f"{n_discrepancies} eltérés — nézd át a besorolt listát."
         ),
     }
-
-
-def _unverifiable_verdict(declaracion: DeclaracionFiling) -> VerificationVerdict:
-    """Return the canonical
-    :attr:`VerificationStatus.UNVERIFIABLE` verdict.
-
-    Used when no ruleset is registered for the filing's
-    ``(modelo, período)`` pair; the verdict carries an empty discrepancy
-    tuple, zero coverage, and a multilingual explanatory narrative.
-    """
-    return VerificationVerdict(
-        modelo=declaracion.modelo,
-        period=declaracion.period,
-        ruleset_id=None,
-        status=VerificationStatus.UNVERIFIABLE,
-        discrepancies=(),
-        coverage=0.0,
-        narrative={
-            "es": (
-                f"Modelo {declaracion.modelo} {declaracion.period}: no hay ruleset registrado; no se puede verificar."
-            ),
-            "en": (
-                f"Modelo {declaracion.modelo} {declaracion.period}: no ruleset registered; verification unavailable."
-            ),
-            "hu": (
-                f"{declaracion.modelo} modell {declaracion.period}: "
-                "nincs ruleset regisztrálva; az igazolás nem elérhető."
-            ),
-        },
-        verified_at=datetime.now(tz=UTC),
-    )
 
 
 __all__ = ["verify_declaracion"]

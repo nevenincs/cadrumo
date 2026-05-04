@@ -16,6 +16,7 @@ from ...adapters.inbound.declaracion import (
 )
 from ...adapters.inbound.pdf._shared import ExtractedCasilla
 from . import (
+    VerificationError,
     VerificationStatus,
     VerificationVerdict,
     verify_declaracion,
@@ -64,10 +65,59 @@ def _build_filing(
     )
 
 
-def test_verify_declaracion_requires_registry_snapshot() -> None:
-    filing = _build_filing(values=(("01", Decimal("0")),))
-    with pytest.raises(ValueError, match="validated registry snapshot"):
-        verify_declaracion(filing, ruleset=None)
+def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
+    filing = _build_filing(
+        values=(
+            ("01", Decimal("10000")),
+            ("02", Decimal("4000")),
+            ("03", Decimal("6000.00")),
+            ("04", Decimal("1200.00")),
+            ("05", Decimal("250")),
+            ("06", Decimal("100")),
+            ("07", Decimal("850.00")),
+            ("08", Decimal("2000")),
+            ("09", Decimal("40.00")),
+            ("10", Decimal("10")),
+            ("11", Decimal("30.00")),
+            ("12", Decimal("880.00")),
+            ("13", Decimal("0")),
+            ("14", Decimal("880.00")),
+            ("15", Decimal("0")),
+            ("16", Decimal("0")),
+            ("17", Decimal("880.00")),
+            ("18", Decimal("0")),
+            ("19", Decimal("880.00")),
+        )
+    )
+
+    verdict = verify_declaracion(filing)
+
+    assert verdict.registry_snapshot_id == "registry:130:2019-y-siguientes"
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.coverage == 1.0
+    assert verdict.discrepancies == ()
+
+
+def test_verify_declaracion_classifies_registry_divergence() -> None:
+    filing = _build_filing(
+        values=(
+            ("01", Decimal("10000")),
+            ("02", Decimal("4000")),
+            ("19", Decimal("999.00")),
+        )
+    )
+
+    verdict = verify_declaracion(filing)
+
+    assert verdict.status is VerificationStatus.NEEDS_REVIEW
+    assert verdict.discrepancies[0].casilla_id == "19"
+
+
+def test_verify_declaracion_fails_without_registry_snapshot() -> None:
+    filing = _build_filing(values=(("01", Decimal("0")),), modelo="303")
+
+    with pytest.raises(VerificationError, match="not present in the calculation registry"):
+        verify_declaracion(filing)
 
 
 class TestVerdictJsonRoundTrip:
@@ -80,13 +130,13 @@ class TestVerdictJsonRoundTrip:
         verdict = VerificationVerdict(
             modelo="130",
             period="2025Q1",
-            ruleset_id=None,
-            status=VerificationStatus.UNVERIFIABLE,
+            registry_snapshot_id="registry:130:2019-y-siguientes",
+            status=VerificationStatus.VERIFIED,
             discrepancies=(),
-            coverage=0.0,
+            coverage=1.0,
             narrative={
-                "es": "Verificacion no disponible hasta que exista snapshot de registro.",
-                "en": "Verification unavailable until a registry snapshot exists.",
+                "es": "Verificacion completada contra el registro.",
+                "en": "Verification completed against the registry.",
             },
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
         )

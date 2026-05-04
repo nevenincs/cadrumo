@@ -11,6 +11,8 @@ from pydantic import BaseModel, ConfigDict
 
 from ...domain.calculations.registry import RegistryValidator, load_registry_tree, verify_workbook_backend
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
+from ._i18n import t as _t
+from ._i18n import tr as _msg
 
 app = typer.Typer(
     name="registry",
@@ -40,6 +42,11 @@ class RegistryTreeReport(BaseModel):
     source_reference_count: int
     modelos: tuple[str, ...]
     verified: bool
+
+
+def _emit_metric(key: str, value: object) -> None:
+    line = f"{key}={value}"
+    typer.echo(_msg(_t(line, line, line, line)))
 
 
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
@@ -100,11 +107,11 @@ def inspect_registry_cmd(
     if json_output:
         typer.echo(report.model_dump_json(indent=2))
         return
-    typer.echo(f"modelo_count={report.modelo_count}")
-    typer.echo(f"revision_count={report.revision_count}")
-    typer.echo(f"legal_reference_count={report.legal_reference_count}")
-    typer.echo(f"source_reference_count={report.source_reference_count}")
-    typer.echo(f"modelos={','.join(report.modelos)}")
+    _emit_metric("modelo_count", report.modelo_count)
+    _emit_metric("revision_count", report.revision_count)
+    _emit_metric("legal_reference_count", report.legal_reference_count)
+    _emit_metric("source_reference_count", report.source_reference_count)
+    _emit_metric("modelos", ",".join(report.modelos))
 
 
 @app.command("verify", help="Fail-fast validate the registry tree and official source evidence.")
@@ -142,12 +149,12 @@ def verify_registry_cmd(
     if json_output:
         typer.echo(report.model_dump_json(indent=2))
         return
-    typer.echo(f"verified={report.verified}")
-    typer.echo(f"modelo_count={report.modelo_count}")
-    typer.echo(f"revision_count={report.revision_count}")
-    typer.echo(f"legal_reference_count={report.legal_reference_count}")
-    typer.echo(f"source_reference_count={report.source_reference_count}")
-    typer.echo(f"modelos={','.join(report.modelos)}")
+    _emit_metric("verified", report.verified)
+    _emit_metric("modelo_count", report.modelo_count)
+    _emit_metric("revision_count", report.revision_count)
+    _emit_metric("legal_reference_count", report.legal_reference_count)
+    _emit_metric("source_reference_count", report.source_reference_count)
+    _emit_metric("modelos", ",".join(report.modelos))
 
 
 @workbooks_app.command("verify", help="Verify workbook parity backend discovery against a corpus root.")
@@ -208,14 +215,14 @@ def verify_workbooks_cmd(
     if json_output:
         typer.echo(report.model_dump_json(indent=2))
         return
-    typer.echo(f"backend_exists={report.backend_exists}")
-    typer.echo(f"workbook_count={report.workbook_count}")
-    typer.echo(f"scanned_count={report.scanned_count}")
-    typer.echo(f"formula_workbook_count={report.formula_workbook_count}")
-    typer.echo(f"unsupported_xls_count={report.unsupported_xls_count}")
-    typer.echo(f"failed_count={report.failed_count}")
-    typer.echo(f"runner_status={report.runner.status}")
-    typer.echo(f"runner_detail={report.runner.detail}")
+    _emit_metric("backend_exists", report.backend_exists)
+    _emit_metric("workbook_count", report.workbook_count)
+    _emit_metric("scanned_count", report.scanned_count)
+    _emit_metric("formula_workbook_count", report.formula_workbook_count)
+    _emit_metric("unsupported_xls_count", report.unsupported_xls_count)
+    _emit_metric("failed_count", report.failed_count)
+    _emit_metric("runner_status", report.runner.status)
+    _emit_metric("runner_detail", report.runner.detail)
 
 
 def _json_default(value: object) -> str:
