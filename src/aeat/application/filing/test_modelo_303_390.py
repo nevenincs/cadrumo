@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
 
 import pytest
 
-from ...domain.filing import CasillaSchemaProvider
-from . import FilingBuilderError, build_draft
+from . import FilingBuilderError, build_draft, build_runtime_schema_provider
 from .testing import SyntheticProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -22,27 +20,23 @@ def _profile() -> SyntheticProfile:
     )
 
 
-def _schema_provider() -> CasillaSchemaProvider:
-    return cast("CasillaSchemaProvider", object())
-
-
 @pytest.mark.parametrize(
     ("modelo", "period", "inputs"),
     [
         ("303", "2025Q1", {"07": Decimal("10000.00"), "29": Decimal("200.00")}),
-        ("390", "2025", {"01": 2025}),
+        ("390", "2025A", {"01": 2025}),
     ],
 )
-def test_modelo_build_draft_requires_registry_snapshot(
+def test_modelo_build_draft_requires_registry_definition(
     modelo: str,
     period: str,
     inputs: dict[str, object],
 ) -> None:
-    with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
+    with pytest.raises(FilingBuilderError, match="not present in the calculation registry"):
         build_draft(
             modelo=modelo,
             period=period,
             profile=_profile(),
             inputs=inputs,
-            schema_provider=_schema_provider(),
+            schema_provider=build_runtime_schema_provider(),
         )

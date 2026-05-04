@@ -22,8 +22,10 @@ from . import (
     FilingFindingSeverity,
     FilingValidationFinding,
     FilingValidator,
+    FilingValueKind,
     approve_draft,
     build_draft,
+    build_runtime_schema_provider,
     compute_draft_id,
     iter_findings,
     refresh_review_status,
@@ -102,15 +104,32 @@ def _schema_provider(
     return _TestSchemaProvider(_TestCasillaCollection(casillas=casillas, schema_version=schema_version))
 
 
-def test_build_draft_requires_validated_registry_snapshot() -> None:
-    with pytest.raises(FilingBuilderError, match="validated registry snapshot"):
-        build_draft(
-            modelo="130",
-            period="2026Q1",
-            profile=_profile(),
-            inputs={"01": Decimal("12500.00")},
-            schema_provider=_schema_provider(),
-        )
+def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
+    draft = build_draft(
+        modelo="130",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("10000"),
+            "02": Decimal("4000"),
+            "05": Decimal("250"),
+            "06": Decimal("100"),
+            "08": Decimal("2000"),
+            "10": Decimal("10"),
+            "13": Decimal("0"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+
+    values = {value.casilla_id: value for value in draft.values}
+    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.schema_version == "registry:130:2019-y-siguientes"
+    assert values["19"].value == Decimal("880.00")
+    assert values["19"].kind is FilingValueKind.COMPUTED
+    assert values["19"].formula_trace == ("17", "18")
 
 
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
