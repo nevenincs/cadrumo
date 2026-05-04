@@ -88,6 +88,7 @@ class FilingValue(BaseModel):
     source: str
     formula_trace: tuple[str, ...] | None = None
 
+
 class FilingValidationFinding(BaseModel):
     """One finding produced by the validator.
 

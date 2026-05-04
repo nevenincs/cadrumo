@@ -22,6 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
@@ -50,7 +51,7 @@ class _ReviewItemBase(BaseModel):
     item_id: str = Field(min_length=1)
     modelo: str | None
     severity: ReviewSeverity
-    summary: str
+    summary: tr
     drill_command: str = Field(min_length=1)
     since: datetime
 

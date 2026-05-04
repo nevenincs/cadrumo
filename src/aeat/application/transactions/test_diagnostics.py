@@ -19,6 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _SOURCE_PATH = Path("imports/n26-2026Q1.csv")
 
+
 def _message() -> tr:
     return tr("transactions.test_diagnostics.message")
 

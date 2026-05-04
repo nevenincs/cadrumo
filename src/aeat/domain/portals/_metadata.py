@@ -6,7 +6,7 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from ._codes import Portal
 
@@ -54,7 +54,7 @@ class PortalMetadata(BaseModel):
     category: PortalCategory
     auth_methods: frozenset[AuthMethod] = Field(min_length=1)
     url_stability: UrlStability
-    label: Translatable
+    label: tr
     purpose_es: str = Field(min_length=1)
     active: bool = True
     replaced_by: Portal | None = None
@@ -70,7 +70,7 @@ class PortalMetadata(BaseModel):
 
     @field_validator("label")
     @classmethod
-    def _label_not_blank(cls, value: Translatable) -> Translatable:
+    def _label_not_blank(cls, value: tr) -> tr:
         """Reject whitespace-only label keys."""
         if not value.strip():
             raise ValueError("label must not be empty or whitespace-only")
@@ -114,3 +114,6 @@ class PortalMetadata(BaseModel):
             raise ValueError("replaced_by must be None when active is True")
 
         return self
+
+
+__all__ = ["PortalMetadata"]

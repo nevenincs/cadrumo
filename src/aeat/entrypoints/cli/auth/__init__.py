@@ -1079,4 +1079,3 @@ def logout(
 
 
 __all__ = ["app"]
-
