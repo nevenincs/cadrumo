@@ -21,6 +21,7 @@ DELETED_AUTHORITY_PATHS: tuple[Path, ...] = (
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "inbound" / "schema",
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "export" / "_formats" / "_generate.py",
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "export" / "_formats" / "_ingest.py",
+    PROJECT_ROOT / "src" / "aeat" / "adapters" / "inbound" / "borrador" / "_tarifa.py",
     PROJECT_ROOT / "src" / "aeat" / "domain" / "sync",
     PROJECT_ROOT / "src" / "aeat" / "application" / "sync",
     PROJECT_ROOT / "tests" / "fixtures" / "dr_specs",
@@ -35,6 +36,7 @@ AUTHORITY_SCAN_ROOTS: tuple[Path, ...] = (
     PROJECT_ROOT / "src" / "aeat" / "application" / "filing",
     PROJECT_ROOT / "src" / "aeat" / "application" / "review",
     PROJECT_ROOT / "src" / "aeat" / "application" / "workflow",
+    PROJECT_ROOT / "src" / "aeat" / "adapters" / "inbound" / "borrador",
     PROJECT_ROOT / "src" / "aeat" / "core" / "errors",
     PROJECT_ROOT / "src" / "aeat" / "core" / "config.py",
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "export" / "_formats",
@@ -81,6 +83,10 @@ BANNED_AUTHORITY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "healing authority",
         re.compile(r"\b(?:self-healing|auto-?heal|auto_heal|HealingDispatcher)\b", re.IGNORECASE),
+    ),
+    (
+        "hardcoded tarifa authority",
+        re.compile(r"\b(?:_TARIFA_ESTATAL|SUPPORTED_EJERCICIOS|validate_tarifa_estatal|apply_tarifa)\b"),
     ),
     ("phase metadata", re.compile(r"\bphase\s+\d+\b", re.IGNORECASE)),
     ("wave metadata", re.compile(r"\bwave\s+\d+\b", re.IGNORECASE)),
