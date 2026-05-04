@@ -2,7 +2,7 @@
 
 The CURRENCY encoders in
 :mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` must handle
-every value Kent's ruleset can emit across both the 13-byte (Modelo 130) and
+every registry-calculated value across both the 13-byte (Modelo 130) and
 17-byte (Modelo 303) column widths, and under both the UNSIGNED and
 INLINE_SIGN conventions. Golden-SHA tests lock a single happy-path scenario
 per modelo; this matrix exercises:

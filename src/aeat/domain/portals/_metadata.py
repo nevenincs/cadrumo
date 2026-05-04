@@ -38,8 +38,8 @@ class PortalMetadata(BaseModel):
         auth_methods: Non-empty frozenset of accepted
             :class:`AuthMethod` values. ``AuthMethod.ANONYMOUS`` is
             mutually exclusive with every other method.
-        url_stability: :class:`UrlStability` tier for self-healing
-            sync prioritisation.
+        url_stability: :class:`UrlStability` tier for read-only portal
+            monitoring priority.
         related_modelo: Foreign key into :class:`ModeloCode`. Required
             iff ``category`` is ``FILING``, ``CENSUS``, or ``BORRADOR``;
             forbidden for every other category.

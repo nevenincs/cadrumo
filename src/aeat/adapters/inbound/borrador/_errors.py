@@ -12,7 +12,7 @@ from ..pdf._errors import PdfFilingImportError
 
 
 class BorradorParseError(PdfFilingImportError):
-    """Raised when a Modelo 100 PDF cannot be parsed into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`.
+    """Raised when a Modelo 100 PDF cannot be parsed into a filing record.
 
     Base class for every domain-specific failure raised by the borrador
     pipeline. Subclasses (e.g. :class:`ArtefactNotRecognisedError`)
