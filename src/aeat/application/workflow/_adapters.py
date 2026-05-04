@@ -32,14 +32,12 @@ from ...domain.deadlines import (
     Schedule,
 )
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
-from ...domain.sync import ModeloIdentifier as SyncModeloIdentifier
 from ..filing import (
     CasillaSchemaProvider,
     FilingDraft,
     FilingProfile,
     build_draft,
 )
-from ..sync import LiveSyncRunner
 from ._engine import WorkflowEngine
 from ._errors import WorkflowError
 from ._protocols import (
@@ -48,8 +46,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SyncRunnerProtocol,
-    SyncRunSummary,
 )
 
 _logger = get_logger(__name__)
@@ -130,37 +126,6 @@ class SubmissionEngineAdapter:
         self._engine.preflight(draft, today=today)
 
 
-class SyncRunnerAdapter:
-    """Wrap :class:`aeat.application.sync.LiveSyncRunner` as a workflow Protocol."""
-
-    def __init__(self, runner: LiveSyncRunner) -> None:
-        """Store the wrapped :class:`LiveSyncRunner`."""
-        self._runner = runner
-
-    async def run(
-        self,
-        *,
-        modelo: str | None = None,
-        period: str | None = None,
-        auto_heal: bool = False,
-    ) -> SyncRunSummary:
-        """Delegate to :meth:`LiveSyncRunner.run` and project the result."""
-        runner_modelo = cast("SyncModeloIdentifier | None", modelo)
-        result = await self._runner.run(
-            modelo=runner_modelo,
-            period=period,
-            auto_heal=auto_heal,
-        )
-        divergences = len(result.divergence_records)
-        auto_healed = len(result.plan.auto_heal)
-        escalated = len(result.plan.escalate)
-        return SyncRunSummary(
-            divergence_count=divergences,
-            auto_healed_count=auto_healed,
-            escalated_count=escalated,
-        )
-
-
 class JsonFileInputsProvider:
     """Read casilla inputs from the settings-configured JSON file.
 
@@ -210,7 +175,6 @@ def default_engine(
     submission_engine: SubmissionEngineProtocol,
     deadline_engine: DeadlineEngineProtocol | None = None,
     filing_draft_builder: FilingDraftBuilderProtocol | None = None,
-    sync_runner: SyncRunnerProtocol | None = None,
     session: AeatSession | None = None,
     certificate_bundle: CertificateBundleProtocol | None = None,
     inputs_provider: FilingInputsProviderProtocol | None = None,
@@ -228,8 +192,6 @@ def default_engine(
             workflow to have any obligation to work on.
         filing_draft_builder: Optional draft-builder Protocol.
             ``None`` triggers a :class:`WorkflowError`.
-        sync_runner: Optional sync Protocol. ``None`` skips the sync
-            stage with a "not wired" diagnostic.
         session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`.
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
@@ -256,7 +218,6 @@ def default_engine(
         deadline_engine=deadline_engine,
         filing_draft_builder=filing_draft_builder,
         submission_engine=submission_engine,
-        sync_runner=sync_runner,
         session=session,
         certificate_bundle=certificate_bundle,
         inputs_provider=provider,
@@ -273,6 +234,5 @@ __all__ = [
     "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionPreflightError",
-    "SyncRunnerAdapter",
     "default_engine",
 ]

@@ -5,13 +5,10 @@ instance-level reasons a local :class:`aeat.domain.filing.FilingDraft`
 and its parsed AEAT :class:`aeat.domain.justificante.Justificante` can
 disagree.
 
-This taxonomy is deliberately disjoint from the schema-level
-:class:`aeat.domain.sync.DivergenceKind`, which is consumed by the
-auto-heal decision tables in :mod:`aeat.application.sync`. The two
-enums must not be conflated: one classifies schema drift between
-versions of a modelo definition, the other classifies per-instance
-mismatches between the operator's local view of a filing and what
-AEAT has on file.
+This taxonomy classifies per-instance mismatches between the operator's
+local view of a filing and what AEAT has on file. Modelo and casilla
+definition changes are governed by the registry backend, not by this
+reconciliation surface.
 """
 
 from __future__ import annotations

@@ -400,10 +400,6 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
             hkdf_context=b"aeat.application.workflow.run.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.aeat_sync_divergence_file_dir),
-            hkdf_context=b"aeat.application.sync.divergence.v1",
-        ),
-        RotationPlanEntry(
             # The setup wizard's ``AutonomoProfile`` is written as a
             # single-file envelope at the operator-configured
             # ``aeat_default_profile_path`` (or no file at all when

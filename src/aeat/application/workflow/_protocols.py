@@ -22,13 +22,9 @@ from collections.abc import Mapping
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from ...adapters.outbound.aeat.export import FilingDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import AutonomoProfile, Schedule
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 @runtime_checkable
@@ -69,37 +65,6 @@ class SubmissionEngineProtocol(Protocol):
 
     def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
         """Run preflight gates against ``draft``; raise on failure."""
-        ...
-
-
-class SyncRunSummary(BaseModel):
-    """Narrow contract for a sync run outcome.
-
-    The workflow engine only needs to know whether the sync succeeded
-    and surface a numeric summary for diagnostics; the full
-    :class:`aeat.application.sync.SyncRunResult` graph is intentionally not
-    imported here.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    divergence_count: int = Field(ge=0)
-    auto_healed_count: int = Field(ge=0)
-    escalated_count: int = Field(ge=0)
-
-
-@runtime_checkable
-class SyncRunnerProtocol(Protocol):
-    """Narrow surface over :class:`aeat.application.sync.LiveSyncRunner`."""
-
-    async def run(
-        self,
-        *,
-        modelo: str | None = None,
-        period: str | None = None,
-        auto_heal: bool = False,
-    ) -> SyncRunSummary:
-        """Execute one sync cycle and return a narrow summary."""
         ...
 
 
@@ -147,6 +112,4 @@ __all__ = [
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
     "SubmissionEngineProtocol",
-    "SyncRunSummary",
-    "SyncRunnerProtocol",
 ]

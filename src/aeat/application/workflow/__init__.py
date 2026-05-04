@@ -2,9 +2,9 @@
 
 The :mod:`aeat.application.workflow` subpackage owns the project's first
 *composite* end-user command: a single entry point that orchestrates
-the deadline engine, the self-healing sync runner, the filing draft
-builder, the submission engine, and the in-flight status / inbox /
-certificate surfaces into one ordered pipeline. The workflow is
+the deadline engine, the filing draft builder, the submission engine,
+and the in-flight status / inbox / certificate surfaces into one
+ordered pipeline. The workflow is
 **read-only**: live AEAT submission is permanently forbidden, so the
 pipeline stops after preflight and never executes a real filing.
 
@@ -24,7 +24,6 @@ from ._adapters import (
     FilingDraftBuilderAdapter,
     JsonFileInputsProvider,
     SubmissionEngineAdapter,
-    SyncRunnerAdapter,
     default_engine,
 )
 from ._engine import WorkflowEngine
@@ -48,8 +47,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SyncRunnerProtocol,
-    SyncRunSummary,
 )
 
 __all__ = [
@@ -63,9 +60,6 @@ __all__ = [
     "SiteHealthAlert",
     "SubmissionEngineAdapter",
     "SubmissionEngineProtocol",
-    "SyncRunSummary",
-    "SyncRunnerAdapter",
-    "SyncRunnerProtocol",
     "WorkflowAbortReason",
     "WorkflowAbortedError",
     "WorkflowComponentError",

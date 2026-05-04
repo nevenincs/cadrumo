@@ -24,11 +24,6 @@ from ...domain.invoices import (
     InvoiceCatalogue,
     PaymentStatus,
 )
-from ...domain.sync import (
-    DivergenceClassification,
-    DivergenceRecord,
-    ResolutionState,
-)
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -42,11 +37,9 @@ from ..filing import (
     FilingFindingSeverity,
     FilingValidationFinding,
 )
-from ..sync import JsonFileDivergenceRepository
 from ._enums import ReviewSeverity
 from ._errors import ReviewSourceLoadError
 from ._models import (
-    DivergenceReviewItem,
     FindingReviewItem,
     InvoiceReviewItem,
     TransactionReviewItem,
@@ -350,69 +343,6 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
         drill_command=f"aeat financial invoices show {invoice.invoice_id}",
         since=since,
         source=invoice,
-    )
-
-
-# ── divergences ───────────────────────────────────────────────────
-
-
-def divergences_pending(
-    settings: Settings,
-    *,
-    records: tuple[DivergenceRecord, ...] | None = None,
-) -> tuple[DivergenceReviewItem, ...]:
-    """Return :class:`DivergenceReviewItem`s for PENDING divergence records."""
-    if records is None:
-        repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-        try:
-            records = repo.list()
-        except (ValidationError, OSError, ValueError) as exc:
-            raise ReviewSourceLoadError(
-                f"failed to list divergences at {settings.aeat_sync_divergence_file_dir}: {exc}"
-            ) from exc
-    items: list[DivergenceReviewItem] = []
-    for record in records:
-        if record.resolution_state is not ResolutionState.PENDING:
-            continue
-        items.append(_to_divergence_item(record))
-    return tuple(items)
-
-
-def _classify_divergence(record: DivergenceRecord) -> ReviewSeverity:
-    """First-match-wins severity for divergences."""
-    if record.classification in {
-        DivergenceClassification.BREAKING,
-        DivergenceClassification.SUSPICIOUS,
-    }:
-        return ReviewSeverity.CRITICAL
-    return ReviewSeverity.NORMAL
-
-
-def _to_divergence_item(record: DivergenceRecord) -> DivergenceReviewItem:
-    classification_label = _t(
-        record.classification.value,
-        record.classification.value,
-        record.classification.value,
-        record.classification.value,
-    )
-    summary = _per_lang_summary(
-        _t(
-            "[{classification}] {kind}",
-            "[{classification}] {kind}",
-            "[{classification}] {kind}",
-            "[{classification}] {kind}",
-        ),
-        classification=classification_label,
-        kind=record.payload.kind.value,
-    )
-    return DivergenceReviewItem(
-        item_id=record.record_id,
-        modelo=str(record.modelo) if record.modelo is not None else None,
-        severity=_classify_divergence(record),
-        summary=summary,
-        drill_command=f"aeat sync show-divergence {record.record_id}",
-        since=record.detected_at,
-        source=record,
     )
 
 

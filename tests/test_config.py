@@ -187,7 +187,6 @@ class TestStatusDetailUrlTemplate:
             "\n".join(
                 (
                     "AEAT_DEFAULT_PROFILE_PATH=env/profiles/dev.json",
-                    "AEAT_SYNC_DIVERGENCE_FILE_DIR=var/divergences",
                     "GOOGLE_APPLICATION_CREDENTIALS=env/google-service-account.json",
                     "GOOGLE_OAUTH_CLIENT_JSON=env/google-oauth-client.json",
                 )
@@ -207,7 +206,6 @@ class TestStatusDetailUrlTemplate:
 
         settings = RelativeEnvSettings()
         assert settings.aeat_default_profile_path == PROJECT_ROOT / "env" / "profiles" / "dev.json"
-        assert settings.aeat_sync_divergence_file_dir == PROJECT_ROOT / "var" / "divergences"
         assert settings.google_application_credentials == str(PROJECT_ROOT / "env" / "google-service-account.json")
         assert settings.google_oauth_client_json == str(PROJECT_ROOT / "env" / "google-oauth-client.json")
 
