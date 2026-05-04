@@ -1,15 +1,13 @@
 """Catalogue entry for the *Modelo 100* IRPF annual return procedure page.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
-:attr:`aeat.domain.modelos.ModeloCode.MODELO_100`. Accepts the IRPF-only
+under :attr:`aeat.domain.portals.PortalCategory.FILING`. Accepts the IRPF-only
 :attr:`aeat.domain.portals.AuthMethod.REFERENCE_NUMBER` credential in
 addition to the standard certificate / Cl@ve / DNIe set.
 """
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -29,7 +27,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.REFERENCE_NUMBER,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_100,
     label="entries.portal_m100_renta.label_331643",
     purpose_es="Presentación de la declaración anual del IRPF (Renta).",
 )

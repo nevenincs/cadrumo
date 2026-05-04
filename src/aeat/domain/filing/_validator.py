@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.logging import get_logger
 from ._protocols import (
     CasillaCollection,
@@ -97,7 +97,7 @@ class FilingValidator:
                 casilla_id=None,
                 severity=FilingFindingSeverity.WARNING,
                 code="filing-schema-version-mismatch",
-                message=Translatable("filing.validation.schema_mismatch"),
+                message=tr("filing.validation.schema_mismatch"),
                 references_rules=(),
             )
         ]
@@ -115,7 +115,7 @@ class FilingValidator:
                         casilla_id=casilla.id,
                         severity=FilingFindingSeverity.ERROR,
                         code="casilla-required-missing",
-                        message=Translatable("filing.validation.required_missing"),
+                        message=tr("filing.validation.required_missing"),
                         references_rules=(),
                     )
                 )
@@ -142,7 +142,7 @@ class FilingValidator:
             casilla_id=casilla_id,
             severity=FilingFindingSeverity.ERROR,
             code="casilla-out-of-range",
-            message=Translatable("filing.validation.out_of_range"),
+            message=tr("filing.validation.out_of_range"),
             references_rules=(),
         )
 
@@ -177,7 +177,7 @@ class FilingValidator:
             casilla_id=casilla_id,
             severity=FilingFindingSeverity.ERROR,
             code="formula-divergence",
-            message=Translatable("filing.validation.formula_divergence"),
+            message=tr("filing.validation.formula_divergence"),
             references_rules=(),
         )
 
@@ -193,7 +193,7 @@ class FilingValidator:
                 casilla_id=None,
                 severity=FilingFindingSeverity.ERROR,
                 code="filing-deadline-missed",
-                message=Translatable("filing.validation.deadline_missed"),
+                message=tr("filing.validation.deadline_missed"),
                 references_rules=(),
             )
         ]

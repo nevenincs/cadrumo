@@ -7,7 +7,6 @@ from types import MappingProxyType
 
 import pytest
 
-from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._errors import PortalIntegrityError, UnknownPortalError
@@ -62,19 +61,11 @@ def test_replaced_by_resolves_for_every_retired_entry() -> None:
             assert metadata.replaced_by in PORTAL_REGISTRY
 
 
-def test_modelo_037_is_the_only_retired_carve_out() -> None:
-    """Modelo 037 is the sole ``ModeloCode`` without an active portal."""
-    for code in ModeloCode:
-        portals = [
-            m
-            for m in PORTAL_REGISTRY.values()
-            if m.category in {PortalCategory.FILING, PortalCategory.CENSUS} and m.related_modelo is code
-        ]
-        assert portals, f"modelo {code.value} has no FILING/CENSUS portal"
-        if code is ModeloCode.MODELO_037:
-            assert all(not p.active for p in portals)
-        else:
-            assert any(p.active for p in portals)
+def test_modelo_037_entries_are_retired() -> None:
+    """Modelo 037 portal records are retained only as inactive history."""
+    metadata = PORTAL_REGISTRY[Portal.PORTAL_M037_CENSAL_SIMPLIFICADA]
+    assert metadata.category is PortalCategory.CENSUS
+    assert metadata.active is False
 
 
 def test_duplicate_entry_rejected() -> None:
@@ -103,33 +94,32 @@ def test_get_portal_unknown_string_raises() -> None:
 
 
 def test_portals_for_modelo_scope_is_filing_and_borrador() -> None:
-    """``portals_for_modelo`` returns FILING / BORRADOR only — CENSUS is excluded."""
-    entries = portals_for_modelo(ModeloCode.MODELO_303)
+    """``portals_for_modelo`` returns FILING / BORRADOR only."""
+    entries = portals_for_modelo("130")
     categories = {e.category for e in entries}
-    assert categories == {PortalCategory.FILING, PortalCategory.BORRADOR}
+    assert categories == {PortalCategory.FILING}
 
 
 def test_portals_for_modelo_excludes_census_for_036() -> None:
     """Modelo 036 CENSUS portal is not surfaced by ``portals_for_modelo``."""
-    entries = portals_for_modelo(ModeloCode.MODELO_036)
+    entries = portals_for_modelo("036")
     assert entries == ()
 
 
 def test_portals_for_modelo_accepts_string_code() -> None:
     """``portals_for_modelo`` accepts the canonical string code."""
-    entries = portals_for_modelo("303")
-    assert entries == portals_for_modelo(ModeloCode.MODELO_303)
+    entries = portals_for_modelo("130")
+    assert entries
 
 
-def test_portals_for_modelo_unknown_code_raises() -> None:
-    """Unknown modelo codes are rejected."""
-    with pytest.raises(ValueError):
-        portals_for_modelo("999")
+def test_portals_for_modelo_without_portal_returns_empty_tuple() -> None:
+    """A valid identifier without portal metadata returns no entries."""
+    assert portals_for_modelo("999") == ()
 
 
 def test_portals_for_modelo_is_sorted_deterministic() -> None:
     """Result is sorted by :class:`Portal` value."""
-    entries = portals_for_modelo(ModeloCode.MODELO_303)
+    entries = portals_for_modelo("130")
     values = [e.portal.value for e in entries]
     assert values == sorted(values)
 

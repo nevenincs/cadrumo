@@ -110,7 +110,7 @@ def set_ratio_cmd(
             typer.echo(str(exc), err=True)
             raise typer.Exit(code=2) from exc
     _save_profile(updated)
-    for category in categories:
+    for _category in categories:
         typer.echo(tr("financial.profile.t_407379"))
 
 
@@ -141,7 +141,7 @@ def unset_ratio_cmd(
         typer.echo(tr("financial.profile.t_344840"))
         return
     _save_profile(updated)
-    for category in removed:
+    for _category in removed:
         typer.echo(tr("financial.profile.t_620920"))
 
 

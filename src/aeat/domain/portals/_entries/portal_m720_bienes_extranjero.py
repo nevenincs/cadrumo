@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -26,7 +25,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_720,
     label="entries.portal_m720_bienes_extranjero.label_396501",
     purpose_es="Declaración informativa sobre bienes y derechos situados en el extranjero.",
 )

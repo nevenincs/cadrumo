@@ -1,15 +1,13 @@
 """Catalogue entry for the *Modelo 036* census-declaration procedure page.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.CENSUS` cross-referencing
-:attr:`aeat.domain.modelos.ModeloCode.MODELO_036`. Covers registration,
+under :attr:`aeat.domain.portals.PortalCategory.CENSUS`. Covers registration,
 modification, and deregistration on the census of entrepreneurs,
 professionals, and withholders.
 """
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -28,7 +26,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_036,
     label="entries.portal_m036_censal.label_771260",
     purpose_es="Alta, modificación y baja en el censo de empresarios, profesionales y retenedores.",
 )

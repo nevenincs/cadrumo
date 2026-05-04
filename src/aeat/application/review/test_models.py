@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import (
     Invoice,
     InvoiceKind,
@@ -40,11 +41,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _REVIEW_ITEM_ADAPTER = TypeAdapter(ReviewItem)
 
 
-from ...core.i18n import Translatable
-
-
-def _summary(text: str = "demo") -> Translatable:
-    return Translatable("translation")
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 def _raw() -> RawTransaction:

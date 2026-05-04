@@ -1,10 +1,10 @@
-"""Shared helpers for constructing per-portal registry entries.
+"""Shared helpers for constructing per-portal entries.
 
 Each entry module in :mod:`aeat.domain.portals._entries` calls
 :func:`build_entry` to turn a compact set of keyword arguments into a
 fully validated :class:`PortalMetadata`. Keeping this glue private
-isolates the repetitive construction boilerplate from the authoritative
-per-portal data tables.
+isolates the repetitive construction boilerplate from the per-portal
+data tables.
 """
 
 from __future__ import annotations
@@ -13,7 +13,6 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -36,7 +35,6 @@ def build_entry(
     url_stability: UrlStability,
     label: str,
     purpose_es: str,
-    related_modelo: ModeloCode | None = None,
     active: bool = True,
     replaced_by: Portal | None = None,
     notes_es: Iterable[str] = (),
@@ -52,8 +50,6 @@ def build_entry(
         url_stability: The :class:`UrlStability` tier.
         label: Multilingual display label.
         purpose_es: One-sentence Spanish purpose.
-        related_modelo: Foreign key into :class:`ModeloCode`. Required
-            for FILING / CENSUS / BORRADOR portals.
         active: Whether the portal is currently in service.
         replaced_by: When retired, optionally the :class:`Portal`
             member that supersedes this one.
@@ -69,7 +65,6 @@ def build_entry(
         category=category,
         auth_methods=frozenset(auth_methods),
         url_stability=url_stability,
-        related_modelo=related_modelo,
         label=label,
         purpose_es=purpose_es,
         active=active,

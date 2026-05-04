@@ -1,15 +1,13 @@
 """Catalogue entry for the *Modelo 115* urban-rental withholdings procedure.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
-:attr:`aeat.domain.modelos.ModeloCode.MODELO_115`. Backs the periodic
+under :attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
 self-assessment of withholdings and on-account payments on income from
 urban property leases.
 """
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -28,7 +26,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_115,
     label="entries.portal_m115_retenciones_arrendamientos.label_841139",
     purpose_es=(
         "Autoliquidación periódica de retenciones e ingresos a cuenta "

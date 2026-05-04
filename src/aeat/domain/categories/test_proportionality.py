@@ -20,6 +20,7 @@ from . import (
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
+    StatutoryCapVariant,
     parse_http_url,
 )
 
@@ -96,3 +97,47 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
 
     assert rule.statutory_cap_eur == Decimal("500")
     assert rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON
+
+
+def test_statutory_cap_accepts_daily_cap_variants() -> None:
+    """Daily statutory-cap variants preserve condition-specific legal limits."""
+
+    rule = ProportionalityRule(
+        kind=ProportionalityKind.STATUTORY_CAP,
+        statutory_cap_variants=(
+            StatutoryCapVariant(
+                id="sin-pernocta",
+                label_es="Sin pernocta",
+                statutory_cap_eur_per_day=Decimal("26.67"),
+            ),
+            StatutoryCapVariant(
+                id="con-pernocta",
+                label_es="Con pernocta",
+                statutory_cap_eur_per_day=Decimal("53.34"),
+            ),
+        ),
+        citations=(_citation(),),
+        notes_es="Límites diarios por condición.",
+    )
+
+    assert {variant.id for variant in rule.statutory_cap_variants} == {"sin-pernocta", "con-pernocta"}
+
+
+def test_statutory_cap_rejects_mixed_cap_modes() -> None:
+    """A statutory-cap rule must not mix generic and variant cap modes."""
+
+    with pytest.raises(ValidationError):
+        ProportionalityRule(
+            kind=ProportionalityKind.STATUTORY_CAP,
+            statutory_cap_eur=Decimal("500"),
+            statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
+            statutory_cap_variants=(
+                StatutoryCapVariant(
+                    id="sin-pernocta",
+                    label_es="Sin pernocta",
+                    statutory_cap_eur_per_day=Decimal("26.67"),
+                ),
+            ),
+            citations=(_citation(),),
+            notes_es="Modos incompatibles.",
+        )

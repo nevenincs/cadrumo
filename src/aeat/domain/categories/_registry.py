@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from types import MappingProxyType
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
     CategoryCitation,
@@ -13,6 +13,7 @@ from ._proportionality import (
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
+    StatutoryCapVariant,
     parse_http_url,
 )
 from ._spending_category import SpendingCategory
@@ -30,10 +31,10 @@ _AEAT_RETA = (
 )
 
 
-def _label(message: str) -> Translatable:
+def _label(message: str) -> tr:
     """Build a multilingual label payload."""
 
-    return Translatable(message)
+    return tr(message)
 
 
 def _citation(
@@ -64,6 +65,7 @@ def _rule(
     statutory_cap_eur_per_day: Decimal | None = None,
     statutory_cap_eur: Decimal | None = None,
     statutory_cap_period: StatutoryCapPeriod | None = None,
+    statutory_cap_variants: tuple[StatutoryCapVariant, ...] = (),
 ) -> ProportionalityRule:
     """Build a proportionality rule."""
 
@@ -74,15 +76,24 @@ def _rule(
         statutory_cap_eur_per_day=statutory_cap_eur_per_day,
         statutory_cap_eur=statutory_cap_eur,
         statutory_cap_period=statutory_cap_period,
+        statutory_cap_variants=statutory_cap_variants,
         citations=citations,
         notes_es=notes_es,
+    )
+
+
+def _daily_cap_variant(*, variant_id: str, label_es: str, amount: str) -> StatutoryCapVariant:
+    return StatutoryCapVariant(
+        id=variant_id,
+        label_es=label_es,
+        statutory_cap_eur_per_day=Decimal(amount),
     )
 
 
 def _profile(
     *,
     category: SpendingCategory,
-    label: Translatable,
+    label: tr,
     proportionality: ProportionalityRule,
     vat_hint: VatCategory | None,
 ) -> CategoryProfile:
@@ -355,7 +366,9 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_RETA,
-            notes_es="Las cuotas de mutualidades alternativas al RETA son gasto en lugar de reducción en base imponible.",
+            notes_es=(
+                "Las cuotas de mutualidades alternativas al RETA son gasto en lugar de reducción en base imponible."
+            ),
             statutory_cap_eur=Decimal("15000"),
             statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         ),
@@ -378,7 +391,7 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_RENT,
             notes_es="Regla especial: 30% del porcentaje de afectación.",
-            default_ratio=Decimal("0.30"),
+            fixed_pct=Decimal("0.30"),
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
@@ -399,7 +412,7 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
             notes_es="Electricidad de vivienda afecta: 30% de la proporción m2.",
-            default_ratio=Decimal("0.30"),
+            fixed_pct=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
@@ -410,7 +423,7 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
             notes_es="Agua de vivienda afecta: 30% de la proporción m2.",
-            default_ratio=Decimal("0.30"),
+            fixed_pct=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
@@ -421,7 +434,7 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
             notes_es="Gas de vivienda afecta: 30% de la proporción m2.",
-            default_ratio=Decimal("0.30"),
+            fixed_pct=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
@@ -432,7 +445,7 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=_CIT_HOME_SUPPLIES,
             notes_es="Internet de vivienda afecta: 30% de la proporción m2.",
-            default_ratio=Decimal("0.30"),
+            fixed_pct=Decimal("0.30"),
         ),
         vat_hint=VatCategory.GENERAL,
     ),
@@ -562,7 +575,14 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_DIETAS,
-            notes_es="Límite reglamentario: 53,34 EUR/día (con pernocta), 26,67 EUR/día (sin). Pago electrónico obligatorio.",
+            notes_es=(
+                "Límite reglamentario: 53,34 EUR/día con pernocta y 26,67 EUR/día sin pernocta. "
+                "Pago electrónico obligatorio."
+            ),
+            statutory_cap_variants=(
+                _daily_cap_variant(variant_id="sin-pernocta", label_es="Sin pernocta", amount="26.67"),
+                _daily_cap_variant(variant_id="con-pernocta", label_es="Con pernocta", amount="53.34"),
+            ),
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
@@ -572,7 +592,14 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
         proportionality=_rule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=_CIT_DIETAS,
-            notes_es="Límite reglamentario: 91,35 EUR/día (con pernocta), 48,08 EUR/día (sin). Pago electrónico obligatorio.",
+            notes_es=(
+                "Límite reglamentario: 91,35 EUR/día con pernocta y 48,08 EUR/día sin pernocta. "
+                "Pago electrónico obligatorio."
+            ),
+            statutory_cap_variants=(
+                _daily_cap_variant(variant_id="sin-pernocta", label_es="Sin pernocta", amount="48.08"),
+                _daily_cap_variant(variant_id="con-pernocta", label_es="Con pernocta", amount="91.35"),
+            ),
         ),
         vat_hint=VatCategory.EXEMPT_OR_NON_SUBJECT,
     ),
@@ -694,7 +721,9 @@ _PROFILE_BY_CATEGORY: dict[SpendingCategory, CategoryProfile] = {
         proportionality=_rule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             citations=_CIT_GENERAL_EXPENSES,
-            notes_es="Costes directos refacturados o incorporados al servicio del cliente (servidores, APIs, materiales).",
+            notes_es=(
+                "Costes directos refacturados o incorporados al servicio del cliente (servidores, APIs, materiales)."
+            ),
         ),
         vat_hint=VatCategory.GENERAL,
     ),

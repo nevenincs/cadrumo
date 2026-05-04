@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -24,7 +23,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.CLAVE_PERMANENTE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    related_modelo=ModeloCode.MODELO_303,
     label="entries.portal_pre303_ayuda.label_935129",
     purpose_es="Servicio de ayuda Pre303: prefilled de casillas del Modelo 303 a partir de libros registro y SII.",
 )

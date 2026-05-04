@@ -66,9 +66,7 @@ def functions_list() -> None:
     table.add_column("State", style="white")
     table.add_column("Environment", style="dim")
     table.add_column("Update Time", style="dim")
-    count = 0
-    for function in client.list_functions(parent=parent):
-        count += 1
+    for _count, function in enumerate(client.list_functions(parent=parent), start=1):
         table.add_row(
             getattr(function, "name", ""),
             str(getattr(function, "state", "")),
@@ -103,9 +101,7 @@ def run_list() -> None:
     table.add_column("Name", style="cyan")
     table.add_column("Generation", style="white")
     table.add_column("Update Time", style="dim")
-    count = 0
     for service in client.list_services(parent=parent):
-        count += 1
         table.add_row(
             getattr(service, "name", ""),
             str(getattr(service, "generation", "")),
@@ -138,9 +134,7 @@ def storage_buckets() -> None:
     table.add_column("Name", style="cyan")
     table.add_column("Location", style="white")
     table.add_column("Storage Class", style="dim")
-    count = 0
     for bucket in client.list_buckets():
-        count += 1
         table.add_row(bucket.name, bucket.location or "", bucket.storage_class or "")
     Console().print(table)
     typer.echo(tr("cli.cloud.t_742684"))
@@ -159,9 +153,7 @@ def storage_ls(
     table.add_column("Name", style="cyan")
     table.add_column("Size", style="white", justify="right")
     table.add_column("Updated", style="dim")
-    count = 0
     for blob in client.list_blobs(bucket, prefix=prefix):
-        count += 1
         table.add_row(blob.name, str(blob.size or ""), str(blob.updated or ""))
     Console().print(table)
     typer.echo(tr("cli.cloud.t_754075"))

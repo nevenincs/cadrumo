@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.filing import (
     FilingDraft,
     FilingDraftStatus,
@@ -28,11 +29,8 @@ def _hint() -> str:
     return "filing.test_calculate.hint"
 
 
-from ...core.i18n import Translatable
-
-
-def _finding_message(code: str) -> Translatable:
-    return Translatable(f"filing.test_calculate.finding_{code}")
+def _finding_message(code: str) -> tr:
+    return tr(f"filing.test_calculate.finding_{code}")
 
 
 def _make_draft(

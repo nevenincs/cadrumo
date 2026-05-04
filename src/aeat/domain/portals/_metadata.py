@@ -1,4 +1,4 @@
-"""Strict pydantic model for a single portal's authoritative metadata."""
+"""Strict pydantic model for a single portal's metadata."""
 
 from __future__ import annotations
 
@@ -6,27 +6,22 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
-from ..modelos import ModeloCode
+from ...core.i18n import Translatable
 from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from ._codes import Portal
 
-_CATEGORIES_REQUIRING_MODELO: frozenset[PortalCategory] = frozenset(
-    {PortalCategory.FILING, PortalCategory.CENSUS, PortalCategory.BORRADOR}
-)
 _G_CODE_PATH_RE: re.Pattern[str] = re.compile(r"^/Sede/procedimientoini/G[A-Z0-9]{3}\.shtml$")
 
 
 class PortalMetadata(BaseModel):
-    """Authoritative, curated metadata for a single AEAT portal.
+    """Curated metadata for a single AEAT portal.
 
     One instance per :class:`Portal` member in the registry. The model
     is strict, frozen, and rejects unknown keys. Structural
-    cross-reference invariants that span the registry as a whole
-    (``replaced_by`` resolution, ``related_modelo`` closure over every
-    :class:`ModeloCode` member) are enforced at registry-assembly time
-    by :func:`aeat.domain.portals._registry._finalise_registry` rather than
-    here, so individual entries can be constructed in isolation in
-    unit tests.
+    cross-reference invariants that span the registry as a whole are
+    enforced at registry-assembly time by
+    :func:`aeat.domain.portals._registry._finalise_registry` rather than
+    here, so individual entries can be constructed in isolation.
 
     Attributes:
         portal: The :class:`Portal` this entry describes.
@@ -39,11 +34,7 @@ class PortalMetadata(BaseModel):
             mutually exclusive with every other method.
         url_stability: :class:`UrlStability` tier for read-only portal
             monitoring priority.
-        related_modelo: Foreign key into :class:`ModeloCode`. Required
-            iff ``category`` is ``FILING``, ``CENSUS``, or ``BORRADOR``;
-            forbidden for every other category.
-        label: Multilingual display label with non-empty ``es`` / ``en``
-            / ``hu`` keys.
+        label: Translation key for the display label.
         purpose_es: One-sentence Spanish purpose, non-empty after
             stripping.
         active: ``False`` marks retired portals preserved for
@@ -63,8 +54,7 @@ class PortalMetadata(BaseModel):
     category: PortalCategory
     auth_methods: frozenset[AuthMethod] = Field(min_length=1)
     url_stability: UrlStability
-    related_modelo: ModeloCode | None = None
-    label: str
+    label: Translatable
     purpose_es: str = Field(min_length=1)
     active: bool = True
     replaced_by: Portal | None = None
@@ -76,6 +66,14 @@ class PortalMetadata(BaseModel):
         """Reject whitespace-only purpose strings."""
         if not value.strip():
             raise ValueError("purpose_es must not be empty or whitespace-only")
+        return value
+
+    @field_validator("label")
+    @classmethod
+    def _label_not_blank(cls, value: Translatable) -> Translatable:
+        """Reject whitespace-only label keys."""
+        if not value.strip():
+            raise ValueError("label must not be empty or whitespace-only")
         return value
 
     @field_validator("url")
@@ -97,14 +95,6 @@ class PortalMetadata(BaseModel):
         host = self.url.host
         if host != self.subdomain.value:
             raise ValueError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")
-
-        # related_modelo gating by category.
-        if self.category in _CATEGORIES_REQUIRING_MODELO:
-            if self.related_modelo is None:
-                raise ValueError(f"category {self.category.value!r} requires related_modelo")
-        else:
-            if self.related_modelo is not None:
-                raise ValueError(f"category {self.category.value!r} forbids related_modelo")
 
         # G-code path check for active FILING / CENSUS entries.
         if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSUS}:

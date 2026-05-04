@@ -28,7 +28,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 
 class LedgerImportDiagnosticKind(StrEnum):
@@ -74,7 +74,7 @@ class LedgerImportDiagnostic(BaseModel):
 
     kind: LedgerImportDiagnosticKind
     severity: LedgerImportDiagnosticSeverity
-    message: Translatable
+    message: tr
     source_path: Path | None = None
     source_locator: str | None = Field(default=None, max_length=256)
     affected_transaction_ids: tuple[str, ...] = ()
@@ -101,7 +101,7 @@ def build_ledger_import_diagnostic(
     *,
     kind: LedgerImportDiagnosticKind,
     severity: LedgerImportDiagnosticSeverity,
-    message: Translatable,
+    message: tr,
     source_path: Path | None = None,
     source_locator: str | None = None,
     affected_transaction_ids: tuple[str, ...] = (),

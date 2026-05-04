@@ -353,6 +353,12 @@ production-readiness definition above.
      closure per modelo/revision: legal closure, source closure, calculation
      closure, extraction closure, export closure, application-link closure,
      workbook parity coverage, and remote-state guard policy.
+     - [x] Expose central closure inventory counts through read-only
+        inspect/verify output: casillas, formulas, extraction profiles,
+        live/static cross-references, workbook parity refs, verification
+        expectations, application links, and application-link surfaces.
+     - [ ] Add per-modelo/revision closure detail output for export fields,
+        deadlines, portal guard policies, and workbook parity coverage.
   - [x] Add behavioural tests for the closed schema. Tests must load committed
      registry TOML and verify real validation/runtime behaviour; they must not
      define their own modelo, casilla, legal, source, extraction, or export
@@ -361,6 +367,10 @@ production-readiness definition above.
      parity tests, filing schema projection tests, verification tests, export
      tests, import-contract tests, `ruff`, and `ty` before starting any further
      model wave or deleting additional old authorities.
+     - [x] Re-run focused registry, categories, registry CLI, hard-cut
+        import-contract, `ruff`, and `ty` checks for the completed batch.
+     - [ ] Re-run filing schema projection, verification, and export suites
+        after their consumers are switched to the new snapshot sections.
 
 - `Phase 2` Central authority buildout and scattered-authority replacement
   - [ ] Establish the central registry backend as the only filing-grade
@@ -465,7 +475,7 @@ application surface, and the old authority has been deleted.
 | Hydrate, generation, schema-cache, BOE-promotion, and DR-promotion paths | Reviewed registry source material and human-authored registry definitions | Runtime and app CLI cannot write legal-rule truth. Any discovery tool output is evidence only and cannot be imported as executable authority. |
 
 - `Phase 2A` Discovered residual authority teardown ledger
-  - [ ] `src/aeat/domain/modelos`: replace the hardcoded `ModeloCode` authority
+  - [x] `src/aeat/domain/modelos`: replace the hardcoded `ModeloCode` authority
      with registry-backed modelo identity and lookup. Surviving
      Python may expose typed identifiers, but it must not own the supported
      modelo catalogue.
@@ -529,18 +539,18 @@ application surface, and the old authority has been deleted.
      references.
 
 - `Phase 2B` File-level scattered-authority cleanup guardrail
-  - [ ] `src/aeat/domain/modelos/_codes.py`: move supported modelo identity,
+  - [x] `src/aeat/domain/modelos/_codes.py`: move supported modelo identity,
      names, and retirement decisions into `registry/aeat/modelos/*.toml`; keep
      only registry-backed identifier helpers or delete the module.
-  - [ ] `src/aeat/domain/modelos/__init__.py`: export registry-backed modelo
-     lookup APIs only; remove enum-style catalogue authority.
-  - [ ] `src/aeat/domain/modelos/test_codes.py`: replace enum-member assertions
-     with committed-registry lookup behaviour tests.
-  - [ ] `src/aeat/domain/modelos/test_smoke.py`: replace hardcoded modelo smoke
-     expectations with registry load and validation checks.
+  - [x] `src/aeat/domain/modelos/__init__.py`: export identifier helpers only;
+     remove enum-style catalogue authority.
+  - [x] `src/aeat/domain/modelos/test_codes.py`: replace enum-member assertions
+     with identifier-shape behaviour tests.
+  - [x] `src/aeat/domain/modelos/test_smoke.py`: remove hardcoded enum-member
+     smoke expectations.
   - [ ] `src/aeat/domain/portals/_metadata.py`: replace `ModeloCode` coupling
      with registry modelo ids and portal binding references.
-  - [ ] `src/aeat/domain/portals/_registry.py`: remove portal coverage gates
+  - [x] `src/aeat/domain/portals/_registry.py`: remove portal coverage gates
      that decide filing-grade modelo support; validate only portal catalogue
      integrity and defer applicability to registry snapshots.
   - [ ] `src/aeat/domain/portals/_entries/_common.py`: replace
@@ -548,11 +558,11 @@ application surface, and the old authority has been deleted.
   - [ ] `src/aeat/domain/portals/_entries/portal_m*.py`: remove per-entry
      modelo support authority; each filing/census portal entry must be linked
      through registry portal bindings or remain endpoint metadata only.
-  - [ ] `src/aeat/domain/portals/test_modelo_cross_reference.py`: replace
+  - [x] `src/aeat/domain/portals/test_modelo_cross_reference.py`: replace
      `ModeloCode` coverage tests with registry portal-binding validation tests.
   - [ ] `src/aeat/domain/portals/test_metadata.py`: replace `ModeloCode`
      fixture construction with registry-backed metadata validation.
-  - [ ] `src/aeat/domain/portals/test_registry.py`: verify endpoint catalogue
+  - [x] `src/aeat/domain/portals/test_registry.py`: verify endpoint catalogue
      behaviour and registry binding closure; do not assert support from portal
      entries alone.
   - [ ] `src/aeat/domain/deadlines/_calendar.py`: move modelo cadence, filing

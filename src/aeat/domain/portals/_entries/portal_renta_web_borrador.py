@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -28,7 +27,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.REFERENCE_NUMBER,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    related_modelo=ModeloCode.MODELO_100,
     label="entries.portal_renta_web_borrador.label_255206",
     purpose_es="Acceso al borrador y servicio Renta Web para la declaración del IRPF.",
     notes_es=("Ruta WebLogic: puede rotar entre campañas Renta.",),

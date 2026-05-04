@@ -42,7 +42,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.logging import get_logger
 from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
@@ -233,7 +233,7 @@ def _category_hint(value: SpendingCategory) -> str:
     notes_preview = rule.notes_es.strip().splitlines()[0][:120] if rule.notes_es else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
-        segments.append(Translatable(notes_preview))
+        segments.append(tr(notes_preview))
     return " — ".join(segments)
 
 

@@ -6,6 +6,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.i18n import Translatable as tr  # noqa: N813
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
@@ -41,29 +43,29 @@ class AuthProviderListing(BaseModel):
     model_config = _STRICT_FROZEN
 
     id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
-    label: str = Field(min_length=1)
+    label: tr
     availability: AuthProviderAvailability
-    description: str = Field(min_length=1)
+    description: tr
 
 
 AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="certificate",
-        label="auth.catalogue.certificate_label",
+        label=tr("auth.catalogue.certificate_label"),
         availability=AuthProviderAvailability.AVAILABLE,
-        description="auth.catalogue.certificate_description",
+        description=tr("auth.catalogue.certificate_description"),
     ),
     AuthProviderListing(
         id="clave-movil",
-        label="auth.catalogue.clave_movil_label",
-        availability=AuthProviderAvailability.AVAILABLE,
-        description="auth.catalogue.clave_movil_description",
+        label=tr("auth.catalogue.clave_movil_label"),
+        availability=AuthProviderAvailability.UNAVAILABLE,
+        description=tr("auth.catalogue.clave_movil_description"),
     ),
     AuthProviderListing(
         id="clave-permanente",
-        label="auth.catalogue.clave_permanente_label",
+        label=tr("auth.catalogue.clave_permanente_label"),
         availability=AuthProviderAvailability.UNAVAILABLE,
-        description="auth.catalogue.clave_permanente_description",
+        description=tr("auth.catalogue.clave_permanente_description"),
     ),
 )
 """Catalogue of auth provider entries in display order."""

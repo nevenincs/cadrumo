@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
@@ -18,12 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _SOURCE_PATH = Path("imports/n26-2026Q1.csv")
 
-
-from ...core.i18n import Translatable
-
-
-def _message() -> Translatable:
-    return Translatable("transactions.test_diagnostics.message")
+def _message() -> tr:
+    return tr("transactions.test_diagnostics.message")
 
 
 def test_kind_enum_carries_cli_values() -> None:
@@ -59,7 +56,7 @@ def test_diagnostic_rejects_message_without_authoritative_spanish() -> None:
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
             severity=LedgerImportDiagnosticSeverity.ERROR,
-            message=Translatable("translation"),
+            message=tr("translation"),
         )
 
 
