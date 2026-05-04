@@ -1,11 +1,11 @@
 """Public ``parse_declaracion`` entry point for declaración PDFs.
 
-Single-function module that ties detection
-(:func:`aeat.adapters.inbound.declaracion._detect.detect_template_revision`)
-to extraction (:func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`)
-behind one call. Callers may override modelo / año / revision; the
-function reconciles overrides against the auto-detected triple and
-raises on conflict.
+Detection resolves a
+:class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
+from document content and caller overrides. That tuple is a detected
+template identity only; it no longer selects a legacy Python extractor
+registry entry. Extractor dispatch fails closed until declaration parsing
+is backed by validated registry snapshots.
 """
 
 from __future__ import annotations
@@ -33,8 +33,7 @@ def parse_declaracion(
     Resolves the
     :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
     triple by combining auto-detection with any caller-supplied
-    overrides, then dispatches to the matching extractor obtained from
-    :func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`.
+    overrides, then enters the fail-closed extractor dispatch boundary.
 
     Args:
         pdf_path: Path to the declaración PDF.
@@ -51,8 +50,7 @@ def parse_declaracion(
             When auto-detection fails and the caller did not supply both
             ``modelo_override`` and ``año_override``.
         :exc:`aeat.adapters.inbound.declaracion._errors.NoExtractorRegisteredError`:
-            When no extractor is registered for the resolved template
-            revision.
+            When extractor dispatch requires validated registry snapshots.
         :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
             For other parse errors (PDF not found, empty text, required
             header field missing, override conflicts with detected

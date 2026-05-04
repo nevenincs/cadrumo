@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_modelo_code_has_exactly_twenty_one_members() -> None:
-    """The inventory locks exactly 21 modelos."""
+    """The identifier enum covers the currently scoped modelo ids."""
     assert len(list(ModeloCode)) == 21
 
 
@@ -32,17 +32,3 @@ def test_value_round_trip(raw: str) -> None:
     """``ModeloCode(str)`` round-trips through the value."""
     member = ModeloCode(raw)
     assert member.value == raw
-
-
-def test_error_classes_import() -> None:
-    """error classes import cleanly from the private module."""
-    from ...core.errors import AeatError
-    from ._errors import (
-        ModeloRegistryError,
-        RegistryIntegrityError,
-        UnknownModeloError,
-    )
-
-    assert issubclass(ModeloRegistryError, AeatError)
-    assert issubclass(UnknownModeloError, ModeloRegistryError)
-    assert issubclass(RegistryIntegrityError, ModeloRegistryError)

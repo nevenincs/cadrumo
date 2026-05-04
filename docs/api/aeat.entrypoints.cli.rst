@@ -12,7 +12,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   aeat.entrypoints.cli.audit
    aeat.entrypoints.cli.auth
    aeat.entrypoints.cli.browser
    aeat.entrypoints.cli.data

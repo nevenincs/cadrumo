@@ -25,13 +25,12 @@ class DeclaracionParseError(PdfFilingImportError):
 
 
 class NoExtractorRegisteredError(DeclaracionParseError):
-    """Raised when no concrete extractor exists for the detected template.
+    """Raised when extraction reaches the disabled legacy dispatch path.
 
-    The template-revision registry under
-    :mod:`aeat.adapters.inbound.declaracion._extractors` has no entry for
-    the resolved ``(modelo, año, revision)`` triple. The error message
-    enumerates the supported triples so callers can pick a compatible
-    override.
+    The legacy Python extractor registry is intentionally fail-closed.
+    Callers must use validated registry snapshots once registry-backed
+    declaration extraction is available; supported-triple enumeration is
+    no longer authoritative.
     """
 
 

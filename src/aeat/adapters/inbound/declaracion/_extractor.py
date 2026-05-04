@@ -1,10 +1,9 @@
-"""Abstract base class for per-modelo declaración extractors.
+"""Legacy abstract base for declaración extractors.
 
-Defines the :class:`DeclaracionExtractor` contract that every concrete
-extractor under :mod:`aeat.adapters.inbound.declaracion._extractors`
-implements. Subclasses pin a :class:`TemplateRevision` ClassVar and
-implement :meth:`DeclaracionExtractor.extract` to convert the PDF at
-``pdf_path`` into a strict :class:`DeclaracionFiling`.
+The concrete per-model extractor modules have been removed from public
+dispatch. This base type remains only as a structural protocol for any
+future registry-backed extraction adapter that needs to return a
+``DeclaracionFiling`` from a PDF path.
 """
 
 from __future__ import annotations
@@ -17,20 +16,16 @@ from ._schema import DeclaracionFiling, TemplateRevision
 
 
 class DeclaracionExtractor(ABC):
-    """Abstract extractor for a single ``(modelo, template_revision)`` pair.
+    """Abstract extractor shape retained for registry-backed adapters.
 
-    Each concrete subclass owns the parsing logic for one AEAT template
-    revision and is registered in
-    :mod:`aeat.adapters.inbound.declaracion._extractors`. The
-    :meth:`extract` method is the only behavioural contract; everything
-    else (regex maps, field labels, structural checks) is an internal
-    detail of the subclass.
+    The legacy Python extractor registry is disabled, so this class no
+    longer implies import-time registration or dispatch authority. The
+    :meth:`extract` method is the only behavioural contract retained by
+    the type.
 
     Attributes:
-        template_revision: The :class:`TemplateRevision` triple this
-            extractor handles. Used by
-            :func:`aeat.adapters.inbound.declaracion._extractors.get_extractor`
-            to route a detected PDF to the right extractor.
+        template_revision: The :class:`TemplateRevision` identity the
+            adapter reports for diagnostics.
     """
 
     template_revision: ClassVar[TemplateRevision]

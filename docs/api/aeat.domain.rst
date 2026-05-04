@@ -25,7 +25,6 @@ Subpackages
    aeat.domain.portals
    aeat.domain.profile
    aeat.domain.rental
-   aeat.domain.schema
    aeat.domain.submission
    aeat.domain.sync
    aeat.domain.transactions

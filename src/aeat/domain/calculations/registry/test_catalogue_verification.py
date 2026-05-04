@@ -5,9 +5,11 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
+from ._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import LegalReference, SourceReference
@@ -15,17 +17,20 @@ from ._sources import verify_source_catalogue, verify_source_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+LegalReferenceKind = Literal["ley", "real_decreto", "orden", "reglamento", "directiva", "manual", "instruction"]
+
 
 def _legal_reference(
     *,
     ref_id: str = "ley-37-1992:art-90",
+    kind: LegalReferenceKind = "ley",
     article: str = "90",
     notes: str | None = "IVA general",
 ) -> LegalReference:
     return LegalReference(
         id=ref_id,
         authority="boe",
-        kind="ley",
+        kind=kind,
         corpus_ref="corpus/normatives/ley-37-1992.json#art-90",
         document_id="BOE-A-1992-28740",
         article=article,
@@ -103,6 +108,32 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
 
     with pytest.raises(RegistryValidationError, match="known-bad citation"):
         verify_legal_catalogue({reference.id: reference})
+
+
+@pytest.mark.parametrize("blocked", _KNOWN_BAD_CITATIONS)
+def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked) -> None:
+    reference = _legal_reference(
+        ref_id=f"{blocked.source}:{blocked.article}",
+        kind=blocked.source,
+        article=blocked.article,
+        notes=blocked.role_substring_es,
+    )
+    text = " ".join(part for part in (reference.section, reference.notes) if part)
+
+    assert find_known_bad(blocked.source, blocked.article, text) == blocked
+    with pytest.raises(RegistryValidationError, match="known-bad citation"):
+        verify_legal_catalogue({reference.id: reference})
+
+
+def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
+    blocked = find_known_bad("ley", "77", "cuota integra autonomica")
+
+    assert blocked is not None
+    assert blocked.role_substring_es == "cuota íntegra autonómica"
+
+
+def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
+    assert find_known_bad("ley", "77", "cuota líquida autonómica total") is None
 
 
 def test_verify_legal_catalogue_rejects_key_mismatch() -> None:
