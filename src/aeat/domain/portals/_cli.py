@@ -4,7 +4,7 @@ Exposes three commands backed by :data:`aeat.domain.portals.PORTAL_REGISTRY`:
 
 - ``aeat portals list`` — filter and list portal entries.
 - ``aeat portals show`` — dump a single entry.
-- ``aeat portals for-modelo`` — list filing portals for a modelo.
+- ``aeat portals for-modelo`` — list registry-linked filing portals.
 
 Every command emits deterministic JSON (sorted by :class:`Portal`
 value) via :meth:`pydantic.BaseModel.model_dump` or a rich table
@@ -53,7 +53,7 @@ def _ensure_utf8_streams() -> None:
     """Reconfigure stdout/stderr to UTF-8 for the current process.
 
     The portal catalogue carries Spanish and Hungarian characters that
-    Windows legacy code-page stdout (cp1252) cannot encode. Scoped to
+    Windows code-page stdout (cp1252) cannot encode. Scoped to
     the Typer callback so the side effect only applies to
     ``aeat portals`` invocations.
     """
@@ -90,14 +90,12 @@ def _emit_entries(entries: tuple[PortalMetadata, ...], json_out: bool, *, comman
     table.add_column("category")
     table.add_column("subdomain")
     table.add_column("active")
-    table.add_column("modelo")
     for entry in entries:
         table.add_row(
             entry.portal.value,
             entry.category.value,
             entry.subdomain.value,
             "yes" if entry.active else "no",
-            entry.related_modelo.value if entry.related_modelo else "-",
         )
     _CONSOLE.print(table)
     _CONSOLE.print(f"[dim]{len(entries)} entry(ies)[/dim]")
@@ -107,7 +105,7 @@ def _emit_entries(entries: tuple[PortalMetadata, ...], json_out: bool, *, comman
 def list_command(
     category: PortalCategory | None = typer.Option(None, "--category", help="Filter by portal category."),
     modelo: str | None = typer.Option(
-        None, "--modelo", help="Filter by related modelo code (FILING/CENSUS/BORRADOR only)."
+        None, "--modelo", help="Filter by registry-linked modelo code."
     ),
     active_only: bool = typer.Option(False, "--active-only", help="Exclude retired portals."),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
@@ -148,7 +146,7 @@ def show_command(
 
 @app.command(
     name="for-modelo",
-    help="List every FILING / BORRADOR portal cross-referencing a modelo.",
+    help="List every registry-linked FILING / BORRADOR portal for a modelo.",
 )
 def for_modelo_command(
     code: str = typer.Argument(..., help="Three-character modelo code, e.g. '303'."),

@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ..submission._protocols import FilingFindingSeverity
 
 # Default schema version stamped on a freshly built draft when a
@@ -87,10 +88,6 @@ class FilingValue(BaseModel):
     source: str
     formula_trace: tuple[str, ...] | None = None
 
-
-from ...core.i18n import Translatable
-
-
 class FilingValidationFinding(BaseModel):
     """One finding produced by the validator.
 
@@ -110,7 +107,7 @@ class FilingValidationFinding(BaseModel):
     casilla_id: str | None
     severity: FilingFindingSeverity
     code: str
-    message: Translatable
+    message: tr
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 

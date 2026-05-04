@@ -6,7 +6,7 @@ public API is defined here. The schema is frozen and strict wherever
 the loader idiom permits it, per the project-wide pydantic v2
 mandate.
 
-Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
+Closed handbooks are :class:`enum.StrEnum`. Multilingual fields use
 :class:`aeat.core.i18n.str`. Modelo field cross-references
 are stored as validated strings (``MODELO_130:01`` shape) so the
 manuals corpus stays loadable even when a citation references a
@@ -29,17 +29,13 @@ from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from ..modelos import ModeloCode
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 # Modelo field cross-reference syntax used inside extracted rules.
-# The MODELO_NNN prefix is anchored to the closed `aeat.domain.modelos.ModeloCode`
-# enum (each member's value is the three-character AEAT code string), so a
-# new modelo cannot be cited from the manuals corpus without first being
-# registered in `aeat.domain.modelos`. The optional field suffix is a
-# validated string only - the field itself need not exist in a registry
-# snapshot at manual-corpus load time.
-_MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)
-_MODELO_CASILLA_PATTERN = rf"^MODELO_(?:{_MODELO_CODE_ALTERNATION})(?::[0-9A-Z_]+)?$"
+# The MODELO_NNN prefix validates identifier shape only. Filing-grade support
+# and casilla existence are resolved by registry snapshots, not by this corpus
+# schema.
+_MODELO_CASILLA_PATTERN = r"^MODELO_[0-9]{3}(?::[0-9A-Z_]+)?$"
 
 
 class ManualId(StrEnum):
@@ -116,9 +112,11 @@ _LegalActRef = Annotated[str, StringConstraints(strip_whitespace=True, min_lengt
 _YearField = Annotated[int, Field(ge=2000, le=2100)]
 
 
-def _require_spanish(translatable: str, field_name: str) -> None:
+def _require_spanish(translatable: tr, field_name: str) -> None:
     """Assert a :class:`~aeat.core.i18n.str` carries the authoritative ``es`` key."""
     if not translatable:
+        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
+    if not translatable.has_spanish and "." not in str(translatable):
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
@@ -226,7 +224,7 @@ class Rule(_ManualStrictFrozen):
     chapter_id: _StableId
     section_id: _StableId
     kind: RuleKind
-    statement: str = Field(description="Rule statement in all supplied languages.")
+    statement: tr = Field(description="Rule statement in all supplied languages.")
     applies_when: str | None = Field(
         default=None,
         description="Optional natural-language predicate describing the rule's applicability.",
@@ -285,8 +283,8 @@ class Section(_ManualStrictFrozen):
 
     section_id: _StableId
     chapter_id: _StableId
-    title: str
-    summary: str
+    title: tr
+    summary: tr
     prose: tuple[Paragraph, ...] = Field(default_factory=tuple)
     rules: tuple[Rule, ...] = Field(default_factory=tuple)
     references_sections: tuple[_StableId, ...] = Field(default_factory=tuple)
@@ -306,8 +304,8 @@ class Chapter(_ManualStrictFrozen):
     """A handbook chapter: metadata plus ordered section references."""
 
     chapter_id: _StableId
-    title: str
-    summary: str
+    title: tr
+    summary: tr
     sections: tuple[SectionRef, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
@@ -323,8 +321,8 @@ class Manual(_ManualStrictFrozen):
     manual_id: ManualId
     year: _YearField
     part: ManualPart
-    title: str
-    summary: str
+    title: tr
+    summary: tr
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
     fetched_at: datetime

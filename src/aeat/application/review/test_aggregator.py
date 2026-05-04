@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -45,11 +46,8 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-from ...core.i18n import Translatable
-
-
-def _summary(text: str = "demo") -> Translatable:
-    return Translatable("translation")
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 def _build_settings(tmp_path: Path) -> Settings:

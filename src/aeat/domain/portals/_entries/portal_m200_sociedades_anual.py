@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -24,7 +23,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_200,
     label="entries.portal_m200_sociedades_anual.label_979781",
     purpose_es="Autoliquidación anual del Impuesto sobre Sociedades.",
 )

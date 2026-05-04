@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     PROFILE_KEYS,
     ProfileKey,
@@ -55,7 +55,7 @@ def test_profile_key_rejects_blank_keys() -> None:
         ProfileKey(
             key="",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description=Translatable("profile.test_keys.description_490119"),
+            description=tr("profile.test_keys.description_490119"),
         )
 
 
@@ -64,7 +64,7 @@ def test_profile_key_rejects_padded_keys() -> None:
         ProfileKey(
             key=" tax.id ",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description=Translatable("profile.test_keys.description_490119"),
+            description=tr("profile.test_keys.description_490119"),
         )
 
 
@@ -73,5 +73,5 @@ def test_profile_key_rejects_descriptions_without_authoritative_spanish() -> Non
         ProfileKey(
             key="x",
             requirement=ProfileKeyRequirement.OPTIONAL,
-            description=Translatable("translation"),
+            description=tr("translation"),
         )

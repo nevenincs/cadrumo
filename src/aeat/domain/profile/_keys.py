@@ -24,7 +24,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 
 class ProfileKeyRequirement(StrEnum):
@@ -41,7 +41,7 @@ class ProfileKey(BaseModel):
 
     key: str = Field(min_length=1, max_length=128)
     requirement: ProfileKeyRequirement
-    description: Translatable
+    description: tr
 
     @field_validator("key")
     @classmethod
@@ -68,7 +68,7 @@ def _key(
     return ProfileKey(
         key=key,
         requirement=requirement,
-        description=Translatable(f"profile.key.{key}"),
+        description=tr(f"profile.key.{key}"),
     )
 
 

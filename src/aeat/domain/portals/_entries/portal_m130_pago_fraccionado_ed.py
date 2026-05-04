@@ -1,15 +1,13 @@
 """Catalogue entry for the *Modelo 130* IRPF instalment payment procedure.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
-:attr:`aeat.domain.modelos.ModeloCode.MODELO_130`. Used by entrepreneurs and
+under :attr:`aeat.domain.portals.PortalCategory.FILING`. Used by entrepreneurs and
 professionals on the IRPF *direct-assessment* (estimación directa) regime
 to settle on-account quarterly instalments.
 """
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -28,7 +26,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_130,
     label="entries.portal_m130_pago_fraccionado_ed.label_523782",
     purpose_es="Pago fraccionado a cuenta del IRPF para empresarios y profesionales en estimación directa.",
 )

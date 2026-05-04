@@ -118,11 +118,9 @@ def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
 def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> Manual:
     """Parse ``manual.json`` plus chapters into a :class:`~aeat.domain.manuals.Manual`.
 
-    The ``manual.json`` file is loaded via JSON mode and the chapters
-    loaded separately are serialised back through
-    :meth:`pydantic.BaseModel.model_dump` and spliced in before final
-    validation. JSON mode allows the list-to-tuple coercion that
-    strict Python mode refuses.
+    The ``manual.json`` file is loaded via JSON mode. Chapter records are
+    loaded and validated separately, then attached directly so translatable
+    provenance is preserved.
     """
     raw = _read_text(manual_path)
     try:
@@ -131,11 +129,12 @@ def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> M
         raise ManualParseError(f"{manual_path}: invalid JSON ({exc})") from exc
     if not isinstance(base_payload, dict):
         raise ManualParseError(f"{manual_path}: expected a JSON object")
-    base_payload["chapters"] = [chapter.model_dump(mode="json") for chapter in chapters]
+    base_payload["chapters"] = []
     try:
-        return Manual.model_validate_json(json.dumps(base_payload))
+        manual = Manual.model_validate_json(json.dumps(base_payload))
     except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{manual_path}: manual validation failed: {exc}") from exc
+    return manual.model_copy(update={"chapters": chapters})
 
 
 def load_manual(

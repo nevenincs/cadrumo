@@ -36,6 +36,7 @@ AUTHORITY_SCAN_ROOTS: tuple[Path, ...] = (
     PROJECT_ROOT / "src" / "aeat" / "application" / "filing",
     PROJECT_ROOT / "src" / "aeat" / "application" / "review",
     PROJECT_ROOT / "src" / "aeat" / "application" / "workflow",
+    PROJECT_ROOT / "src" / "aeat" / "domain" / "portals",
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "inbound" / "borrador",
     PROJECT_ROOT / "src" / "aeat" / "core" / "errors",
     PROJECT_ROOT / "src" / "aeat" / "core" / "config.py",
@@ -87,6 +88,12 @@ BANNED_AUTHORITY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "hardcoded tarifa authority",
         re.compile(r"\b(?:_TARIFA_ESTATAL|SUPPORTED_EJERCICIOS|validate_tarifa_estatal|apply_tarifa)\b"),
+    ),
+    ("modelo enum support authority", re.compile(r"\bModeloCode\.MODELO_\d{3}\b")),
+    ("portal-owned modelo binding", re.compile(r"\brelated_modelo\b")),
+    (
+        "modelo enum iteration authority",
+        re.compile(r"\b(?:for\s+\w+\s+in\s+ModeloCode|set\(ModeloCode\)|list\(ModeloCode\))\b"),
     ),
     ("phase metadata", re.compile(r"\bphase\s+\d+\b", re.IGNORECASE)),
     ("wave metadata", re.compile(r"\bwave\s+\d+\b", re.IGNORECASE)),

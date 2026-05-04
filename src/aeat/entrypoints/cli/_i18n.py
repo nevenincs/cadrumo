@@ -19,6 +19,7 @@ from ...core.config import load_settings
 i18n.load_path.append(str(importlib.resources.files("aeat").joinpath("locales")))
 i18n.set("filename_format", "{locale}.{format}")
 i18n.set("file_format", "yml")
+i18n.set("skip_locale_root_data", True)
 
 
 def output_language() -> str:

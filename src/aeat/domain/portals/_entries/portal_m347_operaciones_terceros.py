@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -26,7 +25,6 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_347,
     label="entries.portal_m347_operaciones_terceros.label_293185",
     purpose_es="Declaración informativa anual de operaciones con terceras personas por encima del umbral legal.",
 )

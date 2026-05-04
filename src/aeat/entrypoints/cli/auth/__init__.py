@@ -842,7 +842,6 @@ def login(
 
     now = datetime.now(UTC)
     remaining_seconds = int((session.idle_deadline - now).total_seconds())
-    _registry.get_entry(session.provider_kind).label
     if remaining_seconds <= 0:
         _CONSOLE.print("[yellow]" + tr("auth.init.t_092134") + "[/yellow]")
     else:
@@ -983,7 +982,6 @@ def whoami(
         emit_json_success("auth whoami", payload)
         return
 
-    _registry.get_entry(refreshed.provider_kind).label
     if assertion.is_valid:
         _CONSOLE.print("[green]" + tr("auth.init.t_888711") + "[/green]")
     else:
@@ -1081,3 +1079,4 @@ def logout(
 
 
 __all__ = ["app"]
+

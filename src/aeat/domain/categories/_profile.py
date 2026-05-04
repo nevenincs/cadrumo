@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
@@ -24,14 +25,11 @@ class VatCategory(StrEnum):
     NON_DEDUCTIBLE_INPUT = "non_deductible_input"
 
 
-from ...core.i18n import Translatable
-
-
 class CategoryProfile(_CategoryProfileStrictFrozenModel):
     """Explainable category profile for one spending category."""
 
     category: SpendingCategory
-    display_label: Translatable
+    display_label: tr
     proportionality: ProportionalityRule
     vat_hint: VatCategory | None = None
 

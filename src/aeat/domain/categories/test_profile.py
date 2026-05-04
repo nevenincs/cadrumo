@@ -13,7 +13,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     CategoryCitation,
     CategoryCitationSource,
@@ -50,7 +50,7 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
 
     profile = CategoryProfile(
         category=SpendingCategory.MATERIAL_OFICINA,
-        display_label=Translatable("categories.test_profile.display_label_851219"),
+        display_label=tr("categories.test_profile.display_label_851219"),
         proportionality=ProportionalityRule(
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             fixed_pct=Decimal("1.00"),

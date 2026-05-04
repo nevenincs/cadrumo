@@ -120,6 +120,14 @@ class StatutoryCapPeriod(StrEnum):
     YEAR_PER_PERSON = "year_per_person"
 
 
+class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
+    """One legally distinct daily cap inside a statutory-cap rule."""
+
+    id: str = Field(min_length=1, max_length=64)
+    label_es: str = Field(min_length=1, max_length=256)
+    statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
+
+
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category.
 
@@ -138,6 +146,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         statutory_cap_period: :class:`StatutoryCapPeriod` that the
             generic cap applies over; required when
             :attr:`statutory_cap_eur` is set.
+        statutory_cap_variants: Daily statutory caps selected by a
+            legally relevant condition.
         citations: At least one :class:`CategoryCitation` proving
             the rule.
         notes_es: Spanish-language notes describing the rule.
@@ -149,6 +159,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
+    statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
     citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
     notes_es: str = Field(min_length=1, max_length=2048)
 
@@ -168,15 +179,20 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             raise ValueError("default_ratio is only valid for usage_ratio rules")
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
+        has_variant_caps = bool(self.statutory_cap_variants)
         if self.kind is ProportionalityKind.STATUTORY_CAP:
-            if not has_daily_cap and not has_generic_cap:
+            if not has_daily_cap and not has_generic_cap and not has_variant_caps:
                 raise ValueError("statutory_cap rules require a cap amount")
-            if has_daily_cap and has_generic_cap:
-                raise ValueError("statutory cap rules must use either daily or generic cap fields, not both")
+            mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
+            if mode_count > 1:
+                raise ValueError("statutory cap rules must use one cap mode")
             if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
                 raise ValueError("statutory_cap_period requires statutory_cap_eur")
             if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
                 raise ValueError("statutory_cap_eur requires statutory_cap_period")
+            variant_ids = [variant.id for variant in self.statutory_cap_variants]
+            if len(set(variant_ids)) != len(variant_ids):
+                raise ValueError("statutory cap variant ids must be unique")
             return self
         if has_daily_cap:
             raise ValueError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
@@ -184,4 +200,6 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             raise ValueError("statutory_cap_eur is only valid for statutory_cap rules")
         if self.statutory_cap_period is not None:
             raise ValueError("statutory_cap_period is only valid for statutory_cap rules")
+        if has_variant_caps:
+            raise ValueError("statutory_cap_variants are only valid for statutory_cap rules")
         return self
