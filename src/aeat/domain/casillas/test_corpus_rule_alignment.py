@@ -19,7 +19,6 @@ from pathlib import Path
 import pytest
 
 from ...core.config import PROJECT_ROOT
-from . import load_casillas
 from .models import CasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -220,8 +219,8 @@ def test_corpus_formula_expression_mentions_match_references_casillas(corpus_cat
         pytest.fail("Corpus formula expression vs refs drift:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-def test_corpus_directory_layout_matches_modelo_registry() -> None:
-    """Every ModeloCode must have a corpus directory and vice versa."""
+def test_corpus_directory_layout_matches_modelo_identifiers() -> None:
+    """Every current ModeloCode identifier must have a corpus directory and vice versa."""
     from ..modelos import ModeloCode
 
     corpus_root = PROJECT_ROOT / "corpus" / "casillas"
@@ -291,47 +290,6 @@ def test_corpus_references_casillas_have_no_duplicates(corpus_catalogues: _Catal
                 )
     if failures:
         pytest.fail("Corpus has duplicate references_casillas:\n" + "\n".join(f" - {f}" for f in failures))
-
-
-def test_corpus_cross_modelo_hints_match_engine_caps_into() -> None:
-    """Annual summary modelos must mention every modelo whose ``caps_into`` resolves to them.
-
-    The engine's :class:`ModeloMetadata.caps_into` field encodes the
-    upstream relationship (e.g., M130 caps into M100). The corpus help
-    body for an annual modelo must mention each upstream modelo so the
-    cross-modelo dependency is visible to Kent inline.
-    """
-    from ..modelos import ModeloCode, get_modelo
-
-    upstream_by_modelo: dict[str, set[str]] = {}
-    for code in ModeloCode:
-        meta = get_modelo(code.value)
-        if meta.caps_into is not None:
-            upstream_by_modelo.setdefault(meta.caps_into.value, set()).add(code.value)
-
-    failures: list[str] = []
-    for downstream, upstream_set in upstream_by_modelo.items():
-        modelo = f"MODELO_{downstream}"
-        # Pick the latest year's catalogue.
-        candidates = sorted((PROJECT_ROOT / "corpus" / "casillas" / modelo.lower()).glob("*.json"))
-        if not candidates:
-            continue
-        catalogue = load_casillas(modelo, candidates[-1].stem)
-        if not catalogue.records:
-            continue
-        # Sample help.es of any single record (the cross-modelo hint
-        # is appended uniformly).
-        help_es = catalogue.records[0].help["es"]
-        for upstream in upstream_set:
-            if f"modelo {upstream}" not in help_es:
-                failures.append(
-                    f"{modelo}: help body does not mention upstream M{upstream} "
-                    f"(engine caps_into={sorted(upstream_set)})"
-                )
-    if failures:
-        pytest.fail(
-            "Corpus cross-modelo hint missing engine caps_into upstream:\n" + "\n".join(f" - {f}" for f in failures)
-        )
 
 
 def test_corpus_within_year_periods_share_structural_shape(corpus_catalogues: _Catalogues) -> None:
@@ -426,33 +384,6 @@ def test_corpus_help_and_label_carry_no_dev_process_leakage(corpus_catalogues: _
         pytest.fail(
             "Corpus leaks dev-process tokens into user-facing strings:\n" + "\n".join(f" - {f}" for f in failures)
         )
-
-
-def test_corpus_source_manual_url_matches_hydrate_resolver(corpus_catalogues: _Catalogues) -> None:
-    """Every record's ``source_manual_url`` must agree with ``_source_url_for(modelo, year)``.
-
-    Catches drift between the canonical ``ModeloMetadata.category /
-    caps_into``-driven URL resolver in the hydrate generator and the
-    committed corpus on disk. If a future PR hardcodes a fresh URL
-    in a corpus JSON without going through the resolver, this test
-    fires.
-    """
-    from ._hydrate import _source_url_for
-
-    failures: list[str] = []
-    for _path, modelo, period, catalogue in corpus_catalogues:
-        modelo_code = modelo.removeprefix("MODELO_")
-        year = int(period[:4])
-        expected = _source_url_for(modelo_code, year)
-        for rec in catalogue.records:
-            actual = str(rec.source_manual_url) if rec.source_manual_url is not None else ""
-            if actual.rstrip("/") != expected.rstrip("/"):
-                failures.append(
-                    f"{modelo} {period} cas {rec.casilla_id}: source_manual_url={actual!r} != resolver {expected!r}"
-                )
-                break  # one mismatch per file is enough
-    if failures:
-        pytest.fail("Corpus source_manual_url drift from hydrate resolver:\n" + "\n".join(f" - {f}" for f in failures))
 
 
 def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:

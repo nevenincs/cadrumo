@@ -19,4 +19,3 @@ Subpackages
    aeat.adapters.inbound.justificante
    aeat.adapters.inbound.pdf
    aeat.adapters.inbound.sanitizer
-   aeat.adapters.inbound.schema

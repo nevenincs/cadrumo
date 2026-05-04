@@ -21,7 +21,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain.normatives",
     "aeat.domain.portals",
     "aeat.domain.deadlines",
-    "aeat.domain.schema",
     "aeat.domain.profile",
     "aeat.domain.rental",
     "aeat.domain.filing",
@@ -43,7 +42,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.adapters.inbound.justificante",
     "aeat.adapters.inbound.identity",
     "aeat.adapters.inbound.sanitizer",
-    "aeat.adapters.inbound.schema",
     "aeat.adapters.inbound.financial",
     "aeat.adapters.inbound.financial.providers",
     "aeat.adapters.outbound",
@@ -117,8 +115,6 @@ REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
     "application/auth/__init__.py",
     "application/filing/testing.py",
     "adapters/persistence/profile/tax_residence.py",
-    "adapters/inbound/schema/_boe_extractor.py",
-    "adapters/inbound/schema/_fetch.py",
     "adapters/inbound/justificante/_parser.py",
     "adapters/inbound/justificante/_extract.py",
 )
@@ -162,19 +158,6 @@ def test_domain_justificante_does_not_export_parser_pipeline() -> None:
     module = importlib.import_module("aeat.domain.justificante")
 
     assert not hasattr(module, "parse_justificante")
-
-
-def test_domain_schema_does_not_export_inbound_extraction_pipeline() -> None:
-    module = importlib.import_module("aeat.domain.schema")
-
-    for symbol_name in (
-        "BOE_ORDEN_SOURCES",
-        "BoeOrdenExtractor",
-        "BoeOrdenSource",
-        "FetchedSchemaSource",
-        "fetch_boe_pdf",
-    ):
-        assert not hasattr(module, symbol_name), symbol_name
 
 
 def test_aeat_auth_does_not_export_google_auth_pipeline() -> None:

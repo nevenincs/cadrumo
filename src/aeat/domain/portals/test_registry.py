@@ -8,7 +8,6 @@ from types import MappingProxyType
 import pytest
 
 from ..modelos import ModeloCode
-from ..modelos._errors import UnknownModeloError
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._errors import PortalIntegrityError, UnknownPortalError
@@ -123,8 +122,8 @@ def test_portals_for_modelo_accepts_string_code() -> None:
 
 
 def test_portals_for_modelo_unknown_code_raises() -> None:
-    """Unknown modelo codes raise :class:`UnknownModeloError`."""
-    with pytest.raises(UnknownModeloError):
+    """Unknown modelo codes are rejected."""
+    with pytest.raises(ValueError):
         portals_for_modelo("999")
 
 

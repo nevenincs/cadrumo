@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
-from ...modelos import LegalCitationSource
-from ...modelos._citation_registry import find_known_bad
+from ._citation_blocklist import CitationSource, find_known_bad
 from ._errors import RegistryValidationError
 from ._schema import LegalReference
 
-_SOURCE_BY_KIND = {
-    "ley": LegalCitationSource.LEY,
-    "real_decreto": LegalCitationSource.REGLAMENTO,
-    "orden": LegalCitationSource.ORDEN_MINISTERIAL,
-    "reglamento": LegalCitationSource.REGLAMENTO,
-    "manual": LegalCitationSource.MANUAL_PRACTICO,
-    "instruction": LegalCitationSource.BOE,
-}
+_SOURCE_BY_KIND = cast(
+    "Mapping[str, CitationSource]",
+    {
+        "ley": "ley",
+        "real_decreto": "reglamento",
+        "orden": "orden",
+        "reglamento": "reglamento",
+        "manual": "manual",
+        "instruction": "instruction",
+    },
+)
 
 
 def verify_legal_reference(reference: LegalReference) -> None:
