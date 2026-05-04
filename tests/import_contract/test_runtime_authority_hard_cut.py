@@ -30,10 +30,17 @@ AUTHORITY_SCAN_ROOTS: tuple[Path, ...] = (
     PROJECT_ROOT / "registry" / "aeat",
     PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations",
     PROJECT_ROOT / "src" / "aeat" / "application" / "verification",
+    PROJECT_ROOT / "src" / "aeat" / "core" / "errors",
     PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "export" / "_formats",
     PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "registry.py",
     PROJECT_ROOT / "env" / ".env.example",
     PROJECT_ROOT / "pyproject.toml",
+)
+
+TEST_SCHEMA_SCAN_ROOTS: tuple[Path, ...] = (
+    PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry",
+    PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli",
+    PROJECT_ROOT / "tests",
 )
 
 BANNED_AUTHORITY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
@@ -50,10 +57,24 @@ BANNED_AUTHORITY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
     ("dr fixture promotion path", re.compile(r"\b(?:dr_specs|ingest_dr_spec)\b", re.IGNORECASE)),
     ("schema promotion wording", re.compile(r"\b(?:schema regeneration|schema-generation)\b", re.IGNORECASE)),
+    (
+        "obsolete ruleset error surface",
+        re.compile(r"\b(?:FormulasError|RulesetValidationError|MissingRulesetError|ruleset)\b", re.IGNORECASE),
+    ),
     ("phase metadata", re.compile(r"\bphase\s+\d+\b", re.IGNORECASE)),
     ("wave metadata", re.compile(r"\bwave\s+\d+\b", re.IGNORECASE)),
     ("issue metadata", re.compile(r"\b(?:issue|ticket|epic)\s*#?\d+\b|(?<!PKCS)#\d+\b", re.IGNORECASE)),
     ("review-process metadata", re.compile(r"\b(?:ADR|PR|pull request|development flow|dev metadata)\b")),
+)
+
+BANNED_TEST_SCHEMA_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("test-owned modelo object", re.compile(r"\bModeloDefinition\s*\(")),
+    ("test-owned modelo revision object", re.compile(r"\bModeloRevision\s*\(")),
+    ("test-owned casilla object", re.compile(r"\bCasillaDefinition\s*\(")),
+    ("test-owned wire modelo object", re.compile(r"\bWireModeloDefinition\s*\(")),
+    ("test-owned wire casilla object", re.compile(r"\bWireCasilla\s*\(")),
+    ("test-owned modelo TOML", re.compile(r"^\s*\[modelo\]\s*$", re.MULTILINE)),
+    ("test-owned casilla TOML", re.compile(r"^\s*\[\[revisions\.[^\]]+\.casillas\]\]\s*$", re.MULTILINE)),
 )
 
 
@@ -73,6 +94,16 @@ def _authority_files() -> Iterable[Path]:
             yield candidate
 
 
+def _test_schema_files() -> Iterable[Path]:
+    this_file = Path(__file__).resolve()
+    for root in TEST_SCHEMA_SCAN_ROOTS:
+        for candidate in root.rglob("*test*.py"):
+            if candidate.resolve() == this_file:
+                continue
+            if candidate.is_file():
+                yield candidate
+
+
 @pytest.mark.parametrize("path", DELETED_AUTHORITY_PATHS, ids=lambda path: path.as_posix())
 def test_deleted_casilla_authority_paths_do_not_exist(path: Path) -> None:
     assert not path.exists(), f"{path.relative_to(PROJECT_ROOT)} must not be restored"
@@ -85,6 +116,20 @@ def test_runtime_authority_surfaces_do_not_encode_process_or_legacy_metadata() -
         content = path.read_text(encoding="utf-8")
         relative = path.relative_to(PROJECT_ROOT).as_posix()
         for label, pattern in BANNED_AUTHORITY_PATTERNS:
+            for match in pattern.finditer(content):
+                line_no = content.count("\n", 0, match.start()) + 1
+                failures.append(f"{relative}:{line_no}: {label}: {match.group(0)!r}")
+
+    assert not failures, "\n".join(failures)
+
+
+def test_tests_do_not_define_modelo_or_casilla_schema_authority() -> None:
+    failures: list[str] = []
+
+    for path in _test_schema_files():
+        content = path.read_text(encoding="utf-8")
+        relative = path.relative_to(PROJECT_ROOT).as_posix()
+        for label, pattern in BANNED_TEST_SCHEMA_PATTERNS:
             for match in pattern.finditer(content):
                 line_no = content.count("\n", 0, match.start()) + 1
                 failures.append(f"{relative}:{line_no}: {label}: {match.group(0)!r}")
