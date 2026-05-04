@@ -27,8 +27,6 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
-
 from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
@@ -49,24 +47,6 @@ _log = get_logger(__name__)
 _JUSTIFICANTE_ENVELOPE_VERSION = 1
 _JUSTIFICANTE_ENVELOPE_SUFFIX = ".envelope.json"
 _JUSTIFICANTE_LOCK_SUFFIX = ".lock"
-
-
-class JustificanteMigrationSummary(BaseModel):
-    """Frozen summary of one :func:`migrate_legacy_justificantes_to_repository` call.
-
-    Attributes:
-        imported: Number of legacy metadata records persisted.
-        skipped: Number already present in the destination repository.
-        errors: Number of legacy files the helper could not parse.
-        store_dir: Resolved path to the repository's store directory.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
-    errors: int = Field(default=0, ge=0)
-    store_dir: str
 
 
 class JustificanteRepository:
@@ -233,90 +213,8 @@ class JustificanteRepository:
                 yield payload
 
 
-# TODO: remove after 2026-10-27 retention window.
-def migrate_legacy_justificantes_to_repository(
-    legacy_dir: Path,
-    *,
-    repository: JustificanteRepository,
-    overwrite: bool = False,
-) -> JustificanteMigrationSummary:
-    """Move legacy plaintext justificante-metadata JSONs into the repository.
-
-    Args:
-        legacy_dir: Source directory containing legacy
-            ``<csv>.json`` files (each is a JSON-serialised
-            :class:`Justificante`).
-        repository: Destination repository.
-        overwrite: When ``True``, replaces any record already
-            persisted in the repository. When ``False`` (default),
-            already-persisted records are counted under ``skipped``.
-
-    Returns:
-        A frozen :class:`JustificanteMigrationSummary`.
-
-    Raises:
-        FileNotFoundError: If ``legacy_dir`` does not exist.
-        NotADirectoryError: If ``legacy_dir`` is not a directory.
-    """
-    if not legacy_dir.exists():
-        raise FileNotFoundError(legacy_dir)
-    if not legacy_dir.is_dir():
-        raise NotADirectoryError(legacy_dir)
-    repository._store_dir.mkdir(parents=True, exist_ok=True)
-    imported = 0
-    skipped = 0
-    errors = 0
-    for path in sorted(legacy_dir.iterdir()):
-        if not path.is_file():
-            continue
-        if path.suffix != ".json":
-            continue
-        if path.name.endswith(_JUSTIFICANTE_ENVELOPE_SUFFIX):
-            continue
-        try:
-            justificante = Justificante.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError):
-            _log.warning("skipping unreadable legacy justificante %s", path, exc_info=True)
-            errors += 1
-            continue
-        with exclusive_file_lock(repository.lock_target_for(justificante.csv)):
-            target = repository.envelope_path_for(justificante.csv)
-            if not overwrite and target.exists():
-                skipped += 1
-                continue
-            envelope = Envelope[Justificante](
-                schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=justificante,
-            )
-            save_encrypted_envelope(
-                envelope,
-                target,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
-            )
-            imported += 1
-    _log.info(
-        "migrated legacy justificantes from %s into %s: imported=%d skipped=%d errors=%d",
-        legacy_dir,
-        repository.store_dir,
-        imported,
-        skipped,
-        errors,
-    )
-    return JustificanteMigrationSummary(
-        imported=imported,
-        skipped=skipped,
-        errors=errors,
-        store_dir=str(repository.store_dir.resolve()),
-    )
-
-
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "JustificanteMigrationSummary",
     "JustificanteRepository",
-    "migrate_legacy_justificantes_to_repository",
 ]

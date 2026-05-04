@@ -2,8 +2,8 @@
 
 Exercises the round-trip save/load API, list/iter/delete behaviour,
 the AUDIT classification gate, the unsafe-id rejection, the
-legacy-store migration helper, and the per-amendment lock isolation
-of :class:`aeat.domain.filing.FilingAmendmentRepository`.
+per-amendment lock isolation of
+:class:`aeat.domain.filing.FilingAmendmentRepository`.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ import pytest
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
-    LockAcquisitionError,
     SecretStore,
     override_master_key_provider,
     override_secret_store,
@@ -30,9 +29,7 @@ from ...domain.filing._amendment import (
     FilingAmendment,
 )
 from ...domain.filing._complementaria_repository import (
-    AmendmentMigrationSummary,
     FilingAmendmentRepository,
-    migrate_legacy_amendments_to_repository,
 )
 from .testing import synthesize_filing_draft
 
@@ -182,84 +179,3 @@ class TestUnsafeAmendmentIds:
         repo = FilingAmendmentRepository(store_dir=store_dir)
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
-
-
-class TestMigration:
-    def test_migrate_legacy(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-amendments"
-        legacy_dir.mkdir()
-        a1 = _make_amendment(amendment_id="amend-a")
-        a2 = _make_amendment(amendment_id="amend-b")
-        for amendment in (a1, a2):
-            (legacy_dir / f"{amendment.amendment_id}.json").write_text(
-                amendment.model_dump_json(),
-                encoding="utf-8",
-            )
-        repo = FilingAmendmentRepository(store_dir=store_dir)
-        summary = migrate_legacy_amendments_to_repository(legacy_dir, repository=repo)
-        assert isinstance(summary, AmendmentMigrationSummary)
-        assert summary.imported == 2
-        assert summary.errors == 0
-        assert set(repo.list_amendment_ids()) == {a1.amendment_id, a2.amendment_id}
-
-    def test_re_migrate_skips_already_present(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-amendments"
-        legacy_dir.mkdir()
-        amendment = _make_amendment()
-        (legacy_dir / f"{amendment.amendment_id}.json").write_text(
-            amendment.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingAmendmentRepository(store_dir=store_dir)
-        first = migrate_legacy_amendments_to_repository(legacy_dir, repository=repo)
-        assert first.imported == 1
-        second = migrate_legacy_amendments_to_repository(legacy_dir, repository=repo)
-        assert second.imported == 0
-        assert second.skipped == 1
-
-    def test_migrate_skips_unparseable(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-amendments"
-        legacy_dir.mkdir()
-        (legacy_dir / "broken.json").write_text("{ not valid json", encoding="utf-8")
-        amendment = _make_amendment()
-        (legacy_dir / f"{amendment.amendment_id}.json").write_text(
-            amendment.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingAmendmentRepository(store_dir=store_dir)
-        summary = migrate_legacy_amendments_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 1
-
-    def test_migrate_missing_dir_raises(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
-        with pytest.raises(FileNotFoundError):
-            migrate_legacy_amendments_to_repository(tmp_path / "nope", repository=repo)
-
-
-class TestMigrationLockedPerAmendment:
-    def test_migration_blocked_by_held_lock(
-        self,
-        store_dir: Path,
-        tmp_path: Path,
-        fast_lock_acquire,
-    ) -> None:
-        from ...adapters.persistence.storage import exclusive_file_lock
-        from ...domain.filing import _complementaria_repository as _repo_module
-
-        fast_lock_acquire(_repo_module)
-
-        legacy_dir = tmp_path / "legacy-amendments"
-        legacy_dir.mkdir()
-        amendment = _make_amendment()
-        (legacy_dir / f"{amendment.amendment_id}.json").write_text(
-            amendment.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingAmendmentRepository(store_dir=store_dir)
-        store_dir.mkdir(parents=True, exist_ok=True)
-        with (
-            exclusive_file_lock(repo.lock_target_for(amendment.amendment_id)),
-            pytest.raises(LockAcquisitionError),
-        ):
-            migrate_legacy_amendments_to_repository(legacy_dir, repository=repo)

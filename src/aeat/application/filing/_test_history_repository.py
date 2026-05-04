@@ -1,9 +1,8 @@
 """Tests for the governed-persistence :class:`FilingHistoryRepository`.
 
 Exercises round-trip save/load, list/iter, deletion, the AUDIT
-classification gate, unsafe-modelo rejection, the migration helper
-(including the ``pages/`` sub-directory skip), and the per-modelo
-lock isolation guarantees.
+classification gate, unsafe-modelo rejection, and the per-modelo lock
+isolation guarantees.
 """
 
 from __future__ import annotations
@@ -17,18 +16,13 @@ import pytest
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
-    LockAcquisitionError,
     SecretStore,
     override_master_key_provider,
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...domain.sync import ModeloIdentifier, WireFilingEntry, WireFilingHistory
-from ._history_repository import (
-    FilingHistoryRepository,
-    HistoryMigrationSummary,
-    migrate_legacy_filing_history_to_repository,
-)
+from ._history_repository import FilingHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -167,95 +161,3 @@ class TestUnsafeModelo:
         repo = FilingHistoryRepository(store_dir=store_dir)
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
-
-
-class TestMigration:
-    def test_migrate_legacy(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-history"
-        legacy_dir.mkdir()
-        h130 = _make_history(modelo="130")
-        h303 = _make_history(modelo="303")
-        for modelo, history in (("130", h130), ("303", h303)):
-            (legacy_dir / f"{modelo}.json").write_text(
-                history.model_dump_json(),
-                encoding="utf-8",
-            )
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        summary = migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
-        assert isinstance(summary, HistoryMigrationSummary)
-        assert summary.imported == 2
-        assert summary.errors == 0
-        assert set(repo.list_modelos()) == {"130", "303"}
-
-    def test_migrate_skips_pages_subdir(self, store_dir: Path, tmp_path: Path) -> None:
-        """The legacy `pages/` sub-directory carries archived HTML — must be skipped."""
-        legacy_dir = tmp_path / "legacy-history"
-        legacy_dir.mkdir()
-        pages = legacy_dir / "pages"
-        pages.mkdir()
-        (pages / "junk.json").write_text("garbage", encoding="utf-8")
-        h130 = _make_history(modelo="130")
-        (legacy_dir / "130.json").write_text(h130.model_dump_json(), encoding="utf-8")
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        summary = migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 0
-
-    def test_re_migrate_skips_already_present(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-history"
-        legacy_dir.mkdir()
-        (legacy_dir / "130.json").write_text(
-            _make_history(modelo="130").model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        first = migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
-        assert first.imported == 1
-        second = migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
-        assert second.imported == 0
-        assert second.skipped == 1
-
-    def test_migrate_skips_unparseable(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-history"
-        legacy_dir.mkdir()
-        (legacy_dir / "broken.json").write_text("{ not valid json", encoding="utf-8")
-        (legacy_dir / "130.json").write_text(
-            _make_history(modelo="130").model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        summary = migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 1
-
-    def test_migrate_missing_dir_raises(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        with pytest.raises(FileNotFoundError):
-            migrate_legacy_filing_history_to_repository(tmp_path / "nope", repository=repo)
-
-
-class TestMigrationLockedPerModelo:
-    def test_migration_blocked_by_held_lock(
-        self,
-        store_dir: Path,
-        tmp_path: Path,
-        fast_lock_acquire,
-    ) -> None:
-        from ...adapters.persistence.storage import exclusive_file_lock
-        from . import _history_repository as _repo_module
-
-        fast_lock_acquire(_repo_module)
-
-        legacy_dir = tmp_path / "legacy-history"
-        legacy_dir.mkdir()
-        (legacy_dir / "130.json").write_text(
-            _make_history(modelo="130").model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingHistoryRepository(store_dir=store_dir)
-        store_dir.mkdir(parents=True, exist_ok=True)
-        with (
-            exclusive_file_lock(repo.lock_target_for("130")),
-            pytest.raises(LockAcquisitionError),
-        ):
-            migrate_legacy_filing_history_to_repository(legacy_dir, repository=repo)
