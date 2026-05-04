@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Domiciliación bancaria",
-        "en": "Bank-account direct debit",
-        "hu": "Banki csoportos beszedés",
-    },
+    label="entries.portal_domiciliacion_bancaria.label_231897",
     purpose_es="Alta, consulta y revocación de domiciliaciones bancarias de autoliquidaciones.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""

@@ -32,7 +32,7 @@ from typing import Any
 import typer
 from rich.console import Console
 
-from ._i18n import t, tr
+from ._i18n import tr
 
 app = typer.Typer(name="oauth-client", no_args_is_help=True, help="OAuth 2.0 Desktop client provisioning.")
 
@@ -120,64 +120,24 @@ def init(
     settings = Settings()
     project = settings.google_cloud_project or "<your-project-id>"
     console = Console()
-    open_url_label = tr(
-        t(
-            "Abre esta URL en un navegador:",
-            "Open this URL in a browser:",
-            "Obre aquesta URL en un navegador:",
-            "Nyisd meg ezt a URL-t böngészőben:",
-        )
-    )
+    open_url_label = tr("cli.oauth.t_516471")
     console.print(f"[bold]{open_url_label}[/]\n  {CREDENTIALS_PAGE_TEMPLATE.format(project=project)}")
     console.print()
     console.print(REQUIRED_BLOCK)
 
     if json_path is None:
-        console.print(
-            "[yellow]"
-            + tr(
-                t(
-                    "Ejecuta `aeat oauth-client init --json <ruta>` tras descargar el JSON para escribir env/.env.",
-                    "Run `aeat oauth-client init --json <path>` after downloading the JSON to write env/.env.",
-                    "Executa `aeat oauth-client init --json <camí>` després de descarregar el JSON per escriure env/.env.",
-                    "Futtasd: `aeat oauth-client init --json <útvonal>` a JSON letöltése után az env/.env írásához.",
-                )
-            )
-            + "[/]"
-        )
+        console.print("[yellow]" + tr("cli.oauth.t_068820") + "[/]")
         return
 
     if not json_path.exists():
-        console.print(
-            "[red]"
-            + tr(
-                t(
-                    f"el fichero json no existe: {json_path}",
-                    f"json file does not exist: {json_path}",
-                    f"el fitxer json no existeix: {json_path}",
-                    f"a json fajl nem letezik: {json_path}",
-                )
-            )
-            + "[/]"
-        )
+        console.print("[red]" + tr("cli.oauth.t_603335") + "[/]")
         raise typer.Exit(code=1)
 
     raw = json_path.read_text(encoding="utf-8")
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
-        console.print(
-            "[red]"
-            + tr(
-                t(
-                    f"no se ha podido analizar el json: {exc}",
-                    f"could not parse json: {exc}",
-                    f"no s'ha pogut analitzar el json: {exc}",
-                    f"a json nem ertelmezheto: {exc}",
-                )
-            )
-            + "[/]"
-        )
+        console.print("[red]" + tr("cli.oauth.t_977712") + "[/]")
         raise typer.Exit(code=1) from exc
 
     try:
@@ -202,42 +162,10 @@ def init(
             "GOOGLE_OAUTH_CLIENT_JSON": str(stable_client_path),
         },
     )
-    console.print(
-        "[green]"
-        + tr(
-            t(
-                f"copiado JSON de cliente OAuth a {stable_client_path}",
-                f"copied OAuth client JSON to {stable_client_path}",
-                f"copiat el JSON del client OAuth a {stable_client_path}",
-                f"OAuth kliens JSON masolva ide: {stable_client_path}",
-            )
-        )
-        + "[/]"
-    )
-    console.print(
-        "[green]"
-        + tr(
-            t(
-                "escritos GOOGLE_OAUTH_CLIENT_ID, _SECRET, _JSON en env/.env",
-                "wrote GOOGLE_OAUTH_CLIENT_ID, _SECRET, _JSON to env/.env",
-                "escrits GOOGLE_OAUTH_CLIENT_ID, _SECRET, _JSON a env/.env",
-                "GOOGLE_OAUTH_CLIENT_ID, _SECRET, _JSON beírva ide: env/.env",
-            )
-        )
-        + "[/]"
-    )
-    next_step = tr(t("Siguiente paso:", "Next step:", "Pas següent:", "Következő lépés:"))
-    console.print(
-        f"[bold]{next_step}[/] "
-        + tr(
-            t(
-                "ejecuta `just gcloud-auth`",
-                "run `just gcloud-auth`",
-                "executa `just gcloud-auth`",
-                "futtasd: `just gcloud-auth`",
-            )
-        )
-    )
+    console.print("[green]" + tr("cli.oauth.t_011367") + "[/]")
+    console.print("[green]" + tr("cli.oauth.t_119877") + "[/]")
+    next_step = tr("cli.oauth.t_379147")
+    console.print(f"[bold]{next_step}[/] " + tr("cli.oauth.t_822917"))
 
 
 __all__ = ["app", "parse_oauth_client_json"]

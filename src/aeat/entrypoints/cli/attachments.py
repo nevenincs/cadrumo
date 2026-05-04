@@ -29,7 +29,7 @@ from ...domain.attachments import (
     AttachmentSource,
     AttachmentStore,
 )
-from ._i18n import t, tr
+from ._i18n import tr
 
 _DEFAULT_MIME_TYPE = "application/octet-stream"
 
@@ -114,28 +114,14 @@ def add_cmd(
     resolved_reference = (source_reference or str(resolved_path)).strip()
     if not resolved_reference:
         typer.echo(
-            tr(
-                t(
-                    "--source-reference no puede estar vacío",
-                    "--source-reference must not be blank",
-                    "--source-reference no pot ser buit",
-                    "--source-reference nem lehet üres",
-                )
-            ),
+            tr("cli.attachments.t_847658"),
             err=True,
         )
         raise typer.Exit(code=2)
     resolved_mime = (mime_type or _guess_mime_type(resolved_path)).strip()
     if not resolved_mime:
         typer.echo(
-            tr(
-                t(
-                    "--mime-type no puede estar vacío",
-                    "--mime-type must not be blank",
-                    "--mime-type no pot ser buit",
-                    "--mime-type nem lehet üres",
-                )
-            ),
+            tr("cli.attachments.t_813758"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -197,16 +183,7 @@ def list_cmd(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
     if not attachments:
-        typer.echo(
-            tr(
-                t(
-                    "No se encontraron adjuntos.",
-                    "No attachments found.",
-                    "No s'han trobat adjunts.",
-                    "Nincs talált csatolmany.",
-                )
-            )
-        )
+        typer.echo(tr("cli.attachments.t_397885"))
         return
     typer.echo("attachment_id\tkind\tsource\tmime_type\tbytes_size\tcaptured_at\tlinked_tx\tlinked_invoices")
     for attachment in sorted(attachments, key=lambda item: (item.captured_at, item.attachment_id)):
@@ -277,14 +254,7 @@ def _parse_metadata(items: list[str]) -> dict[str, str]:
     for raw in items:
         if "=" not in raw:
             typer.echo(
-                tr(
-                    t(
-                        f"--metadata debe tener formato clave=valor: {raw!r}",
-                        f"--metadata entry must be key=value: {raw!r}",
-                        f"--metadata ha de tenir el format clau=valor: {raw!r}",
-                        f"--metadata formatuma kulcs=ertek kell legyen: {raw!r}",
-                    )
-                ),
+                tr("cli.attachments.t_693468"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -292,40 +262,19 @@ def _parse_metadata(items: list[str]) -> dict[str, str]:
         key = key.strip()
         if not key:
             typer.echo(
-                tr(
-                    t(
-                        f"--metadata clave no puede estar vacía: {raw!r}",
-                        f"--metadata key must not be blank: {raw!r}",
-                        f"--metadata clau no pot ser buida: {raw!r}",
-                        f"--metadata kulcs nem lehet ures: {raw!r}",
-                    )
-                ),
+                tr("cli.attachments.t_146769"),
                 err=True,
             )
             raise typer.Exit(code=2)
         if not value:
             typer.echo(
-                tr(
-                    t(
-                        f"--metadata valor no puede estar vacío: {raw!r}",
-                        f"--metadata value must not be blank: {raw!r}",
-                        f"--metadata valor no pot ser buit: {raw!r}",
-                        f"--metadata ertek nem lehet ures: {raw!r}",
-                    )
-                ),
+                tr("cli.attachments.t_973889"),
                 err=True,
             )
             raise typer.Exit(code=2)
         if key in parsed:
             typer.echo(
-                tr(
-                    t(
-                        f"--metadata clave repetida: {key!r}",
-                        f"--metadata key repeated: {key!r}",
-                        f"--metadata clau repetida: {key!r}",
-                        f"--metadata kulcs ismetlodik: {key!r}",
-                    )
-                ),
+                tr("cli.attachments.t_094739"),
                 err=True,
             )
             raise typer.Exit(code=2)

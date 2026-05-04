@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -26,12 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_180,
-    label={
-        "es": "Modelo 180 — Resumen anual retenciones arrendamientos",
-        "en": "Modelo 180 — Annual summary of rental withholdings",
-        "hu": "180-as űrlap — Éves bérleti forrásadó összefoglaló",
-    },
+    label="entries.portal_m180_resumen_arrendamientos.label_962375",
     purpose_es=(
         "Resumen anual de retenciones e ingresos a cuenta sobre "
         "arrendamientos de inmuebles urbanos (complementa al Modelo 115)."

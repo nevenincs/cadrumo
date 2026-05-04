@@ -10,10 +10,13 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ._ids import (
+    ApplicationLinkId,
     BindingId,
     CasillaId,
+    CrossReferenceId,
     ExportFieldId,
     ExportLayoutId,
+    ExtractionProfileId,
     FormulaId,
     LegalRefId,
     ModeloId,
@@ -22,6 +25,8 @@ from ._ids import (
     RelationId,
     RevisionId,
     SourceRefId,
+    VerificationExpectationId,
+    WorkbookParityRefId,
 )
 
 
@@ -175,6 +180,112 @@ class SourceReference(RegistryModel):
         if lowered != value or any(char not in "0123456789abcdef" for char in value):
             raise ValueError("sha256 must be lowercase hexadecimal")
         return value
+
+
+class ExtractionProfileDefinition(RegistryModel):
+    id: ExtractionProfileId
+    surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
+    artefact_kind: str
+    parser: str
+    target_casillas: tuple[CasillaId, ...] = Field(min_length=1)
+    confidence: Literal["strict", "review_required"]
+    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("target_casillas")
+    @classmethod
+    def _target_casillas_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("extraction profile target_casillas must be unique")
+        return value
+
+
+class LiveCrossReferenceDecision(RegistryModel):
+    id: CrossReferenceId
+    surface: Literal["open_simulator", "integration_test_service", "static_official_documentation"]
+    guard_policy_id: str
+    allowed_hosts: tuple[str, ...] = ()
+    allowed_methods: tuple[str, ...] = ()
+    forbidden_actions: tuple[str, ...] = Field(min_length=1)
+    synthetic_data_allowed: bool
+    requires_authentication: bool
+    requires_aeat_authorization: bool
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
+        if self.surface in {"open_simulator", "integration_test_service"} and not self.allowed_hosts:
+            raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
+        if self.surface == "open_simulator" and self.requires_authentication:
+            raise ValueError(f"cross-reference {self.id!r} open simulator must not require authentication")
+        if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
+            raise ValueError(f"cross-reference {self.id!r} static documentation cannot accept synthetic data")
+        for method in self.allowed_methods:
+            if method.upper() != method:
+                raise ValueError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
+        return self
+
+
+class WorkbookParityReference(RegistryModel):
+    id: WorkbookParityRefId
+    workbook_source: SourceRefId
+    fixture_id: str
+    formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
+    runner_required: bool
+    output_cells: Mapping[str, str] = Field(default_factory=dict)
+    tolerance: DecimalValue = Decimal("0.00")
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_workbook_reference(self) -> WorkbookParityReference:
+        if self.runner_required and not self.output_cells:
+            raise ValueError(f"workbook parity reference {self.id!r} requires output_cells")
+        if self.workbook_source not in self.source_refs:
+            raise ValueError(f"workbook parity reference {self.id!r} source_refs must include workbook_source")
+        return self
+
+
+class VerificationExpectationDefinition(RegistryModel):
+    id: VerificationExpectationId
+    computed_casillas: tuple[CasillaId, ...]
+    tolerance: DecimalValue
+    rounding: str
+    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
+    discrepancy_causes: tuple[
+        Literal["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"],
+        ...,
+    ] = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("computed_casillas")
+    @classmethod
+    def _computed_casillas_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("verification expectation computed_casillas must be unique")
+        return value
+
+
+class ApplicationLinkDefinition(RegistryModel):
+    id: ApplicationLinkId
+    surface: Literal[
+        "calculation",
+        "filing",
+        "review",
+        "verification",
+        "export",
+        "deadline",
+        "portal",
+        "extractor",
+        "workflow",
+    ]
+    consumer: str
+    requires_snapshot: Literal[True]
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
 
 
 class FormulaExpression(RegistryModel):
@@ -368,6 +479,11 @@ class ModeloRevision(RegistryModel):
     algorithm_bindings: tuple[AlgorithmBindingDefinition, ...] = ()
     relations: tuple[RelationDefinition, ...] = ()
     export_layouts: tuple[ExportLayoutDefinition, ...] = ()
+    extraction_profiles: tuple[ExtractionProfileDefinition, ...] = ()
+    live_cross_references: tuple[LiveCrossReferenceDecision, ...] = ()
+    workbook_parity_refs: tuple[WorkbookParityReference, ...] = ()
+    verification_expectations: tuple[VerificationExpectationDefinition, ...] = ()
+    application_links: tuple[ApplicationLinkDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
@@ -407,3 +523,8 @@ class RegistrySnapshot(RegistryModel):
     revision: ModeloRevision
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
+    extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]
+    live_cross_references: Mapping[CrossReferenceId, LiveCrossReferenceDecision]
+    workbook_parity_refs: Mapping[WorkbookParityRefId, WorkbookParityReference]
+    verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
+    application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]

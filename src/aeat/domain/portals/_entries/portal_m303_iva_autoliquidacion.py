@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -27,12 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_303,
-    label={
-        "es": "Modelo 303 — IVA autoliquidación",
-        "en": "Modelo 303 — Periodic VAT self-assessment",
-        "hu": "303-as űrlap — Időszakos IVA-önbevallás",
-    },
+    label="entries.portal_m303_iva_autoliquidacion.label_847914",
     purpose_es="Autoliquidación periódica del Impuesto sobre el Valor Añadido (IVA).",
 )
 """Portal entry for Modelo 303 (periodic VAT self-assessment)."""

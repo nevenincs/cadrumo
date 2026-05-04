@@ -27,8 +27,6 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.i18n import Translatable
-
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -131,7 +129,7 @@ class FilingFinding(BaseModel):
     model_config = _STRICT_FROZEN
 
     severity: FilingFindingSeverity
-    message: Translatable
+    message: str
 
 
 class DraftStatus(StrEnum):

@@ -3,55 +3,53 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import date
 from pathlib import Path
-from typing import Literal
 
 import pytest
+
+from aeat.core.paths import PROJECT_ROOT
 
 from ._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._schema import LegalReference, SourceReference
+from ._loader import load_registry_tree
+from ._schema import LegalReference, RegistryCatalogues, SourceReference
 from ._sources import verify_source_catalogue, verify_source_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-LegalReferenceKind = Literal["ley", "real_decreto", "orden", "reglamento", "directiva", "manual", "instruction"]
+
+def _catalogues() -> RegistryCatalogues:
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    return catalogues
 
 
 def _legal_reference(
     *,
-    ref_id: str = "ley-37-1992:art-90",
-    kind: LegalReferenceKind = "ley",
-    article: str = "90",
-    notes: str | None = "IVA general",
+    ref_id: str = "rd-439-2007:art-110",
+    kind: str = "real_decreto",
+    article: str = "110",
+    notes: str | None = None,
 ) -> LegalReference:
-    return LegalReference(
-        id=ref_id,
-        authority="boe",
-        kind=kind,
-        corpus_ref="corpus/normatives/ley-37-1992.json#art-90",
-        document_id="BOE-A-1992-28740",
-        article=article,
-        permalink=f"https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a{article}",
-        effective_from=date(1992, 12, 29),
-        review_status="reviewed",
-        notes=notes,
+    reference = next(iter(_catalogues().legal.values()))
+    return reference.model_copy(
+        update={
+            "id": ref_id,
+            "kind": kind,
+            "article": article,
+            "notes": reference.notes if notes is None else notes,
+        }
     )
 
 
 def _source_reference(path: str, payload: bytes) -> SourceReference:
-    return SourceReference(
-        id="aeat-source",
-        authority="aeat",
-        kind="record_design",
-        corpus_path=path,
-        sha256=hashlib.sha256(payload).hexdigest(),
-        bytes=len(payload),
-        retrieved_at=date(2026, 5, 3),
-        source_url="https://sede.agenciatributaria.gob.es/source.xlsx",
-        review_status="reviewed",
+    source = next(iter(_catalogues().sources.values()))
+    return source.model_copy(
+        update={
+            "corpus_path": path,
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "bytes": len(payload),
+        }
     )
 
 
@@ -74,17 +72,7 @@ def test_verify_source_file_rejects_hash_mismatch(tmp_path: Path) -> None:
 
 
 def test_verify_source_file_rejects_path_escape(tmp_path: Path) -> None:
-    source = SourceReference.model_construct(
-        id="escape",
-        authority="aeat",
-        kind="record_design",
-        corpus_path="../outside.xlsx",
-        sha256=hashlib.sha256(b"x").hexdigest(),
-        bytes=1,
-        retrieved_at=date(2026, 5, 3),
-        source_url="https://sede.agenciatributaria.gob.es/source.xlsx",
-        review_status="reviewed",
-    )
+    source = _source_reference("../outside.xlsx", b"x")
 
     with pytest.raises(RegistryValidationError, match="escapes repository root"):
         verify_source_file(tmp_path, source)
@@ -102,6 +90,7 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
     reference = _legal_reference(
         ref_id="ley-35-2006:art-103",
+        kind="ley",
         article="103",
         notes="cuota diferencial",
     )

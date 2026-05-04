@@ -1,0 +1,985 @@
+export:
+  test_errors:
+    translatable: piszkozat nem kész
+  test_preflight:
+    message_378808: rossz
+    message_965088: figyelem
+    message_868279: rossz
+    message_620739: figyelem
+auth:
+  test_catalogue:
+    label: Tanúsítvány
+    description: Leírás
+  catalogue:
+    certificate_label: Digitális tanúsítvány
+    certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
+      más elismert hatóság). A Sede minden folyamatát támogatja.
+    clave_movil_label: Cl@ve Móvil
+    clave_movil_description: Cl@ve-rendszerben regisztrált mobilon megjelenő push-jóváhagyásos
+      hitelesítés. DNI/NIE, Cl@ve-regisztráció és párosított készülék szükséges.
+    clave_permanente_label: Cl@ve Permanente
+    clave_permanente_description: Cl@ve Permanente felhasználónév + megerősített jelszó
+      + SMS-kód alapú hitelesítés. Ebben a telepítésben nem érhető el, ezért a ``configure``
+      és ``login`` parancsokat elutasítja.
+  init:
+    t_054274: 'Cél:'
+    t_497682: 'Művelet:'
+    t_591049: 'Forrás:'
+    t_002588: 'Böngésző:'
+    t_427109: 'Siker:'
+    t_539673: 'Következő:'
+    t_674931: a DNI/NIE számod
+    t_305382: ' es '
+    t_781191: 'f"ismeretlen szolgaltato {raw!r}; ervenyes ertekek: {valid}'
+    t_306449: 'f"nem tamogatott szolgaltato {raw!r}; ervenyes ertekek: {valid}'
+    t_251084: 'f"a Desktop OAuth kliens JSON nem létezik: {json_path}'
+    t_001180: 'f"a szolgáltatásfiók kulcs nem létezik: {service_account_json}'
+    t_779238: A Settings nem rendelkezik `env_file` beállítással; nem írható ki a
+      szolgáltató konfigurációja.
+    t_527810: "f\"A Settings.env_file alakja nem támogatott ({type(env_file).__name__});\
+      \ \"\n                \"nem állapítható meg"
+    t_181508: "f\"`aeat auth configure --provider {provider}` nem tamogatott. \"\n\
+      \                    \"Futtasd: `aeat setup` a tanusitvany szolgaltatohoz."
+    t_992296: "\\nKonfiguráld a Cl@ve Móvil bejelentkezést az AEAT Sede Electrónica-hoz.\\\
+      n\"\n                    \"Minden bejelentkezés push értesítést küld a Cl@ve\
+      \ alkalmazásba a telefonodra; \"\n                    \"az 'Aprovar' gombra\
+      \ koppintasz a hitelesítéshez. Ez a lépés csak az adatokat \"\n            \
+      \        \"rögzíti"
+    t_975420: --dni-nie kötelező a --non-interactive mellett
+    t_153369: Add meg a DNI vagy NIE számodat
+    t_322375: --dni-fecha kötelező a --prefer-non-qr mellett DNI azonossághoz
+    t_822466: Add meg a DNI-n szereplő érvényességi dátumot (YYYY-MM-DD)
+    t_573144: --nie-soporte kötelező a --prefer-non-qr mellett NIE azonossághoz
+    t_771056: Add meg a NIE dokumentumon szereplő támogató számot
+    t_196449: a DNI érvényességi datuma
+    t_818366: a NIE támogató szám
+    t_873287: a közvetlen push beállítás
+    t_137998: a QR kód beállítás
+    t_716469: Cl@ve Móvil mint alapertelmezett szolgaltato
+    t_824025: 'f"Mentve: {human_list} ide: {env_file}.'
+    t_565569: 'Futtasd: `aeat auth login` a Cl@ve Móvil bejelentkezeshez.'
+    t_539921: f"a {kind.value} szolgaltato interaktiv jovahagyast igenyel; nem futtathato
+      --non-interactive mellett
+    t_418939: 'f"AEAT hitelesites sikertelen: {exc}'
+    t_547085: "but the \"\n                    \"session is already past its idle\
+      \ deadline. AEAT may refuse subsequent \"\n                    \"requests; run\
+      \ `aeat auth login` again if reads fail."
+    t_098262: "f\"Bejelentkezve mint {session.identity_nif} ({label}). \"\n      \
+      \              f\"A munkamenet kb. {remaining_minutes} perc mulva lejar."
+    t_158225: 'f"AEAT lekerdezes sikertelen: {exc}'
+    t_327962: f"Bejelentkezve mint {refreshed.identity_nif} ({label}). Az AEAT elfogadta
+      a tarolt munkamenetet.
+    t_578352: "f\"A tarolt {label} munkamenet lejart vagy visszavonva. \"\n      \
+      \              \"Futtasd: `aeat auth login` az ujboli bejelentkezeshez."
+    t_758194: Pass either --provider or --all
+    t_166580: Nincs aktív munkamenet. Nincs mit törölni.
+    t_482912: 'f"Kijelentkezve: {labels[0]}.'
+    t_673587: 'f"Kijelentkezve: {joined}.'
+    t_954326: 'Cél:'
+    t_714790: 'Művelet:'
+    t_322689: 'Forrás:'
+    t_853374: 'Böngésző:'
+    t_105867: 'Siker:'
+    t_351011: 'Következő:'
+    t_686896: 'f"ismeretlen szolgaltato {raw!r}; ervenyes ertekek: {valid}'
+    t_151679: 'f"nem tamogatott szolgaltato {raw!r}; ervenyes ertekek: {valid}'
+    t_263360: 'f"a Desktop OAuth kliens JSON nem létezik: {json_path}'
+    t_352935: 'f"a szolgáltatásfiók kulcs nem létezik: {service_account_json}'
+    t_178097: A Settings nem rendelkezik `env_file` beállítással; nem írható ki a
+      szolgáltató konfigurációja.
+    t_589739: "f\"A Settings.env_file alakja nem támogatott ({type(env_file).__name__});\
+      \ \"\n                \"nem állapítható meg"
+    t_549784: "f\"`aeat auth configure --provider {provider}` nem tamogatott. \"\n\
+      \                    \"Futtasd: `aeat setup` a tanusitvany szolgaltatohoz."
+    t_201308: "\\nKonfiguráld a Cl@ve Móvil bejelentkezést az AEAT Sede Electrónica-hoz.\\\
+      n\"\n                    \"Minden bejelentkezés push értesítést küld a Cl@ve\
+      \ alkalmazásba a telefonodra; \"\n                    \"az 'Aprovar' gombra\
+      \ koppintasz a hitelesítéshez. Ez a lépés csak az adatokat \"\n            \
+      \        \"rögzíti"
+    t_833547: --dni-nie kötelező a --non-interactive mellett
+    t_834743: Add meg a DNI vagy NIE számodat
+    t_386762: --dni-fecha kötelező a --prefer-non-qr mellett DNI azonossághoz
+    t_958045: Add meg a DNI-n szereplő érvényességi dátumot (YYYY-MM-DD)
+    t_479907: --nie-soporte kötelező a --prefer-non-qr mellett NIE azonossághoz
+    t_944378: Add meg a NIE dokumentumon szereplő támogató számot
+    t_994186: a DNI/NIE számod
+    t_316510: a DNI érvényességi datuma
+    t_770369: a NIE támogató szám
+    t_912253: a közvetlen push beállítás
+    t_725014: a QR kód beállítás
+    t_542731: Cl@ve Móvil mint alapertelmezett szolgaltato
+    t_497666: ' i '
+    t_637763: 'f"Mentve: {human_list} ide: {env_file}.'
+    t_370466: 'Futtasd: `aeat auth login` a Cl@ve Móvil bejelentkezeshez.'
+    t_273946: f"a {kind.value} szolgaltato interaktiv jovahagyast igenyel; nem futtathato
+      --non-interactive mellett
+    t_938392: 'f"AEAT hitelesites sikertelen: {exc}'
+    t_092134: "but the \"\n                    \"session is already past its idle\
+      \ deadline. AEAT may refuse subsequent \"\n                    \"requests; run\
+      \ `aeat auth login` again if reads fail."
+    t_941077: "f\"Bejelentkezve mint {session.identity_nif} ({label}). \"\n      \
+      \              f\"A munkamenet kb. {remaining_minutes} perc mulva lejar."
+    t_908949: 'f"AEAT lekerdezes sikertelen: {exc}'
+    t_888711: f"Bejelentkezve mint {refreshed.identity_nif} ({label}). Az AEAT elfogadta
+      a tarolt munkamenetet.
+    t_906241: "f\"A tarolt {label} munkamenet lejart vagy visszavonva. \"\n      \
+      \              \"Futtasd: `aeat auth login` az ujboli bejelentkezeshez."
+    t_950022: Pass either --provider or --all
+    t_594919: Nincs aktív munkamenet. Nincs mit törölni.
+    t_186277: 'f"Kijelentkezve: {labels[0]}.'
+    t_979591: 'f"Kijelentkezve: {joined}.'
+filing:
+  test_export:
+    narrative: A fájl exportálva a /tmp/m130-2026Q1.txt útvonalra.
+  import:
+    empty_casilla_warning: A justificante PDF nem hordozza a soronkénti casilla értékeket;
+      töltsd ki őket `aeat filing build` paranccsal vagy a piszkozatban.
+  init:
+    t_539673: 'Következő:'
+    t_495047: '[figyelmeztetes]'
+    t_049231: rovat
+    t_499410: várható
+    t_729108: tényleges
+    t_305241: ok
+    t_405647: 'f"bemeneti fájl nem található: {path}'
+    t_319976: 'f"érvénytelen JSON itt: {path}: {exc}'
+    t_944632: f"a bemeneti fájlnak ({path}) JSON objektumot kell tartalmaznia
+    t_369842: got {type(key).__name__}
+    t_841363: 'f"nem támogatott érték típus a rovathoz {key!r}: {type(value).__name__}'
+    t_549739: 'f"piszkozat fájl nem található: {path}'
+    t_587954: 'f"fel nem ismert piszkozat fájl: {path}; várható: <draft_id>.envelope.json.'
+    t_749072: 'f"piszkozat csomag nem található: {path}'
+    t_126681: 'f"érvénytelen kiegészítő JSON {raw!r}: {exc}'
+    t_855364: a kiegészítő hasznos teher JSON objektum kell legyen
+    t_484757: got {type(key).__name__}
+    t_447605: 'f"nem támogatott kiegészítő érték típus ehhez: {key!r}: {type(value).__name__}'
+    t_235839: f"Piszkozat mentve {draft.draft_id} -> {saved}
+    t_901821: f"Piszkozat ujra-validalva {refreshed.draft_id} (allapot={refreshed.status.value})
+    t_750547: 'f"ismeretlen allapot {status!r}; ervenyesek: {valid_statuses}'
+    t_004067: exactly one of --from-justificante
+    t_053773: egyszerre csak egy --from-* kapcsoló
+    t_851234: f"Piszkozat importalva {draft_id} bizonylatbol {justificante_csv} ->
+      {draft_path}
+    t_617275: f"Beadas mentve {submission_id} -> {submission_path}
+    t_643377: 'f"Adoilletosegi CCAA: {residence.ccaa.value}'
+    t_833360: "f\"Modelo {filing.modelo} {filing.period} bevallas feldolgozva \"\n\
+      \                f\"(sablon {filing.template_revision.revision}). \"\n     \
+      \           f\"{extracted} / {total} rovat kinyerve."
+    t_751717: 'f"Kinyerés állapota: {filing.extraction_status.value}'
+    t_028818: 'f"[figyelmeztetesek] {len(filing.warnings)}:'
+    t_976753: 'f"Verifikalas allapota: {verdict.status.value}'
+    t_973810: A 100-as modell importalasa validalt registry snapshotot igenyel
+    t_255799: a kiegeszito hasznos teherben szükséges a nem üres 'original_submission_id
+    t_228758: a kiegeszito hasznos teherben szükséges az 'updated_inputs' objektum
+    t_200471: 'a ''reasons'' egy JSON objektum: rovat -> indok'
+    t_447877: f"a hasznos teher modelje {modelo!r} nem egyezik az eredeti beadas modeljevel
+      {original.modelo!r}
+    t_691257: "a hasznos teher idoszaka \"\n                    f\"{period!r} nem\
+      \ egyezik az eredeti beadas idoszakaval {original.period!r}"
+    t_891106: f"Kiegeszito piszkozat mentve {amended_draft_id} -> {saved_amended_draft}
+    t_799855: 'f"bemeneti fájl nem található: {path}'
+    t_353235: 'f"érvénytelen JSON itt: {path}: {exc}'
+    t_139225: f"a bemeneti fájlnak ({path}) JSON objektumot kell tartalmaznia
+    t_645353: got {type(key).__name__}
+    t_479580: 'f"nem támogatott érték típus a rovathoz {key!r}: {type(value).__name__}'
+    t_719978: 'f"piszkozat fájl nem található: {path}'
+    t_410741: 'f"fel nem ismert piszkozat fájl: {path}; várható: <draft_id>.envelope.json.'
+    t_772310: 'f"piszkozat csomag nem található: {path}'
+    t_351011: 'Következő:'
+    t_647650: 'f"érvénytelen kiegészítő JSON {raw!r}: {exc}'
+    t_130629: a kiegészítő hasznos teher JSON objektum kell legyen
+    t_536885: got {type(key).__name__}
+    t_685385: 'f"nem támogatott kiegészítő érték típus ehhez: {key!r}: {type(value).__name__}'
+    t_819520: f"Piszkozat mentve {draft.draft_id} -> {saved}
+    t_569422: f"Piszkozat ujra-validalva {refreshed.draft_id} (allapot={refreshed.status.value})
+    t_410025: 'f"ismeretlen allapot {status!r}; ervenyesek: {valid_statuses}'
+    t_652733: exactly one of --from-justificante
+    t_343266: egyszerre csak egy --from-* kapcsoló
+    t_177065: f"Piszkozat importalva {draft_id} bizonylatbol {justificante_csv} ->
+      {draft_path}
+    t_655133: f"Beadas mentve {submission_id} -> {submission_path}
+    t_141095: '[figyelmeztetes]'
+    t_208082: 'f"Adoilletosegi CCAA: {residence.ccaa.value}'
+    t_515456: "f\"Modelo {filing.modelo} {filing.period} bevallas feldolgozva \"\n\
+      \                f\"(sablon {filing.template_revision.revision}). \"\n     \
+      \           f\"{extracted} / {total} rovat kinyerve."
+    t_977837: 'f"Kinyerés állapota: {filing.extraction_status.value}'
+    t_418958: 'f"[figyelmeztetesek] {len(filing.warnings)}:'
+    t_805103: rovat
+    t_677464: 'f"Verifikalas allapota: {verdict.status.value}'
+    t_068995: várható
+    t_190116: tényleges
+    t_790289: ok
+    t_647538: A 100-as modell importalasa validalt registry snapshotot igenyel
+    t_597994: a kiegeszito hasznos teherben szükséges a nem üres 'original_submission_id
+    t_076424: a kiegeszito hasznos teherben szükséges az 'updated_inputs' objektum
+    t_679229: 'a ''reasons'' egy JSON objektum: rovat -> indok'
+    t_248734: f"a hasznos teher modelje {modelo!r} nem egyezik az eredeti beadas modeljevel
+      {original.modelo!r}
+    t_810643: "a hasznos teher idoszaka \"\n                    f\"{period!r} nem\
+      \ egyezik az eredeti beadas idoszakaval {original.period!r}"
+    t_091089: f"Kiegeszito piszkozat mentve {amended_draft_id} -> {saved_amended_draft}
+review:
+  adapters:
+    t_041224: bevetel
+    t_311773: kiadas
+    t_376309: üzleti
+    t_377446: személyes
+    t_011227: vegyes
+    t_638342: párosítatlan
+    t_823110: lejart
+    t_455073: fizetés függőben
+    t_308487: részben fizetve
+    t_712789: 'hu: str'
+    t_918533: belső átutalás
+    t_373752: feldolgozatlan
+    t_626817: feldolgozva
+    t_425725: szabály által kihagyva
+    t_866317: érvénytelen
+    t_603694: '[{state}] {direction} {amount} {currency}: {description}'
+    t_364641: reason
+    t_594612: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_229397: piszkozat nem áll készen küldésre (állapot={status})
+    t_964513: jóváhagyás lejárt — újbóli felülvizsgálat szükséges (állapot=APPROVAL_STALE)
+    t_540950: 'hu: str'
+    t_968325: bevetel
+    t_629803: kiadas
+    t_135562: belső átutalás
+    t_142007: üzleti
+    t_870243: személyes
+    t_619063: vegyes
+    t_754183: feldolgozatlan
+    t_791512: feldolgozva
+    t_607122: szabály által kihagyva
+    t_352338: érvénytelen
+    t_551826: párosítatlan
+    t_167733: lejart
+    t_298389: fizetés függőben
+    t_352928: részben fizetve
+    t_170461: '[{state}] {direction} {amount} {currency}: {description}'
+    t_189155: reason
+    t_122028: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_397611: piszkozat nem áll készen küldésre (állapot={status})
+    t_787894: jóváhagyás lejárt — újbóli felülvizsgálat szükséges (állapot=APPROVAL_STALE)
+setup:
+  test_models:
+    message_428675: rendben
+    message_679514: rendben
+  wizard:
+    t_724914: ''
+    t_365267: ''
+transactions:
+  test_diagnostics:
+    message: A 2026-03 hónap hiányzik az importált fájlból.
+access_gate:
+  errors:
+    default_translatable: Az élő AEAT beküldés véglegesen tiltott. Használd a produce
+      -> verify -> export folyamatot, és töltsd fel a fájlt te magad az AEAT portálon.
+categories:
+  test_profile:
+    display_label_946207: Anyag
+    display_label_851219: Anyag
+manuals:
+  test_schema:
+    statement_733773: Teszt szabály
+    statement_121189: Teszt szabály
+normatives:
+  test_schema:
+    titulo_285059: Csökkentések
+    summary_752293: Összefoglaló.
+    title_837681: 35/2006. törvény
+    titulo_908834: Csökkentések
+    summary_296440: Összefoglaló.
+    title_440480: 35/2006. törvény
+portals:
+  test_metadata:
+    label_398871: x
+    label_830236: x
+entries:
+  portal_calendario_contribuyente:
+    label_137875: Adózói naptár
+    label_808341: Adózói naptár
+  portal_cert_selection:
+    label_315663: Tanúsítvány-választó
+    label_714926: Tanúsítvány-választó
+  portal_cert_validation_rest:
+    label_652192: Elektronikus tanúsítvány ellenőrzése
+    label_050984: Elektronikus tanúsítvány ellenőrzése
+  portal_clave_gestiones:
+    label_389181: Cl@ve PIN önkiszolgáló
+    label_802490: Cl@ve PIN önkiszolgáló
+  portal_clave_idp_root:
+    label_359879: Cl@ve — spanyol közszolgálati azonosító
+    label_655035: Cl@ve — spanyol közszolgálati azonosító
+  portal_clave_sede_entry:
+    label_429190: Cl@ve beléptető oldal a székhelyen
+    label_975912: Cl@ve beléptető oldal a székhelyen
+  portal_consulta_pagos:
+    label_977717: Kifizetések és NRC lekérdezése
+    label_872613: Kifizetések és NRC lekérdezése
+  portal_dnie_sede_entry:
+    label_443996: DNIe elektronikus személyi igazolvány belépés
+    label_508736: DNIe elektronikus személyi igazolvány belépés
+  portal_domiciliacion_bancaria:
+    label_990607: Banki csoportos beszedés
+    label_231897: Banki csoportos beszedés
+  portal_m036_censal:
+    label_074226: 036-os űrlap — Adóalanyi nyilvántartásba vétel
+    label_771260: 036-os űrlap — Adóalanyi nyilvántartásba vétel
+  portal_m037_censal_simplificada:
+    label_762588: 037-es űrlap — Egyszerűsített adóalanyi nyilvántartás (visszavont)
+    label_500048: 037-es űrlap — Egyszerűsített adóalanyi nyilvántartás (visszavont)
+  portal_m100_renta:
+    label_540884: 100-as űrlap — Éves személyi jövedelemadó
+    label_331643: 100-as űrlap — Éves személyi jövedelemadó
+  portal_m111_retenciones_trabajo:
+    label_208571: 111-es űrlap — Munkabérek és tevékenységek forrásadója
+    label_774262: 111-es űrlap — Munkabérek és tevékenységek forrásadója
+  portal_m115_retenciones_arrendamientos:
+    label_132495: 115-ös űrlap — Városi bérleti forrásadók
+    label_841139: 115-ös űrlap — Városi bérleti forrásadók
+  portal_m123_retenciones_capital:
+    label_228780: 123-as űrlap — Tőkejövedelem forrásadói
+    label_392660: 123-as űrlap — Tőkejövedelem forrásadói
+  portal_m130_pago_fraccionado_ed:
+    label_281631: 130-as űrlap — IRPF részletfizetés (közvetlen megállapítás)
+    label_523782: 130-as űrlap — IRPF részletfizetés (közvetlen megállapítás)
+  portal_m131_pago_fraccionado_eo:
+    label_971784: 131-es űrlap — IRPF részletfizetés (módszeres megállapítás)
+    label_128460: 131-es űrlap — IRPF részletfizetés (módszeres megállapítás)
+  portal_m180_resumen_arrendamientos:
+    label_015497: 180-as űrlap — Éves bérleti forrásadó összefoglaló
+    label_962375: 180-as űrlap — Éves bérleti forrásadó összefoglaló
+  portal_m190_resumen_trabajo:
+    label_631657: 190-es űrlap — Éves munkabér-forrásadó összefoglaló
+    label_059630: 190-es űrlap — Éves munkabér-forrásadó összefoglaló
+  portal_m193_resumen_capital:
+    label_555297: 193-as űrlap — Éves tőkejövedelem-forrásadó összefoglaló
+    label_188618: 193-as űrlap — Éves tőkejövedelem-forrásadó összefoglaló
+  portal_m200_sociedades_anual:
+    label_824991: 200-as űrlap — Társasági adó (éves)
+    label_979781: 200-as űrlap — Társasági adó (éves)
+  portal_m202_sociedades_fraccionado:
+    label_145412: 202-es űrlap — Társasági adó részletfizetés
+    label_203074: 202-es űrlap — Társasági adó részletfizetés
+  portal_m232_vinculadas:
+    label_530315: 232-es űrlap — Kapcsolt felek közötti ügyletek
+    label_589847: 232-es űrlap — Kapcsolt felek közötti ügyletek
+  portal_m303_iva_autoliquidacion:
+    label_424259: 303-as űrlap — Időszakos IVA-önbevallás
+    label_847914: 303-as űrlap — Időszakos IVA-önbevallás
+  portal_m347_operaciones_terceros:
+    label_724454: 347-es űrlap — Harmadik felekkel folytatott ügyletek
+    label_293185: 347-es űrlap — Harmadik felekkel folytatott ügyletek
+  portal_m349_intracomunitarias:
+    label_497624: 349-es űrlap — Közösségen belüli ügyletek
+    label_740192: 349-es űrlap — Közösségen belüli ügyletek
+  portal_m369_oss_ioss:
+    label_971125: 369-es űrlap — OSS / IOSS egyablakos ügyintézés
+    label_354748: 369-es űrlap — OSS / IOSS egyablakos ügyintézés
+  portal_m390_resumen_iva:
+    label_896367: 390-es űrlap — Éves IVA-összefoglaló
+    label_101607: 390-es űrlap — Éves IVA-összefoglaló
+  portal_m720_bienes_extranjero:
+    label_816468: 720-as űrlap — Külföldi vagyontárgyak és jogok
+    label_396501: 720-as űrlap — Külföldi vagyontárgyak és jogok
+  portal_m840_iae:
+    label_733092: 840-es űrlap — Gazdasági tevékenységi adó
+    label_017824: 840-es űrlap — Gazdasági tevékenységi adó
+  portal_mis_datos_censales:
+    label_692227: Nyilvántartási adataim
+    label_558126: Nyilvántartási adataim
+  portal_mis_documentos_pendientes_firma:
+    label_904016: Aláírásra váró dokumentumok
+    label_128262: Aláírásra váró dokumentumok
+  portal_mis_expedientes:
+    label_279574: Aktáim
+    label_909741: Aktáim
+  portal_mis_notificaciones:
+    label_941829: Értesítéseim
+    label_055002: Értesítéseim
+  portal_mi_area_personal:
+    label_019216: Személyes felületem
+    label_684631: Személyes felületem
+  portal_pago_autoliquidacion_cuenta:
+    label_155077: Önbevallások kifizetése bankszámláról
+    label_405817: Önbevallások kifizetése bankszámláról
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label_858279: Önbevallások kifizetése bankkártyával vagy Bizummal
+    label_409842: Önbevallások kifizetése bankkártyával vagy Bizummal
+  portal_pago_liquidaciones_deudas:
+    label_496859: Adókivetések és tartozások kifizetése
+    label_907488: Adókivetések és tartozások kifizetése
+  portal_pre303_ayuda:
+    label_213716: Pre303 — Előzetes IVA kitöltő segéd
+    label_935129: Pre303 — Előzetes IVA kitöltő segéd
+  portal_presentar_consultar_index:
+    label_291034: Bevallások benyújtása és lekérdezése — tárgymutató
+    label_621468: Bevallások benyújtása és lekérdezése — tárgymutató
+  portal_renta_web_borrador:
+    label_845823: Renta Web — IRPF előzetes vázlat
+    label_255206: Renta Web — IRPF előzetes vázlat
+  portal_sede_root:
+    label_962623: AEAT elektronikus székhely
+    label_323061: AEAT elektronikus székhely
+profile:
+  test_keys:
+    description_105989: x
+    description_490119: x
+  errors:
+    message: Nincs beallitva RENTA adoilletosegi profil.
+vat:
+  test_rules:
+    translatable: x
+    translatable_es_ok: x
+  catalogue:
+    label_587258: Belföldi ügylet általános kulccsal (21 %)
+    description_811453: Belföldi termékértékesítés és szolgáltatásnyújtás 21 %-os
+      általános ÁFA-kulccsal.
+    triggers_when_652065: A termék vagy szolgáltatás nem tartozik a 91. cikk kedvezményes
+      listáihoz és nem mentes a 20. cikk alapján.
+    iva_treatment_375461: A számlán 21 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_247329: Belföldi ügylet kedvezményes kulccsal (10 %)
+    description_140564: 'Az Art. 91.Uno alá tartozó 10 %-os kulcsú ügyletek: általános
+      élelmiszer, vendéglátás, utasszállítás, új lakóingatlan.'
+    triggers_when_135246: A termék vagy szolgáltatás szerepel az Art. 91.Uno listáján.
+    iva_treatment_180667: A számlán 10 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_152655: Belföldi ügylet szuper-kedvezményes kulccsal (4 %)
+    description_669130: Alapvető termékek és szolgáltatások 4 %-os kulcsa az Art.
+      91.Dos alapján.
+    triggers_when_337687: A termék vagy szolgáltatás szerepel az Art. 91.Dos listáján.
+    iva_treatment_850584: A számlán 4 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_335037: Belföldi ügylet nulla kulccsal
+    description_650743: Átmeneti vagy strukturális 0 %-os kulccsal adózó ügyletek
+      (teljes mentesség levonási joggal).
+    triggers_when_900269: Átmeneti rendelkezés vagy az Art. 24. cikk mentessége alapozza
+      meg a nulla kulcsot.
+    iva_treatment_801453: Számlázás 0 %-kal, Modelo 303-on bevallva, a levonási jog
+      megőrzésével.
+    label_251820: Belföldi adómentes ügylet
+    description_279007: 'Az Art. 20. alapján mentes belföldi ügyletek: egészségügy,
+      oktatás, pénzügyi, biztosítási, ingatlan (lemondás nélkül).'
+    triggers_when_752126: Az ügylet szerepel az Art. 20.Uno listáján.
+    iva_treatment_461076: Nincs felszámított ÁFA; a mentesség korlátozott (nincs levonási
+      jog) és a Modelo 303 külön rovataiban kerül bevallásra.
+    label_721417: IVA alá nem tartozó ügylet
+    description_795493: Az Art. 7. alapján az adóköteles eseményen kívül eső ügyletek.
+    triggers_when_890848: Az eset szerepel az Art. 7 nem adóköteles felsorolásában.
+    iva_treatment_236002: Nincs adóköteles tényállás; nincs ÁFA felszámítás vagy bevallás.
+    label_799700: Belföldi ügylet fordított adózással
+    description_496471: 'Olyan belföldi termékértékesítések vagy szolgáltatásnyújtások,
+      ahol az átvevő/megrendelő válik adóalannyá és önadózással állapítja meg az ÁFA-t
+      (Art. 84.Uno.2º): építési munkák, hulladék-/újrahasznosítási anyagok, B2B mobiltelefonok,
+      játékkonzolok, laptopok és táblagépek értékesítései.'
+    triggers_when_019278: Az ügylet az Art. 84.Uno.2º valamely pontjának megfelel
+      (építés, hulladék, B2B fogyasztói elektronika stb.).
+    iva_treatment_632365: A kibocsátó ÁFA nélkül állítja ki a számlát, feltüntetve
+      a 'fordított adózást'. A vevő önbevallással megállapítja a fizetendő ÁFA-t és
+      — ha jogosult — egyidejűleg le is vonja ugyanazon a Modelo 303-on.
+    label_718631: Közösségi értékesítés (mentes)
+    description_746004: Spanyolországból másik tagállamba szállított termék értékesítése
+      érvényes közösségi adószámú vevő részére; mentes az Art. 25. alapján.
+    triggers_when_621296: A vevő másik tagállamban közösségi adószámmal rendelkező
+      vállalkozás és a termék elhagyja a spanyol ÁFA-területet.
+    iva_treatment_977632: ÁFA nélküli számla 'exenta Art. 25 Ley 37/1992' megjelöléssel;
+      Modelo 303 és Modelo 349 bevallás.
+    label_196484: Közösségen belüli beszerzés (fordított adózás)
+    description_609600: Másik tagállamból származó termék vásárlása spanyol vállalkozás
+      által; a vevő fordított adózás keretében számolja el az ÁFA-t.
+    triggers_when_030936: A vevő spanyol vállalkozás és az eladó közösségi ÁFA-azonosítóval
+      jár el.
+    iva_treatment_124024: Modelo 303-on fordított adózás (egyidejű fizetendő és levonható
+      ÁFA), Modelo 349-en bevallva.
+    label_772607: Közösségen belüli háromszögügylet
+    description_869664: Három tagállamban letelepedett vállalkozás közötti láncügylet,
+      amelyben a közbeékelt szereplő mentesül a rendeltetési ország ÁFA-jától.
+    triggers_when_430467: Az Art. 26.tres szerinti egyszerűsített háromszögügylet
+      feltételei teljesülnek.
+    iva_treatment_816317: Modelo 349-en T kóddal bevallott közösségi ügylet.
+    label_486415: Harmadik országba irányuló export (mentes)
+    description_233971: Közösségen kívülre szállított termék értékesítése; mentes
+      levonási joggal az Art. 21. alapján.
+    triggers_when_283979: A termék kilép a vámterületről kiviteli nyilatkozattal.
+    iva_treatment_781772: ÁFA nélküli számla 'exenta Art. 21 Ley 37/1992' megjelöléssel;
+      a DUA igazolásként megőrizve.
+    label_362155: Harmadik országból történő import
+    description_847172: Harmadik országból érkező termék beléptetése; az ÁFA keletkezése
+      a vámnál az Art. 17-18. szerint.
+    triggers_when_791426: A DUA (vámáru-nyilatkozat) benyújtása és az ÁFA megállapítása.
+    iva_treatment_861572: Az ÁFA a vámnál kerül megállapításra, vagy a halasztott
+      import-ÁFA rendszerben a Modelo 303-on.
+    label_014211: Egyenértékűségi pótlék rendszer
+    description_763220: Kötelező különleges adózási mód kiskereskedő magánszemélyeknek,
+      kiegészítő pótlékkal.
+    triggers_when_309904: A vevő kiskereskedő magánszemély, aki az egyenértékűségi
+      pótlék rendszerébe tartozik.
+    iva_treatment_535387: A szállító az ÁFA-n felül pótlékot is felszámít; a kiskereskedő
+      nem nyújt be Modelo 303/390-et.
+    label_089574: Egyszerűsített ÁFA-rendszer (modulok)
+    description_187074: Az éves miniszteri rendeletben felsorolt tevékenységekre alkalmazandó
+      modulos ÁFA rendszer.
+    triggers_when_519525: A tevékenység szerepel a hatályos miniszteri rendeletben
+      és az adózó nem mondott le a rendszerről.
+    iva_treatment_958350: Negyedéves Modelo 303 bevallás éves modulok alapján.
+    label_097134: Hatályon kívüli ügylet (teljesítési hely Spanyolországon kívül)
+    description_904421: Olyan ügyletek, amelyek teljesítési helye a spanyol ÁFA területen
+      kívül esik az Art. 68-74. szerint.
+    triggers_when_667229: A teljesítési helyet szabályozó előírások szerint az ügylet
+      Spanyolországon kívül teljesül.
+    iva_treatment_483772: Nincs spanyol ÁFA; a célországban lehet szükséges ÁFA-regisztráció.
+    label_377629: Hibás számla (helyesbítendő)
+    description_194881: Hibás adatot tartalmazó kapott vagy kiállított számla, amelyet
+      bevallás előtt helyesbíteni kell.
+    triggers_when_429116: A bevallás előtt vagy után hibát észlelünk a számlán.
+    iva_treatment_872751: Helyesbítő számla kiállítása az Art. 89. szerint és az érintett
+      időszak bevallásának módosítása.
+    label_313422: Ismeretlen ÁFA-szabályozás
+    description_635057: Sentinel érték olyan tranzakciókra, amelyek ÁFA-kategóriája
+      nem állapítható meg automatikusan.
+    triggers_when_617948: A besoroló nem talál megfelelő szabályt elegendő bizonyossággal.
+    iva_treatment_366559: A tranzakció kézi felülvizsgálatra kerül bevallás előtt.
+    label_365838: Belföldi ügylet általános kulccsal (21 %)
+    description_217010: Belföldi termékértékesítés és szolgáltatásnyújtás 21 %-os
+      általános ÁFA-kulccsal.
+    triggers_when_142813: A termék vagy szolgáltatás nem tartozik a 91. cikk kedvezményes
+      listáihoz és nem mentes a 20. cikk alapján.
+    iva_treatment_888336: A számlán 21 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_027962: Belföldi ügylet kedvezményes kulccsal (10 %)
+    description_983244: 'Az Art. 91.Uno alá tartozó 10 %-os kulcsú ügyletek: általános
+      élelmiszer, vendéglátás, utasszállítás, új lakóingatlan.'
+    triggers_when_029777: A termék vagy szolgáltatás szerepel az Art. 91.Uno listáján.
+    iva_treatment_786939: A számlán 10 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_915730: Belföldi ügylet szuper-kedvezményes kulccsal (4 %)
+    description_069076: Alapvető termékek és szolgáltatások 4 %-os kulcsa az Art.
+      91.Dos alapján.
+    triggers_when_352485: A termék vagy szolgáltatás szerepel az Art. 91.Dos listáján.
+    iva_treatment_774580: A számlán 4 % ÁFA felszámítása, a Modelo 303-on szerepeltetve.
+    label_996028: Belföldi ügylet nulla kulccsal
+    description_640356: Átmeneti vagy strukturális 0 %-os kulccsal adózó ügyletek
+      (teljes mentesség levonási joggal).
+    triggers_when_739440: Átmeneti rendelkezés vagy az Art. 24. cikk mentessége alapozza
+      meg a nulla kulcsot.
+    iva_treatment_872035: Számlázás 0 %-kal, Modelo 303-on bevallva, a levonási jog
+      megőrzésével.
+    label_342635: Belföldi adómentes ügylet
+    description_311472: 'Az Art. 20. alapján mentes belföldi ügyletek: egészségügy,
+      oktatás, pénzügyi, biztosítási, ingatlan (lemondás nélkül).'
+    triggers_when_049241: Az ügylet szerepel az Art. 20.Uno listáján.
+    iva_treatment_795653: Nincs felszámított ÁFA; a mentesség korlátozott (nincs levonási
+      jog) és a Modelo 303 külön rovataiban kerül bevallásra.
+    label_385669: IVA alá nem tartozó ügylet
+    description_196978: Az Art. 7. alapján az adóköteles eseményen kívül eső ügyletek.
+    triggers_when_425274: Az eset szerepel az Art. 7 nem adóköteles felsorolásában.
+    iva_treatment_078140: Nincs adóköteles tényállás; nincs ÁFA felszámítás vagy bevallás.
+    label_198815: Belföldi ügylet fordított adózással
+    description_425875: 'Olyan belföldi termékértékesítések vagy szolgáltatásnyújtások,
+      ahol az átvevő/megrendelő válik adóalannyá és önadózással állapítja meg az ÁFA-t
+      (Art. 84.Uno.2º): építési munkák, hulladék-/újrahasznosítási anyagok, B2B mobiltelefonok,
+      játékkonzolok, laptopok és táblagépek értékesítései.'
+    triggers_when_234924: Az ügylet az Art. 84.Uno.2º valamely pontjának megfelel
+      (építés, hulladék, B2B fogyasztói elektronika stb.).
+    iva_treatment_847858: A kibocsátó ÁFA nélkül állítja ki a számlát, feltüntetve
+      a 'fordított adózást'. A vevő önbevallással megállapítja a fizetendő ÁFA-t és
+      — ha jogosult — egyidejűleg le is vonja ugyanazon a Modelo 303-on.
+    label_375372: Közösségi értékesítés (mentes)
+    description_170404: Spanyolországból másik tagállamba szállított termék értékesítése
+      érvényes közösségi adószámú vevő részére; mentes az Art. 25. alapján.
+    triggers_when_605383: A vevő másik tagállamban közösségi adószámmal rendelkező
+      vállalkozás és a termék elhagyja a spanyol ÁFA-területet.
+    iva_treatment_816799: ÁFA nélküli számla 'exenta Art. 25 Ley 37/1992' megjelöléssel;
+      Modelo 303 és Modelo 349 bevallás.
+    label_576993: Közösségen belüli beszerzés (fordított adózás)
+    description_027697: Másik tagállamból származó termék vásárlása spanyol vállalkozás
+      által; a vevő fordított adózás keretében számolja el az ÁFA-t.
+    triggers_when_477522: A vevő spanyol vállalkozás és az eladó közösségi ÁFA-azonosítóval
+      jár el.
+    iva_treatment_373587: Modelo 303-on fordított adózás (egyidejű fizetendő és levonható
+      ÁFA), Modelo 349-en bevallva.
+    label_357358: Közösségen belüli háromszögügylet
+    description_747833: Három tagállamban letelepedett vállalkozás közötti láncügylet,
+      amelyben a közbeékelt szereplő mentesül a rendeltetési ország ÁFA-jától.
+    triggers_when_253417: Az Art. 26.tres szerinti egyszerűsített háromszögügylet
+      feltételei teljesülnek.
+    iva_treatment_660394: Modelo 349-en T kóddal bevallott közösségi ügylet.
+    label_620271: Harmadik országba irányuló export (mentes)
+    description_889069: Közösségen kívülre szállított termék értékesítése; mentes
+      levonási joggal az Art. 21. alapján.
+    triggers_when_824512: A termék kilép a vámterületről kiviteli nyilatkozattal.
+    iva_treatment_338490: ÁFA nélküli számla 'exenta Art. 21 Ley 37/1992' megjelöléssel;
+      a DUA igazolásként megőrizve.
+    label_889802: Harmadik országból történő import
+    description_247574: Harmadik országból érkező termék beléptetése; az ÁFA keletkezése
+      a vámnál az Art. 17-18. szerint.
+    triggers_when_775302: A DUA (vámáru-nyilatkozat) benyújtása és az ÁFA megállapítása.
+    iva_treatment_869170: Az ÁFA a vámnál kerül megállapításra, vagy a halasztott
+      import-ÁFA rendszerben a Modelo 303-on.
+    label_243153: Egyenértékűségi pótlék rendszer
+    description_951487: Kötelező különleges adózási mód kiskereskedő magánszemélyeknek,
+      kiegészítő pótlékkal.
+    triggers_when_060209: A vevő kiskereskedő magánszemély, aki az egyenértékűségi
+      pótlék rendszerébe tartozik.
+    iva_treatment_837679: A szállító az ÁFA-n felül pótlékot is felszámít; a kiskereskedő
+      nem nyújt be Modelo 303/390-et.
+    label_574464: Egyszerűsített ÁFA-rendszer (modulok)
+    description_837760: Az éves miniszteri rendeletben felsorolt tevékenységekre alkalmazandó
+      modulos ÁFA rendszer.
+    triggers_when_809073: A tevékenység szerepel a hatályos miniszteri rendeletben
+      és az adózó nem mondott le a rendszerről.
+    iva_treatment_720111: Negyedéves Modelo 303 bevallás éves modulok alapján.
+    label_765009: Hatályon kívüli ügylet (teljesítési hely Spanyolországon kívül)
+    description_113281: Olyan ügyletek, amelyek teljesítési helye a spanyol ÁFA területen
+      kívül esik az Art. 68-74. szerint.
+    triggers_when_020809: A teljesítési helyet szabályozó előírások szerint az ügylet
+      Spanyolországon kívül teljesül.
+    iva_treatment_703895: Nincs spanyol ÁFA; a célországban lehet szükséges ÁFA-regisztráció.
+    label_947785: Hibás számla (helyesbítendő)
+    description_243075: Hibás adatot tartalmazó kapott vagy kiállított számla, amelyet
+      bevallás előtt helyesbíteni kell.
+    triggers_when_035779: A bevallás előtt vagy után hibát észlelünk a számlán.
+    iva_treatment_592112: Helyesbítő számla kiállítása az Art. 89. szerint és az érintett
+      időszak bevallásának módosítása.
+    label_775396: Ismeretlen ÁFA-szabályozás
+    description_306964: Sentinel érték olyan tranzakciókra, amelyek ÁFA-kategóriája
+      nem állapítható meg automatikusan.
+    triggers_when_512869: A besoroló nem talál megfelelő szabályt elegendő bizonyossággal.
+    iva_treatment_732254: A tranzakció kézi felülvizsgálatra kerül bevallás előtt.
+cli:
+  bootstrap:
+    t_115877: Erőforrás
+    t_558798: Azonosító
+    t_490630: scratch mappa
+    t_478529: scratch táblázat
+    t_301797: scratch dokumentum
+    t_107758: 'bootstrap: GOOGLE_CLOUD_PROJECT üres a env/.env-ben'
+    t_465133: 'f"bootstrap: hitelesito adatok nem elerhetok: {exc}'
+    t_436721: 'Állítsd be a GOOGLE_APPLICATION_CREDENTIALS-t vagy futtasd: `just gcloud-auth`.'
+    t_107956: 'bootstrap: nem lehet Drive erőforrásokat létrehozni az aktív hitelesito
+      adatokkal.'
+    t_378702: A fogyasztoi (nem Workspace) Google fiokokon a szolgaltatasi fiokoknak
+      nulla a Drive tárhelykvótája
+    t_912574: "or operate from a Google Workspace tenant where \"\n              \
+      \          \"the SA can own files in a Shared Drive."
+    t_791600: 'bootstrap: env/.env frissítve. Futtasd újra: `aeat doctor` az ellenorzeshez.'
+    t_682855: 'bootstrap: GOOGLE_CLOUD_PROJECT üres a env/.env-ben'
+    t_078117: 'f"bootstrap: hitelesito adatok nem elerhetok: {exc}'
+    t_524692: 'Állítsd be a GOOGLE_APPLICATION_CREDENTIALS-t vagy futtasd: `just gcloud-auth`.'
+    t_457020: 'bootstrap: nem lehet Drive erőforrásokat létrehozni az aktív hitelesito
+      adatokkal.'
+    t_272641: A fogyasztoi (nem Workspace) Google fiokokon a szolgaltatasi fiokoknak
+      nulla a Drive tárhelykvótája
+    t_047210: "or operate from a Google Workspace tenant where \"\n              \
+      \          \"the SA can own files in a Shared Drive."
+    t_011711: Erőforrás
+    t_673036: Azonosító
+    t_630898: scratch mappa
+    t_762170: scratch táblázat
+    t_115599: scratch dokumentum
+    t_488785: 'bootstrap: env/.env frissítve. Futtasd újra: `aeat doctor` az ellenorzeshez.'
+  normatives:
+    t_663483: id
+    t_685100: tipus
+    t_130420: szam
+    t_853221: rövid cím
+    t_022643: cikkek
+    t_603642: cimkek
+    t_033405: szam
+    t_021549: cim
+    t_412680: hivatkozás
+    t_284896: verifikálási eredmények
+    t_123721: szint
+    t_621240: kod
+    t_469146: referencia
+    t_884332: uzenet
+    t_400377: cim
+    t_674439: megjelent
+    t_589274: felulvizsgalta
+    t_445972: utolso_felulvizsgalat
+    t_527335: f"{count} jogszabaly
+    t_208308: (nincsenek kódolt cikkek)
+    t_198005: 'f"verifikalas sikertelen: {exc}'
+    t_449672: ✓ verifikálás tiszta
+    t_708509: id
+    t_484866: tipus
+    t_532988: szam
+    t_033361: rövid cím
+    t_849756: cikkek
+    t_232960: cimkek
+    t_360736: f"{count} jogszabaly
+    t_329493: tipus
+    t_896602: szam
+    t_528486: cim
+    t_032146: megjelent
+    t_888840: cimkek
+    t_628053: felulvizsgalta
+    t_596645: utolso_felulvizsgalat
+    t_506342: (nincsenek kódolt cikkek)
+    t_876125: cikkek
+    t_956665: szam
+    t_908462: cim
+    t_300148: hivatkozás
+    t_688044: 'f"verifikalas sikertelen: {exc}'
+    t_838663: ✓ verifikálás tiszta
+    t_757078: verifikálási eredmények
+    t_668112: szint
+    t_253101: kod
+    t_311779: referencia
+    t_756958: uzenet
+  oauth:
+    t_069252: 'Következő lépés:'
+    t_409941: 'Nyisd meg ezt a URL-t böngészőben:'
+    t_230163: 'Futtasd: `aeat oauth-client init --json <útvonal>` a JSON letöltése
+      után az env/.env írásához.'
+    t_389131: 'f"a json fajl nem letezik: {json_path}'
+    t_825524: 'f"a json nem ertelmezheto: {exc}'
+    t_901667: 'f"OAuth kliens JSON masolva ide: {stable_client_path}'
+    t_788993: wrote GOOGLE_OAUTH_CLIENT_ID
+    t_784359: 'futtasd: `just gcloud-auth`'
+    t_516471: 'Nyisd meg ezt a URL-t böngészőben:'
+    t_068820: 'Futtasd: `aeat oauth-client init --json <útvonal>` a JSON letöltése
+      után az env/.env írásához.'
+    t_603335: 'f"a json fajl nem letezik: {json_path}'
+    t_977712: 'f"a json nem ertelmezheto: {exc}'
+    t_011367: 'f"OAuth kliens JSON masolva ide: {stable_client_path}'
+    t_119877: wrote GOOGLE_OAUTH_CLIENT_ID
+    t_379147: 'Következő lépés:'
+    t_822917: 'futtasd: `just gcloud-auth`'
+  test_no_hardcoded_user_strings:
+    t_915315: szia
+    t_342476: hu
+    t_535146: hu
+    t_182298: szia
+  attachments:
+    t_367843: --source-reference nem lehet üres
+    t_576293: --mime-type nem lehet üres
+    t_668551: Nincs talált csatolmany.
+    t_456518: 'f"--metadata formatuma kulcs=ertek kell legyen: {raw!r}'
+    t_782346: 'f"--metadata kulcs nem lehet ures: {raw!r}'
+    t_847558: 'f"--metadata ertek nem lehet ures: {raw!r}'
+    t_924712: 'f"--metadata kulcs ismetlodik: {key!r}'
+    t_847658: --source-reference nem lehet üres
+    t_813758: --mime-type nem lehet üres
+    t_397885: Nincs talált csatolmany.
+    t_693468: 'f"--metadata formatuma kulcs=ertek kell legyen: {raw!r}'
+    t_146769: 'f"--metadata kulcs nem lehet ures: {raw!r}'
+    t_973889: 'f"--metadata ertek nem lehet ures: {raw!r}'
+    t_094739: 'f"--metadata kulcs ismetlodik: {key!r}'
+  cloud:
+    t_090770: GOOGLE_CLOUD_PROJECT üres a env/.env-ben
+    t_445360: f"{count} fuggveny
+    t_020102: f"{count} szolgaltatas
+    t_638870: f"{count} bucket
+    t_339951: f"{count} objektum
+    t_626960: GOOGLE_CLOUD_PROJECT üres a env/.env-ben
+    t_776970: f"{count} fuggveny
+    t_829017: f"{count} szolgaltatas
+    t_742684: f"{count} bucket
+    t_754075: f"{count} objektum
+  docs:
+    t_946853: a szöveg nem lehet üres
+    t_489738: f"hozzáfűzve {len(text)} karakter a(z) {end_index} pozícióban
+    t_890669: f"lecserélve {occurrences} előfordulás
+    t_771049: a szöveg nem lehet üres
+    t_372230: f"hozzáfűzve {len(text)} karakter a(z) {end_index} pozícióban
+    t_327883: f"lecserélve {occurrences} előfordulás
+  doctor:
+    t_279934: f"{n} kötelező ellenőrzés sikertelen
+    t_836703: minden kötelező ellenőrzés sikeres
+    t_480369: f"{n} kötelező ellenőrzés sikertelen
+    t_599915: minden kötelező ellenőrzés sikeres
+  drive:
+    t_812324: 'f"egyetlen Drive fajl sem egyezik a nevvel: {name!r}.'
+    t_081792: "f\"{len(files)} Drive fajl egyezik a nevvel: {name!r}; \"\n       \
+      \             f\"szukitsd a Drive UI-ban egyedi nev hasznalataval. Talalatok:\
+      \ {match_ids!r}"
+    t_546944: 'f"{target} mar letezik. Add at: --overwrite a felulirashoz.'
+    t_687155: 'f"kiirva: {target} ({byte_count} bajt)'
+    t_851653: 'f"a helyi fajl nem letezik: {local}'
+    t_940486: f"törölve {file_id}
+    t_291305: f"kukába helyezve {file_id}
+    t_054217: 'f"egyetlen Drive fajl sem egyezik a nevvel: {name!r}.'
+    t_189509: "f\"{len(files)} Drive fajl egyezik a nevvel: {name!r}; \"\n       \
+      \             f\"szukitsd a Drive UI-ban egyedi nev hasznalataval. Talalatok:\
+      \ {match_ids!r}"
+    t_821830: 'f"{target} mar letezik. Add at: --overwrite a felulirashoz.'
+    t_226571: 'f"kiirva: {target} ({byte_count} bajt)'
+    t_351741: 'f"a helyi fajl nem letezik: {local}'
+    t_090079: f"törölve {file_id}
+    t_737010: f"kukába helyezve {file_id}
+  registry:
+    t_407997: line
+    t_899563: line
+  i18n:
+    t_540950: 'hu: str'
+ledgers:
+  inventory:
+    t_050404: nyitás
+    t_260715: zárás
+    t_853976: Nincsenek készletek könyvei.
+    t_651428: 'f"Keszlet konyv letrehozva: {actividad} {year}.'
+    t_135732: 'f"Keszlet mozgas rogzitve: {movement_id}.'
+    t_451750: 'f"ervenytelen tizedes szam: {raw}'
+    t_121323: 'f"ervenytelen datum: {raw}'
+    t_352942: Nincsenek készletek könyvei.
+    t_979405: nyitás
+    t_090463: 'f"Keszlet konyv letrehozva: {actividad} {year}.'
+    t_531632: 'f"Keszlet mozgas rogzitve: {movement_id}.'
+    t_067126: zárás
+    t_047048: 'f"ervenytelen tizedes szam: {raw}'
+    t_740982: 'f"ervenytelen datum: {raw}'
+deadlines:
+  next:
+    t_234598: lezárul
+    t_027622: 'f"nincs közelgő kötelezettség {year} évre: minden bejegyzés lejárt'
+    t_688927: 'f"nincs közelgő kötelezettség {year} évre: minden bejegyzés lejárt'
+    t_744197: lezárul
+  list:
+    t_542331: f"{n} kötelezettség
+    t_125112: f"{n} kötelezettség
+  helpers:
+    t_492787: nincs megadva profil útvonal; add át a --profile PATH-t vagy állítsd
+      be az AEAT_DEFAULT_PROFILE_PATH-t a env/.env-ben
+    t_751621: nincs megadva profil útvonal; add át a --profile PATH-t vagy állítsd
+      be az AEAT_DEFAULT_PROFILE_PATH-t a env/.env-ben
+financial:
+  ingest:
+    t_122870: betoltve
+    t_698715: 'rekord ezzel:'
+    t_433516: elmentve
+    t_314937: 'f"elutasitva: egyetlen szolgaltato sem tudja kezelni: {path}'
+    t_503694: 'f"validacios hiba: {warning}'
+    t_118103: 'f"figyelmeztetes: {warning}'
+    t_301335: 'f"betoltesi hiba: {exc}'
+    t_032626: 'f"betoltve {len(transactions)} rekord ezzel: {provider_impl.name}'
+    t_865065: 'f"elutasitva: egyetlen szolgaltato sem tudja kezelni: {path}'
+    t_845188: 'f"validacios hiba: {warning}'
+    t_985130: 'f"figyelmeztetes: {warning}'
+    t_965742: 'f"betoltesi hiba: {exc}'
+    t_480489: 'f"betoltve {len(transactions)} rekord ezzel: {provider_impl.name}'
+    t_434310: betoltve
+    t_591400: 'rekord ezzel:'
+    t_860156: elmentve
+  txs:
+    t_457577: próbafutás
+    t_080819: elmentve
+    t_222454: osztályozva
+    t_315628: sikertelen
+    t_727361: "so --confidence-below \"\n                        \"only surfaces results\
+      \ when a rule engine or LLM classifier has assigned a \"\n                 \
+      \       \"lower score."
+    t_537014: Nincs talált tranzakció.
+    t_834955: "f\"a tranzakcio katalogus mar letezik itt: {target}; \"\n         \
+      \           \"futtasd ujra --replace kapcsoloval a felulirashoz"
+    t_578483: 'f"epitve {len(catalogue)} tranzakcio ide: {target}'
+    t_280845: 'f"tranzakcio nem talalhato: {transaction_id}'
+    t_627061: --pct o --confidence
+    t_652583: 'f"ervenytelen --pct ertek: {pct}'
+    t_140855: --pct csak --as MIXED mellett hasznalhato; nem-MIXED osztalyozasoknal
+      hagyd el a --pct kapcsolót
+    t_485520: "a költség kategóriák csak kimenő (költség) tranzakciokra alkalmazhatok;\
+      \ \"\n                        \"a bevetelek nem kaphatnak költség kategoriat"
+    t_498874: PERSONAL
+    t_481849: --all es a transaction-id argumentum kölcsönösen kizárják egymást.
+    t_971537: 'Adj át egy transaction-id argumentumot vagy használd: --all.'
+    t_712952: --max-total-seconds szigorúan pozitív kell legyen.
+    t_192763: Nincs kiválasztott tranzakció LLM osztalyozashoz.
+    t_737405: f"[{index - 1}/{total}] --max-total-seconds elérve; eddig {successes}
+      osztályozva megtartva.
+    t_368309: 'f"{prefix} {provider} hiba: {exc}'
+    t_168103: 'f"{prefix} mentési hiba: {exc}'
+    t_272460: 'f"végső mentési hiba: {exc}'
+    t_428267: ' (--max-total-seconds-nél leállt)'
+    t_461729: 'f"tranzakcio nem talalhato: {transaction_id}'
+    t_004844: 'f"ervenytelen --confidence-below ertek: {value}'
+    t_929822: --confidence-below a 0..1 zárt intervallumon belul kell legyen
+    t_578676: 'f"ervenytelen --confidence ertek: {value}'
+    t_380463: --confidence a 0..1 zárt intervallumon belul kell legyen
+    t_245971: "so --confidence-below \"\n                        \"only surfaces results\
+      \ when a rule engine or LLM classifier has assigned a \"\n                 \
+      \       \"lower score."
+    t_121365: Nincs talált tranzakció.
+    t_199417: "f\"a tranzakcio katalogus mar letezik itt: {target}; \"\n         \
+      \           \"futtasd ujra --replace kapcsoloval a felulirashoz"
+    t_700793: 'f"epitve {len(catalogue)} tranzakcio ide: {target}'
+    t_217036: 'f"tranzakcio nem talalhato: {transaction_id}'
+    t_384718: --pct o --confidence
+    t_475858: 'f"ervenytelen --pct ertek: {pct}'
+    t_492743: --pct csak --as MIXED mellett hasznalhato; nem-MIXED osztalyozasoknal
+      hagyd el a --pct kapcsolót
+    t_757092: "a költség kategóriák csak kimenő (költség) tranzakciokra alkalmazhatok;\
+      \ \"\n                        \"a bevetelek nem kaphatnak költség kategoriat"
+    t_091408: PERSONAL
+    t_532646: --all es a transaction-id argumentum kölcsönösen kizárják egymást.
+    t_074603: 'Adj át egy transaction-id argumentumot vagy használd: --all.'
+    t_338582: --max-total-seconds szigorúan pozitív kell legyen.
+    t_184654: Nincs kiválasztott tranzakció LLM osztalyozashoz.
+    t_917316: f"[{index - 1}/{total}] --max-total-seconds elérve; eddig {successes}
+      osztályozva megtartva.
+    t_725301: 'f"{prefix} {provider} hiba: {exc}'
+    t_735916: 'f"{prefix} mentési hiba: {exc}'
+    t_044885: 'f"végső mentési hiba: {exc}'
+    t_510476: próbafutás
+    t_594729: elmentve
+    t_222239: ' (--max-total-seconds-nél leállt)'
+    t_341377: osztályozva
+    t_577243: sikertelen
+    t_268130: 'f"tranzakcio nem talalhato: {transaction_id}'
+    t_993328: 'f"ervenytelen --confidence-below ertek: {value}'
+    t_725396: --confidence-below a 0..1 zárt intervallumon belul kell legyen
+    t_410287: 'f"ervenytelen --confidence ertek: {value}'
+    t_065677: --confidence a 0..1 zárt intervallumon belul kell legyen
+  invoices:
+    t_939792: Nincs talált szamla.
+    t_538928: 'f"szamla nem talalhato: {invoice_id}'
+    t_366680: 'f"szamla nem talalhato a frissites utan: {invoice_id}'
+    t_205790: Nincsenek egyeztető javaslatok.
+    t_413996: 'f"kihagyva {suggestion.invoice_id} <-> {suggestion.transaction_id}:
+      {exc}'
+    t_553082: 'f"a vegso mentes sikertelen; nincsenek mentett valtoztatasok: {exc}'
+    t_313284: f"alkalmazva {applied} / {len(suggestions)} javaslat.
+    t_769483: A szamla- es tranzakciókatalógusok konzisztensek.
+    t_424939: Nincs párosítatlan szamla.
+    t_969951: 'f"szamlakatalogus nem talalhato itt: {repository.envelope_path}'
+    t_151516: Nincs talált szamla.
+    t_346820: 'f"szamla nem talalhato: {invoice_id}'
+    t_950400: 'f"szamla nem talalhato a frissites utan: {invoice_id}'
+    t_395612: Nincsenek egyeztető javaslatok.
+    t_238826: 'f"kihagyva {suggestion.invoice_id} <-> {suggestion.transaction_id}:
+      {exc}'
+    t_486268: 'f"a vegso mentes sikertelen; nincsenek mentett valtoztatasok: {exc}'
+    t_403031: f"alkalmazva {applied} / {len(suggestions)} javaslat.
+    t_515965: A szamla- es tranzakciókatalógusok konzisztensek.
+    t_188960: Nincs párosítatlan szamla.
+    t_241070: 'f"szamlakatalogus nem talalhato itt: {repository.envelope_path}'
+  profile:
+    t_120774: Nincs beállítva használati arány.
+    t_699908: f"beallitva {category.value} = {_format_decimal(ratio)}
+    t_329069: 'f"nincs beallitott arany ehhez: {key}'
+    t_766299: f"torolve {category.value}
+    t_928044: f"{category.value!r} nem fogad el hasznalati aranyt\n{_format_eligible_list()}
+    t_315053: 'f"ervenytelen arany: {raw!r}'
+    t_421626: 'f"az aranynak vegesnek kell lennie (kapott: {ratio})'
+    t_203663: 1] (got {ratio})
+    t_695847: Nincs beállítva használati arány.
+    t_407379: f"beallitva {category.value} = {_format_decimal(ratio)}
+    t_344840: 'f"nincs beallitott arany ehhez: {key}'
+    t_620920: f"torolve {category.value}
+    t_538938: f"{category.value!r} nem fogad el hasznalati aranyt\n{_format_eligible_list()}
+    t_338721: 'f"ervenytelen arany: {raw!r}'
+    t_323949: 'f"az aranynak vegesnek kell lennie (kapott: {ratio})'
+    t_496708: 1] (got {ratio})
+  catalogue:
+    t_361804: 'f"tranzakciókatalógus nem található itt: {repo.envelope_path}'
+    t_854600: 'f"tranzakciókatalógus nem található itt: {repo.envelope_path}'
+aggregation:
+  models:
+    t_492196: Invalid period. Use YYYY-Qn
+    t_944805: Invalid period. Use YYYY-Qn
+llm:
+  init:
+    t_271736: f"Hiányzó prompt változó {exc.args[0]!r}.
+    t_172682: f"törölve {n} gyorsítótár fájl
+    t_398390: f"Hiányzó prompt változó {exc.args[0]!r}.
+    t_029483: f"törölve {n} gyorsítótár fájl
+i18n:
+  test_diacritic_consistency:
+    t_535146: hu

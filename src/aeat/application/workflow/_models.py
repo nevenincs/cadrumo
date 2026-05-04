@@ -17,7 +17,6 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...core.i18n import Translatable
 from ...domain.deadlines import FilingObligation
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -32,11 +31,10 @@ class WorkflowStage(StrEnum):
 
     Attributes:
         LOADING_PROFILE: Resolve the autónomo profile and target run.
-        SYNCING_CATALOGUES: Run the self-healing catalogue sync.
         COMPUTING_DEADLINES: Determine the next pending obligation.
         CHECKING_INBOX: Probe the AEAT inbox for blocking requerimientos.
-        BUILDING_DRAFT: Compose the filing draft from inputs and rules.
-        VALIDATING_DRAFT: Apply ruleset validation to the draft.
+        BUILDING_DRAFT: Compose the filing draft from registry-backed inputs.
+        VALIDATING_DRAFT: Apply registry-backed validation to the draft.
         RUNNING_PREFLIGHT: Execute the submission engine's preflight.
         DONE: Terminal success stage.
         ABORTED: Terminal failure stage; pairs with a
@@ -44,7 +42,6 @@ class WorkflowStage(StrEnum):
     """
 
     LOADING_PROFILE = "LOADING_PROFILE"
-    SYNCING_CATALOGUES = "SYNCING_CATALOGUES"
     COMPUTING_DEADLINES = "COMPUTING_DEADLINES"
     CHECKING_INBOX = "CHECKING_INBOX"
     BUILDING_DRAFT = "BUILDING_DRAFT"
@@ -132,7 +129,7 @@ class WorkflowStep(BaseModel):
     started_at: datetime
     ended_at: datetime | None = None
     success: bool | None = None
-    summary: Translatable
+    summary: str
     details: dict[str, str] | None = None
     site_health_alert: SiteHealthAlert | None = None
 
@@ -180,7 +177,7 @@ class WorkflowResult(BaseModel):
     draft_id: str | None = None
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]
-    summary: Translatable
+    summary: str
 
     @model_validator(mode="after")
     def _check_terminal_consistency(self) -> WorkflowResult:

@@ -12,7 +12,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ...core.i18n import get_translation
 from ...domain.normatives import (
     NormativeError,
     NormativeNotFoundError,
@@ -23,7 +22,7 @@ from ...domain.normatives import (
     short_title,
     verify_catalogue,
 )
-from ._i18n import output_language, t, tr
+from ._i18n import output_language, tr
 
 app = typer.Typer(
     name="normatives",
@@ -47,12 +46,12 @@ def list_normatives(
     """
     catalogue = load_catalogue()
     table = Table(title="aeat normatives", header_style="bold")
-    table.add_column(tr(t("id", "id", "id", "id")), style="cyan")
-    table.add_column(tr(t("tipo", "kind", "tipus", "tipus")), style="white")
-    table.add_column(tr(t("número", "number", "número", "szam")), style="white")
-    table.add_column(tr(t("título corto", "short title", "títol curt", "rövid cím")), style="white")
-    table.add_column(tr(t("artículos", "articulos", "articles", "cikkek")), justify="right", style="white")
-    table.add_column(tr(t("etiquetas", "tags", "etiquetes", "cimkek")), style="dim")
+    table.add_column(tr("cli.normatives.t_708509"), style="cyan")
+    table.add_column(tr("cli.normatives.t_484866"), style="white")
+    table.add_column(tr("cli.normatives.t_532988"), style="white")
+    table.add_column(tr("cli.normatives.t_033361"), style="white")
+    table.add_column(tr("cli.normatives.t_849756"), justify="right", style="white")
+    table.add_column(tr("cli.normatives.t_232960"), style="dim")
     count = 0
     for reference in catalogue:
         if tag is not None and tag not in reference.tags:
@@ -67,16 +66,7 @@ def list_normatives(
         )
         count += 1
     _console.print(table)
-    typer.echo(
-        tr(
-            t(
-                f"{count} normativa(s)",
-                f"{count} normative(s)",
-                f"{count} normativa/-es",
-                f"{count} jogszabaly",
-            )
-        )
-    )
+    typer.echo(tr("cli.normatives.t_360736"))
 
 
 @app.command(name="show", help="Show a single normative's metadata and article index.")
@@ -99,44 +89,30 @@ def show(
     except NormativeNotFoundError as exc:
         typer.secho(str(exc), fg=typer.colors.RED)
         raise typer.Exit(code=1) from exc
-    lang = output_language()
-    title_text = get_translation(reference.title, lang) if reference.title else ""
+    output_language()
+    title_text = reference.title if reference.title else ""
     typer.echo(f"id: {reference.id}")
-    typer.echo(f"{tr(t('tipo', 'kind', 'tipus', 'tipus'))}: {reference.kind.value}")
-    typer.echo(f"{tr(t('número', 'number', 'número', 'szam'))}: {reference.number}")
-    typer.echo(f"{tr(t('título', 'title', 'títol', 'cim'))}: {title_text}")
-    typer.echo(
-        f"{tr(t('publicado_en', 'published_at', 'publicat_a', 'megjelent'))}: {reference.published_at.isoformat()}"
-    )
+    typer.echo(f"{tr('cli.normatives.t_329493')}: {reference.kind.value}")
+    typer.echo(f"{tr('cli.normatives.t_896602')}: {reference.number}")
+    typer.echo(f"{tr('cli.normatives.t_528486')}: {title_text}")
+    typer.echo(f"{tr('cli.normatives.t_032146')}: {reference.published_at.isoformat()}")
     typer.echo(f"boe_id: {reference.boe_id}")
     typer.echo(f"boe_url: {reference.boe_url}")
-    typer.echo(f"{tr(t('etiquetas', 'tags', 'etiquetes', 'cimkek'))}: {', '.join(reference.tags)}")
-    typer.echo(f"{tr(t('revisado_por', 'reviewed_by', 'revisat_per', 'felulvizsgalta'))}: {reference.reviewed_by}")
-    typer.echo(
-        f"{tr(t('última_revisión', 'last_reviewed_at', 'última_revisió', 'utolso_felulvizsgalat'))}: "
-        f"{reference.last_reviewed_at.isoformat()}"
-    )
+    typer.echo(f"{tr('cli.normatives.t_888840')}: {', '.join(reference.tags)}")
+    typer.echo(f"{tr('cli.normatives.t_628053')}: {reference.reviewed_by}")
+    typer.echo(f"{tr('cli.normatives.t_596645')}: {reference.last_reviewed_at.isoformat()}")
     if not reference.articulos:
-        typer.echo(
-            tr(
-                t(
-                    "(sin artículos codificados)",
-                    "(no articulos codified)",
-                    "(sense articles codificats)",
-                    "(nincsenek kódolt cikkek)",
-                )
-            )
-        )
+        typer.echo(tr("cli.normatives.t_506342"))
         return
     table = Table(
-        title=f"{reference.id} {tr(t('artículos', 'articulos', 'articles', 'cikkek'))}",
+        title=f"{reference.id} {tr('cli.normatives.t_876125')}",
         header_style="bold",
     )
-    table.add_column(tr(t("número", "numero", "número", "szam")), style="cyan")
-    table.add_column(tr(t("título", "titulo", "títol", "cim")), style="white")
-    table.add_column(tr(t("cita", "cite", "cita", "hivatkozás")), style="dim")
+    table.add_column(tr("cli.normatives.t_956665"), style="cyan")
+    table.add_column(tr("cli.normatives.t_908462"), style="white")
+    table.add_column(tr("cli.normatives.t_300148"), style="dim")
     for articulo in reference.articulos:
-        articulo_title = get_translation(articulo.titulo, lang) if articulo.titulo else ""
+        articulo_title = articulo.titulo if articulo.titulo else ""
         table.add_row(
             articulo.numero,
             articulo_title,
@@ -162,40 +138,24 @@ def verify() -> None:
         report = verify_catalogue()
     except NormativeError as exc:
         typer.secho(
-            tr(
-                t(
-                    f"falló la verificación: {exc}",
-                    f"verify failed: {exc}",
-                    f"la verificació ha fallat: {exc}",
-                    f"verifikalas sikertelen: {exc}",
-                )
-            ),
+            tr("cli.normatives.t_688044"),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1) from exc
     if report.clean:
         typer.secho(
-            tr(
-                t(
-                    "✓ verificación correcta",
-                    "✓ verify clean",
-                    "✓ verificació correcta",
-                    "✓ verifikálás tiszta",
-                )
-            ),
+            tr("cli.normatives.t_838663"),
             fg=typer.colors.GREEN,
         )
         return
     table = Table(
-        title=tr(
-            t("hallazgos de verificación", "verify findings", "resultats de verificació", "verifikálási eredmények")
-        ),
+        title=tr("cli.normatives.t_757078"),
         header_style="bold",
     )
-    table.add_column(tr(t("nivel", "level", "nivell", "szint")), style="white")
-    table.add_column(tr(t("código", "code", "codi", "kod")), style="cyan")
-    table.add_column(tr(t("referencia", "reference", "referència", "referencia")), style="dim")
-    table.add_column(tr(t("mensaje", "message", "missatge", "uzenet")), style="white")
+    table.add_column(tr("cli.normatives.t_668112"), style="white")
+    table.add_column(tr("cli.normatives.t_253101"), style="cyan")
+    table.add_column(tr("cli.normatives.t_311779"), style="dim")
+    table.add_column(tr("cli.normatives.t_756958"), style="white")
     for issue in report.issues:
         colour = "red" if issue.level == "error" else "yellow"
         table.add_row(

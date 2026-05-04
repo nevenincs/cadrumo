@@ -26,8 +26,10 @@ from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorFiling
 
-# Summary-block casilla IDs — narrow MVP subset; see the AEAT Modelo 100
-# 2024 instruction manual chapter "Liquidación. Resultado".
+# Summary-block casilla IDs from the parsed Renta artefact surface.
+# Filing-grade Modelo 100 schema and calculation authority belongs in
+# registry/aeat; this parser only extracts printed values for later
+# reconciliation.
 _SUMMARY_CASILLAS: tuple[str, ...] = (
     # Rendimientos netos.
     "0022",  # Rendimiento neto rendimientos del trabajo

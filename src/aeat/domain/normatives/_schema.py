@@ -6,7 +6,7 @@ frozen and strict wherever the loader idiom permits it, per the
 project-wide pydantic v2 mandate.
 
 Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
-:class:`aeat.core.i18n.Translatable`; the authoritative ``es`` key is
+:class:`aeat.core.i18n.str`; the authoritative ``es`` key is
 enforced at load time on every title and summary.
 """
 
@@ -24,8 +24,6 @@ from pydantic import (
     StringConstraints,
     model_validator,
 )
-
-from ...core.i18n import Translatable
 
 
 class NormativeKind(StrEnum):
@@ -107,7 +105,7 @@ _BoeIdField = Annotated[
 """BOE-A identifier shape, e.g. ``BOE-A-2006-20764``."""
 
 
-def _require_spanish(translatable: Translatable, field_name: str) -> None:
+def _require_spanish(translatable: str, field_name: str) -> None:
     """Assert a translatable carries the authoritative ``es`` key.
 
     Args:
@@ -117,7 +115,7 @@ def _require_spanish(translatable: Translatable, field_name: str) -> None:
     Raises:
         ValueError: If the ``es`` key is missing or empty.
     """
-    if not translatable.get("es"):
+    if not translatable:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
@@ -151,8 +149,8 @@ class Articulo(_NormativeStrictFrozen):
     """
 
     numero: _ArticuloNumero = Field(description="Article number, e.g. '32' or '32.1.a'.")
-    titulo: Translatable = Field(description="Article title in all supplied languages.")
-    summary: Translatable = Field(description="One-paragraph plain-language article summary.")
+    titulo: str = Field(description="Article title in all supplied languages.")
+    summary: str = Field(description="One-paragraph plain-language article summary.")
     permalink: AnyHttpUrl = Field(description="BOE deep link to the article (fragment-addressed).")
     notes: str = Field(default="", description="Free-form reviewer notes.")
 
@@ -170,7 +168,7 @@ class NormativeReference(_NormativeStrictFrozen):
     id: _StableId = Field(description="Stable kebab-case id, e.g. 'ley-35-2006'.")
     kind: NormativeKind = Field(description="Legal-act kind.")
     number: _NormativeNumber = Field(description="Normative number, e.g. '35/2006' or 'HAC/242/2025'.")
-    title: Translatable = Field(description="Full normative title in all supplied languages.")
+    title: str = Field(description="Full normative title in all supplied languages.")
     published_at: date = Field(description="BOE publication date.")
     boe_url: AnyHttpUrl = Field(description="Canonical BOE consolidated-text URL.")
     boe_id: _BoeIdField = Field(description="BOE-A identifier, e.g. 'BOE-A-2006-20764'.")

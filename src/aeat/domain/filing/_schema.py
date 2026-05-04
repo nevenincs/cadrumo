@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ..submission._protocols import FilingFindingSeverity
 
 # Default schema version stamped on a freshly built draft when a
@@ -98,8 +98,7 @@ class FilingValidationFinding(BaseModel):
         severity: ERROR / WARNING / INFO.
         code: A stable machine-readable code (e.g.
             ``"casilla-required-missing"``).
-        message: A multilingual :class:`Translatable` describing the
-            finding.
+        message: A strictly-typed :class:`Translatable` key.
         references_rules: Tuple of Manual práctico Rule IDs that
             justify the finding (see :class:`aeat.domain.manuals.Rule`).
     """
@@ -109,7 +108,7 @@ class FilingValidationFinding(BaseModel):
     casilla_id: str | None
     severity: FilingFindingSeverity
     code: str
-    message: Translatable
+    message: tr
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 

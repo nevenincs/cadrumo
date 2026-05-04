@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     LedgerImportDiagnostic,
     LedgerImportDiagnosticKind,
@@ -20,14 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _SOURCE_PATH = Path("imports/n26-2026Q1.csv")
 
 
-def _message() -> Translatable:
-    message: Translatable = {
-        "es": "Falta el mes 2026-03 en el archivo importado.",
-        "en": "Month 2026-03 is missing from the imported file.",
-        "ca": "Falta el mes 2026-03 al fitxer importat.",
-        "hu": "A 2026-03 hónap hiányzik az importált fájlból.",
-    }
-    return message
+def _message() -> tr:
+    return tr("transactions.test_diagnostics.message")
 
 
 def test_kind_enum_carries_cli_values() -> None:
@@ -52,7 +46,7 @@ def test_factory_round_trips_canonical_fields() -> None:
     )
     assert diag.kind is LedgerImportDiagnosticKind.GAP
     assert diag.severity is LedgerImportDiagnosticSeverity.WARNING
-    assert diag.message["es"]
+    assert diag.message
     assert diag.source_path == _SOURCE_PATH
     assert diag.source_locator == "period=2026-03"
     assert diag.affected_transaction_ids == ("aa" * 32,)
@@ -63,7 +57,7 @@ def test_diagnostic_rejects_message_without_authoritative_spanish() -> None:
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
             severity=LedgerImportDiagnosticSeverity.ERROR,
-            message={"en": "missing"},  # type: ignore[typeddict-item]
+            message=tr("translation"),
         )
 
 

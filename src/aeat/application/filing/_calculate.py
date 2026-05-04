@@ -21,9 +21,8 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
 from ...domain.filing import (
     FilingDraft,
     FilingDraftStatus,
@@ -86,12 +85,11 @@ class DeclarationCalculateSummary(BaseModel):
         next_action: Closed :class:`DeclarationCalculateNextAction`.
             Derived deterministically from ``status`` and the finding
             mix.
-        repair_hints: Multilingual hints surfaced when ``next_action``
+        repair_hints: Translation keys surfaced when ``next_action``
             is :attr:`DeclarationCalculateNextAction.RESOLVE_BLOCKERS`;
             empty otherwise. The CLI renders them under the summary
             line so the operator never sees a silent ERROR.
-        narrative: Multilingual operator-facing summary line; Spanish
-            authoritative per the project i18n contract.
+        narrative: Translation key for summary line.
         calculated_at: UTC timestamp of when the summary was produced.
     """
 
@@ -105,33 +103,9 @@ class DeclarationCalculateSummary(BaseModel):
     warning_count: int = Field(ge=0)
     info_count: int = Field(ge=0)
     next_action: DeclarationCalculateNextAction
-    repair_hints: tuple[Translatable, ...] = ()
-    narrative: Translatable
+    repair_hints: tuple[str, ...] = ()
+    narrative: str
     calculated_at: datetime
-
-    @field_validator("narrative")
-    @classmethod
-    def _require_authoritative_narrative(cls, value: Translatable) -> Translatable:
-        """Reject narratives that omit the authoritative Spanish key."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
-        return value
-
-    @field_validator("repair_hints")
-    @classmethod
-    def _require_authoritative_repair_hints(
-        cls,
-        value: tuple[Translatable, ...],
-    ) -> tuple[Translatable, ...]:
-        """Reject any repair hint missing its authoritative Spanish key."""
-        for hint in value:
-            try:
-                require_authoritative(hint, domain="aeat")
-            except TranslationError as exc:
-                raise ValueError(str(exc)) from exc
-        return value
 
     @model_validator(mode="after")
     def _enforce_repair_hint_invariant(self) -> DeclarationCalculateSummary:
@@ -184,8 +158,8 @@ def _next_action_for(
 def summarise_calculation(
     draft: FilingDraft,
     *,
-    repair_hints: tuple[Translatable, ...] = (),
-    narrative: Translatable | None = None,
+    repair_hints: tuple[str, ...] = (),
+    narrative: str | None = None,
     calculated_at: datetime | None = None,
 ) -> DeclarationCalculateSummary:
     """Build a :class:`DeclarationCalculateSummary` from a validated draft.
@@ -193,15 +167,15 @@ def summarise_calculation(
     Args:
         draft: The freshly built draft returned by
             :func:`aeat.application.filing.build_draft`.
-        repair_hints: Multilingual remediation hints. Required when
+        repair_hints: Translation keys for remediation hints. Required when
             the draft carries any ``ERROR`` finding (the CLI must not
             surface a silent blocker); rejected
             otherwise. Passing the existing draft findings unchanged
             is acceptable; callers that derive richer hints from
             upstream catalogues can synthesise their own.
-        narrative: Optional override for the multilingual summary
-            line. When ``None``, a default Spanish/English narrative
-            is composed from the draft identity and status.
+        narrative: Optional override for the translation key summary
+            line. When ``None``, a default narrative key
+            is used.
         calculated_at: Optional UTC timestamp. Defaults to the draft's
             ``updated_at``.
 
@@ -210,8 +184,7 @@ def summarise_calculation(
 
     Raises:
         ValueError: When ``repair_hints`` violates the
-            ``RESOLVE_BLOCKERS`` invariant or any narrative omits its
-            authoritative Spanish key.
+            ``RESOLVE_BLOCKERS`` invariant.
     """
     counts: dict[FilingFindingSeverity, int] = {
         FilingFindingSeverity.INFO: 0,
@@ -222,7 +195,7 @@ def summarise_calculation(
         counts[finding.severity] += 1
 
     next_action = _next_action_for(draft.status, blocker_count=counts[FilingFindingSeverity.ERROR])
-    resolved_narrative = narrative if narrative is not None else _default_narrative(draft, next_action)
+    resolved_narrative = narrative if narrative is not None else "filing.calculate.default_narrative"
     resolved_at = calculated_at if calculated_at is not None else draft.updated_at
 
     return DeclarationCalculateSummary(
@@ -238,17 +211,6 @@ def summarise_calculation(
         narrative=resolved_narrative,
         calculated_at=resolved_at,
     )
-
-
-def _default_narrative(
-    draft: FilingDraft,
-    next_action: DeclarationCalculateNextAction,
-) -> Translatable:
-    """Compose a default multilingual narrative for a calculate summary."""
-    es = f"Modelo {draft.modelo} {draft.period}: estado {draft.status.value}, siguiente paso {next_action.value}."
-    en = f"Modelo {draft.modelo} {draft.period}: status {draft.status.value}, next action {next_action.value}."
-    narrative: Translatable = {"es": es, "en": en}
-    return narrative
 
 
 __all__ = [

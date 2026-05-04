@@ -3,8 +3,8 @@
 Owns the closed taxonomy of deductible autónomo spending categories
 (:class:`SpendingCategory`, :class:`SpendingCategoryFamily`), their
 explainable proportionality rules (:class:`ProportionalityRule`,
-:class:`ProportionalityKind`, :class:`StatutoryCapPeriod`), and their
-legal citations.
+:class:`ProportionalityKind`, :class:`StatutoryCapPeriod`,
+:class:`StatutoryCapVariant`), and their legal citations.
 
 The :data:`CATEGORY_PROFILES_2025` registry is the curated
 hand-checked source of truth; :func:`load_category_profiles_from_manual`
@@ -26,6 +26,7 @@ from ._proportionality import (
     ProportionalityKind,
     ProportionalityRule,
     StatutoryCapPeriod,
+    StatutoryCapVariant,
     parse_http_url,
 )
 from ._registry import CATEGORY_PROFILES_2025
@@ -48,6 +49,7 @@ __all__ = [
     "SpendingCategory",
     "SpendingCategoryFamily",
     "StatutoryCapPeriod",
+    "StatutoryCapVariant",
     "VatCategory",
     "categories_for_family",
     "family_for",

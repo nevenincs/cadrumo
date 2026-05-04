@@ -13,7 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from .._i18n import t, tr
+from .._i18n import tr
 from ._helpers import build_engine, load_profile, resolve_profile_path
 
 _CONSOLE = Console()
@@ -48,13 +48,6 @@ def list_schedule(
             obligation.status.value,
         )
     _CONSOLE.print(table)
-    n = len(schedule.obligations)
-    label = tr(
-        t(
-            f"{n} obligación(es)",
-            f"{n} obligation(s)",
-            f"{n} obligació/-ns",
-            f"{n} kötelezettség",
-        )
-    )
+    len(schedule.obligations)
+    label = tr("deadlines.list.t_125112")
     _CONSOLE.print(f"[dim]{label}[/dim]")

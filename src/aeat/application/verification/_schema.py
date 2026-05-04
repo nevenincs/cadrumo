@@ -17,8 +17,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.i18n import Translatable
-
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
@@ -81,7 +79,7 @@ class ClassifiedDiscrepancy(BaseModel):
     actual: Decimal
     delta: Decimal
     cause: DiscrepancyCause
-    cause_rationale: Translatable
+    cause_rationale: str
 
 
 class VerificationVerdict(BaseModel):
@@ -108,5 +106,5 @@ class VerificationVerdict(BaseModel):
     status: VerificationStatus
     discrepancies: tuple[ClassifiedDiscrepancy, ...]
     coverage: float = Field(ge=0.0, le=1.0)
-    narrative: Translatable
+    narrative: str
     verified_at: datetime

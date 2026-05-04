@@ -36,7 +36,7 @@ from ....domain.transactions import (
     TransactionError,
     link_invoice,
 )
-from .._i18n import t, tr
+from .._i18n import tr
 from ._catalogue import catalogue_dir as _transaction_catalogue_dir
 from ._catalogue import catalogue_repository as _transaction_catalogue_repository
 
@@ -70,16 +70,7 @@ def list_cmd(
     catalogue = _load_invoice_catalogue_or_empty()
     invoices = tuple(invoice for invoice in catalogue.values() if kind is None or invoice.kind is kind)
     if not invoices:
-        typer.echo(
-            tr(
-                t(
-                    "No se encontraron facturas.",
-                    "No invoices found.",
-                    "No s'han trobat factures.",
-                    "Nincs talált szamla.",
-                )
-            )
-        )
+        typer.echo(tr("financial.invoices.t_151516"))
         return
     typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency\tpayment_status")
     for invoice in sorted(invoices, key=lambda item: (item.issued_at, item.invoice_id)):
@@ -116,14 +107,7 @@ def show_cmd(
     invoice = find_invoice(catalogue, invoice_id)
     if invoice is None:
         typer.echo(
-            tr(
-                t(
-                    f"factura no encontrada: {invoice_id}",
-                    f"invoice not found: {invoice_id}",
-                    f"factura no trobada: {invoice_id}",
-                    f"szamla nem talalhato: {invoice_id}",
-                )
-            ),
+            tr("financial.invoices.t_346820"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -164,14 +148,7 @@ def link_cmd(
     updated_invoice = find_invoice(updated_invoices, invoice_id)
     if updated_invoice is None:
         typer.echo(
-            tr(
-                t(
-                    f"factura no encontrada tras actualizar: {invoice_id}",
-                    f"invoice not found after update: {invoice_id}",
-                    f"factura no trobada després d'actualitzar: {invoice_id}",
-                    f"szamla nem talalhato a frissites utan: {invoice_id}",
-                )
-            ),
+            tr("financial.invoices.t_950400"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -212,16 +189,7 @@ def reconcile_cmd(
     transactions = _load_transaction_catalogue_or_empty()
     suggestions = suggest_reconciliations(invoices, transactions)
     if not suggestions:
-        typer.echo(
-            tr(
-                t(
-                    "Sin sugerencias de conciliación.",
-                    "No reconciliation suggestions.",
-                    "Sense suggeriments de conciliació.",
-                    "Nincsenek egyeztető javaslatok.",
-                )
-            )
-        )
+        typer.echo(tr("financial.invoices.t_395612"))
         return
     _print_suggestions(suggestions)
     if not apply:
@@ -242,16 +210,9 @@ def reconcile_cmd(
                 suggestion.transaction_id,
                 suggestion.invoice_id,
             )
-        except (InvoiceError, TransactionError) as exc:
+        except (InvoiceError, TransactionError):
             typer.echo(
-                tr(
-                    t(
-                        f"omitido {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
-                        f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
-                        f"omès {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
-                        f"kihagyva {suggestion.invoice_id} <-> {suggestion.transaction_id}: {exc}",
-                    )
-                ),
+                tr("financial.invoices.t_238826"),
                 err=True,
             )
             continue
@@ -266,27 +227,11 @@ def reconcile_cmd(
             _transaction_catalogue_repository().save(pending_transactions)
         except (InvoiceError, TransactionError) as exc:
             typer.echo(
-                tr(
-                    t(
-                        f"falló el guardado final; no se persistieron cambios: {exc}",
-                        f"final save failed; no changes persisted: {exc}",
-                        f"el desament final ha fallat; no s'han persistit canvis: {exc}",
-                        f"a vegso mentes sikertelen; nincsenek mentett valtoztatasok: {exc}",
-                    )
-                ),
+                tr("financial.invoices.t_486268"),
                 err=True,
             )
             raise typer.Exit(code=2) from exc
-    typer.echo(
-        tr(
-            t(
-                f"aplicadas {applied} de {len(suggestions)} sugerencias.",
-                f"applied {applied} of {len(suggestions)} suggestions.",
-                f"aplicades {applied} de {len(suggestions)} suggeriments.",
-                f"alkalmazva {applied} / {len(suggestions)} javaslat.",
-            )
-        )
-    )
+    typer.echo(tr("financial.invoices.t_403031"))
 
 
 @app.command(
@@ -308,16 +253,7 @@ def verify_cmd() -> None:
     transactions = _load_transaction_catalogue_or_empty()
     inconsistencies = verify_link_consistency(invoices, transactions)
     if not inconsistencies:
-        typer.echo(
-            tr(
-                t(
-                    "Los catálogos de facturas y transacciones son consistentes.",
-                    "Invoice and transaction catalogues are consistent.",
-                    "Els catàlegs de factures i transaccions són coherents.",
-                    "A szamla- es tranzakciókatalógusok konzisztensek.",
-                )
-            )
-        )
+        typer.echo(tr("financial.invoices.t_515965"))
         return
     _print_inconsistencies(inconsistencies)
     raise typer.Exit(code=2)
@@ -344,16 +280,7 @@ def unmatched_cmd(
     invoices = _load_invoice_catalogue_or_empty()
     unmatched = find_unmatched(invoices, kind=kind)
     if not unmatched:
-        typer.echo(
-            tr(
-                t(
-                    "No hay facturas sin emparejar.",
-                    "No unmatched invoices.",
-                    "No hi ha factures sense aparellar.",
-                    "Nincs párosítatlan szamla.",
-                )
-            )
-        )
+        typer.echo(tr("financial.invoices.t_188960"))
         return
     typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency")
     for invoice in unmatched:
@@ -392,14 +319,7 @@ def _load_invoice_catalogue_required() -> InvoiceCatalogue:
     repository = _invoice_catalogue_repository()
     if not repository.envelope_path.exists():
         typer.echo(
-            tr(
-                t(
-                    f"catálogo de facturas no encontrado en {repository.envelope_path}",
-                    f"invoice catalogue not found at {repository.envelope_path}",
-                    f"catàleg de factures no trobat a {repository.envelope_path}",
-                    f"szamlakatalogus nem talalhato itt: {repository.envelope_path}",
-                )
-            ),
+            tr("financial.invoices.t_241070"),
             err=True,
         )
         raise typer.Exit(code=2)

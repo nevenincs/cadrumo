@@ -72,6 +72,11 @@ class RegistryValidator:
         parameter_ids = [parameter.id for parameter in revision.parameters]
         provider_ids = [provider.id for provider in revision.algorithm_providers]
         algorithm_binding_ids = [binding.id for binding in revision.algorithm_bindings]
+        extraction_profile_ids = [profile.id for profile in revision.extraction_profiles]
+        cross_reference_ids = [cross_reference.id for cross_reference in revision.live_cross_references]
+        workbook_parity_ids = [workbook.id for workbook in revision.workbook_parity_refs]
+        verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
+        application_link_ids = [link.id for link in revision.application_links]
         for kind, ids in (
             ("casilla", casilla_ids),
             ("formula", formula_ids),
@@ -80,11 +85,28 @@ class RegistryValidator:
             ("parameter", parameter_ids),
             ("algorithm provider", provider_ids),
             ("algorithm binding", algorithm_binding_ids),
+            ("extraction profile", extraction_profile_ids),
+            ("cross-reference", cross_reference_ids),
+            ("workbook parity reference", workbook_parity_ids),
+            ("verification expectation", verification_expectation_ids),
+            ("application link", application_link_ids),
         ):
             for duplicate in sorted(_duplicates(ids)):
                 failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
 
-        primary_ids = casilla_ids + formula_ids + binding_ids + relation_ids + parameter_ids + algorithm_binding_ids
+        primary_ids = (
+            casilla_ids
+            + formula_ids
+            + binding_ids
+            + relation_ids
+            + parameter_ids
+            + algorithm_binding_ids
+            + extraction_profile_ids
+            + cross_reference_ids
+            + workbook_parity_ids
+            + verification_expectation_ids
+            + application_link_ids
+        )
         for duplicate in sorted(_duplicates(primary_ids)):
             failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
 
@@ -256,6 +278,86 @@ class RegistryValidator:
                             f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}"
                         )
 
+        for profile in revision.extraction_profiles:
+            failures.extend(
+                self._missing_refs(prefix, f"extraction profile {profile.id}", profile.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix, f"extraction profile {profile.id}", profile.source_refs, self._sources, "source"
+                )
+            )
+            for casilla_id in profile.target_casillas:
+                if casilla_id not in casillas:
+                    failures.append(
+                        f"{prefix}: extraction profile {profile.id!r} references unknown casilla {casilla_id!r}"
+                    )
+
+        for cross_reference in revision.live_cross_references:
+            failures.extend(
+                self._missing_refs(
+                    prefix, f"cross-reference {cross_reference.id}", cross_reference.legal_refs, self._legal, "legal"
+                )
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix,
+                    f"cross-reference {cross_reference.id}",
+                    cross_reference.source_refs,
+                    self._sources,
+                    "source",
+                )
+            )
+
+        for workbook in revision.workbook_parity_refs:
+            failures.extend(
+                self._missing_refs(prefix, f"workbook parity {workbook.id}", workbook.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix, f"workbook parity {workbook.id}", workbook.source_refs, self._sources, "source"
+                )
+            )
+            if workbook.workbook_source not in self._sources:
+                failures.append(
+                    f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
+                )
+
+        for expectation in revision.verification_expectations:
+            failures.extend(
+                self._missing_refs(
+                    prefix,
+                    f"verification expectation {expectation.id}",
+                    expectation.legal_refs,
+                    self._legal,
+                    "legal",
+                )
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix,
+                    f"verification expectation {expectation.id}",
+                    expectation.source_refs,
+                    self._sources,
+                    "source",
+                )
+            )
+            for casilla_id in expectation.computed_casillas:
+                if casilla_id not in casillas:
+                    failures.append(
+                        f"{prefix}: verification expectation {expectation.id!r} references unknown casilla "
+                        f"{casilla_id!r}"
+                    )
+
+        for link in revision.application_links:
+            failures.extend(
+                self._missing_refs(prefix, f"application link {link.id}", link.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(prefix, f"application link {link.id}", link.source_refs, self._sources, "source")
+            )
+
+        failures.extend(self._validate_application_link_closure(prefix, revision))
         failures.extend(self._validate_formula_dag(prefix, revision))
         return failures
 
@@ -338,6 +440,24 @@ class RegistryValidator:
         except CycleError as exc:
             return [f"{scope}: formula graph cycle: {exc}"]
         return []
+
+    @staticmethod
+    def _validate_application_link_closure(scope: str, revision: ModeloRevision) -> list[str]:
+        failures: list[str] = []
+        surfaces = {link.surface for link in revision.application_links}
+        if revision.formulas and "calculation" not in surfaces:
+            failures.append(f"{scope}: formulas require a calculation application link")
+        if revision.extraction_profiles and "extractor" not in surfaces:
+            failures.append(f"{scope}: extraction profiles require an extractor application link")
+        if revision.export_layouts and "export" not in surfaces:
+            failures.append(f"{scope}: export layouts require an export application link")
+        if revision.verification_expectations and "verification" not in surfaces:
+            failures.append(f"{scope}: verification expectations require a verification application link")
+        if revision.casillas and "filing" not in surfaces:
+            failures.append(f"{scope}: filing-grade casillas require a filing application link")
+        if revision.live_cross_references and "portal" not in surfaces:
+            failures.append(f"{scope}: live/static cross-references require a portal application link")
+        return failures
 
     @classmethod
     def _validate_formula_expression(

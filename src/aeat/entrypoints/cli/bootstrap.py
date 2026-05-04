@@ -21,7 +21,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ...core.logging import get_logger
-from ._i18n import t, tr
+from ._i18n import tr
 
 _logger = get_logger(__name__)
 
@@ -186,18 +186,7 @@ def bootstrap() -> None:
     settings = Settings()
 
     if not settings.google_cloud_project:
-        console.print(
-            "[red]"
-            + tr(
-                t(
-                    "bootstrap: GOOGLE_CLOUD_PROJECT está vacío en env/.env",
-                    "bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env",
-                    "bootstrap: GOOGLE_CLOUD_PROJECT és buit a env/.env",
-                    "bootstrap: GOOGLE_CLOUD_PROJECT üres a env/.env-ben",
-                )
-            )
-            + "[/]"
-        )
+        console.print("[red]" + tr("cli.bootstrap.t_682855") + "[/]")
         raise typer.Exit(code=1)
 
     _logger.info("bootstrap: starting scratch resource provisioning for project %s", settings.google_cloud_project)
@@ -205,28 +194,8 @@ def bootstrap() -> None:
         creds = get_credentials_for_scopes(REQUIRED_ADC_SCOPES)
     except Exception as exc:
         _logger.warning("bootstrap: failed to obtain ADC credentials", exc_info=True)
-        console.print(
-            "[red]"
-            + tr(
-                t(
-                    f"bootstrap: credenciales no disponibles: {exc}",
-                    f"bootstrap: credentials unavailable: {exc}",
-                    f"bootstrap: credencials no disponibles: {exc}",
-                    f"bootstrap: hitelesito adatok nem elerhetok: {exc}",
-                )
-            )
-            + "[/]"
-        )
-        console.print(
-            tr(
-                t(
-                    "Configura GOOGLE_APPLICATION_CREDENTIALS o ejecuta `just gcloud-auth`.",
-                    "Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.",
-                    "Configura GOOGLE_APPLICATION_CREDENTIALS o executa `just gcloud-auth`.",
-                    "Állítsd be a GOOGLE_APPLICATION_CREDENTIALS-t vagy futtasd: `just gcloud-auth`.",
-                )
-            )
-        )
+        console.print("[red]" + tr("cli.bootstrap.t_078117") + "[/]")
+        console.print(tr("cli.bootstrap.t_524692"))
         raise typer.Exit(code=1) from exc
 
     drive = build_drive_service(creds)
@@ -240,47 +209,9 @@ def bootstrap() -> None:
         _logger.warning("bootstrap: Drive resource creation failed", exc_info=True)
         text = repr(exc).lower()
         if "storagequotaexceeded" in text or "storage quota" in text:
-            console.print(
-                "[yellow]"
-                + tr(
-                    t(
-                        "bootstrap: no se pueden crear recursos de Drive con las credenciales activas.",
-                        "bootstrap: cannot create Drive resources under the active credentials.",
-                        "bootstrap: no es poden crear recursos de Drive amb les credencials actives.",
-                        "bootstrap: nem lehet Drive erőforrásokat létrehozni az aktív hitelesito adatokkal.",
-                    )
-                )
-                + "[/]"
-            )
-            console.print(
-                tr(
-                    t(
-                        "Las cuentas de servicio en cuentas Google de consumo (no Workspace) tienen cuota cero "
-                        "de almacenamiento en Drive y no pueden ser propietarias de archivos.",
-                        "Service accounts on consumer (non-Workspace) Google accounts have zero "
-                        "Drive storage quota and cannot own Drive files.",
-                        "Els comptes de servei en comptes Google de consum (no Workspace) tenen quota zero "
-                        "d'emmagatzematge a Drive i no poden ser propietaris de fitxers.",
-                        "A fogyasztoi (nem Workspace) Google fiokokon a szolgaltatasi fiokoknak nulla a Drive tárhelykvótája, es nem birtokolhatnak Drive fajlokat.",
-                    )
-                )
-            )
-            console.print(
-                tr(
-                    t(
-                        "Ejecuta `aeat oauth-client init` para crear un cliente OAuth Desktop + "
-                        "`just gcloud-auth`, u opera desde un tenant Google Workspace donde "
-                        "la SA pueda ser propietaria en una unidad compartida.",
-                        "Run `aeat oauth-client init` to create an OAuth Desktop client + "
-                        "`just gcloud-auth`, or operate from a Google Workspace tenant where "
-                        "the SA can own files in a Shared Drive.",
-                        "Executa `aeat oauth-client init` per crear un client OAuth Desktop + "
-                        "`just gcloud-auth`, o opera des d'un tenant Google Workspace on "
-                        "el SA pugui ser propietari en una unitat compartida.",
-                        "Futtasd: `aeat oauth-client init` egy OAuth Desktop kliens letrehozasahoz + `just gcloud-auth`, vagy használj Google Workspace tenantot, ahol az SA tulajdonolhat fajlokat egy megosztott meghajtón.",
-                    )
-                )
-            )
+            console.print("[yellow]" + tr("cli.bootstrap.t_457020") + "[/]")
+            console.print(tr("cli.bootstrap.t_272641"))
+            console.print(tr("cli.bootstrap.t_047210"))
             raise typer.Exit(code=2) from exc
         raise
 
@@ -295,32 +226,21 @@ def bootstrap() -> None:
 
     table = Table(title="aeat bootstrap", show_lines=False, header_style="bold")
     table.add_column(
-        tr(t("Recurso", "Resource", "Recurs", "Erőforrás")),
+        tr("cli.bootstrap.t_011711"),
         style="cyan",
     )
-    table.add_column(tr(t("ID", "ID", "ID", "Azonosító")), style="white", overflow="fold")
+    table.add_column(tr("cli.bootstrap.t_673036"), style="white", overflow="fold")
     table.add_row(
-        tr(t("carpeta scratch", "scratch folder", "carpeta scratch", "scratch mappa")),
+        tr("cli.bootstrap.t_630898"),
         folder_id,
     )
     table.add_row(
-        tr(t("hoja scratch", "scratch sheet", "full scratch", "scratch táblázat")),
+        tr("cli.bootstrap.t_762170"),
         sheet_id,
     )
     table.add_row(
-        tr(t("documento scratch", "scratch doc", "document scratch", "scratch dokumentum")),
+        tr("cli.bootstrap.t_115599"),
         doc_id,
     )
     console.print(table)
-    console.print(
-        "[green]"
-        + tr(
-            t(
-                "bootstrap: env/.env actualizado. Vuelve a ejecutar `aeat doctor` para verificar.",
-                "bootstrap: env/.env updated. Re-run `aeat doctor` to verify.",
-                "bootstrap: env/.env actualitzat. Torna a executar `aeat doctor` per verificar.",
-                "bootstrap: env/.env frissítve. Futtasd újra: `aeat doctor` az ellenorzeshez.",
-            )
-        )
-        + "[/]"
-    )
+    console.print("[green]" + tr("cli.bootstrap.t_488785") + "[/]")

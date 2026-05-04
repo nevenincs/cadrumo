@@ -39,13 +39,8 @@ def test_export_errors_are_canonical_access_gate_errors() -> None:
 
 
 def test_translatable_message_preserved() -> None:
-    from .....core.i18n import Translatable
 
-    translatable: Translatable = {
-        "en": "draft not ready",
-        "es": "borrador no listo",
-        "hu": "piszkozat nem kész",
-    }
+    translatable: str = "export.test_errors.translatable"
     exc = SubmissionPreflightError("draft not ready", translated_message=translatable)
     assert exc.translated_message == translatable
     assert str(exc) == "draft not ready"

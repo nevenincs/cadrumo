@@ -12,7 +12,6 @@ from decimal import Decimal
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._adapters import (
-    divergences_pending,
     drafts_pending,
     invoices_pending,
     transactions_low_confidence,
@@ -29,9 +28,9 @@ class ReviewQueue:
 
     Combines the per-source adapters
     (:func:`transactions_pending`, :func:`invoices_pending`,
-    :func:`divergences_pending`, :func:`drafts_pending`) into one
-    deterministically sorted tuple. Severity is the primary sort key;
-    ``since`` and ``item_id`` provide stable tiebreakers.
+    :func:`drafts_pending`) into one deterministically sorted tuple.
+    Severity is the primary sort key; ``since`` and ``item_id`` provide
+    stable tiebreakers.
     """
 
     @staticmethod
@@ -62,7 +61,7 @@ class ReviewQueue:
                 :func:`transactions_low_confidence`: classified
                 transactions whose ``classification_confidence`` is
                 non-None and strictly less than the threshold. Other
-                review kinds (invoices, divergences, findings) cannot
+                review kinds (invoices, findings) cannot
                 satisfy a decision-confidence predicate and are
                 excluded while this filter is active.
 
@@ -75,7 +74,6 @@ class ReviewQueue:
             items = [
                 *transactions_pending(settings),
                 *invoices_pending(settings),
-                *divergences_pending(settings),
                 *drafts_pending(settings),
             ]
         if kinds is not None:

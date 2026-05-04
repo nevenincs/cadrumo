@@ -75,12 +75,12 @@ class TestEncryptedString:
     """``EncryptedString`` round-trips str values and stores ciphertext on disk."""
 
     def test_round_trip_ascii(self, session: Session) -> None:
-        row = _CryptoRow(secret_text="hello world")
+        row = _CryptoRow(secret_text="hello world")  # noqa: S106
         session.add(row)
         session.commit()
         session.expire_all()
         loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_text == "hello world"
+        assert loaded.secret_text == "hello world"  # noqa: S105
 
     def test_round_trip_unicode(self, session: Session) -> None:
         text = "movimientos bancarios — autónomo año 2025"
@@ -176,7 +176,7 @@ class TestCrossTypeReplayPrevention:
         engine: Engine,
         session: Session,
     ) -> None:
-        session.add(_CryptoRow(secret_text="payload"))
+        session.add(_CryptoRow(secret_text="payload"))  # noqa: S106
         session.commit()
         with engine.connect() as conn:
             ciphertext = conn.exec_driver_sql(

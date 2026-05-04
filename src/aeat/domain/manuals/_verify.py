@@ -12,7 +12,6 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings, load_settings
-from ...core.i18n import Language
 from ...core.logging import get_logger
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
@@ -72,18 +71,17 @@ class ManualVerificationReport(BaseModel):
 
 
 def _section_multilingual_warnings(section: Section) -> list[ManualVerificationIssue]:
-    """Warn when a :class:`~aeat.domain.manuals.Section` is missing ``en`` or ``hu`` translations."""
+    """Warn when a :class:`~aeat.domain.manuals.Section` is missing translation keys."""
     issues: list[ManualVerificationIssue] = []
     for field_name, translatable in (("title", section.title), ("summary", section.summary)):
-        for lang in (Language.EN, Language.HU):
-            if not translatable.get(lang.value):
-                issues.append(
-                    ManualVerificationIssue(
-                        level="warning",
-                        code="missing-translation",
-                        message=(f"section {section.section_id!r}: {field_name} missing '{lang.value}' translation"),
-                    )
+        if not translatable:
+            issues.append(
+                ManualVerificationIssue(
+                    level="warning",
+                    code="missing-translation",
+                    message=(f"section {section.section_id!r}: {field_name} missing translation key"),
                 )
+            )
     return issues
 
 

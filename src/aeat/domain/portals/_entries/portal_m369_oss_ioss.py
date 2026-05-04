@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -24,12 +23,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_369,
-    label={
-        "es": "Modelo 369 — Ventanilla única OSS/IOSS",
-        "en": "Modelo 369 — OSS / IOSS one-stop shop",
-        "hu": "369-es űrlap — OSS / IOSS egyablakos ügyintézés",
-    },
+    label="entries.portal_m369_oss_ioss.label_354748",
     purpose_es="Autoliquidación del IVA de servicios y ventas a distancia intracomunitarias bajo el régimen OSS/IOSS.",
 )
 """Portal entry for Modelo 369 (OSS / IOSS one-stop-shop VAT return)."""

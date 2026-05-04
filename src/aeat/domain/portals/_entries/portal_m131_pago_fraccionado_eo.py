@@ -1,15 +1,13 @@
 """Catalogue entry for the *Modelo 131* IRPF instalment payment procedure.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING` cross-referencing
-:attr:`aeat.domain.modelos.ModeloCode.MODELO_131`. Used by entrepreneurs on
+under :attr:`aeat.domain.portals.PortalCategory.FILING`. Used by entrepreneurs on
 the IRPF *objective-assessment* (módulos) regime to settle on-account
 quarterly instalments.
 """
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -28,12 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_131,
-    label={
-        "es": "Modelo 131 — Pago fraccionado IRPF (estimación objetiva)",
-        "en": "Modelo 131 — IRPF instalment payment (objective assessment)",
-        "hu": "131-es űrlap — IRPF részletfizetés (módszeres megállapítás)",
-    },
+    label="entries.portal_m131_pago_fraccionado_eo.label_128460",
     purpose_es="Pago fraccionado a cuenta del IRPF para empresarios en estimación objetiva (módulos).",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 131 procedure page."""

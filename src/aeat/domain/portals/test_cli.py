@@ -42,13 +42,12 @@ def test_list_filter_by_category() -> None:
 
 
 def test_list_filter_by_modelo() -> None:
-    """``list --modelo 303 --json`` returns FILING + BORRADOR for 303."""
-    code, out = _invoke("list", "--modelo", "303", "--json")
+    """``list --modelo 130 --json`` returns the registry-linked portal."""
+    code, out = _invoke("list", "--modelo", "130", "--json")
     assert code == 0, out
     payload = _unwrap_result(out)
     related = {e["portal"] for e in payload}
-    assert "portal_m303_iva_autoliquidacion" in related
-    assert "portal_pre303_ayuda" in related
+    assert related == {"portal_m130_pago_fraccionado_ed"}
 
 
 def test_list_active_only() -> None:
@@ -61,12 +60,12 @@ def test_list_active_only() -> None:
 
 
 def test_list_filter_flags_combined() -> None:
-    """Filters compose: ``--category filing --modelo 303`` is the presentation portal."""
-    code, out = _invoke("list", "--category", "filing", "--modelo", "303", "--json")
+    """Filters compose over registry-backed modelo linkage."""
+    code, out = _invoke("list", "--category", "filing", "--modelo", "130", "--json")
     assert code == 0, out
     payload = _unwrap_result(out)
     assert len(payload) == 1
-    assert payload[0]["portal"] == "portal_m303_iva_autoliquidacion"
+    assert payload[0]["portal"] == "portal_m130_pago_fraccionado_ed"
 
 
 def test_list_is_deterministic_and_sorted() -> None:
@@ -94,21 +93,23 @@ def test_show_unknown_portal_errors() -> None:
 
 
 def test_for_modelo_json() -> None:
-    """``for-modelo 303 --json`` emits the known two entries."""
-    code, out = _invoke("for-modelo", "303", "--json")
+    """``for-modelo 130 --json`` emits the registry-linked entry."""
+    code, out = _invoke("for-modelo", "130", "--json")
     assert code == 0, out
     payload = _unwrap_result(out)
     portals = {e["portal"] for e in payload}
-    assert portals == {"portal_m303_iva_autoliquidacion", "portal_pre303_ayuda"}
+    assert portals == {"portal_m130_pago_fraccionado_ed"}
 
 
-def test_for_modelo_unknown_code_errors() -> None:
-    """Unknown modelo code causes non-zero exit."""
-    code, _ = _invoke("for-modelo", "999", "--json")
-    assert code != 0
+def test_for_modelo_without_portal_returns_empty_result() -> None:
+    """A valid identifier without portal metadata returns no entries."""
+    code, out = _invoke("for-modelo", "999", "--json")
+    assert code == 0
+    assert _unwrap_result(out) == []
 
 
-def test_list_unknown_modelo_filter_errors() -> None:
-    """``list --modelo 999`` is rejected."""
-    code, _ = _invoke("list", "--modelo", "999", "--json")
-    assert code != 0
+def test_list_modelo_filter_without_portal_returns_empty_result() -> None:
+    """``list --modelo 999`` returns no entries."""
+    code, out = _invoke("list", "--modelo", "999", "--json")
+    assert code == 0
+    assert _unwrap_result(out) == []

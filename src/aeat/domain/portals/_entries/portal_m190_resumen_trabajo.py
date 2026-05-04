@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -26,12 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_190,
-    label={
-        "es": "Modelo 190 — Resumen anual retenciones trabajo",
-        "en": "Modelo 190 — Annual summary of labour withholdings",
-        "hu": "190-es űrlap — Éves munkabér-forrásadó összefoglaló",
-    },
+    label="entries.portal_m190_resumen_trabajo.label_059630",
     purpose_es=(
         "Resumen anual de retenciones e ingresos a cuenta sobre trabajo y actividades (complementa al Modelo 111)."
     ),

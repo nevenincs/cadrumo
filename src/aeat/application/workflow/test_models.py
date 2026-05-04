@@ -41,7 +41,6 @@ class TestWorkflowStageOrdering:
         """Verify every read-only stage is present exactly once."""
         expected = (
             "LOADING_PROFILE",
-            "SYNCING_CATALOGUES",
             "COMPUTING_DEADLINES",
             "CHECKING_INBOX",
             "BUILDING_DRAFT",
@@ -108,7 +107,7 @@ class TestWorkflowStepValidation:
             started_at=now,
             ended_at=now,
             success=True,
-            summary={"en": "ok"},
+            summary="translation",
             details={"key": "value"},
         )
         assert step.details == {"key": "value"}
@@ -122,7 +121,7 @@ class TestWorkflowStepValidation:
                 started_at=now,
                 ended_at=now,
                 success=True,
-                summary={"en": "ok"},
+                summary="translation",
                 details=cast(dict[str, str], {"key": 42}),
             )
 
@@ -172,7 +171,7 @@ class TestSiteHealthAlert:
                 started_at=now,
                 ended_at=earlier,
                 success=True,
-                summary={"en": "ok"},
+                summary="translation",
             )
 
 
@@ -186,7 +185,7 @@ class TestWorkflowResultTerminal:
             started_at=now,
             ended_at=now,
             success=True,
-            summary={"en": "ok"},
+            summary="translation",
         )
 
     def test_done_rejects_reason(self) -> None:
@@ -200,7 +199,7 @@ class TestWorkflowResultTerminal:
                 final_stage=WorkflowStage.DONE,
                 aborted_reason=WorkflowAbortReason.USER_CANCELLED,
                 steps=(self._step(),),
-                summary={"en": "done"},
+                summary="translation",
             )
 
     def test_aborted_requires_reason(self) -> None:
@@ -214,7 +213,7 @@ class TestWorkflowResultTerminal:
                 final_stage=WorkflowStage.ABORTED,
                 aborted_reason=None,
                 steps=(self._step(),),
-                summary={"en": "?"},
+                summary="translation",
             )
 
     def test_non_terminal_stage_rejected(self) -> None:
@@ -227,7 +226,7 @@ class TestWorkflowResultTerminal:
                 ended_at=now,
                 final_stage=WorkflowStage.BUILDING_DRAFT,
                 steps=(self._step(),),
-                summary={"en": "?"},
+                summary="translation",
             )
 
     def test_json_round_trip(self) -> None:
@@ -243,7 +242,7 @@ class TestWorkflowResultTerminal:
             draft_id="draft-1",
             submission_id=None,
             steps=(self._step(),),
-            summary={"en": "ok"},
+            summary="translation",
         )
         blob = original.model_dump_json()
         reconstructed = WorkflowResult.model_validate_json(blob)

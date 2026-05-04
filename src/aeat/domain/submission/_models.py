@@ -14,8 +14,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.i18n import Translatable
-
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -65,7 +63,7 @@ class SubmissionAttempt(BaseModel):
     ended_at: datetime
     status: SubmissionStatus
     error_code: str | None = None
-    error_message: Translatable | None = None
+    error_message: str | None = None
     browser_trace_path: Path | None = None
 
     @model_validator(mode="after")

@@ -20,11 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label={
-        "es": "Presentar y consultar declaraciones — índice",
-        "en": "Submit and consult declarations — index",
-        "hu": "Bevallások benyújtása és lekérdezése — tárgymutató",
-    },
+    label="entries.portal_presentar_consultar_index.label_621468",
     purpose_es="Índice oficial de modelos y procedimientos de presentación y consulta.",
 )
 """Portal entry for the AEAT submit-and-consult declarations index."""

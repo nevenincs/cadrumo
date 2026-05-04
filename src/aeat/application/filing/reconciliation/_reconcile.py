@@ -21,7 +21,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
-from ....core.i18n import Translatable
 from ....core.logging import get_logger
 from ._kind import FilingDivergenceKind
 from ._schema import (
@@ -286,48 +285,30 @@ def _format_decimal(value: Decimal) -> str:
     return format(value, "f")
 
 
-def _narrative_not_yet_found(draft: FilingDraft) -> Translatable:
+def _narrative_not_yet_found(draft: FilingDraft) -> str:
     """Build the multilingual narrative for the NOT_YET_FOUND verdict."""
     es = (
         f"AEAT no tiene constancia del modelo {draft.modelo} del período "
         f"{draft.period}. Asegúrate de haberlo presentado correctamente."
     )
-    en = (
-        f"AEAT has no record of modelo {draft.modelo} for period "
-        f"{draft.period}. Confirm the filing was actually submitted."
-    )
-    hu = (
-        f"Az AEAT-nál nincs bejegyzés a {draft.modelo} modellről a "
-        f"{draft.period} időszakra. Ellenőrizd, valóban benyújtottad-e."
-    )
-    ca = (
-        f"L'AEAT no té constància del model {draft.modelo} del període "
-        f"{draft.period}. Assegura't d'haver-lo presentat correctament."
-    )
-    return Translatable(es=es, en=en, hu=hu, ca=ca)
+    return es
 
 
-def _narrative_match(draft: FilingDraft, remote: JustificanteRefSummary) -> Translatable:
+def _narrative_match(draft: FilingDraft, remote: JustificanteRefSummary) -> str:
     """Build the multilingual narrative for the MATCH verdict."""
     es = f"Modelo {draft.modelo} {draft.period}: coincide con lo registrado en AEAT (CSV {remote.csv})."
-    en = f"Modelo {draft.modelo} {draft.period}: matches AEAT's record (CSV {remote.csv})."
-    hu = f"{draft.modelo} modell {draft.period}: egyezik az AEAT bejegyzésével (CSV {remote.csv})."
-    ca = f"Model {draft.modelo} {draft.period}: coincideix amb el que està registrat a l'AEAT (CSV {remote.csv})."
-    return Translatable(es=es, en=en, hu=hu, ca=ca)
+    return es
 
 
 def _narrative_divergent(
     draft: FilingDraft,
     remote: JustificanteRefSummary,
     mismatches: list[FieldMismatch],
-) -> Translatable:
+) -> str:
     """Build the multilingual narrative for the DIVERGENT verdict."""
     fields = ", ".join(m.field_name for m in mismatches)
     es = f"Modelo {draft.modelo} {draft.period}: divergencia frente a AEAT (CSV {remote.csv}) en: {fields}."
-    en = f"Modelo {draft.modelo} {draft.period}: divergence vs AEAT (CSV {remote.csv}) in: {fields}."
-    hu = f"{draft.modelo} modell {draft.period}: eltérés az AEAT-hez képest (CSV {remote.csv}) mezők: {fields}."
-    ca = f"Model {draft.modelo} {draft.period}: divergència respecte l'AEAT (CSV {remote.csv}) en: {fields}."
-    return Translatable(es=es, en=en, hu=hu, ca=ca)
+    return es
 
 
 __all__ = ["reconcile"]

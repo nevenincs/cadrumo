@@ -102,7 +102,7 @@ class TestPreflightGates:
         findings = (
             FilingFinding(
                 severity=FilingFindingSeverity.ERROR,
-                message={"en": "bad", "es": "malo", "hu": "rossz"},
+                message="export.test_preflight.message_868279",
             ),
         )
         with pytest.raises(SubmissionPreflightError, match="ERROR-severity"):
@@ -112,7 +112,7 @@ class TestPreflightGates:
         findings = (
             FilingFinding(
                 severity=FilingFindingSeverity.WARNING,
-                message={"en": "warn", "es": "aviso", "hu": "figyelem"},
+                message="export.test_preflight.message_620739",
             ),
         )
         _preflight().check(_Draft(findings=findings), today=_TODAY)

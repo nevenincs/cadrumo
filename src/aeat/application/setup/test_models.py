@@ -8,7 +8,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.outbound.aeat.auth import CertificateBackend
-from ...core.i18n import Language
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
 from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
@@ -34,8 +33,8 @@ def _canonical_answers(tmp_path: Path) -> SetupAnswers:
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_friendly_name="test cert",
         certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        default_language=Language.EN,
-        output_language=Language.HU,
+        default_language="en",
+        output_language="hu",
         aeat_drafts_dir=tmp_path / "drafts",
         aeat_submissions_dir=tmp_path / "subs",
         aeat_manuals_root=tmp_path / "manuals",
@@ -55,7 +54,7 @@ def test_setup_answers_default_output_language_is_spanish(tmp_path: Path) -> Non
     payload = _canonical_answers(tmp_path).model_dump()
     payload.pop("output_language")
     reparsed = SetupAnswers.model_validate(payload)
-    assert reparsed.output_language is Language.ES
+    assert reparsed.output_language == "es"
 
 
 def test_setup_answers_is_frozen(tmp_path: Path) -> None:
@@ -84,7 +83,7 @@ def test_verify_finding_roundtrip() -> None:
     finding = VerifyFinding(
         name="demo",
         severity=VerifySeverity.OK,
-        message={"en": "ok", "es": "ok", "hu": "rendben"},
+        message="setup.test_models.message_679514",
     )
     assert finding.severity is VerifySeverity.OK
     assert VerifyFinding.model_validate_json(finding.model_dump_json()) == finding

@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Pago autoliquidaciones en cuenta",
-        "en": "Self-assessment payment via bank account",
-        "hu": "Önbevallások kifizetése bankszámláról",
-    },
+    label="entries.portal_pago_autoliquidacion_cuenta.label_405817",
     purpose_es="Pago de autoliquidaciones con cargo en cuenta bancaria generando NRC.",
 )
 """Portal entry for self-assessment payment via bank account (NRC issuance)."""

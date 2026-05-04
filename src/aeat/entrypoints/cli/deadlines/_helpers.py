@@ -18,7 +18,7 @@ from ....domain.deadlines import (
     DeadlineEngine,
     ProfileError,
 )
-from .._i18n import t, tr
+from .._i18n import tr
 
 _logger = get_logger(__name__)
 
@@ -40,16 +40,7 @@ def resolve_profile_path(explicit: Path | None) -> Path:
         return explicit
     settings = load_settings()
     if settings.aeat_default_profile_path is None:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    "no se ha proporcionado ruta de perfil; pasa --profile PATH o define AEAT_DEFAULT_PROFILE_PATH en env/.env",
-                    "no profile path supplied; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH in env/.env",
-                    "no s'ha proporcionat camí del perfil; passa --profile PATH o defineix AEAT_DEFAULT_PROFILE_PATH a env/.env",
-                    "nincs megadva profil útvonal; add át a --profile PATH-t vagy állítsd be az AEAT_DEFAULT_PROFILE_PATH-t a env/.env-ben",
-                )
-            )
-        )
+        raise typer.BadParameter(tr("deadlines.helpers.t_751621"))
     return settings.aeat_default_profile_path
 
 

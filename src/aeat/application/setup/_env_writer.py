@@ -72,7 +72,7 @@ def _answers_to_env_mapping(answers: SetupAnswers) -> dict[str, str]:
         "AEAT_CERTIFICATE_FRIENDLY_NAME": answers.certificate_friendly_name or "",
         "AEAT_CERTIFICATE_BACKEND": answers.certificate_backend.value,
         "AEAT_CERTIFICATE_VERIFY_URL": answers.certificate_verify_url,
-        "AEAT_OUTPUT_LANGUAGE": answers.output_language.value,
+        "AEAT_OUTPUT_LANGUAGE": answers.output_language,
         "AEAT_DEFAULT_PROFILE_PATH": _posix(answers.default_profile_path),
         "AEAT_DRAFTS_DIR": _posix(answers.aeat_drafts_dir),
         "AEAT_SUBMISSIONS_DIR": _posix(answers.aeat_submissions_dir),

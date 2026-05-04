@@ -13,7 +13,6 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ._models import SetupAnswers, VerifyFinding, VerifySeverity
 
@@ -34,15 +33,10 @@ def _finding(
     remediation_hu: str | None = None,
 ) -> VerifyFinding:
     """Construct a :class:`VerifyFinding` with a multilingual message."""
-    message: Translatable = {"es": es, "en": en, "ca": ca, "hu": hu}
-    remediation: Translatable | None = None
+    message: str = "translation"
+    remediation: str | None = None
     if any(slot is not None for slot in (remediation_es, remediation_en, remediation_ca, remediation_hu)):
-        remediation = {
-            "es": remediation_es or remediation_en or "",
-            "en": remediation_en or remediation_es or "",
-            "ca": remediation_ca or remediation_es or remediation_en or "",
-            "hu": remediation_hu or remediation_en or remediation_es or "",
-        }
+        remediation = "translation"
     return VerifyFinding(
         name=name,
         severity=severity,

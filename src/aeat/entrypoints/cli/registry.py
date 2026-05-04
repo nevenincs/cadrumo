@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 import typer
 from pydantic import BaseModel, ConfigDict
 
 from ...domain.calculations.registry import RegistryValidator, load_registry_tree, verify_workbook_backend
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
-from ._i18n import t as _t
-from ._i18n import tr as _msg
 
 app = typer.Typer(
     name="registry",
@@ -40,25 +38,68 @@ class RegistryTreeReport(BaseModel):
     revision_count: int
     legal_reference_count: int
     source_reference_count: int
+    casilla_count: int
+    formula_count: int
+    extraction_profile_count: int
+    cross_reference_count: int
+    workbook_parity_ref_count: int
+    verification_expectation_count: int
+    application_link_count: int
+    application_link_surfaces: tuple[str, ...]
     modelos: tuple[str, ...]
     verified: bool
 
 
+class RegistryRevisionInventory(NamedTuple):
+    casilla_count: int
+    formula_count: int
+    extraction_profile_count: int
+    cross_reference_count: int
+    workbook_parity_ref_count: int
+    verification_expectation_count: int
+    application_link_count: int
+    application_link_surfaces: tuple[str, ...]
+
+
+def _revision_inventory(modelos) -> RegistryRevisionInventory:
+    revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
+    application_surfaces = {link.surface for revision in revisions for link in revision.application_links}
+    return RegistryRevisionInventory(
+        casilla_count=sum(len(revision.casillas) for revision in revisions),
+        formula_count=sum(len(revision.formulas) for revision in revisions),
+        extraction_profile_count=sum(len(revision.extraction_profiles) for revision in revisions),
+        cross_reference_count=sum(len(revision.live_cross_references) for revision in revisions),
+        workbook_parity_ref_count=sum(len(revision.workbook_parity_refs) for revision in revisions),
+        verification_expectation_count=sum(len(revision.verification_expectations) for revision in revisions),
+        application_link_count=sum(len(revision.application_links) for revision in revisions),
+        application_link_surfaces=tuple(sorted(application_surfaces)),
+    )
+
+
 def _emit_metric(key: str, value: object) -> None:
     line = f"{key}={value}"
-    typer.echo(_msg(_t(line, line, line, line)))
+    typer.echo(line)
 
 
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
     """Load the registry tree and return stable read-only inventory counts."""
 
     modelos, catalogues = load_registry_tree(registry_root)
+    inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
         modelo_count=len(modelos),
         revision_count=sum(len(modelo.revisions) for modelo in modelos),
         legal_reference_count=len(catalogues.legal),
         source_reference_count=len(catalogues.sources),
+        casilla_count=inventory.casilla_count,
+        formula_count=inventory.formula_count,
+        extraction_profile_count=inventory.extraction_profile_count,
+        cross_reference_count=inventory.cross_reference_count,
+        workbook_parity_ref_count=inventory.workbook_parity_ref_count,
+        verification_expectation_count=inventory.verification_expectation_count,
+        application_link_count=inventory.application_link_count,
+        application_link_surfaces=inventory.application_link_surfaces,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         verified=False,
     )
@@ -71,6 +112,7 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     validator = RegistryValidator(catalogues, source_root=source_root)
     for modelo in modelos:
         validator.validate_modelo(modelo)
+    inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
         source_root=str(source_root),
@@ -78,6 +120,14 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         revision_count=sum(len(modelo.revisions) for modelo in modelos),
         legal_reference_count=len(catalogues.legal),
         source_reference_count=len(catalogues.sources),
+        casilla_count=inventory.casilla_count,
+        formula_count=inventory.formula_count,
+        extraction_profile_count=inventory.extraction_profile_count,
+        cross_reference_count=inventory.cross_reference_count,
+        workbook_parity_ref_count=inventory.workbook_parity_ref_count,
+        verification_expectation_count=inventory.verification_expectation_count,
+        application_link_count=inventory.application_link_count,
+        application_link_surfaces=inventory.application_link_surfaces,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         verified=True,
     )
@@ -111,6 +161,14 @@ def inspect_registry_cmd(
     _emit_metric("revision_count", report.revision_count)
     _emit_metric("legal_reference_count", report.legal_reference_count)
     _emit_metric("source_reference_count", report.source_reference_count)
+    _emit_metric("casilla_count", report.casilla_count)
+    _emit_metric("formula_count", report.formula_count)
+    _emit_metric("extraction_profile_count", report.extraction_profile_count)
+    _emit_metric("cross_reference_count", report.cross_reference_count)
+    _emit_metric("workbook_parity_ref_count", report.workbook_parity_ref_count)
+    _emit_metric("verification_expectation_count", report.verification_expectation_count)
+    _emit_metric("application_link_count", report.application_link_count)
+    _emit_metric("application_link_surfaces", ",".join(report.application_link_surfaces))
     _emit_metric("modelos", ",".join(report.modelos))
 
 
@@ -154,6 +212,14 @@ def verify_registry_cmd(
     _emit_metric("revision_count", report.revision_count)
     _emit_metric("legal_reference_count", report.legal_reference_count)
     _emit_metric("source_reference_count", report.source_reference_count)
+    _emit_metric("casilla_count", report.casilla_count)
+    _emit_metric("formula_count", report.formula_count)
+    _emit_metric("extraction_profile_count", report.extraction_profile_count)
+    _emit_metric("cross_reference_count", report.cross_reference_count)
+    _emit_metric("workbook_parity_ref_count", report.workbook_parity_ref_count)
+    _emit_metric("verification_expectation_count", report.verification_expectation_count)
+    _emit_metric("application_link_count", report.application_link_count)
+    _emit_metric("application_link_surfaces", ",".join(report.application_link_surfaces))
     _emit_metric("modelos", ",".join(report.modelos))
 
 

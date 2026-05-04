@@ -24,12 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _articulo(numero: str = "32") -> Articulo:
     return Articulo(
         numero=numero,
-        titulo={"es": "Reducciones", "en": "Reductions", "hu": "Csökkentések"},
-        summary={
-            "es": "Resumen.",
-            "en": "Summary.",
-            "hu": "Összefoglaló.",
-        },
+        titulo="normatives.test_schema.titulo_908834",
+        summary="normatives.test_schema.summary_296440",
         permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
     )
 
@@ -43,11 +39,7 @@ def _reference(
         id=ref_id,
         kind=NormativeKind.LEY,
         number="35/2006",
-        title={
-            "es": "Ley 35/2006 del IRPF",
-            "en": "Law 35/2006 IRPF",
-            "hu": "35/2006. törvény",
-        },
+        title="normatives.test_schema.title_440480",
         published_at=date(2006, 11, 29),
         boe_url=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"),
         boe_id="BOE-A-2006-20764",
@@ -64,14 +56,14 @@ class TestArticulo:
     def test_happy_path(self) -> None:
         articulo = _articulo()
         assert articulo.numero == "32"
-        assert articulo.titulo["es"] == "Reducciones"
+        assert articulo.titulo == "Reducciones"
 
     def test_missing_spanish_title_rejected(self) -> None:
         with pytest.raises(ValidationError):
             Articulo(
                 numero="32",
-                titulo={"en": "Reductions"},
-                summary={"es": "Resumen."},
+                titulo="translation",
+                summary="normatives.test_schema.summary_132271",
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
@@ -79,8 +71,8 @@ class TestArticulo:
         with pytest.raises(ValidationError):
             Articulo(
                 numero="32",
-                titulo={"es": "Reducciones"},
-                summary={"en": "Summary."},
+                titulo="normatives.test_schema.titulo_466358",
+                summary="translation",
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
@@ -105,8 +97,8 @@ class TestNormativeReference:
     def test_permalink_without_boe_id_rejected(self) -> None:
         bad = Articulo(
             numero="99",
-            titulo={"es": "x"},
-            summary={"es": "y"},
+            titulo="normatives.test_schema.titulo_446515",
+            summary="normatives.test_schema.summary_391415",
             permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a99"),
         )
         with pytest.raises(ValidationError):

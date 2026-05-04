@@ -120,7 +120,7 @@ class TestSummaryBlockExtraction:
             if casilla_id not in extracted:
                 continue
             assert extracted[casilla_id] == Decimal(raw), casilla_id
-        # Ruleset's 12 casillas must all be present.
+        # The rendered summary-block casillas must all be present.
         assert {
             "0550",
             "0551",
@@ -178,7 +178,7 @@ class TestSparseExtraction:
         extracted_ids = {v.casilla_id for v in filing.values}
         # Only the 5 provided casillas (all summary-scope) should extract.
         assert extracted_ids == set(sparse.keys())
-        # Ruleset-required casillas 0620 / 0622 / 0630 / 0698 / 0720 must
+        # Summary-block casillas 0620 / 0622 / 0630 / 0698 / 0720 must
         # be absent from a sparse PDF that never rendered them.
         for missing in ("0620", "0622", "0630", "0698", "0720"):
             assert missing not in extracted_ids

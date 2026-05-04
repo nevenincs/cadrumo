@@ -13,7 +13,6 @@ import typer
 
 from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
-from ...core.i18n import Language, Translatable, get_translation
 from ...domain.deadlines import AutonomoProfile, IVARegime
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
@@ -94,9 +93,9 @@ def _label_for(listing: AuthProviderListing) -> str:
     return _translate(listing.label)
 
 
-def _translate(translatable: Translatable) -> str:
-    """Render a Translatable in the operator's preferred locale (Spanish first)."""
-    return get_translation(translatable, Language.ES)
+def _translate(translatable: str) -> str:
+    """Render a str in the operator's preferred locale (Spanish first)."""
+    return translatable
 
 
 def _fmt_decimal(value: Decimal | None) -> str:

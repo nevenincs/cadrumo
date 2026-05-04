@@ -14,7 +14,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ._i18n import t, tr
+from ._i18n import tr
 
 app = typer.Typer(name="cloud", no_args_is_help=True, help="GCP product helpers.")
 functions_app = typer.Typer(name="functions", no_args_is_help=True, help="Cloud Functions v2 helpers.")
@@ -33,14 +33,7 @@ def _project() -> str:
     project = Settings().google_cloud_project
     if not project:
         typer.secho(
-            tr(
-                t(
-                    "GOOGLE_CLOUD_PROJECT está vacío en env/.env",
-                    "GOOGLE_CLOUD_PROJECT is empty in env/.env",
-                    "GOOGLE_CLOUD_PROJECT és buit a env/.env",
-                    "GOOGLE_CLOUD_PROJECT üres a env/.env-ben",
-                )
-            ),
+            tr("cli.cloud.t_626960"),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -73,9 +66,7 @@ def functions_list() -> None:
     table.add_column("State", style="white")
     table.add_column("Environment", style="dim")
     table.add_column("Update Time", style="dim")
-    count = 0
-    for function in client.list_functions(parent=parent):
-        count += 1
+    for _count, function in enumerate(client.list_functions(parent=parent), start=1):
         table.add_row(
             getattr(function, "name", ""),
             str(getattr(function, "state", "")),
@@ -83,16 +74,7 @@ def functions_list() -> None:
             str(getattr(function, "update_time", "")),
         )
     Console().print(table)
-    typer.echo(
-        tr(
-            t(
-                f"{count} función(es)",
-                f"{count} function(s)",
-                f"{count} funció/-ns",
-                f"{count} fuggveny",
-            )
-        )
-    )
+    typer.echo(tr("cli.cloud.t_776970"))
 
 
 @functions_app.command(name="describe", help="Print one Cloud Function's metadata.")
@@ -119,25 +101,14 @@ def run_list() -> None:
     table.add_column("Name", style="cyan")
     table.add_column("Generation", style="white")
     table.add_column("Update Time", style="dim")
-    count = 0
     for service in client.list_services(parent=parent):
-        count += 1
         table.add_row(
             getattr(service, "name", ""),
             str(getattr(service, "generation", "")),
             str(getattr(service, "update_time", "")),
         )
     Console().print(table)
-    typer.echo(
-        tr(
-            t(
-                f"{count} servicio(s)",
-                f"{count} service(s)",
-                f"{count} servei(s)",
-                f"{count} szolgaltatas",
-            )
-        )
-    )
+    typer.echo(tr("cli.cloud.t_829017"))
 
 
 @run_app.command(name="describe", help="Print one Cloud Run service's metadata.")
@@ -163,21 +134,10 @@ def storage_buckets() -> None:
     table.add_column("Name", style="cyan")
     table.add_column("Location", style="white")
     table.add_column("Storage Class", style="dim")
-    count = 0
     for bucket in client.list_buckets():
-        count += 1
         table.add_row(bucket.name, bucket.location or "", bucket.storage_class or "")
     Console().print(table)
-    typer.echo(
-        tr(
-            t(
-                f"{count} cubo(s)",
-                f"{count} bucket(s)",
-                f"{count} cubell(s)",
-                f"{count} bucket",
-            )
-        )
-    )
+    typer.echo(tr("cli.cloud.t_742684"))
 
 
 @storage_app.command(name="ls", help="List objects inside a bucket.")
@@ -193,21 +153,10 @@ def storage_ls(
     table.add_column("Name", style="cyan")
     table.add_column("Size", style="white", justify="right")
     table.add_column("Updated", style="dim")
-    count = 0
     for blob in client.list_blobs(bucket, prefix=prefix):
-        count += 1
         table.add_row(blob.name, str(blob.size or ""), str(blob.updated or ""))
     Console().print(table)
-    typer.echo(
-        tr(
-            t(
-                f"{count} objeto(s)",
-                f"{count} object(s)",
-                f"{count} objecte(s)",
-                f"{count} objektum",
-            )
-        )
-    )
+    typer.echo(tr("cli.cloud.t_754075"))
 
 
 __all__ = ["app"]

@@ -19,4 +19,4 @@ def test_smoke_modelos() -> None:
 
 def test_public_surface_is_modelo_identifier_only() -> None:
     assert modelos_all == ("ModeloCode",)
-    assert ModeloCode("303") is ModeloCode.MODELO_303
+    assert ModeloCode("303") == ModeloCode("303")

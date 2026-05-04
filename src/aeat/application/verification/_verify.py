@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionFiling
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
@@ -213,43 +212,21 @@ def _classify_discrepancy(
     delta = discrepancy.delta
     abs_delta = abs(delta)
 
-    rationale: Translatable
+    rationale: str
     if casilla_id in unreliable_ids:
         cause = DiscrepancyCause.EXTRACTION_UNRELIABLE
-        rationale = Translatable(
-            es=(
-                f"Casilla {casilla_id}: el extractor ha marcado este valor como poco fiable. Revisa manualmente el PDF."
-            ),
-            en=(f"Casilla {casilla_id}: the extractor flagged this value as low-confidence. Review the PDF manually."),
-            ca=(
-                f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. Revisa manualment el PDF."
-            ),
-            hu=(f"{casilla_id} casilla: az extraktor alacsony magabiztosságúnak jelölte. Ellenőrizd a PDF-et kézzel."),
+        rationale = (
+            f"Casilla {casilla_id}: el extractor ha marcado este valor como poco fiable. Revisa manualmente el PDF."
         )
     elif casilla_id not in registry_casillas:
         cause = DiscrepancyCause.UNMODELLED_RULE
-        rationale = Translatable(
-            es=(f"Casilla {casilla_id}: el registro no contempla esta casilla. Se acepta el valor extraido."),
-            en=(f"Casilla {casilla_id}: the registry does not include it. Extracted value accepted as-is."),
-            ca=(f"Casella {casilla_id}: el registre no contempla aquesta casella. S'accepta el valor extret."),
-            hu=(f"{casilla_id} casilla: a registry nem ismeri. A kinyert ertek elfogadva."),
-        )
+        rationale = f"Casilla {casilla_id}: el registro no contempla esta casilla. Se acepta el valor extraido."
     elif abs_delta < 10 * tolerance:
         cause = DiscrepancyCause.ROUNDING
-        rationale = Translatable(
-            es=f"Casilla {casilla_id}: diferencia dentro del margen de redondeo ({abs_delta} €).",
-            en=f"Casilla {casilla_id}: delta within rounding tolerance ({abs_delta} €).",
-            ca=f"Casella {casilla_id}: diferència dins del marge d'arrodoniment ({abs_delta} €).",
-            hu=f"{casilla_id} casilla: a kerekítési toleranciába esik ({abs_delta} €).",
-        )
+        rationale = f"Casilla {casilla_id}: diferencia dentro del margen de redondeo ({abs_delta} €)."
     else:
         cause = DiscrepancyCause.CORRECTNESS_DIVERGENCE
-        rationale = Translatable(
-            es=(f"Casilla {casilla_id}: diferencia significativa ({abs_delta} EUR). Revisa el PDF o el registro."),
-            en=(f"Casilla {casilla_id}: material divergence ({abs_delta} EUR). Review the PDF or the registry."),
-            ca=(f"Casella {casilla_id}: diferencia significativa ({abs_delta} EUR). Revisa el PDF o el registre."),
-            hu=(f"{casilla_id} casilla: jelentos elteres ({abs_delta} EUR). Ellenorizd a PDF-et vagy a registryt."),
-        )
+        rationale = f"Casilla {casilla_id}: diferencia significativa ({abs_delta} EUR). Revisa el PDF o el registro."
 
     return ClassifiedDiscrepancy(
         casilla_id=casilla_id,
@@ -305,47 +282,19 @@ def _compose_narrative(
     status: VerificationStatus,
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,
-) -> Translatable:
+) -> str:
     """Build the multilingual summary string the operator sees after import.
 
     The narrative collapses the verdict into one sentence per supported
     UI language and embeds the coverage percentage and discrepancy count
     so the operator can decide whether to drill into the classified list.
     """
-    coverage_pct = round(coverage * 100)
-    n_discrepancies = len(classified)
-    modelo = declaracion.modelo
-    period = declaracion.period
+    round(coverage * 100)
+    len(classified)
 
     if status is VerificationStatus.VERIFIED:
-        return {
-            "es": (
-                f"Modelo {modelo} {period}: verificado. Cobertura {coverage_pct}%. "
-                f"{n_discrepancies} discrepancias no bloqueantes (redondeo / reglas no modeladas)."
-            ),
-            "en": (
-                f"Modelo {modelo} {period}: verified. Coverage {coverage_pct}%. "
-                f"{n_discrepancies} non-blocking discrepancies (rounding / unmodelled rules)."
-            ),
-            "hu": (
-                f"{modelo} modell {period}: igazolva. Lefedettség {coverage_pct}%. "
-                f"{n_discrepancies} nem blokkoló eltérés (kerekítés / nem modellezett szabályok)."
-            ),
-        }
-    return {
-        "es": (
-            f"Modelo {modelo} {period}: revisar. Cobertura {coverage_pct}%. "
-            f"{n_discrepancies} discrepancias — revisa la lista clasificada."
-        ),
-        "en": (
-            f"Modelo {modelo} {period}: needs review. Coverage {coverage_pct}%. "
-            f"{n_discrepancies} discrepancies — inspect the classified list."
-        ),
-        "hu": (
-            f"{modelo} modell {period}: felülvizsgálat szükséges. Lefedettség {coverage_pct}%. "
-            f"{n_discrepancies} eltérés — nézd át a besorolt listát."
-        ),
-    }
+        return "verification.status.verified"
+    return "verification.status.needs_review"
 
 
 __all__ = ["verify_declaracion"]

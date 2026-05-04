@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
@@ -29,14 +29,10 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     """Explainable category profile for one spending category."""
 
     category: SpendingCategory
-    display_label: Translatable
+    display_label: tr
     proportionality: ProportionalityRule
     vat_hint: VatCategory | None = None
 
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:
-        try:
-            require_authoritative(self.display_label, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
         return self

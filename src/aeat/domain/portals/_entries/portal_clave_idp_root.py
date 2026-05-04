@@ -20,11 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    label={
-        "es": "Cl@ve — Identidad Electrónica para las Administraciones",
-        "en": "Cl@ve — Spanish public-sector identity provider",
-        "hu": "Cl@ve — spanyol közszolgálati azonosító",
-    },
+    label="entries.portal_clave_idp_root.label_655035",
     purpose_es="Página raíz del proveedor de identidad Cl@ve (clave.gob.es).",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Cl@ve IdP root page."""

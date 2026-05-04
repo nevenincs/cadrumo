@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Pago autoliquidaciones con tarjeta o Bizum",
-        "en": "Self-assessment payment by card or Bizum",
-        "hu": "Önbevallások kifizetése bankkártyával vagy Bizummal",
-    },
+    label="entries.portal_pago_autoliquidacion_tarjeta_bizum.label_409842",
     purpose_es="Pago de autoliquidaciones mediante tarjeta bancaria o Bizum.",
 )
 """Portal entry for self-assessment payment via bank card or Bizum."""

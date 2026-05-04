@@ -4,16 +4,14 @@ Each per-kind model wraps the source record verbatim alongside the
 unified queue fields (``item_id``, ``modelo``, ``severity``,
 ``summary``, ``drill_command``, ``since``).
 
-The :data:`ReviewItem` discriminated union mirrors the canonical
-``DivergencePayload`` pattern in :mod:`aeat.domain.sync`: a single
-discriminator field (``kind``) selects the concrete model, and
-pydantic enforces the discriminator at validation time.
+The :data:`ReviewItem` discriminated union uses a single
+discriminator field (``kind``) to select the concrete model, and
+pydantic enforces that discriminator at validation time.
 
 Concrete models:
 
 * :class:`TransactionReviewItem` — pending bank transactions.
 * :class:`InvoiceReviewItem` — unmatched, disputed, or payment-pending invoices.
-* :class:`DivergenceReviewItem` — pending sync divergence records.
 * :class:`FindingReviewItem` — pending findings on filing drafts.
 """
 
@@ -24,9 +22,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import Invoice
-from ...domain.sync import DivergenceRecord
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
 from ._enums import ReviewItemKind, ReviewSeverity
@@ -54,7 +51,7 @@ class _ReviewItemBase(BaseModel):
     item_id: str = Field(min_length=1)
     modelo: str | None
     severity: ReviewSeverity
-    summary: Translatable
+    summary: tr
     drill_command: str = Field(min_length=1)
     since: datetime
 
@@ -97,19 +94,6 @@ class InvoiceReviewItem(_ReviewItemBase):
     source: Invoice
 
 
-class DivergenceReviewItem(_ReviewItemBase):
-    """One pending sync divergence record.
-
-    Attributes:
-        kind: Literal discriminator pinned to
-            :attr:`ReviewItemKind.DIVERGENCE`.
-        source: The verbatim :class:`aeat.domain.sync.DivergenceRecord`.
-    """
-
-    kind: Literal[ReviewItemKind.DIVERGENCE] = ReviewItemKind.DIVERGENCE
-    source: DivergenceRecord
-
-
 class FindingReviewItem(_ReviewItemBase):
     """One pending finding extracted from a filing draft.
 
@@ -134,7 +118,7 @@ class FindingReviewItem(_ReviewItemBase):
 
 
 ReviewItem = Annotated[
-    TransactionReviewItem | InvoiceReviewItem | DivergenceReviewItem | FindingReviewItem,
+    TransactionReviewItem | InvoiceReviewItem | FindingReviewItem,
     Field(discriminator="kind"),
 ]
 """Discriminated union of every concrete review-queue item.

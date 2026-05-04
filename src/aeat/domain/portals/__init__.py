@@ -1,12 +1,9 @@
-"""Authoritative AEAT portal catalogue and metadata.
+"""AEAT portal catalogue and metadata.
 
-This subpackage exposes the closed, strict, pydantic v2 registry of
-every AEAT (and adjacent) portal the project interacts with for
-Spanish autónomo and small-SL tax filing. Membership is fixed at 42
-entries (8 AUTH + 21 FILING/CENSUS + 2 BORRADOR + 4 CONSULTATION + 5
-PAYMENT + 2 CALENDAR_REFERENCE). The registry is built at import time
-from the per-portal entries under the private ``_entries`` package and
-is frozen as a :class:`types.MappingProxyType`.
+This subpackage exposes the strict pydantic v2 registry of AEAT and
+adjacent portal metadata used by the project. The registry is built at import
+time from the per-portal entries under the private ``_entries`` package and is
+frozen as a :class:`types.MappingProxyType`.
 
 Consumers outside :mod:`aeat.domain.portals` MUST import from this module
 only; the underscore-prefixed submodules are internal and unstable.
@@ -16,9 +13,7 @@ The heavy imports (``_metadata``, ``_registry``) load lazily via
 ``__getattr__`` so importing portal enums does not materialise the full
 catalogue. The first access to any registry name loads the full catalogue.
 
-Modelo cross-reference is tied to :class:`aeat.domain.modelos.ModeloCode` —
-every ``ModeloCode`` member has at least one FILING or CENSUS portal
-backing it (``ModeloCode.MODELO_037`` is the sole retired carve-out).
+Modelo filing linkage is resolved from validated calculation registry data.
 """
 
 from __future__ import annotations

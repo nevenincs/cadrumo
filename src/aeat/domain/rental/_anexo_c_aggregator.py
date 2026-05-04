@@ -2,8 +2,8 @@
 
 The aggregator pulls per-finca + per-contract data from the rental
 register repositories for a given ejercicio and produces the five
-caller-supplied casillas that the existing M100 Anexo C ruleset
-consumes:
+Anexo C casilla values consumed by the registry-backed Modelo 100
+implementation:
 
   - 0061: Σ per-contract gross_rent_received for the period.
   - 0066: Σ per-finca total_deductible (LIRPF art. 23.1) including
@@ -231,8 +231,7 @@ def compute_anexo_c_aggregates(
         per_contract_tier=contract_tier,
     )
     _log.debug(
-        "anexo c aggregates computed: period=%d fincas=%d contracts=%d "
-        "0061=%s 0066=%s 0072=%s 0078=%s 0085=%s",
+        "anexo c aggregates computed: period=%d fincas=%d contracts=%d 0061=%s 0066=%s 0072=%s 0078=%s 0085=%s",
         period_year,
         len(fincas),
         len(contract_tier),

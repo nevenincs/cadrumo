@@ -26,11 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Mi área personal",
-        "en": "My personal area",
-        "hu": "Személyes felületem",
-    },
+    label="entries.portal_mi_area_personal.label_684631",
     purpose_es="Punto de entrada autenticado al área personal del contribuyente.",
 )
 """Portal entry for the taxpayer's personal area (authenticated landing)."""

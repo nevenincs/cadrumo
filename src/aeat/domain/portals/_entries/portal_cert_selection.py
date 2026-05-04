@@ -20,11 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.VOLATILE_APP_PATH,
-    label={
-        "es": "Selector de certificado",
-        "en": "Certificate selector",
-        "hu": "Tanúsítvány-választó",
-    },
+    label="entries.portal_cert_selection.label_714926",
     purpose_es="Punto de selección de certificado digital en la pasarela autenticada de la AEAT.",
     notes_es=("Ruta volátil: puede rotar entre campañas sin aviso previo.",),
 )

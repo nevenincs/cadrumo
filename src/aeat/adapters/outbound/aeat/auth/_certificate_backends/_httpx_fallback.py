@@ -92,7 +92,7 @@ class HttpxFallbackBackend(_CertBackend):
     """mTLS handshake probe via :mod:`httpx`.
 
     Verify-only backend; rejects any attempt to preload a browser
-    context. See :class:`aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
+    context. See :class:`aeat.adapters.outbound.aeat.auth._certificate_backends.PlaywrightContextBackend`
     for the interactive counterpart.
     """
 

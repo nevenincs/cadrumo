@@ -96,10 +96,10 @@ def _quarterly_windows(
 
     The standard autónomo schedule is:
 
-    - Q1: 1–20 April
-    - Q2: 1–20 July
-    - Q3: 1–20 October
-    - Q4: 1–30 January (of ``year + 1``)
+    - Q1: 1-20 April
+    - Q2: 1-20 July
+    - Q3: 1-20 October
+    - Q4: 1-30 January (of ``year + 1``)
 
     Direct-debit cutoff is ``closes_on - 5`` days.
     """

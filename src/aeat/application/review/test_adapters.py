@@ -7,7 +7,6 @@ and the severity-mapping invariants.
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -25,13 +24,6 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.invoices._repository import InvoiceCatalogueRepository
-from ...domain.sync import (
-    CasillaAddedWithDefault,
-    CasillaRemoved,
-    DivergenceClassification,
-    DivergenceRecord,
-    ModeloIdentifier,
-)
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -50,14 +42,11 @@ from ..filing import (
     FilingValue,
     FilingValueKind,
 )
-from ..sync import JsonFileDivergenceRepository
 from . import (
-    DivergenceReviewItem,
     FindingReviewItem,
     InvoiceReviewItem,
     ReviewSeverity,
     TransactionReviewItem,
-    divergences_pending,
     drafts_pending,
     invoices_pending,
     transactions_pending,
@@ -75,15 +64,14 @@ def _build_settings(tmp_path: Path) -> Settings:
         aeat_financial_txs_dir=tmp_path / "transactions",
         aeat_invoices_dir=tmp_path / "invoices",
         aeat_attachments_dir=tmp_path / "attachments",
-        aeat_sync_divergence_file_dir=tmp_path / "divergences",
         aeat_inbox_dir=tmp_path / "inbox",
         aeat_inbox_pdf_dir=tmp_path / "inbox-pdfs",
         aeat_drafts_dir=tmp_path / "drafts",
     )
 
 
-def _summary(text: str = "demo") -> Translatable:
-    return {"es": text, "en": text, "hu": text}
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -287,86 +275,6 @@ def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     assert isinstance(items[0], InvoiceReviewItem)
 
 
-# ── divergences adapter ───────────────────────────────────────────
-
-
-def _divergence_record(
-    *,
-    classification: DivergenceClassification = DivergenceClassification.BREAKING,
-    casilla_id: str = "C9",
-    modelo: ModeloIdentifier | None = None,
-) -> DivergenceRecord:
-    modelo_value = modelo if modelo is not None else ModeloIdentifier("130")
-    if classification is DivergenceClassification.BREAKING:
-        payload: CasillaRemoved | CasillaAddedWithDefault = CasillaRemoved(
-            modelo=modelo_value,
-            casilla_id=casilla_id,
-        )
-    else:
-        payload = CasillaAddedWithDefault(
-            modelo=modelo_value,
-            casilla_id=casilla_id,
-            default="0",
-            label=_summary("label"),
-        )
-    return DivergenceRecord(
-        record_id=uuid.uuid4().hex,
-        detected_at=datetime(2026, 4, 12, tzinfo=UTC),
-        modelo=modelo_value,
-        classification=classification,
-        payload=payload,
-    )
-
-
-def test_divergences_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
-    settings = _build_settings(tmp_path)
-    items = divergences_pending(settings)
-    assert items == ()
-
-
-@pytest.mark.parametrize(
-    ("classification", "expected_severity"),
-    [
-        (DivergenceClassification.BREAKING, ReviewSeverity.CRITICAL),
-        (DivergenceClassification.SUSPICIOUS, ReviewSeverity.CRITICAL),
-        (DivergenceClassification.ADDITIVE, ReviewSeverity.NORMAL),
-        (DivergenceClassification.BENIGN, ReviewSeverity.NORMAL),
-    ],
-)
-def test_divergences_pending_severity_mapping(
-    tmp_path: Path,
-    classification: DivergenceClassification,
-    expected_severity: ReviewSeverity,
-) -> None:
-    settings = _build_settings(tmp_path)
-    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-    repo.save(_divergence_record(classification=classification))
-    items = divergences_pending(settings)
-    assert len(items) == 1
-    assert items[0].severity is expected_severity
-    assert isinstance(items[0], DivergenceReviewItem)
-
-
-def test_divergences_pending_skips_non_pending_records(tmp_path: Path) -> None:
-    """Records that already transitioned out of PENDING must not appear in the queue."""
-    from ...domain.sync import ResolutionState
-
-    settings = _build_settings(tmp_path)
-    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-    pending = _divergence_record(classification=DivergenceClassification.BREAKING)
-    repo.save(pending)
-    resolved = pending.model_copy(
-        update={
-            "record_id": uuid.uuid4().hex,
-            "resolution_state": ResolutionState.HUMAN_APPROVED,
-        }
-    )
-    repo.save(resolved)
-    items = divergences_pending(settings)
-    assert len(items) == 1
-    assert items[0].source.record_id == pending.record_id
-
-
 # ── drafts adapter ────────────────────────────────────────────────
 
 
@@ -455,7 +363,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
-    summary_en = items[0].summary.get("en", "")
+    summary_en = items[0].summary
     assert "DRAFT" in summary_en
 
 
@@ -477,7 +385,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
     assert items[0].draft_id == "d_stale"
-    summary_en = items[0].summary.get("en", "")
+    summary_en = items[0].summary
     assert "APPROVAL_STALE" in summary_en
     assert items[0].drill_command.startswith("aeat review show ")
 

@@ -16,7 +16,7 @@ from types import MappingProxyType
 class ReviewItemKind(StrEnum):
     """Stable identifier for the source of a review item.
 
-    The four members below cover every pending source emitted by the
+    The three members below cover every pending source emitted by the
     review queue. Additional parser tokens can be reserved without
     becoming emitted item kinds; reserved tokens are rejected with a
     ``ReviewKindReservedError`` that explains the accepted surface.
@@ -24,7 +24,6 @@ class ReviewItemKind(StrEnum):
 
     TRANSACTION = "transaction"
     INVOICE = "invoice"
-    DIVERGENCE = "divergence"
     FINDING = "finding"
 
 

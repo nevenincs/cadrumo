@@ -10,7 +10,6 @@ the entry is retained for historical lookup. URL stability is therefore
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -27,12 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.CLAVE_PERMANENTE,
     ),
     url_stability=UrlStability.RETIRED,
-    related_modelo=ModeloCode.MODELO_037,
-    label={
-        "es": "Modelo 037 — Declaración censal simplificada (suprimido)",
-        "en": "Modelo 037 — Simplified census declaration (retired)",
-        "hu": "037-es űrlap — Egyszerűsített adóalanyi nyilvántartás (visszavont)",
-    },
+    label="entries.portal_m037_censal_simplificada.label_500048",
     purpose_es="Declaración censal simplificada. Suprimida por Orden HAC/1526/2024 el 2025-02-03.",
     active=False,
     replaced_by=Portal.PORTAL_M036_CENSAL,

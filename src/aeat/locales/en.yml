@@ -1,0 +1,1026 @@
+export:
+  test_errors:
+    translatable: draft not ready
+  test_preflight:
+    message_378808: bad
+    message_965088: warn
+    message_868279: bad
+    message_620739: warn
+auth:
+  test_catalogue:
+    label: Certificate
+    description: Description
+  catalogue:
+    certificate_label: Digital certificate
+    certificate_description: X.509 client certificate authentication (FNMT-RCM or
+      any recognised authority). Supports every Sede flow.
+    clave_movil_label: Cl@ve Móvil
+    clave_movil_description: Push-approval authentication via the holder's phone registered
+      with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
+    clave_permanente_label: Cl@ve Permanente
+    clave_permanente_description: Username + reinforced-password + SMS authentication
+      via Cl@ve Permanente. Not available in this installation, so ``configure`` and
+      ``login`` refuse the provider.
+  init:
+    t_054274: 'Purpose:'
+    t_497682: 'Action:'
+    t_591049: 'Source:'
+    t_002588: 'Browser:'
+    t_427109: 'Success:'
+    t_539673: 'Next:'
+    t_674931: your DNI/NIE
+    t_305382: ', and '
+    t_781191: 'f"unknown provider {raw!r}; valid values: {valid}'
+    t_306449: 'f"unsupported provider {raw!r}; valid values: {valid}'
+    t_251084: 'f"Desktop OAuth client JSON does not exist: {json_path}'
+    t_001180: 'f"Service-account key does not exist: {service_account_json}'
+    t_779238: Settings has no `env_file` configured; cannot write provider configuration.
+    t_527810: "f\"Settings.env_file has an unsupported shape ({type(env_file).__name__});\
+      \ \"\n                \"cannot determine where to persist provider configuration."
+    t_181508: "f\"`aeat auth configure --provider {provider}` is not supported. \"\
+      \n                    \"Run `aeat setup` for the certificate provider."
+    t_992296: "\\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\\n\"\n  \
+      \                  \"Every login sends a push notification to the Cl@ve app\
+      \ on your \"\n                    \"phone; you tap 'Approve' to sign in. This\
+      \ step only records the \"\n                    \"details AEAT needs to trigger\
+      \ that push."
+    t_975420: --dni-nie is required with --non-interactive
+    t_153369: Enter your DNI or NIE
+    t_322375: --dni-fecha is required with --prefer-non-qr for a DNI identity
+    t_822466: Enter the validity date printed on your DNI (YYYY-MM-DD)
+    t_573144: --nie-soporte is required with --prefer-non-qr for a NIE identity
+    t_771056: Enter the support number printed on your NIE document
+    t_196449: the DNI validity date
+    t_818366: the NIE support number
+    t_873287: the direct-push preference
+    t_137998: the QR-code preference
+    t_716469: Cl@ve Móvil as the default provider
+    t_824025: f"Saved {human_list} to {env_file}.
+    t_565569: Run `aeat auth login` to sign in with Cl@ve Móvil.
+    t_539921: f"provider {kind.value} requires an interactive approval step; cannot
+      run with --non-interactive
+    t_418939: 'f"AEAT authentication failed: {exc}'
+    t_547085: "pero la \"\n                    \"sesión ya superó su límite de inactividad.\
+      \ La AEAT puede rechazar \"\n                    \"peticiones posteriores; vuelve\
+      \ a ejecutar `aeat auth login` si las lecturas fallan."
+    t_098262: f"Signed in as {session.identity_nif} via {label}. Session expires in
+      about {remaining_minutes}m.
+    t_158225: 'f"AEAT probe failed: {exc}'
+    t_327962: f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the
+      cached session.
+    t_578352: f"The cached {label} session is stale or revoked. Run `aeat auth login`
+      to sign in again.
+    t_758194: "no ambos: --all limpia la sesión guardada \"\n                    \"\
+      de cada proveedor"
+    t_166580: No active session found. Nothing to clear.
+    t_482912: f"Signed out of {labels[0]}.
+    t_673587: f"Signed out of {joined}.
+    t_954326: 'Purpose:'
+    t_714790: 'Action:'
+    t_322689: 'Source:'
+    t_853374: 'Browser:'
+    t_105867: 'Success:'
+    t_351011: 'Next:'
+    t_686896: 'f"unknown provider {raw!r}; valid values: {valid}'
+    t_151679: 'f"unsupported provider {raw!r}; valid values: {valid}'
+    t_263360: 'f"Desktop OAuth client JSON does not exist: {json_path}'
+    t_352935: 'f"Service-account key does not exist: {service_account_json}'
+    t_178097: Settings has no `env_file` configured; cannot write provider configuration.
+    t_589739: "f\"Settings.env_file has an unsupported shape ({type(env_file).__name__});\
+      \ \"\n                \"cannot determine where to persist provider configuration."
+    t_549784: "f\"`aeat auth configure --provider {provider}` is not supported. \"\
+      \n                    \"Run `aeat setup` for the certificate provider."
+    t_201308: "\\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\\n\"\n  \
+      \                  \"Every login sends a push notification to the Cl@ve app\
+      \ on your \"\n                    \"phone; you tap 'Approve' to sign in. This\
+      \ step only records the \"\n                    \"details AEAT needs to trigger\
+      \ that push."
+    t_833547: --dni-nie is required with --non-interactive
+    t_834743: Enter your DNI or NIE
+    t_386762: --dni-fecha is required with --prefer-non-qr for a DNI identity
+    t_958045: Enter the validity date printed on your DNI (YYYY-MM-DD)
+    t_479907: --nie-soporte is required with --prefer-non-qr for a NIE identity
+    t_944378: Enter the support number printed on your NIE document
+    t_994186: your DNI/NIE
+    t_316510: the DNI validity date
+    t_770369: the NIE support number
+    t_912253: the direct-push preference
+    t_725014: the QR-code preference
+    t_542731: Cl@ve Móvil as the default provider
+    t_497666: ''
+    t_637763: f"Saved {human_list} to {env_file}.
+    t_370466: Run `aeat auth login` to sign in with Cl@ve Móvil.
+    t_273946: f"provider {kind.value} requires an interactive approval step; cannot
+      run with --non-interactive
+    t_938392: 'f"AEAT authentication failed: {exc}'
+    t_092134: "pero la \"\n                    \"sesión ya superó su límite de inactividad.\
+      \ La AEAT puede rechazar \"\n                    \"peticiones posteriores; vuelve\
+      \ a ejecutar `aeat auth login` si las lecturas fallan."
+    t_941077: f"Signed in as {session.identity_nif} via {label}. Session expires in
+      about {remaining_minutes}m.
+    t_908949: 'f"AEAT probe failed: {exc}'
+    t_888711: f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the
+      cached session.
+    t_906241: f"The cached {label} session is stale or revoked. Run `aeat auth login`
+      to sign in again.
+    t_950022: "no ambos: --all limpia la sesión guardada \"\n                    \"\
+      de cada proveedor"
+    t_594919: No active session found. Nothing to clear.
+    t_186277: f"Signed out of {labels[0]}.
+    t_979591: f"Signed out of {joined}.
+filing:
+  test_calculate:
+    hint: Fill casilla 03 before continuing.
+    narrative_313277: Casilla 03 is missing.
+    narrative_166743: Casilla 03 is missing.
+  test_export:
+    narrative: File exported at /tmp/m130-2026Q1.txt.
+  import:
+    empty_casilla_warning: Line-level casilla values are not carried in the justificante
+      PDF; fill them in via `aeat filing build` or by editing the draft JSON.
+  init:
+    t_539673: 'Next:'
+    t_495047: '[warning]'
+    t_049231: casilla
+    t_499410: expected
+    t_729108: actual
+    t_305241: cause
+    t_405647: 'f"inputs file not found: {path}'
+    t_319976: 'f"invalid JSON in {path}: {exc}'
+    t_944632: f"inputs file {path} must contain a JSON object
+    t_369842: recibido {type(key).__name__}
+    t_841363: 'f"unsupported value type for casilla {key!r}: {type(value).__name__}'
+    t_549739: 'f"draft file not found: {path}'
+    t_587954: 'f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json
+      file.'
+    t_749072: 'f"draft envelope not found: {path}'
+    t_126681: 'f"invalid amendment JSON {raw!r}: {exc}'
+    t_855364: amendment payload must be a JSON object
+    t_484757: recibido {type(key).__name__}
+    t_447605: 'f"unsupported amendment value type for {key!r}: {type(value).__name__}'
+    t_235839: f"Saved draft {draft.draft_id} -> {saved}
+    t_901821: f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})
+    t_750547: 'f"unknown status {status!r}; valid: {valid_statuses}'
+    t_004067: --from-declaracion
+    t_053773: only one --from-* flag at a time
+    t_851234: f"Imported draft {draft_id} from justificante {justificante_csv} ->
+      {draft_path}
+    t_617275: f"Saved submission {submission_id} -> {submission_path}
+    t_643377: 'f"Tax residence CCAA: {residence.ccaa.value}'
+    t_833360: "f\"Parsed Modelo {filing.modelo} {filing.period} declaración \"\n \
+      \               f\"(template {filing.template_revision.revision}). \"\n    \
+      \            f\"{extracted} of {total} casillas extracted."
+    t_751717: 'f"Extraction status: {filing.extraction_status.value}'
+    t_028818: 'f"[warnings] {len(filing.warnings)}:'
+    t_976753: 'f"Verification status: {verdict.status.value}'
+    t_973810: Modelo 100 import requires a validated registry snapshot
+    t_255799: amendment payload must include non-empty 'original_submission_id
+    t_228758: amendment payload must include object 'updated_inputs
+    t_200471: reasons' must be a JSON object of casilla -> reason
+    t_447877: f"payload modelo {modelo!r} does not match original submission modelo
+      {original.modelo!r}
+    t_691257: f"payload period {period!r} does not match original submission period
+      {original.period!r}
+    t_891106: f"Saved amended draft {amended_draft_id} -> {saved_amended_draft}
+    t_799855: 'f"inputs file not found: {path}'
+    t_353235: 'f"invalid JSON in {path}: {exc}'
+    t_139225: f"inputs file {path} must contain a JSON object
+    t_645353: recibido {type(key).__name__}
+    t_479580: 'f"unsupported value type for casilla {key!r}: {type(value).__name__}'
+    t_719978: 'f"draft file not found: {path}'
+    t_410741: 'f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json
+      file.'
+    t_772310: 'f"draft envelope not found: {path}'
+    t_351011: 'Next:'
+    t_647650: 'f"invalid amendment JSON {raw!r}: {exc}'
+    t_130629: amendment payload must be a JSON object
+    t_536885: recibido {type(key).__name__}
+    t_685385: 'f"unsupported amendment value type for {key!r}: {type(value).__name__}'
+    t_819520: f"Saved draft {draft.draft_id} -> {saved}
+    t_569422: f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})
+    t_410025: 'f"unknown status {status!r}; valid: {valid_statuses}'
+    t_652733: --from-declaracion
+    t_343266: only one --from-* flag at a time
+    t_177065: f"Imported draft {draft_id} from justificante {justificante_csv} ->
+      {draft_path}
+    t_655133: f"Saved submission {submission_id} -> {submission_path}
+    t_141095: '[warning]'
+    t_208082: 'f"Tax residence CCAA: {residence.ccaa.value}'
+    t_515456: "f\"Parsed Modelo {filing.modelo} {filing.period} declaración \"\n \
+      \               f\"(template {filing.template_revision.revision}). \"\n    \
+      \            f\"{extracted} of {total} casillas extracted."
+    t_977837: 'f"Extraction status: {filing.extraction_status.value}'
+    t_418958: 'f"[warnings] {len(filing.warnings)}:'
+    t_805103: casilla
+    t_677464: 'f"Verification status: {verdict.status.value}'
+    t_068995: expected
+    t_190116: actual
+    t_790289: cause
+    t_647538: Modelo 100 import requires a validated registry snapshot
+    t_597994: amendment payload must include non-empty 'original_submission_id
+    t_076424: amendment payload must include object 'updated_inputs
+    t_679229: reasons' must be a JSON object of casilla -> reason
+    t_248734: f"payload modelo {modelo!r} does not match original submission modelo
+      {original.modelo!r}
+    t_810643: f"payload period {period!r} does not match original submission period
+      {original.period!r}
+    t_091089: f"Saved amended draft {amended_draft_id} -> {saved_amended_draft}
+review:
+  adapters:
+    t_041224: incoming
+    t_311773: outgoing
+    t_376309: business
+    t_377446: personal
+    t_011227: mixed
+    t_638342: unmatched
+    t_823110: overdue
+    t_455073: payment pending
+    t_308487: partially paid
+    t_712789: 'en: str'
+    t_918533: internal transfer
+    t_373752: unprocessed
+    t_626817: processed unclassified
+    t_425725: skipped by rule
+    t_866317: failed validation
+    t_603694: '[{state}] {direction} {amount} {currency}: {description}'
+    t_364641: reason
+    t_594612: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_229397: draft not ready to submit (status={status})
+    t_964513: approval stale — re-review required (status=APPROVAL_STALE)
+    t_540950: 'en: str'
+    t_968325: incoming
+    t_629803: outgoing
+    t_135562: internal transfer
+    t_142007: business
+    t_870243: personal
+    t_619063: mixed
+    t_754183: unprocessed
+    t_791512: processed unclassified
+    t_607122: skipped by rule
+    t_352338: failed validation
+    t_551826: unmatched
+    t_167733: overdue
+    t_298389: payment pending
+    t_352928: partially paid
+    t_170461: '[{state}] {direction} {amount} {currency}: {description}'
+    t_189155: reason
+    t_122028: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
+    t_397611: draft not ready to submit (status={status})
+    t_787894: approval stale — re-review required (status=APPROVAL_STALE)
+setup:
+  test_models:
+    message_428675: ok
+    message_679514: ok
+  wizard:
+    t_266857: 'en: str'
+    t_724914: Tax-residence CCAA for RENTA
+    t_066157: 'en: str'
+    t_365267: Tax-residence CCAA for RENTA
+transactions:
+  test_diagnostics:
+    message: Month 2026-03 is missing from the imported file.
+  import:
+    message_902292: The source file contains no valid transactions.
+    message_327698: Duplicate transaction already in ledger.
+    message_976713: Duplicate transaction detected within imported file.
+    message_906366: 'Potential gap: more than 35 days between transactions.'
+    message_185962: The source file contains no valid transactions.
+    message_082074: Duplicate transaction already in ledger.
+    message_053465: Duplicate transaction detected within imported file.
+    message_829073: 'Potential gap: more than 35 days between transactions.'
+verification:
+  test_verify:
+    narrative_432410: Verification completed against the registry.
+    narrative_258092: Verification completed against the registry.
+access_gate:
+  errors:
+    default_translatable: Live AEAT submission is permanently forbidden. Use produce
+      -> verify -> export and upload the file yourself in the AEAT portal.
+categories:
+  test_profile:
+    display_label_946207: Supplies
+    display_label_851219: Supplies
+manuals:
+  test_schema:
+    statement_733773: Test rule
+    statement_121189: Test rule
+normatives:
+  test_schema:
+    titulo_285059: Reductions
+    summary_752293: Summary.
+    title_837681: Law 35/2006 IRPF
+    titulo_908834: Reductions
+    summary_296440: Summary.
+    title_440480: Law 35/2006 IRPF
+portals:
+  test_metadata:
+    label_976277: x
+    label_398871: ' '
+    label_718993: x
+    label_830236: ' '
+entries:
+  portal_calendario_contribuyente:
+    label_137875: Taxpayer calendar
+    label_808341: Taxpayer calendar
+  portal_cert_selection:
+    label_315663: Certificate selector
+    label_714926: Certificate selector
+  portal_cert_validation_rest:
+    label_652192: Electronic certificate validation
+    label_050984: Electronic certificate validation
+  portal_clave_gestiones:
+    label_389181: Cl@ve PIN self-service
+    label_802490: Cl@ve PIN self-service
+  portal_clave_idp_root:
+    label_359879: Cl@ve — Spanish public-sector identity provider
+    label_655035: Cl@ve — Spanish public-sector identity provider
+  portal_clave_sede_entry:
+    label_429190: Cl@ve gateway on Sede
+    label_975912: Cl@ve gateway on Sede
+  portal_consulta_pagos:
+    label_977717: Payment and NRC enquiry
+    label_872613: Payment and NRC enquiry
+  portal_dnie_sede_entry:
+    label_443996: DNIe electronic ID access
+    label_508736: DNIe electronic ID access
+  portal_domiciliacion_bancaria:
+    label_990607: Bank-account direct debit
+    label_231897: Bank-account direct debit
+  portal_m036_censal:
+    label_074226: Modelo 036 — Census declaration
+    label_771260: Modelo 036 — Census declaration
+  portal_m037_censal_simplificada:
+    label_762588: Modelo 037 — Simplified census declaration (retired)
+    label_500048: Modelo 037 — Simplified census declaration (retired)
+  portal_m100_renta:
+    label_540884: Modelo 100 — Annual personal income tax
+    label_331643: Modelo 100 — Annual personal income tax
+  portal_m111_retenciones_trabajo:
+    label_208571: Modelo 111 — Withholdings on labour and activities
+    label_774262: Modelo 111 — Withholdings on labour and activities
+  portal_m115_retenciones_arrendamientos:
+    label_132495: Modelo 115 — Withholdings on urban rentals
+    label_841139: Modelo 115 — Withholdings on urban rentals
+  portal_m123_retenciones_capital:
+    label_228780: Modelo 123 — Withholdings on movable capital
+    label_392660: Modelo 123 — Withholdings on movable capital
+  portal_m130_pago_fraccionado_ed:
+    label_281631: Modelo 130 — IRPF instalment payment (direct assessment)
+    label_523782: Modelo 130 — IRPF instalment payment (direct assessment)
+  portal_m131_pago_fraccionado_eo:
+    label_971784: Modelo 131 — IRPF instalment payment (objective assessment)
+    label_128460: Modelo 131 — IRPF instalment payment (objective assessment)
+  portal_m180_resumen_arrendamientos:
+    label_015497: Modelo 180 — Annual summary of rental withholdings
+    label_962375: Modelo 180 — Annual summary of rental withholdings
+  portal_m190_resumen_trabajo:
+    label_631657: Modelo 190 — Annual summary of labour withholdings
+    label_059630: Modelo 190 — Annual summary of labour withholdings
+  portal_m193_resumen_capital:
+    label_555297: Modelo 193 — Annual summary of movable-capital withholdings
+    label_188618: Modelo 193 — Annual summary of movable-capital withholdings
+  portal_m200_sociedades_anual:
+    label_824991: Modelo 200 — Corporate income tax (annual)
+    label_979781: Modelo 200 — Corporate income tax (annual)
+  portal_m202_sociedades_fraccionado:
+    label_145412: Modelo 202 — Corporate tax instalment payment
+    label_203074: Modelo 202 — Corporate tax instalment payment
+  portal_m232_vinculadas:
+    label_530315: Modelo 232 — Related-party transactions
+    label_589847: Modelo 232 — Related-party transactions
+  portal_m303_iva_autoliquidacion:
+    label_424259: Modelo 303 — Periodic VAT self-assessment
+    label_847914: Modelo 303 — Periodic VAT self-assessment
+  portal_m347_operaciones_terceros:
+    label_724454: Modelo 347 — Third-party transactions
+    label_293185: Modelo 347 — Third-party transactions
+  portal_m349_intracomunitarias:
+    label_497624: Modelo 349 — Intra-EU transactions
+    label_740192: Modelo 349 — Intra-EU transactions
+  portal_m369_oss_ioss:
+    label_971125: Modelo 369 — OSS / IOSS one-stop shop
+    label_354748: Modelo 369 — OSS / IOSS one-stop shop
+  portal_m390_resumen_iva:
+    label_896367: Modelo 390 — Annual VAT summary
+    label_101607: Modelo 390 — Annual VAT summary
+  portal_m720_bienes_extranjero:
+    label_816468: Modelo 720 — Foreign assets and rights
+    label_396501: Modelo 720 — Foreign assets and rights
+  portal_m840_iae:
+    label_733092: Modelo 840 — Economic activities tax
+    label_017824: Modelo 840 — Economic activities tax
+  portal_mis_datos_censales:
+    label_692227: My census data
+    label_558126: My census data
+  portal_mis_documentos_pendientes_firma:
+    label_904016: Documents awaiting signature
+    label_128262: Documents awaiting signature
+  portal_mis_expedientes:
+    label_279574: My case files
+    label_909741: My case files
+  portal_mis_notificaciones:
+    label_941829: My notifications
+    label_055002: My notifications
+  portal_mi_area_personal:
+    label_019216: My personal area
+    label_684631: My personal area
+  portal_pago_autoliquidacion_cuenta:
+    label_155077: Self-assessment payment via bank account
+    label_405817: Self-assessment payment via bank account
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label_858279: Self-assessment payment by card or Bizum
+    label_409842: Self-assessment payment by card or Bizum
+  portal_pago_liquidaciones_deudas:
+    label_496859: Payment of liquidations and debts
+    label_907488: Payment of liquidations and debts
+  portal_pre303_ayuda:
+    label_213716: Pre303 — Pre-filled VAT helper
+    label_935129: Pre303 — Pre-filled VAT helper
+  portal_presentar_consultar_index:
+    label_291034: Submit and consult declarations — index
+    label_621468: Submit and consult declarations — index
+  portal_renta_web_borrador:
+    label_845823: Renta Web — IRPF pre-filled draft
+    label_255206: Renta Web — IRPF pre-filled draft
+  portal_sede_root:
+    label_962623: AEAT electronic headquarters
+    label_323061: AEAT electronic headquarters
+profile:
+  test_keys:
+    description_105989: x
+    description_490119: x
+  errors:
+    message: No tax-residence profile is configured for RENTA.
+vat:
+  test_rules:
+    translatable: x
+    translatable_es_ok: x
+  catalogue:
+    label_587258: Domestic supply at the general 21 % rate
+    description_811453: Supplies of goods and services carried out in the Spanish
+      VAT territory at the 21 % general rate.
+    triggers_when_652065: The good or service is neither listed in Art. 91 reduced
+      tables nor exempt under Art. 20.
+    iva_treatment_375461: Charge 21 % on the invoice and declare on Modelo 303.
+    label_247329: Domestic supply at the reduced 10 % rate
+    description_140564: Goods and services taxed at the 10 % reduced rate under Art.
+      91.Uno (general food, hospitality, passenger transport, new housing).
+    triggers_when_135246: The good or service is listed in Art. 91.Uno.
+    iva_treatment_180667: Charge 10 % on the invoice and declare on Modelo 303.
+    label_152655: Domestic supply at the super-reduced 4 % rate
+    description_669130: Essential goods and services taxed at the super-reduced 4
+      % rate under Art. 91.Dos (basic bread, milk, eggs, fruit, books, medicines,
+      prostheses, special-regime social housing).
+    triggers_when_337687: The good or service is listed in Art. 91.Dos.
+    iva_treatment_850584: Charge 4 % on the invoice and declare on Modelo 303.
+    label_335037: Domestic supply at the zero rate
+    description_650743: Supplies taxed at a transitional or structural zero rate (full
+      exemptions with right of deduction).
+    triggers_when_900269: A transitional law or the Art. 24 exemption enables the
+      zero rate.
+    iva_treatment_801453: Invoice at 0 % and declare on Modelo 303 while preserving
+      input-VAT deduction.
+    label_251820: Domestic exempt supply
+    description_279007: 'Domestic supplies exempt under Art. 20: health, education,
+      financial, insurance, immovable (without waiver).'
+    triggers_when_752126: The activity or good is listed in Art. 20.Uno.
+    iva_treatment_461076: No VAT charged; the exemption is limited (no input-VAT deduction)
+      and declared on dedicated Modelo 303 boxes.
+    label_721417: Non-subject operation
+    description_795493: 'Operations outside the VAT taxable event per Art. 7: transfer
+      of a going concern, services rendered by employees, free samples.'
+    triggers_when_890848: The scenario is enumerated in Art. 7 as non-subject.
+    iva_treatment_236002: There is no taxable event; no VAT is charged or declared.
+    label_799700: Domestic operation with reverse charge
+    description_496471: 'Domestic supplies of goods or services where the recipient
+      becomes the taxable person and self-assesses VAT (Art. 84.Uno.2º): construction
+      works, waste / recovery materials, B2B supplies of mobile phones, video consoles,
+      laptops and tablets.'
+    triggers_when_019278: The transaction matches one of the Art. 84.Uno.2º sub-paragraphs
+      (construction, waste, B2B consumer electronics, etc.).
+    iva_treatment_632365: The issuer raises the invoice without output VAT and records
+      'reverse charge'. The recipient self-assesses the output VAT and may simultaneously
+      deduct it on the same Modelo 303.
+    label_718631: Intra-community supply (exempt)
+    description_746004: Supply of goods dispatched from Spain to another member state
+      to a buyer holding a valid VAT-ID; exempt under Art. 25.
+    triggers_when_621296: The buyer is VAT-registered in another member state and
+      the goods leave the Spanish VAT territory.
+    iva_treatment_977632: Invoice without VAT with the 'exenta Art. 25 Ley 37/1992'
+      mention; declare on Modelo 303 and Modelo 349.
+    label_196484: Intra-community acquisition (reverse charge)
+    description_609600: Purchase of goods from another member state by a Spanish business;
+      the buyer self-assesses and deducts the VAT in the same return.
+    triggers_when_030936: The buyer is a Spanish business and the supplier acts with
+      its intra-community VAT-ID.
+    iva_treatment_124024: Self-assess VAT on Modelo 303 (both output and input) and
+      declare on Modelo 349.
+    label_772607: Intra-community triangulation
+    description_869664: Chain transaction between three businesses in three member
+      states where the intermediary does not tax in destination.
+    triggers_when_430467: The simplified triangulation conditions of Art. 26.tres
+      are met.
+    iva_treatment_816317: Declared as an intra-community operation with key T on Modelo
+      349.
+    label_486415: Export to a third country (zero rated)
+    description_233971: Supply of goods dispatched outside the Community, exempt with
+      input-VAT deduction right under Art. 21.
+    triggers_when_283979: The goods leave the Union customs territory with an export
+      declaration.
+    iva_treatment_781772: Invoice without VAT with the 'exenta Art. 21 Ley 37/1992'
+      mention; keep the DUA as evidence; declare on Modelo 303.
+    label_362155: Import from a third country
+    description_847172: Entry of goods from non-member countries into the Spanish
+      VAT territory; accrual at customs per Arts. 17 and 18.
+    triggers_when_791426: A DUA is filed and import VAT is assessed at customs.
+    iva_treatment_861572: VAT is assessed at customs (or deferred via Modelo 303 under
+      the deferred import-VAT regime).
+    label_014211: Equivalence surcharge regime
+    description_763220: Mandatory special regime for retail sole traders charging
+      an additional surcharge on top of the supplier's VAT (5.2 / 1.4 / 0.5).
+    triggers_when_309904: The recipient is a natural-person retail trader subject
+      to the equivalence-surcharge regime.
+    iva_treatment_535387: The supplier charges VAT plus the surcharge; the retailer
+      does not file Modelo 303 or 390 for that activity.
+    label_089574: Simplified VAT regime (módulos)
+    description_187074: Special regime computing VAT via indices and modules for activities
+      listed in the yearly Ministerial Order.
+    triggers_when_519525: The self-employed activity is listed in the current Ministerial
+      Order and the taxpayer has not opted out.
+    iva_treatment_958350: Quarterly Modelo 303 settlements computed via yearly indices.
+    label_097134: Out-of-scope operation (place of supply outside Spain)
+    description_904421: Operations whose place of supply is outside the Spanish VAT
+      territory per Arts. 68-74 place-of-supply rules.
+    triggers_when_667229: Place-of-supply rules place the operation outside the Spanish
+      VAT territory and Law 37/1992 does not tax it.
+    iva_treatment_483772: No Spanish VAT is charged; the operation is reported but
+      may require VAT registration in the destination country.
+    label_377629: Erroneous invoice (rectifiable)
+    description_194881: Received or issued invoice with incorrect data (base, VAT
+      amount, recipient, rate) that must be rectified before being declared.
+    triggers_when_429116: An error is detected on the invoice before or after the
+      return.
+    iva_treatment_872751: Issue a rectifying invoice under Art. 89 and adjust the
+      corresponding period's return.
+    label_313422: Unknown VAT regime
+    description_635057: Sentinel for transactions whose VAT category cannot be determined
+      automatically and require human review.
+    triggers_when_617948: The classifier cannot find any applicable rule with sufficient
+      confidence.
+    iva_treatment_366559: Flag the transaction for human review before declaring.
+    label_365838: Domestic supply at the general 21 % rate
+    description_217010: Supplies of goods and services carried out in the Spanish
+      VAT territory at the 21 % general rate.
+    triggers_when_142813: The good or service is neither listed in Art. 91 reduced
+      tables nor exempt under Art. 20.
+    iva_treatment_888336: Charge 21 % on the invoice and declare on Modelo 303.
+    label_027962: Domestic supply at the reduced 10 % rate
+    description_983244: Goods and services taxed at the 10 % reduced rate under Art.
+      91.Uno (general food, hospitality, passenger transport, new housing).
+    triggers_when_029777: The good or service is listed in Art. 91.Uno.
+    iva_treatment_786939: Charge 10 % on the invoice and declare on Modelo 303.
+    label_915730: Domestic supply at the super-reduced 4 % rate
+    description_069076: Essential goods and services taxed at the super-reduced 4
+      % rate under Art. 91.Dos (basic bread, milk, eggs, fruit, books, medicines,
+      prostheses, special-regime social housing).
+    triggers_when_352485: The good or service is listed in Art. 91.Dos.
+    iva_treatment_774580: Charge 4 % on the invoice and declare on Modelo 303.
+    label_996028: Domestic supply at the zero rate
+    description_640356: Supplies taxed at a transitional or structural zero rate (full
+      exemptions with right of deduction).
+    triggers_when_739440: A transitional law or the Art. 24 exemption enables the
+      zero rate.
+    iva_treatment_872035: Invoice at 0 % and declare on Modelo 303 while preserving
+      input-VAT deduction.
+    label_342635: Domestic exempt supply
+    description_311472: 'Domestic supplies exempt under Art. 20: health, education,
+      financial, insurance, immovable (without waiver).'
+    triggers_when_049241: The activity or good is listed in Art. 20.Uno.
+    iva_treatment_795653: No VAT charged; the exemption is limited (no input-VAT deduction)
+      and declared on dedicated Modelo 303 boxes.
+    label_385669: Non-subject operation
+    description_196978: 'Operations outside the VAT taxable event per Art. 7: transfer
+      of a going concern, services rendered by employees, free samples.'
+    triggers_when_425274: The scenario is enumerated in Art. 7 as non-subject.
+    iva_treatment_078140: There is no taxable event; no VAT is charged or declared.
+    label_198815: Domestic operation with reverse charge
+    description_425875: 'Domestic supplies of goods or services where the recipient
+      becomes the taxable person and self-assesses VAT (Art. 84.Uno.2º): construction
+      works, waste / recovery materials, B2B supplies of mobile phones, video consoles,
+      laptops and tablets.'
+    triggers_when_234924: The transaction matches one of the Art. 84.Uno.2º sub-paragraphs
+      (construction, waste, B2B consumer electronics, etc.).
+    iva_treatment_847858: The issuer raises the invoice without output VAT and records
+      'reverse charge'. The recipient self-assesses the output VAT and may simultaneously
+      deduct it on the same Modelo 303.
+    label_375372: Intra-community supply (exempt)
+    description_170404: Supply of goods dispatched from Spain to another member state
+      to a buyer holding a valid VAT-ID; exempt under Art. 25.
+    triggers_when_605383: The buyer is VAT-registered in another member state and
+      the goods leave the Spanish VAT territory.
+    iva_treatment_816799: Invoice without VAT with the 'exenta Art. 25 Ley 37/1992'
+      mention; declare on Modelo 303 and Modelo 349.
+    label_576993: Intra-community acquisition (reverse charge)
+    description_027697: Purchase of goods from another member state by a Spanish business;
+      the buyer self-assesses and deducts the VAT in the same return.
+    triggers_when_477522: The buyer is a Spanish business and the supplier acts with
+      its intra-community VAT-ID.
+    iva_treatment_373587: Self-assess VAT on Modelo 303 (both output and input) and
+      declare on Modelo 349.
+    label_357358: Intra-community triangulation
+    description_747833: Chain transaction between three businesses in three member
+      states where the intermediary does not tax in destination.
+    triggers_when_253417: The simplified triangulation conditions of Art. 26.tres
+      are met.
+    iva_treatment_660394: Declared as an intra-community operation with key T on Modelo
+      349.
+    label_620271: Export to a third country (zero rated)
+    description_889069: Supply of goods dispatched outside the Community, exempt with
+      input-VAT deduction right under Art. 21.
+    triggers_when_824512: The goods leave the Union customs territory with an export
+      declaration.
+    iva_treatment_338490: Invoice without VAT with the 'exenta Art. 21 Ley 37/1992'
+      mention; keep the DUA as evidence; declare on Modelo 303.
+    label_889802: Import from a third country
+    description_247574: Entry of goods from non-member countries into the Spanish
+      VAT territory; accrual at customs per Arts. 17 and 18.
+    triggers_when_775302: A DUA is filed and import VAT is assessed at customs.
+    iva_treatment_869170: VAT is assessed at customs (or deferred via Modelo 303 under
+      the deferred import-VAT regime).
+    label_243153: Equivalence surcharge regime
+    description_951487: Mandatory special regime for retail sole traders charging
+      an additional surcharge on top of the supplier's VAT (5.2 / 1.4 / 0.5).
+    triggers_when_060209: The recipient is a natural-person retail trader subject
+      to the equivalence-surcharge regime.
+    iva_treatment_837679: The supplier charges VAT plus the surcharge; the retailer
+      does not file Modelo 303 or 390 for that activity.
+    label_574464: Simplified VAT regime (módulos)
+    description_837760: Special regime computing VAT via indices and modules for activities
+      listed in the yearly Ministerial Order.
+    triggers_when_809073: The self-employed activity is listed in the current Ministerial
+      Order and the taxpayer has not opted out.
+    iva_treatment_720111: Quarterly Modelo 303 settlements computed via yearly indices.
+    label_765009: Out-of-scope operation (place of supply outside Spain)
+    description_113281: Operations whose place of supply is outside the Spanish VAT
+      territory per Arts. 68-74 place-of-supply rules.
+    triggers_when_020809: Place-of-supply rules place the operation outside the Spanish
+      VAT territory and Law 37/1992 does not tax it.
+    iva_treatment_703895: No Spanish VAT is charged; the operation is reported but
+      may require VAT registration in the destination country.
+    label_947785: Erroneous invoice (rectifiable)
+    description_243075: Received or issued invoice with incorrect data (base, VAT
+      amount, recipient, rate) that must be rectified before being declared.
+    triggers_when_035779: An error is detected on the invoice before or after the
+      return.
+    iva_treatment_592112: Issue a rectifying invoice under Art. 89 and adjust the
+      corresponding period's return.
+    label_775396: Unknown VAT regime
+    description_306964: Sentinel for transactions whose VAT category cannot be determined
+      automatically and require human review.
+    triggers_when_512869: The classifier cannot find any applicable rule with sufficient
+      confidence.
+    iva_treatment_732254: Flag the transaction for human review before declaring.
+cli:
+  bootstrap:
+    t_115877: Resource
+    t_558798: ID
+    t_490630: scratch folder
+    t_478529: scratch sheet
+    t_301797: scratch doc
+    t_107758: 'bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env'
+    t_465133: 'f"bootstrap: credentials unavailable: {exc}'
+    t_436721: Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.
+    t_107956: 'bootstrap: cannot create Drive resources under the active credentials.'
+    t_378702: "Service accounts on consumer (non-Workspace) Google accounts have zero\
+      \ \"\n                        \"Drive storage quota and cannot own Drive files."
+    t_912574: "u opera desde un tenant Google Workspace donde \"\n               \
+      \         \"la SA pueda ser propietaria en una unidad compartida."
+    t_791600: 'bootstrap: env/.env updated. Re-run `aeat doctor` to verify.'
+    t_682855: 'bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env'
+    t_078117: 'f"bootstrap: credentials unavailable: {exc}'
+    t_524692: Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.
+    t_457020: 'bootstrap: cannot create Drive resources under the active credentials.'
+    t_272641: "Service accounts on consumer (non-Workspace) Google accounts have zero\
+      \ \"\n                        \"Drive storage quota and cannot own Drive files."
+    t_047210: "u opera desde un tenant Google Workspace donde \"\n               \
+      \         \"la SA pueda ser propietaria en una unidad compartida."
+    t_011711: Resource
+    t_673036: ID
+    t_630898: scratch folder
+    t_762170: scratch sheet
+    t_115599: scratch doc
+    t_488785: 'bootstrap: env/.env updated. Re-run `aeat doctor` to verify.'
+  normatives:
+    t_663483: id
+    t_685100: kind
+    t_130420: number
+    t_853221: short title
+    t_022643: articulos
+    t_603642: tags
+    t_033405: numero
+    t_021549: titulo
+    t_412680: cite
+    t_284896: verify findings
+    t_123721: level
+    t_621240: code
+    t_469146: reference
+    t_884332: message
+    t_400377: title
+    t_674439: published_at
+    t_589274: reviewed_by
+    t_445972: last_reviewed_at
+    t_527335: f"{count} normative(s)
+    t_208308: (no articulos codified)
+    t_198005: 'f"verify failed: {exc}'
+    t_449672: ✓ verify clean
+    t_708509: id
+    t_484866: kind
+    t_532988: number
+    t_033361: short title
+    t_849756: articulos
+    t_232960: tags
+    t_360736: f"{count} normative(s)
+    t_329493: kind
+    t_896602: number
+    t_528486: title
+    t_032146: published_at
+    t_888840: tags
+    t_628053: reviewed_by
+    t_596645: last_reviewed_at
+    t_506342: (no articulos codified)
+    t_876125: articulos
+    t_956665: numero
+    t_908462: titulo
+    t_300148: cite
+    t_688044: 'f"verify failed: {exc}'
+    t_838663: ✓ verify clean
+    t_757078: verify findings
+    t_668112: level
+    t_253101: code
+    t_311779: reference
+    t_756958: message
+  oauth:
+    t_069252: 'Next step:'
+    t_409941: 'Open this URL in a browser:'
+    t_230163: Run `aeat oauth-client init --json <path>` after downloading the JSON
+      to write env/.env.
+    t_389131: 'f"json file does not exist: {json_path}'
+    t_825524: 'f"could not parse json: {exc}'
+    t_901667: f"copied OAuth client JSON to {stable_client_path}
+    t_788993: _SECRET
+    t_784359: run `just gcloud-auth`
+    t_516471: 'Open this URL in a browser:'
+    t_068820: Run `aeat oauth-client init --json <path>` after downloading the JSON
+      to write env/.env.
+    t_603335: 'f"json file does not exist: {json_path}'
+    t_977712: 'f"could not parse json: {exc}'
+    t_011367: f"copied OAuth client JSON to {stable_client_path}
+    t_119877: _SECRET
+    t_379147: 'Next step:'
+    t_822917: run `just gcloud-auth`
+  test_no_hardcoded_user_strings:
+    t_915315: hello
+    t_342476: en
+    t_535146: en
+    t_182298: hello
+  attachments:
+    t_367843: --source-reference must not be blank
+    t_576293: --mime-type must not be blank
+    t_668551: No attachments found.
+    t_456518: 'f"--metadata entry must be key=value: {raw!r}'
+    t_782346: 'f"--metadata key must not be blank: {raw!r}'
+    t_847558: 'f"--metadata value must not be blank: {raw!r}'
+    t_924712: 'f"--metadata key repeated: {key!r}'
+    t_847658: --source-reference must not be blank
+    t_813758: --mime-type must not be blank
+    t_397885: No attachments found.
+    t_693468: 'f"--metadata entry must be key=value: {raw!r}'
+    t_146769: 'f"--metadata key must not be blank: {raw!r}'
+    t_973889: 'f"--metadata value must not be blank: {raw!r}'
+    t_094739: 'f"--metadata key repeated: {key!r}'
+  cloud:
+    t_090770: GOOGLE_CLOUD_PROJECT is empty in env/.env
+    t_445360: f"{count} function(s)
+    t_020102: f"{count} service(s)
+    t_638870: f"{count} bucket(s)
+    t_339951: f"{count} object(s)
+    t_626960: GOOGLE_CLOUD_PROJECT is empty in env/.env
+    t_776970: f"{count} function(s)
+    t_829017: f"{count} service(s)
+    t_742684: f"{count} bucket(s)
+    t_754075: f"{count} object(s)
+  docs:
+    t_946853: text must not be empty
+    t_489738: f"appended {len(text)} characters at index {end_index}
+    t_890669: f"replaced {occurrences} occurrence(s)
+    t_771049: text must not be empty
+    t_372230: f"appended {len(text)} characters at index {end_index}
+    t_327883: f"replaced {occurrences} occurrence(s)
+  doctor:
+    t_279934: f"{n} required check(s) failing
+    t_836703: all required checks passing
+    t_480369: f"{n} required check(s) failing
+    t_599915: all required checks passing
+  drive:
+    t_812324: f"no Drive file matched name {name!r}.
+    t_081792: "f\"{len(files)} Drive files matched name {name!r}; \"\n           \
+      \         f\"narrow down by visiting the Drive UI and using a unique name. Matches:\
+      \ {match_ids!r}"
+    t_546944: f"{target} already exists. Pass --overwrite to replace it.
+    t_687155: f"wrote {target} ({byte_count} bytes)
+    t_851653: 'f"local file does not exist: {local}'
+    t_940486: f"deleted {file_id}
+    t_291305: f"trashed {file_id}
+    t_054217: f"no Drive file matched name {name!r}.
+    t_189509: "f\"{len(files)} Drive files matched name {name!r}; \"\n           \
+      \         f\"narrow down by visiting the Drive UI and using a unique name. Matches:\
+      \ {match_ids!r}"
+    t_821830: f"{target} already exists. Pass --overwrite to replace it.
+    t_226571: f"wrote {target} ({byte_count} bytes)
+    t_351741: 'f"local file does not exist: {local}'
+    t_090079: f"deleted {file_id}
+    t_737010: f"trashed {file_id}
+  registry:
+    t_407997: line
+    t_899563: line
+  i18n:
+    t_399040: locale=output_language()
+    t_540950: 'en: str'
+ledgers:
+  inventory:
+    t_050404: opening
+    t_260715: closing
+    t_853976: No inventory ledgers.
+    t_651428: 'f"Inventory ledger created: {actividad} {year}.'
+    t_135732: 'f"Inventory movement recorded: {movement_id}.'
+    t_451750: 'f"invalid decimal: {raw}'
+    t_121323: 'f"invalid date: {raw}'
+    t_352942: No inventory ledgers.
+    t_979405: opening
+    t_090463: 'f"Inventory ledger created: {actividad} {year}.'
+    t_531632: 'f"Inventory movement recorded: {movement_id}.'
+    t_067126: closing
+    t_047048: 'f"invalid decimal: {raw}'
+    t_740982: 'f"invalid date: {raw}'
+deadlines:
+  next:
+    t_234598: closes
+    t_027622: 'f"no upcoming obligations for {year}: every entry is overdue'
+    t_688927: 'f"no upcoming obligations for {year}: every entry is overdue'
+    t_744197: closes
+  list:
+    t_542331: f"{n} obligation(s)
+    t_125112: f"{n} obligation(s)
+  helpers:
+    t_492787: no profile path supplied; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH
+      in env/.env
+    t_751621: no profile path supplied; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH
+      in env/.env
+financial:
+  ingest:
+    t_122870: ingested
+    t_698715: record(s) via
+    t_433516: persisted
+    t_314937: 'f"refusing: no provider can handle {path}'
+    t_503694: 'f"validation error: {warning}'
+    t_118103: 'f"warning: {warning}'
+    t_301335: 'f"ingest error: {exc}'
+    t_032626: f"ingested {len(transactions)} record(s) via {provider_impl.name}
+    t_865065: 'f"refusing: no provider can handle {path}'
+    t_845188: 'f"validation error: {warning}'
+    t_985130: 'f"warning: {warning}'
+    t_965742: 'f"ingest error: {exc}'
+    t_480489: f"ingested {len(transactions)} record(s) via {provider_impl.name}
+    t_434310: ingested
+    t_591400: record(s) via
+    t_860156: persisted
+  txs:
+    t_457577: dry-run
+    t_080819: persisted
+    t_222454: classified
+    t_315628: failed
+    t_727361: "\n                        \"así que --confidence-below \"\n       \
+      \                 \"solo muestra resultados cuando un motor de reglas o un clasificador\
+      \ LLM ha asignado una \"\n                        \"puntuación menor."
+    t_537014: No transactions found.
+    t_834955: f"transaction catalogue already exists at {target}; rerun with --replace
+      to overwrite it
+    t_578483: f"built {len(catalogue)} transaction(s) into {target}
+    t_280845: 'f"transaction not found: {transaction_id}'
+    t_627061: --category
+    t_652583: 'f"invalid --pct value: {pct}'
+    t_140855: --pct can only be used together with --as MIXED; omit --pct for non-MIXED
+      classifications
+    t_485520: "spending categories apply only to outgoing expense transactions; \"\
+      \n                        \"incoming payments should not be assigned an expense\
+      \ category"
+    t_498874: PERSONAL o MIXED antes de asignar una categoría
+    t_481849: --all is mutually exclusive with a transaction-id argument.
+    t_971537: Pass a transaction-id argument or use --all.
+    t_712952: --max-total-seconds must be strictly positive.
+    t_192763: No transactions selected for LLM classification.
+    t_737405: f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes}
+      classified so far.
+    t_368309: 'f"{prefix} {provider} error: {exc}'
+    t_168103: 'f"{prefix} persist error: {exc}'
+    t_272460: 'f"final save error: {exc}'
+    t_428267: ' (stopped at --max-total-seconds)'
+    t_461729: 'f"transaction not found: {transaction_id}'
+    t_004844: 'f"invalid --confidence-below value: {value}'
+    t_929822: --confidence-below must be within the inclusive 0..1 range
+    t_578676: 'f"invalid --confidence value: {value}'
+    t_380463: --confidence must be within the inclusive 0..1 range
+    t_245971: "\n                        \"así que --confidence-below \"\n       \
+      \                 \"solo muestra resultados cuando un motor de reglas o un clasificador\
+      \ LLM ha asignado una \"\n                        \"puntuación menor."
+    t_121365: No transactions found.
+    t_199417: f"transaction catalogue already exists at {target}; rerun with --replace
+      to overwrite it
+    t_700793: f"built {len(catalogue)} transaction(s) into {target}
+    t_217036: 'f"transaction not found: {transaction_id}'
+    t_384718: --category
+    t_475858: 'f"invalid --pct value: {pct}'
+    t_492743: --pct can only be used together with --as MIXED; omit --pct for non-MIXED
+      classifications
+    t_757092: "spending categories apply only to outgoing expense transactions; \"\
+      \n                        \"incoming payments should not be assigned an expense\
+      \ category"
+    t_091408: PERSONAL o MIXED antes de asignar una categoría
+    t_532646: --all is mutually exclusive with a transaction-id argument.
+    t_074603: Pass a transaction-id argument or use --all.
+    t_338582: --max-total-seconds must be strictly positive.
+    t_184654: No transactions selected for LLM classification.
+    t_917316: f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes}
+      classified so far.
+    t_725301: 'f"{prefix} {provider} error: {exc}'
+    t_735916: 'f"{prefix} persist error: {exc}'
+    t_044885: 'f"final save error: {exc}'
+    t_510476: dry-run
+    t_594729: persisted
+    t_222239: ' (stopped at --max-total-seconds)'
+    t_341377: classified
+    t_577243: failed
+    t_268130: 'f"transaction not found: {transaction_id}'
+    t_993328: 'f"invalid --confidence-below value: {value}'
+    t_725396: --confidence-below must be within the inclusive 0..1 range
+    t_410287: 'f"invalid --confidence value: {value}'
+    t_065677: --confidence must be within the inclusive 0..1 range
+  invoices:
+    t_939792: No invoices found.
+    t_538928: 'f"invoice not found: {invoice_id}'
+    t_366680: 'f"invoice not found after update: {invoice_id}'
+    t_205790: No reconciliation suggestions.
+    t_413996: 'f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}:
+      {exc}'
+    t_553082: 'f"final save failed; no changes persisted: {exc}'
+    t_313284: f"applied {applied} of {len(suggestions)} suggestions.
+    t_769483: Invoice and transaction catalogues are consistent.
+    t_424939: No unmatched invoices.
+    t_969951: f"invoice catalogue not found at {repository.envelope_path}
+    t_151516: No invoices found.
+    t_346820: 'f"invoice not found: {invoice_id}'
+    t_950400: 'f"invoice not found after update: {invoice_id}'
+    t_395612: No reconciliation suggestions.
+    t_238826: 'f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}:
+      {exc}'
+    t_486268: 'f"final save failed; no changes persisted: {exc}'
+    t_403031: f"applied {applied} of {len(suggestions)} suggestions.
+    t_515965: Invoice and transaction catalogues are consistent.
+    t_188960: No unmatched invoices.
+    t_241070: f"invoice catalogue not found at {repository.envelope_path}
+  profile:
+    t_120774: No usage ratios configured.
+    t_699908: f"set {category.value} = {_format_decimal(ratio)}
+    t_329069: f"no user ratio set for {key}
+    t_766299: f"unset {category.value}
+    t_928044: f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}
+    t_315053: 'f"invalid ratio: {raw!r}'
+    t_421626: f"ratio must be finite (got {ratio})
+    t_203663: 1] (recibido {ratio})
+    t_695847: No usage ratios configured.
+    t_407379: f"set {category.value} = {_format_decimal(ratio)}
+    t_344840: f"no user ratio set for {key}
+    t_620920: f"unset {category.value}
+    t_538938: f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}
+    t_338721: 'f"invalid ratio: {raw!r}'
+    t_323949: f"ratio must be finite (got {ratio})
+    t_496708: 1] (recibido {ratio})
+  catalogue:
+    t_361804: f"transaction catalogue not found at {repo.envelope_path}
+    t_854600: f"transaction catalogue not found at {repo.envelope_path}
+aggregation:
+  errors:
+    t_266857: 'en: str'
+    t_066157: 'en: str'
+  models:
+    t_492196: YYYYQn
+    t_944805: YYYYQn
+llm:
+  init:
+    t_271736: f"Missing prompt variable {exc.args[0]!r}.
+    t_172682: f"removed {n} cache file(s)
+    t_398390: f"Missing prompt variable {exc.args[0]!r}.
+    t_029483: f"removed {n} cache file(s)
+i18n:
+  test_diacritic_consistency:
+    t_535146: en

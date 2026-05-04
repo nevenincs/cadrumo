@@ -9,26 +9,19 @@ from ._codes import ModeloCode
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_modelo_code_has_exactly_twenty_one_members() -> None:
-    """The identifier enum covers the currently scoped modelo ids."""
-    assert len(list(ModeloCode)) == 21
-
-
-def test_every_value_is_three_digit_string() -> None:
-    """Every value is a three-character numeric string."""
-    for member in ModeloCode:
-        assert len(member.value) == 3
-        assert member.value.isdigit()
-
-
-def test_member_name_matches_value() -> None:
-    """Member name equals ``MODELO_<value>`` for every entry."""
-    for member in ModeloCode:
-        assert member.name == f"MODELO_{member.value}"
-
-
-@pytest.mark.parametrize("raw", ["036", "037", "303", "840"])
+@pytest.mark.parametrize("raw", ["036", "037", "130", "303", "840"])
 def test_value_round_trip(raw: str) -> None:
-    """``ModeloCode(str)`` round-trips through the value."""
     member = ModeloCode(raw)
-    assert member.value == raw
+
+    assert member == raw
+    assert str(member) == raw
+
+
+@pytest.mark.parametrize("raw", ["", "13", "1300", "abc", "13A"])
+def test_invalid_value_rejected(raw: str) -> None:
+    with pytest.raises(ValueError):
+        ModeloCode(raw)
+
+
+def test_modelo_code_is_not_a_support_catalogue() -> None:
+    assert not hasattr(ModeloCode, "MODELO_130")

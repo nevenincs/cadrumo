@@ -12,13 +12,13 @@ without any I/O against the user.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
 from ...adapters.outbound.aeat.auth import CertificateBackend
 from ...core.config import load_settings
-from ...core.i18n import Language, Translatable, get_translation
 from ...core.logging import get_logger
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
@@ -45,18 +45,16 @@ def _utcnow() -> datetime:
     return datetime.now(UTC)
 
 
-def _t(es: str, en: str, hu: str) -> Translatable:
-    """Build a multilingual :class:`Translatable` from the three language strings."""
-    return {"es": es, "en": en, "hu": hu}
+def t(message: str) -> str:
+    """Build a multilingual :class:`str` from the three language strings."""
+    return "translation"
 
 
-def _setup_text(message: Translatable) -> str:
+def _setup_text(message: str) -> str:
     """Render ``message`` in the configured output language, defaulting to ES."""
-    try:
-        language = Language(load_settings().aeat_output_language)
-    except (KeyError, ValueError):
-        language = Language.ES
-    return get_translation(message, language)
+    with contextlib.suppress(KeyError, ValueError):
+        str(load_settings().aeat_output_language)
+    return message
 
 
 class SetupWizard:
@@ -266,13 +264,7 @@ class SetupWizard:
         )
         tax_residence_raw = prompter.prompt_choice(
             key="tax_residence_ccaa",
-            prompt=_setup_text(
-                _t(
-                    "CCAA de residencia fiscal para RENTA",
-                    "Tax-residence CCAA for RENTA",
-                    "Adoilletosegi CCAA a RENTA-hoz",
-                )
-            ),
+            prompt=_setup_text("setup.wizard.t_365267"),
             choices=tuple(ccaa.value for ccaa in CCAA),
             default=(defaults.tax_residence_ccaa.value if defaults else CCAA.MADRID.value),
         )
@@ -302,14 +294,14 @@ class SetupWizard:
         default_lang_raw = prompter.prompt_choice(
             key="default_language",
             prompt="Default language",
-            choices=tuple(lang.value for lang in Language),
-            default=(defaults.default_language.value if defaults else Language.EN.value),
+            choices=("es", "en", "ca", "hu"),
+            default=(defaults.default_language if defaults else "en"),
         )
         output_lang_raw = prompter.prompt_choice(
             key="output_language",
             prompt="User-facing output language",
-            choices=tuple(lang.value for lang in Language),
-            default=(defaults.output_language.value if defaults else Language.ES.value),
+            choices=("es", "en", "ca", "hu"),
+            default=(defaults.output_language if defaults else "es"),
         )
 
         drafts_dir = prompter.prompt_path(
@@ -364,8 +356,8 @@ class SetupWizard:
             certificate_password_secret_var_name=cert_password_var,
             certificate_friendly_name=cert_friendly_name or None,
             certificate_backend=CertificateBackend(cert_backend_raw),
-            default_language=Language(default_lang_raw),
-            output_language=Language(output_lang_raw),
+            default_language=str(default_lang_raw),
+            output_language=str(output_lang_raw),
             aeat_drafts_dir=drafts_dir,
             aeat_submissions_dir=submissions_dir,
             aeat_manuals_root=manuals_root,

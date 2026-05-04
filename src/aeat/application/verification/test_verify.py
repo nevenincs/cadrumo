@@ -134,10 +134,7 @@ class TestVerdictJsonRoundTrip:
             status=VerificationStatus.VERIFIED,
             discrepancies=(),
             coverage=1.0,
-            narrative={
-                "es": "Verificacion completada contra el registro.",
-                "en": "Verification completed against the registry.",
-            },
+            narrative="verification.test_verify.narrative_258092",
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
         )
         serialised = verdict.model_dump_json()

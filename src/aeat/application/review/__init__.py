@@ -13,9 +13,9 @@ not re-touched.
 Key exports:
 
 * :class:`ReviewQueue` — cross-source aggregator.
-* :class:`ReviewItem` — discriminated union over the four per-source
+* :class:`ReviewItem` — discriminated union over the three per-source
   shapes (:class:`TransactionReviewItem`, :class:`InvoiceReviewItem`,
-  :class:`DivergenceReviewItem`, :class:`FindingReviewItem`).
+  :class:`FindingReviewItem`).
 * :class:`ReviewItemKind`, :class:`ReviewSeverity`, :class:`ReviewState`,
   :class:`ReviewFormat` — closed enumerations.
 * :class:`ReviewError`, :class:`ReviewSourceLoadError`,
@@ -25,7 +25,6 @@ Key exports:
 from __future__ import annotations
 
 from ._adapters import (
-    divergences_pending,
     drafts_pending,
     invoices_pending,
     transactions_pending,
@@ -68,7 +67,6 @@ from ._filter import (
     parse_filter_clauses,
 )
 from ._models import (
-    DivergenceReviewItem,
     FindingReviewItem,
     InvoiceReviewItem,
     ReviewItem,
@@ -80,7 +78,6 @@ __all__ = [
     "DeclarationReviewFilterKey",
     "DeclarationReviewFilterSpec",
     "DeclarationReviewStatus",
-    "DivergenceReviewItem",
     "EditClause",
     "EditParseError",
     "FilterClause",
@@ -108,7 +105,6 @@ __all__ = [
     "ReviewSourceLoadError",
     "ReviewState",
     "TransactionReviewItem",
-    "divergences_pending",
     "drafts_pending",
     "invoices_pending",
     "parse_edit_clause",

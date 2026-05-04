@@ -1,14 +1,13 @@
 """M100 Anexo C rental-register merge provider.
 
-The existing M100 ruleset (`anexo_c_2024.py / 2025.py / 2026.py`)
-treats casillas 0061/0066/0072/0078/0085 as caller-supplied. This
-module bridges the rental register to that ruleset:
+The Modelo 100 registry wave treats casillas 0061/0066/0072/0078/0085
+as values derived from the rental register. This module bridges the
+rental register to that registry-backed implementation:
 
   - When the rental register has no fincas registered for the
     period (or the ``store`` argument is ``None``), the supplied
     casilla mapping is returned unchanged. This preserves the
-    legacy behaviour for callers that maintain their own
-    aggregates.
+    existing behaviour for callers that maintain their own aggregates.
 
   - When the rental register has fincas, derived aggregates take
     precedence. Casillas not present in the supplied mapping are
@@ -16,9 +15,8 @@ module bridges the rental register to that ruleset:
     derived value but their pre-existing value is surfaced via
     :class:`AnexoCMergeReport` so callers can report a discrepancy.
 
-The M100 audit surface (``Engine.audit_against``) consumes the
-final dict; the discrepancy classification falls out of the
-existing surface.
+The M100 audit surface consumes the final dict; discrepancy
+classification falls out of the existing reconciliation surface.
 """
 
 from __future__ import annotations
@@ -76,8 +74,7 @@ def compute_or_passthrough(
 
     When any of the repository arguments is ``None``, the rental
     register is treated as absent and the provided casillas are
-    returned unchanged (passthrough mode). This is the legacy M100
-    behaviour and preserves the operator's existing flow.
+    returned unchanged (passthrough mode).
 
     When all repositories are supplied AND the finca repository
     has at least one row, derived aggregates from the register are

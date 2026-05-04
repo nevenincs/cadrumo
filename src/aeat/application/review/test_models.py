@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,19 +9,13 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import (
     Invoice,
     InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
-)
-from ...domain.sync import (
-    CasillaAddedWithDefault,
-    DivergenceClassification,
-    DivergenceRecord,
-    ModeloIdentifier,
 )
 from ...domain.transactions import (
     BusinessClassification,
@@ -34,7 +27,6 @@ from ...domain.transactions import (
 )
 from ..filing import FilingFindingSeverity, FilingValidationFinding
 from . import (
-    DivergenceReviewItem,
     FindingReviewItem,
     InvoiceReviewItem,
     ReviewItem,
@@ -49,8 +41,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _REVIEW_ITEM_ADAPTER = TypeAdapter(ReviewItem)
 
 
-def _summary(text: str = "demo") -> Translatable:
-    return {"es": text, "en": text, "hu": text}
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 def _raw() -> RawTransaction:
@@ -116,23 +108,6 @@ def _invoice() -> Invoice:
     )
 
 
-def _divergence() -> DivergenceRecord:
-    modelo = ModeloIdentifier("130")
-    payload = CasillaAddedWithDefault(
-        modelo=modelo,
-        casilla_id="C9",
-        default="0",
-        label=_summary("label"),
-    )
-    return DivergenceRecord(
-        record_id=uuid.uuid4().hex,
-        detected_at=datetime(2026, 4, 12, tzinfo=UTC),
-        modelo=modelo,
-        classification=DivergenceClassification.ADDITIVE,
-        payload=payload,
-    )
-
-
 def _finding() -> FilingValidationFinding:
     return FilingValidationFinding(
         casilla_id="03",
@@ -176,15 +151,6 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             drill_command="aeat financial invoices show i-1",
             since=datetime(2026, 4, 1, tzinfo=UTC),
             source=_invoice(),
-        ),
-        DivergenceReviewItem(
-            item_id="d-1",
-            modelo="130",
-            severity=ReviewSeverity.NORMAL,
-            summary=_summary("div"),
-            drill_command="aeat sync show-divergence d-1",
-            since=datetime(2026, 4, 12, tzinfo=UTC),
-            source=_divergence(),
         ),
         FindingReviewItem(
             item_id="f-1",

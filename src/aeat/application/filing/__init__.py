@@ -66,6 +66,7 @@ from ._export import (
     export_draft,
     verify_export,
 )
+from ._history_models import FilingHistory, FilingHistoryEntry
 from ._import import JustificanteImportResult, import_filing_from_justificante
 from ._review import (
     FilingApprovalStaleReason,
@@ -359,6 +360,8 @@ __all__ = [
     "FilingDraftError",
     "FilingDraftStatus",
     "FilingFindingSeverity",
+    "FilingHistory",
+    "FilingHistoryEntry",
     "FilingImportError",
     "FilingInputs",
     "FilingOperatorProfile",

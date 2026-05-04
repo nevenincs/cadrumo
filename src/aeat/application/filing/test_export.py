@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
 from . import (
     DeclarationExportFormat,
     DeclarationExportResult,
@@ -24,13 +23,8 @@ _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
 
 
-def _narrative() -> Translatable:
-    narrative: Translatable = {
-        "es": "Fichero exportado en /tmp/m130-2026Q1.txt.",
-        "en": "File exported at /tmp/m130-2026Q1.txt.",
-        "ca": "Fitxer exportat a /tmp/m130-2026Q1.txt.",
-        "hu": "A fájl exportálva a /tmp/m130-2026Q1.txt útvonalra.",
-    }
+def _narrative() -> str:
+    narrative: str = "filing.test_export.narrative"
     return narrative
 
 
@@ -59,7 +53,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
     assert receipt.output_path == _EXPORT_PATH
     assert receipt.byte_size == 512
     assert receipt.file_sha256 == _HEX_DIGEST
-    assert receipt.narrative["es"]
+    assert receipt.narrative
 
 
 def test_export_result_rejects_uppercase_digest() -> None:
@@ -89,21 +83,6 @@ def test_export_result_rejects_non_hex_digest() -> None:
             file_sha256="z" * 64,
             exported_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
-        )
-
-
-def test_export_result_rejects_narrative_without_authoritative_spanish() -> None:
-    with pytest.raises(ValueError):
-        DeclarationExportResult(
-            draft_id="d",
-            modelo="130",
-            period="2026Q1",
-            format=DeclarationExportFormat.FICHERO_BOE,
-            output_path=_OTHER_EXPORT_PATH,
-            byte_size=1,
-            file_sha256=_HEX_DIGEST,
-            exported_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative={"en": "missing es"},  # type: ignore[typeddict-item]
         )
 
 
@@ -184,15 +163,4 @@ def test_verify_result_rejects_short_digest() -> None:
             file_sha256="abc",
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
-        )
-
-
-def test_verify_result_rejects_narrative_without_authoritative_spanish() -> None:
-    with pytest.raises(ValueError):
-        DeclarationVerifyResult(
-            draft_id="d",
-            file_path=_OTHER_EXPORT_PATH,
-            verdict=DeclarationVerifyVerdict.MISSING,
-            verified_at=datetime(2026, 5, 3, tzinfo=UTC),
-            narrative={"en": "missing es"},  # type: ignore[typeddict-item]
         )

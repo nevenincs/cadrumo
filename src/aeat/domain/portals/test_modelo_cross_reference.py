@@ -1,61 +1,37 @@
-"""Cross-reference tests between :mod:`aeat.domain.portals` and :mod:`aeat.domain.modelos`."""
+"""Cross-reference tests between portal metadata and registry definitions."""
 
 from __future__ import annotations
 
 import pytest
 
-from ..modelos import ModeloCode
 from ._categories import PortalCategory
-from ._registry import PORTAL_REGISTRY
+from ._codes import Portal
+from ._registry import PORTAL_REGISTRY, portals_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-_FILING_CENSUS_BORRADOR = {
-    PortalCategory.FILING,
-    PortalCategory.CENSUS,
-    PortalCategory.BORRADOR,
-}
+def test_modelo_portal_linkage_comes_from_registry() -> None:
+    """Modelo filing linkage is resolved from committed registry data."""
+    entries = portals_for_modelo("130")
+    assert [entry.portal for entry in entries] == [Portal.PORTAL_M130_PAGO_FRACCIONADO_ED]
 
 
-def test_every_related_modelo_is_a_known_code() -> None:
-    """Every non-``None`` ``related_modelo`` resolves inside :class:`ModeloCode`."""
-    valid = set(ModeloCode)
+def test_registry_linked_portals_are_filing_dispatch_entries() -> None:
+    """Registry-backed lookup exposes only filing or borrador portals."""
+    entries = portals_for_modelo("130")
+    assert entries
+    assert all(entry.category in {PortalCategory.FILING, PortalCategory.BORRADOR} for entry in entries)
+
+
+def test_portal_metadata_has_no_modelo_binding_field() -> None:
+    """Portal entries do not expose a modelo binding field."""
     for metadata in PORTAL_REGISTRY.values():
-        if metadata.related_modelo is None:
-            continue
-        assert metadata.related_modelo in valid
+        assert "modelo" not in metadata.model_dump(mode="json")
 
 
-def test_every_related_modelo_binds_to_filing_family_category() -> None:
-    """Only FILING / CENSUS / BORRADOR carry a ``related_modelo``."""
-    for metadata in PORTAL_REGISTRY.values():
-        if metadata.related_modelo is not None:
-            assert metadata.category in _FILING_CENSUS_BORRADOR
-        else:
-            assert metadata.category not in _FILING_CENSUS_BORRADOR
-
-
-def test_every_modelo_code_has_at_least_one_filing_or_census_portal() -> None:
-    """Every :class:`ModeloCode` is backed by a FILING or CENSUS portal."""
-    coverage = {code: [] for code in ModeloCode}
-    for metadata in PORTAL_REGISTRY.values():
-        if metadata.category in {PortalCategory.FILING, PortalCategory.CENSUS}:
-            assert metadata.related_modelo is not None
-            coverage[metadata.related_modelo].append(metadata)
-    for code, portals in coverage.items():
-        assert portals, f"modelo {code.value} is uncovered"
-
-
-def test_modelo_037_is_the_only_retired_carve_out() -> None:
-    """M037's FILING/CENSUS portals are all retired; every other modelo has ≥1 active."""
-    for code in ModeloCode:
-        portals = [
-            m
-            for m in PORTAL_REGISTRY.values()
-            if m.category in {PortalCategory.FILING, PortalCategory.CENSUS} and m.related_modelo is code
-        ]
-        if code is ModeloCode.MODELO_037:
-            assert all(not p.active for p in portals)
-        else:
-            assert any(p.active for p in portals)
+def test_retired_modelo_037_portal_is_not_registry_linked_for_filing() -> None:
+    """Retired census metadata does not imply filing-grade modelo support."""
+    metadata = PORTAL_REGISTRY[Portal.PORTAL_M037_CENSAL_SIMPLIFICADA]
+    assert metadata.active is False
+    assert portals_for_modelo("037") == ()

@@ -12,7 +12,7 @@ multilingual description rendered in operator-facing surfaces.
 
 Adding a new key means appending a :class:`ProfileKey` row here and
 extending the validators that consume the value. Adding a new
-language means extending :class:`aeat.core.i18n.Language`; the
+language means extending :class:`aeat.core.i18n.str`; the
 description fields fall back through
 :func:`aeat.core.i18n.require_authoritative` when a per-language
 slot is empty.
@@ -24,7 +24,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 
 class ProfileKeyRequirement(StrEnum):
@@ -41,7 +41,7 @@ class ProfileKey(BaseModel):
 
     key: str = Field(min_length=1, max_length=128)
     requirement: ProfileKeyRequirement
-    description: Translatable
+    description: tr
 
     @field_validator("key")
     @classmethod
@@ -53,16 +53,6 @@ class ProfileKey(BaseModel):
         if trimmed != value:
             raise ValueError("key must not be padded with whitespace")
         return trimmed
-
-    @field_validator("description")
-    @classmethod
-    def _require_authoritative_description(cls, value: Translatable) -> Translatable:
-        """Reject descriptions without an authoritative Spanish rendering."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
-        return value
 
 
 def _key(
@@ -78,7 +68,7 @@ def _key(
     return ProfileKey(
         key=key,
         requirement=requirement,
-        description={"es": es, "en": en, "ca": ca, "hu": hu},
+        description=tr(f"profile.key.{key}"),
     )
 
 

@@ -2,9 +2,9 @@
 
 Wraps the encrypted-envelope substrate's
 :class:`aeat.adapters.persistence.storage.Envelope` of
-:class:`aeat.domain.sync.WireFilingHistory` behind a small typed
-surface for the sync runner and other consumers. Each modelo's filing
-history is persisted as its own envelope file
+:class:`aeat.application.filing.FilingHistory` behind a small typed
+surface for filing-state consumers. Each modelo's filing history is
+persisted as its own envelope file
 (``<modelo>.envelope.json``) under
 :attr:`aeat.core.config.AeatSettings.aeat_filing_history_dir`, guarded
 by a per-modelo :func:`aeat.adapters.persistence.storage.exclusive_file_lock`.
@@ -40,7 +40,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
-from ...domain.sync import WireFilingHistory
+from ._history_models import FilingHistory
 
 _HKDF_CONTEXT_FILING_HISTORY = b"aeat.application.filing.history.v1"
 
@@ -84,14 +84,14 @@ class FilingHistoryRepository:
         safe_repository_id(modelo, context="modelo")
         return self._store_dir / f"{modelo}{_HISTORY_LOCK_SUFFIX}"
 
-    def load(self, modelo: str) -> WireFilingHistory | None:
+    def load(self, modelo: str) -> FilingHistory | None:
         """Return the persisted filing history for ``modelo`` or ``None``.
 
         Args:
             modelo: Modelo identifier (e.g. ``"130"``).
 
         Returns:
-            The decrypted :class:`aeat.domain.sync.WireFilingHistory`
+            The decrypted :class:`aeat.application.filing.FilingHistory`
             payload, or ``None`` when no envelope is persisted.
 
         Raises:
@@ -106,7 +106,7 @@ class FilingHistoryRepository:
             return None
         envelope = load_encrypted_envelope(
             target,
-            Envelope[WireFilingHistory],
+            Envelope[FilingHistory],
             expected_class=SensitivityClass.AUDIT,
             master_key_provider=_resolve_master_key_provider(),
             hkdf_context=_HKDF_CONTEXT_FILING_HISTORY,
@@ -114,7 +114,7 @@ class FilingHistoryRepository:
         )
         return envelope.payload
 
-    def save(self, modelo: str, history: WireFilingHistory) -> None:
+    def save(self, modelo: str, history: FilingHistory) -> None:
         """Persist ``history`` for ``modelo`` atomically under the per-modelo lock.
 
         The on-disk envelope is AES-256-GCM ciphertext at
@@ -123,14 +123,14 @@ class FilingHistoryRepository:
 
         Args:
             modelo: Modelo identifier (e.g. ``"130"``).
-            history: The :class:`aeat.domain.sync.WireFilingHistory`
+            history: The :class:`aeat.application.filing.FilingHistory`
                 payload to persist.
         """
         safe_repository_id(modelo, context="modelo")
         self._store_dir.mkdir(parents=True, exist_ok=True)
         try:
             with exclusive_file_lock(self.lock_target_for(modelo)):
-                envelope = Envelope[WireFilingHistory](
+                envelope = Envelope[FilingHistory](
                     schema_version=_HISTORY_ENVELOPE_VERSION,
                     written_at=datetime.now(UTC),
                     classification=SensitivityClass.AUDIT,
@@ -189,7 +189,7 @@ class FilingHistoryRepository:
         ids.sort()
         return tuple(ids)
 
-    def iter_histories(self) -> Iterator[tuple[str, WireFilingHistory]]:
+    def iter_histories(self) -> Iterator[tuple[str, FilingHistory]]:
         """Yield ``(modelo, history)`` tuples for every persisted modelo."""
         for modelo in self.list_modelos():
             payload = self.load(modelo)
@@ -202,5 +202,6 @@ class FilingHistoryRepository:
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
+    "FilingHistory",
     "FilingHistoryRepository",
 ]

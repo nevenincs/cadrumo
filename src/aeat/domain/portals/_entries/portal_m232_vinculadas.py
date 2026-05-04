@@ -8,7 +8,6 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -24,12 +23,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_232,
-    label={
-        "es": "Modelo 232 — Operaciones vinculadas",
-        "en": "Modelo 232 — Related-party transactions",
-        "hu": "232-es űrlap — Kapcsolt felek közötti ügyletek",
-    },
+    label="entries.portal_m232_vinculadas.label_589847",
     purpose_es="Declaración informativa de operaciones vinculadas y con paraísos fiscales.",
 )
 """Portal entry for Modelo 232 (related-party and tax-haven transactions)."""
