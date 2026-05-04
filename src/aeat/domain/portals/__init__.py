@@ -13,10 +13,8 @@ only; the underscore-prefixed submodules are internal and unstable.
 The public surface is the :data:`__all__` tuple below.
 
 The heavy imports (``_metadata``, ``_registry``) load lazily via
-``__getattr__`` so that :mod:`aeat.domain.modelos._metadata` can import
-:class:`Portal` without triggering the circular dependency chain
-``models → portals → models``. The first access to any registry name
-materialises the full catalogue.
+``__getattr__`` so importing portal enums does not materialise the full
+catalogue. The first access to any registry name loads the full catalogue.
 
 Modelo cross-reference is tied to :class:`aeat.domain.modelos.ModeloCode` —
 every ``ModeloCode`` member has at least one FILING or CENSUS portal
@@ -56,13 +54,7 @@ _LAZY_NAMES: frozenset[str] = frozenset(
 
 
 def __getattr__(name: str) -> Any:
-    """Lazily materialise the registry surface on first access.
-
-    Keeping ``_metadata`` / ``_registry`` out of the eager import chain
-    lets :mod:`aeat.domain.modelos._metadata` import :class:`Portal` without
-    inducing a circular import through :mod:`aeat.domain.portals._metadata`
-    (which itself imports from :mod:`aeat.domain.modelos`).
-    """
+    """Lazily materialise the registry surface on first access."""
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     from . import _metadata, _registry

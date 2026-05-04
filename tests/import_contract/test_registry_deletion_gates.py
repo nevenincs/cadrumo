@@ -46,23 +46,6 @@ def test_declaration_export_functions_fail_before_runtime_work(function_name: st
     assert imported_before_raise == []
 
 
-def test_schema_cache_writer_has_no_filesystem_write_path() -> None:
-    schema_package = importlib.import_module("aeat.domain.schema")
-    assert not hasattr(schema_package, "save_modelo_to_cache")
-    assert "save_modelo_to_cache" not in schema_package.__all__
-    package_source = _source("src/aeat/domain/schema/__init__.py")
-    assert "save_modelo_to_cache" not in package_source
-    node = _function_node(_source("src/aeat/domain/schema/_cache.py"), "save_modelo_to_cache")
-    calls = [
-        child
-        for child in ast.walk(node)
-        if isinstance(child, ast.Call)
-        and isinstance(child.func, ast.Attribute)
-        and child.func.attr in {"mkdir", "write_text", "write_bytes", "replace", "open"}
-    ]
-    assert calls == []
-
-
 def test_casilla_catalogue_writers_have_no_filesystem_write_path() -> None:
     casillas_package = importlib.import_module("aeat.domain.casillas")
     assert not hasattr(casillas_package, "save_casillas")

@@ -135,7 +135,7 @@ dev = [
   # Used only to generate synthetic fixture PDFs in tests (#44).
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
-  # Snapshot diffing for modelo schemas / casilla extractions — #15 ADR (both scopes).
+  # Snapshot diffing for registry/casilla behaviour — #15 ADR (both scopes).
   "syrupy>=4.7.0",
   # Wall-clock control for deadline/expedientes tests — #15 ADR (unit only; banned in live files).
   "time-machine>=2.16.0",
@@ -220,7 +220,6 @@ ignore = [
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
-"src/aeat/domain/modelos/_cli.py" = ["B008"]
 "src/aeat/domain/portals/_cli.py" = ["B008"]
 # Curated multilingual label/help strings carry verbatim AEAT/BOE wordings
 # that are routinely longer than 120 chars; line-wrapping a translation
@@ -285,13 +284,11 @@ markers = [
   "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
   "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
   "domain_inbound: exercises financial ingest (financial, cli/financial)",
-  "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
+  "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, registry, deadlines, cli/deadlines)",
   "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
   "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
   # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
-  # Registered alongside the legacy markers for the restructure soak window;
-  # legacy markers retire at the post-restructure Step 11 sanitization rollup.
-  "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared, schema extraction)",
+  "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared)",
   "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, google, llm)",
   "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
   "domain_persistence: exercises adapters.persistence.* (storage substrate)",

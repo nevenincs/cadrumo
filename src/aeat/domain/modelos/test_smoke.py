@@ -3,6 +3,8 @@
 import pytest
 
 from ...core import errors, logging
+from . import ModeloCode
+from . import __all__ as modelos_all
 from . import __doc__ as modelos_doc
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -13,3 +15,8 @@ def test_smoke_modelos() -> None:
     assert modelos_doc is not None
     assert issubclass(errors.AeatError, Exception)
     assert logging.get_logger(__name__).name == __name__
+
+
+def test_public_surface_is_modelo_identifier_only() -> None:
+    assert modelos_all == ("ModeloCode",)
+    assert ModeloCode("303") is ModeloCode.MODELO_303

@@ -22,7 +22,6 @@ from rich.table import Table
 
 from ...core.click_context import json_output_requested
 from ...core.json_contract import OutputRootSchema, emit_json_success, register_schema
-from ..modelos import UnknownModeloError
 from ._categories import PortalCategory
 from ._errors import UnknownPortalError
 from ._metadata import PortalMetadata
@@ -120,7 +119,7 @@ def list_command(
     if modelo is not None:
         try:
             matches = portals_for_modelo(modelo)
-        except UnknownModeloError as exc:
+        except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc
         match_set = frozenset(m.portal for m in matches)
         entries = tuple(e for e in entries if e.portal in match_set)
@@ -158,7 +157,7 @@ def for_modelo_command(
     """Return the FILING / BORRADOR portals bound to ``code``."""
     try:
         entries = portals_for_modelo(code)
-    except UnknownModeloError as exc:
+    except ValueError as exc:
         raise typer.BadParameter(str(exc)) from exc
     _emit_entries(entries, json_out, command="portals for-modelo")
 

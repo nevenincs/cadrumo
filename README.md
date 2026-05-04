@@ -107,12 +107,12 @@ Primary subpackages under `src/aeat/`:
 
 | Subpackage             | Responsibility                                                            |
 | :--------------------- | :------------------------------------------------------------------------ |
-| `aeat.domain.modelos`  | Closed catalogue of supported modelos (130, 303, 390).                    |
+| `aeat.domain.modelos`  | Current AEAT modelo identifiers shared by registry-backed modules.        |
 | `aeat.domain.portals`  | URL + form metadata for every AEAT portal the project touches.            |
 | `aeat.adapters.outbound.aeat.auth` | AEAT certificate and Cl@ve Movil authentication providers.     |
 | `aeat.adapters.outbound.aeat.browser` | Controlled headless Playwright session against AEAT.          |
-| `aeat.domain.schema` | Canonical home for schema IR models, cache contracts, and evaluation rules. |
-| `aeat.adapters.inbound.schema` | BOE PDF extraction adapter that emits `aeat.domain.schema` IR. |
+| `aeat.domain.calculations.registry` | Validated registry snapshots backed by `registry/aeat`.       |
+| `aeat.entrypoints.cli.registry` | Registry inspection through `aeat app registry`.                  |
 | `aeat.domain.normatives` | Live normative corpus (BOE references, vigencia windows).               |
 | `aeat.domain.manuals`  | Manual práctico ingestion and structured extraction.                      |
 | `aeat.domain.deadlines` | Deadline engine — what's due, when, with what tolerance.                 |

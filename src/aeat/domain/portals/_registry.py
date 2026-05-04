@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from ...core.logging import get_logger
-from ..modelos import ModeloCode, UnknownModeloError
+from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._entries import (
@@ -308,7 +308,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
         :class:`Portal` value for deterministic output.
 
     Raises:
-        UnknownModeloError: If ``code`` is not a registered modelo.
+        ValueError: If ``code`` is not a known modelo identifier.
     """
     if isinstance(code, ModeloCode):
         member = code
@@ -316,7 +316,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
         try:
             member = ModeloCode(code)
         except ValueError as exc:
-            raise UnknownModeloError(str(code)) from exc
+            raise ValueError(f"unknown modelo code: {code!r}") from exc
     matches = [
         metadata
         for metadata in PORTAL_REGISTRY.values()
