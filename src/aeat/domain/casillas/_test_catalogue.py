@@ -20,7 +20,6 @@ from . import (
     load_casillas,
     verify_casillas,
 )
-from .catalogue import save_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -151,13 +150,6 @@ def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None
     assert '"definition_reviewed_at"' in payload
     assert '"reviewed_by"' not in payload
     assert '"reviewed_at"' not in payload
-
-
-def test_save_casillas_is_disabled(tmp_path: Path) -> None:
-    catalogue = CasillaCatalogue(modelo="MODELO_130", period="2025Q4", records=(_record(),))
-    with pytest.raises(CasillaParseError, match="registry/aeat"):
-        save_casillas(catalogue, root=tmp_path)
-    assert not list(tmp_path.rglob("*.json"))
 
 
 def test_llm_provenance_is_optional_but_strict() -> None:

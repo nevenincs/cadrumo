@@ -241,10 +241,8 @@ def test_corpus_directory_layout_matches_modelo_identifiers() -> None:
 def test_corpus_committed_records_are_canonical_not_drafts(corpus_catalogues: _Catalogues) -> None:
     """No record may carry ``synthetic=True`` or ``llm_draft_provenance``.
 
-    The committed corpus is the human-reviewed canonical surface; LLM
-    draft payloads are temp-file only via :func:`write_extract_draft`
-    / :func:`write_translate_draft`. A record with either flag set
-    here means an unreviewed draft leaked into the canonical store.
+    The committed corpus is a reviewed surface. A record with either
+    flag set here means unreviewed material leaked into the store.
     """
     failures: list[str] = []
     for _path, modelo, period, catalogue in corpus_catalogues:
@@ -330,9 +328,8 @@ def test_corpus_label_and_help_carry_every_supported_language(corpus_catalogues:
 
     The Translatable contract is open-ended; the corpus mirrors the
     engine's :class:`aeat.core.i18n.Language` enum. Adding a language
-    to the enum auto-widens the corpus on the next hydrate run; this
-    test fires before the next hydrate if a language is added but
-    not propagated.
+    to the enum requires the committed corpus to be updated in the
+    same change.
     """
     from ...core.i18n import Language
 
