@@ -547,14 +547,17 @@ def _schema_formula_fingerprint(
     payload = {
         "current_schema_version": collection.schema_version,
         "draft_schema_version": draft.schema_version,
-        "ruleset_id": _resolve_ruleset_id(draft.modelo, draft.period),
+        "casillas": [
+            {
+                "formula_inputs": list(casilla.formula_inputs),
+                "id": casilla.id,
+                "required": casilla.required,
+                "value_type": casilla.value_type,
+            }
+            for casilla in collection.all()
+        ],
     }
     return _sha256_payload(payload)
-
-
-def _resolve_ruleset_id(modelo: str, period: str) -> str:
-    _ = (modelo, period)
-    raise FilingDraftError("approval basis requires a validated registry snapshot; formula rulesets are unavailable")
 
 
 def _sha256_payload(payload: object) -> str:
