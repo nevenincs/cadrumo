@@ -13,6 +13,7 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
+from ....core.i18n import Translatable as tr  # noqa: N813
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
@@ -65,7 +66,7 @@ def build_entry(
         category=category,
         auth_methods=frozenset(auth_methods),
         url_stability=url_stability,
-        label=label,
+        label=tr(label),
         purpose_es=purpose_es,
         active=active,
         replaced_by=replaced_by,

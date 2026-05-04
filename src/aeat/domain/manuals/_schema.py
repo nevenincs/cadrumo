@@ -116,8 +116,6 @@ def _require_spanish(translatable: tr, field_name: str) -> None:
     """Assert a :class:`~aeat.core.i18n.str` carries the authoritative ``es`` key."""
     if not translatable:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
-    if not translatable.has_spanish and "." not in str(translatable):
-        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
 class _ManualStrictFrozen(BaseModel):

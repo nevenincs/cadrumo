@@ -104,9 +104,7 @@ def _emit_entries(entries: tuple[PortalMetadata, ...], json_out: bool, *, comman
 @app.command(name="list", help="List portal catalogue entries with optional filters.")
 def list_command(
     category: PortalCategory | None = typer.Option(None, "--category", help="Filter by portal category."),
-    modelo: str | None = typer.Option(
-        None, "--modelo", help="Filter by registry-linked modelo code."
-    ),
+    modelo: str | None = typer.Option(None, "--modelo", help="Filter by registry-linked modelo code."),
     active_only: bool = typer.Option(False, "--active-only", help="Exclude retired portals."),
     json_out: bool = typer.Option(False, "--json", help="Emit JSON instead of a table."),
 ) -> None:

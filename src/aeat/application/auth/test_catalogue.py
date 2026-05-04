@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderAvailability,
@@ -69,9 +70,9 @@ def test_listing_rejects_blank_id() -> None:
     with pytest.raises(ValueError):
         AuthProviderListing(
             id="",
-            label="label",
+            label=tr("label"),
             availability=AuthProviderAvailability.AVAILABLE,
-            description="desc",
+            description=tr("desc"),
         )
 
 
@@ -79,9 +80,9 @@ def test_listing_rejects_uppercase_id() -> None:
     with pytest.raises(ValueError):
         AuthProviderListing(
             id="Certificate",
-            label="label",
+            label=tr("label"),
             availability=AuthProviderAvailability.AVAILABLE,
-            description="desc",
+            description=tr("desc"),
         )
 
 

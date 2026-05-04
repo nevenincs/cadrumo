@@ -347,6 +347,8 @@ production-readiness definition above.
      - [x] Add typed snapshot maps for extraction profiles, live/static
         cross-reference decisions, workbook parity refs, verification
         expectations, and application links.
+     - [x] Resolve portal filing lookup from validated registry application
+        links instead of portal-entry metadata.
      - [ ] Add or verify typed consumer subviews for deadline and portal
         consumption.
   - [ ] Extend the registry CLI so operators can inspect and verify schema
@@ -479,7 +481,7 @@ application surface, and the old authority has been deleted.
      with registry-backed modelo identity and lookup. Surviving
      Python may expose typed identifiers, but it must not own the supported
      modelo catalogue.
-  - [ ] `src/aeat/domain/portals`: move filing/census portal-to-modelo
+  - [x] `src/aeat/domain/portals`: move filing/census portal-to-modelo
      applicability into registry-backed portal bindings or source-backed
      registry metadata. Portal modules may describe read-only portal endpoints,
      but they must not define filing-grade modelo support, retirement carve-outs,
@@ -548,19 +550,19 @@ application surface, and the old authority has been deleted.
      with identifier-shape behaviour tests.
   - [x] `src/aeat/domain/modelos/test_smoke.py`: remove hardcoded enum-member
      smoke expectations.
-  - [ ] `src/aeat/domain/portals/_metadata.py`: replace `ModeloCode` coupling
+  - [x] `src/aeat/domain/portals/_metadata.py`: replace `ModeloCode` coupling
      with registry modelo ids and portal binding references.
   - [x] `src/aeat/domain/portals/_registry.py`: remove portal coverage gates
      that decide filing-grade modelo support; validate only portal catalogue
      integrity and defer applicability to registry snapshots.
-  - [ ] `src/aeat/domain/portals/_entries/_common.py`: replace
+  - [x] `src/aeat/domain/portals/_entries/_common.py`: replace
      `related_modelo=ModeloCode.*` construction with registry id/binding data.
-  - [ ] `src/aeat/domain/portals/_entries/portal_m*.py`: remove per-entry
+  - [x] `src/aeat/domain/portals/_entries/portal_m*.py`: remove per-entry
      modelo support authority; each filing/census portal entry must be linked
      through registry portal bindings or remain endpoint metadata only.
   - [x] `src/aeat/domain/portals/test_modelo_cross_reference.py`: replace
      `ModeloCode` coverage tests with registry portal-binding validation tests.
-  - [ ] `src/aeat/domain/portals/test_metadata.py`: replace `ModeloCode`
+  - [x] `src/aeat/domain/portals/test_metadata.py`: replace `ModeloCode`
      fixture construction with registry-backed metadata validation.
   - [x] `src/aeat/domain/portals/test_registry.py`: verify endpoint catalogue
      behaviour and registry binding closure; do not assert support from portal
