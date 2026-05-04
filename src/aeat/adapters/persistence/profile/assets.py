@@ -23,12 +23,8 @@ from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.assets import (
     AmortizationLedger,
-    AmortizationRecordResult,
     AssetRecord,
     AssetsLedgerDocument,
-    _flatten_entries,
-    _nested_entries,
-    compute_amortization_for_year,
 )
 from ....domain.profile.errors import AssetRecordError
 from ..storage import Envelope, SensitivityClass, exclusive_file_lock, load_encrypted_envelope, save_encrypted_envelope
@@ -129,24 +125,6 @@ def save_amortization_ledger(ledger: AmortizationLedger, *, storage_dir: Path | 
     repository = AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir())
     repository.save(ledger)
     return repository.envelope_path
-
-
-def record_amortization(asset: AssetRecord, year: int, *, storage_dir: Path | None = None) -> AmortizationLedger:
-    """Compute and record amortization for one asset and tax year.
-
-    Idempotent: if an entry for ``(asset.identifier, year)`` already exists,
-    the existing amount is returned unchanged.
-
-    Args:
-        asset: Asset whose amortization is being recorded.
-        year: Tax year (e.g. ``2025``).
-        storage_dir: Override for the ledger storage directory.
-
-    Returns:
-        The amortization ledger as it stands after the operation.
-    """
-
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).record(asset, year).ledger
 
 
 class AssetsLedgerRepository:
@@ -359,36 +337,6 @@ class AmortizationLedgerRepository:
             )
         _log.info("saved amortization ledger to %s", self.envelope_path)
 
-    def record(self, asset: AssetRecord, year: int) -> AmortizationRecordResult:
-        """Atomically compute and record amortization for one asset and year.
-
-        Returns the prior amount unchanged when an entry for
-        ``(asset.identifier, year)`` already exists, with
-        :attr:`aeat.domain.profile.assets.AmortizationRecordResult.stored`
-        set to ``False``.
-
-        Args:
-            asset: Asset whose amortization is being recorded.
-            year: Tax year.
-
-        Returns:
-            Result carrying the resulting ledger, the recorded amount, and a
-            ``stored`` flag.
-        """
-
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            by_asset = _nested_entries(current)
-            by_year = by_asset.setdefault(asset.identifier, {})
-            if year in by_year:
-                return AmortizationRecordResult(ledger=current, amount=by_year[year], stored=False)
-            amount = compute_amortization_for_year(asset, year, current)
-            by_year[year] = amount
-            updated = AmortizationLedger(entries=_flatten_entries(by_asset))
-            self._save_unlocked(updated)
-            return AmortizationRecordResult(ledger=updated, amount=amount, stored=True)
-
     def _load_unlocked(self) -> AmortizationLedger:
         if not self.envelope_path.exists():
             return AmortizationLedger()
@@ -424,7 +372,6 @@ __all__ = [
     "default_storage_dir",
     "load_amortization_ledger",
     "load_assets",
-    "record_amortization",
     "save_amortization_ledger",
     "save_assets",
 ]

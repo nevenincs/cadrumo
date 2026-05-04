@@ -15,14 +15,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ..errors import AssetRecordError
-
 SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _CENT = Decimal("0.01")
 _ONE = Decimal("1")
-_ZERO = Decimal("0.00")
 _HUNDRED = Decimal("100")
 
 
@@ -216,23 +213,6 @@ class AmortizationLedger(BaseModel):
         return value
 
 
-class AmortizationRecordResult(BaseModel):
-    """Result of an atomic amortization record operation.
-
-    Attributes:
-        ledger: Resulting :class:`AmortizationLedger` after the write.
-        amount: Amortization amount stored (or that would have been
-            stored when ``stored`` is ``False``).
-        stored: ``True`` when the entry was newly persisted.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    ledger: AmortizationLedger
-    amount: Decimal
-    stored: bool
-
-
 class AssetsLedgerDocument(BaseModel):
     """JSON document containing the asset ledger.
 
@@ -255,65 +235,6 @@ class AssetsLedgerDocument(BaseModel):
         return value
 
 
-def compute_amortization_for_year(asset: AssetRecord, year: int, ledger: AmortizationLedger) -> Decimal:
-    """Reject legacy asset amortization calculation."""
-
-    _ = (asset, year, ledger)
-    raise AssetRecordError("asset amortization requires a validated registry snapshot")
-
-
-def compute_anexo_d_amortization_aggregate(
-    year: int,
-    *,
-    assets: tuple[AssetRecord, ...] = (),
-    ledger: AmortizationLedger | None = None,
-    actividad_id: str | None = None,
-) -> Decimal:
-    """Reject legacy Anexo D asset amortization aggregation."""
-
-    _ = (year, assets, ledger, actividad_id)
-    raise AssetRecordError("asset amortization aggregation requires a validated registry snapshot")
-
-
-def _annual_rate(asset: AssetRecord) -> Decimal:
-    _ = asset
-    raise AssetRecordError("asset amortization rates require a validated registry snapshot")
-
-
-def _days_used(asset: AssetRecord, year: int) -> int:
-    start = max(asset.acquisition_date, date(year, 1, 1))
-    end = date(year, 12, 31)
-    if start > end:
-        return 0
-    return (end - start).days + 1
-
-
-def _cumulative_for_asset(ledger: AmortizationLedger, asset_id: str, *, up_to_year: int | None = None) -> Decimal:
-    return sum(
-        (
-            entry.amount
-            for entry in ledger.entries
-            if entry.asset_id == asset_id and (up_to_year is None or entry.year <= up_to_year)
-        ),
-        _ZERO,
-    )
-
-
-def _nested_entries(ledger: AmortizationLedger) -> dict[str, dict[int, Decimal]]:
-    nested: dict[str, dict[int, Decimal]] = {}
-    for entry in ledger.entries:
-        nested.setdefault(entry.asset_id, {})[entry.year] = entry.amount
-    return nested
-
-
-def _flatten_entries(entries: dict[str, dict[int, Decimal]]) -> tuple[AmortizationEntry, ...]:
-    return tuple(
-        AmortizationEntry(asset_id=asset_id, year=year, amount=amount)
-        for asset_id, by_year in sorted(entries.items())
-        for year, amount in sorted(by_year.items())
-    )
-
-
 def _quantize(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
@@ -324,6 +245,4 @@ __all__ = [
     "AssetClass",
     "AssetRecord",
     "LibertadAmortizacionElection",
-    "compute_amortization_for_year",
-    "compute_anexo_d_amortization_aggregate",
 ]
