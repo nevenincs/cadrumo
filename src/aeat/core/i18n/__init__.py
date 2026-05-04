@@ -4,7 +4,7 @@ Primitives for managing user-facing translations across the four
 languages of the project's i18n contract:
 
 - Spanish (``es``) — authoritative for every AEAT domain term
-  (modelos, casillas, BOE references, legal terminology). Default
+  (modelos, registry definitions, BOE references, legal terminology). Default
   output language for the CLI.
 - English (``en``) — authoritative for code, docstrings, and
   developer-facing documentation.

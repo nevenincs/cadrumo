@@ -144,7 +144,7 @@ class WorkbookModeloCoverage(WorkbookParityModel):
 
 
 class WorkbookBackendVerificationReport(WorkbookParityModel):
-    """Backend-level verification report used before modelo refactor waves."""
+    """Backend-level verification report for workbook calculation coverage."""
 
     root: str
     workbook_count: int = Field(ge=0)

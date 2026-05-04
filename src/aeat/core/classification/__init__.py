@@ -56,7 +56,7 @@ class SensitivityClass(StrEnum):
             public reference data; identity-bearing caches escalate to
             IDENTITY.
         CORPUS: Public reference material — manuals, normatives, BOE
-            PDFs, casillas catalogue. Treatment: plaintext at rest is
+            PDFs, registry definitions. Treatment: plaintext at rest is
             acceptable; integrity (SHA-256) MUST still be tracked.
         OPERATIONAL: Settings, build manifests, low-sensitivity
             configuration that legitimately remains in plaintext.

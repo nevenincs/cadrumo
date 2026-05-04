@@ -13,7 +13,6 @@ Subpackages
    :maxdepth: 4
 
    aeat.domain.attachments
-   aeat.domain.casillas
    aeat.domain.categories
    aeat.domain.deadlines
    aeat.domain.filing

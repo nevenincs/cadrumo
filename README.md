@@ -44,7 +44,7 @@ files from the CLI. The project does not submit filings to AEAT.
 - **Reads your filing status** directly from *Mis expedientes* and
   *Mis notificaciones* via a controlled headless browser session.
 - **Builds typed filing drafts** for the supported modelos by joining
-  the AEAT casilla catalogue, the manual práctico, and the live
+  validated registry definitions, the manual práctico, and the live
   normative corpus.
 - **Exports and verifies filing files** for Kent to upload manually in
   AEAT's official portal. There is no live-submit or dry-run-submit CLI
@@ -116,7 +116,7 @@ Primary subpackages under `src/aeat/`:
 | `aeat.domain.normatives` | Live normative corpus (BOE references, vigencia windows).               |
 | `aeat.domain.manuals`  | Manual práctico ingestion and structured extraction.                      |
 | `aeat.domain.deadlines` | Deadline engine — what's due, when, with what tolerance.                 |
-| `aeat.application.filing` | Filing draft orchestration from manuals + casillas.                   |
+| `aeat.application.filing` | Filing draft orchestration from validated registry snapshots.         |
 | `aeat.domain.submission` | Read-only preflight contracts and local filing records.                 |
 | `aeat.adapters.outbound.aeat.sede` | *Mis expedientes* and notification readers.                  |
 | `aeat.domain.sync` | Divergence taxonomy, wire records, validation, and classification.        |
@@ -182,12 +182,6 @@ Milestones:
 
 `uv run aeat --help` (and `--help` on any sub-command) prints the
 authoritative version.
-
-## Casillas corpus
-
-The curated casilla workflow is exposed through `aeat casillas ...`.
-Contributor guidance for adding a new `(modelo, period)` catalogue lives in
-`docs/casillas.md`.
 
 ## Doctor
 

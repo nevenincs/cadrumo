@@ -226,7 +226,7 @@ class Settings(BaseSettings):
         default="es",
         description=(
             "Authoritative language for AEAT domain terminology "
-            "(modelos, casillas, BOE references). Must be 'es' — "
+            "(modelos, registry definitions, BOE references). Must be 'es' — "
             "the project's contract pins Spanish as the legal canonical."
         ),
     )
@@ -319,16 +319,6 @@ class Settings(BaseSettings):
     aeat_audit_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "audit",
         description="Directory for the governed audit sink (redacted, classification-aware)",
-    )
-
-    # ── Casilla corpus ──────────────────────────────────────────────────────
-    aeat_casillas_root: Path = Field(
-        default=PROJECT_ROOT / "corpus" / "casillas",
-        description="Root directory for canonical casilla catalogue JSON files",
-    )
-    aeat_casillas_review_required: bool = Field(
-        default=True,
-        description="If true, verify rejects casilla records lacking definition-review metadata",
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
@@ -699,24 +689,6 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ── Schema extraction/cache ──────────────────────────────────────────────────
-    aeat_schema_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "schema-cache",
-        description=("Directory where inbound schema extraction persists Modelo schemas and provenance manifests."),
-    )
-    aeat_schema_source_urls_override: str = Field(
-        default="",
-        description=(
-            "Optional JSON-encoded mapping of {modelo_code: {boe_ref: url}} "
-            "that overrides the built-in BOE URL table (used for offline CI)."
-        ),
-    )
-    aeat_schema_extraction_concurrency: int = Field(
-        default=2,
-        ge=1,
-        description="Maximum number of BOE PDFs fetched in parallel by `aeat schema refresh`.",
-    )
-
     # ── Observability ──────────────────────────────────────────────────────
     aeat_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "runs",
@@ -862,7 +834,6 @@ class Settings(BaseSettings):
         "aeat_secret_store_dir",
         "aeat_blob_store_dir",
         "aeat_audit_dir",
-        "aeat_casillas_root",
         "aeat_manuals_root",
         "aeat_normatives_root",
         "aeat_vat_catalogue_root",
@@ -884,7 +855,6 @@ class Settings(BaseSettings):
         "aeat_status_browser_trace_dir",
         "aeat_justificantes_dir",
         "aeat_filing_history_dir",
-        "aeat_schema_cache_dir",
         mode="after",
     )
     @classmethod

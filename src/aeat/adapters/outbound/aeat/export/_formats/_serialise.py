@@ -100,7 +100,7 @@ def serialise(
 
             case FieldKind.CURRENCY:
                 # CURRENCY fields with a casilla_id draw from the
-                # ruleset draft; headerless casilla_id == None draws
+                # calculated draft; headerless casilla_id == None draws
                 # from the headers mapping (e.g., IMPORTE_INGRESO).
                 if spec.casilla_id is not None:
                     value = casilla_values.get(spec.casilla_id, _ZERO)

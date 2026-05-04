@@ -18,7 +18,6 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
-from ...domain.casillas import PeriodType
 from ...domain.deadlines import PeriodKind
 from ._errors import AggregationPeriodError, t
 
@@ -33,6 +32,13 @@ class Quarter(StrEnum):
     Q2 = "Q2"
     Q3 = "Q3"
     Q4 = "Q4"
+
+
+class PeriodType(StrEnum):
+    """Aggregation period cadence used by transaction rollups."""
+
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
 
 
 _QUARTER_MONTHS: dict[Quarter, tuple[int, int]] = {
@@ -164,7 +170,7 @@ class Period(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def period_type(self) -> PeriodType:
-        """Return the matching :class:`aeat.domain.casillas.PeriodType`."""
+        """Return the matching aggregation period cadence."""
 
         if self.kind is PeriodKind.ANNUAL:
             return PeriodType.ANNUAL
@@ -252,5 +258,6 @@ __all__ = [
     "CasillaProvenance",
     "Period",
     "PeriodKind",
+    "PeriodType",
     "Quarter",
 ]
