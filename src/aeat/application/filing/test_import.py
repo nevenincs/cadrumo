@@ -40,19 +40,23 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
 class TestImportFromJustificante:
     """End-to-end reconstruction on the committed fixture corpus."""
 
-    def test_modelo_130_requires_registry_snapshot(self, schema_provider) -> None:
+    def test_modelo_130_imports_empty_registry_draft_and_submission(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="validated registry snapshot"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
-    def test_modelo_130_does_not_emit_companion_submission_without_registry(self, schema_provider) -> None:
-        pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="Python filing builders are unavailable"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+        values = {value.casilla_id: value for value in result.draft.values}
+        assert result.draft.modelo == "130"
+        assert result.draft.period == "2026Q1"
+        assert result.submission.modelo == "130"
+        assert result.submission.period == "2026Q1"
+        assert len(result.draft.values) == 19
+        assert values["01"].value is None
+        assert values["19"].value == 0
+        assert result.warnings
 
     def test_modelo_303_requires_registry_snapshot(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_303_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="validated registry snapshot"):
+        with pytest.raises(FilingImportError, match="not present in the calculation registry"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider) -> None:
@@ -69,10 +73,11 @@ class TestImportFromJustificante:
         with pytest.raises(JustificanteParseError, match="not found"):
             import_filing_from_justificante(missing, schema_provider=schema_provider)
 
-    def test_import_stops_before_empty_casilla_warning_projection(self, schema_provider) -> None:
+    def test_import_reports_empty_casilla_warning_projection(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="validated registry snapshot"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
+
+        assert result.warnings[0]["en"].startswith("Line-level casilla values")
 
 
 class TestNormalisePeriod:
