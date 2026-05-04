@@ -117,58 +117,6 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-# -- legacy formula error hierarchy --------------------------------------------
-# Retained temporarily so persisted envelopes can still deserialize while the
-# calculation registry replaces the old ruleset engine.
-
-
-class FormulasError(AeatError):
-    """Base error for legacy formula-engine failures."""
-
-
-class RulesetValidationError(FormulasError):
-    """Raised when a ruleset fails structural validation at load time."""
-
-
-class FormulaCycleError(FormulasError):
-    """Raised when a ruleset DAG contains a cycle between computed casillas."""
-
-    def __init__(self, *, ruleset_id: str, cycle: tuple[str, ...]) -> None:
-        """Construct with the offending ruleset id and the cycle.
-
-        Args:
-            ruleset_id: Stable id of the ruleset whose DAG is cyclic.
-            cycle: Tuple of casilla ids forming the cycle.
-        """
-
-        super().__init__(
-            f"ruleset {ruleset_id!r} has cycle: {' -> '.join(cycle)}",
-            context={"ruleset_id": ruleset_id, "cycle": " -> ".join(cycle)},
-        )
-        self.ruleset_id: str = ruleset_id
-        self.cycle: tuple[str, ...] = cycle
-
-
-class CasillaNotDefinedError(FormulasError):
-    """Raised when a formula references a casilla that the ruleset does not declare."""
-
-
-class AmbiguousPeriodError(FormulasError):
-    """Raised when a period matches more than one ruleset span."""
-
-
-class MissingRulesetError(FormulasError):
-    """Raised when no ruleset covers the requested modelo/period pair."""
-
-
-class EvaluationError(FormulasError):
-    """Raised when a formula evaluation produces an arithmetic domain error."""
-
-
-class AuditDiscrepancyError(FormulasError):
-    """Raised by :meth:`AuditReport.assert_clean` when discrepancies are present."""
-
-
 from ._registry import (  # noqa: E402
     ERROR_REGISTRY,
     ErrorCategory,
@@ -190,20 +138,12 @@ __all__ = [
     "ERROR_REGISTRY",
     "AeatError",
     "AeatObservabilityError",
-    "AmbiguousPeriodError",
-    "AuditDiscrepancyError",
-    "CasillaNotDefinedError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
-    "EvaluationError",
     "FilingFixtureError",
     "FixtureProvisioningError",
-    "FormulaCycleError",
-    "FormulasError",
     "McpLaunchError",
-    "MissingRulesetError",
-    "RulesetValidationError",
     "SiteHealthError",
     "bind_error_code",
     "build_error_envelope",
