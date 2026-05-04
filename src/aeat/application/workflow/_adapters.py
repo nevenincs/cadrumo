@@ -20,7 +20,7 @@ import json
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import Protocol, cast
+from typing import cast
 
 from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.export import FilingDraftLike
@@ -53,24 +53,6 @@ from ._protocols import (
 )
 
 _logger = get_logger(__name__)
-
-
-class _FinancialInputsProvider(Protocol):
-    """Narrow surface used by :class:`_AggregatedFinancialInputsProvider`."""
-
-    def has_catalogue(self) -> bool:
-        """Return ``True`` when a transaction catalogue is reachable on disk."""
-        ...
-
-    def load_inputs(
-        self,
-        *,
-        modelo: str,
-        period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
-        """Aggregate the catalogue into casilla inputs for ``modelo`` / ``period``."""
-        ...
 
 
 class DeadlineEngineAdapter:
@@ -223,53 +205,6 @@ class JsonFileInputsProvider:
         return raw
 
 
-class FinancialThenJsonInputsProvider:
-    """Use financial inputs when present and otherwise read a JSON file.
-
-    Wraps an optional ``_FinancialInputsProvider`` (typically
-    :class:`aeat.application.aggregation._provider.FinancialFilingInputsProvider`)
-    and a :class:`JsonFileInputsProvider` fallback. If a catalogue is
-    present, financial aggregation errors are propagated so coverage
-    gaps cannot be hidden by manual inputs.
-    """
-
-    def __init__(
-        self,
-        *,
-        financial_provider: _FinancialInputsProvider | None,
-        fallback_provider: JsonFileInputsProvider,
-    ) -> None:
-        """Store the financial provider and the JSON fallback."""
-        self._financial_provider = financial_provider
-        self._fallback_provider = fallback_provider
-
-    def load_inputs(
-        self,
-        *,
-        modelo: str,
-        period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
-        """Return casilla inputs, preferring the financial aggregator.
-
-        Args:
-            modelo: AEAT modelo identifier (e.g. ``"130"``).
-            period: Period identifier (e.g. ``"2026Q1"``).
-            profile: The autónomo profile passed through to providers.
-
-        Returns:
-            A mapping of casilla id to raw casilla input.
-        """
-
-        if self._financial_provider is None:
-            _logger.debug("financial provider not wired; using json fallback modelo=%s period=%s", modelo, period)
-            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
-        if not self._financial_provider.has_catalogue():
-            _logger.debug("transaction catalogue absent; using json fallback modelo=%s period=%s", modelo, period)
-            return self._fallback_provider.load_inputs(modelo=modelo, period=period, profile=profile)
-        return self._financial_provider.load_inputs(modelo=modelo, period=period, profile=profile)
-
-
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol,
@@ -316,10 +251,7 @@ def default_engine(
         raise WorkflowError("default_engine requires a deadline_engine adapter")
     if filing_draft_builder is None:
         raise WorkflowError("default_engine requires a filing_draft_builder adapter")
-    provider = inputs_provider or FinancialThenJsonInputsProvider(
-        financial_provider=_default_financial_inputs_provider(cfg),
-        fallback_provider=JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path),
-    )
+    provider = inputs_provider or JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path)
     return WorkflowEngine(
         deadline_engine=deadline_engine,
         filing_draft_builder=filing_draft_builder,
@@ -332,23 +264,12 @@ def default_engine(
     )
 
 
-def _default_financial_inputs_provider(cfg: Settings) -> _FinancialInputsProvider | None:
-    catalogue_dir = cfg.aeat_financial_txs_dir.resolve()
-    if not (catalogue_dir / "transactions.envelope.json").exists():
-        return None
-    from ...domain.transactions._repository import TransactionCatalogueRepository
-    from ..aggregation._provider import FinancialFilingInputsProvider
-
-    return FinancialFilingInputsProvider(repository=TransactionCatalogueRepository(store_dir=catalogue_dir))
-
-
 # Re-exported so importing :mod:`aeat.application.workflow` surfaces the primary
 # preflight-exception type without callers having to dig into
 # :mod:`aeat.adapters.outbound.aeat.export` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "FilingDraftBuilderAdapter",
-    "FinancialThenJsonInputsProvider",
     "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionPreflightError",

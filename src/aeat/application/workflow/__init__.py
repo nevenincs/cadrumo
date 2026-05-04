@@ -22,7 +22,6 @@ from __future__ import annotations
 from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
-    FinancialThenJsonInputsProvider,
     JsonFileInputsProvider,
     SubmissionEngineAdapter,
     SyncRunnerAdapter,
@@ -60,7 +59,6 @@ __all__ = [
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
-    "FinancialThenJsonInputsProvider",
     "JsonFileInputsProvider",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",
