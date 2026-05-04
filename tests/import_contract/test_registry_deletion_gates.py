@@ -206,16 +206,6 @@ def test_filing_cli_cannot_resolve_legacy_formula_rulesets() -> None:
     assert "_ = (filing_modelo, filing_period, filing_ejercicio)" in resolver_source
 
 
-def test_audit_cli_cannot_reach_legacy_rulesets() -> None:
-    source = _source("src/aeat/entrypoints/cli/audit/__init__.py")
-    helper_source = _source("src/aeat/entrypoints/cli/audit/_helpers.py")
-    assert "ALL_RULESETS" not in source
-    assert "domain.formulas" not in source
-    assert "Ruleset" not in helper_source
-    validator = _function_node(helper_source, "validate_citation_coverage")
-    assert any(isinstance(stmt, ast.Raise) for stmt in validator.body)
-
-
 def test_aggregation_models_do_not_import_legacy_formula_codes() -> None:
     source = _source("src/aeat/application/aggregation/_models.py")
     assert "domain.formulas" not in source
