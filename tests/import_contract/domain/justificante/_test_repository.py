@@ -14,17 +14,12 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
-    LockAcquisitionError,
     SecretStore,
     override_master_key_provider,
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.justificante._repository import (
-    JustificanteMigrationSummary,
-    JustificanteRepository,
-    migrate_legacy_justificantes_to_repository,
-)
+from aeat.domain.justificante._repository import JustificanteRepository
 from aeat.domain.justificante._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -167,84 +162,3 @@ class TestUnsafeCsv:
         repo = JustificanteRepository(store_dir=store_dir)
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
-
-
-class TestMigration:
-    def test_migrate_legacy(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-justificantes"
-        legacy_dir.mkdir()
-        a = _make_justificante(tmp_path, csv="AAAA1111BBBB2222")
-        b = _make_justificante(tmp_path, csv="CCCC3333DDDD4444")
-        for record in (a, b):
-            (legacy_dir / f"{record.csv}.json").write_text(
-                record.model_dump_json(),
-                encoding="utf-8",
-            )
-        repo = JustificanteRepository(store_dir=store_dir)
-        summary = migrate_legacy_justificantes_to_repository(legacy_dir, repository=repo)
-        assert isinstance(summary, JustificanteMigrationSummary)
-        assert summary.imported == 2
-        assert summary.errors == 0
-        assert set(repo.list_csvs()) == {a.csv, b.csv}
-
-    def test_re_migrate_skips_already_present(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-justificantes"
-        legacy_dir.mkdir()
-        record = _make_justificante(tmp_path)
-        (legacy_dir / f"{record.csv}.json").write_text(
-            record.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = JustificanteRepository(store_dir=store_dir)
-        first = migrate_legacy_justificantes_to_repository(legacy_dir, repository=repo)
-        assert first.imported == 1
-        second = migrate_legacy_justificantes_to_repository(legacy_dir, repository=repo)
-        assert second.imported == 0
-        assert second.skipped == 1
-
-    def test_migrate_skips_unparseable(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-justificantes"
-        legacy_dir.mkdir()
-        (legacy_dir / "broken.json").write_text("{ not valid json", encoding="utf-8")
-        record = _make_justificante(tmp_path)
-        (legacy_dir / f"{record.csv}.json").write_text(
-            record.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = JustificanteRepository(store_dir=store_dir)
-        summary = migrate_legacy_justificantes_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 1
-
-    def test_migrate_missing_dir_raises(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
-        with pytest.raises(FileNotFoundError):
-            migrate_legacy_justificantes_to_repository(tmp_path / "nope", repository=repo)
-
-
-class TestMigrationLockedPerCsv:
-    def test_migration_blocked_by_held_lock(
-        self,
-        store_dir: Path,
-        tmp_path: Path,
-        fast_lock_acquire,
-    ) -> None:
-        from aeat.adapters.persistence.storage import exclusive_file_lock
-        from aeat.domain.justificante import _repository as _repo_module
-
-        fast_lock_acquire(_repo_module)
-
-        legacy_dir = tmp_path / "legacy-justificantes"
-        legacy_dir.mkdir()
-        record = _make_justificante(tmp_path)
-        (legacy_dir / f"{record.csv}.json").write_text(
-            record.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = JustificanteRepository(store_dir=store_dir)
-        store_dir.mkdir(parents=True, exist_ok=True)
-        with (
-            exclusive_file_lock(repo.lock_target_for(record.csv)),
-            pytest.raises(LockAcquisitionError),
-        ):
-            migrate_legacy_justificantes_to_repository(legacy_dir, repository=repo)

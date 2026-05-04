@@ -26,8 +26,6 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
-
 from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
@@ -48,27 +46,6 @@ _log = get_logger(__name__)
 _AMENDMENT_ENVELOPE_VERSION = 1
 _AMENDMENT_ENVELOPE_SUFFIX = ".envelope.json"
 _AMENDMENT_LOCK_SUFFIX = ".lock"
-
-
-class AmendmentMigrationSummary(BaseModel):
-    """Frozen summary of one ``migrate_legacy_amendments_to_repository`` call.
-
-    Attributes:
-        imported: Number of legacy amendments persisted by this call.
-        skipped: Number of legacy amendments already present in the
-            destination repository (idempotency hit).
-        errors: Number of legacy amendment files the helper could not
-            parse; counted but not re-raised so a partial migration can
-            complete.
-        store_dir: Resolved path to the repository's store directory.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
-    errors: int = Field(default=0, ge=0)
-    store_dir: str
 
 
 class FilingAmendmentRepository:
@@ -198,94 +175,8 @@ class FilingAmendmentRepository:
                 yield payload
 
 
-# TODO: remove after 2026-10-27 retention window.
-def migrate_legacy_amendments_to_repository(
-    legacy_dir: Path,
-    *,
-    repository: FilingAmendmentRepository,
-    overwrite: bool = False,
-) -> AmendmentMigrationSummary:
-    """Move legacy plaintext amendment JSONs into the governed repository.
-
-    The legacy complementaria flow writes each amendment as
-    ``<amendment_id>.json`` containing the JSON serialisation of one
-    :class:`FilingAmendment`. This helper reads every such file in
-    ``legacy_dir`` and persists each through the repository (which writes
-    the envelope under AUDIT class).
-
-    Args:
-        legacy_dir: Source directory containing legacy amendment JSONs.
-        repository: Destination repository.
-        overwrite: When ``True``, replaces any amendment already
-            persisted in the repository. When ``False`` (default),
-            already-persisted amendments are counted under ``skipped``.
-
-    Returns:
-        A frozen :class:`AmendmentMigrationSummary`.
-
-    Raises:
-        FileNotFoundError: If ``legacy_dir`` does not exist.
-        NotADirectoryError: If ``legacy_dir`` is not a directory.
-    """
-    if not legacy_dir.exists():
-        raise FileNotFoundError(legacy_dir)
-    if not legacy_dir.is_dir():
-        raise NotADirectoryError(legacy_dir)
-    repository._store_dir.mkdir(parents=True, exist_ok=True)
-    imported = 0
-    skipped = 0
-    errors = 0
-    for path in sorted(legacy_dir.iterdir()):
-        if not path.is_file():
-            continue
-        if path.suffix != ".json":
-            continue
-        if path.name.endswith(_AMENDMENT_ENVELOPE_SUFFIX):
-            continue
-        try:
-            amendment = FilingAmendment.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError):
-            _log.warning("skipping unreadable legacy amendment %s", path, exc_info=True)
-            errors += 1
-            continue
-        with exclusive_file_lock(repository.lock_target_for(amendment.amendment_id)):
-            target = repository.envelope_path_for(amendment.amendment_id)
-            if not overwrite and target.exists():
-                skipped += 1
-                continue
-            envelope = Envelope[FilingAmendment](
-                schema_version=_AMENDMENT_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=amendment,
-            )
-            save_encrypted_envelope(
-                envelope,
-                target,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMENDMENT,
-            )
-            imported += 1
-    _log.info(
-        "migrated legacy amendments from %s into %s: imported=%d skipped=%d errors=%d",
-        legacy_dir,
-        repository.store_dir,
-        imported,
-        skipped,
-        errors,
-    )
-    return AmendmentMigrationSummary(
-        imported=imported,
-        skipped=skipped,
-        errors=errors,
-        store_dir=str(repository.store_dir.resolve()),
-    )
-
-
 __all__ = [
-    "AmendmentMigrationSummary",
     "ClassificationError",
     "EnvelopeVersionError",
     "FilingAmendmentRepository",
-    "migrate_legacy_amendments_to_repository",
 ]
