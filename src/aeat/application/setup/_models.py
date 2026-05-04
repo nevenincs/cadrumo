@@ -14,7 +14,6 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.outbound.aeat.auth import CertificateBackend
-from ...core.i18n import Language, Translatable
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
 
@@ -82,8 +81,8 @@ class VerifyFinding(BaseModel):
 
     name: str = Field(min_length=1)
     severity: VerifySeverity
-    message: Translatable
-    remediation: Translatable | None = None
+    message: str
+    remediation: str | None = None
 
 
 class SetupAnswers(BaseModel):
@@ -116,8 +115,8 @@ class SetupAnswers(BaseModel):
     certificate_verify_url: str = "https://sede.agenciatributaria.gob.es/"
 
     # ── language ─────────────────────────────────────────────────────────
-    default_language: Language = Language.EN
-    output_language: Language = Language.ES
+    default_language: str = "en"
+    output_language: str = "es"
 
     # ── output directories ───────────────────────────────────────────────
     aeat_drafts_dir: Path

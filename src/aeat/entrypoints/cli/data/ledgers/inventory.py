@@ -31,7 +31,7 @@ from .....domain.profile.inventory import (
     parse_valuation_method,
 )
 from ..._context import json_output_requested
-from ..._i18n import t, tr
+from ..._i18n import tr
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 
 app = typer.Typer(name="inventory", no_args_is_help=True, help="Per-actividad inventory ledger.")
@@ -126,18 +126,9 @@ def list_inventory(
         emit_json_success("data ledgers inventory list", payload)
         return
     if not payload:
-        typer.echo(
-            tr(
-                t(
-                    "No hay libros de inventario.",
-                    "No inventory ledgers.",
-                    "No hi ha llibres d'inventari.",
-                    "Nincsenek készletek könyvei.",
-                )
-            )
-        )
+        typer.echo(tr("ledgers.inventory.t_352942"))
         return
-    opening_label = tr(t("apertura", "opening", "obertura", "nyitás"))
+    opening_label = tr("ledgers.inventory.t_979405")
     for item in payload:
         typer.echo(
             f"{item['actividad_id']} | {item['year']} | {item['valuation_method']} | "
@@ -182,16 +173,7 @@ def create_inventory(
     if json_output_requested():
         emit_json_success("data ledgers inventory create", payload)
         return
-    typer.echo(
-        tr(
-            t(
-                f"Libro de inventario creado: {actividad} {year}.",
-                f"Inventory ledger created: {actividad} {year}.",
-                f"Llibre d'inventari creat: {actividad} {year}.",
-                f"Keszlet konyv letrehozva: {actividad} {year}.",
-            )
-        )
-    )
+    typer.echo(tr("ledgers.inventory.t_090463"))
 
 
 @movement_app.command(name="add", help="Add a purchase, COGS, opening, or count movement.")
@@ -232,16 +214,7 @@ def add_movement(
     if json_output_requested():
         emit_json_success("data ledgers inventory movement add", payload)
         return
-    typer.echo(
-        tr(
-            t(
-                f"Movimiento de inventario registrado: {movement_id}.",
-                f"Inventory movement recorded: {movement_id}.",
-                f"Moviment d'inventari registrat: {movement_id}.",
-                f"Keszlet mozgas rogzitve: {movement_id}.",
-            )
-        )
-    )
+    typer.echo(tr("ledgers.inventory.t_531632"))
 
 
 @valuation_app.command(name="preview", help="Preview closing stock and COGS without writing.")
@@ -268,7 +241,7 @@ def preview_valuation(
     if json_output_requested():
         emit_json_success("data ledgers inventory valuation preview", payload)
         return
-    closing_label = tr(t("cierre", "closing", "tancament", "zárás"))
+    closing_label = tr("ledgers.inventory.t_067126")
     typer.echo(f"{actividad} {year}: {closing_label} {result.closing_value} EUR, COGS {result.cogs_value} EUR.")
 
 
@@ -311,16 +284,7 @@ def _decimal(raw: str) -> Decimal:
     try:
         return Decimal(raw)
     except InvalidOperation as exc:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"decimal no válido: {raw}",
-                    f"invalid decimal: {raw}",
-                    f"decimal no vàlid: {raw}",
-                    f"ervenytelen tizedes szam: {raw}",
-                )
-            )
-        ) from exc
+        raise typer.BadParameter(tr("ledgers.inventory.t_047048")) from exc
 
 
 def _date(raw: str) -> date:
@@ -328,16 +292,7 @@ def _date(raw: str) -> date:
     try:
         return date.fromisoformat(raw)
     except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"fecha no válida: {raw}",
-                    f"invalid date: {raw}",
-                    f"data no vàlida: {raw}",
-                    f"ervenytelen datum: {raw}",
-                )
-            )
-        ) from exc
+        raise typer.BadParameter(tr("ledgers.inventory.t_740982")) from exc
 
 
 def _money(value: Decimal) -> Decimal:

@@ -8,7 +8,6 @@ registry.
 from __future__ import annotations
 
 from ...core.errors import AeatError
-from ...core.i18n import Translatable
 
 
 class AggregationError(AeatError):
@@ -31,8 +30,8 @@ class AggregationCategoryCoverageError(AggregationError):
     """Raised when a business transaction lacks category or profile coverage."""
 
 
-def t(es: str, en: str, hu: str) -> Translatable:
-    """Build a multilingual :class:`aeat.core.i18n.Translatable` message payload.
+def t(message: str) -> str:
+    """Build a multilingual :class:`aeat.core.i18n.str` message payload.
 
     Args:
         es: Spanish message.
@@ -40,11 +39,11 @@ def t(es: str, en: str, hu: str) -> Translatable:
         hu: Hungarian message.
 
     Returns:
-        A :class:`aeat.core.i18n.Translatable` mapping carrying all
+        A :class:`aeat.core.i18n.str` mapping carrying all
         three languages keyed by ISO 639-1 code.
     """
 
-    return {"es": es, "en": en, "hu": hu}
+    return "translation"
 
 
 __all__ = [

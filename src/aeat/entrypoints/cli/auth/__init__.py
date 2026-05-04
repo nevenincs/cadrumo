@@ -32,7 +32,7 @@ from ....core.config import PROJECT_ROOT, Settings
 from ....core.env_io import write_env_vars
 from ....core.logging import get_logger
 from .._errors import CliRefusedBoundaryError, json_output_requested
-from .._i18n import t, tr
+from .._i18n import tr
 from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ..oauth import CREDENTIALS_PAGE_TEMPLATE, REQUIRED_BLOCK, parse_oauth_client_json
 from . import _registry, _session
@@ -177,12 +177,12 @@ def _print_step(
     success: str,
     continuation: str,
 ) -> None:
-    purpose_label = tr(t("Propósito:", "Purpose:", "Propòsit:", "Cél:"))
-    action_label = tr(t("Acción:", "Action:", "Acció:", "Művelet:"))
-    source_label = tr(t("Origen:", "Source:", "Origen:", "Forrás:"))
-    browser_label = tr(t("Navegador:", "Browser:", "Navegador:", "Böngésző:"))
-    success_label = tr(t("Éxito:", "Success:", "Èxit:", "Siker:"))
-    next_label = tr(t("Siguiente:", "Next:", "Següent:", "Következő:"))
+    purpose_label = tr("auth.init.t_954326")
+    action_label = tr("auth.init.t_714790")
+    source_label = tr("auth.init.t_322689")
+    browser_label = tr("auth.init.t_853374")
+    success_label = tr("auth.init.t_105867")
+    next_label = tr("auth.init.t_351011")
     console.print(f"[bold]{title}[/bold]")
     console.print(f"{purpose_label} {purpose}")
     console.print(f"{action_label} {action}")
@@ -268,29 +268,11 @@ def _parse_kind(raw: str) -> AuthProviderKind:
     try:
         kind = AuthProviderKind(raw)
     except ValueError as exc:
-        valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"proveedor desconocido {raw!r}; valores válidos: {valid}",
-                    f"unknown provider {raw!r}; valid values: {valid}",
-                    f"proveïdor desconegut {raw!r}; valors vàlids: {valid}",
-                    f"ismeretlen szolgaltato {raw!r}; ervenyes ertekek: {valid}",
-                )
-            )
-        ) from exc
+        ", ".join(k.value for k in _registry.iter_kinds())
+        raise typer.BadParameter(tr("auth.init.t_686896")) from exc
     if kind not in _registry.iter_kinds():
-        valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"proveedor no soportado {raw!r}; valores válidos: {valid}",
-                    f"unsupported provider {raw!r}; valid values: {valid}",
-                    f"proveïdor no admès {raw!r}; valors vàlids: {valid}",
-                    f"nem tamogatott szolgaltato {raw!r}; ervenyes ertekek: {valid}",
-                )
-            )
-        )
+        ", ".join(k.value for k in _registry.iter_kinds())
+        raise typer.BadParameter(tr("auth.init.t_151679"))
     return kind
 
 
@@ -341,18 +323,7 @@ def init(
     if selected_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         if json_path is not None:
             if not json_path.exists():
-                console.print(
-                    "[red]"
-                    + tr(
-                        t(
-                            f"el JSON del cliente OAuth Desktop no existe: {json_path}",
-                            f"Desktop OAuth client JSON does not exist: {json_path}",
-                            f"el JSON del client OAuth Desktop no existeix: {json_path}",
-                            f"a Desktop OAuth kliens JSON nem létezik: {json_path}",
-                        )
-                    )
-                    + "[/]"
-                )
+                console.print("[red]" + tr("auth.init.t_263360") + "[/]")
                 raise typer.Exit(code=1)
             stable_path = _copy_oauth_client_json(json_path)
             _print_step(
@@ -489,18 +460,7 @@ def init(
     else:
         if service_account_json is not None:
             if not service_account_json.exists():
-                console.print(
-                    "[red]"
-                    + tr(
-                        t(
-                            f"la clave de cuenta de servicio no existe: {service_account_json}",
-                            f"Service-account key does not exist: {service_account_json}",
-                            f"la clau del compte de servei no existeix: {service_account_json}",
-                            f"a szolgáltatásfiók kulcs nem létezik: {service_account_json}",
-                        )
-                    )
-                    + "[/]"
-                )
+                console.print("[red]" + tr("auth.init.t_352935") + "[/]")
                 raise typer.Exit(code=1)
             stable_path = _copy_service_account_json(service_account_json)
             _print_step(
@@ -648,16 +608,7 @@ def _resolve_env_file(settings: Settings) -> Path:
     """Return the env file Settings is bound to (``env/.env`` by default)."""
     env_file = settings.model_config.get("env_file")
     if env_file is None:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    "Settings no tiene `env_file` configurado; no se puede escribir la configuración del proveedor.",
-                    "Settings has no `env_file` configured; cannot write provider configuration.",
-                    "Settings no té `env_file` configurat; no es pot escriure la configuració del proveïdor.",
-                    "A Settings nem rendelkezik `env_file` beállítással; nem írható ki a szolgáltató konfigurációja.",
-                )
-            )
-        )
+        raise typer.BadParameter(tr("auth.init.t_178097"))
     if isinstance(env_file, Path):
         return env_file
     if isinstance(env_file, str):
@@ -674,20 +625,7 @@ def _resolve_env_file(settings: Settings) -> Path:
         "_resolve_env_file: Settings.env_file has unsupported shape %s; cannot determine env file path",
         type(env_file).__name__,
     )
-    raise typer.BadParameter(
-        tr(
-            t(
-                f"Settings.env_file tiene una forma no soportada ({type(env_file).__name__}); "
-                "no se puede determinar dónde persistir la configuración del proveedor.",
-                f"Settings.env_file has an unsupported shape ({type(env_file).__name__}); "
-                "cannot determine where to persist provider configuration.",
-                f"Settings.env_file té una forma no admesa ({type(env_file).__name__}); "
-                "no es pot determinar on persistir la configuració del proveïdor.",
-                f"A Settings.env_file alakja nem támogatott ({type(env_file).__name__}); "
-                "nem állapítható meg, hová mentsük a szolgáltató konfigurációját.",
-            )
-        )
-    )
+    raise typer.BadParameter(tr("auth.init.t_589739"))
 
 
 def _classify_identity_for_cli(raw: str) -> str:
@@ -767,74 +705,18 @@ def configure(
     """
     kind = _parse_kind(provider)
     if kind is not AuthProviderKind.CLAVE_MOVIL:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    f"`aeat auth configure --provider {provider}` no es compatible. "
-                    "Ejecuta `aeat setup` para el proveedor de certificado.",
-                    f"`aeat auth configure --provider {provider}` is not supported. "
-                    "Run `aeat setup` for the certificate provider.",
-                    f"`aeat auth configure --provider {provider}` no s'admet. "
-                    "Executa `aeat setup` per al proveïdor de certificat.",
-                    f"`aeat auth configure --provider {provider}` nem tamogatott. "
-                    "Futtasd: `aeat setup` a tanusitvany szolgaltatohoz.",
-                )
-            )
-        )
+        raise typer.BadParameter(tr("auth.init.t_549784"))
 
     settings = _load_settings()
     env_file = _resolve_env_file(settings)
 
     if dni_nie is None and not non_interactive:
-        _CONSOLE.print(
-            tr(
-                t(
-                    "\nConfigura el inicio de sesión Cl@ve Móvil para la Sede Electrónica de la AEAT.\n"
-                    "Cada inicio envía una notificación push a la app Cl@ve en tu móvil; "
-                    "tocas 'Aprobar' para autenticarte. Este paso solo guarda los datos que "
-                    "la AEAT necesita para activar ese push.",
-                    "\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\n"
-                    "Every login sends a push notification to the Cl@ve app on your "
-                    "phone; you tap 'Approve' to sign in. This step only records the "
-                    "details AEAT needs to trigger that push.",
-                    "\nConfigura l'inici de sessió Cl@ve Móvil per a la Seu Electrònica de l'AEAT.\n"
-                    "Cada inici envia una notificació push a l'aplicació Cl@ve al teu mòbil; "
-                    "toques 'Aprovar' per autenticar-te. Aquest pas només desa les dades que "
-                    "l'AEAT necessita per activar aquest push.",
-                    "\nKonfiguráld a Cl@ve Móvil bejelentkezést az AEAT Sede Electrónica-hoz.\n"
-                    "Minden bejelentkezés push értesítést küld a Cl@ve alkalmazásba a telefonodra; "
-                    "az 'Aprovar' gombra koppintasz a hitelesítéshez. Ez a lépés csak az adatokat "
-                    "rögzíti, amelyek az AEAT-nak szükségesek a push aktiválásához.",
-                )
-            )
-        )
+        _CONSOLE.print(tr("auth.init.t_201308"))
 
     if dni_nie is None:
         if non_interactive:
-            raise typer.BadParameter(
-                tr(
-                    t(
-                        "--dni-nie es obligatorio con --non-interactive",
-                        "--dni-nie is required with --non-interactive",
-                        "--dni-nie és obligatori amb --non-interactive",
-                        "--dni-nie kötelező a --non-interactive mellett",
-                    )
-                )
-            )
-        dni_nie = (
-            typer.prompt(
-                tr(
-                    t(
-                        "Introduce tu DNI o NIE",
-                        "Enter your DNI or NIE",
-                        "Introdueix el teu DNI o NIE",
-                        "Add meg a DNI vagy NIE számodat",
-                    )
-                )
-            )
-            .strip()
-            .upper()
-        )
+            raise typer.BadParameter(tr("auth.init.t_833547"))
+        dni_nie = typer.prompt(tr("auth.init.t_834743")).strip().upper()
     else:
         dni_nie = dni_nie.strip().upper()
 
@@ -848,48 +730,12 @@ def configure(
     if resolved_prefer_non_qr:
         if identity_kind == "DNI" and not dni_fecha:
             if non_interactive:
-                raise typer.BadParameter(
-                    tr(
-                        t(
-                            "--dni-fecha es obligatorio con --prefer-non-qr para una identidad DNI",
-                            "--dni-fecha is required with --prefer-non-qr for a DNI identity",
-                            "--dni-fecha és obligatori amb --prefer-non-qr per a una identitat DNI",
-                            "--dni-fecha kötelező a --prefer-non-qr mellett DNI azonossághoz",
-                        )
-                    )
-                )
-            dni_fecha = typer.prompt(
-                tr(
-                    t(
-                        "Introduce la fecha de validez impresa en tu DNI (YYYY-MM-DD)",
-                        "Enter the validity date printed on your DNI (YYYY-MM-DD)",
-                        "Introdueix la data de validesa impresa al teu DNI (YYYY-MM-DD)",
-                        "Add meg a DNI-n szereplő érvényességi dátumot (YYYY-MM-DD)",
-                    )
-                )
-            ).strip()
+                raise typer.BadParameter(tr("auth.init.t_386762"))
+            dni_fecha = typer.prompt(tr("auth.init.t_958045")).strip()
         if identity_kind == "NIE" and not nie_soporte:
             if non_interactive:
-                raise typer.BadParameter(
-                    tr(
-                        t(
-                            "--nie-soporte es obligatorio con --prefer-non-qr para una identidad NIE",
-                            "--nie-soporte is required with --prefer-non-qr for a NIE identity",
-                            "--nie-soporte és obligatori amb --prefer-non-qr per a una identitat NIE",
-                            "--nie-soporte kötelező a --prefer-non-qr mellett NIE azonossághoz",
-                        )
-                    )
-                )
-            nie_soporte = typer.prompt(
-                tr(
-                    t(
-                        "Introduce el número de soporte impreso en tu documento NIE",
-                        "Enter the support number printed on your NIE document",
-                        "Introdueix el número de suport imprès al teu document NIE",
-                        "Add meg a NIE dokumentumon szereplő támogató számot",
-                    )
-                )
-            ).strip()
+                raise typer.BadParameter(tr("auth.init.t_479907"))
+            nie_soporte = typer.prompt(tr("auth.init.t_944378")).strip()
 
     from ....core.env_io import write_env_vars
 
@@ -913,87 +759,23 @@ def configure(
     # sentence confirms what the CLI saved and where.
     human_terms: list[str] = []
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_NIE"):
-        human_terms.append(tr(t("tu DNI/NIE", "your DNI/NIE", "el teu DNI/NIE", "a DNI/NIE számod")))
+        human_terms.append(tr("auth.init.t_994186"))
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_FECHA"):
-        human_terms.append(
-            tr(
-                t(
-                    "la fecha de validez del DNI",
-                    "the DNI validity date",
-                    "la data de validesa del DNI",
-                    "a DNI érvényességi datuma",
-                )
-            )
-        )
+        human_terms.append(tr("auth.init.t_316510"))
     if mapping.get("AEAT_CLAVE_MOVIL_NIE_SOPORTE"):
-        human_terms.append(
-            tr(
-                t(
-                    "el número de soporte del NIE",
-                    "the NIE support number",
-                    "el número de suport del NIE",
-                    "a NIE támogató szám",
-                )
-            )
-        )
+        human_terms.append(tr("auth.init.t_770369"))
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "true":
-        human_terms.append(
-            tr(
-                t(
-                    "la preferencia push directo",
-                    "the direct-push preference",
-                    "la preferència de push directe",
-                    "a közvetlen push beállítás",
-                )
-            )
-        )
+        human_terms.append(tr("auth.init.t_912253"))
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "false":
-        human_terms.append(
-            tr(
-                t(
-                    "la preferencia código QR",
-                    "the QR-code preference",
-                    "la preferència de codi QR",
-                    "a QR kód beállítás",
-                )
-            )
-        )
+        human_terms.append(tr("auth.init.t_725014"))
     if mapping.get("AEAT_AUTH_PROVIDER"):
-        human_terms.append(
-            tr(
-                t(
-                    "Cl@ve Móvil como proveedor por defecto",
-                    "Cl@ve Móvil as the default provider",
-                    "Cl@ve Móvil com a proveïdor per defecte",
-                    "Cl@ve Móvil mint alapertelmezett szolgaltato",
-                )
-            )
-        )
+        human_terms.append(tr("auth.init.t_542731"))
     if len(human_terms) == 1:
-        human_list = human_terms[0]
+        human_terms[0]
     else:
-        and_word = tr(t(" y ", ", and ", " i ", " es "))
-        human_list = ", ".join(human_terms[:-1]) + and_word + human_terms[-1]
-    _CONSOLE.print(
-        "[green]"
-        + tr(
-            t(
-                f"Guardado {human_list} en {env_file}.",
-                f"Saved {human_list} to {env_file}.",
-                f"Desat {human_list} a {env_file}.",
-                f"Mentve: {human_list} ide: {env_file}.",
-            )
-        )
-        + "[/green]\n"
-        + tr(
-            t(
-                "Ejecuta `aeat auth login` para iniciar sesión con Cl@ve Móvil.",
-                "Run `aeat auth login` to sign in with Cl@ve Móvil.",
-                "Executa `aeat auth login` per iniciar sessió amb Cl@ve Móvil.",
-                "Futtasd: `aeat auth login` a Cl@ve Móvil bejelentkezeshez.",
-            )
-        )
-    )
+        and_word = tr("auth.init.t_497666")
+        ", ".join(human_terms[:-1]) + and_word + human_terms[-1]
+    _CONSOLE.print("[green]" + tr("auth.init.t_637763") + "[/green]\n" + tr("auth.init.t_370466"))
 
 
 @app.command("login", help="Authenticate with the selected provider and cache the session.")
@@ -1020,16 +802,7 @@ def login(
     kind = _resolve_kind(settings, _parse_kind(provider) if provider else None)
 
     if non_interactive and kind in _registry.INTERACTIVE_KINDS:
-        msg = tr(
-            t(
-                f"el proveedor {kind.value} requiere un paso de aprobación interactivo; "
-                "no puede ejecutarse con --non-interactive",
-                f"provider {kind.value} requires an interactive approval step; cannot run with --non-interactive",
-                f"el proveïdor {kind.value} requereix un pas d'aprovació interactiu; "
-                "no es pot executar amb --non-interactive",
-                f"a {kind.value} szolgaltato interaktiv jovahagyast igenyel; nem futtathato --non-interactive mellett",
-            )
-        )
+        msg = tr("auth.init.t_273946")
         if json_output or json_output_requested():
             raise CliRefusedBoundaryError(msg)
         _CONSOLE.print(f"[red]{msg}[/red]")
@@ -1047,18 +820,7 @@ def login(
         logger.error("login: authentication failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print(
-            "[red]"
-            + tr(
-                t(
-                    f"falló la autenticación AEAT: {exc}",
-                    f"AEAT authentication failed: {exc}",
-                    f"l'autenticació AEAT ha fallat: {exc}",
-                    f"AEAT hitelesites sikertelen: {exc}",
-                )
-            )
-            + "[/red]"
-        )
+        _CONSOLE.print("[red]" + tr("auth.init.t_938392") + "[/red]")
         raise typer.Exit(code=1) from exc
 
     logger.info("login: authenticated via %s", kind.value)
@@ -1080,45 +842,12 @@ def login(
 
     now = datetime.now(UTC)
     remaining_seconds = int((session.idle_deadline - now).total_seconds())
-    label = _registry.get_entry(session.provider_kind).label
+    _registry.get_entry(session.provider_kind).label
     if remaining_seconds <= 0:
-        _CONSOLE.print(
-            "[yellow]"
-            + tr(
-                t(
-                    f"Sesión iniciada como {session.identity_nif} vía {label}, pero la "
-                    "sesión ya superó su límite de inactividad. La AEAT puede rechazar "
-                    "peticiones posteriores; vuelve a ejecutar `aeat auth login` si las lecturas fallan.",
-                    f"Signed in as {session.identity_nif} via {label}, but the "
-                    "session is already past its idle deadline. AEAT may refuse subsequent "
-                    "requests; run `aeat auth login` again if reads fail.",
-                    f"Sessió iniciada com a {session.identity_nif} via {label}, però la "
-                    "sessió ja ha superat el límit d'inactivitat. L'AEAT pot rebutjar "
-                    "peticions posteriors; torna a executar `aeat auth login` si les lectures fallen.",
-                    f"Bejelentkezve mint {session.identity_nif} ({label}), de a "
-                    "munkamenet mar tullepte a tetlensegi hatarat. Az AEAT elutasithatja a "
-                    "kovetkezo kereseket; futtasd ujra: `aeat auth login`, ha az olvasasok hibasak.",
-                )
-            )
-            + "[/yellow]"
-        )
+        _CONSOLE.print("[yellow]" + tr("auth.init.t_092134") + "[/yellow]")
     else:
-        remaining_minutes = max(1, remaining_seconds // 60)
-        _CONSOLE.print(
-            "[green]"
-            + tr(
-                t(
-                    f"Sesión iniciada como {session.identity_nif} vía {label}. "
-                    f"La sesión expira en aproximadamente {remaining_minutes}m.",
-                    f"Signed in as {session.identity_nif} via {label}. Session expires in about {remaining_minutes}m.",
-                    f"Sessió iniciada com a {session.identity_nif} via {label}. "
-                    f"La sessió expira en aproximadament {remaining_minutes}m.",
-                    f"Bejelentkezve mint {session.identity_nif} ({label}). "
-                    f"A munkamenet kb. {remaining_minutes} perc mulva lejar.",
-                )
-            )
-            + "[/green]"
-        )
+        max(1, remaining_seconds // 60)
+        _CONSOLE.print("[green]" + tr("auth.init.t_941077") + "[/green]")
 
 
 @app.command("status", help="Show whether a session is active and how much idle TTL remains.")
@@ -1230,18 +959,7 @@ def whoami(
         logger.error("whoami: probe failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print(
-            "[red]"
-            + tr(
-                t(
-                    f"falló la sonda AEAT: {exc}",
-                    f"AEAT probe failed: {exc}",
-                    f"la sonda AEAT ha fallat: {exc}",
-                    f"AEAT lekerdezes sikertelen: {exc}",
-                )
-            )
-            + "[/red]"
-        )
+        _CONSOLE.print("[red]" + tr("auth.init.t_908949") + "[/red]")
         raise typer.Exit(code=1) from exc
 
     if json_output or json_output_requested():
@@ -1265,36 +983,11 @@ def whoami(
         emit_json_success("auth whoami", payload)
         return
 
-    label = _registry.get_entry(refreshed.provider_kind).label
+    _registry.get_entry(refreshed.provider_kind).label
     if assertion.is_valid:
-        _CONSOLE.print(
-            "[green]"
-            + tr(
-                t(
-                    f"Sesión iniciada como {refreshed.identity_nif} vía {label}. La AEAT aceptó la sesión guardada.",
-                    f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the cached session.",
-                    f"Sessió iniciada com a {refreshed.identity_nif} via {label}. L'AEAT ha acceptat la sessió desada.",
-                    f"Bejelentkezve mint {refreshed.identity_nif} ({label}). Az AEAT elfogadta a tarolt munkamenetet.",
-                )
-            )
-            + "[/green]"
-        )
+        _CONSOLE.print("[green]" + tr("auth.init.t_888711") + "[/green]")
     else:
-        _CONSOLE.print(
-            "[yellow]"
-            + tr(
-                t(
-                    f"La sesión guardada de {label} está caducada o revocada. "
-                    "Ejecuta `aeat auth login` para iniciar sesión de nuevo.",
-                    f"The cached {label} session is stale or revoked. Run `aeat auth login` to sign in again.",
-                    f"La sessió desada de {label} està caducada o revocada. "
-                    "Executa `aeat auth login` per iniciar sessió de nou.",
-                    f"A tarolt {label} munkamenet lejart vagy visszavonva. "
-                    "Futtasd: `aeat auth login` az ujboli bejelentkezeshez.",
-                )
-            )
-            + "[/yellow]"
-        )
+        _CONSOLE.print("[yellow]" + tr("auth.init.t_906241") + "[/yellow]")
         raise typer.Exit(code=1)
 
 
@@ -1319,20 +1012,7 @@ def logout(
 ) -> None:
     """Delete the storage-state + metadata pair for the selected provider(s)."""
     if all_providers and provider is not None:
-        raise typer.BadParameter(
-            tr(
-                t(
-                    "Pasa --provider o --all, no ambos: --all limpia la sesión guardada "
-                    "de cada proveedor, por lo que --provider sería ignorado.",
-                    "Pass either --provider or --all, not both: --all clears every "
-                    "provider's cached session, so --provider would be ignored.",
-                    "Passa --provider o --all, no ambdós: --all neteja la sessió desada "
-                    "de cada proveïdor, així que --provider seria ignorat.",
-                    "Add at: --provider VAGY --all, ne mindkettot: az --all minden "
-                    "szolgáltató tárolt munkamenetet torli, igy a --provider figyelmen kivul maradna.",
-                )
-            )
-        )
+        raise typer.BadParameter(tr("auth.init.t_950022"))
     settings = _load_settings()
 
     removed: list[Path] = []
@@ -1389,42 +1069,15 @@ def logout(
         return
 
     if not removed:
-        _CONSOLE.print(
-            tr(
-                t(
-                    "No se encontró sesión activa. Nada que limpiar.",
-                    "No active session found. Nothing to clear.",
-                    "No s'ha trobat sessió activa. Res a netejar.",
-                    "Nincs aktív munkamenet. Nincs mit törölni.",
-                )
-            )
-        )
+        _CONSOLE.print(tr("auth.init.t_594919"))
         return
 
     labels = [_registry.get_entry(k).label for k in cleared_kinds]
     if len(labels) == 1:
-        _CONSOLE.print(
-            tr(
-                t(
-                    f"Sesión cerrada en {labels[0]}.",
-                    f"Signed out of {labels[0]}.",
-                    f"Sessió tancada a {labels[0]}.",
-                    f"Kijelentkezve: {labels[0]}.",
-                )
-            )
-        )
+        _CONSOLE.print(tr("auth.init.t_186277"))
     else:
-        joined = ", ".join(labels)
-        _CONSOLE.print(
-            tr(
-                t(
-                    f"Sesión cerrada en {joined}.",
-                    f"Signed out of {joined}.",
-                    f"Sessió tancada a {joined}.",
-                    f"Kijelentkezve: {joined}.",
-                )
-            )
-        )
+        ", ".join(labels)
+        _CONSOLE.print(tr("auth.init.t_979591"))
 
 
 __all__ = ["app"]

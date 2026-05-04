@@ -13,6 +13,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.i18n import Translatable
 from . import (
     CategoryCitation,
     CategoryCitationSource,
@@ -44,24 +45,12 @@ def _rule() -> ProportionalityRule:
     )
 
 
-def test_category_profile_requires_authoritative_spanish_label() -> None:
-    """Profiles must reject labels missing the authoritative Spanish string."""
-
-    with pytest.raises(ValidationError):
-        CategoryProfile(
-            category=SpendingCategory.MATERIAL_OFICINA,
-            display_label={"en": "Office supplies"},
-            proportionality=_rule(),
-            vat_hint=None,
-        )
-
-
 def test_category_profile_accepts_profile_without_casilla_projection() -> None:
     """Profiles carry category semantics, not filing-layout projection."""
 
     profile = CategoryProfile(
         category=SpendingCategory.MATERIAL_OFICINA,
-        display_label={"es": "Material", "en": "Supplies", "hu": "Anyag"},
+        display_label=Translatable("categories.test_profile.display_label_851219"),
         proportionality=ProportionalityRule(
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             fixed_pct=Decimal("1.00"),

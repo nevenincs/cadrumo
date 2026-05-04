@@ -6,7 +6,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 
@@ -25,6 +24,9 @@ class VatCategory(StrEnum):
     NON_DEDUCTIBLE_INPUT = "non_deductible_input"
 
 
+from ...core.i18n import Translatable
+
+
 class CategoryProfile(_CategoryProfileStrictFrozenModel):
     """Explainable category profile for one spending category."""
 
@@ -35,8 +37,4 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
 
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:
-        try:
-            require_authoritative(self.display_label, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
         return self

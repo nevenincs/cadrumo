@@ -33,7 +33,7 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
         started_at=started,
         ended_at=started,
         success=True,
-        summary={"en": "ok"},
+        summary="translation",
     )
     return WorkflowResult(
         run_id=run_id,
@@ -42,7 +42,7 @@ def _result(run_id: str, started: datetime) -> WorkflowResult:
         final_stage=WorkflowStage.DONE,
         aborted_reason=None,
         steps=(step,),
-        summary={"en": "ok"},
+        summary="translation",
     )
 
 

@@ -14,7 +14,6 @@ import secrets
 from collections.abc import Callable, Sequence
 
 from ....core.config import Settings
-from ....core.i18n import normalize_language_code
 from ....core.logging import get_logger
 from ._client import LLMClient
 from ._errors import LLMRateLimitError
@@ -69,8 +68,8 @@ class Translator:
             normalized language codes, and provider accounting metadata.
         """
 
-        normalized_source = normalize_language_code(source_lang)
-        normalized_target = normalize_language_code(target_lang)
+        normalized_source = source_lang
+        normalized_target = target_lang
         prompt = self.prompt_registry.get("translation_v1")
         rendered_prompt = render_prompt(
             prompt,

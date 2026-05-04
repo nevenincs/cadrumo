@@ -36,6 +36,20 @@ def test_registry_inspect_cli_reports_committed_tree_inventory() -> None:
     assert payload["verified"] is False
     assert payload["modelo_count"] == 1
     assert payload["revision_count"] == 1
+    assert payload["casilla_count"] == 19
+    assert payload["formula_count"] == 9
+    assert payload["extraction_profile_count"] == 1
+    assert payload["cross_reference_count"] == 1
+    assert payload["workbook_parity_ref_count"] == 1
+    assert payload["verification_expectation_count"] == 1
+    assert payload["application_link_count"] == 5
+    assert payload["application_link_surfaces"] == [
+        "calculation",
+        "extractor",
+        "filing",
+        "portal",
+        "verification",
+    ]
     assert payload["modelos"] == ["130"]
 
 
@@ -58,6 +72,13 @@ def test_registry_verify_cli_validates_committed_sources_and_catalogues() -> Non
     payload = json.loads(result.output)
     assert payload["verified"] is True
     assert payload["source_reference_count"] == 1
+    assert payload["application_link_surfaces"] == [
+        "calculation",
+        "extractor",
+        "filing",
+        "portal",
+        "verification",
+    ]
 
 
 def test_registry_verify_cli_fails_fast_on_missing_committed_corpus_source(tmp_path) -> None:

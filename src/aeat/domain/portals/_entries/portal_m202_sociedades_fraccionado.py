@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_202,
-    label={
-        "es": "Modelo 202 — IS pago fraccionado",
-        "en": "Modelo 202 — Corporate tax instalment payment",
-        "hu": "202-es űrlap — Társasági adó részletfizetés",
-    },
+    label="entries.portal_m202_sociedades_fraccionado.label_203074",
     purpose_es="Pago fraccionado a cuenta del Impuesto sobre Sociedades.",
 )
 """Portal entry for Modelo 202 (corporate-tax instalment payment)."""

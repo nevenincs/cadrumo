@@ -29,11 +29,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_036,
-    label={
-        "es": "Modelo 036 — Declaración censal",
-        "en": "Modelo 036 — Census declaration",
-        "hu": "036-os űrlap — Adóalanyi nyilvántartásba vétel",
-    },
+    label="entries.portal_m036_censal.label_771260",
     purpose_es="Alta, modificación y baja en el censo de empresarios, profesionales y retenedores.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 census procedure page."""

@@ -26,7 +26,7 @@ from ....domain.usage_ratios import (
     load_usage_ratios,
     save_usage_ratios,
 )
-from .._i18n import t, tr
+from .._i18n import tr
 from ._profile_aliases import FAMILY_ALIASES
 
 _MISSING = "(none)"
@@ -59,16 +59,7 @@ def list_cmd() -> None:
     """
     profile = _load_profile()
     if not profile.ratios:
-        typer.echo(
-            tr(
-                t(
-                    "No hay ratios de uso configurados.",
-                    "No usage ratios configured.",
-                    "No hi ha ràtios d'ús configurades.",
-                    "Nincs beállítva használati arány.",
-                )
-            )
-        )
+        typer.echo(tr("financial.profile.t_695847"))
         return
     typer.echo("category\tkind\tuser_ratio\tstatutory_default")
     for category in sorted(profile.ratios, key=lambda c: c.value):
@@ -120,16 +111,7 @@ def set_ratio_cmd(
             raise typer.Exit(code=2) from exc
     _save_profile(updated)
     for category in categories:
-        typer.echo(
-            tr(
-                t(
-                    f"establecido {category.value} = {_format_decimal(ratio)}",
-                    f"set {category.value} = {_format_decimal(ratio)}",
-                    f"establert {category.value} = {_format_decimal(ratio)}",
-                    f"beallitva {category.value} = {_format_decimal(ratio)}",
-                )
-            )
-        )
+        typer.echo(tr("financial.profile.t_407379"))
 
 
 @app.command(name="unset-ratio", help="Remove the usage ratio for one category or family alias.")
@@ -156,29 +138,11 @@ def unset_ratio_cmd(
             updated = updated.without_ratio(category)
             removed.append(category)
     if not removed:
-        typer.echo(
-            tr(
-                t(
-                    f"no hay ratio configurado para {key}",
-                    f"no user ratio set for {key}",
-                    f"no hi ha cap ràtio configurada per a {key}",
-                    f"nincs beallitott arany ehhez: {key}",
-                )
-            )
-        )
+        typer.echo(tr("financial.profile.t_344840"))
         return
     _save_profile(updated)
     for category in removed:
-        typer.echo(
-            tr(
-                t(
-                    f"eliminado {category.value}",
-                    f"unset {category.value}",
-                    f"eliminat {category.value}",
-                    f"torolve {category.value}",
-                )
-            )
-        )
+        typer.echo(tr("financial.profile.t_620920"))
 
 
 def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
@@ -212,14 +176,7 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
         typer.echo(
-            tr(
-                t(
-                    f"{category.value!r} no acepta ratio de uso\n{_format_eligible_list()}",
-                    f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}",
-                    f"{category.value!r} no accepta una ràtio d'ús\n{_format_eligible_list()}",
-                    f"{category.value!r} nem fogad el hasznalati aranyt\n{_format_eligible_list()}",
-                )
-            ),
+            tr("financial.profile.t_538938"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -308,40 +265,19 @@ def _parse_ratio(raw: str) -> Decimal:
         ratio = Decimal(raw)
     except InvalidOperation as exc:
         typer.echo(
-            tr(
-                t(
-                    f"ratio no válido: {raw!r}",
-                    f"invalid ratio: {raw!r}",
-                    f"ràtio no vàlida: {raw!r}",
-                    f"ervenytelen arany: {raw!r}",
-                )
-            ),
+            tr("financial.profile.t_338721"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not ratio.is_finite():
         typer.echo(
-            tr(
-                t(
-                    f"el ratio debe ser finito (recibido {ratio})",
-                    f"ratio must be finite (got {ratio})",
-                    f"la ràtio ha de ser finita (rebuda {ratio})",
-                    f"az aranynak vegesnek kell lennie (kapott: {ratio})",
-                )
-            ),
+            tr("financial.profile.t_323949"),
             err=True,
         )
         raise typer.Exit(code=2)
     if not (Decimal("0") <= ratio <= Decimal("1")):
         typer.echo(
-            tr(
-                t(
-                    f"el ratio debe estar en [0, 1] (recibido {ratio})",
-                    f"ratio must be in [0, 1] (got {ratio})",
-                    f"la ràtio ha d'estar dins [0, 1] (rebuda {ratio})",
-                    f"az aranynak [0, 1] tartomanyban kell lennie (kapott: {ratio})",
-                )
-            ),
+            tr("financial.profile.t_496708"),
             err=True,
         )
         raise typer.Exit(code=2)

@@ -20,11 +20,7 @@ ENTRY: PortalMetadata = build_entry(
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Validación de certificado electrónico",
-        "en": "Electronic certificate validation",
-        "hu": "Elektronikus tanúsítvány ellenőrzése",
-    },
+    label="entries.portal_cert_validation_rest.label_050984",
     purpose_es="Información y validación de certificados electrónicos admitidos por la AEAT.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-validation page."""

@@ -11,7 +11,6 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import AeatError
-from ...core.i18n import Translatable
 from ._models import WorkflowAbortReason
 
 
@@ -55,7 +54,7 @@ class WorkflowAbortSignal(WorkflowError):  # noqa: N818 - internal control-flow 
 
     Attributes:
         reason: The :class:`WorkflowAbortReason` that classifies the bailout.
-        summary: Human-readable :class:`Translatable` summary surfaced on
+        summary: Human-readable :class:`str` summary surfaced on
             the resulting :class:`WorkflowResult`.
     """
 
@@ -63,7 +62,7 @@ class WorkflowAbortSignal(WorkflowError):  # noqa: N818 - internal control-flow 
         self,
         *,
         reason: WorkflowAbortReason,
-        summary: Translatable,
+        summary: str,
     ) -> None:
         super().__init__(reason.value)
         self.reason = reason

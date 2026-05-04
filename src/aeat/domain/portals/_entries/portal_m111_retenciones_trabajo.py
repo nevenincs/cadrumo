@@ -29,11 +29,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_111,
-    label={
-        "es": "Modelo 111 — Retenciones trabajo y actividades",
-        "en": "Modelo 111 — Withholdings on labour and activities",
-        "hu": "111-es űrlap — Munkabérek és tevékenységek forrásadója",
-    },
+    label="entries.portal_m111_retenciones_trabajo.label_774262",
     purpose_es=(
         "Autoliquidación periódica de retenciones e ingresos a cuenta "
         "sobre rendimientos del trabajo y actividades económicas."

@@ -29,11 +29,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_130,
-    label={
-        "es": "Modelo 130 — Pago fraccionado IRPF (estimación directa)",
-        "en": "Modelo 130 — IRPF instalment payment (direct assessment)",
-        "hu": "130-as űrlap — IRPF részletfizetés (közvetlen megállapítás)",
-    },
+    label="entries.portal_m130_pago_fraccionado_ed.label_523782",
     purpose_es="Pago fraccionado a cuenta del IRPF para empresarios y profesionales en estimación directa.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 130 procedure page."""

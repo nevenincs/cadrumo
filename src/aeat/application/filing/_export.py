@@ -33,7 +33,6 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
 from ...core.logging import get_logger
 
 _logger = get_logger(__name__)
@@ -98,8 +97,7 @@ class DeclarationExportResult(BaseModel):
             Used by :class:`DeclarationVerifyResult` to anchor the
             file-vs-draft comparison.
         exported_at: UTC timestamp of when the file was written.
-        narrative: Multilingual operator-facing summary, Spanish
-            authoritative per the project's i18n contract.
+        narrative: Translation key for operator-facing summary.
     """
 
     model_config = _STRICT_FROZEN
@@ -112,7 +110,7 @@ class DeclarationExportResult(BaseModel):
     byte_size: int = Field(ge=0)
     file_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
     exported_at: datetime
-    narrative: Translatable
+    narrative: str
 
     @field_validator("file_sha256")
     @classmethod
@@ -124,16 +122,6 @@ class DeclarationExportResult(BaseModel):
             raise ValueError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
             raise ValueError("file_sha256 must be lowercase hex")
-        return value
-
-    @field_validator("narrative")
-    @classmethod
-    def _require_authoritative_narrative(cls, value: Translatable) -> Translatable:
-        """Reject narratives that omit the authoritative Spanish key."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
         return value
 
 
@@ -164,8 +152,7 @@ class DeclarationVerifyResult(BaseModel):
             command wrote was the one verified, even if
             ``output_path`` was renamed in between.
         verified_at: UTC timestamp of when the verdict was produced.
-        narrative: Multilingual operator-facing summary, Spanish
-            authoritative per the project's i18n contract.
+        narrative: Translation key for operator-facing summary.
     """
 
     model_config = _STRICT_FROZEN
@@ -177,7 +164,7 @@ class DeclarationVerifyResult(BaseModel):
     unchecked_casillas: tuple[str, ...] = ()
     file_sha256: str | None = Field(default=None)
     verified_at: datetime
-    narrative: Translatable
+    narrative: str
 
     @field_validator("mismatched_casillas", "unchecked_casillas")
     @classmethod
@@ -202,16 +189,6 @@ class DeclarationVerifyResult(BaseModel):
             raise ValueError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
             raise ValueError("file_sha256 must be lowercase hex")
-        return value
-
-    @field_validator("narrative")
-    @classmethod
-    def _require_authoritative_narrative(cls, value: Translatable) -> Translatable:
-        """Reject narratives that omit the authoritative Spanish key."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
         return value
 
 

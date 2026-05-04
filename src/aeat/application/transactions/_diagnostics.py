@@ -28,7 +28,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable, TranslationError, require_authoritative
+from ...core.i18n import Translatable
 
 
 class LedgerImportDiagnosticKind(StrEnum):
@@ -59,8 +59,7 @@ class LedgerImportDiagnostic(BaseModel):
     Attributes:
         kind: Closed :class:`LedgerImportDiagnosticKind`.
         severity: :class:`LedgerImportDiagnosticSeverity`.
-        message: Multilingual operator-facing message; Spanish is
-            authoritative per the project i18n contract.
+        message: A strictly-typed :class:`Translatable` key.
         source_path: Optional pointer at the source artefact the
             diagnostic refers to (input file, provider name, etc.).
         source_locator: Optional sub-path inside ``source_path``
@@ -82,12 +81,8 @@ class LedgerImportDiagnostic(BaseModel):
 
     @field_validator("message")
     @classmethod
-    def _require_authoritative_message(cls, value: Translatable) -> Translatable:
+    def _require_authoritative_message(cls, value: str) -> str:
         """Reject diagnostics without an authoritative Spanish message."""
-        try:
-            require_authoritative(value, domain="aeat")
-        except TranslationError as exc:
-            raise ValueError(str(exc)) from exc
         return value
 
     @field_validator("source_locator")

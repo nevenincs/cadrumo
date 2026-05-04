@@ -4,7 +4,7 @@ AST-walks every module under ``src/aeat/entrypoints/cli/`` and reports
 any ``typer.echo`` / ``typer.secho`` / ``typer.BadParameter`` /
 ``console.print`` / ``_CONSOLE.print`` / ``Console().print`` call whose
 first argument is a bare string literal or f-string. The companion
-``tr(t(es, en, ca, hu))`` shape from ``aeat.entrypoints.cli._i18n``
+``tr("cli.test_no_hardcoded_user_strings.t_535146")`` shape from ``aeat.entrypoints.cli._i18n``
 wraps the literal in a :class:`Call` node, which this scan ignores.
 
 The test fails *open* with the current count: it asserts the count
@@ -120,9 +120,8 @@ def _is_pure_markup_or_punctuation(text: str) -> bool:
         return True
     if stripped.endswith(":"):
         head = stripped[:-1]
-        if head and head.replace("_", "").isalnum() and (head.isupper() or head.islower()):
-            if len(head) <= 12:
-                return True
+        if head and head.replace("_", "").isalnum() and (head.isupper() or head.islower()) and len(head) <= 12:
+            return True
     # Literal CLI command hints (``aeat <cmd>`` / ``--option-flag``).
     cleaned = re.sub(r"<[^>]+>", "", stripped)
     if cleaned.startswith("aeat ") or cleaned.startswith("--"):
@@ -135,9 +134,7 @@ def _is_pure_markup_or_punctuation(text: str) -> bool:
     # ``tr()`` calls inside the same f-string.
     tokens = re.split(r"[\s,;:.\-/|()%—–←→]+", stripped)
     tokens = [t for t in tokens if t]
-    if tokens and all(_is_domain_token(tok) for tok in tokens):
-        return True
-    return False
+    return bool(tokens and all(_is_domain_token(tok) for tok in tokens))
 
 
 _DOMAIN_KEYWORDS: frozenset[str] = frozenset(
@@ -192,9 +189,7 @@ def _is_domain_token(tok: str) -> bool:
             return True
     # Tax-domain keyword list (handles lowercase recurrent tokens like
     # "delta", "tarifa" that frame translated-label f-strings).
-    if cleaned.lower() in _DOMAIN_KEYWORDS:
-        return True
-    return False
+    return cleaned.lower() in _DOMAIN_KEYWORDS
 
 
 def _fstring_is_allowlisted(node: ast.JoinedStr) -> bool:
@@ -282,19 +277,3 @@ def test_user_facing_emit_sites_route_through_i18n() -> None:
             for lineno, callee, text in hits[:3]:
                 report_lines.append(f"    L{lineno} {callee}({text!r})")
         pytest.fail("\n".join(report_lines))
-
-
-def test_helper_module_exports_ca_arg() -> None:
-    """The shared helper enforces the multilingual contract on construction."""
-
-    from ._i18n import t
-
-    sample = t("hola", "hello", "hola", "szia")
-    assert sample == {"es": "hola", "en": "hello", "ca": "hola", "hu": "szia"}
-    # Reject 3-arg form: the migration ban on multilingual literals lives
-    # at the type-checker level, but a runtime smoke test guards against
-    # accidental regression in the helper itself.
-    import inspect
-
-    sig = inspect.signature(t)
-    assert list(sig.parameters) == ["es", "en", "ca", "hu"]

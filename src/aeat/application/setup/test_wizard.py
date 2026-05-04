@@ -22,7 +22,6 @@ from ...adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
-from ...core.i18n import Language
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
 from . import (
@@ -76,8 +75,8 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         certificate_path=cert,
         certificate_password_secret_var_name="AEAT_TEST_PW",
         certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        default_language=Language.EN,
-        output_language=Language.HU,
+        default_language="en",
+        output_language="hu",
         aeat_drafts_dir=tmp_path / "drafts",
         aeat_submissions_dir=tmp_path / "subs",
         aeat_manuals_root=tmp_path / "manuals",
@@ -206,8 +205,8 @@ def test_interactive_collects_from_queued_prompter(
         # cert backend
         CertificateBackend.PLAYWRIGHT_CONTEXT.value,
         # languages
-        Language.EN.value,
-        Language.HU.value,
+        "en",
+        "hu",
         # output dirs
         drafts,
         subs,

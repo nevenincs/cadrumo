@@ -13,7 +13,6 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
-from ....core.i18n import Translatable
 from ...modelos import ModeloCode
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
@@ -35,7 +34,7 @@ def build_entry(
     category: PortalCategory,
     auth_methods: Iterable[AuthMethod],
     url_stability: UrlStability,
-    label: Translatable,
+    label: str,
     purpose_es: str,
     related_modelo: ModeloCode | None = None,
     active: bool = True,

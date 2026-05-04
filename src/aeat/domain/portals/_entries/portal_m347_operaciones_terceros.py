@@ -27,11 +27,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     related_modelo=ModeloCode.MODELO_347,
-    label={
-        "es": "Modelo 347 — Operaciones con terceros",
-        "en": "Modelo 347 — Third-party transactions",
-        "hu": "347-es űrlap — Harmadik felekkel folytatott ügyletek",
-    },
+    label="entries.portal_m347_operaciones_terceros.label_293185",
     purpose_es="Declaración informativa anual de operaciones con terceras personas por encima del umbral legal.",
 )
 """Portal entry for Modelo 347 (annual third-party transactions return)."""

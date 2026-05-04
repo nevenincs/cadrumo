@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Mis notificaciones",
-        "en": "My notifications",
-        "hu": "Értesítéseim",
-    },
+    label="entries.portal_mis_notificaciones.label_055002",
     purpose_es="Buzón electrónico de notificaciones y comunicaciones recibidas de la AEAT.",
 )
 """Portal entry for the AEAT electronic notifications and communications mailbox."""

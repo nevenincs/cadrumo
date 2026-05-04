@@ -15,18 +15,17 @@ have a single root they can catch at integration boundaries.
 from __future__ import annotations
 
 from ..errors import AeatError
-from ..i18n import Translatable
 
 
 class AccessGateSubmissionError(AeatError):
     """Base class for live-write access-gate submission policy failures.
 
     Attributes:
-        translated_message: Optional :class:`aeat.core.i18n.Translatable`
+        translated_message: Optional :class:`aeat.core.i18n.str`
             payload carrying a user-facing version of the message.
     """
 
-    def __init__(self, message: str, *, translated_message: Translatable | None = None) -> None:
+    def __init__(self, message: str, *, translated_message: str | None = None) -> None:
         """Construct a submission error.
 
         Args:
@@ -35,7 +34,7 @@ class AccessGateSubmissionError(AeatError):
                 to the CLI and any user-facing consumer.
         """
         super().__init__(message)
-        self.translated_message: Translatable | None = translated_message
+        self.translated_message: str | None = translated_message
 
 
 class AccessGateSubmissionPreflightError(AccessGateSubmissionError):
@@ -52,26 +51,10 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
             "export and upload the file yourself in the AEAT portal"
         ),
         *,
-        translated_message: Translatable | None = None,
+        translated_message: str | None = None,
     ) -> None:
         """Construct the permanent live-submit refusal error."""
-        default_translatable: Translatable = {
-            "es": (
-                "El envío en vivo a AEAT está permanentemente prohibido. "
-                "Usa produce -> verify -> export y sube el fichero tú mismo "
-                "en el portal de AEAT."
-            ),
-            "en": (
-                "Live AEAT submission is permanently forbidden. "
-                "Use produce -> verify -> export and upload the file yourself "
-                "in the AEAT portal."
-            ),
-            "hu": (
-                "Az élő AEAT beküldés véglegesen tiltott. "
-                "Használd a produce -> verify -> export folyamatot, és töltsd "
-                "fel a fájlt te magad az AEAT portálon."
-            ),
-        }
+        default_translatable: str = "access_gate.errors.default_translatable"
         super().__init__(
             message,
             translated_message=translated_message or default_translatable,

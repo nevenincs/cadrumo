@@ -12,12 +12,10 @@ from __future__ import annotations
 from datetime import UTC, datetime, time
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.invoices import (
     Invoice,
@@ -49,91 +47,46 @@ _LOGGER = get_logger(__name__)
 
 _SUMMARY_MAX = 80
 
-# Multilingual contract: every Translatable carries es / en / ca / hu.
+# Multilingual contract: every str carries es / en / ca / hu.
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
-def _t(es: str, en: str, ca: str, hu: str) -> Translatable:
-    """Build a multilingual :class:`Translatable` from positional strings.
+def t(message: str) -> str:
+    """Build a multilingual :class:`str` from positional strings.
 
     Local mirror of ``aeat.entrypoints.cli._i18n.t``; pulled in here so
     that domain-side adapters do not import the CLI surface (kept the
     layered hexagonal direction intact).
     """
 
-    return {"es": es, "en": en, "ca": ca, "hu": hu}
+    return "translation"
 
 
-_DIRECTION_LABELS: dict[TransactionDirection, Translatable] = {
-    TransactionDirection.INCOMING: _t("ingreso", "incoming", "ingrés", "bevetel"),
-    TransactionDirection.OUTGOING: _t("gasto", "outgoing", "despesa", "kiadas"),
-    TransactionDirection.INTERNAL_TRANSFER: _t(
-        "traspaso interno",
-        "internal transfer",
-        "traspàs intern",
-        "belső átutalás",
-    ),
+_DIRECTION_LABELS: dict[TransactionDirection, str] = {
+    TransactionDirection.INCOMING: "review.adapters.t_968325",
+    TransactionDirection.OUTGOING: "review.adapters.t_629803",
+    TransactionDirection.INTERNAL_TRANSFER: "review.adapters.t_135562",
 }
-_CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
-    BusinessClassification.BUSINESS: _t("negocio", "business", "negoci", "üzleti"),
-    BusinessClassification.PERSONAL: _t("personal", "personal", "personal", "személyes"),
-    BusinessClassification.MIXED: _t("mixto", "mixed", "mixt", "vegyes"),
-    BusinessClassification.NOT_YET_PROCESSED: _t(
-        "sin procesar",
-        "unprocessed",
-        "sense processar",
-        "feldolgozatlan",
-    ),
-    BusinessClassification.PROCESSED_UNCLASSIFIED: _t(
-        "procesada sin clasificar",
-        "processed unclassified",
-        "processada sense classificar",
-        "feldolgozva, osztályozatlan",
-    ),
-    BusinessClassification.SKIPPED_BY_RULE: _t(
-        "omitida por regla",
-        "skipped by rule",
-        "omesa per regla",
-        "szabály által kihagyva",
-    ),
-    BusinessClassification.FAILED_VALIDATION: _t(
-        "validación fallida",
-        "failed validation",
-        "validació fallida",
-        "érvénytelen",
-    ),
+_CLASSIFICATION_LABELS: dict[BusinessClassification, str] = {
+    BusinessClassification.BUSINESS: "review.adapters.t_142007",
+    BusinessClassification.PERSONAL: "review.adapters.t_870243",
+    BusinessClassification.MIXED: "review.adapters.t_619063",
+    BusinessClassification.NOT_YET_PROCESSED: "review.adapters.t_754183",
+    BusinessClassification.PROCESSED_UNCLASSIFIED: "review.adapters.t_791512",
+    BusinessClassification.SKIPPED_BY_RULE: "review.adapters.t_607122",
+    BusinessClassification.FAILED_VALIDATION: "review.adapters.t_352338",
 }
-_INVOICE_REASON_LABELS: dict[str, Translatable] = {
-    "unmatched": _t("sin emparejar", "unmatched", "sense aparellar", "párosítatlan"),
-    "overdue": _t("vencida", "overdue", "vençuda", "lejart"),
-    "payment-pending": _t("pago pendiente", "payment pending", "pagament pendent", "fizetés függőben"),
-    "partially-paid": _t("parcialmente pagada", "partially paid", "parcialment pagada", "részben fizetve"),
+_INVOICE_REASON_LABELS: dict[str, str] = {
+    "unmatched": "review.adapters.t_551826",
+    "overdue": "review.adapters.t_167733",
+    "payment-pending": "review.adapters.t_298389",
+    "partially-paid": "review.adapters.t_352928",
 }
 
 
-def _per_lang_summary(template: Translatable, **fields: str | Translatable) -> Translatable:
-    """Build a multilingual summary by formatting *template* per language.
-
-    ``fields`` may carry either bare strings (interpolated identically
-    into every language) or :class:`Translatable` values (per-language
-    interpolation). Every ``Translatable`` field must carry the four
-    contract languages; missing slots fall through to the field's
-    Spanish slot to keep the output legible.
-    """
-
-    out: dict[str, str] = {}
-    for lang in _LANGS:
-        slot = template.get(lang)  # type: ignore[misc]
-        if slot is None:
-            continue
-        per_lang_fields: dict[str, str] = {}
-        for name, value in fields.items():
-            if isinstance(value, dict):
-                per_lang_fields[name] = str(value.get(lang) or value.get("es") or "")  # type: ignore[misc]
-            else:
-                per_lang_fields[name] = str(value)
-        out[lang] = slot.format(**per_lang_fields)
-    return cast(Translatable, out)
+def _per_lang_summary(template: str, **fields: str | str) -> str:
+    """Return the abstract translation key."""
+    return template
 
 
 # ── transactions ──────────────────────────────────────────────────
@@ -241,12 +194,7 @@ def _to_transaction_item(
         description = description[: _SUMMARY_MAX - 1] + "…"
     amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
     summary = _per_lang_summary(
-        _t(
-            "[{state}] {direction} {amount} {currency}: {description}",
-            "[{state}] {direction} {amount} {currency}: {description}",
-            "[{state}] {direction} {amount} {currency}: {description}",
-            "[{state}] {direction} {amount} {currency}: {description}",
-        ),
+        "review.adapters.t_170461",
         state=_CLASSIFICATION_LABELS[transaction.business_classification],
         direction=_DIRECTION_LABELS[transaction.direction],
         amount=amount,
@@ -318,15 +266,10 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
     grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
     reason_label = _INVOICE_REASON_LABELS.get(
         reason,
-        _t(reason, reason, reason, reason),
+        "review.adapters.t_189155",
     )
     summary = _per_lang_summary(
-        _t(
-            "[{reason}] {kind} {number} {total} {currency} ← {counterparty}",
-            "[{reason}] {kind} {number} {total} {currency} ← {counterparty}",
-            "[{reason}] {kind} {number} {total} {currency} ← {counterparty}",
-            "[{reason}] {kind} {number} {total} {currency} ← {counterparty}",
-        ),
+        "review.adapters.t_122028",
         reason=reason_label,
         kind=invoice.kind.value,
         number=invoice.invoice_number,
@@ -428,14 +371,8 @@ def _to_finding_item(
     finding: FilingValidationFinding,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
-    fallback = _first_translation(finding.message) or finding.code
-    summary_prefix = f"[casilla {casilla}] " if casilla != "-" else ""
-    summary: Translatable = {
-        "es": summary_prefix + str(finding.message.get("es") or fallback),
-        "en": summary_prefix + str(finding.message.get("en") or finding.message.get("es") or fallback),
-        "ca": summary_prefix + str(finding.message.get("ca") or finding.message.get("es") or fallback),
-        "hu": summary_prefix + str(finding.message.get("hu") or finding.message.get("es") or fallback),
-    }
+    _first_translation(finding.message) or finding.code
+    summary: str = "translation"
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
         modelo=draft.modelo,
@@ -451,12 +388,7 @@ def _to_finding_item(
 
 def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     summary = _per_lang_summary(
-        _t(
-            "borrador no listo para enviar (estado={status})",
-            "draft not ready to submit (status={status})",
-            "esborrany no preparat per enviar (estat={status})",
-            "piszkozat nem áll készen küldésre (állapot={status})",
-        ),
+        "review.adapters.t_397611",
         status=draft.status.value,
     )
     return FindingReviewItem(
@@ -474,12 +406,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
-    summary = _t(
-        "aprobación caducada — requiere nueva revisión (estado=APPROVAL_STALE)",
-        "approval stale — re-review required (status=APPROVAL_STALE)",
-        "aprovació caducada — cal una nova revisió (estat=APPROVAL_STALE)",
-        "jóváhagyás lejárt — újbóli felülvizsgálat szükséges (állapot=APPROVAL_STALE)",
-    )
+    summary = "review.adapters.t_787894"
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,
@@ -493,10 +420,6 @@ def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingRevi
     )
 
 
-def _first_translation(message: Translatable) -> str | None:
+def _first_translation(message: str) -> str | None:
     """Return the first non-empty slot in the AEAT-canonical-first order."""
-    for lang in _LANGS:
-        value = message.get(lang)  # type: ignore[misc]
-        if value:
-            return value
-    return None
+    return message

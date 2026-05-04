@@ -32,7 +32,7 @@ from ....adapters.inbound.financial.providers import (
 )
 from ....core.logging import get_logger
 from ....domain.transactions import RawTransaction
-from .._i18n import t, tr
+from .._i18n import tr
 
 if TYPE_CHECKING:
     from ....domain.transactions import ImportSummary
@@ -139,14 +139,7 @@ def ingest_cmd(
     if provider_impl is None:
         _logger.warning("financial ingest: no provider can handle %s", path)
         typer.echo(
-            tr(
-                t(
-                    f"rechazado: ningún proveedor puede procesar {path}",
-                    f"refusing: no provider can handle {path}",
-                    f"rebutjat: cap proveïdor pot processar {path}",
-                    f"elutasitva: egyetlen szolgaltato sem tudja kezelni: {path}",
-                )
-            ),
+            tr("financial.ingest.t_865065"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -159,29 +152,15 @@ def ingest_cmd(
             provider_impl.name,
             len(validation.warnings),
         )
-        for warning in validation.warnings:
+        for _warning in validation.warnings:
             typer.echo(
-                tr(
-                    t(
-                        f"error de validación: {warning}",
-                        f"validation error: {warning}",
-                        f"error de validació: {warning}",
-                        f"validacios hiba: {warning}",
-                    )
-                ),
+                tr("financial.ingest.t_845188"),
                 err=True,
             )
         raise typer.Exit(code=2)
-    for warning in validation.warnings:
+    for _warning in validation.warnings:
         typer.echo(
-            tr(
-                t(
-                    f"aviso: {warning}",
-                    f"warning: {warning}",
-                    f"avís: {warning}",
-                    f"figyelmeztetes: {warning}",
-                )
-            ),
+            tr("financial.ingest.t_985130"),
             err=True,
         )
     try:
@@ -194,14 +173,7 @@ def ingest_cmd(
             exc_info=True,
         )
         typer.echo(
-            tr(
-                t(
-                    f"error de ingesta: {exc}",
-                    f"ingest error: {exc}",
-                    f"error d'ingesta: {exc}",
-                    f"betoltesi hiba: {exc}",
-                )
-            ),
+            tr("financial.ingest.t_965742"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
@@ -233,30 +205,21 @@ def ingest_cmd(
             typer.echo(summary.model_dump_json(), err=True)
         else:
             typer.echo(
-                tr(
-                    t(
-                        f"ingeridos {len(transactions)} registro(s) vía {provider_impl.name}",
-                        f"ingested {len(transactions)} record(s) via {provider_impl.name}",
-                        f"ingerits {len(transactions)} registre(s) via {provider_impl.name}",
-                        f"betoltve {len(transactions)} rekord ezzel: {provider_impl.name}",
-                    )
-                ),
+                tr("financial.ingest.t_480489"),
                 err=True,
             )
         return
 
     _CONSOLE.print(
         "[green]"
-        + tr(t("ingeridos", "ingested", "ingerits", "betoltve"))
+        + tr("financial.ingest.t_434310")
         + f"[/green] {len(transactions)} "
-        + tr(t("registro(s) vía", "record(s) via", "registre(s) via", "rekord ezzel:"))
+        + tr("financial.ingest.t_591400")
         + f" [bold]{provider_impl.name}[/bold]",
     )
     if summary is not None:
         _CONSOLE.print(
-            "[green]"
-            + tr(t("persistidos", "persisted", "persistits", "elmentve"))
-            + f"[/green] imported={summary.imported} "
+            "[green]" + tr("financial.ingest.t_860156") + f"[/green] imported={summary.imported} "
             f"skipped={summary.skipped} catalogue={summary.catalogue_path}",
         )
     if verbose:

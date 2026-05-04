@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -46,8 +45,11 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+from ...core.i18n import Translatable
+
+
 def _summary(text: str = "demo") -> Translatable:
-    return {"es": text, "en": text, "hu": text}
+    return Translatable("translation")
 
 
 def _build_settings(tmp_path: Path) -> Settings:

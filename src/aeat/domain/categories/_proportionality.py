@@ -105,6 +105,7 @@ class ProportionalityKind(StrEnum):
     USAGE_RATIO_HOME_AREA = "usage_ratio_home_area"
     STATUTORY_CAP = "statutory_cap"
     NON_DEDUCTIBLE = "non_deductible"
+    REQUIRES_EXCLUSIVE_USE = "requires_exclusive_use"
 
 
 class StatutoryCapPeriod(StrEnum):

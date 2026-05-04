@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Consulta de pagos",
-        "en": "Payment and NRC enquiry",
-        "hu": "Kifizetések és NRC lekérdezése",
-    },
+    label="entries.portal_consulta_pagos.label_872613",
     purpose_es="Consulta del estado de pagos realizados y recuperación de NRC generados.",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the payment / NRC enquiry page."""

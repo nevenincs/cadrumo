@@ -25,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Pago de liquidaciones y deudas",
-        "en": "Payment of liquidations and debts",
-        "hu": "Adókivetések és tartozások kifizetése",
-    },
+    label="entries.portal_pago_liquidaciones_deudas.label_907488",
     purpose_es="Pago de liquidaciones tributarias y deudas notificadas por la AEAT.",
 )
 """Portal entry for paying AEAT-notified tax liquidations and debts."""

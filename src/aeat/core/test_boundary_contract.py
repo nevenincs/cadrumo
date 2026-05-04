@@ -43,10 +43,7 @@ def _absolute_import_name(module: str | None, names: list[ast.alias]) -> str:
 
 def _resolve_relative_import(path: Path, level: int, module: str | None) -> str:
     package_parts = list(path.with_suffix("").relative_to(Path("src")).parts)
-    if package_parts[-1] == "__init__":
-        package_parts = package_parts[:-1]
-    else:
-        package_parts = package_parts[:-1]
+    package_parts = package_parts[:-1] if package_parts[-1] == "__init__" else package_parts[:-1]
     if level:
         package_parts = package_parts[: len(package_parts) - level + 1]
     if module:

@@ -7,7 +7,7 @@ the loader idiom permits it, per the project-wide pydantic v2
 mandate.
 
 Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
-:class:`aeat.core.i18n.Translatable`. Modelo field cross-references
+:class:`aeat.core.i18n.str`. Modelo field cross-references
 are stored as validated strings (``MODELO_130:01`` shape) so the
 manuals corpus stays loadable even when a citation references a
 field that has not yet been promoted into a validated registry
@@ -29,7 +29,6 @@ from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from ...core.i18n import Translatable
 from ..modelos import ModeloCode
 
 # Modelo field cross-reference syntax used inside extracted rules.
@@ -117,9 +116,9 @@ _LegalActRef = Annotated[str, StringConstraints(strip_whitespace=True, min_lengt
 _YearField = Annotated[int, Field(ge=2000, le=2100)]
 
 
-def _require_spanish(translatable: Translatable, field_name: str) -> None:
-    """Assert a :class:`~aeat.core.i18n.Translatable` carries the authoritative ``es`` key."""
-    if not translatable.get("es"):
+def _require_spanish(translatable: str, field_name: str) -> None:
+    """Assert a :class:`~aeat.core.i18n.str` carries the authoritative ``es`` key."""
+    if not translatable:
         raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
@@ -227,7 +226,7 @@ class Rule(_ManualStrictFrozen):
     chapter_id: _StableId
     section_id: _StableId
     kind: RuleKind
-    statement: Translatable = Field(description="Rule statement in all supplied languages.")
+    statement: str = Field(description="Rule statement in all supplied languages.")
     applies_when: str | None = Field(
         default=None,
         description="Optional natural-language predicate describing the rule's applicability.",
@@ -286,8 +285,8 @@ class Section(_ManualStrictFrozen):
 
     section_id: _StableId
     chapter_id: _StableId
-    title: Translatable
-    summary: Translatable
+    title: str
+    summary: str
     prose: tuple[Paragraph, ...] = Field(default_factory=tuple)
     rules: tuple[Rule, ...] = Field(default_factory=tuple)
     references_sections: tuple[_StableId, ...] = Field(default_factory=tuple)
@@ -307,8 +306,8 @@ class Chapter(_ManualStrictFrozen):
     """A handbook chapter: metadata plus ordered section references."""
 
     chapter_id: _StableId
-    title: Translatable
-    summary: Translatable
+    title: str
+    summary: str
     sections: tuple[SectionRef, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
@@ -324,8 +323,8 @@ class Manual(_ManualStrictFrozen):
     manual_id: ManualId
     year: _YearField
     part: ManualPart
-    title: Translatable
-    summary: Translatable
+    title: str
+    summary: str
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
     fetched_at: datetime

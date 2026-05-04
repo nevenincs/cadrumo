@@ -20,7 +20,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionError,
 )
-from .._i18n import t, tr
+from .._i18n import tr
 
 _logger = get_logger(__name__)
 
@@ -85,14 +85,7 @@ def load_catalogue_required() -> TransactionCatalogue:
         raise typer.Exit(code=2) from exc
     if len(catalogue) == 0 and not repo.envelope_path.exists():
         typer.echo(
-            tr(
-                t(
-                    f"catálogo de transacciones no encontrado en {repo.envelope_path}",
-                    f"transaction catalogue not found at {repo.envelope_path}",
-                    f"catàleg de transaccions no trobat a {repo.envelope_path}",
-                    f"tranzakciókatalógus nem található itt: {repo.envelope_path}",
-                )
-            ),
+            tr("financial.catalogue.t_854600"),
             err=True,
         )
         raise typer.Exit(code=2)

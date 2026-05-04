@@ -32,7 +32,6 @@ from typing import Any
 from pydantic import TypeAdapter, ValidationError
 
 from ...core.config import Settings, load_settings
-from ...core.i18n import Language, TranslationError, get_translation
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
 from ._schema import (
@@ -259,7 +258,7 @@ def find_rules(
     *,
     casilla_id: str | None = None,
     kind: RuleKind | None = None,
-    lang: Language | None = None,
+    lang: str | None = None,
     settings: Settings | None = None,
 ) -> Iterator[Rule]:
     """Iterate every :class:`Rule` in ``catalogue`` matching the filters.
@@ -271,7 +270,7 @@ def find_rules(
             ``references_casillas`` does not contain this value are
             skipped.
         kind: Optional :class:`RuleKind` filter.
-        lang: Optional :class:`Language` filter. When provided, rules
+        lang: Optional :class:`str` filter. When provided, rules
             whose statement cannot be resolved into ``lang`` under the
             configured fallback policy are skipped.
         settings: Optional settings instance.
@@ -291,17 +290,10 @@ def find_rules(
                 yield rule
 
 
-def _rule_renders_in_language(rule: Rule, lang: Language) -> bool:
+def _rule_renders_in_language(rule: Rule, lang: str) -> bool:
     """Return ``True`` when the rule statement resolves in ``lang``.
 
-    Wrapping the fallback-aware
-    :func:`~aeat.core.i18n.get_translation` lookup in a helper keeps
-    the :func:`find_rules` loop free of bare ``except Exception``
-    handlers; translation failures are a recognised skip signal, not
-    a programming error.
+    Translation resolution is delegated to the CLI presentation layer;
+    the domain rule always renders its abstract key.
     """
-    try:
-        get_translation(rule.statement, lang)
-    except TranslationError:
-        return False
     return True

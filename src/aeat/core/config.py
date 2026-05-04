@@ -232,7 +232,7 @@ class Settings(BaseSettings):
         default="es,en,ca,hu",
         description=(
             "Comma-separated fallback chain consulted when the target "
-            "language is missing on a Translatable. Default puts Spanish "
+            "language is missing on a str. Default puts Spanish "
             "first so AEAT legal text stays canonical, then English, then "
             "the remaining co-official locales."
         ),

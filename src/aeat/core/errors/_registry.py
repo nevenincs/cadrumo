@@ -154,10 +154,9 @@ def resolve_output_language() -> str:
 
     try:
         from ..config import load_settings
-        from ..i18n import Language
 
         value = load_settings().aeat_output_language
-        return Language(value).value
+        return str(value)
     except (ValueError, OSError):
         return "es"
 
@@ -252,16 +251,8 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
 
     resolved_code = code or get_registered_error_code(error)
     translated_message = getattr(error, "translated_message", None)
-    if isinstance(translated_message, Mapping):
-        try:
-            from ..i18n import Language, TranslationError, get_translation
-        except ImportError:
-            translated_message = None
-        else:
-            try:
-                return get_translation(translated_message, Language(resolve_output_language()))
-            except (TranslationError, TypeError, ValueError):
-                translated_message = None
+    if isinstance(translated_message, str) and translated_message:
+        return translated_message
     if error.args and isinstance(error.args[0], str) and error.args[0]:
         return error.args[0]
     language = resolve_output_language()

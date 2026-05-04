@@ -9,6 +9,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.i18n import Translatable
 from ...domain.transactions import TransactionCatalogue
 from . import (
     SCHEMA_VERSION_DEFAULT,
@@ -202,13 +203,13 @@ def test_iter_findings_threshold() -> None:
         casilla_id=None,
         severity=FilingFindingSeverity.ERROR,
         code="x",
-        message={"en": "x"},
+        message=Translatable("translation"),
     )
     finding_info = FilingValidationFinding(
         casilla_id=None,
         severity=FilingFindingSeverity.INFO,
         code="y",
-        message={"en": "y"},
+        message=Translatable("translation"),
     )
     draft = _draft().model_copy(update={"findings": (finding_error, finding_info)})
     warnings_or_errors = list(iter_findings(draft, severity_at_least="WARNING"))

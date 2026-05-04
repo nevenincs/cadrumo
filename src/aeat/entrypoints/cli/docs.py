@@ -20,7 +20,7 @@ from ._docs_helpers import (
     extract_plaintext,
     find_end_index,
 )
-from ._i18n import t, tr
+from ._i18n import tr
 
 app = typer.Typer(name="docs", no_args_is_help=True, help="Google Docs helpers.")
 
@@ -63,14 +63,7 @@ def append(
     """Append text to the end of a document."""
     if not text:
         typer.secho(
-            tr(
-                t(
-                    "el texto no puede estar vacío",
-                    "text must not be empty",
-                    "el text no pot ser buit",
-                    "a szöveg nem lehet üres",
-                )
-            ),
+            tr("cli.docs.t_771049"),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -81,16 +74,7 @@ def append(
         documentId=doc_id,
         body={"requests": build_append_request(text, end_index)},
     ).execute()
-    typer.echo(
-        tr(
-            t(
-                f"añadidos {len(text)} caracteres en el índice {end_index}",
-                f"appended {len(text)} characters at index {end_index}",
-                f"afegits {len(text)} caràcters a l'índex {end_index}",
-                f"hozzáfűzve {len(text)} karakter a(z) {end_index} pozícióban",
-            )
-        )
-    )
+    typer.echo(tr("cli.docs.t_372230"))
 
 
 @app.command(name="replace", help="Find and replace text inside a document.")
@@ -110,17 +94,8 @@ def replace(
         .execute()
     )
     replies = response.get("replies", [])
-    occurrences = sum(reply.get("replaceAllText", {}).get("occurrencesChanged", 0) for reply in replies)
-    typer.echo(
-        tr(
-            t(
-                f"reemplazadas {occurrences} ocurrencia(s)",
-                f"replaced {occurrences} occurrence(s)",
-                f"reemplaçades {occurrences} ocurrència(es)",
-                f"lecserélve {occurrences} előfordulás",
-            )
-        )
-    )
+    sum(reply.get("replaceAllText", {}).get("occurrencesChanged", 0) for reply in replies)
+    typer.echo(tr("cli.docs.t_327883"))
 
 
 __all__ = [

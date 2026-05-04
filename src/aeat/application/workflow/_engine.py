@@ -31,7 +31,6 @@ from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
-from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
 from ...domain.submission import SubmissionPreflightError
@@ -131,9 +130,9 @@ def _classify_cert_expiry(
     return (CertificateHealthSeverity.OK, days_until_expiry)
 
 
-def _t(en: str) -> Translatable:
-    """Build a :class:`Translatable` carrying a single English message."""
-    return cast(Translatable, {"en": en})
+def _t(en: str) -> str:
+    """Build a :class:`str` carrying a single English message."""
+    return cast(str, {"en": en})
 
 
 def _enum_value(value: object) -> str:
@@ -297,7 +296,7 @@ class WorkflowEngine:
         draft: FilingDraftLike | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
-        abort_summary: Translatable | None = None
+        abort_summary: str | None = None
 
         try:
             self._stage_loading_profile(profile, steps)
@@ -372,7 +371,7 @@ class WorkflowEngine:
             started_at=started_at,
         )
 
-        summary: Translatable
+        summary: str
         if final_stage is WorkflowStage.DONE:
             summary = _t(f"Workflow completed: modelo={modelo_for_hash} period={period_for_hash}")
         elif abort_summary is not None:
