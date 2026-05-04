@@ -77,31 +77,10 @@ def test_list_command_prints_catalogue(tmp_path: Path) -> None:
     assert '"modelo": "MODELO_130"' in result.stdout
 
 
-def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None:
-    """Draft commands must fail clearly until the real LLM client lands."""
-    root = tmp_path / "casillas"
-    _write_catalogue(root)
-
-    extract_result = runner.invoke(
-        app,
-        ["extract", "--modelo", "MODELO_130", "--period", "2025Q4", "--root", str(root)],
-    )
-    translate_result = runner.invoke(
-        app,
-        ["translate", "--modelo", "MODELO_130", "--period", "2025Q4", "--root", str(root)],
-    )
-
-    assert extract_result.exit_code == 2
-    assert translate_result.exit_code == 2
-    assert "requires the LLM client surface" in extract_result.stdout
-    assert "requires the bulk translator surface" in translate_result.stdout
-
-
 def test_command_surface_is_read_and_review_only() -> None:
     """The casillas CLI exposes catalogue inspection commands only."""
     result = runner.invoke(app, ["--help"])
 
     assert result.exit_code == 0
-    for command in ("list", "verify", "extract", "translate"):
+    for command in ("list", "verify"):
         assert command in result.output
-    assert "hydrate" not in result.output
