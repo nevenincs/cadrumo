@@ -8,7 +8,17 @@ from pathlib import Path
 
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
-from ._schema import DatedValue, LegalReference, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
+from ._runtime_graph import expression_casilla_refs
+from ._schema import (
+    DatedValue,
+    FormulaExpression,
+    LegalReference,
+    ModeloDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    RegistryCatalogues,
+    SourceReference,
+)
 from ._sources import verify_source_catalogue
 
 
@@ -116,13 +126,16 @@ class RegistryValidator:
             )
             if formula.target not in casillas:
                 failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target!r}")
-            for arg in formula.args:
-                if arg.casilla is not None and arg.casilla not in casillas:
-                    failures.append(f"{prefix}: formula {formula.id!r} references unknown casilla {arg.casilla!r}")
-                if arg.parameter is not None and arg.parameter not in parameters:
-                    failures.append(f"{prefix}: formula {formula.id!r} references unknown parameter {arg.parameter!r}")
-                if arg.relation is not None and arg.relation not in relations:
-                    failures.append(f"{prefix}: formula {formula.id!r} references unknown relation {arg.relation!r}")
+            failures.extend(
+                self._validate_formula_expression(
+                    prefix,
+                    formula.id,
+                    formula.expression,
+                    casillas=casillas,
+                    parameters=parameters,
+                    relations=relations,
+                )
+            )
 
         for target in sorted(_duplicates([formula.target for formula in revision.formulas])):
             failures.append(f"{prefix}: duplicate formula target {target!r}")
@@ -263,13 +276,37 @@ class RegistryValidator:
         for index, current in enumerate(revisions[1:], start=1):
             previous = revisions[index - 1]
             previous_to = previous.valid_to
-            if (previous_to is None or previous_to >= current.valid_from) and set(
-                previous.period_selector.periods
-            ).intersection(current.period_selector.periods):
+            if (
+                previous_to is None or previous_to >= current.valid_from
+            ) and RegistryValidator._period_selectors_overlap(previous.period_selector, current.period_selector):
                 failures.append(
                     f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector"
                 )
         return failures
+
+    @staticmethod
+    def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+        if not set(left.periods).intersection(right.periods):
+            return False
+        return RegistryValidator._year_selectors_overlap(left, right)
+
+    @staticmethod
+    def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+        if left.years and right.years:
+            return bool(set(left.years).intersection(right.years))
+        if left.years:
+            return any(right.includes_year(year) for year in left.years)
+        if right.years:
+            return any(left.includes_year(year) for year in right.years)
+        left_from = left.year_from
+        right_from = right.year_from
+        if left_from is None or right_from is None:
+            return False
+        left_to = left.year_to
+        right_to = right.year_to
+        if left_to is not None and left_to < right_from:
+            return False
+        return not (right_to is not None and right_to < left_from)
 
     @staticmethod
     def _validate_dated_values(scope: str, parameter_id: str, values: Iterable[DatedValue]) -> list[str]:
@@ -292,10 +329,43 @@ class RegistryValidator:
         formula_targets = {formula.target for formula in revision.formulas}
         sorter: TopologicalSorter[str] = TopologicalSorter()
         for formula in revision.formulas:
-            dependencies = [arg.casilla for arg in formula.args if arg.casilla in formula_targets]
-            sorter.add(formula.target, *(dep for dep in dependencies if dep is not None))
+            dependencies = [
+                casilla for casilla in expression_casilla_refs(formula.expression) if casilla in formula_targets
+            ]
+            sorter.add(formula.target, *dependencies)
         try:
             tuple(sorter.static_order())
         except CycleError as exc:
             return [f"{scope}: formula graph cycle: {exc}"]
         return []
+
+    @classmethod
+    def _validate_formula_expression(
+        cls,
+        scope: str,
+        formula_id: str,
+        expression: FormulaExpression,
+        *,
+        casillas: set[str],
+        parameters: set[str],
+        relations: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        if expression.casilla is not None and expression.casilla not in casillas:
+            failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla!r}")
+        if expression.parameter is not None and expression.parameter not in parameters:
+            failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
+        if expression.relation is not None and expression.relation not in relations:
+            failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
+        for arg in expression.args:
+            failures.extend(
+                cls._validate_formula_expression(
+                    scope,
+                    formula_id,
+                    arg,
+                    casillas=casillas,
+                    parameters=parameters,
+                    relations=relations,
+                )
+            )
+        return failures

@@ -1,0 +1,24 @@
+[legal."rd-439-2007:art-110"]
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-110"
+document_id = "BOE-A-2007-6820"
+article = "110"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-04-12
+reviewed_by = "wgergely"
+notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas."
+
+[sources."aeat-dr-130-2019-v12"]
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
+sha256 = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
+bytes = 180736
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls"
+review_status = "reviewed"
