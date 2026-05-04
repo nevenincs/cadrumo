@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 
+from ...core.paths import PROJECT_ROOT
+from ...domain.calculations.registry import (
+    RegistrySnapshot,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+)
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
     SCHEMA_VERSION_DEFAULT,
@@ -86,35 +95,161 @@ def build_draft(
     deadline_checker: DeadlineChecker | None = None,
     fail_on_warning: bool = False,
 ) -> FilingDraft:
-    """Reject draft construction until validated registry snapshots exist.
+    """Build and validate a filing draft from a registry snapshot.
 
     Args:
         modelo: Stable modelo string ID.
         period: Period identifier.
         profile: Taxpayer profile the draft would be built for.
         inputs: Raw filing inputs.
-        schema_provider: Registry-backed casilla schema provider placeholder.
-        deadline_checker: Optional deadline checker placeholder.
-        fail_on_warning: Accepted by the current command contract; ignored
-            while the registry-backed builder is unavailable.
+        schema_provider: Registry-backed casilla schema provider.
+        deadline_checker: Optional deadline checker.
+        fail_on_warning: Raise when validation produces any warning or error.
 
     Raises:
-        FilingBuilderError: Always, until a validated registry snapshot
-            builder is available.
+        FilingBuilderError: If the registry has no matching snapshot,
+            inputs are malformed, or strict validation fails.
     """
 
-    _ = (
-        modelo,
-        period,
-        profile,
-        inputs,
-        schema_provider,
-        deadline_checker,
-        fail_on_warning,
+    snapshot = _load_registry_snapshot(modelo=modelo, period=period)
+    collection = schema_provider.get_collection(modelo)
+    if collection.schema_version != f"registry:{snapshot.modelo.id}:{snapshot.revision.id}":
+        raise FilingBuilderError(
+            f"schema provider version {collection.schema_version!r} does not match registry snapshot "
+            f"{snapshot.revision.id!r}"
+        )
+    decimal_inputs = _decimal_inputs(inputs)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=decimal_inputs,
+        date_context={"filing_period": _filing_period_date(period)},
     )
-    raise FilingBuilderError(
-        "filing draft construction requires a validated registry snapshot; Python filing builders are unavailable"
+    entries = {entry.target: entry for entry in result.entries}
+    schema_ids = {casilla.id for casilla in collection.all()}
+    values: list[FilingValue] = []
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind == "computed":
+            entry = entries[casilla.id]
+            trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
+            values.append(
+                FilingValue(
+                    casilla_id=casilla.id,
+                    value=result.values[casilla.id],
+                    kind=FilingValueKind.COMPUTED,
+                    source=f"registry formula {entry.formula_id}",
+                    formula_trace=trace,
+                )
+            )
+            continue
+        if casilla.id in decimal_inputs:
+            values.append(
+                FilingValue(
+                    casilla_id=casilla.id,
+                    value=decimal_inputs[casilla.id],
+                    kind=FilingValueKind.LITERAL,
+                    source="registry input",
+                )
+            )
+            continue
+        values.append(
+            FilingValue(
+                casilla_id=casilla.id,
+                value=None,
+                kind=FilingValueKind.EMPTY,
+                source="registry schema",
+            )
+        )
+    created_at = utc_now()
+    value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
+    draft = FilingDraft(
+        draft_id=compute_draft_id(
+            modelo=modelo,
+            period=period,
+            profile_tax_id=profile.tax_id,
+            schema_version=collection.schema_version,
+            values=value_tuple,
+        ),
+        modelo=modelo,
+        period=period,
+        profile_tax_id=profile.tax_id,
+        status=FilingDraftStatus.DRAFT,
+        values=value_tuple,
+        created_at=created_at,
+        updated_at=created_at,
+        schema_version=collection.schema_version,
     )
+    validator = FilingValidator(schema_provider=schema_provider, deadline_checker=deadline_checker)
+    findings = validator.validate(draft)
+    if fail_on_warning and findings:
+        raise FilingBuilderError("draft validation produced findings under fail_on_warning")
+    return apply_validation(draft, findings)
+
+
+def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
+    filing_year, registry_period = _registry_period(period)
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    by_id = {definition.id: definition for definition in modelos}
+    try:
+        definition = by_id[modelo]
+    except KeyError as exc:
+        raise FilingBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+    return build_snapshot(
+        definition,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period=registry_period,
+    )
+
+
+_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
+_MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
+_ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
+
+
+def _registry_period(period: str) -> tuple[int, str]:
+    if match := _QUARTER_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), f"{match.group('quarter')}T"
+    if match := _MONTH_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), match.group("month")
+    if match := _ANNUAL_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), "0A"
+    raise FilingBuilderError(f"cannot map filing period {period!r} to a registry period")
+
+
+def _filing_period_date(period: str) -> date:
+    filing_year, registry_period = _registry_period(period)
+    if registry_period == "1T":
+        return date(filing_year, 3, 31)
+    if registry_period == "2T":
+        return date(filing_year, 6, 30)
+    if registry_period == "3T":
+        return date(filing_year, 9, 30)
+    if registry_period == "4T":
+        return date(filing_year, 12, 31)
+    if registry_period == "0A":
+        return date(filing_year, 12, 31)
+    return date(filing_year, int(registry_period), 1)
+
+
+def _decimal_inputs(inputs: FilingInputs) -> dict[str, Decimal]:
+    decimal_inputs: dict[str, Decimal] = {}
+    for casilla_id, value in inputs.items():
+        if value is None:
+            continue
+        if isinstance(value, bool):
+            raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value")
+        if isinstance(value, Decimal):
+            decimal_inputs[casilla_id] = value
+            continue
+        if isinstance(value, int | str):
+            try:
+                decimal_inputs[casilla_id] = Decimal(value)
+            except Exception as exc:
+                raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value") from exc
+            continue
+        raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value")
+    return decimal_inputs
 
 
 def validate_draft(
