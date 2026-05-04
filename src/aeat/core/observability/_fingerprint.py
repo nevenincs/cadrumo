@@ -49,7 +49,7 @@ def _hash_tree(
 
     Uses :func:`os.walk` with top-down directory pruning so excluded
     subtrees are never descended — on a workstation with tens of GB
-    of LLM / schema cache under ``var/`` this is orders of magnitude
+    of LLM and status cache data under ``var/`` this is orders of magnitude
     faster than walking everything and filtering after the fact.
 
     Args:
@@ -144,7 +144,7 @@ def compute_db_sha256(var_dir: Path) -> str:
 
     Excludes caches, build artefacts, and self-referencing observability
     outputs so the hash is stable across observability writes and
-    LLM/schema/status lookups that would otherwise flap on every read.
+    LLM/status lookups that would otherwise flap on every read.
     The curated list covers every ``var/`` subdirectory that
     :class:`aeat.core.config.Settings` treats as a cache, log, or
     replay-internal artefact, plus every ``var/`` subdirectory the
@@ -154,7 +154,6 @@ def compute_db_sha256(var_dir: Path) -> str:
     - ``var/browser-traces/`` — Playwright session traces.
     - ``var/llm-cache/``, ``var/llm-usage/`` — LLM prompt cache + usage
       meters; drift on every model call.
-    - ``var/schema-cache/`` — derived Modelo schema cache.
     - ``var/status-cache/`` — AEAT status-reader cache.
     - ``var/backups/`` — storage layer backups (non-canonical copies).
     - ``var/packaging-smoke/``, ``var/editable-smoke/`` — release
@@ -181,7 +180,6 @@ def compute_db_sha256(var_dir: Path) -> str:
                 "browser-traces",
                 "llm-cache",
                 "llm-usage",
-                "schema-cache",
                 "status-cache",
                 "backups",
                 "packaging-smoke",
