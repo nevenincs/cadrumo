@@ -2,9 +2,8 @@
 
 The persisted amendment records live in :mod:`aeat.domain.filing`. This
 application module keeps the load/list surfaces available, but amendment
-construction is fail-closed until registry-backed amendment definitions
-provide amendment kind, legal period rules, liability anchors, and delta
-semantics.
+construction requires registry-backed amendment definitions providing
+amendment kind, legal period rules, liability anchors, and delta semantics.
 """
 
 from __future__ import annotations
@@ -40,8 +39,7 @@ def build_complementaria(
 
     del original, updated_inputs, schema_provider
     raise FilingBuilderError(
-        "complementaria construction requires validated registry snapshots; "
-        "legacy Python amendment anchors are disabled"
+        "complementaria construction requires validated registry snapshots; Python amendment anchors are unavailable"
     )
 
 

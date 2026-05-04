@@ -28,17 +28,13 @@ _FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 
 @pytest.fixture(scope="module")
 def schema_provider():
-    """Return a placeholder provider; build_draft fails before using it."""
-    return object()
+    return build_runtime_schema_provider()
 
 
-def test_runtime_schema_provider_requires_registry_snapshot() -> None:
-    with pytest.raises(FilingImportError) as exc_info:
-        try:
-            build_runtime_schema_provider()
-        except Exception as exc:
-            raise FilingImportError(str(exc)) from exc
-    assert "registry snapshots" in str(exc_info.value)
+def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
+    collection = build_runtime_schema_provider().get_collection("130")
+
+    assert collection.get("19") is not None
 
 
 class TestImportFromJustificante:
@@ -51,7 +47,7 @@ class TestImportFromJustificante:
 
     def test_modelo_130_does_not_emit_companion_submission_without_registry(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="legacy Python filing builders are disabled"):
+        with pytest.raises(FilingImportError, match="Python filing builders are unavailable"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_modelo_303_requires_registry_snapshot(self, schema_provider) -> None:

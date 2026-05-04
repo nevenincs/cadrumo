@@ -23,8 +23,7 @@ The public surface is intentionally narrow:
   :func:`session_scope`.
 - Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
   :class:`CorpusArtifactRepository`.
-- Migration helpers — :func:`upgrade_to_head`, :func:`downgrade_to_base`,
-  :func:`round_trip_migrations`.
+- Schema upgrade helper — :func:`upgrade_to_head`.
 - Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
@@ -146,12 +145,10 @@ from .master_key._master_key import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    MigrationResult,
     UnsecuredMasterKeyProvider,
     atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
-    migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
 from .master_key._recovery import (
@@ -167,7 +164,7 @@ from .master_key._recovery import (
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
-from .sql.migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
+from .sql.migrations_api import upgrade_to_head
 from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
 from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
 from .sql.session import get_sessionmaker, session_scope
@@ -219,7 +216,6 @@ __all__ = [
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
     "MigrationError",
-    "MigrationResult",
     "ModeloRecord",
     "ModeloRepository",
     "NonceCollisionError",
@@ -262,7 +258,6 @@ __all__ = [
     "default_rules_for_class",
     "derive_key",
     "dispose_engine",
-    "downgrade_to_base",
     "encode_mnemonic",
     "encrypt_record",
     "exclusive_file_lock",
@@ -279,7 +274,6 @@ __all__ = [
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
-    "migrate_master_key_kdf",
     "override_master_key_provider",
     "override_secret_store",
     "redact",
@@ -289,7 +283,6 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "rotate_blob_stores",
     "rotate_master_key",
-    "round_trip_migrations",
     "safe_record_path",
     "safe_repository_id",
     "safe_subpath",

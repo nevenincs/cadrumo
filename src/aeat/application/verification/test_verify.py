@@ -1,4 +1,4 @@
-"""Unit tests for the verification fail-closed boundary."""
+"""Unit tests for the verification registry boundary."""
 
 from __future__ import annotations
 

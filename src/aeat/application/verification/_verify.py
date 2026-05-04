@@ -1,8 +1,8 @@
 """Registry-gated declaration verification boundary.
 
 Parsed declaración verification is filing-grade calculation work. Until
-that path is backed by validated registry snapshots, the public entry
-point fails closed instead of reaching legacy rulesets.
+that path is backed by validated registry snapshots, verification is not
+available.
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ def verify_declaracion(
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
-        ruleset: Legacy placeholder argument kept while call sites are
-            migrated to registry snapshots.
+        ruleset: Calculation source placeholder until registry snapshots
+            reach this boundary.
         tolerance: Maximum absolute delta between printed and computed
             values to still count as a match. Defaults to ``0.01`` (one
             cent).
@@ -70,8 +70,7 @@ def verify_declaracion(
     """
     _ = (declaracion, ruleset, tolerance)
     raise ValueError(
-        "declaracion verification requires a validated registry snapshot; "
-        "legacy formula rulesets are disabled",
+        "declaracion verification requires a validated registry snapshot; formula rulesets are unavailable",
     )
 
 
@@ -102,8 +101,7 @@ def _classify_discrepancy(
             ),
             en=(f"Casilla {casilla_id}: the extractor flagged this value as low-confidence. Review the PDF manually."),
             ca=(
-                f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. "
-                "Revisa manualment el PDF."
+                f"Casella {casilla_id}: l'extractor ha marcat aquest valor com a poc fiable. Revisa manualment el PDF."
             ),
             hu=(f"{casilla_id} casilla: az extraktor alacsony magabiztosságúnak jelölte. Ellenőrizd a PDF-et kézzel."),
         )

@@ -2,9 +2,7 @@
 
 Exercises round-trip save/load, idempotent saves, list/iter and stray
 file filtering, deletion, the FINANCIAL classification gate, the
-unsafe-id rejection, the per-draft lock isolation, the legacy
-migration helper (including overwrite, unparseable input, and held-lock
-behaviour), and the frozen :class:`DraftMigrationSummary` record.
+unsafe-id rejection, and the per-draft lock isolation.
 """
 
 from __future__ import annotations
@@ -19,17 +17,12 @@ import pytest
 from ...adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
-    LockAcquisitionError,
     SecretStore,
     override_master_key_provider,
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from ...domain.filing._repository import (
-    DraftMigrationSummary,
-    FilingDraftRepository,
-    migrate_legacy_drafts_to_repository,
-)
+from ...domain.filing._repository import FilingDraftRepository
 from ...domain.filing._schema import FilingDraft
 from .testing import synthesize_filing_draft
 
@@ -220,146 +213,3 @@ class TestPerDraftLockIsolation:
         assert a != b
         assert a.parent == store_dir
         assert b.parent == store_dir
-
-
-class TestMigration:
-    def test_migrate_legacy_drafts(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        d1 = _make_draft(period="2026Q1", ingresos=10000)
-        d2 = _make_draft(period="2026Q2", ingresos=20000)
-        for draft in (d1, d2):
-            (legacy_dir / f"130_{draft.period}_{draft.draft_id}.json").write_text(
-                draft.model_dump_json(),
-                encoding="utf-8",
-            )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        summary = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        assert isinstance(summary, DraftMigrationSummary)
-        assert summary.imported == 2
-        assert summary.skipped == 0
-        assert summary.errors == 0
-        loaded_ids = set(repo.list_draft_ids())
-        assert loaded_ids == {d1.draft_id, d2.draft_id}
-
-    def test_re_migrate_skips_already_present(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        draft = _make_draft()
-        (legacy_dir / f"130_{draft.period}_{draft.draft_id}.json").write_text(
-            draft.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        first = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        assert first.imported == 1
-        second = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        assert second.imported == 0
-        assert second.skipped == 1
-
-    def test_migrate_with_overwrite_replaces(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingDraftRepository(store_dir=store_dir)
-        original = _make_draft(ingresos=10000)
-        repo.save(original)
-        # Build a *different* draft with the same id by manually mutating
-        # the JSON would break content-addressing; instead we just assert
-        # overwrite=True does not raise on a non-empty destination.
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        (legacy_dir / f"130_{original.period}_{original.draft_id}.json").write_text(
-            original.model_dump_json(),
-            encoding="utf-8",
-        )
-        summary = migrate_legacy_drafts_to_repository(
-            legacy_dir,
-            repository=repo,
-            overwrite=True,
-        )
-        assert summary.imported == 1
-        assert summary.skipped == 0
-
-    def test_migrate_skips_unparseable_files(self, store_dir: Path, tmp_path: Path) -> None:
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        (legacy_dir / "broken.json").write_text("{ not valid json", encoding="utf-8")
-        valid = _make_draft()
-        (legacy_dir / f"130_{valid.period}_{valid.draft_id}.json").write_text(
-            valid.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        summary = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 1
-
-    def test_migrate_skips_existing_envelope_files(self, store_dir: Path, tmp_path: Path) -> None:
-        """Re-running over a directory that already contains envelope files is a no-op."""
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        # Place an envelope-suffix file in the legacy dir and ensure
-        # the migration ignores it (no error, no double-count).
-        (legacy_dir / "stray.envelope.json").write_text("{}", encoding="utf-8")
-        valid = _make_draft()
-        (legacy_dir / f"130_{valid.period}_{valid.draft_id}.json").write_text(
-            valid.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        summary = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        assert summary.imported == 1
-        assert summary.errors == 0
-
-    def test_migrate_missing_dir_raises(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingDraftRepository(store_dir=store_dir)
-        with pytest.raises(FileNotFoundError):
-            migrate_legacy_drafts_to_repository(tmp_path / "nope", repository=repo)
-
-
-class TestMigrationLockedPerDraft:
-    """The migration helper holds the per-draft lock for the duration of
-    each save. A concurrent writer that holds the same per-draft lock
-    must surface :class:`LockAcquisitionError`."""
-
-    def test_migration_blocked_by_held_per_draft_lock(
-        self,
-        store_dir: Path,
-        tmp_path: Path,
-        fast_lock_acquire,
-    ) -> None:
-        from ...adapters.persistence.storage import exclusive_file_lock
-        from ...domain.filing import _repository as _repo_module
-
-        fast_lock_acquire(_repo_module)
-
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        draft = _make_draft()
-        (legacy_dir / f"130_{draft.period}_{draft.draft_id}.json").write_text(
-            draft.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        # Pre-create the store dir so the lock target's parent exists.
-        store_dir.mkdir(parents=True, exist_ok=True)
-        with (
-            exclusive_file_lock(repo.lock_target_for(draft.draft_id)),
-            pytest.raises(LockAcquisitionError),
-        ):
-            migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-
-
-class TestSummaryFrozen:
-    def test_summary_is_frozen(self, store_dir: Path, tmp_path: Path) -> None:
-        from pydantic import ValidationError
-
-        legacy_dir = tmp_path / "legacy-drafts"
-        legacy_dir.mkdir()
-        draft = _make_draft()
-        (legacy_dir / f"130_{draft.period}_{draft.draft_id}.json").write_text(
-            draft.model_dump_json(),
-            encoding="utf-8",
-        )
-        repo = FilingDraftRepository(store_dir=store_dir)
-        summary = migrate_legacy_drafts_to_repository(legacy_dir, repository=repo)
-        with pytest.raises(ValidationError):
-            summary.imported = 99  # type: ignore[misc]

@@ -13,12 +13,6 @@ the operator uploaded plus AEAT's response. That is auditable evidence
 with identity-bearing context — :class:`SensitivityClass.AUDIT` per the
 default policy table.
 
-The repository does NOT replace the existing
-:meth:`aeat.domain.submission._engine.SubmissionEngine` reader; the
-migration helper :func:`migrate_legacy_submissions_to_repository` reads
-every legacy ``<submission_id>.json`` and persists each through the
-repository's envelope contract.
-
 Layered-import note: this module is a domain-side persistence carve-out:
 ``aeat.domain.submission._repository`` imports
 ``aeat.adapters.persistence.storage.*`` because every domain-owned
@@ -30,8 +24,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage import (
     Envelope,
@@ -58,27 +50,6 @@ _log = get_logger(__name__)
 _SUBMISSION_ENVELOPE_VERSION = 1
 _SUBMISSION_ENVELOPE_SUFFIX = ".envelope.json"
 _SUBMISSION_LOCK_SUFFIX = ".lock"
-
-
-class SubmissionMigrationSummary(BaseModel):
-    """Frozen summary of one ``migrate_legacy_submissions_to_repository`` call.
-
-    Attributes:
-        imported: Number of legacy submissions persisted by this call.
-        skipped: Number of legacy submissions already present in the
-            destination repository (idempotency hit).
-        errors: Number of legacy submission files the helper could not
-            parse; counted but not re-raised so a partial migration can
-            complete.
-        store_dir: Resolved path to the repository's store directory.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
-    errors: int = Field(default=0, ge=0)
-    store_dir: str
 
 
 class SubmissionRepository:
@@ -219,95 +190,8 @@ class SubmissionRepository:
                 yield payload
 
 
-def migrate_legacy_submissions_to_repository(
-    legacy_dir: Path,
-    *,
-    repository: SubmissionRepository,
-    overwrite: bool = False,
-) -> SubmissionMigrationSummary:
-    """Move legacy plaintext submission JSONs into the governed repository.
-
-    The legacy submission engine writes each submission as
-    ``<submission_id>.json`` containing the JSON serialisation of one
-    :class:`SubmittedFiling`. This helper reads every such file in
-    ``legacy_dir`` and persists each through the repository (which writes
-    the envelope under AUDIT class).
-
-    Args:
-        legacy_dir: Source directory containing legacy submission JSONs.
-            Sub-directories (e.g. ``amendment-results/``) are skipped;
-            those carry a different payload type.
-        repository: Destination repository.
-        overwrite: When ``True``, replaces any submission already
-            persisted in the repository. When ``False`` (default),
-            already-persisted submissions are counted under ``skipped``.
-
-    Returns:
-        A frozen :class:`SubmissionMigrationSummary`.
-
-    Raises:
-        FileNotFoundError: If ``legacy_dir`` does not exist.
-        NotADirectoryError: If ``legacy_dir`` is not a directory.
-    """
-    if not legacy_dir.exists():
-        raise FileNotFoundError(legacy_dir)
-    if not legacy_dir.is_dir():
-        raise NotADirectoryError(legacy_dir)
-    repository._store_dir.mkdir(parents=True, exist_ok=True)
-    imported = 0
-    skipped = 0
-    errors = 0
-    for path in sorted(legacy_dir.iterdir()):
-        if not path.is_file():
-            continue
-        if path.suffix != ".json":
-            continue
-        if path.name.endswith(_SUBMISSION_ENVELOPE_SUFFIX):
-            continue
-        try:
-            filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, OSError):
-            _log.warning("skipping unreadable legacy submission %s", path, exc_info=True)
-            errors += 1
-            continue
-        with exclusive_file_lock(repository.lock_target_for(filing.submission_id)):
-            target = repository.envelope_path_for(filing.submission_id)
-            if not overwrite and target.exists():
-                skipped += 1
-                continue
-            envelope = Envelope[SubmittedFiling](
-                schema_version=_SUBMISSION_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=filing,
-            )
-            save_encrypted_envelope(
-                envelope,
-                target,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_SUBMISSION,
-            )
-            imported += 1
-    _log.info(
-        "migrated legacy submissions from %s into %s: imported=%d skipped=%d errors=%d",
-        legacy_dir,
-        repository.store_dir,
-        imported,
-        skipped,
-        errors,
-    )
-    return SubmissionMigrationSummary(
-        imported=imported,
-        skipped=skipped,
-        errors=errors,
-        store_dir=str(repository.store_dir.resolve()),
-    )
-
-
 __all__ = [
     "ClassificationError",
     "EnvelopeVersionError",
-    "SubmissionMigrationSummary",
     "SubmissionRepository",
-    "migrate_legacy_submissions_to_repository",
 ]

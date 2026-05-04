@@ -20,7 +20,6 @@ from . import (
     load_casillas,
     verify_casillas,
 )
-from .catalogue import save_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -58,7 +57,7 @@ def _record(
 
 
 def test_casillas_exports_canonical_modelo_code() -> None:
-    """The casilla API must not expose a shadow ModeloCode enum."""
+    """The casilla API exposes the project-wide ModeloCode enum."""
 
     from . import ModeloCode
 
@@ -66,8 +65,8 @@ def test_casillas_exports_canonical_modelo_code() -> None:
     assert ModeloCode.MODELO_130.value == "130"
 
 
-def test_modelo_validator_accepts_canonical_and_legacy_modelo_ids() -> None:
-    """Corpus payloads keep legacy names while new boundaries use canonical codes."""
+def test_modelo_validator_accepts_canonical_and_corpus_prefixed_modelo_ids() -> None:
+    """Corpus payloads and boundary payloads both validate through one schema."""
 
     assert _record().modelo == "MODELO_130"
     assert CasillaCatalogue(modelo=CanonicalModeloCode.MODELO_130.value, period="2025Q4", records=()).modelo == "130"
@@ -151,13 +150,6 @@ def test_schema_upgrade_path_round_trips_optional_fields(tmp_path: Path) -> None
     assert '"definition_reviewed_at"' in payload
     assert '"reviewed_by"' not in payload
     assert '"reviewed_at"' not in payload
-
-
-def test_save_casillas_is_disabled(tmp_path: Path) -> None:
-    catalogue = CasillaCatalogue(modelo="MODELO_130", period="2025Q4", records=(_record(),))
-    with pytest.raises(CasillaParseError, match="registry/aeat"):
-        save_casillas(catalogue, root=tmp_path)
-    assert not list(tmp_path.rglob("*.json"))
 
 
 def test_llm_provenance_is_optional_but_strict() -> None:

@@ -41,6 +41,24 @@ ReviewStatus = Literal["reviewed", "provisional", "rejected"]
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
+FormulaOperator = Literal[
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+    "percent",
+    "sum",
+    "min",
+    "max",
+    "clamp",
+    "negate",
+    "copy",
+    "if_then_else",
+    "lookup_parameter",
+    "previous_period_value",
+    "previous_period_sum",
+    "cross_model_sum",
+]
 
 
 class RegistryModel(BaseModel):
@@ -50,7 +68,9 @@ class RegistryModel(BaseModel):
 
 
 class PeriodSelector(RegistryModel):
-    years: tuple[int, ...] = Field(min_length=1)
+    years: tuple[int, ...] = ()
+    year_from: int | None = None
+    year_to: int | None = None
     periods: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("periods")
@@ -59,6 +79,29 @@ class PeriodSelector(RegistryModel):
         if len(set(value)) != len(value):
             raise ValueError("period_selector periods must be unique")
         return value
+
+    @model_validator(mode="after")
+    def _validate_year_selector(self) -> PeriodSelector:
+        if self.years and self.year_from is not None:
+            raise ValueError("period_selector must use either years or year_from/year_to")
+        if not self.years and self.year_from is None:
+            raise ValueError("period_selector must declare years or year_from")
+        if len(set(self.years)) != len(self.years):
+            raise ValueError("period_selector years must be unique")
+        if self.year_to is not None and self.year_from is None:
+            raise ValueError("period_selector year_to requires year_from")
+        if self.year_from is not None and self.year_to is not None and self.year_to < self.year_from:
+            raise ValueError("period_selector year_to must be on or after year_from")
+        return self
+
+    def includes_year(self, year: int) -> bool:
+        """Return whether the selector covers a filing year."""
+
+        if self.years:
+            return year in self.years
+        if self.year_from is None:
+            return False
+        return year >= self.year_from and (self.year_to is None or year <= self.year_to)
 
 
 class TemporalApplicability(RegistryModel):
@@ -134,22 +177,32 @@ class SourceReference(RegistryModel):
         return value
 
 
-class FormulaArg(RegistryModel):
+class FormulaExpression(RegistryModel):
+    op: FormulaOperator | None = None
+    args: tuple[FormulaExpression, ...] = ()
     casilla: CasillaId | None = None
     parameter: ParameterId | None = None
     relation: RelationId | None = None
     literal: DecimalValue | None = None
 
     @model_validator(mode="after")
-    def _exactly_one_arg(self) -> FormulaArg:
-        populated = [
+    def _validate_expression(self) -> FormulaExpression:
+        populated_leaves = [
             self.casilla is not None,
             self.parameter is not None,
             self.relation is not None,
             self.literal is not None,
         ]
-        if sum(populated) != 1:
-            raise ValueError("formula arg must declare exactly one source")
+        if self.op is None:
+            if self.args:
+                raise ValueError("formula leaf must not declare args")
+            if sum(populated_leaves) != 1:
+                raise ValueError("formula leaf must declare exactly one source")
+            return self
+        if sum(populated_leaves):
+            raise ValueError("formula operator must not declare leaf sources")
+        if not self.args:
+            raise ValueError("formula operator must declare args")
         return self
 
 
@@ -187,25 +240,7 @@ class DataBindingDefinition(RegistryModel):
 class FormulaDefinition(RegistryModel):
     id: FormulaId
     target: CasillaId
-    op: Literal[
-        "add",
-        "subtract",
-        "multiply",
-        "divide",
-        "percent",
-        "sum",
-        "min",
-        "max",
-        "clamp",
-        "negate",
-        "copy",
-        "if_then_else",
-        "lookup_parameter",
-        "previous_period_value",
-        "previous_period_sum",
-        "cross_model_sum",
-    ]
-    args: tuple[FormulaArg, ...]
+    expression: FormulaExpression
     rounding: str | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs

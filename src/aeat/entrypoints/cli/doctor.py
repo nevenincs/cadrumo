@@ -1058,8 +1058,8 @@ def check_kdf_version(settings: Settings) -> Row:
         return Row(
             section="master.kdf version",
             required=True,
-            state=State.WARN,
-            detail=(f"v{version} (scrypt) — run `aeat security migrate-master-key-kdf` to upgrade to v2 (Argon2id)."),
+            state=State.PARTIAL,
+            detail=f"unsupported KDF version: {version!r}.",
         )
     return Row(
         section="master.kdf version",

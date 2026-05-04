@@ -13,8 +13,8 @@ from ._formula_runtime import calculate_registry_snapshot
 from ._schema import (
     CasillaDefinition,
     DatedValue,
-    FormulaArg,
     FormulaDefinition,
+    FormulaExpression,
     LegalReference,
     ModeloDefinition,
     ModeloRevision,
@@ -136,8 +136,10 @@ def test_registry_formula_runtime_calculates_in_dependency_order() -> None:
             FormulaDefinition(
                 id="quota",
                 target="02",
-                op="percent",
-                args=(FormulaArg(casilla="01"), FormulaArg(parameter="iva.rate")),
+                expression=FormulaExpression(
+                    op="percent",
+                    args=(FormulaExpression(casilla="01"), FormulaExpression(parameter="iva.rate")),
+                ),
                 rounding="money-2",
                 legal_refs=("ley-37-1992:art-90",),
                 source_refs=("aeat-dr-303",),
@@ -145,8 +147,10 @@ def test_registry_formula_runtime_calculates_in_dependency_order() -> None:
             FormulaDefinition(
                 id="total",
                 target="03",
-                op="add",
-                args=(FormulaArg(casilla="01"), FormulaArg(casilla="02")),
+                expression=FormulaExpression(
+                    op="add",
+                    args=(FormulaExpression(casilla="01"), FormulaExpression(casilla="02")),
+                ),
                 rounding="money-2",
                 legal_refs=("ley-37-1992:art-90",),
                 source_refs=("aeat-dr-303",),
@@ -184,8 +188,7 @@ def test_registry_formula_runtime_rejects_missing_parameter_axis() -> None:
             FormulaDefinition(
                 id="quota",
                 target="02",
-                op="lookup_parameter",
-                args=(FormulaArg(parameter="iva.rate"),),
+                expression=FormulaExpression(op="lookup_parameter", args=(FormulaExpression(parameter="iva.rate"),)),
                 rounding="money-2",
                 legal_refs=("ley-37-1992:art-90",),
                 source_refs=("aeat-dr-303",),
@@ -203,8 +206,10 @@ def test_registry_formula_runtime_uses_relation_values() -> None:
             FormulaDefinition(
                 id="quota",
                 target="02",
-                op="previous_period_value",
-                args=(FormulaArg(relation="previous-result"),),
+                expression=FormulaExpression(
+                    op="previous_period_value",
+                    args=(FormulaExpression(relation="previous-result"),),
+                ),
                 rounding="money-2",
                 legal_refs=("ley-37-1992:art-90",),
                 source_refs=("aeat-dr-303",),

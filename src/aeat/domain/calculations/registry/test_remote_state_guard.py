@@ -1,4 +1,4 @@
-"""Tests for fail-closed AEAT remote-state guard policy."""
+"""Tests for deny-by-default AEAT remote-state guard policy."""
 
 from __future__ import annotations
 

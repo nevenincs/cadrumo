@@ -55,9 +55,8 @@ class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.
 
     Identifies modelo, ejercicio, and revision tag discovered during
-    detection. It is not a key into a live Python extractor registry;
-    legacy registry dispatch is disabled until declaration extraction is
-    backed by validated registry snapshots.
+    detection. It is resolved against validated registry snapshots for
+    casilla-complete extraction coverage.
 
     Attributes:
         modelo: Stable modelo identifier (``"130"``, ``"303"``, ...).

@@ -22,7 +22,7 @@ def select_revision(
     for revision in modelo.revisions.values():
         if revision_id is not None and revision.id != revision_id:
             continue
-        if filing_year not in revision.period_selector.years:
+        if not revision.period_selector.includes_year(filing_year):
             continue
         if period not in revision.period_selector.periods:
             continue

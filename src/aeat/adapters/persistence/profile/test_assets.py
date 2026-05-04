@@ -14,10 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.profile.assets import AssetClass, AssetRecord, LibertadAmortizacionElection
-from ....domain.profile.errors import AssetRecordError
+from ....domain.profile.assets import AmortizationEntry, AmortizationLedger, AssetClass, AssetRecord
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
-from .assets import load_amortization_ledger, load_assets, record_amortization, save_assets
+from .assets import load_amortization_ledger, load_assets, save_amortization_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -72,25 +71,9 @@ def test_asset_persistence_is_encrypted_financial_envelope(tmp_path) -> None:
     assert "LEAK-CANARY-NAS" not in text
 
 
-def test_record_amortization_requires_registry_snapshot(tmp_path) -> None:
-    asset = _asset("pc", AssetClass.ELECTRONICA_INFORMATICA)
+def test_amortization_ledger_persistence_round_trip(tmp_path) -> None:
+    ledger = AmortizationLedger(entries=(AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
 
-    with pytest.raises(AssetRecordError, match="validated registry snapshot"):
-        record_amortization(asset, 2025, storage_dir=tmp_path)
+    save_amortization_ledger(ledger, storage_dir=tmp_path)
 
-
-def test_record_amortization_does_not_write_when_registry_snapshot_is_missing(tmp_path) -> None:
-    asset = AssetRecord(
-        identifier="robot",
-        description="robot",
-        asset_class=AssetClass.MAQUINARIA_GENERAL,
-        acquisition_date=date(2025, 1, 1),
-        cost_basis=Decimal("12000.00"),
-        libertad_amortizacion=LibertadAmortizacionElection(enabled=True, legal_basis="LIS art. 12.5"),
-    )
-
-    with pytest.raises(AssetRecordError, match="validated registry snapshot"):
-        record_amortization(asset, 2025, storage_dir=tmp_path)
-    ledger = load_amortization_ledger(storage_dir=tmp_path)
-
-    assert ledger.entries == ()
+    assert load_amortization_ledger(storage_dir=tmp_path) == ledger

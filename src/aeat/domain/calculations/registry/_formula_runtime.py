@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ._errors import RegistryValidationError
 from ._runtime_graph import formula_evaluation_order
-from ._schema import DatedValue, FormulaArg, FormulaDefinition, ModeloRevision, ParameterDefinition, RegistrySnapshot
+from ._schema import DatedValue, FormulaExpression, ModeloRevision, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
@@ -67,8 +67,8 @@ def calculate_registry_snapshot(
             formula = formulas[target]
             operand_refs: list[str] = []
             operand_values: list[Decimal] = []
-            value = _evaluate_formula(
-                formula,
+            value = _evaluate_expression(
+                formula.expression,
                 values=values,
                 parameters=parameters,
                 date_context=date_context,
@@ -82,7 +82,7 @@ def calculate_registry_snapshot(
                 RegistryCalculationEntry(
                     formula_id=formula.id,
                     target=target,
-                    op=formula.op,
+                    op=formula.expression.op or "value",
                     operand_refs=tuple(operand_refs),
                     operand_values=tuple(operand_values),
                     value=value,
@@ -112,8 +112,8 @@ def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> 
     return values
 
 
-def _evaluate_formula(
-    formula: FormulaDefinition,
+def _evaluate_expression(
+    expression: FormulaExpression,
     *,
     values: Mapping[str, Decimal],
     parameters: Mapping[str, ParameterDefinition],
@@ -122,8 +122,18 @@ def _evaluate_formula(
     operand_refs: list[str],
     operand_values: list[Decimal],
 ) -> Decimal:
+    if expression.op is None:
+        return _evaluate_leaf(
+            expression,
+            values=values,
+            parameters=parameters,
+            date_context=date_context,
+            relation_values=relation_values,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
+        )
     args = [
-        _evaluate_arg(
+        _evaluate_expression(
             arg,
             values=values,
             parameters=parameters,
@@ -132,13 +142,13 @@ def _evaluate_formula(
             operand_refs=operand_refs,
             operand_values=operand_values,
         )
-        for arg in formula.args
+        for arg in expression.args
     ]
-    op = formula.op
+    op = expression.op
     if op in {"add", "sum"}:
         return sum(args, _ZERO)
     if op == "subtract":
-        _require_arg_count(formula, args, 2)
+        _require_arg_count(op, args, 2)
         return args[0] - args[1]
     if op == "multiply":
         result = _ONE
@@ -146,39 +156,39 @@ def _evaluate_formula(
             result *= arg
         return result
     if op == "divide":
-        _require_arg_count(formula, args, 2)
+        _require_arg_count(op, args, 2)
         if args[1] == _ZERO:
-            raise RegistryValidationError(f"formula {formula.id!r} divides by zero")
+            raise RegistryValidationError("formula expression divides by zero")
         return args[0] / args[1]
     if op == "percent":
-        _require_arg_count(formula, args, 2)
+        _require_arg_count(op, args, 2)
         return args[0] * args[1] / Decimal("100")
     if op == "min":
-        _require_non_empty(formula, args)
+        _require_non_empty(op, args)
         return min(args)
     if op == "max":
-        _require_non_empty(formula, args)
+        _require_non_empty(op, args)
         return max(args)
     if op == "clamp":
-        _require_arg_count(formula, args, 3)
+        _require_arg_count(op, args, 3)
         return max(args[1], min(args[0], args[2]))
     if op == "negate":
-        _require_arg_count(formula, args, 1)
+        _require_arg_count(op, args, 1)
         return -args[0]
     if op in {"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"}:
-        _require_arg_count(formula, args, 1)
+        _require_arg_count(op, args, 1)
         return args[0]
     if op == "previous_period_sum":
-        _require_non_empty(formula, args)
+        _require_non_empty(op, args)
         return sum(args, _ZERO)
     if op == "if_then_else":
-        _require_arg_count(formula, args, 3)
+        _require_arg_count(op, args, 3)
         return args[1] if args[0] != _ZERO else args[2]
-    raise RegistryValidationError(f"formula {formula.id!r} uses unsupported op {op!r}")
+    raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
 
 
-def _evaluate_arg(
-    arg: FormulaArg,
+def _evaluate_leaf(
+    expression: FormulaExpression,
     *,
     values: Mapping[str, Decimal],
     parameters: Mapping[str, ParameterDefinition],
@@ -187,29 +197,29 @@ def _evaluate_arg(
     operand_refs: list[str],
     operand_values: list[Decimal],
 ) -> Decimal:
-    if arg.literal is not None:
-        return arg.literal
-    if arg.casilla is not None:
-        if arg.casilla not in values:
-            raise RegistryValidationError(f"casilla {arg.casilla!r} referenced before evaluation")
-        value = values[arg.casilla]
-        operand_refs.append(arg.casilla)
+    if expression.literal is not None:
+        return expression.literal
+    if expression.casilla is not None:
+        if expression.casilla not in values:
+            raise RegistryValidationError(f"casilla {expression.casilla!r} referenced before evaluation")
+        value = values[expression.casilla]
+        operand_refs.append(expression.casilla)
         operand_values.append(value)
         return value
-    if arg.parameter is not None:
-        parameter = parameters[arg.parameter]
+    if expression.parameter is not None:
+        parameter = parameters[expression.parameter]
         value = _resolve_parameter(parameter, date_context)
-        operand_refs.append(arg.parameter)
+        operand_refs.append(expression.parameter)
         operand_values.append(value)
         return value
-    if arg.relation is not None:
-        if arg.relation not in relation_values:
-            raise RegistryValidationError(f"relation {arg.relation!r} has no supplied value")
-        value = relation_values[arg.relation]
-        operand_refs.append(arg.relation)
+    if expression.relation is not None:
+        if expression.relation not in relation_values:
+            raise RegistryValidationError(f"relation {expression.relation!r} has no supplied value")
+        value = relation_values[expression.relation]
+        operand_refs.append(expression.relation)
         operand_values.append(value)
         return value
-    raise RegistryValidationError("empty formula arg")
+    raise RegistryValidationError("empty formula expression")
 
 
 def _resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
@@ -245,11 +255,11 @@ def _reject_non_decimal(values: Mapping[str, Decimal], label: str) -> None:
             raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
 
 
-def _require_arg_count(formula: FormulaDefinition, args: list[Decimal], count: int) -> None:
+def _require_arg_count(op: str, args: list[Decimal], count: int) -> None:
     if len(args) != count:
-        raise RegistryValidationError(f"formula {formula.id!r} expects {count} args, got {len(args)}")
+        raise RegistryValidationError(f"formula op {op!r} expects {count} args, got {len(args)}")
 
 
-def _require_non_empty(formula: FormulaDefinition, args: list[Decimal]) -> None:
+def _require_non_empty(op: str, args: list[Decimal]) -> None:
     if not args:
-        raise RegistryValidationError(f"formula {formula.id!r} expects at least one arg")
+        raise RegistryValidationError(f"formula op {op!r} expects at least one arg")

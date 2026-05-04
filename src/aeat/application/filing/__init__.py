@@ -95,12 +95,12 @@ def build_draft(
         inputs: Raw filing inputs.
         schema_provider: Registry-backed casilla schema provider placeholder.
         deadline_checker: Optional deadline checker placeholder.
-        fail_on_warning: Retained for API compatibility; ignored while the
-            registry-backed builder is unavailable.
+        fail_on_warning: Accepted by the current command contract; ignored
+            while the registry-backed builder is unavailable.
 
     Raises:
-        FilingBuilderError: Always, until a validated registry snapshot builder
-            replaces the legacy Python filing builders.
+        FilingBuilderError: Always, until a validated registry snapshot
+            builder is available.
     """
 
     _ = (
@@ -113,8 +113,7 @@ def build_draft(
         fail_on_warning,
     )
     raise FilingBuilderError(
-        "filing draft construction requires a validated registry snapshot; "
-        "legacy Python filing builders are disabled"
+        "filing draft construction requires a validated registry snapshot; Python filing builders are unavailable"
     )
 
 

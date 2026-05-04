@@ -1,12 +1,10 @@
-"""Master-key substrate: providers, KDF migration, and BIP-39 recovery.
+"""Master-key substrate: providers and BIP-39 recovery.
 
 Public surface for the at-rest master-key plumbing. Re-exports the
 provider hierarchy (:class:`MasterKeyProvider`,
 :class:`KeyringMasterKeyProvider`, :class:`FileFallbackMasterKeyProvider`,
 :class:`UnsecuredMasterKeyProvider`, :class:`EphemeralMasterKeyProvider`),
-the :func:`get_master_key_provider` resolver, the KDF
-migration entry points (:func:`migrate_master_key_kdf`,
-:class:`MigrationResult`), the unsecured-provider safety guard
+the :func:`get_master_key_provider` resolver, the unsecured-provider safety guard
 (:func:`refuse_unsecured_with_real_nif`,
 :func:`looks_like_real_tax_id`), the :func:`atomic_write_secure_bytes`
 helper, and the BIP-39 recovery primitives
@@ -24,12 +22,10 @@ from ._master_key import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    MigrationResult,
     UnsecuredMasterKeyProvider,
     atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
-    migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
 from ._recovery import (
@@ -49,7 +45,6 @@ __all__ = [
     "FileFallbackMasterKeyProvider",
     "KeyringMasterKeyProvider",
     "MasterKeyProvider",
-    "MigrationResult",
     "RecoveryKey",
     "UnsecuredMasterKeyProvider",
     "WrappedMasterKey",
@@ -60,7 +55,6 @@ __all__ = [
     "get_master_key_provider",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
-    "migrate_master_key_kdf",
     "refuse_unsecured_with_real_nif",
     "save_wrapped_master_key",
     "unwrap_master_key",

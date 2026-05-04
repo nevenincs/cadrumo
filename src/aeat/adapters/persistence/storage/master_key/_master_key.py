@@ -10,9 +10,7 @@ protocol:
   persists it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
   derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt. The historical (v1, scrypt) format
-  is no longer loadable and must be migrated via
-  :func:`migrate_master_key_kdf`.
+  alongside a per-store random salt.
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
   exclusively by tests; the key vanishes when the provider object is
   garbage-collected.
@@ -56,7 +54,6 @@ from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol, runtime_ch
 
 from argon2.low_level import Type as _Argon2Type
 from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 if TYPE_CHECKING:
@@ -104,12 +101,8 @@ _SALT_SIZE: Final[int] = 16
 _KDF_PARAMS_VERSION: Final[int] = 2
 """Bumped when the on-disk KDF parameter shape changes.
 
-* v1: scrypt (N=2**17, r=8, p=1).
 * v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
-
-_LEGACY_KDF_PARAMS_VERSION: Final[int] = 1
-"""Legacy KDF parameter version. Read-only — only the migration helper consumes it."""
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -129,15 +122,7 @@ class MasterKeyProvider(Protocol):
 
 
 class _KdfParameters(BaseModel):
-    """On-disk record of the Argon2id parameters used to derive the KEK.
-
-    The active (v2) shape. Loading a v1 (scrypt) ``master.kdf`` against
-    this model fails by design — the version-gate in
-    :meth:`FileFallbackMasterKeyProvider._unwrap_existing` produces a
-    typed :class:`MasterKeyKdfVersionError` pointing the operator at
-    the migration tool instead of letting a strict-pydantic
-    ``ValidationError`` bubble up unannotated.
-    """
+    """On-disk record of the Argon2id parameters used to derive the KEK."""
 
     model_config = _STRICT_FROZEN
 
@@ -147,41 +132,6 @@ class _KdfParameters(BaseModel):
     time_cost: int
     parallelism: int
     salt_b64: str
-
-
-class _LegacyKdfParameters(BaseModel):
-    """Parser for v1 (scrypt) ``master.kdf`` files.
-
-    Used **only** by :func:`migrate_master_key_kdf` when re-wrapping an
-    existing master key into the v2 (Argon2id) format. The substrate's
-    regular load path never instantiates this model.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    version: Literal[1]
-    algorithm: Literal["scrypt"]
-    n: int
-    r: int
-    p: int
-    salt_b64: str
-
-
-class MigrationResult(BaseModel):
-    """Outcome of a one-shot ``master.kdf`` migration run.
-
-    Attributes:
-        migrated: ``1`` if the store was on v1 and is now v2; ``0`` if
-            the store was already v2 and required no action.
-        skipped: ``1`` if the store was already v2; ``0`` otherwise.
-        store_dir: The store directory the migration acted on.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    migrated: int = Field(default=0, ge=0, le=1)
-    skipped: int = Field(default=0, ge=0, le=1)
-    store_dir: Path
 
 
 def _b64encode(data: bytes) -> str:
@@ -268,17 +218,6 @@ def _derive_kek(passphrase: bytes, salt: bytes) -> bytes:
         hash_len=KEY_SIZE,
         type=_Argon2Type.ID,
     )
-
-
-def _derive_legacy_scrypt_kek(passphrase: bytes, salt: bytes, params: _LegacyKdfParameters) -> bytes:
-    """Derive the 32-byte KEK under the v1 (scrypt) parameter set.
-
-    Used **only** by :func:`migrate_master_key_kdf`. Once a store has
-    been migrated to v2, this function is no longer reachable from the
-    regular load path.
-    """
-    scrypt = _LegacyScrypt(salt=salt, length=KEY_SIZE, n=params.n, r=params.r, p=params.p)
-    return scrypt.derive(passphrase)
 
 
 PassphraseCallback = Callable[[], str]
@@ -469,7 +408,7 @@ class FileFallbackMasterKeyProvider:
     Persists ``salt`` and ``master.key`` (plus a human-readable
     ``master.kdf`` parameters document) under
     :attr:`Settings.aeat_secret_store_dir`. The KEK is derived from a
-    passphrase via scrypt and wraps the master key with AES-256-GCM.
+    passphrase via Argon2id and wraps the master key with AES-256-GCM.
     """
 
     _lock: ClassVar[Lock] = Lock()
@@ -589,8 +528,7 @@ class FileFallbackMasterKeyProvider:
         if on_disk_version != _KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
                 f"master.kdf at {self._kdf_params_path} is version {on_disk_version!r}; "
-                f"this build expects version {_KDF_PARAMS_VERSION}. "
-                "Run `aeat security migrate-master-key-kdf` to upgrade.",
+                f"this build expects version {_KDF_PARAMS_VERSION}.",
             )
         try:
             params = _KdfParameters.model_validate_json(raw_text)
@@ -723,8 +661,7 @@ class FileFallbackMasterKeyProvider:
             # overwritten — but the recovery-key wrapping at
             # ``master.recovery.key`` is untouched, so the operator
             # can re-run ``aeat security recover`` to complete the
-            # recovery. Compare with ``migrate_master_key_kdf`` which
-            # follows the same write-order discipline.
+            # recovery.
             atomic_write_secure_bytes(
                 self._master_key_path,
                 base64.b64encode(blob.to_wire()),
@@ -1056,180 +993,3 @@ def get_master_key_provider(
             "or set AEAT_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
             "and provision a file-fallback master key with `aeat security provision`.",
         ) from exc
-
-
-def migrate_master_key_kdf(
-    *,
-    store_dir: Path,
-    passphrase: bytes,
-) -> MigrationResult:
-    """One-shot scrypt -> Argon2id migration of the file-fallback ``master.kdf``.
-
-    Reads the v1 (scrypt) on-disk parameters, derives the legacy KEK,
-    decrypts the wrapped master key, derives a fresh KEK under
-    Argon2id with the **same per-store salt + same passphrase**,
-    re-wraps the master key, and atomically replaces ``master.kdf`` +
-    ``master.key``. The on-disk salt file is untouched.
-
-    The function is resume-idempotent: on a store that is already at
-    v2 it returns ``MigrationResult(skipped=1)`` without rewriting any
-    artefact.
-
-    Args:
-        store_dir: Directory containing ``salt``, ``master.key``, and
-            ``master.kdf``. Must already exist.
-        passphrase: The operator's passphrase as raw bytes (UTF-8
-            encoded). Must match the passphrase used to write the
-            existing v1 store; mismatch produces
-            :class:`MasterKeyUnavailableError` with the v1 store
-            untouched.
-
-    Returns:
-        A :class:`MigrationResult` recording whether the migration
-        ran or was a no-op.
-
-    Raises:
-        MasterKeyUnavailableError: If the on-disk store is malformed,
-            the passphrase does not unwrap the existing master key, or
-            an I/O error prevents the atomic rewrite.
-    """
-    store_dir = Path(store_dir).resolve()
-    kdf_params_path = store_dir / "master.kdf"
-    master_key_path = store_dir / "master.key"
-    salt_path = store_dir / "salt"
-    for required in (kdf_params_path, master_key_path, salt_path):
-        if not required.exists():
-            raise MasterKeyUnavailableError(
-                f"required artefact missing for KDF migration: {required}",
-            )
-
-    # Acquire the same on-disk lock that ``get_master_key`` and
-    # ``complete_recovery`` hold during their multi-write sequences.
-    # Without this, a concurrent ``get_master_key`` reader can
-    # observe a torn state mid-migration (master.key rewritten under
-    # the new KEK but master.kdf still at v1) and surface a spurious
-    # ``MasterKeyPassphraseMismatchError`` despite a correct
-    # passphrase. Re-check the on-disk version inside the lock so
-    # two concurrent migrators serialise cleanly — the second sees
-    # v2 and returns ``skipped=1`` without rewriting anything.
-    with exclusive_file_lock(store_dir / "master.lock"):
-        raw_text = kdf_params_path.read_text(encoding="utf-8")
-        try:
-            preview = json.loads(raw_text)
-        except json.JSONDecodeError as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse master.kdf at {kdf_params_path}: {exc}",
-            ) from exc
-        if not isinstance(preview, dict):
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
-            )
-        on_disk_version = preview.get("version")
-        if on_disk_version == _KDF_PARAMS_VERSION:
-            return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
-        if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
-                f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
-                f"{_KDF_PARAMS_VERSION}.",
-            )
-
-        try:
-            legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
-        except (ValueError, ValidationError) as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
-            ) from exc
-        try:
-            salt = _b64decode(legacy_params.salt_b64)
-        except (ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
-
-        legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
-        try:
-            wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
-            blob = EncryptedBlob.from_wire(wire)
-        except (OSError, ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to read wrapped master key at {master_key_path}: {exc}",
-            ) from exc
-
-        new_params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
-            salt_b64=_b64encode(salt),
-        )
-        new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
-
-        # Recovery for the partial-migration window: a previous run may
-        # have rewritten master.key under the new Argon2id KEK but crashed
-        # before flipping master.kdf to v2. Try the new KEK first; if it
-        # succeeds, master.key is already migrated and we only need to
-        # write master.kdf to complete the transition.
-        #
-        # Use ``try ... else`` to isolate the decrypt probe from the
-        # subsequent atomic write. An I/O failure during the
-        # ``master.kdf`` write (disk full / permission denied / fs read-
-        # only) must propagate cleanly rather than fall through to the
-        # legacy-decrypt path — falling through would surface the I/O
-        # failure as the misleading "passphrase wrong / file tampered"
-        # error message that the legacy branch raises.
-        master_key: bytes
-        try:
-            master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
-        except (DecryptionError, EncryptionError):
-            # Not a partial-migration state. Fall through to the
-            # normal legacy-unwrap → re-wrap path. The next try-block
-            # performs the legacy decrypt and surfaces a typed error
-            # if that fails too. Sentinel value for the loop —
-            # immediately overwritten in the legacy-decrypt branch
-            # below.
-            master_key = b""
-        else:
-            _log.info(
-                "master.key at %s already wrapped under Argon2id KEK; "
-                "completing partial migration by rewriting master.kdf only",
-                master_key_path,
-            )
-            # master.key is already v2; just flip master.kdf to v2.
-            # Use atomic_write_secure_bytes so a crash mid-write
-            # leaves the on-disk master.kdf intact (old or new),
-            # never truncated. Any OSError from this write
-            # propagates — it is NOT a passphrase mismatch.
-            atomic_write_secure_bytes(
-                kdf_params_path,
-                new_params.model_dump_json().encode("utf-8"),
-            )
-            _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-            return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
-
-        try:
-            master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
-        except (DecryptionError, EncryptionError) as exc:
-            raise MasterKeyUnavailableError(
-                "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
-                "or the file may be tampered with. The v1 store has not been modified.",
-            ) from exc
-
-        new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
-        # Write order: master.key first (so a crash leaves a
-        # recoverable state — see the partial-migration recovery
-        # branch above), THEN master.kdf (the v2 declaration is the
-        # very last on-disk change). Use ``atomic_write_secure_bytes``
-        # for both so a crash between the file open and the write
-        # leaves either the old or new file intact — the old
-        # ``_write_bytes_secure`` opened with ``O_WRONLY|O_CREAT|O_TRUNC``
-        # which truncates the existing inode in-place, so a power
-        # loss between the truncate and the write left ``master.key``
-        # zero-length and unrecoverable from the v1 path.
-        atomic_write_secure_bytes(
-            master_key_path,
-            base64.b64encode(new_blob.to_wire()),
-        )
-        atomic_write_secure_bytes(
-            kdf_params_path,
-            new_params.model_dump_json().encode("utf-8"),
-        )
-        _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-        return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)

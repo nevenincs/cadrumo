@@ -1,11 +1,8 @@
 """Session-scoped fixtures for the casilla-corpus tests.
 
-The corpus contains ~200 JSON catalogues. The legacy layout had each
-test re-walk the directory and re-parse every file, multiplying the
-parse cost by the number of tests in a module (~13x for
-``test_corpus_rule_alignment``). These fixtures load every catalogue
-exactly once per session and hand the cached objects to every test
-that needs them.
+The corpus contains ~200 JSON catalogues. These fixtures load every
+catalogue exactly once per session and hand the cached objects to every
+test that needs them.
 """
 
 from __future__ import annotations

@@ -1,9 +1,9 @@
 """CLI tests for the ``aeat data ledgers`` command surface.
 
-Exercises the assets, inventory, and Anexo D sub-apps end-to-end via
-:class:`typer.testing.CliRunner` against a local wrapper app,
-using an in-memory ephemeral master key so persistence round-trips run
-against a real on-disk encrypted store inside ``tmp_path``.
+Exercises the inventory sub-app end-to-end via :class:`typer.testing.CliRunner`
+against a local wrapper app, using an in-memory ephemeral master key so
+persistence round-trips run against a real on-disk encrypted store inside
+``tmp_path``.
 """
 
 from __future__ import annotations
@@ -17,8 +17,6 @@ from typer.testing import CliRunner
 
 from .....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ..._errors import decorate_typer_app
-from . import anexo_d as anexo_d_module
-from . import assets as assets_module
 from . import inventory as inventory_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -38,9 +36,7 @@ def _build_ledgers_test_app() -> typer.Typer:
     ) -> None:
         ctx.ensure_object(dict)["json_output"] = json_output
 
-    test_app.add_typer(assets_module.app, name="assets")
     test_app.add_typer(inventory_module.app, name="inventory")
-    test_app.add_typer(anexo_d_module.app, name="anexo-d")
     decorate_typer_app(test_app)
     return test_app
 
@@ -55,20 +51,6 @@ def _ephemeral_master_key() -> Iterator[None]:
         yield
     finally:
         override_master_key_provider(None)
-
-
-def test_data_ledgers_assets_require_registry_snapshot() -> None:
-    result = _RUNNER.invoke(app, ["assets", "list"])
-
-    assert result.exit_code != 0
-    assert "validated registry snapshot" in result.output
-
-
-def test_data_ledgers_assets_amortization_requires_registry_snapshot() -> None:
-    result = _RUNNER.invoke(app, ["assets", "amortization", "preview"])
-
-    assert result.exit_code != 0
-    assert "validated registry snapshot" in result.output
 
 
 def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
@@ -216,28 +198,3 @@ def test_data_ledgers_inventory_refuses_inconsistent_opening_layers(tmp_path) ->
 
     assert result.exit_code != 0
     assert "opening_stock" in result.output
-
-
-def test_data_ledgers_anexo_d_preview_requires_registry_snapshot() -> None:
-    result = _RUNNER.invoke(
-        app,
-        [
-            "anexo-d",
-            "preview",
-            "--modelo",
-            "100",
-            "--year",
-            "2025",
-            "--actividad",
-            "retail",
-        ],
-    )
-
-    assert result.exit_code != 0
-    assert "validated registry snapshot" in result.output
-
-
-def test_old_profile_ledger_namespace_is_not_public() -> None:
-    result = _RUNNER.invoke(app, ["profile", "assets", "list"])
-
-    assert result.exit_code != 0

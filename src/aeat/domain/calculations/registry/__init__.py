@@ -16,10 +16,12 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     evaluate_remote_operation,
 )
+from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
+    FormulaExpression,
     LegalReference,
     ModeloDefinition,
     ModeloRevision,
@@ -55,6 +57,7 @@ __all__ = [
     "CasillaDefinition",
     "DataBindingDefinition",
     "FormulaDefinition",
+    "FormulaExpression",
     "LegalReference",
     "ModeloDefinition",
     "ModeloRevision",
@@ -91,6 +94,7 @@ __all__ = [
     "discover_workbooks",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
+    "expression_casilla_refs",
     "inventory_workbook_coverage",
     "load_catalogue_file",
     "load_modelo_file",
