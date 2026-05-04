@@ -53,34 +53,3 @@ def upgrade_to_head(engine: Engine) -> None:
     except Exception as exc:  # pragma: no cover - surfaced to callers
         raise MigrationError(f"alembic upgrade head failed: {exc}") from exc
     _log.debug("alembic upgrade head complete for url=%s", engine.url)
-
-
-def downgrade_to_base(engine: Engine) -> None:
-    """Run ``alembic downgrade base`` against ``engine``.
-
-    Args:
-        engine: SQLAlchemy engine to migrate.
-
-    Raises:
-        MigrationError: If Alembic raises during the downgrade.
-    """
-    config = _make_config(engine)
-    try:
-        command.downgrade(config, "base")
-    except Exception as exc:  # pragma: no cover - surfaced to callers
-        raise MigrationError(f"alembic downgrade base failed: {exc}") from exc
-    _log.debug("alembic downgrade base complete for url=%s", engine.url)
-
-
-def round_trip_migrations(engine: Engine) -> None:
-    """Apply head → base → head on ``engine``.
-
-    Used by the migration round-trip unit test to ensure every revision is
-    reversible.
-
-    Args:
-        engine: SQLAlchemy engine to migrate.
-    """
-    upgrade_to_head(engine)
-    downgrade_to_base(engine)
-    upgrade_to_head(engine)
