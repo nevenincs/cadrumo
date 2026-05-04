@@ -41,7 +41,6 @@ class TestWorkflowStageOrdering:
         """Verify every read-only stage is present exactly once."""
         expected = (
             "LOADING_PROFILE",
-            "SYNCING_CATALOGUES",
             "COMPUTING_DEADLINES",
             "CHECKING_INBOX",
             "BUILDING_DRAFT",

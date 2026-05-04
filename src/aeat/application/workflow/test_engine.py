@@ -55,11 +55,8 @@ from . import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SyncRunnerProtocol,
-    SyncRunSummary,
     WorkflowAbortReason,
     WorkflowEngine,
-    WorkflowResult,
     WorkflowStage,
 )
 
@@ -133,25 +130,6 @@ class _ConcreteSubmissionEngine:
         self.preflight_calls.append(today)
         if self.preflight_exc is not None:
             raise self.preflight_exc
-
-
-@dataclass
-class _ConcreteSyncRunner:
-    raise_exc: BaseException | None = None
-    summary: SyncRunSummary = field(
-        default_factory=lambda: SyncRunSummary(divergence_count=0, auto_healed_count=0, escalated_count=0)
-    )
-
-    async def run(
-        self,
-        *,
-        modelo: str | None = None,
-        period: str | None = None,
-        auto_heal: bool = False,
-    ) -> SyncRunSummary:
-        if self.raise_exc is not None:
-            raise self.raise_exc
-        return self.summary
 
 
 @dataclass
@@ -272,7 +250,6 @@ class _Fixtures:
     deadline_engine: _ConcreteDeadlineEngine
     draft_builder: _ConcreteDraftBuilder
     submission_engine: _ConcreteSubmissionEngine
-    sync_runner: _ConcreteSyncRunner
     expedientes_source: _ConcreteExpedientesSource
     notifications_source: _ConcreteNotificationsSource
     certificate_bundle: _ConcreteCertificateBundle
@@ -286,7 +263,6 @@ class _Fixtures:
             deadline_engine=cast(DeadlineEngineProtocol, self.deadline_engine),
             filing_draft_builder=cast(FilingDraftBuilderProtocol, self.draft_builder),
             submission_engine=cast(SubmissionEngineProtocol, self.submission_engine),
-            sync_runner=cast(SyncRunnerProtocol, self.sync_runner),
             session=self.session,
             certificate_bundle=cast(CertificateBundleProtocol, self.certificate_bundle),
             inputs_provider=cast(FilingInputsProviderProtocol, self.inputs_provider),
@@ -315,7 +291,6 @@ def _fixtures() -> _Fixtures:
         deadline_engine=_ConcreteDeadlineEngine(obligation=obligation, profile=profile),
         draft_builder=_ConcreteDraftBuilder(draft=draft),
         submission_engine=_ConcreteSubmissionEngine(),
-        sync_runner=_ConcreteSyncRunner(),
         expedientes_source=_ConcreteExpedientesSource(),
         notifications_source=_ConcreteNotificationsSource(),
         certificate_bundle=_ConcreteCertificateBundle(),
@@ -341,7 +316,6 @@ class TestHappyPath:
         stages = tuple(s.stage for s in result.steps)
         assert stages == (
             WorkflowStage.LOADING_PROFILE,
-            WorkflowStage.SYNCING_CATALOGUES,
             WorkflowStage.COMPUTING_DEADLINES,
             WorkflowStage.CHECKING_INBOX,
             WorkflowStage.BUILDING_DRAFT,
@@ -367,19 +341,6 @@ class TestHappyPath:
             )
         )
         assert result.final_stage is WorkflowStage.DONE
-
-    def test_sync_first_false_skips_sync_stage(self) -> None:
-        """When ``sync_first=False`` the sync stage skips cleanly."""
-        fx = _fixtures()
-        asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, sync_first=False))
-        # The sync step is still recorded but as "skipped".
-        step = next(s for s in _result(fx).steps if s.stage is WorkflowStage.SYNCING_CATALOGUES)
-        assert step.details == {"skipped": "sync_first_false"}
-
-
-def _result(fx: _Fixtures) -> WorkflowResult:
-    """Helper used in the tests above to re-run with sync skipped."""
-    return asyncio.run(fx.engine().run_next(fx.profile, today=fx.today, sync_first=False))
 
 
 # ── Every abort reason ──────────────────────────────────────────────────

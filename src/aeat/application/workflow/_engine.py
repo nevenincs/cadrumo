@@ -1,6 +1,6 @@
 """Composition root for the end-user composite workflow engine.
 
-:class:`WorkflowEngine` walks ten stages in strict linear order. Every
+:class:`WorkflowEngine` walks the filing pipeline in strict linear order. Every
 stage lives in its own small ``_stage_*`` method so the bailout matrix
 is trivially auditable — a reader drops into a single stage method to
 see exactly which abort reasons it can produce.
@@ -50,7 +50,6 @@ from ._protocols import (
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
     SubmissionEngineProtocol,
-    SyncRunnerProtocol,
 )
 
 ExpedientesSource = Callable[[AeatSession, str | None], Awaitable[tuple[Expediente, ...]]]
@@ -160,7 +159,6 @@ class WorkflowEngine:
         deadline_engine: DeadlineEngineProtocol,
         filing_draft_builder: FilingDraftBuilderProtocol,
         submission_engine: SubmissionEngineProtocol,
-        sync_runner: SyncRunnerProtocol | None,
         session: AeatSession | None,
         certificate_bundle: CertificateBundleProtocol | None,
         inputs_provider: FilingInputsProviderProtocol,
@@ -174,8 +172,6 @@ class WorkflowEngine:
             deadline_engine: Protocol over :class:`aeat.domain.deadlines.DeadlineEngine`.
             filing_draft_builder: Protocol over :func:`aeat.application.filing.build_draft`.
             submission_engine: Protocol over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`.
-            sync_runner: Optional Protocol over the sync runner. ``None``
-                causes the ``SYNCING_CATALOGUES`` stage to skip.
             session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
                 used to drive the live :mod:`aeat.adapters.outbound.aeat.sede` reader. ``None``
                 skips both the inbox probe and the already-filed probe.
@@ -194,7 +190,6 @@ class WorkflowEngine:
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder
         self._submission_engine = submission_engine
-        self._sync_runner = sync_runner
         self._session = session
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
@@ -207,7 +202,7 @@ class WorkflowEngine:
         # obligation has been resolved carries a ``run_id`` that
         # matches the final :class:`WorkflowResult.run_id`. When no
         # obligation is known yet (e.g. ``SiteHealthError`` from the
-        # sync or deadline stage of an open-ended ``run_next`` call)
+        # deadline stage of an open-ended ``run_next`` call)
         # the ``-`` placeholders are expected and match the
         # placeholders in the final result.
         self._run_tax_id: str | None = None
@@ -222,7 +217,6 @@ class WorkflowEngine:
         self,
         profile: AutonomoProfile,
         *,
-        sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
     ) -> WorkflowResult:
@@ -230,9 +224,6 @@ class WorkflowEngine:
 
         Args:
             profile: The :class:`AutonomoProfile` to run for.
-            sync_first: Whether to run the sync runner before the
-                deadline computation. ``None`` means "use the
-                ``AEAT_WORKFLOW_SYNC_FIRST_DEFAULT`` setting".
             fail_on_warning: Forwarded to the filing draft builder.
             today: Reference date for deadline / preflight checks.
                 Defaults to :meth:`date.today`.
@@ -244,7 +235,6 @@ class WorkflowEngine:
             profile=profile,
             target_modelo=None,
             target_period=None,
-            sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
         )
@@ -255,7 +245,6 @@ class WorkflowEngine:
         modelo: str,
         period: str,
         *,
-        sync_first: bool | None = None,
         fail_on_warning: bool = False,
         today: date | None = None,
     ) -> WorkflowResult:
@@ -265,7 +254,6 @@ class WorkflowEngine:
             profile: The :class:`AutonomoProfile` to run for.
             modelo: Target modelo identifier.
             period: Target period identifier.
-            sync_first: See :meth:`run_next`.
             fail_on_warning: See :meth:`run_next`.
             today: See :meth:`run_next`.
 
@@ -276,7 +264,6 @@ class WorkflowEngine:
             profile=profile,
             target_modelo=modelo,
             target_period=period,
-            sync_first=sync_first,
             fail_on_warning=fail_on_warning,
             today=today,
         )
@@ -289,14 +276,12 @@ class WorkflowEngine:
         profile: AutonomoProfile,
         target_modelo: str | None,
         target_period: str | None,
-        sync_first: bool | None,
         fail_on_warning: bool,
         today: date | None,
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
         reference_today = today or date.today()
-        should_sync = sync_first if sync_first is not None else self._settings.aeat_workflow_sync_first_default
 
         # Record run context so ``_record_site_unavailable`` can lazily
         # recompute the run_id from whichever information is latest
@@ -316,12 +301,6 @@ class WorkflowEngine:
 
         try:
             self._stage_loading_profile(profile, steps)
-            await self._stage_syncing_catalogues(
-                should_sync=should_sync,
-                target_modelo=target_modelo,
-                target_period=target_period,
-                steps=steps,
-            )
             obligation = self._stage_computing_deadlines(
                 profile=profile,
                 target_modelo=target_modelo,
@@ -422,11 +401,11 @@ class WorkflowEngine:
         profile: AutonomoProfile,
         steps: list[WorkflowStep],
     ) -> None:
-        """Stage 1 — validate the incoming profile.
+        """Validate the incoming profile.
 
         The profile is already a strict pydantic model, so this stage
         is mostly an audit log. It still exists as a distinct step so
-        the ten-stage contract is visible in every result.
+        the workflow contract is visible in every result.
         """
         started = _utcnow()
         steps.append(
@@ -436,82 +415,6 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=True,
                 summary=_t(f"Loaded profile tax_id={profile.tax_id}"),
-            )
-        )
-
-    async def _stage_syncing_catalogues(
-        self,
-        *,
-        should_sync: bool,
-        target_modelo: str | None,
-        target_period: str | None,
-        steps: list[WorkflowStep],
-    ) -> None:
-        """Stage 2 — run the self-healing sync runner if configured."""
-        started = _utcnow()
-        if not should_sync:
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.SYNCING_CATALOGUES,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=True,
-                    summary=_t("Sync skipped (sync_first=False)"),
-                    details={"skipped": "sync_first_false"},
-                )
-            )
-            return
-        if self._sync_runner is None:
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.SYNCING_CATALOGUES,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=True,
-                    summary=_t("Sync skipped (runner not wired)"),
-                    details={"skipped": "not_wired"},
-                )
-            )
-            return
-        try:
-            summary_result = await self._sync_runner.run(
-                modelo=target_modelo,
-                period=target_period,
-                auto_heal=False,
-            )
-            _logger.debug(
-                "sync stage complete modelo=%s divergences=%d auto_healed=%d escalated=%d",
-                target_modelo,
-                summary_result.divergence_count,
-                summary_result.auto_healed_count,
-                summary_result.escalated_count,
-            )
-        except SiteHealthError as exc:
-            self._record_site_unavailable(
-                stage=WorkflowStage.SYNCING_CATALOGUES,
-                started=started,
-                exc=exc,
-                steps=steps,
-            )
-        except Exception as exc:
-            self._record_unhandled(
-                stage=WorkflowStage.SYNCING_CATALOGUES,
-                started=started,
-                exc=exc,
-                steps=steps,
-            )
-        steps.append(
-            WorkflowStep(
-                stage=WorkflowStage.SYNCING_CATALOGUES,
-                started_at=started,
-                ended_at=_utcnow(),
-                success=True,
-                summary=_t(f"Sync OK divergences={summary_result.divergence_count}"),
-                details={
-                    "divergence_count": str(summary_result.divergence_count),
-                    "auto_healed_count": str(summary_result.auto_healed_count),
-                    "escalated_count": str(summary_result.escalated_count),
-                },
             )
         )
 

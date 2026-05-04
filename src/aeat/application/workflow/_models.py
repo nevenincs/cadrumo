@@ -32,11 +32,10 @@ class WorkflowStage(StrEnum):
 
     Attributes:
         LOADING_PROFILE: Resolve the autónomo profile and target run.
-        SYNCING_CATALOGUES: Run the self-healing catalogue sync.
         COMPUTING_DEADLINES: Determine the next pending obligation.
         CHECKING_INBOX: Probe the AEAT inbox for blocking requerimientos.
-        BUILDING_DRAFT: Compose the filing draft from inputs and rules.
-        VALIDATING_DRAFT: Apply ruleset validation to the draft.
+        BUILDING_DRAFT: Compose the filing draft from registry-backed inputs.
+        VALIDATING_DRAFT: Apply registry-backed validation to the draft.
         RUNNING_PREFLIGHT: Execute the submission engine's preflight.
         DONE: Terminal success stage.
         ABORTED: Terminal failure stage; pairs with a
@@ -44,7 +43,6 @@ class WorkflowStage(StrEnum):
     """
 
     LOADING_PROFILE = "LOADING_PROFILE"
-    SYNCING_CATALOGUES = "SYNCING_CATALOGUES"
     COMPUTING_DEADLINES = "COMPUTING_DEADLINES"
     CHECKING_INBOX = "CHECKING_INBOX"
     BUILDING_DRAFT = "BUILDING_DRAFT"

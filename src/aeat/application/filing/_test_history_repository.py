@@ -21,16 +21,17 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
-from ...domain.sync import ModeloIdentifier, WireFilingEntry, WireFilingHistory
+from ...domain._identifiers import ModeloIdentifier
+from ._history_models import FilingHistory, FilingHistoryEntry
 from ._history_repository import FilingHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _make_history(*, modelo: str = "130", n_entries: int = 2) -> WireFilingHistory:
+def _make_history(*, modelo: str = "130", n_entries: int = 2) -> FilingHistory:
     base = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     entries = tuple(
-        WireFilingEntry(
+        FilingHistoryEntry(
             modelo=ModeloIdentifier(modelo),
             period=f"2026Q{i + 1}",
             submitted_at=base.replace(month=1 + 3 * i),
@@ -38,7 +39,7 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> WireFilingHisto
         )
         for i in range(n_entries)
     )
-    return WireFilingHistory(entries=entries)
+    return FilingHistory(entries=entries)
 
 
 @pytest.fixture
@@ -135,7 +136,7 @@ class TestClassificationGate:
 
         store_dir.mkdir(parents=True, exist_ok=True)
         history = _make_history(modelo="130")
-        bad = Envelope[WireFilingHistory](
+        bad = Envelope[FilingHistory](
             schema_version=1,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.OPERATIONAL,

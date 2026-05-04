@@ -23,12 +23,6 @@ from .paths import (
 )
 
 
-class DivergenceSink(StrEnum):
-    """Supported sinks for :class:`aeat.application.sync.DivergenceRecord` persistence."""
-
-    FILE = "FILE"
-
-
 class SecretStoreBackend(StrEnum):
     """Supported backends for the master-key secret store.
 
@@ -586,35 +580,6 @@ class Settings(BaseSettings):
         description="Directory where submission-engine Playwright traces and screenshots are written",
     )
 
-    # ── Self-healing sync runner ────────────────────────────────────────────
-    aeat_sync_concurrency: int = Field(
-        default=4,
-        description="Maximum number of concurrent sync fetches",
-    )
-    aeat_sync_auto_heal_allowlist: str = Field(
-        default="casilla_added_with_default,label_translation_added,vigencia_extended",
-        description=(
-            "CSV list of DivergenceKind values the runner is permitted to "
-            "auto-apply when classification==ADDITIVE and auto_heal=True"
-        ),
-    )
-    aeat_sync_divergence_sink: DivergenceSink = Field(
-        default=DivergenceSink.FILE,
-        description="Divergence record sink (currently only FILE is implemented)",
-    )
-    aeat_sync_divergence_file_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "divergences",
-        description="Directory for JSON-file divergence records when sink=FILE",
-    )
-    aeat_sync_retry_max: int = Field(
-        default=3,
-        description="Maximum transient-fetch retry attempts during a sync run",
-    )
-    aeat_sync_retry_backoff_s: float = Field(
-        default=5.0,
-        description="Initial exponential backoff delay (seconds) between retries",
-    )
-
     # ── Notifications inbox ─────────────────────────────────────────────────
     aeat_inbox_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "inbox",
@@ -636,10 +601,6 @@ class Settings(BaseSettings):
     aeat_workflow_runs_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "workflow-runs",
         description="Directory where WorkflowResult JSON audit records are persisted",
-    )
-    aeat_workflow_sync_first_default: bool = Field(
-        default=True,
-        description="Default for WorkflowEngine.run_next(sync_first=...) when omitted by the CLI",
     )
     aeat_workflow_draft_inputs_path: Path | None = Field(
         default=None,
@@ -844,7 +805,6 @@ class Settings(BaseSettings):
         "aeat_tax_residence_profile_path",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
-        "aeat_sync_divergence_file_dir",
         "aeat_inbox_dir",
         "aeat_inbox_pdf_dir",
         "aeat_workflow_runs_dir",

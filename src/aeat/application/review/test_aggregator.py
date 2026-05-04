@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -20,12 +19,6 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.invoices._repository import InvoiceCatalogueRepository
-from ...domain.sync import (
-    CasillaRemoved,
-    DivergenceClassification,
-    DivergenceRecord,
-    ModeloIdentifier,
-)
 from ...domain.transactions import (
     RawProvenance,
     RawTransaction,
@@ -43,7 +36,6 @@ from ..filing import (
     FilingValue,
     FilingValueKind,
 )
-from ..sync import JsonFileDivergenceRepository
 from . import (
     ReviewItemKind,
     ReviewQueue,
@@ -63,7 +55,6 @@ def _build_settings(tmp_path: Path) -> Settings:
         aeat_financial_txs_dir=tmp_path / "transactions",
         aeat_invoices_dir=tmp_path / "invoices",
         aeat_attachments_dir=tmp_path / "attachments",
-        aeat_sync_divergence_file_dir=tmp_path / "divergences",
         aeat_inbox_dir=tmp_path / "inbox",
         aeat_inbox_pdf_dir=tmp_path / "inbox-pdfs",
         aeat_drafts_dir=tmp_path / "drafts",
@@ -123,18 +114,6 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     )
     InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(InvoiceCatalogue.from_invoices((invoice,)))
 
-    modelo = ModeloIdentifier("130")
-    repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-    repo.save(
-        DivergenceRecord(
-            record_id=uuid.uuid4().hex,
-            detected_at=datetime(2026, 4, 12, tzinfo=UTC),
-            modelo=modelo,
-            classification=DivergenceClassification.BREAKING,
-            payload=CasillaRemoved(modelo=modelo, casilla_id="C9"),
-        )
-    )
-
     settings.aeat_drafts_dir.mkdir(parents=True, exist_ok=True)
     finding = FilingValidationFinding(
         casilla_id="03",
@@ -175,17 +154,16 @@ def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
     assert kinds == {
         ReviewItemKind.TRANSACTION,
         ReviewItemKind.INVOICE,
-        ReviewItemKind.DIVERGENCE,
         ReviewItemKind.FINDING,
     }
-    assert len(items) == 4
+    assert len(items) == 3
 
 
 def test_collect_sorts_critical_before_normal(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(settings)
     severities = [item.severity for item in items]
-    # CRITICAL comes first; NORMAL last; the seeded items are CRITICAL x2, HIGH x1, NORMAL x1.
+    # CRITICAL comes first; NORMAL last; the seeded items are CRITICAL x1, HIGH x1, NORMAL x1.
     assert severities[0] is ReviewSeverity.CRITICAL
     assert severities[-1] is ReviewSeverity.NORMAL
 
@@ -194,19 +172,18 @@ def test_collect_filters_by_kind(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(
         settings,
-        kinds=frozenset({ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}),
+        kinds=frozenset({ReviewItemKind.FINDING}),
     )
     kinds = {item.kind for item in items}
-    assert kinds == {ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}
-    assert len(items) == 2
+    assert kinds == {ReviewItemKind.FINDING}
+    assert len(items) == 1
 
 
 def test_collect_filters_by_modelo(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(settings, modelo="130")
     # Transaction and invoice carry no modelo so they are excluded.
-    # Only divergence + draft finding (both modelo=130) survive.
-    assert {item.kind for item in items} == {ReviewItemKind.DIVERGENCE, ReviewItemKind.FINDING}
+    assert {item.kind for item in items} == {ReviewItemKind.FINDING}
 
 
 def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:

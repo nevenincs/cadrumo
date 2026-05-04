@@ -64,7 +64,7 @@ class FilingApprovalStaleReason(StrEnum):
             transactions have been updated since approval.
         CATEGORY_PROFILES_CHANGED: The fiscal category profile catalog
             has been edited since approval.
-        SCHEMA_FORMULA_CHANGED: The casilla schema or active ruleset
+        SCHEMA_FORMULA_CHANGED: The registry-backed casilla schema or formula set
             has changed since approval.
     """
 
