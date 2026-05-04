@@ -145,12 +145,10 @@ from .master_key._master_key import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    MigrationResult,
     UnsecuredMasterKeyProvider,
     atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
-    migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
 from .master_key._recovery import (
@@ -218,7 +216,6 @@ __all__ = [
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
     "MigrationError",
-    "MigrationResult",
     "ModeloRecord",
     "ModeloRepository",
     "NonceCollisionError",
@@ -277,7 +274,6 @@ __all__ = [
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
-    "migrate_master_key_kdf",
     "override_master_key_provider",
     "override_secret_store",
     "redact",
