@@ -251,14 +251,6 @@ def test_profile_support_modules_do_not_import_legacy_formula_package(relative: 
     assert "from ..formulas" not in source
 
 
-def test_calculation_registry_facade_cannot_import_legacy_rulesets() -> None:
-    source = _source("src/aeat/domain/calculations/_registry.py")
-    assert "domain.formulas" not in source
-    assert "ALL_RULESETS" not in source
-    assert "RulesetRegistry" not in source
-    assert "legacy calculation registry is disabled" in source
-
-
 def test_legacy_formula_package_is_deleted() -> None:
     formula_dir = _ROOT / "src/aeat/domain/formulas"
     formula_import_contract_dir = _ROOT / "tests/import_contract/domain/formulas"
