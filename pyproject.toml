@@ -22,13 +22,13 @@ dependencies = [
   # LLM providers
   "anthropic>=0.74.1",
   # Argon2id KDF for the file-fallback master-key provider's
-  # passphrase-to-KEK derivation (wave-12). OWASP-current top-tier
+  # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
   # Linux/macOS/Windows.
   "argon2-cffi>=23.1.0",
-  # HTML parsing (status reader, #43)
+  # HTML parsing for status readers.
   "beautifulsoup4>=4.12",
-  # PKCS#12 parsing for client-certificate auth (#8)
+  # PKCS#12 parsing for client-certificate auth.
   "cryptography>=47.0.0",
   # Google Cloud / Workspace
   "google-api-python-client>=2.194.0",
@@ -46,12 +46,12 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0",
-  # Financial ingest (#73)
+  # Financial ingest.
   "ofxparse>=0.21",
   "openpyxl>=3.1.5",
-  # PDF parsing (#44 justificante)
+  # PDF parsing for justificantes.
   "pdfplumber>=0.11.9",
-  # PDF sanitiser (#239) — content-stream rewriter for PII redaction.
+  # PDF sanitiser; content-stream rewriter for PII redaction.
   "pikepdf>=10.0.0",
   # Browser automation
   "playwright>=1.58.0",
@@ -113,31 +113,31 @@ torch = [
 ]
 [dependency-groups]
 dev = [
-  # Import-linter for layered-architecture boundary enforcement (#475/#476).
+  # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
-  # the Step 7 keystone PR when the hexagonal layout move lands.
+  # the architecture boundary checks.
   "import-linter>=2.0",
   "playwright>=1.58.0",
   "playwright-stealth>=2.0.3",
   "prek>=0.2.0",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
-  # Coverage measurement + fail-under gate — #15 ADR (unit only).
+  # Coverage measurement + fail-under gate for unit tests.
   "pytest-cov>=6.0.0",
-  # httpx wire-shape assertions — #15 ADR (unit only; banned in live files).
+  # httpx wire-shape assertions for unit tests; banned in live files.
   "pytest-httpx>=0.35.0",
-  # Live browser harness — #15 ADR (live only).
+  # Live browser harness.
   "pytest-playwright>=0.6.0",
-  # Per-test retries for genuinely flaky live endpoints — #15 ADR (live only, opt-in per test).
+  # Per-test retries for genuinely flaky live endpoints; live only, opt-in per test.
   "pytest-rerunfailures>=15.0",
-  # Parallel unit suite via opt-in `just test-parallel` — #15 ADR (unit only).
+  # Parallel unit suite via opt-in `just test-parallel`.
   "pytest-xdist>=3.6.0",
-  # Used only to generate synthetic fixture PDFs in tests (#44).
+  # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
-  # Snapshot diffing for registry/casilla behaviour — #15 ADR (both scopes).
+  # Snapshot diffing for registry behaviour.
   "syrupy>=4.7.0",
-  # Wall-clock control for deadline/expedientes tests — #15 ADR (unit only; banned in live files).
+  # Wall-clock control for deadline/expedientes tests; banned in live files.
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/aeat/.
@@ -170,12 +170,12 @@ select = [
   "S",  # flake8-bandit (security)
   "T20",  # flake8-print
   "SIM",  # flake8-simplify
-  "TID",  # flake8-tidy-imports (enforces banned-api below) — #15 ADR
+  "TID",  # flake8-tidy-imports; enforces banned-api below
   "RUF",  # ruff-specific rules
 ]
 ignore = [
   "S101",  # allow assert in tests
-  "TID252",  # tolerate relative parent imports within subpackages; #15 + #162 require relative imports inside src/aeat/
+  "TID252",  # tolerate relative parent imports within subpackages
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -221,28 +221,17 @@ ignore = [
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
 "src/aeat/domain/portals/_cli.py" = ["B008"]
-# Curated multilingual label/help strings carry verbatim AEAT/BOE wordings
-# that are routinely longer than 120 chars; line-wrapping a translation
-# corrupts the text. The script's tail also prints a one-line summary
-# when invoked directly.
-"src/aeat/domain/casillas/_hydrate.py" = ["E501", "T201"]
-# Curated multilingual help strings carry the same verbatim long-line
-# constraint at the corpus-alignment-test level; the docstring also
-# reuses the BOE-glossary union character ∪.
-"src/aeat/domain/casillas/test_corpus_rule_alignment.py" = ["E501", "RUF002"]
-
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-# #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.
+# Lock the project into pytest-only testing.
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
 "unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
 "mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
 
-# #162 — the relative-imports mandate is enforced by the custom
+# The relative-imports mandate is enforced by the custom
 # scripts/check_relative_imports.py script, not by Ruff TID251. Ruff's
 # banned-api resolves relative imports back to their absolute path
 # before matching the banned prefix, which would flag every legitimate
 # `from .module import X` inside src/aeat/ when `aeat` is banned.
-# See .vault/adr/2026-04-17-relative-imports-adr.md.
 
 [tool.ruff.format]
 quote-style = "double"
@@ -278,30 +267,30 @@ python_files = ["test_*.py", "_test_*.py"]
 addopts = "-v --tb=short -m 'unit' --strict-markers"
 asyncio_mode = "strict"
 markers = [
-  "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
+  "unit: deterministic tests with no external I/O",
   "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
   "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
-  "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
+  "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, inbox, justificante, portals, status, sync)",
   "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
   "domain_inbound: exercises financial ingest (financial, cli/financial)",
   "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, registry, deadlines, cli/deadlines)",
   "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
   "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
-  # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
+  # Hexagonal layered markers.
   "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared)",
   "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, google, llm)",
   "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
   "domain_persistence: exercises adapters.persistence.* (storage substrate)",
-  "domain_model: exercises domain.* business model + computation (modelos, casillas, formulas, manuals, deadlines, profile, rental, ...)",
+  "domain_model: exercises domain.* business model + computation (modelos, registry, manuals, deadlines, profile, rental, ...)",
   "domain_application: exercises application.* use-cases / orchestration (filing, workflow, sync, setup, review, verification)",
   "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
-  "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only — #15 ADR",
-  "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open — EPIC #305 cluster C)",
-  "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only — EPIC #305 cluster C)",
-  "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk (EPIC #305 cluster C)",
+  "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only",
+  "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open)",
+  "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only)",
+  "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
 ]
 
-# ── Coverage (pytest-cov) — #15 ADR ──────────────────────────────────────────
+# ── Coverage (pytest-cov) ────────────────────────────────────────────────────
 [tool.coverage.run]
 source = ["src/aeat"]
 branch = true
@@ -312,8 +301,8 @@ omit = [
 ]
 
 [tool.coverage.report]
-# Starting floor per #15 ADR. Ratchet upward in a follow-up ADR once the
-# first real measurement is in. Never lower without a documented ADR update.
+# Starting floor. Ratchet upward after real measurement, and never lower
+# without a documented architectural update.
 fail_under = 60
 show_missing = true
 skip_covered = false

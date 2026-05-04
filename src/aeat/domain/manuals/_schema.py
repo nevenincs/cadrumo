@@ -7,11 +7,11 @@ the loader idiom permits it, per the project-wide pydantic v2
 mandate.
 
 Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
-:class:`aeat.core.i18n.Translatable`. Modelo casilla cross-references
+:class:`aeat.core.i18n.Translatable`. Modelo field cross-references
 are stored as validated strings (``MODELO_130:01`` shape) so the
 manuals corpus stays loadable even when a citation references a
-casilla outside the :class:`aeat.domain.casillas.CasillaRecord`
-catalogue at load time.
+field that has not yet been promoted into a validated registry
+snapshot.
 
 Spanish is the authoritative language for AEAT-domain terminology.
 Spanish-authoritative translatable fields on persisted records are
@@ -32,13 +32,13 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints
 from ...core.i18n import Translatable
 from ..modelos import ModeloCode
 
-# Modelo + casilla cross-reference syntax used inside extracted rules.
+# Modelo field cross-reference syntax used inside extracted rules.
 # The MODELO_NNN prefix is anchored to the closed `aeat.domain.modelos.ModeloCode`
 # enum (each member's value is the three-character AEAT code string), so a
 # new modelo cannot be cited from the manuals corpus without first being
-# registered in `aeat.domain.modelos`. The optional ``:<casilla>`` suffix is a
-# validated string only - the casilla itself need not exist in the casilla
-# catalogue at load time.
+# registered in `aeat.domain.modelos`. The optional field suffix is a
+# validated string only - the field itself need not exist in a registry
+# snapshot at manual-corpus load time.
 _MODELO_CODE_ALTERNATION = "|".join(member.value for member in ModeloCode)
 _MODELO_CASILLA_PATTERN = rf"^MODELO_(?:{_MODELO_CODE_ALTERNATION})(?::[0-9A-Z_]+)?$"
 
@@ -104,9 +104,9 @@ _StableId = Annotated[
 # Reviewer tag: any non-empty trimmed string (e.g. GitHub handle, email, or name).
 _Reviewer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 
-# Modelo + casilla cross-reference, e.g. ``MODELO_130:01``. Validated as a
-# constrained string so manuals can cite casillas that may not yet exist in
-# the casilla catalogue at load time.
+# Modelo field cross-reference, e.g. ``MODELO_130:01``. Validated as a
+# constrained string so manuals can cite fields that may not yet exist in a
+# registry snapshot at manual-corpus load time.
 _CasillaRef = Annotated[str, StringConstraints(strip_whitespace=True, pattern=_MODELO_CASILLA_PATTERN)]
 
 # Legal-act reference: free-form but trimmed + non-empty, e.g. "Ley 35/2006, art. 32".
@@ -208,7 +208,7 @@ class Rule(_ManualStrictFrozen):
         statement: Rule statement in all supplied languages.
         applies_when: Optional natural-language predicate describing
             the rule's applicability.
-        references_casillas: Cross-references to modelo casillas.
+        references_casillas: Cross-references to modelo fields.
         references_sections: Cross-references to sibling sections by
             stable id.
         references_legal_acts: Cross-references to external legal acts
@@ -234,7 +234,7 @@ class Rule(_ManualStrictFrozen):
     )
     references_casillas: tuple[_CasillaRef, ...] = Field(
         default_factory=tuple,
-        description="Cross-references to modelo casillas (e.g. 'MODELO_130:01').",
+        description="Cross-references to modelo fields (e.g. 'MODELO_130:01').",
     )
     references_sections: tuple[_StableId, ...] = Field(
         default_factory=tuple,

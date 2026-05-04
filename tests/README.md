@@ -37,7 +37,7 @@ function.
 
 | Marker                   | Covers                                                                            | Selection example                                |
 | :----------------------- | :-------------------------------------------------------------------------------- | :----------------------------------------------- |
-| `domain_outbound`     | `auth`, `browser`, `casillas`, `inbox`, `justificante`, `portals`, `status`, `sync` | `uv run pytest -m "unit and domain_outbound"` |
+| `domain_outbound`     | `auth`, `browser`, `inbox`, `justificante`, `portals`, `status`, `sync` | `uv run pytest -m "unit and domain_outbound"` |
 | `domain_submission`      | `filing`, `submission` local export, preflight, and historical records             | `uv run pytest -m "unit and domain_submission"`  |
 | `domain_inbound` | `financial`, `cli/financial`                                                       | `just test-domain financial_input`               |
 | `domain_persistence`     | `storage`, `models`, `normatives`, `manuals`, `corpus`, `schema`, `deadlines`     | `just test-domain local_state`                   |

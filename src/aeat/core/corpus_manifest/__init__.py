@@ -13,9 +13,9 @@ fields are validated against path-traversal at construction.
 
 Operator workflow (via the ``aeat security verify-corpus`` CLI):
 
-- ``aeat security verify-corpus --corpus casillas`` — re-walk the
-  casillas root and exit non-zero with a per-file diff on drift.
-- ``aeat security verify-corpus --corpus casillas --regenerate``
+- ``aeat security verify-corpus --corpus manuals`` — re-walk the
+  manuals root and exit non-zero with a per-file diff on drift.
+- ``aeat security verify-corpus --corpus manuals --regenerate``
   — re-walk and rewrite the manifest in place after intentional
   corpus updates.
 """
@@ -96,7 +96,7 @@ class CorpusManifest(BaseModel):
         manifest_version: Wire-format version. Higher than the consumer
             supports raises :class:`CorpusManifestError` at load time.
         corpus_root_name: Stable identifier for the corpus
-            (``"casillas"``, ``"manuals"``, etc.).
+            (``"manuals"``, ``"legal"``, etc.).
         generated_at: UTC timestamp the manifest was built.
         entries: Frozen tuple of :class:`CorpusEntry` records, sorted by
             ``relative_path`` for deterministic ``manifest_sha256``.
