@@ -1,8 +1,6 @@
-"""Financial aggregation boundaries for registry-backed AEAT filing inputs."""
+"""Financial aggregation value models."""
 
 from __future__ import annotations
-
-from typing import TYPE_CHECKING
 
 from ._errors import (
     AggregationCategoryCoverageError,
@@ -12,10 +10,6 @@ from ._errors import (
     AggregationUnsupportedModeloError,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
-from ._service import aggregate_catalogue
-
-if TYPE_CHECKING:
-    from ._provider import FinancialFilingInputsProvider
 
 __all__ = [
     "AggregationCategoryCoverageError",
@@ -25,19 +19,7 @@ __all__ = [
     "AggregationUnsupportedModeloError",
     "CasillaAggregation",
     "CasillaProvenance",
-    "FinancialFilingInputsProvider",
     "Period",
     "PeriodKind",
     "Quarter",
-    "aggregate_catalogue",
 ]
-
-
-def __getattr__(name: str) -> object:
-    """Lazily expose repository-backed provider without importing storage at CLI startup."""
-
-    if name == "FinancialFilingInputsProvider":
-        from ._provider import FinancialFilingInputsProvider
-
-        return FinancialFilingInputsProvider
-    raise AttributeError(name)

@@ -1,9 +1,8 @@
-"""Strict boundary models for the financial transaction aggregation service.
+"""Strict boundary models for financial transaction aggregation.
 
 Carries the :class:`Period` parser, the per-casilla
 :class:`CasillaProvenance` trace, and the aggregated
-:class:`CasillaAggregation` ledger consumed by
-:func:`aeat.application.aggregation.aggregate_catalogue`.
+:class:`CasillaAggregation` ledger shape.
 """
 
 from __future__ import annotations
