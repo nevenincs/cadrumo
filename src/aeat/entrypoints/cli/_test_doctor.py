@@ -522,17 +522,6 @@ class TestKdfVersionRow:
         assert row.state == State.OK
         assert "Argon2id" in row.detail
 
-    def test_v1_kdf_is_warn_with_migration_hint(self, tmp_path: Path) -> None:
-        secret_dir = tmp_path / "secrets"
-        secret_dir.mkdir()
-        (secret_dir / "master.kdf").write_text(
-            json.dumps({"version": 1, "algorithm": "scrypt"}),
-            encoding="utf-8",
-        )
-        row = check_kdf_version(_settings_with_secret_dir(tmp_path))
-        assert row.state == State.WARN
-        assert "migrate-master-key-kdf" in row.detail
-
     def test_unparseable_master_kdf_is_partial(self, tmp_path: Path) -> None:
         secret_dir = tmp_path / "secrets"
         secret_dir.mkdir()

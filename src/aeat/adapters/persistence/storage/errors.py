@@ -48,7 +48,7 @@ class DecryptionError(EncryptionError):
 
 
 class KeyDerivationError(EncryptionError):
-    """Raised when an HKDF / scrypt key-derivation step fails."""
+    """Raised when a key-derivation step fails."""
 
 
 class NonceCollisionError(EncryptionError):
@@ -75,11 +75,9 @@ class MasterKeyUnavailableError(SecretStoreError):
 class MasterKeyKdfVersionError(MasterKeyUnavailableError):
     """Raised when the on-disk ``master.kdf`` declares a KDF version this build cannot consume.
 
-    The substrate gates the master.kdf parameters by version. Mismatch
-    means the operator is on a build that has rotated the password-derived
-    KDF (e.g. the scrypt -> Argon2id transition); the operator
-    must run ``aeat security migrate-master-key-kdf`` to re-wrap the
-    master key under the new KDF.
+    The substrate gates the master.kdf parameters by version. Mismatch means
+    the operator's passphrase may be correct, but the on-disk parameters do not
+    match this build's supported key-derivation contract.
     """
 
 
