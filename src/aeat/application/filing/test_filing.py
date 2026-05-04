@@ -17,7 +17,6 @@ from . import (
     CasillaSchemaProvider,
     FilingBuilderError,
     FilingDraft,
-    FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingValidationFinding,
@@ -220,14 +219,27 @@ def test_iter_findings_threshold() -> None:
         list(iter_findings(draft, severity_at_least="HUGE"))
 
 
-def test_approve_requires_registry_snapshot() -> None:
-    with pytest.raises(FilingDraftError, match="validated registry snapshot"):
-        approve_draft(
-            _draft(),
-            approved_by="kent",
-            schema_provider=_schema_provider(),
-            transaction_catalogue=TransactionCatalogue(),
-        )
+def test_approve_draft_uses_registry_schema_fingerprint() -> None:
+    schema_provider = build_runtime_schema_provider()
+    draft = build_draft(
+        modelo="130",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={"01": Decimal("100"), "02": Decimal("25")},
+        schema_provider=schema_provider,
+    )
+
+    approved = approve_draft(
+        draft,
+        approved_by="kent",
+        schema_provider=schema_provider,
+        transaction_catalogue=TransactionCatalogue(),
+    )
+
+    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.approval_basis is not None
+    assert approved.approval_basis.schema_formula_fingerprint
+    assert approved.review_checksum is not None
 
 
 def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval() -> None:
