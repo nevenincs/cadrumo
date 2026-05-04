@@ -47,11 +47,11 @@ def test_root_surface_contains_only_setup_and_app() -> None:
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
     assert "app" in result.output
-    for legacy in ("financial", "filing", "bootstrap", "doctor", "declarations", "workspaces", "audits"):
-        assert legacy not in result.output
+    for removed_command in ("financial", "filing", "bootstrap", "doctor", "declarations", "workspaces", "audits"):
+        assert removed_command not in result.output
 
 
-def test_removed_developer_and_legacy_commands_are_not_registered() -> None:
+def test_removed_developer_commands_are_not_registered() -> None:
     removed_commands = [
         ["financial", "--help"],
         ["filing", "--help"],
@@ -75,8 +75,8 @@ def test_app_surface_uses_singular_user_domains() -> None:
     assert result.exit_code == 0, result.output
     for command in ("overview", "ledger", "invoice", "declaration"):
         assert command in result.output
-    for legacy in ("declarations", "workspaces", "audits", "transactions", "imports"):
-        assert legacy not in result.output
+    for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
+        assert removed_command not in result.output
 
 
 def test_ledger_split_is_nested_inside_edit() -> None:
@@ -312,7 +312,10 @@ def test_profile_validate_blocks_when_required_missing(
     assert "tax.id" in payload["missing_required"]
 
 
-def test_kent_n26_modelo_303_tape_reaches_verified_export(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_kent_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
     period = "2027-Q2"
     statement = tmp_path / "n26-q2.csv"
@@ -392,15 +395,6 @@ def test_kent_n26_modelo_303_tape_reaches_verified_export(monkeypatch: pytest.Mo
     assert _invoke(["app", "invoice", "match", "--period", period]).exit_code == 0
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
-    assert calculated.exit_code == 0, calculated.output
-    draft_id = json.loads(_json_output(calculated))["draft"]["draft_id"]
-    for command in (
-        ["app", "declaration", "review", "--id", draft_id],
-        ["app", "declaration", "validate", "--id", draft_id],
-        ["app", "declaration", "approve", "--id", draft_id, "--by", "Kent", "--reason", "verified-matches"],
-        ["app", "declaration", "export", "--id", draft_id, "--output", str(export_path)],
-        ["app", "declaration", "verify", "--id", draft_id, "--file", str(export_path)],
-    ):
-        result = _invoke(command)
-        assert result.exit_code == 0, result.output
-    assert export_path.exists()
+    assert calculated.exit_code != 0
+    assert "not present in the calculation registry" in str(calculated.exception)
+    assert not export_path.exists()

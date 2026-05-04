@@ -32,7 +32,7 @@ class DiscrepancyCause(StrEnum):
             casilla). The operator should re-check the source PDF.
         ROUNDING: Small delta within ``10 * tolerance`` on a computed
             casilla. Non-blocking.
-        UNMODELLED_RULE: The ruleset has no formula for this casilla;
+        UNMODELLED_RULE: The registry snapshot has no formula for this casilla;
             the user's value is accepted as-is.
         CORRECTNESS_DIVERGENCE: Material disagreement — likely an
             extractor bug or a formula bug. Requires operator review.
@@ -53,14 +53,11 @@ class VerificationStatus(StrEnum):
         NEEDS_REVIEW: At least one
             :attr:`DiscrepancyCause.EXTRACTION_UNRELIABLE` or
             :attr:`DiscrepancyCause.CORRECTNESS_DIVERGENCE` finding, or
-            ruleset coverage below 30%.
-        UNVERIFIABLE: No ruleset is registered for this
-            ``(modelo, período)`` pair; nothing can be compared.
+            registry coverage below 30%.
     """
 
     VERIFIED = "VERIFIED"
     NEEDS_REVIEW = "NEEDS_REVIEW"
-    UNVERIFIABLE = "UNVERIFIABLE"
 
 
 class ClassifiedDiscrepancy(BaseModel):
@@ -93,13 +90,11 @@ class VerificationVerdict(BaseModel):
     Attributes:
         modelo: AEAT modelo identifier (e.g. ``"130"``).
         period: Period identifier (e.g. ``"2025Q1"``).
-        ruleset_id: Identifier of the formula ruleset used for the audit,
-            or ``None`` when the verdict is
-            :attr:`VerificationStatus.UNVERIFIABLE`.
+        registry_snapshot_id: Identifier of the registry snapshot used for the audit,
         status: The :class:`VerificationStatus` summarising the verdict.
         discrepancies: Every :class:`ClassifiedDiscrepancy` produced by
             the engine audit.
-        coverage: Fraction of the ruleset's casillas the extraction
+        coverage: Fraction of the registry casillas the extraction
             supplied, in the inclusive ``0.0..1.0`` range.
         narrative: Multilingual user-facing summary string.
         verified_at: UTC timestamp of when the verdict was produced.
@@ -109,7 +104,7 @@ class VerificationVerdict(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=8)
     period: str = Field(min_length=1, max_length=16)
-    ruleset_id: str | None
+    registry_snapshot_id: str
     status: VerificationStatus
     discrepancies: tuple[ClassifiedDiscrepancy, ...]
     coverage: float = Field(ge=0.0, le=1.0)

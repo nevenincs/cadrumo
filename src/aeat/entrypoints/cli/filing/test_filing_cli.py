@@ -42,12 +42,12 @@ def _write_inputs(tmp_path: Path) -> Path:
     return target
 
 
-def _write_submitted_filing(submissions_dir: Path) -> SubmittedFiling:
+def _write_submitted_filing(submissions_dir: Path, *, draft_id: str = "draft-cli-1") -> SubmittedFiling:
     """Persist a real submitted-filing record for CLI amendment tests."""
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     filing = SubmittedFiling(
         submission_id="sub-cli-1",
-        draft_id="draft-cli-1",
+        draft_id=draft_id,
         modelo="130",
         period="2024Q1",
         profile_tax_id="00000000T",
@@ -67,6 +67,12 @@ def _write_submitted_filing(submissions_dir: Path) -> SubmittedFiling:
     )
     (submissions_dir / "sub-cli-1.json").write_text(filing.model_dump_json(), encoding="utf-8")
     return filing
+
+
+def _single_draft_path(drafts_dir: Path) -> Path:
+    drafts = list(drafts_dir.glob("*.envelope.json"))
+    assert len(drafts) == 1
+    return drafts[0]
 
 
 @pytest.fixture
@@ -157,9 +163,10 @@ class TestFilingCLI:
                 "Configured operator",
             ],
         )
-        assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert result.exit_code == 0, result.output
+        assert "Saved draft" in result.output
+        assert "registry:130:2019-y-siguientes" in result.output
+        assert _single_draft_path(drafts_dir).exists()
 
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -175,9 +182,10 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert result.exit_code == 0, result.output
+        assert "Saved draft" in result.output
+        assert "registry:130:2019-y-siguientes" in result.output
+        assert _single_draft_path(drafts_dir).exists()
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -193,9 +201,16 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        assert build_result.exit_code != 0
-        assert "validated registry" in build_result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert build_result.exit_code == 0, build_result.output
+        draft_path = _single_draft_path(drafts_dir)
+
+        show_result = runner.invoke(app, ["show", str(draft_path)])
+        assert show_result.exit_code == 0, show_result.output
+        assert "registry:130:2019-y-siguientes" in show_result.output
+
+        validate_result = runner.invoke(app, ["validate", str(draft_path)])
+        assert validate_result.exit_code == 0, validate_result.output
+        assert "READY_TO_SUBMIT" in validate_result.output
 
     def test_validate_preserves_approval_for_unchanged_reviewed_draft(
         self,
@@ -217,9 +232,12 @@ class TestFilingCLI:
                 str(inputs),
             ],
         )
-        assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert result.exit_code == 0, result.output
+        draft_path = _single_draft_path(drafts_dir)
+
+        validate_result = runner.invoke(app, ["validate", str(draft_path)])
+        assert validate_result.exit_code == 0, validate_result.output
+        assert "READY_TO_SUBMIT" in validate_result.output
 
     def test_list_filters_by_modelo(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -248,10 +266,10 @@ class TestFilingCLI:
             app,
             ["import", "--from-justificante", str(pdf)],
         )
-        assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.json"))
+        assert result.exit_code == 0, result.output
+        assert "from justificante" in result.output
+        assert _single_draft_path(drafts_dir).exists()
+        assert list(submissions_dir.glob("*.envelope.json"))
 
     def test_import_rejects_missing_pdf(
         self,
@@ -279,7 +297,6 @@ class TestFilingCLI:
             ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
         assert not list(drafts_dir.glob("*.envelope.json"))
         assert not list(submissions_dir.glob("*.json"))
 
@@ -304,8 +321,25 @@ class TestFilingCLI:
         self,
         drafts_dir: Path,
         submissions_dir: Path,
+        tmp_path: Path,
     ) -> None:
-        submitted = _write_submitted_filing(submissions_dir)
+        inputs = _write_inputs(tmp_path)
+        build_result = runner.invoke(
+            app,
+            [
+                "build",
+                "--modelo",
+                "130",
+                "--period",
+                "2024Q1",
+                "--inputs",
+                str(inputs),
+            ],
+        )
+        assert build_result.exit_code == 0, build_result.output
+        draft_path = _single_draft_path(drafts_dir)
+        draft_id = draft_path.name.removesuffix(".envelope.json")
+        submitted = _write_submitted_filing(submissions_dir, draft_id=draft_id)
         payload = {
             "original_submission_id": submitted.submission_id,
             "updated_inputs": {
@@ -321,7 +355,7 @@ class TestFilingCLI:
             ["complementaria", "build", "130", "2024Q1", json.dumps(payload)],
         )
 
-        assert result.exit_code != 0, result.output
-        assert "validated registry" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not (submissions_dir / "amendments").exists()
+        assert result.exit_code == 0, result.output
+        assert "Saved amended draft" in result.output
+        assert len(list(drafts_dir.glob("*.envelope.json"))) == 2
+        assert (submissions_dir / "amendments").exists()
