@@ -148,8 +148,7 @@ source_refs = ["aeat-dr-303-2024-v2"]
 [[revisions."2024-from-09-3t".formulas]]
 id = "resultado-regimen-general"
 target = "46"
-op = "copy"
-args = [{{ casilla = "03" }}]
+expression = {{ op = "copy", args = [{{ casilla = "03" }}] }}
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92"]
 source_refs = ["aeat-dr-303-2024-v2"]
@@ -269,8 +268,7 @@ def test_validator_rejects_duplicate_formula_targets(tmp_path: Path) -> None:
 [[revisions."2024-from-09-3t".formulas]]
 id = "duplicate-target"
 target = "46"
-op = "copy"
-args = [{ casilla = "03" }]
+expression = { op = "copy", args = [{ casilla = "03" }] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92"]
 source_refs = ["aeat-dr-303-2024-v2"]

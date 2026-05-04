@@ -1,0 +1,354 @@
+[modelo]
+id = "130"
+title = "IRPF pago fraccionado estimacion directa"
+official_name = "Impuesto sobre la Renta de las Personas Fisicas. Actividades economicas en estimacion directa. Pago fraccionado."
+tax_domain = "irpf"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[revisions."2019-y-siguientes"]
+label = "Orden HAP/258/2015, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.direct_estimation_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Ingresos"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Gastos"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Rendimiento neto"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-rendimiento-neto"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Importe del pago fraccionado"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-pago-fraccionado-directa"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Pagos fraccionados anteriores"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "Retenciones e ingresos a cuenta"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "Resultado parcial apartado I"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-apartado-i"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "08"
+number = "08"
+label = "Volumen de ingresos del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "09"
+number = "09"
+label = "Importe del pago fraccionado"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "10"
+number = "10"
+label = "Retenciones e ingresos a cuenta"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "11"
+number = "11"
+label = "Resultado parcial apartado II"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-apartado-ii"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "12"
+number = "12"
+label = "Suma de resultados parciales"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-suma-parciales"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "13"
+number = "13"
+label = "Minoracion por rendimientos netos"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "14"
+number = "14"
+label = "Neto tras minoracion"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-neto-tras-minoracion"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "15"
+number = "15"
+label = "Resultados negativos de trimestres anteriores"
+section = ["resultados_negativos_trimestres_anteriores"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "16"
+number = "16"
+label = "Deduccion por inversion en vivienda habitual"
+section = ["deduccion_inversion_vivienda_habitual"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "17"
+number = "17"
+label = "Diferencia"
+section = ["resultado_final"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-diferencia"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "18"
+number = "18"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["resultado_final"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "19"
+number = "19"
+label = "Resultado final"
+section = ["resultado_final"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-final"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-rendimiento-neto"
+target = "03"
+expression = { op = "subtract", args = [{ casilla = "01" }, { casilla = "02" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-pago-fraccionado-directa"
+target = "04"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "percent", args = [
+        { casilla = "03" },
+        { parameter = "irpf.direct_estimation_fractional_payment_rate" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-apartado-i"
+target = "07"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "subtract", args = [{ casilla = "04" }, { casilla = "05" }] },
+        { casilla = "06" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-pago-fraccionado-agrario"
+target = "09"
+expression = { op = "percent", args = [
+    { casilla = "08" },
+    { parameter = "irpf.agriculture_fractional_payment_rate" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-apartado-ii"
+target = "11"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "09" }, { casilla = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-suma-parciales"
+target = "12"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "add", args = [{ casilla = "07" }, { casilla = "11" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-neto-tras-minoracion"
+target = "14"
+expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-diferencia"
+target = "17"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
+    { casilla = "16" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-final"
+target = "19"
+expression = { op = "subtract", args = [{ casilla = "17" }, { casilla = "18" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
