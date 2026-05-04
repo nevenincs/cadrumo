@@ -97,9 +97,11 @@ def test_extract_and_translate_report_issue21_dependency(tmp_path: Path) -> None
     assert "requires the bulk translator surface" in translate_result.stdout
 
 
-def test_hydrate_command_is_not_app_facing() -> None:
-    """The legacy hydrate write path must not be reachable from the CLI."""
-    result = runner.invoke(app, ["hydrate"])
+def test_command_surface_is_read_and_review_only() -> None:
+    """The casillas CLI exposes catalogue inspection commands only."""
+    result = runner.invoke(app, ["--help"])
 
-    assert result.exit_code == 2
-    assert "No such command" in result.output
+    assert result.exit_code == 0
+    for command in ("list", "verify", "extract", "translate"):
+        assert command in result.output
+    assert "hydrate" not in result.output

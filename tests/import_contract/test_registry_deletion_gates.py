@@ -48,32 +48,19 @@ def test_declaration_export_functions_fail_before_runtime_work(function_name: st
 
 def test_casilla_catalogue_writers_have_no_filesystem_write_path() -> None:
     casillas_package = importlib.import_module("aeat.domain.casillas")
+    catalogue_module = importlib.import_module("aeat.domain.casillas.catalogue")
     assert not hasattr(casillas_package, "save_casillas")
     assert "save_casillas" not in casillas_package.__all__
     package_source = _source("src/aeat/domain/casillas/__init__.py")
     assert "save_casillas" not in package_source
-    source = _source("src/aeat/domain/casillas/catalogue.py")
     for function_name in ("save_casillas", "write_extract_draft", "write_translate_draft", "_write_temp_catalogue"):
-        node = _function_node(source, function_name)
-        write_calls = [
-            child
-            for child in ast.walk(node)
-            if isinstance(child, ast.Call)
-            and isinstance(child.func, ast.Attribute)
-            and child.func.attr in {"mkdir", "write_text", "write_bytes", "open"}
-        ]
-        assert write_calls == [], f"{function_name} reintroduced a corpus writer"
+        assert not hasattr(catalogue_module, function_name)
 
 
 def test_public_hydrate_module_cannot_reach_legacy_ruleset_projection() -> None:
-    source = _source("src/aeat/domain/casillas/_hydrate/__init__.py")
-    assert "from .records import" not in source
-    assert "_hydrate_from_rulesets" not in source
-    assert "casilla hydrate is disabled" in source
     hydrate_dir = _ROOT / "src/aeat/domain/casillas/_hydrate"
-    assert not (hydrate_dir / "records.py").exists()
-    assert not (hydrate_dir / "formulas.py").exists()
-    assert not (hydrate_dir / "metadata.py").exists()
+    assert not hydrate_dir.exists()
+    assert importlib.util.find_spec("aeat.domain.casillas._hydrate") is None
 
 
 def test_runtime_schema_provider_cannot_import_model_specific_static_schemas() -> None:

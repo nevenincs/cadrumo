@@ -1,4 +1,4 @@
-"""Catalogue loading, saving, and verification helpers.
+"""Catalogue loading and verification helpers.
 
 Persistence layer for :class:`~aeat.domain.casillas.models.CasillaCatalogue`:
 resolves the corpus root from configuration, validates the on-disk
@@ -215,35 +215,6 @@ def load_casillas(modelo: str, period: str, root: Path | None = None) -> Casilla
         raise CasillaParseError(path, summary)
     _log.debug("loaded casilla catalogue %s/%s (%d records)", modelo, period, len(catalogue.records))
     return catalogue
-
-
-def save_casillas(catalogue: CasillaCatalogue, root: Path | None = None) -> None:
-    """Reject legacy casilla-corpus writes."""
-
-    path = catalogue_path(catalogue.modelo, catalogue.period, root=root)
-    raise CasillaParseError(path, "casilla catalogue writes are disabled; migrate definitions through registry/aeat")
-
-
-def write_extract_draft(catalogue: CasillaCatalogue) -> Path:
-    """Reject legacy extraction draft writes."""
-
-    return _write_temp_catalogue(catalogue, suffix="extract")
-
-
-def write_translate_draft(catalogue: CasillaCatalogue) -> Path:
-    """Reject legacy translation draft writes."""
-
-    return _write_temp_catalogue(catalogue, suffix="translate")
-
-
-def _write_temp_catalogue(catalogue: CasillaCatalogue, *, suffix: str) -> Path:
-    """Reject legacy temporary draft writes."""
-
-    path = catalogue_path(catalogue.modelo, catalogue.period)
-    raise CasillaParseError(
-        path,
-        f"casilla {suffix} draft writes are disabled; migrate definitions through registry/aeat",
-    )
 
 
 def attach_draft_provenance(
