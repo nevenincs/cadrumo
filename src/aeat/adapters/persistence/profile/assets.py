@@ -248,7 +248,7 @@ class AssetsLedgerRepository:
                 raise AssetRecordError(
                     f"asset {asset.identifier!r} already exists",
                     context={"asset_id": asset.identifier},
-                    suggestion=f"aeat data ledgers assets show {asset.identifier}",
+                    suggestion=None,
                 )
             updated = AssetsLedgerDocument(assets=(*current.assets, asset))
             self._save_unlocked(updated)
