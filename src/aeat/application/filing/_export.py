@@ -14,8 +14,7 @@ The CLI exposes two primitives the application layer must back end-to-end:
   can render a deterministic table.
 
 The records are structured return values for renderers, persistence, and
-JSON round trips. Runtime export remains disabled until registry-backed
-schemas replace the deleted generated modules.
+JSON round trips. Runtime export requires registry-backed schemas.
 
 The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`aeat.domain.submission`) — local export and live submit are
@@ -224,7 +223,7 @@ def export_draft(
 ) -> DeclarationExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt."""
     _ = (draft, output_path, headers)
-    raise ValueError("declaration export requires a validated registry snapshot; generated exporters are disabled")
+    raise ValueError("declaration export requires a validated registry snapshot")
 
 
 def verify_export(
@@ -234,7 +233,7 @@ def verify_export(
 ) -> DeclarationVerifyResult:
     """Verify an exported file against an approved draft and return a verdict."""
     _ = (draft, file_path)
-    raise ValueError("declaration verify requires a validated registry snapshot; generated exporters are disabled")
+    raise ValueError("declaration verify requires a validated registry snapshot")
 
 
 __all__ = [

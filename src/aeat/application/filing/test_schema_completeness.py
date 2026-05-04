@@ -1,4 +1,4 @@
-"""Runtime schema-provider deletion gate."""
+"""Runtime schema-provider registry gate."""
 
 from __future__ import annotations
 

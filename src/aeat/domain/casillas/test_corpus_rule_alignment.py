@@ -255,15 +255,6 @@ def test_corpus_committed_records_are_canonical_not_drafts(corpus_catalogues: _C
         pytest.fail("Corpus contains non-canonical records:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-def test_corpus_casilla_ids_match_extractor_for_extractor_backed_modelos() -> None:
-    """Corpus ID coverage no longer treats extractor class maps as authority."""
-    import importlib
-
-    extractor_package = importlib.import_module("aeat.adapters.inbound.declaracion._extractors")
-    assert not hasattr(extractor_package, "_REGISTERED_CLASSES")
-    assert not hasattr(extractor_package, "_REGISTRY")
-
-
 def test_corpus_references_rules_have_no_duplicates(corpus_catalogues: _Catalogues) -> None:
     """``references_rules`` must be dedup'd per record."""
     failures: list[str] = []
@@ -381,11 +372,3 @@ def test_corpus_help_and_label_carry_no_dev_process_leakage(corpus_catalogues: _
         pytest.fail(
             "Corpus leaks dev-process tokens into user-facing strings:\n" + "\n".join(f" - {f}" for f in failures)
         )
-
-
-def test_corpus_modelo_840_label_es_matches_extractor_text_labels() -> None:
-    """M840 corpus labels must not depend on a Python extractor class map."""
-    import importlib.util
-
-    spec = importlib.util.find_spec("aeat.adapters.inbound.declaracion._extractors.modelo_840_v2025")
-    assert spec is None

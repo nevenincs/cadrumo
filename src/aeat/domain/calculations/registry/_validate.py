@@ -76,7 +76,7 @@ class RegistryValidator:
 
         primary_ids = casilla_ids + formula_ids + binding_ids + relation_ids + parameter_ids + algorithm_binding_ids
         for duplicate in sorted(_duplicates(primary_ids)):
-            failures.append(f"{prefix}: shadowed registry id {duplicate!r}")
+            failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
 
         casillas = set(casilla_ids)
         formulas = {formula.id: formula for formula in revision.formulas}

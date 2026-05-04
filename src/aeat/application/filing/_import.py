@@ -206,7 +206,7 @@ def _build_submission_record(
 
     The ``submission_id`` hashes the CSV and the draft id together so it
     stays stable across re-imports of the same PDF and remains distinct
-    from legacy local attempt ids.
+    from locally-created attempt ids.
     """
     from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 

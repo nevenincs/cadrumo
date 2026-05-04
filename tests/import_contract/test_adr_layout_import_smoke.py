@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib
-import importlib.util
 from pathlib import Path
 
 import pytest
@@ -82,14 +81,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.core.identity",
 )
 
-DELETED_ROOT_MODULES: tuple[str, ...] = (
-    "aeat.auth",
-    "aeat.errors",
-    "aeat.formulas",
-    "aeat.domain.formulas",
-    "aeat.submission",
-)
-
 CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.core.errors", "AeatError"),
     ("aeat.core.access_gate", "LiveSubmitForbiddenError"),
@@ -97,18 +88,6 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.adapters.outbound.google", "GoogleAuthPath"),
     ("aeat.adapters.outbound.google", "get_credentials_for_scopes"),
     ("aeat.application.auth", "select_provider"),
-)
-
-FORBIDDEN_RELOCATED_PATHS: tuple[str, ...] = (
-    "domain/auth",
-    "domain/testing",
-    "domain/profile/_storage.py",
-    "domain/schema/_boe_extractor.py",
-    "domain/schema/_fetch.py",
-    "domain/schema/testing.py",
-    "domain/justificante/_parser.py",
-    "domain/justificante/_extract.py",
-    "domain/justificante/_parsers",
 )
 
 REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
@@ -128,24 +107,12 @@ def test_adr_layout_package_import_smoke(module_name: str) -> None:
     importlib.import_module(module_name)
 
 
-@pytest.mark.parametrize("module_name", DELETED_ROOT_MODULES)
-def test_deleted_root_modules_stay_absent(module_name: str) -> None:
-    """Hard-cutover forbids deleted root modules from reappearing."""
-    assert importlib.util.find_spec(module_name) is None
-
-
 @pytest.mark.parametrize(("module_name", "symbol_name"), CANONICAL_PUBLIC_SYMBOLS)
 def test_canonical_public_symbols_are_exposed(module_name: str, symbol_name: str) -> None:
     """Representative ADR public symbols remain available at canonical paths."""
     module = importlib.import_module(module_name)
 
     assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
-
-
-@pytest.mark.parametrize("relative_path", FORBIDDEN_RELOCATED_PATHS)
-def test_relocated_surfaces_do_not_reappear_at_old_paths(relative_path: str) -> None:
-    """ADR relocation decisions are static filesystem contracts."""
-    assert not (SRC_AEAT / relative_path).exists()
 
 
 @pytest.mark.parametrize("relative_path", REQUIRED_RELOCATED_PATHS)

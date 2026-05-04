@@ -131,7 +131,7 @@ def assert_remote_operation_allowed(
 
 
 def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
-    """Evaluate one operation against the fail-closed remote-state guard."""
+    """Evaluate one operation against the deny-by-default remote-state guard."""
 
     if operation.kind == "local_workbook":
         return RemoteStateGuardResult(

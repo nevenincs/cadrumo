@@ -283,7 +283,7 @@ source_refs = ["aeat-dr-303-2024-v2"]
         RegistryValidator(_catalogues(), source_root=tmp_path).validate_modelo(modelo)
 
 
-def test_validator_rejects_formula_id_shadowing_casilla_id(tmp_path: Path) -> None:
+def test_validator_rejects_formula_id_matching_casilla_id(tmp_path: Path) -> None:
     path = tmp_path / "303.toml"
     _write_modelo(path)
     text = path.read_text(encoding="utf-8").replace('id = "resultado-regimen-general"', 'id = "46"', 1)
@@ -292,7 +292,7 @@ def test_validator_rejects_formula_id_shadowing_casilla_id(tmp_path: Path) -> No
     _write_sources(tmp_path)
     modelo = load_modelo_file(path)
 
-    with pytest.raises(RegistryValidationError, match="shadowed registry id '46'"):
+    with pytest.raises(RegistryValidationError, match="duplicate registry id '46'"):
         RegistryValidator(_catalogues(), source_root=tmp_path).validate_modelo(modelo)
 
 

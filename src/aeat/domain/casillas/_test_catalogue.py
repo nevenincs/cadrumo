@@ -57,7 +57,7 @@ def _record(
 
 
 def test_casillas_exports_canonical_modelo_code() -> None:
-    """The casilla API must not expose a shadow ModeloCode enum."""
+    """The casilla API exposes the project-wide ModeloCode enum."""
 
     from . import ModeloCode
 
@@ -65,8 +65,8 @@ def test_casillas_exports_canonical_modelo_code() -> None:
     assert ModeloCode.MODELO_130.value == "130"
 
 
-def test_modelo_validator_accepts_canonical_and_legacy_modelo_ids() -> None:
-    """Corpus payloads keep legacy names while new boundaries use canonical codes."""
+def test_modelo_validator_accepts_canonical_and_corpus_prefixed_modelo_ids() -> None:
+    """Corpus payloads and boundary payloads both validate through one schema."""
 
     assert _record().modelo == "MODELO_130"
     assert CasillaCatalogue(modelo=CanonicalModeloCode.MODELO_130.value, period="2025Q4", records=()).modelo == "130"

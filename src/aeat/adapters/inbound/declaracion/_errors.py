@@ -16,21 +16,11 @@ class DeclaracionParseError(PdfFilingImportError):
     """Raised when a PDF cannot be parsed into a declaración filing.
 
     Base class for all parse-time errors emitted by
-    :func:`aeat.adapters.inbound.declaracion.parse_declaracion`. Concrete
-    subclasses (:exc:`NoExtractorRegisteredError`,
-    :exc:`TemplateNotDetectedError`) signal recoverable conditions; the
-    bare class is raised for low-level failures (PDF unreadable, header
-    field missing, etc.).
-    """
-
-
-class NoExtractorRegisteredError(DeclaracionParseError):
-    """Raised when extraction reaches the disabled legacy dispatch path.
-
-    The legacy Python extractor registry is intentionally fail-closed.
-    Callers must use validated registry snapshots once registry-backed
-    declaration extraction is available; supported-triple enumeration is
-    no longer authoritative.
+    :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
+    :exc:`TemplateNotDetectedError` signals a recoverable template
+    detection failure; the bare class is raised for low-level failures
+    (PDF unreadable, header field missing, missing registry coverage,
+    etc.).
     """
 
 
