@@ -4,7 +4,7 @@ Provides the typed schema, file-backed loader, query API, verification
 report, and raw-manual fetcher for the annual AEAT *Manual práctico de
 Renta* and *Manual práctico de IVA* handbooks. The handbook is the
 *de facto* rule book for every modelo the project files, and the
-casilla catalogue, schema extractor, and downstream filing modules all
+registry definitions, schema extractor, and downstream filing modules all
 consume this schema.
 
 Public surface: callers from outside this subpackage must import

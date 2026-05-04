@@ -15,7 +15,6 @@ SRC_AEAT = Path(__file__).resolve().parents[2] / "src" / "aeat"
 ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain",
     "aeat.domain.modelos",
-    "aeat.domain.casillas",
     "aeat.domain.manuals",
     "aeat.domain.normatives",
     "aeat.domain.portals",

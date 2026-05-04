@@ -28,7 +28,6 @@ Submodules
 
    aeat.entrypoints.cli.attachments
    aeat.entrypoints.cli.bootstrap
-   aeat.entrypoints.cli.casillas
    aeat.entrypoints.cli.categories
    aeat.entrypoints.cli.cloud
    aeat.entrypoints.cli.docs
