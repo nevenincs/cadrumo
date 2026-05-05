@@ -569,6 +569,58 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
 
 
+def test_validator_rejects_unclassified_relation_source() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in revision.dependency_classifications if item.source_modelo != "130"
+            )
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="relation source modelo '130' has no dependency classification"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
+    mutated_classification = classification.model_copy(update={"relation_refs": classification.relation_refs[:1]})
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            )
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="does not cover relation refs"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_duplicate_dependency_classification_source() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    duplicate = classification.model_copy(update={"id": "renta-2025-dep-130-duplicate"})
+    mutated_revision = revision.model_copy(
+        update={"dependency_classifications": (*revision.dependency_classifications, duplicate)}
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="duplicate dependency classification source modelo '130'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
 def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_evidence() -> None:
     modelos_by_id, catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
