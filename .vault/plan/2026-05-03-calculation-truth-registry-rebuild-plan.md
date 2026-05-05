@@ -3980,8 +3980,11 @@ application surface, and the old authority has been deleted.
        - [x] Objective-estimation record-design outputs 1479, 1553, and 1577
          are registry-backed as informational casillas and round-trip through
          the official 2025 export parser paths.
-       - [ ] Objective-estimation formulas, signs, indices, and reductions
-         remain open until the module-order arithmetic is grounded.
+       - [x] The 2025 reduction chain is now registry-backed for casillas
+         1578, 1579, 1580, 1581, 1582, 0384, 1583, and 1605 with source and
+         legal closure plus behavior tests.
+       - [ ] Objective-estimation module signs, indices, and annual module
+         orders remain open until the full module-order arithmetic is grounded.
      - [x] Payments on account, retentions, and relation to Modelos 130 and 131.
        Casilla 0604 is computed from the registered Modelo 130 and Modelo 131
        relation values; casilla 0609 totals the official AEAT payments-on-

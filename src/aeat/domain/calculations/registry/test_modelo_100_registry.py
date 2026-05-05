@@ -113,7 +113,20 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert set(payments_retentions.bindings) == filed_dependency_bindings
     assert set(payments_retentions.relations) == {relation.id for relation in snapshot.revision.relations}
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
-    assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
+    assert {
+        "1444",
+        "1468",
+        "1474",
+        "1479",
+        "1484",
+        "1486",
+        "1536",
+        "1548",
+        "1553",
+        "1555",
+        "1560",
+        "1577",
+    }.issubset(economic_activities.casillas)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
@@ -496,12 +509,43 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     <TomaDatosAmpliada>
       <RegEstimaObj>
         <ActividadEstObj>
-          <E4AL>214.00</E4AL>
+          <Modulo1 definicion="1" unidades="2.00" rendimiento="10.00" />
+          <Modulo2 definicion="2" unidades="3.00" rendimiento="20.00" />
+          <E4AE>30.00</E4AE>
+          <E4AF>5.00</E4AF>
+          <E4AH>6.00</E4AH>
+          <E4AK>7.00</E4AK>
+          <E4AL>26.00</E4AL>
+          <E4AM>4.00</E4AM>
+          <E4AR>22.00</E4AR>
+          <E4SUMA>22.00</E4SUMA>
+          <E4REDU>2.00</E4REDU>
+          <E4TOTAL>20.00</E4TOTAL>
         </ActividadEstObj>
       </RegEstimaObj>
       <RegEstimaObjAgricola>
         <ActividadAgr>
-          <E5AK>315.00</E5AK>
+          <E5ADE>1</E5ADE>
+          <E5ACI>X</E5ACI>
+          <Producto1 ingresosIntegros="100.00" indice="0.50" rendimiento="50.00" />
+          <Producto2 ingresosIntegros="80.00" indice="0.25" rendimiento="20.00" />
+          <E5II>180.00</E5II>
+          <E5AA>180.00</E5AA>
+          <E5AB valor="10.00" />
+          <E5AC>170.00</E5AC>
+          <E5AI1>X</E5AI1>
+          <E5AI2>X</E5AI2>
+          <E5AD>170.00</E5AD>
+          <E5AE>20.00</E5AE>
+          <E5AF>150.00</E5AF>
+          <E5AG>5.00</E5AG>
+          <E5AJ>7.00</E5AJ>
+          <E5AK>138.00</E5AK>
+          <E5AL>3.00</E5AL>
+          <T5AM>135.00</T5AM>
+          <E5SUMA>135.00</E5SUMA>
+          <E5REDU>4.00</E5REDU>
+          <E5TOTAL>131.00</E5TOTAL>
         </ActividadAgr>
       </RegEstimaObjAgricola>
       <RegimenesEspeciales>
@@ -524,8 +568,41 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
-        "1479": Decimal("214.00"),
-        "1553": Decimal("315.00"),
+        "1474": Decimal("30.00"),
+        "1475": Decimal("5.00"),
+        "1477": Decimal("6.00"),
+        "1478": Decimal("7.00"),
+        "1479": Decimal("26.00"),
+        "1480": Decimal("4.00"),
+        "1481": Decimal("22.00"),
+        "1482": Decimal("22.00"),
+        "1483": Decimal("2.00"),
+        "1484": Decimal("20.00"),
+        "1486": Decimal("1"),
+        "1487": "X",
+        "1488": Decimal("100.00"),
+        "1489": Decimal("0.50"),
+        "1490": Decimal("50.00"),
+        "1491": Decimal("80.00"),
+        "1492": Decimal("0.25"),
+        "1493": Decimal("20.00"),
+        "1536": Decimal("180.00"),
+        "1537": Decimal("180.00"),
+        "1538": Decimal("10.00"),
+        "1539": Decimal("170.00"),
+        "1540": "X",
+        "1541": "X",
+        "1548": Decimal("170.00"),
+        "1549": Decimal("20.00"),
+        "1550": Decimal("150.00"),
+        "1551": Decimal("5.00"),
+        "1552": Decimal("7.00"),
+        "1553": Decimal("138.00"),
+        "1554": Decimal("3.00"),
+        "1555": Decimal("135.00"),
+        "1558": Decimal("135.00"),
+        "1559": Decimal("4.00"),
+        "1560": Decimal("131.00"),
         "1577": Decimal("128.00"),
     }
 

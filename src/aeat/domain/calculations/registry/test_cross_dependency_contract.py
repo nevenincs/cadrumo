@@ -158,18 +158,17 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
                 binding = bindings[relation.target_binding]
                 selector = binding.selector
                 selector_modelo = selector.get("source_modelo", selector.get("modelo"))
-                selector_output = selector.get("source_output")
                 selector_casillas = selector.get("source_casillas")
                 selector_periods = selector.get("source_periods")
+                selector_period = selector.get("period")
 
                 assert binding.source == "previous_filing", f"{modelo.id}/{revision.id}/{relation.id}"
                 assert selector_modelo == relation.source_modelo, f"{modelo.id}/{revision.id}/{relation.id}"
-                if selector_output is not None:
-                    assert selector_output == relation.source_output, f"{modelo.id}/{revision.id}/{relation.id}"
-                if selector_casillas is not None:
-                    assert selector_casillas == (relation.source_output,), f"{modelo.id}/{revision.id}/{relation.id}"
+                assert selector_casillas == (relation.source_output,), f"{modelo.id}/{revision.id}/{relation.id}"
                 if selector_periods is not None:
                     assert selector_periods == relation.source_periods, f"{modelo.id}/{revision.id}/{relation.id}"
+                else:
+                    assert selector_period == relation.source_periods[0], f"{modelo.id}/{revision.id}/{relation.id}"
                 assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
 
 

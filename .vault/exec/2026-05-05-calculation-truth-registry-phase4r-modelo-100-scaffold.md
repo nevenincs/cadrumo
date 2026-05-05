@@ -154,9 +154,11 @@ The corresponding registry tests exercise both mode branches against the real
 calculator instead of asserting declaration-state metadata.
 
 The objective-estimation reader surface now also round-trips the record-design
-outputs 1479, 1553, and 1577 from the 2025 export layout. Those outputs remain
-informational rather than calculated formulas, but they are now visible through
-the same registry-backed export parser path and covered by behavior tests.
+outputs 1479, 1553, and 1577 from the 2025 export layout. The reduction inputs
+1578, 1579, 1580, 1581, 1582, and 0384 are now registry-backed too, and the
+derived outputs 1583 and 1605 compute through the same registry path instead of
+being left as dead layout metadata. Those outputs are now visible through the
+registry-backed export parser and calculation tests.
 
 The registry validator now extracts text from reviewed AEAT manual PDFs and
 normalizes source text accent-insensitively before checking formula citations.
