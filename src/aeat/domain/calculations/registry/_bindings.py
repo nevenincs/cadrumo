@@ -25,6 +25,7 @@ __all__ = [
     "resolve_bound_casilla_inputs",
     "resolve_invoice_binding_values",
     "resolve_previous_filing_binding_values",
+    "validate_invoice_binding_definition",
 ]
 
 
@@ -374,7 +375,7 @@ def invoice_binding_requirements(
     for binding in revision.bindings:
         if binding.source != "invoice":
             continue
-        selector = _invoice_selector(binding)
+        selector = _validated_invoice_selector(binding)
         key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.vat_regime)
         grouped.setdefault(key, set()).add(binding.id)
     requirements: list[InvoiceObservationRequirement] = []
@@ -400,6 +401,30 @@ _INVOICE_FACTS = {
 }
 
 
+def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
+    """Validate an invoice-source binding before it reaches runtime."""
+
+    _validated_invoice_selector(binding)
+
+
+def _validated_invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
+    selector = _invoice_selector(binding)
+    _validate_invoice_fact_and_aggregation(binding, selector)
+    return selector
+
+
+def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selector: _InvoiceSelector) -> None:
+    if selector.fact not in _INVOICE_FACTS:
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if selector.fact == "operator_count" and op != "count_distinct":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
+        )
+    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
+        raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+
+
 def resolve_invoice_binding_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
@@ -411,9 +436,7 @@ def resolve_invoice_binding_values(
     for binding in revision.bindings:
         if binding.source != "invoice":
             continue
-        selector = _invoice_selector(binding)
-        if selector.fact not in _INVOICE_FACTS:
-            raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+        selector = _validated_invoice_selector(binding)
         scope_filtered = tuple(_filter_invoice_observations(available, selector))
         resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
     return resolved
