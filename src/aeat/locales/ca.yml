@@ -730,25 +730,25 @@ cli:
     profile:
       app_help: Gestió de perfils financers
       errors:
-        at_least_one: Es requereix almenys un camp o perfil
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: Volia dir...?
         eligible_categories: Categories elegibles
         family_aliases: Àlies familiars
         invalid_ratio: Ràtio o percentatge no vàlid
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Clau o propietat desconeguda al perfil
       headers:
         ratios: Ràtios / Repartiments
       labels:
         no_active: No hi ha cap perfil actiu seleccionat
-        profile_not_found: Perfil financer no trobat
-        switched: Perfil financer canviat correctament
       ratios_help: Definir ràtios de repartiment per al perfil financer
       ratios_list_help: Llistar els ràtios de repartiment definits al perfil
       set_ratio_help: Establir un ràtio de repartiment específic
-      set_ratio_key_help: Clau o categoria del ràtio
+      set_ratio_key_help: 'Clau o categoria del ràtio. Àlies de família: %{aliases}'
       set_ratio_value_help: Valor del ràtio (p. ex., 0.5 per a 50%)
       unset_ratio_help: Eliminar un ràtio de repartiment específic
-      unset_ratio_key_help: Clau o categoria del ràtio a eliminar
+      unset_ratio_key_help: 'Clau o categoria del ràtio a eliminar. Àlies de família: %{aliases}'
     txs:
       app_help: Gestió de transaccions bancàries
   financial_invoices:
@@ -908,7 +908,6 @@ cli:
       'no': 'No'
       rows: Files
       skipped: Omesos
-      status: Estat
       'yes': Sí
     review:
       filter_help: Filtrar entrades del llibre a revisar (p. ex., per data o import)
@@ -1029,6 +1028,14 @@ cli:
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
+    parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
+    parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
+      actual del registre
+    parity_run_help: Executar un escenari de paritat desat i arxivar la cinta resultant
+    parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
+    parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
+    parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
     period_help: cli.registry.period_help
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
