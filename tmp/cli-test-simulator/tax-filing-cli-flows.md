@@ -63,12 +63,12 @@ and corrective declaration work.
 | 4 | `aeat setup auth configure --provider clave_movil` | User configures login. |
 | 5 | `aeat setup auth login` | User authenticates. |
 | 6 | `aeat setup auth whoami` | User confirms identity. |
-| 7 | `aeat setup init --name autonomo-2026` | User creates a profile. |
-| 8 | `aeat setup profile set tax.id 12345678Z` | User enters required data. |
-| 9 | `aeat setup profile set tax.name Kent` | User enters display identity. |
-| 10 | `aeat setup profile set activity.label design` | User records design activity. |
-| 11 | `aeat setup profile set address.postcode 28013` | User enters address fact. |
-| 12 | `aeat setup profile validate` | User closes setup readiness. |
+| 7 | `aeat setup init --name autonomo-2026 --activity design --tax-id 12345678Z` | User creates a profile with required data. |
+| 8 | `aeat setup profile set name Kent` | User enters display identity. |
+| 9 | `aeat setup profile set address.postcode 28013` | User enters address fact. |
+| 10 | `aeat setup profile set declaration.type autoliquidacion` | User enters declaration header fact. |
+| 11 | `aeat setup profile validate` | User checks required profile data. |
+| 12 | `aeat setup status` | User closes setup readiness. |
 
 ## Tape: Invalid And Incomplete N26 Imports
 

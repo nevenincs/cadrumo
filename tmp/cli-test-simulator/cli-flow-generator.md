@@ -124,7 +124,7 @@ aeat setup auth login
 aeat setup auth status
 aeat setup auth whoami
 aeat setup profile list-keys
-aeat setup init --name PROFILE
+aeat setup init --name PROFILE --activity ACTIVITY --tax-id TAX_ID
 aeat setup profile use PROFILE
 aeat setup profile set KEY VALUE
 aeat setup profile unset KEY

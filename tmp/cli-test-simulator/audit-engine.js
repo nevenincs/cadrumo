@@ -23,6 +23,7 @@
       "aeat setup auth status",
       "aeat setup auth configure --provider clave_movil",
       "aeat setup auth login",
+      "aeat setup init --name PROFILE --activity ACTIVITY --tax-id TAX_ID",
       "aeat setup profile list-keys",
       "aeat setup profile set KEY VALUE",
       "aeat setup profile validate",
@@ -154,22 +155,28 @@
           "Profile keys must be discoverable.",
         );
         event(
-          "aeat setup profile set tax.id 12345678Z",
+          "aeat setup init --name autonomo-2026 --activity design --tax-id 12345678Z",
           "ok",
           "Setup And Profile Friction",
-          "Profile edits use schema-backed keys.",
+          "Profile context is created before profile values are edited.",
         );
         event(
-          "aeat setup profile set tax.name Kent",
+          "aeat setup profile set name Kent",
           "ok",
           "Setup And Profile Friction",
-          "Profile identity lives in profile.",
+          "Profile display identity uses a schema-backed key.",
         );
         event(
           "aeat setup profile set address.postcode 28013",
           "ok",
           "Setup And Profile Friction",
-          "Profile readiness is concrete.",
+          "Optional tax-address facts can be added after profile creation.",
+        );
+        event(
+          "aeat setup profile set declaration.type autoliquidacion",
+          "ok",
+          "Setup And Profile Friction",
+          "Declaration header values use discoverable profile keys.",
         );
         event(
           "aeat setup profile validate",

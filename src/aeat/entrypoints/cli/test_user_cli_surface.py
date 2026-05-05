@@ -296,6 +296,26 @@ def test_profile_validate_no_active_profile_blocks(monkeypatch: pytest.MonkeyPat
     assert payload["missing"] == ["profile"]
 
 
+def test_profile_set_requires_active_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    result = _invoke(["setup", "profile", "set", "tax.id", "12345678Z"])
+
+    assert result.exit_code == 2, result.output
+    assert "no-active-profile" in result.output
+    assert "aeat setup init --name NAME" in result.output
+
+
+def test_profile_keys_match_domain_registry_names() -> None:
+    result = _invoke(["setup", "profile", "list-keys"])
+
+    assert result.exit_code == 0, result.output
+    for key in ("tax.id", "activity", "name", "surnames", "address.postcode", "declaration.type"):
+        assert key in result.output
+    for retired_key in ("tax.name", "activity.label", "activity.code"):
+        assert retired_key not in result.output
+
+
 def test_profile_validate_routes_through_application_layer(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
