@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
+from aeat.domain.deadlines import AutonomoProfile, FilingEnrollment, IVARegime
 
 from . import (
     RegistryValidationError,
@@ -32,6 +33,21 @@ def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts() -> 
 
     assert [schedule.id for schedule in schedules] == ["modelo-111-mensual"]
     assert schedules[0].period_kind == "monthly"
+
+
+def test_modelo_111_selects_monthly_schedule_from_profile_object() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "111")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="01")
+    profile = AutonomoProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        enrollment=FilingEnrollment(large_company=True),
+    )
+
+    schedules = applicable_filing_schedules(snapshot.revision, profile, period="01")
+
+    assert [schedule.id for schedule in schedules] == ["modelo-111-mensual"]
 
 
 def test_modelo_111_selects_quarterly_schedule_from_profile_enrollment_facts() -> None:
