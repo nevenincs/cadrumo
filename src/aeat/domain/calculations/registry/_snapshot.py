@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from ._export import derive_export_layouts_from_bindings
 from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._temporal import select_revision
 from ._validate import RegistryValidator
@@ -24,6 +25,7 @@ def build_snapshot(
 
     RegistryValidator(catalogues, source_root=source_root).validate_modelo(modelo)
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
     source_ids = set(modelo.source_refs).union(revision.source_refs)
     for casilla in revision.casillas:

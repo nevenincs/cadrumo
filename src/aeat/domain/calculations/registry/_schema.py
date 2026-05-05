@@ -780,7 +780,15 @@ class ExportRecordDefinition(RegistryModel):
     encoding: str
     line_ending: Literal["crlf", "lf", "none"]
     repeat: Literal["binding_rows"] | None = None
+    binding_record: str | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
+
+    @field_validator("binding_record")
+    @classmethod
+    def _binding_record_non_empty(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("export record binding_record must be non-empty")
+        return value
 
 
 class ExportLayoutDefinition(RegistryModel):

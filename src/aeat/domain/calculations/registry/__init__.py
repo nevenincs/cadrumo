@@ -12,7 +12,12 @@ from ._bindings import (
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
 from ._coverage import EvidenceTierCoverageGate, ModelLawCoverageLedger, build_model_law_coverage_ledger
 from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
-from ._export import ResolvedExportLayout, export_fields_for_casilla, resolve_export_layout
+from ._export import (
+    ResolvedExportLayout,
+    derive_export_layouts_from_bindings,
+    export_fields_for_casilla,
+    resolve_export_layout,
+)
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._legal import verify_legal_catalogue, verify_legal_reference
@@ -159,6 +164,7 @@ __all__ = [
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
     "detect_workbook_runner",
+    "derive_export_layouts_from_bindings",
     "discover_workbooks",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
