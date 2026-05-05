@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._models import SetupAnswers, VerifyFinding, VerifySeverity
 
@@ -24,8 +24,8 @@ def _finding(
     *,
     name: str,
     severity: VerifySeverity,
-    message: tr,
-    remediation: tr | None = None,
+    message: str,
+    remediation: str | None = None,
 ) -> VerifyFinding:
     """Construct a :class:`VerifyFinding` with a translatable message."""
     return VerifyFinding(

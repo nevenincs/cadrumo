@@ -18,6 +18,7 @@ from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ._i18n import tr
 
 # ---------------------------------------------------------------------
 # Transport helpers

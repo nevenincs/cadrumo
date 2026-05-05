@@ -70,17 +70,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.i18n.TranslationError",
-        ErrorCode(
-            code="ERROR_I18N_TRANSLATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_i18n_translation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.core.observability._errors.AeatCorpusDriftError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT",

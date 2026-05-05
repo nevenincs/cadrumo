@@ -8,16 +8,54 @@ import pytest
 
 from ....core.paths import PROJECT_ROOT
 from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
-from ._bindings import RegistryFilingObservation
+from ._bindings import RegistryFilingObservation, resolve_previous_filing_binding_values
 from ._relations import (
     RegistryRelationSourceRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
+from ._schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+
+
+def test_cross_model_relations_resolve_from_observations_for_revision_edge_years() -> None:
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            if not revision.relations:
+                continue
+            relation_ids = {relation.id for relation in revision.relations}
+            for filing_year in _revision_edge_years(revision):
+                for period in revision.period_selector.periods:
+                    active_relation_ids = {
+                        relation.id
+                        for relation in revision.relations
+                        if not relation.target_periods or period in relation.target_periods
+                    }
+                    if active_relation_ids != relation_ids:
+                        continue
+                    requirements = relation_source_requirements(
+                        revision,
+                        filing_year=filing_year,
+                        period=period,
+                    )
+                    observations = _observations_from_requirements(
+                        requirements,
+                        lambda _requirement, period_index: Decimal(period_index + 1),
+                    )
+
+                    resolved = resolve_relation_values_from_observations(
+                        revision,
+                        observations,
+                        filing_year=filing_year,
+                        period=period,
+                    )
+
+                    assert set(resolved) == relation_ids, f"{modelo.id}/{revision.id}/{filing_year}/{period}"
 
 
 @pytest.mark.parametrize(
@@ -98,6 +136,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         inputs={},
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values=relation_values,
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
     )
 
     assert relation_values["renta-2025-rel-111-retenciones-trimestrales"] == Decimal("10")
@@ -114,6 +153,81 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
     )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "source_year", "source_values", "expected_binding", "expected_minoracion", "expected_result"),
+    [
+        (
+            2022,
+            2021,
+            {
+                "0224": Decimal("4000"),
+                "1479": Decimal("2000"),
+                "1553": Decimal("1500"),
+                "1577": Decimal("1000"),
+            },
+            Decimal("8500"),
+            Decimal("100.00"),
+            Decimal("780.00"),
+        ),
+        (
+            2026,
+            2025,
+            {
+                "0224": Decimal("5000"),
+                "1479": Decimal("2000"),
+                "1553": Decimal("1500"),
+                "1577": Decimal("1000"),
+            },
+            Decimal("9500"),
+            Decimal("75.00"),
+            Decimal("805.00"),
+        ),
+    ],
+)
+def test_modelo_130_calculation_resolves_previous_year_modelo_100_filed_casillas(
+    filing_year: int,
+    source_year: int,
+    source_values: dict[str, Decimal],
+    expected_binding: Decimal,
+    expected_minoracion: Decimal,
+    expected_result: Decimal,
+) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "130")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period="1T",
+    )
+
+    binding_values = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        (
+            RegistryFilingObservation(
+                modelo="100",
+                filing_year=source_year,
+                period="0A",
+                casilla_values=source_values,
+            ),
+        ),
+        filing_year=filing_year,
+        period="1T",
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=_modelo_130_inputs(),
+        date_context={"filing_period": date(filing_year, 3, 31)},
+        binding_values=binding_values,
+    )
+
+    assert binding_values["irpf.previous_year_economic_activity_net_income"] == expected_binding
+    assert result.values["13"] == expected_minoracion
+    assert result.values["14"] == expected_result
+    assert result.values["19"] == expected_result
 
 
 def _observations_from_requirements(
@@ -137,6 +251,22 @@ def _observations_from_requirements(
     )
 
 
+def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
+    if revision.period_selector.years:
+        years = sorted(revision.period_selector.years)
+        return tuple(dict.fromkeys((years[0], years[-1])))
+    year_from = revision.period_selector.year_from
+    if year_from is None:
+        raise AssertionError(f"revision {revision.id} has no filing-year selector")
+    year_to = revision.period_selector.year_to
+    if year_to is not None:
+        if year_to == year_from:
+            return (year_from,)
+        midpoint = year_from + ((year_to - year_from) // 2)
+        return tuple(dict.fromkeys((year_from, midpoint, year_to)))
+    return (year_from, year_from + 1, year_from + 7)
+
+
 def _renta_relation_observed_value(requirement: RegistryRelationSourceRequirement, period_index: int) -> Decimal:
     relation_id = requirement.relation_ids[0]
     if relation_id == "renta-2025-rel-111-retenciones-trimestrales":
@@ -154,3 +284,17 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
     if relation_id == "renta-2025-rel-180-retenciones-anuales":
         return Decimal("30")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
+
+
+def _modelo_130_inputs() -> dict[str, Decimal]:
+    return {
+        "01": Decimal("10000"),
+        "02": Decimal("4000"),
+        "05": Decimal("250"),
+        "06": Decimal("100"),
+        "08": Decimal("2000"),
+        "10": Decimal("10"),
+        "15": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }

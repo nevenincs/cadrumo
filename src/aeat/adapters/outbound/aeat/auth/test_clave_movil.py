@@ -49,6 +49,7 @@ class _RecordingPage:
         self._authenticated = authenticated
         self.clicks: list[str] = []
         self.fills: list[tuple[str, str]] = []
+        self.types: list[tuple[str, str]] = []
         self.gotos: list[str] = []
         self.url: str = ""
         self.closed = False
@@ -83,6 +84,10 @@ class _RecordingPage:
 
     async def fill(self, selector: str, value: str) -> None:
         self.fills.append((selector, value))
+
+    async def type(self, selector: str, value: str, *, delay: float | None = None) -> None:
+        del delay
+        self.types.append((selector, value))
 
     async def wait_for_selector(self, selector: str, *, timeout: float | None = None) -> None:
         del selector, timeout
@@ -315,8 +320,8 @@ class TestAuthenticateFresh:
             assert isinstance(detail, ClaveMovilSessionDetail)
             assert detail.used_non_qr_fallback is True
             page = browser_session.contexts[0].pages[0]
-            assert ("#NIF", "12345678Z") in page.fills
-            assert ("#FECHA", "2030-01-01") in page.fills
+            assert ("#NIF", "12345678Z") in page.types
+            assert ("#FECHA", "2030-01-01") in page.types
             assert page.clicks.count('button[name="autoriza-P"]') == 1
             assert "#botonContinuar" in page.clicks
 
@@ -372,7 +377,7 @@ class TestPostAuthLanding:
         page.url = "https://www6.agenciatributaria.gob.es/wlpl/OVCT-CXEW/DialogoRepresentacion"
 
         async def run() -> None:
-            with pytest.raises(AeatLoginAssertionError, match="will not submit representation forms"):
+            with pytest.raises(AeatLoginAssertionError, match="does not expose evaluate"):
                 await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
 
         asyncio.run(run())

@@ -43,4 +43,4 @@ def test_operator_impact_explains_protocol_value_for_ready_certificate() -> None
     message = describe_provider_operator_impact(description)
 
     assert "same CLI filing flow" in message
-    assert "future providers can plug into the same commands" in message
+    assert "every provider uses the same command workflow" in message

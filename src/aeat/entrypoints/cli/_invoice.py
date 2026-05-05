@@ -182,6 +182,7 @@ def invoice_review(
                     "review": review,
                     "verbose": verbose,
                 }
+                payment_id = review.fields.get("payment.id", "-") if review else "-"
                 _emit(
                     ctx,
                     payload,
@@ -190,7 +191,7 @@ def invoice_review(
                         f"{tr('cli.invoice.labels.kind')}\t{inv.kind.value}",
                         f"{tr('cli.invoice.labels.base')}\t{_fmt_decimal(base)}",
                         f"{tr('cli.invoice.labels.iva')}\t{_fmt_decimal(iva)}",
-                        f"{tr('cli.invoice.labels.payment')}\t{review.fields.get('payment.id', '-') if review else '-'}",
+                        f"{tr('cli.invoice.labels.payment')}\t{payment_id}",
                     ],
                 )
                 return

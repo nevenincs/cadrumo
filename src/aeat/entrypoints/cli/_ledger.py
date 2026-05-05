@@ -275,12 +275,14 @@ def ledger_edit(
     )
     review = updated.ledger_reviews.get(record_id)
     payload = {tr("cli.ledger.labels.id"): record_id, "review": review}
+    skipped_label = tr("cli.ledger.labels.yes") if review and review.skipped else tr("cli.ledger.labels.no")
+    fields_label = ", ".join(sorted(review.fields)) if review else "-"
     _emit(
         ctx,
         payload,
         [
             f"{tr('cli.ledger.labels.id')}\t{record_id}",
-            f"{tr('cli.ledger.labels.skipped')}\t{tr('cli.ledger.labels.yes') if review and review.skipped else tr('cli.ledger.labels.no')}",
-            f"{tr('cli.ledger.labels.fields')}\t{', '.join(sorted(review.fields)) if review else '-'}",
+            f"{tr('cli.ledger.labels.skipped')}\t{skipped_label}",
+            f"{tr('cli.ledger.labels.fields')}\t{fields_label}",
         ],
     )

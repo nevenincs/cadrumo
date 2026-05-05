@@ -4,6 +4,10 @@ from typing import Any
 
 import yaml
 
+from aeat.core.logging import get_logger
+
+_log = get_logger(__name__)
+
 
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
@@ -35,10 +39,11 @@ class LocaleManager:
                 continue
             try:
                 content = py_file.read_text(encoding="utf-8", errors="ignore")
-                for match in self.pattern.finditer(content):
-                    keys.add(match.group(1))
-            except Exception:
+            except OSError as exc:
+                _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
                 continue
+            for match in self.pattern.finditer(content):
+                keys.add(match.group(1))
         return keys
 
     def get_yaml_keys(self, d: dict[str, Any], current_path: str = "") -> set[str]:

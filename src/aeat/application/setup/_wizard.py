@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ...adapters.outbound.aeat.auth import CertificateBackend
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.logging import get_logger
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
