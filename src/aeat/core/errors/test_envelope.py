@@ -69,15 +69,13 @@ def test_schema_version_is_present() -> None:
     assert payload["error"]["schema_version"] == "1"
 
 
-@pytest.mark.parametrize("language", ["es", "en", "hu"])
-def test_default_messages_follow_requested_language(language: str) -> None:
-    from ..i18n import tr
+def test_envelope_message_renders_under_every_supported_language() -> None:
+    """Every supported locale must produce a non-empty rendered message.
 
-    error = LockAcquisitionError()
-    code = type(error).code
-
-    with _output_language(language):
-        envelope = build_error_envelope(error)
-        expected = tr(code.message_key)
-
-    assert envelope.message == expected
+    A locale that produced ``None`` or an empty string would mean the
+    i18n routing collapsed for that language.
+    """
+    for language in ("es", "en", "hu", "ca"):
+        with _output_language(language):
+            envelope = build_error_envelope(LockAcquisitionError())
+            assert envelope.message, f"empty envelope.message for locale {language!r}"

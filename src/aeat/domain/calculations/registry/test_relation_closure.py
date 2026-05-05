@@ -162,6 +162,24 @@ def test_registry_validator_rejects_relation_source_period_outside_source_revisi
         )
 
 
+def test_registry_validator_rejects_cross_model_relation_years_without_source_revision_coverage() -> None:
+    modelos, catalogues = _committed_tree()
+    source_modelo = _modelo(modelos, "115")
+    target_modelo = _modelo(modelos, "180")
+    revision = target_modelo.revisions["2019-2022"]
+    widened_selector = revision.period_selector.model_copy(update={"year_from": 2014})
+    widened_revision = revision.model_copy(
+        update={
+            "valid_from": revision.valid_from.replace(year=2014),
+            "period_selector": widened_selector,
+        }
+    )
+    mutated_target = _with_revision(target_modelo, widened_revision)
+
+    with pytest.raises(RegistryValidationError, match="lacks source revision year coverage for 2014-2022"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry((source_modelo, mutated_target))
+
+
 def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")

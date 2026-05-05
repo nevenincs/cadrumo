@@ -952,8 +952,9 @@ class TestFiledObservationRelations:
                 period="0A",
             )
 
-    def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self) -> None:
-        snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
+    @pytest.mark.parametrize("filing_year", (2022, 2026))
+    def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self, filing_year: int) -> None:
+        snapshot = _modelo_snapshot("180", filing_year=filing_year, period="0A")
         quarterly_values = {
             "1T": {"01": Decimal("2"), "02": Decimal("100.10"), "03": Decimal("19.20")},
             "2T": {"01": Decimal("3"), "02": Decimal("200.20"), "03": Decimal("38.40")},
@@ -966,13 +967,13 @@ class TestFiledObservationRelations:
             tuple(
                 _filed_observation(
                     modelo="115",
-                    ejercicio=2026,
+                    ejercicio=filing_year,
                     period=period,
                     casilla_values=casilla_values,
                 )
                 for period, casilla_values in quarterly_values.items()
             ),
-            filing_year=2026,
+            filing_year=filing_year,
             period="0A",
         )
 

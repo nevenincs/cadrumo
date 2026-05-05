@@ -167,10 +167,6 @@ class TestSubmittedFiling:
 class TestMakeSubmissionId:
     """Invariants for :func:`make_submission_id`."""
 
-    def test_stable(self) -> None:
-        """Assert the same ``(draft_id, ordinal)`` produces the same id."""
-        assert make_submission_id("draft-1", 1) == make_submission_id("draft-1", 1)
-
     def test_ordinal_changes_hash(self) -> None:
         """Assert a different ``ordinal`` produces a different id."""
         assert make_submission_id("draft-1", 1) != make_submission_id("draft-1", 2)

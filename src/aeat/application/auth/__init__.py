@@ -125,26 +125,15 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     do given the current provider configuration; never contains
     secrets.
     """
+    from ...core.i18n import tr
+
     if not description.configured:
-        return (
-            "The operator can still produce, verify, and export filings locally, but "
-            "AEAT-backed reads stay unavailable until an auth provider is configured."
-        )
+        return tr("application.auth.provider_impact.unconfigured")
     if not description.available:
-        return (
-            f"{description.label} is configured but not ready yet. The operator can still "
-            "produce, verify, and export filings locally, but AEAT-backed reads "
-            "stay unavailable until auth is fixed."
-        )
+        return tr("application.auth.provider_impact.unavailable", label=description.label)
     if description.kind == AuthProviderKind.CERTIFICATE:
-        return (
-            "Certificate auth is ready. The operator keeps the same CLI filing flow for "
-            "AEAT-backed reads; every provider uses the same command workflow."
-        )
-    return (
-        f"{description.label} is ready. The operator keeps the same CLI filing flow while "
-        "this provider plugs into the shared auth protocol."
-    )
+        return tr("application.auth.provider_impact.certificate_ready")
+    return tr("application.auth.provider_impact.generic_ready", label=description.label)
 
 
 from ._sessions import (  # noqa: E402

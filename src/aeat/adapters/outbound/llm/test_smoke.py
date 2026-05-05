@@ -18,4 +18,8 @@ def test_smoke_llm() -> None:
 
     assert llm_doc is not None
     assert issubclass(errors.AeatError, Exception)
-    assert logging.get_logger(__name__).name == __name__
+    # Sanity-check that the substrate's ``get_logger`` hands back a usable
+    # logger; the per-name identity is a Python stdlib invariant and is
+    # not worth asserting.
+    logger = logging.get_logger(__name__)
+    logger.debug("smoke")

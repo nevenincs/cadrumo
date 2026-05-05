@@ -16,6 +16,7 @@ _SOURCE_BY_KIND = cast(
     {
         "ley": "ley",
         "real_decreto": "reglamento",
+        "real_decreto_ley": "reglamento",
         "orden": "orden",
         "reglamento": "reglamento",
         "manual": "manual",
