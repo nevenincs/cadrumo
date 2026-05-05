@@ -1,1026 +1,1200 @@
-export:
-  test_errors:
-    translatable: draft not ready
-  test_preflight:
-    message_378808: bad
-    message_965088: warn
-    message_868279: bad
-    message_620739: warn
+aggregation:
+  models:
+    t_944805: YYYYQn
 auth:
-  test_catalogue:
-    label: Certificate
-    description: Description
   catalogue:
-    certificate_label: Digital certificate
     certificate_description: X.509 client certificate authentication (FNMT-RCM or
       any recognised authority). Supports every Sede flow.
-    clave_movil_label: Cl@ve Móvil
+    certificate_label: Digital certificate
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
-    clave_permanente_label: Cl@ve Permanente
+    clave_movil_label: Cl@ve Móvil
     clave_permanente_description: Username + reinforced-password + SMS authentication
       via Cl@ve Permanente. Not available in this installation, so ``configure`` and
       ``login`` refuse the provider.
-  init:
-    t_054274: 'Purpose:'
-    t_497682: 'Action:'
-    t_591049: 'Source:'
-    t_002588: 'Browser:'
-    t_427109: 'Success:'
-    t_539673: 'Next:'
-    t_674931: your DNI/NIE
-    t_305382: ', and '
-    t_781191: 'f"unknown provider {raw!r}; valid values: {valid}'
-    t_306449: 'f"unsupported provider {raw!r}; valid values: {valid}'
-    t_251084: 'f"Desktop OAuth client JSON does not exist: {json_path}'
-    t_001180: 'f"Service-account key does not exist: {service_account_json}'
-    t_779238: Settings has no `env_file` configured; cannot write provider configuration.
-    t_527810: "f\"Settings.env_file has an unsupported shape ({type(env_file).__name__});\
-      \ \"\n                \"cannot determine where to persist provider configuration."
-    t_181508: "f\"`aeat auth configure --provider {provider}` is not supported. \"\
-      \n                    \"Run `aeat setup` for the certificate provider."
-    t_992296: "\\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\\n\"\n  \
-      \                  \"Every login sends a push notification to the Cl@ve app\
-      \ on your \"\n                    \"phone; you tap 'Approve' to sign in. This\
-      \ step only records the \"\n                    \"details AEAT needs to trigger\
-      \ that push."
-    t_975420: --dni-nie is required with --non-interactive
-    t_153369: Enter your DNI or NIE
-    t_322375: --dni-fecha is required with --prefer-non-qr for a DNI identity
-    t_822466: Enter the validity date printed on your DNI (YYYY-MM-DD)
-    t_573144: --nie-soporte is required with --prefer-non-qr for a NIE identity
-    t_771056: Enter the support number printed on your NIE document
-    t_196449: the DNI validity date
-    t_818366: the NIE support number
-    t_873287: the direct-push preference
-    t_137998: the QR-code preference
-    t_716469: Cl@ve Móvil as the default provider
-    t_824025: f"Saved {human_list} to {env_file}.
-    t_565569: Run `aeat auth login` to sign in with Cl@ve Móvil.
-    t_539921: f"provider {kind.value} requires an interactive approval step; cannot
-      run with --non-interactive
-    t_418939: 'f"AEAT authentication failed: {exc}'
-    t_547085: "pero la \"\n                    \"sesión ya superó su límite de inactividad.\
-      \ La AEAT puede rechazar \"\n                    \"peticiones posteriores; vuelve\
-      \ a ejecutar `aeat auth login` si las lecturas fallan."
-    t_098262: f"Signed in as {session.identity_nif} via {label}. Session expires in
-      about {remaining_minutes}m.
-    t_158225: 'f"AEAT probe failed: {exc}'
-    t_327962: f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the
-      cached session.
-    t_578352: f"The cached {label} session is stale or revoked. Run `aeat auth login`
-      to sign in again.
-    t_758194: "no ambos: --all limpia la sesión guardada \"\n                    \"\
-      de cada proveedor"
-    t_166580: No active session found. Nothing to clear.
-    t_482912: f"Signed out of {labels[0]}.
-    t_673587: f"Signed out of {joined}.
-    t_954326: 'Purpose:'
-    t_714790: 'Action:'
-    t_322689: 'Source:'
-    t_853374: 'Browser:'
-    t_105867: 'Success:'
-    t_351011: 'Next:'
-    t_686896: 'f"unknown provider {raw!r}; valid values: {valid}'
-    t_151679: 'f"unsupported provider {raw!r}; valid values: {valid}'
-    t_263360: 'f"Desktop OAuth client JSON does not exist: {json_path}'
-    t_352935: 'f"Service-account key does not exist: {service_account_json}'
-    t_178097: Settings has no `env_file` configured; cannot write provider configuration.
-    t_589739: "f\"Settings.env_file has an unsupported shape ({type(env_file).__name__});\
-      \ \"\n                \"cannot determine where to persist provider configuration."
-    t_549784: "f\"`aeat auth configure --provider {provider}` is not supported. \"\
-      \n                    \"Run `aeat setup` for the certificate provider."
-    t_201308: "\\nConfigure Cl@ve Móvil login for AEAT Sede Electrónica.\\n\"\n  \
-      \                  \"Every login sends a push notification to the Cl@ve app\
-      \ on your \"\n                    \"phone; you tap 'Approve' to sign in. This\
-      \ step only records the \"\n                    \"details AEAT needs to trigger\
-      \ that push."
-    t_833547: --dni-nie is required with --non-interactive
-    t_834743: Enter your DNI or NIE
-    t_386762: --dni-fecha is required with --prefer-non-qr for a DNI identity
-    t_958045: Enter the validity date printed on your DNI (YYYY-MM-DD)
-    t_479907: --nie-soporte is required with --prefer-non-qr for a NIE identity
-    t_944378: Enter the support number printed on your NIE document
-    t_994186: your DNI/NIE
-    t_316510: the DNI validity date
-    t_770369: the NIE support number
-    t_912253: the direct-push preference
-    t_725014: the QR-code preference
-    t_542731: Cl@ve Móvil as the default provider
-    t_497666: ''
-    t_637763: f"Saved {human_list} to {env_file}.
-    t_370466: Run `aeat auth login` to sign in with Cl@ve Móvil.
-    t_273946: f"provider {kind.value} requires an interactive approval step; cannot
-      run with --non-interactive
-    t_938392: 'f"AEAT authentication failed: {exc}'
-    t_092134: "pero la \"\n                    \"sesión ya superó su límite de inactividad.\
-      \ La AEAT puede rechazar \"\n                    \"peticiones posteriores; vuelve\
-      \ a ejecutar `aeat auth login` si las lecturas fallan."
-    t_941077: f"Signed in as {session.identity_nif} via {label}. Session expires in
-      about {remaining_minutes}m.
-    t_908949: 'f"AEAT probe failed: {exc}'
-    t_888711: f"Signed in as {refreshed.identity_nif} via {label}. AEAT accepted the
-      cached session.
-    t_906241: f"The cached {label} session is stale or revoked. Run `aeat auth login`
-      to sign in again.
-    t_950022: "no ambos: --all limpia la sesión guardada \"\n                    \"\
-      de cada proveedor"
-    t_594919: No active session found. Nothing to clear.
-    t_186277: f"Signed out of {labels[0]}.
-    t_979591: f"Signed out of {joined}.
-filing:
-  test_calculate:
-    hint: Fill casilla 03 before continuing.
-    narrative_313277: Casilla 03 is missing.
-    narrative_166743: Casilla 03 is missing.
-  test_export:
-    narrative: File exported at /tmp/m130-2026Q1.txt.
-  import:
-    empty_casilla_warning: Line-level casilla values are not carried in the justificante
-      PDF; fill them in via `aeat filing build` or by editing the draft JSON.
-  init:
-    t_539673: 'Next:'
-    t_495047: '[warning]'
-    t_049231: casilla
-    t_499410: expected
-    t_729108: actual
-    t_305241: cause
-    t_405647: 'f"inputs file not found: {path}'
-    t_319976: 'f"invalid JSON in {path}: {exc}'
-    t_944632: f"inputs file {path} must contain a JSON object
-    t_369842: recibido {type(key).__name__}
-    t_841363: 'f"unsupported value type for casilla {key!r}: {type(value).__name__}'
-    t_549739: 'f"draft file not found: {path}'
-    t_587954: 'f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json
-      file.'
-    t_749072: 'f"draft envelope not found: {path}'
-    t_126681: 'f"invalid amendment JSON {raw!r}: {exc}'
-    t_855364: amendment payload must be a JSON object
-    t_484757: recibido {type(key).__name__}
-    t_447605: 'f"unsupported amendment value type for {key!r}: {type(value).__name__}'
-    t_235839: f"Saved draft {draft.draft_id} -> {saved}
-    t_901821: f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})
-    t_750547: 'f"unknown status {status!r}; valid: {valid_statuses}'
-    t_004067: --from-declaracion
-    t_053773: only one --from-* flag at a time
-    t_851234: f"Imported draft {draft_id} from justificante {justificante_csv} ->
-      {draft_path}
-    t_617275: f"Saved submission {submission_id} -> {submission_path}
-    t_643377: 'f"Tax residence CCAA: {residence.ccaa.value}'
-    t_833360: "f\"Parsed Modelo {filing.modelo} {filing.period} declaración \"\n \
-      \               f\"(template {filing.template_revision.revision}). \"\n    \
-      \            f\"{extracted} of {total} casillas extracted."
-    t_751717: 'f"Extraction status: {filing.extraction_status.value}'
-    t_028818: 'f"[warnings] {len(filing.warnings)}:'
-    t_976753: 'f"Verification status: {verdict.status.value}'
-    t_973810: Modelo 100 import requires a validated registry snapshot
-    t_255799: amendment payload must include non-empty 'original_submission_id
-    t_228758: amendment payload must include object 'updated_inputs
-    t_200471: reasons' must be a JSON object of casilla -> reason
-    t_447877: f"payload modelo {modelo!r} does not match original submission modelo
-      {original.modelo!r}
-    t_691257: f"payload period {period!r} does not match original submission period
-      {original.period!r}
-    t_891106: f"Saved amended draft {amended_draft_id} -> {saved_amended_draft}
-    t_799855: 'f"inputs file not found: {path}'
-    t_353235: 'f"invalid JSON in {path}: {exc}'
-    t_139225: f"inputs file {path} must contain a JSON object
-    t_645353: recibido {type(key).__name__}
-    t_479580: 'f"unsupported value type for casilla {key!r}: {type(value).__name__}'
-    t_719978: 'f"draft file not found: {path}'
-    t_410741: 'f"unrecognised draft file: {path}; expected a <draft_id>.envelope.json
-      file.'
-    t_772310: 'f"draft envelope not found: {path}'
-    t_351011: 'Next:'
-    t_647650: 'f"invalid amendment JSON {raw!r}: {exc}'
-    t_130629: amendment payload must be a JSON object
-    t_536885: recibido {type(key).__name__}
-    t_685385: 'f"unsupported amendment value type for {key!r}: {type(value).__name__}'
-    t_819520: f"Saved draft {draft.draft_id} -> {saved}
-    t_569422: f"Re-validated draft {refreshed.draft_id} (status={refreshed.status.value})
-    t_410025: 'f"unknown status {status!r}; valid: {valid_statuses}'
-    t_652733: --from-declaracion
-    t_343266: only one --from-* flag at a time
-    t_177065: f"Imported draft {draft_id} from justificante {justificante_csv} ->
-      {draft_path}
-    t_655133: f"Saved submission {submission_id} -> {submission_path}
-    t_141095: '[warning]'
-    t_208082: 'f"Tax residence CCAA: {residence.ccaa.value}'
-    t_515456: "f\"Parsed Modelo {filing.modelo} {filing.period} declaración \"\n \
-      \               f\"(template {filing.template_revision.revision}). \"\n    \
-      \            f\"{extracted} of {total} casillas extracted."
-    t_977837: 'f"Extraction status: {filing.extraction_status.value}'
-    t_418958: 'f"[warnings] {len(filing.warnings)}:'
-    t_805103: casilla
-    t_677464: 'f"Verification status: {verdict.status.value}'
-    t_068995: expected
-    t_190116: actual
-    t_790289: cause
-    t_647538: Modelo 100 import requires a validated registry snapshot
-    t_597994: amendment payload must include non-empty 'original_submission_id
-    t_076424: amendment payload must include object 'updated_inputs
-    t_679229: reasons' must be a JSON object of casilla -> reason
-    t_248734: f"payload modelo {modelo!r} does not match original submission modelo
-      {original.modelo!r}
-    t_810643: f"payload period {period!r} does not match original submission period
-      {original.period!r}
-    t_091089: f"Saved amended draft {amended_draft_id} -> {saved_amended_draft}
-review:
-  adapters:
-    t_041224: incoming
-    t_311773: outgoing
-    t_376309: business
-    t_377446: personal
-    t_011227: mixed
-    t_638342: unmatched
-    t_823110: overdue
-    t_455073: payment pending
-    t_308487: partially paid
-    t_712789: 'en: str'
-    t_918533: internal transfer
-    t_373752: unprocessed
-    t_626817: processed unclassified
-    t_425725: skipped by rule
-    t_866317: failed validation
-    t_603694: '[{state}] {direction} {amount} {currency}: {description}'
-    t_364641: reason
-    t_594612: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
-    t_229397: draft not ready to submit (status={status})
-    t_964513: approval stale — re-review required (status=APPROVAL_STALE)
-    t_540950: 'en: str'
-    t_968325: incoming
-    t_629803: outgoing
-    t_135562: internal transfer
-    t_142007: business
-    t_870243: personal
-    t_619063: mixed
-    t_754183: unprocessed
-    t_791512: processed unclassified
-    t_607122: skipped by rule
-    t_352338: failed validation
-    t_551826: unmatched
-    t_167733: overdue
-    t_298389: payment pending
-    t_352928: partially paid
-    t_170461: '[{state}] {direction} {amount} {currency}: {description}'
-    t_189155: reason
-    t_122028: '[{reason}] {kind} {number} {total} {currency} ← {counterparty}'
-    t_397611: draft not ready to submit (status={status})
-    t_787894: approval stale — re-review required (status=APPROVAL_STALE)
-setup:
-  test_models:
-    message_428675: ok
-    message_679514: ok
-  wizard:
-    t_266857: 'en: str'
-    t_724914: Tax-residence CCAA for RENTA
-    t_066157: 'en: str'
-    t_365267: Tax-residence CCAA for RENTA
-transactions:
-  test_diagnostics:
-    message: Month 2026-03 is missing from the imported file.
-  import:
-    message_902292: The source file contains no valid transactions.
-    message_327698: Duplicate transaction already in ledger.
-    message_976713: Duplicate transaction detected within imported file.
-    message_906366: 'Potential gap: more than 35 days between transactions.'
-    message_185962: The source file contains no valid transactions.
-    message_082074: Duplicate transaction already in ledger.
-    message_053465: Duplicate transaction detected within imported file.
-    message_829073: 'Potential gap: more than 35 days between transactions.'
-verification:
-  test_verify:
-    narrative_432410: Verification completed against the registry.
-    narrative_258092: Verification completed against the registry.
-access_gate:
-  errors:
-    default_translatable: Live AEAT submission is permanently forbidden. Use produce
-      -> verify -> export and upload the file yourself in the AEAT portal.
+    clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
-    display_label_946207: Supplies
     display_label_851219: Supplies
-manuals:
-  test_schema:
-    statement_733773: Test rule
-    statement_121189: Test rule
-normatives:
-  test_schema:
-    titulo_285059: Reductions
-    summary_752293: Summary.
-    title_837681: Law 35/2006 IRPF
-    titulo_908834: Reductions
-    summary_296440: Summary.
-    title_440480: Law 35/2006 IRPF
-portals:
-  test_metadata:
-    label_976277: x
-    label_398871: ' '
-    label_718993: x
-    label_830236: ' '
-entries:
-  portal_calendario_contribuyente:
-    label_137875: Taxpayer calendar
-    label_808341: Taxpayer calendar
-  portal_cert_selection:
-    label_315663: Certificate selector
-    label_714926: Certificate selector
-  portal_cert_validation_rest:
-    label_652192: Electronic certificate validation
-    label_050984: Electronic certificate validation
-  portal_clave_gestiones:
-    label_389181: Cl@ve PIN self-service
-    label_802490: Cl@ve PIN self-service
-  portal_clave_idp_root:
-    label_359879: Cl@ve — Spanish public-sector identity provider
-    label_655035: Cl@ve — Spanish public-sector identity provider
-  portal_clave_sede_entry:
-    label_429190: Cl@ve gateway on Sede
-    label_975912: Cl@ve gateway on Sede
-  portal_consulta_pagos:
-    label_977717: Payment and NRC enquiry
-    label_872613: Payment and NRC enquiry
-  portal_dnie_sede_entry:
-    label_443996: DNIe electronic ID access
-    label_508736: DNIe electronic ID access
-  portal_domiciliacion_bancaria:
-    label_990607: Bank-account direct debit
-    label_231897: Bank-account direct debit
-  portal_m036_censal:
-    label_074226: Modelo 036 — Census declaration
-    label_771260: Modelo 036 — Census declaration
-  portal_m037_censal_simplificada:
-    label_762588: Modelo 037 — Simplified census declaration (retired)
-    label_500048: Modelo 037 — Simplified census declaration (retired)
-  portal_m100_renta:
-    label_540884: Modelo 100 — Annual personal income tax
-    label_331643: Modelo 100 — Annual personal income tax
-  portal_m111_retenciones_trabajo:
-    label_208571: Modelo 111 — Withholdings on labour and activities
-    label_774262: Modelo 111 — Withholdings on labour and activities
-  portal_m115_retenciones_arrendamientos:
-    label_132495: Modelo 115 — Withholdings on urban rentals
-    label_841139: Modelo 115 — Withholdings on urban rentals
-  portal_m123_retenciones_capital:
-    label_228780: Modelo 123 — Withholdings on movable capital
-    label_392660: Modelo 123 — Withholdings on movable capital
-  portal_m130_pago_fraccionado_ed:
-    label_281631: Modelo 130 — IRPF instalment payment (direct assessment)
-    label_523782: Modelo 130 — IRPF instalment payment (direct assessment)
-  portal_m131_pago_fraccionado_eo:
-    label_971784: Modelo 131 — IRPF instalment payment (objective assessment)
-    label_128460: Modelo 131 — IRPF instalment payment (objective assessment)
-  portal_m180_resumen_arrendamientos:
-    label_015497: Modelo 180 — Annual summary of rental withholdings
-    label_962375: Modelo 180 — Annual summary of rental withholdings
-  portal_m190_resumen_trabajo:
-    label_631657: Modelo 190 — Annual summary of labour withholdings
-    label_059630: Modelo 190 — Annual summary of labour withholdings
-  portal_m193_resumen_capital:
-    label_555297: Modelo 193 — Annual summary of movable-capital withholdings
-    label_188618: Modelo 193 — Annual summary of movable-capital withholdings
-  portal_m200_sociedades_anual:
-    label_824991: Modelo 200 — Corporate income tax (annual)
-    label_979781: Modelo 200 — Corporate income tax (annual)
-  portal_m202_sociedades_fraccionado:
-    label_145412: Modelo 202 — Corporate tax instalment payment
-    label_203074: Modelo 202 — Corporate tax instalment payment
-  portal_m232_vinculadas:
-    label_530315: Modelo 232 — Related-party transactions
-    label_589847: Modelo 232 — Related-party transactions
-  portal_m303_iva_autoliquidacion:
-    label_424259: Modelo 303 — Periodic VAT self-assessment
-    label_847914: Modelo 303 — Periodic VAT self-assessment
-  portal_m347_operaciones_terceros:
-    label_724454: Modelo 347 — Third-party transactions
-    label_293185: Modelo 347 — Third-party transactions
-  portal_m349_intracomunitarias:
-    label_497624: Modelo 349 — Intra-EU transactions
-    label_740192: Modelo 349 — Intra-EU transactions
-  portal_m369_oss_ioss:
-    label_971125: Modelo 369 — OSS / IOSS one-stop shop
-    label_354748: Modelo 369 — OSS / IOSS one-stop shop
-  portal_m390_resumen_iva:
-    label_896367: Modelo 390 — Annual VAT summary
-    label_101607: Modelo 390 — Annual VAT summary
-  portal_m720_bienes_extranjero:
-    label_816468: Modelo 720 — Foreign assets and rights
-    label_396501: Modelo 720 — Foreign assets and rights
-  portal_m840_iae:
-    label_733092: Modelo 840 — Economic activities tax
-    label_017824: Modelo 840 — Economic activities tax
-  portal_mis_datos_censales:
-    label_692227: My census data
-    label_558126: My census data
-  portal_mis_documentos_pendientes_firma:
-    label_904016: Documents awaiting signature
-    label_128262: Documents awaiting signature
-  portal_mis_expedientes:
-    label_279574: My case files
-    label_909741: My case files
-  portal_mis_notificaciones:
-    label_941829: My notifications
-    label_055002: My notifications
-  portal_mi_area_personal:
-    label_019216: My personal area
-    label_684631: My personal area
-  portal_pago_autoliquidacion_cuenta:
-    label_155077: Self-assessment payment via bank account
-    label_405817: Self-assessment payment via bank account
-  portal_pago_autoliquidacion_tarjeta_bizum:
-    label_858279: Self-assessment payment by card or Bizum
-    label_409842: Self-assessment payment by card or Bizum
-  portal_pago_liquidaciones_deudas:
-    label_496859: Payment of liquidations and debts
-    label_907488: Payment of liquidations and debts
-  portal_pre303_ayuda:
-    label_213716: Pre303 — Pre-filled VAT helper
-    label_935129: Pre303 — Pre-filled VAT helper
-  portal_presentar_consultar_index:
-    label_291034: Submit and consult declarations — index
-    label_621468: Submit and consult declarations — index
-  portal_renta_web_borrador:
-    label_845823: Renta Web — IRPF pre-filled draft
-    label_255206: Renta Web — IRPF pre-filled draft
-  portal_sede_root:
-    label_962623: AEAT electronic headquarters
-    label_323061: AEAT electronic headquarters
+cli:
+  attachments:
+    add_help: cli.attachments.add_help
+    add_kind_help: cli.attachments.add_kind_help
+    add_link_invoice_help: cli.attachments.add_link_invoice_help
+    add_link_tx_help: cli.attachments.add_link_tx_help
+    add_metadata_help: cli.attachments.add_metadata_help
+    add_mime_type_help: cli.attachments.add_mime_type_help
+    add_notes_help: cli.attachments.add_notes_help
+    add_path_help: cli.attachments.add_path_help
+    add_source_help: cli.attachments.add_source_help
+    add_source_ref_help: cli.attachments.add_source_ref_help
+    app_help: cli.attachments.app_help
+    errors:
+      duplicate_metadata_key: cli.attachments.errors.duplicate_metadata_key
+      empty_metadata_key: cli.attachments.errors.empty_metadata_key
+      empty_metadata_value: cli.attachments.errors.empty_metadata_value
+      empty_mime_type: cli.attachments.errors.empty_mime_type
+      empty_source_reference: cli.attachments.errors.empty_source_reference
+      invalid_metadata_format: cli.attachments.errors.invalid_metadata_format
+    list:
+      no_attachments: cli.attachments.list.no_attachments
+    list_header: cli.attachments.list_header
+    list_help: cli.attachments.list_help
+    list_kind_filter_help: cli.attachments.list_kind_filter_help
+    list_linked_to_help: cli.attachments.list_linked_to_help
+    show_help: cli.attachments.show_help
+    show_id_help: cli.attachments.show_id_help
+  auth:
+    app_help: cli.auth.app_help
+    configure:
+      dni_fecha_help: cli.auth.configure.dni_fecha_help
+      dni_nie_help: cli.auth.configure.dni_nie_help
+      help: cli.auth.configure.help
+      nie_soporte_help: cli.auth.configure.nie_soporte_help
+      non_interactive_help: cli.auth.configure.non_interactive_help
+      prefer_non_qr_help: cli.auth.configure.prefer_non_qr_help
+      provider_help: cli.auth.configure.provider_help
+      set_default_help: cli.auth.configure.set_default_help
+    init:
+      acquire_cli_token_help: cli.auth.init.acquire_cli_token_help
+      doctor_help: cli.auth.init.doctor_help
+      errors:
+        accepted_cached: cli.auth.init.errors.accepted_cached
+        auth_failed: cli.auth.init.errors.auth_failed
+        clave_movil_config_purpose: cli.auth.init.errors.clave_movil_config_purpose
+        desktop_client_not_found: cli.auth.init.errors.desktop_client_not_found
+        dni_fecha_required: cli.auth.init.errors.dni_fecha_required
+        dni_nie_required: cli.auth.init.errors.dni_nie_required
+        interactive_required: cli.auth.init.errors.interactive_required
+        missing_provider_or_all: cli.auth.init.errors.missing_provider_or_all
+        nie_soporte_required: cli.auth.init.errors.nie_soporte_required
+        no_env_file: cli.auth.init.errors.no_env_file
+        no_session_found: cli.auth.init.errors.no_session_found
+        probe_failed: cli.auth.init.errors.probe_failed
+        provider_not_supported: cli.auth.init.errors.provider_not_supported
+        sa_key_not_found: cli.auth.init.errors.sa_key_not_found
+        session_stale: cli.auth.init.errors.session_stale
+        signed_in: cli.auth.init.errors.signed_in
+        signed_out: cli.auth.init.errors.signed_out
+        signed_out_many: cli.auth.init.errors.signed_out_many
+        stale_or_revoked: cli.auth.init.errors.stale_or_revoked
+        unknown_provider: cli.auth.init.errors.unknown_provider
+        unsupported_env_file: cli.auth.init.errors.unsupported_env_file
+        unsupported_provider: cli.auth.init.errors.unsupported_provider
+      help: cli.auth.init.help
+      json_help: cli.auth.init.json_help
+      labels:
+        action: cli.auth.init.labels.action
+        and: cli.auth.init.labels.and
+        browser: cli.auth.init.labels.browser
+        next: cli.auth.init.labels.next
+        purpose: cli.auth.init.labels.purpose
+        source: cli.auth.init.labels.source
+        success: cli.auth.init.labels.success
+      login_instruction: cli.auth.init.login_instruction
+      path_help: cli.auth.init.path_help
+      prepare_mcp_help: cli.auth.init.prepare_mcp_help
+      prompts:
+        dni_fecha: cli.auth.init.prompts.dni_fecha
+        dni_nie: cli.auth.init.prompts.dni_nie
+        nie_soporte: cli.auth.init.prompts.nie_soporte
+      reset_cli_token_help: cli.auth.init.reset_cli_token_help
+      saved_config: cli.auth.init.saved_config
+      service_account_json_help: cli.auth.init.service_account_json_help
+      step_acq_action: cli.auth.init.step_acq_action
+      step_acq_browser: cli.auth.init.step_acq_browser
+      step_acq_next: cli.auth.init.step_acq_next
+      step_acq_purpose: cli.auth.init.step_acq_purpose
+      step_acq_source: cli.auth.init.step_acq_source
+      step_acq_success: cli.auth.init.step_acq_success
+      step_acq_title: cli.auth.init.step_acq_title
+      step_desktop_imported_action: cli.auth.init.step_desktop_imported_action
+      step_desktop_imported_browser: cli.auth.init.step_desktop_imported_browser
+      step_desktop_imported_next: cli.auth.init.step_desktop_imported_next
+      step_desktop_imported_purpose: cli.auth.init.step_desktop_imported_purpose
+      step_desktop_imported_source: cli.auth.init.step_desktop_imported_source
+      step_desktop_imported_success: cli.auth.init.step_desktop_imported_success
+      step_desktop_imported_title: cli.auth.init.step_desktop_imported_title
+      step_mcp_action: cli.auth.init.step_mcp_action
+      step_mcp_browser: cli.auth.init.step_mcp_browser
+      step_mcp_next: cli.auth.init.step_mcp_next
+      step_mcp_purpose: cli.auth.init.step_mcp_purpose
+      step_mcp_source: cli.auth.init.step_mcp_source
+      step_mcp_success: cli.auth.init.step_mcp_success
+      step_mcp_title: cli.auth.init.step_mcp_title
+      step_repair_action: cli.auth.init.step_repair_action
+      step_repair_browser: cli.auth.init.step_repair_browser
+      step_repair_next: cli.auth.init.step_repair_next
+      step_repair_purpose: cli.auth.init.step_repair_purpose
+      step_repair_source: cli.auth.init.step_repair_source
+      step_repair_success: cli.auth.init.step_repair_success
+      step_repair_title: cli.auth.init.step_repair_title
+      step_sa_imported_action: cli.auth.init.step_sa_imported_action
+      step_sa_imported_browser: cli.auth.init.step_sa_imported_browser
+      step_sa_imported_next: cli.auth.init.step_sa_imported_next
+      step_sa_imported_purpose: cli.auth.init.step_sa_imported_purpose
+      step_sa_imported_source: cli.auth.init.step_sa_imported_source
+      step_sa_imported_success: cli.auth.init.step_sa_imported_success
+      step_sa_imported_title: cli.auth.init.step_sa_imported_title
+      step_sa_req_action: cli.auth.init.step_sa_req_action
+      step_sa_req_browser: cli.auth.init.step_sa_req_browser
+      step_sa_req_next: cli.auth.init.step_sa_req_next
+      step_sa_req_purpose: cli.auth.init.step_sa_req_purpose
+      step_sa_req_source: cli.auth.init.step_sa_req_source
+      step_sa_req_success: cli.auth.init.step_sa_req_success
+      step_sa_req_title: cli.auth.init.step_sa_req_title
+      step_sa_status_action: cli.auth.init.step_sa_status_action
+      step_sa_status_browser: cli.auth.init.step_sa_status_browser
+      step_sa_status_next: cli.auth.init.step_sa_status_next
+      step_sa_status_purpose: cli.auth.init.step_sa_status_purpose
+      step_sa_status_source: cli.auth.init.step_sa_status_source
+      step_sa_status_success: cli.auth.init.step_sa_status_success
+      step_sa_status_title: cli.auth.init.step_sa_status_title
+      step_setup_req_action: cli.auth.init.step_setup_req_action
+      step_setup_req_browser: cli.auth.init.step_setup_req_browser
+      step_setup_req_next: cli.auth.init.step_setup_req_next
+      step_setup_req_purpose: cli.auth.init.step_setup_req_purpose
+      step_setup_req_source: cli.auth.init.step_setup_req_source
+      step_setup_req_success: cli.auth.init.step_setup_req_success
+      step_setup_req_title: cli.auth.init.step_setup_req_title
+      step_status_action: cli.auth.init.step_status_action
+      step_status_browser: cli.auth.init.step_status_browser
+      step_status_next: cli.auth.init.step_status_next
+      step_status_purpose: cli.auth.init.step_status_purpose
+      step_status_source: cli.auth.init.step_status_source
+      step_status_success: cli.auth.init.step_status_success
+      step_status_title: cli.auth.init.step_status_title
+      step_token_reset_action: cli.auth.init.step_token_reset_action
+      step_token_reset_browser: cli.auth.init.step_token_reset_browser
+      step_token_reset_next: cli.auth.init.step_token_reset_next
+      step_token_reset_purpose: cli.auth.init.step_token_reset_purpose
+      step_token_reset_source: cli.auth.init.step_token_reset_source
+      step_token_reset_success: cli.auth.init.step_token_reset_success
+      step_token_reset_title: cli.auth.init.step_token_reset_title
+      terms:
+        default_provider: cli.auth.init.terms.default_provider
+        direct_push: cli.auth.init.terms.direct_push
+        dni_fecha: cli.auth.init.terms.dni_fecha
+        dni_nie: cli.auth.init.terms.dni_nie
+        nie_soporte: cli.auth.init.terms.nie_soporte
+        qr_code: cli.auth.init.terms.qr_code
+      url_prompt: cli.auth.init.url_prompt
+    list_providers:
+      all_help: cli.auth.list_providers.all_help
+      configured_help: cli.auth.list_providers.configured_help
+      help: cli.auth.list_providers.help
+      json_help: cli.auth.list_providers.json_help
+    login:
+      help: cli.auth.login.help
+      json_help: cli.auth.login.json_help
+      non_interactive_help: cli.auth.login.non_interactive_help
+      provider_help: cli.auth.login.provider_help
+    logout:
+      all_help: cli.auth.logout.all_help
+      help: cli.auth.logout.help
+      json_output_help: cli.auth.logout.json_output_help
+      provider_help: cli.auth.logout.provider_help
+    status:
+      help: cli.auth.status.help
+      json_help: cli.auth.status.json_help
+      provider_help: cli.auth.status.provider_help
+    whoami:
+      help: cli.auth.whoami.help
+      json_help: cli.auth.whoami.json_help
+      provider_help: cli.auth.whoami.provider_help
+  bootstrap:
+    errors:
+      already_bootstrapped: cli.bootstrap.errors.already_bootstrapped
+      destructive_warning: cli.bootstrap.errors.destructive_warning
+      force_instruction: cli.bootstrap.errors.force_instruction
+      missing_env: cli.bootstrap.errors.missing_env
+      missing_target: cli.bootstrap.errors.missing_target
+      target_instruction: cli.bootstrap.errors.target_instruction
+    labels:
+      active_env: cli.bootstrap.labels.active_env
+      active_target: cli.bootstrap.labels.active_target
+      auth_method: cli.bootstrap.labels.auth_method
+      auth_path: cli.bootstrap.labels.auth_path
+      mcp_status: cli.bootstrap.labels.mcp_status
+    success:
+      complete: cli.bootstrap.success.complete
+  browser:
+    app_help: cli.browser.app_help
+    health:
+      json_help: cli.browser.health.json_help
+    health_help: cli.browser.health_help
+    labels:
+      http_status: cli.browser.labels.http_status
+      markers: cli.browser.labels.markers
+      none: cli.browser.labels.none
+      retry_after_seconds: cli.browser.labels.retry_after_seconds
+      state: cli.browser.labels.state
+  categories:
+    app_help: cli.categories.app_help
+    id_help: cli.categories.id_help
+    list_help: cli.categories.list_help
+    show_help: cli.categories.show_help
+    year_help: cli.categories.year_help
+  cloud:
+    app_help: cli.cloud.app_help
+    environment_col: cli.cloud.environment_col
+    errors:
+      missing_project: cli.cloud.errors.missing_project
+    functions_app_help: cli.cloud.functions_app_help
+    functions_describe_help: cli.cloud.functions_describe_help
+    functions_describe_name_help: cli.cloud.functions_describe_name_help
+    functions_list_help: cli.cloud.functions_list_help
+    functions_list_title: cli.cloud.functions_list_title
+    generation_col: cli.cloud.generation_col
+    labels:
+      buckets_found: cli.cloud.labels.buckets_found
+      functions_found: cli.cloud.labels.functions_found
+      objects_found: cli.cloud.labels.objects_found
+      services_found: cli.cloud.labels.services_found
+    location_col: cli.cloud.location_col
+    name_col: cli.cloud.name_col
+    run_app_help: cli.cloud.run_app_help
+    run_describe_help: cli.cloud.run_describe_help
+    run_describe_name_help: cli.cloud.run_describe_name_help
+    run_list_help: cli.cloud.run_list_help
+    run_list_title: cli.cloud.run_list_title
+    size_col: cli.cloud.size_col
+    state_col: cli.cloud.state_col
+    storage_app_help: cli.cloud.storage_app_help
+    storage_buckets_help: cli.cloud.storage_buckets_help
+    storage_buckets_title: cli.cloud.storage_buckets_title
+    storage_class_col: cli.cloud.storage_class_col
+    storage_ls_bucket_help: cli.cloud.storage_ls_bucket_help
+    storage_ls_help: cli.cloud.storage_ls_help
+    storage_ls_prefix_help: cli.cloud.storage_ls_prefix_help
+    update_time_col: cli.cloud.update_time_col
+    updated_col: cli.cloud.updated_col
+  common:
+    errors:
+      invalid_iso_date: cli.common.errors.invalid_iso_date
+      period_empty: cli.common.errors.period_empty
+      period_unrecognised: cli.common.errors.period_unrecognised
+  data:
+    app_help: cli.data.app_help
+    ledgers:
+      app_help: cli.data.ledgers.app_help
+      inventory_help: cli.data.ledgers.inventory_help
+    ledgers_help: cli.data.ledgers_help
+  deadlines:
+    app_help: cli.deadlines.app_help
+    explain:
+      modelo_help: cli.deadlines.explain.modelo_help
+      profile_help: cli.deadlines.explain.profile_help
+    explain_help: cli.deadlines.explain_help
+    list:
+      closes_on_col: cli.deadlines.list.closes_on_col
+      labels:
+        tax_deadlines: cli.deadlines.list.labels.tax_deadlines
+      modelo_col: cli.deadlines.list.modelo_col
+      opens_on_col: cli.deadlines.list.opens_on_col
+      period_col: cli.deadlines.list.period_col
+      profile_help: cli.deadlines.list.profile_help
+      status_col: cli.deadlines.list.status_col
+      table_title: cli.deadlines.list.table_title
+      year_help: cli.deadlines.list.year_help
+    list_help: cli.deadlines.list_help
+    next:
+      labels:
+        closes: cli.deadlines.next.labels.closes
+        no_upcoming: cli.deadlines.next.labels.no_upcoming
+      profile_help: cli.deadlines.next.profile_help
+      year_help: cli.deadlines.next.year_help
+    next_help: cli.deadlines.next_help
+  declaration:
+    app_help: cli.declaration.app_help
+    approve_help: cli.declaration.approve_help
+    calculate_help: cli.declaration.calculate_help
+    edit_help: cli.declaration.edit_help
+    errors:
+      activate_profile: cli.declaration.errors.activate_profile
+      at_least_one_edit: cli.declaration.errors.at_least_one_edit
+      file_not_found: cli.declaration.errors.file_not_found
+      filter_parse_error: cli.declaration.errors.filter_parse_error
+      missing_id_or_period_modelo: cli.declaration.errors.missing_id_or_period_modelo
+      no_draft_for_period: cli.declaration.errors.no_draft_for_period
+      not_approved_for_export: cli.declaration.errors.not_approved_for_export
+      profile_tax_id_required: cli.declaration.errors.profile_tax_id_required
+      set_parse_error: cli.declaration.errors.set_parse_error
+    export_help: cli.declaration.export_help
+    format_help: cli.declaration.format_help
+    labels:
+      blockers: cli.declaration.labels.blockers
+      by: cli.declaration.labels.by
+      bytes: cli.declaration.labels.bytes
+      draft_id: cli.declaration.labels.draft_id
+      edits: cli.declaration.labels.edits
+      findings: cli.declaration.labels.findings
+      mismatched: cli.declaration.labels.mismatched
+      modelo: cli.declaration.labels.modelo (tax form)
+      next: cli.declaration.labels.next
+      path: cli.declaration.labels.path
+      period: cli.declaration.labels.period
+      sha256: cli.declaration.labels.sha256
+      status: cli.declaration.labels.status
+      values: cli.declaration.labels.values
+      verdict: cli.declaration.labels.verdict
+      warnings: cli.declaration.labels.warnings
+    opts:
+      by: cli.declaration.opts.by
+      draft_id: cli.declaration.opts.draft_id
+      file: cli.declaration.opts.file
+      filter: cli.declaration.opts.filter
+      modelo: cli.declaration.opts.modelo (tax form)
+      output: cli.declaration.opts.output
+      period: cli.declaration.opts.period
+      reason: cli.declaration.opts.reason
+      set: cli.declaration.opts.set
+    preview_help: cli.declaration.preview_help
+    review_help: cli.declaration.review_help
+    status:
+      absent: cli.declaration.status.absent
+    status_help: cli.declaration.status_help
+    validate_help: cli.declaration.validate_help
+    verify_help: cli.declaration.verify_help
+  docs:
+    app_help: cli.docs.app_help
+    append_doc_id_help: cli.docs.append_doc_id_help
+    append_help: cli.docs.append_help
+    append_text_help: cli.docs.append_text_help
+    errors:
+      empty_text: cli.docs.errors.empty_text
+    get_doc_id_help: cli.docs.get_doc_id_help
+    get_help: cli.docs.get_help
+    get_plaintext_help: cli.docs.get_plaintext_help
+    new_help: cli.docs.new_help
+    new_title_help: cli.docs.new_title_help
+    replace_doc_id_help: cli.docs.replace_doc_id_help
+    replace_help: cli.docs.replace_help
+    replace_new_text_help: cli.docs.replace_new_text_help
+    replace_old_help: cli.docs.replace_old_help
+    success:
+      appended: cli.docs.success.appended
+      replaced: cli.docs.success.replaced
+  doctor:
+    details:
+      adc_granted_scopes: cli.doctor.details.adc_granted_scopes
+      adc_missing_scopes: cli.doctor.details.adc_missing_scopes
+      adc_no_scopes: cli.doctor.details.adc_no_scopes
+      adc_not_configured_advisory: cli.doctor.details.adc_not_configured_advisory
+      adc_substep_json_not_configured: cli.doctor.details.adc_substep_json_not_configured
+      api_call_failed: cli.doctor.details.api_call_failed
+      api_enabled: cli.doctor.details.api_enabled
+      api_needs_billing: cli.doctor.details.api_needs_billing
+      auth_path_active: cli.doctor.details.auth_path_active
+      auth_path_adc: cli.doctor.details.auth_path_adc
+      auth_path_oauth_desktop: cli.doctor.details.auth_path_oauth_desktop
+      auth_path_service_account: cli.doctor.details.auth_path_service_account
+      auth_ready_both: cli.doctor.details.auth_ready_both
+      auth_ready_cli_only: cli.doctor.details.auth_ready_cli_only
+      auth_ready_mcp_only: cli.doctor.details.auth_ready_mcp_only
+      auth_ready_none: cli.doctor.details.auth_ready_none
+      backend_active: cli.doctor.details.backend_active
+      buckets_visible: cli.doctor.details.buckets_visible
+      cert_health_detail: cli.doctor.details.cert_health_detail
+      drive_scope_check_failed: cli.doctor.details.drive_scope_check_failed
+      functions_visible: cli.doctor.details.functions_visible
+      gcloud_env_project_mismatch: cli.doctor.details.gcloud_env_project_mismatch
+      gcloud_installed: cli.doctor.details.gcloud_installed
+      gcloud_version_failed: cli.doctor.details.gcloud_version_failed
+      gcp_project_not_set: cli.doctor.details.gcp_project_not_set
+      install_gcloud_advisory: cli.doctor.details.install_gcloud_advisory
+      live_reads_enabled: cli.doctor.details.live_reads_enabled
+      live_reads_skipped: cli.doctor.details.live_reads_skipped
+      live_tests_disabled: cli.doctor.details.live_tests_disabled
+      live_writes_forbidden: cli.doctor.details.live_writes_forbidden
+      master_kdf_absent: cli.doctor.details.master_kdf_absent
+      master_kdf_argon2id: cli.doctor.details.master_kdf_argon2id
+      master_kdf_not_object: cli.doctor.details.master_kdf_not_object
+      master_kdf_parse_failed: cli.doctor.details.master_kdf_parse_failed
+      master_kdf_unrecognised: cli.doctor.details.master_kdf_unrecognised
+      master_kdf_unsupported: cli.doctor.details.master_kdf_unsupported
+      master_key_file_present: cli.doctor.details.master_key_file_present
+      master_key_keychain_preferred: cli.doctor.details.master_key_keychain_preferred
+      master_key_keyring: cli.doctor.details.master_key_keyring
+      master_key_missing: cli.doctor.details.master_key_missing
+      master_key_partial: cli.doctor.details.master_key_partial
+      master_key_unsecured: cli.doctor.details.master_key_unsecured
+      mcp_credentials_dir_prepared: cli.doctor.details.mcp_credentials_dir_prepared
+      mcp_credentials_present: cli.doctor.details.mcp_credentials_present
+      no_active_auth_path: cli.doctor.details.no_active_auth_path
+      no_credentials_configured: cli.doctor.details.no_credentials_configured
+      no_scratch_doc: cli.doctor.details.no_scratch_doc
+      no_scratch_sheet: cli.doctor.details.no_scratch_sheet
+      no_stale_artifacts: cli.doctor.details.no_stale_artifacts
+      not_required_active_path: cli.doctor.details.not_required_active_path
+      not_required_see_drift: cli.doctor.details.not_required_see_drift
+      oauth_config_missing: cli.doctor.details.oauth_config_missing
+      oauth_config_partial: cli.doctor.details.oauth_config_partial
+      oauth_json_present: cli.doctor.details.oauth_json_present
+      oauth_token_issue: cli.doctor.details.oauth_token_issue
+      provider_not_configured: cli.doctor.details.provider_not_configured
+      provider_unavailable: cli.doctor.details.provider_unavailable
+      pytest_current_test_present: cli.doctor.details.pytest_current_test_present
+      run_auth_init_mcp: cli.doctor.details.run_auth_init_mcp
+      run_env_setup: cli.doctor.details.run_env_setup
+      run_gcloud_auth: cli.doctor.details.run_gcloud_auth
+      run_gcloud_config_set_project: cli.doctor.details.run_gcloud_config_set_project
+      run_gcloud_services_enable: cli.doctor.details.run_gcloud_services_enable
+      sa_key_not_found: cli.doctor.details.sa_key_not_found
+      sa_key_unparseable: cli.doctor.details.sa_key_unparseable
+      sa_key_unset: cli.doctor.details.sa_key_unset
+      secret_store_dir_missing: cli.doctor.details.secret_store_dir_missing
+      secret_store_dir_not_writable: cli.doctor.details.secret_store_dir_not_writable
+      select_auth_path_first: cli.doctor.details.select_auth_path_first
+      select_prepare_auth_path: cli.doctor.details.select_prepare_auth_path
+      service_usage_failed: cli.doctor.details.service_usage_failed
+      services_visible: cli.doctor.details.services_visible
+      set_gcp_project: cli.doctor.details.set_gcp_project
+      unsecured_requires_allow: cli.doctor.details.unsecured_requires_allow
+      unsecured_warning: cli.doctor.details.unsecured_warning
+    errors:
+      findings: cli.doctor.errors.findings
+    sections:
+      active_google_auth_path: cli.doctor.sections.active_google_auth_path
+      adc_file: cli.doctor.sections.adc_file
+      adc_scopes: cli.doctor.sections.adc_scopes
+      aeat_auth_path: cli.doctor.sections.aeat_auth_path
+      aeat_certificate: cli.doctor.sections.aeat_certificate
+      api_enablement: cli.doctor.sections.api_enablement
+      api_service: cli.doctor.sections.api_service
+      auth_path: cli.doctor.sections.auth_path
+      cli_oauth_cache: cli.doctor.sections.cli_oauth_cache
+      desktop_oauth_client_material: cli.doctor.sections.desktop_oauth_client_material
+      docs_round_trip: cli.doctor.sections.docs_round_trip
+      drive_round_trip: cli.doctor.sections.drive_round_trip
+      env_file: cli.doctor.sections.env_file
+      functions_list: cli.doctor.sections.functions_list
+      gcloud_auth: cli.doctor.sections.gcloud_auth
+      gcloud_binary: cli.doctor.sections.gcloud_binary
+      gcloud_project: cli.doctor.sections.gcloud_project
+      google_auth_readiness: cli.doctor.sections.google_auth_readiness
+      google_cloud_project: cli.doctor.sections.google_cloud_project
+      inactive_path_drift: cli.doctor.sections.inactive_path_drift
+      kdf_version: cli.doctor.sections.kdf_version
+      live_access_gate: cli.doctor.sections.live_access_gate
+      live_tests: cli.doctor.sections.live_tests
+      master_key_readiness: cli.doctor.sections.master_key_readiness
+      mcp_credentials_cache: cli.doctor.sections.mcp_credentials_cache
+      run_list: cli.doctor.sections.run_list
+      secret_store_backend: cli.doctor.sections.secret_store_backend
+      secret_store_dir: cli.doctor.sections.secret_store_dir
+      service_account_key_state: cli.doctor.sections.service_account_key_state
+      sheets_round_trip: cli.doctor.sections.sheets_round_trip
+      storage_list: cli.doctor.sections.storage_list
+    success:
+      all_clean: cli.doctor.success.all_clean
+    table:
+      detail: cli.doctor.table.detail
+      'no': cli.doctor.table.no
+      required: cli.doctor.table.required
+      section: cli.doctor.table.section
+      state: cli.doctor.table.state
+      title: cli.doctor.table.title
+      'yes': cli.doctor.table.yes
+  drive:
+    app_help: cli.drive.app_help
+    cat_export_mime_help: cli.drive.cat_export_mime_help
+    cat_file_id_help: cli.drive.cat_file_id_help
+    cat_help: cli.drive.cat_help
+    errors:
+      already_exists: cli.drive.errors.already_exists
+      local_not_found: cli.drive.errors.local_not_found
+      multiple_matches: cli.drive.errors.multiple_matches
+      not_found: cli.drive.errors.not_found
+    fetch_help: cli.drive.fetch_help
+    fetch_name_help: cli.drive.fetch_name_help
+    fetch_out_help: cli.drive.fetch_out_help
+    fetch_overwrite_help: cli.drive.fetch_overwrite_help
+    find_help: cli.drive.find_help
+    find_query_help: cli.drive.find_query_help
+    find_table_title: cli.drive.find_table_title
+    ls_folder_help: cli.drive.ls_folder_help
+    ls_help: cli.drive.ls_help
+    ls_page_size_help: cli.drive.ls_page_size_help
+    ls_table_title: cli.drive.ls_table_title
+    mkdir_help: cli.drive.mkdir_help
+    mkdir_name_help: cli.drive.mkdir_name_help
+    mkdir_parent_help: cli.drive.mkdir_parent_help
+    put_folder_help: cli.drive.put_folder_help
+    put_help: cli.drive.put_help
+    put_local_help: cli.drive.put_local_help
+    put_mime_help: cli.drive.put_mime_help
+    put_name_help: cli.drive.put_name_help
+    rm_file_id_help: cli.drive.rm_file_id_help
+    rm_help: cli.drive.rm_help
+    rm_permanent_help: cli.drive.rm_permanent_help
+    success:
+      deleted: cli.drive.success.deleted
+      fetched: cli.drive.success.fetched
+      trashed: cli.drive.success.trashed
+    table_id: cli.drive.table_id
+    table_mime: cli.drive.table_mime
+    table_modified: cli.drive.table_modified
+    table_name: cli.drive.table_name
+    table_size: cli.drive.table_size
+  filing:
+    amendment:
+      delta_table_title: cli.filing.amendment.delta_table_title
+      title: cli.filing.amendment.title
+    app_help: cli.filing.app_help
+    build:
+      inputs_help: cli.filing.build.inputs_help
+      modelo_help: cli.filing.build.modelo_help
+      period_help: cli.filing.build.period_help
+      profile_help: cli.filing.build.profile_help
+      profile_name_help: cli.filing.build.profile_name_help
+      profile_tax_id_help: cli.filing.build.profile_tax_id_help
+      success: cli.filing.build.success
+    complementaria:
+      app_help: cli.filing.complementaria.app_help
+      build:
+        delta_json_help: cli.filing.complementaria.build.delta_json_help
+    draft:
+      approved_by_you: cli.filing.draft.approved_by_you
+      next_steps_label: cli.filing.draft.next_steps_label
+      title: cli.filing.draft.title
+      values_table_title: cli.filing.draft.values_table_title
+    errors:
+      amendment_success: cli.filing.errors.amendment_success
+      casilla_key_not_string: cli.filing.errors.casilla_key_not_string
+      draft_not_found: cli.filing.errors.draft_not_found
+      failed_to_load_draft: cli.filing.errors.failed_to_load_draft
+      inputs_not_found: cli.filing.errors.inputs_not_found
+      inputs_not_object: cli.filing.errors.inputs_not_object
+      invalid_draft_extension: cli.filing.errors.invalid_draft_extension
+      invalid_json: cli.filing.errors.invalid_json
+      invalid_status: cli.filing.errors.invalid_status
+      missing_import_source: cli.filing.errors.missing_import_source
+      missing_original_submission_id: cli.filing.errors.missing_original_submission_id
+      missing_updated_inputs: cli.filing.errors.missing_updated_inputs
+      modelo_mismatch: cli.filing.errors.modelo_mismatch
+      multiple_import_sources: cli.filing.errors.multiple_import_sources
+      period_mismatch: cli.filing.errors.period_mismatch
+      profile_tax_id_required: cli.filing.errors.profile_tax_id_required
+      reasons_not_object: cli.filing.errors.reasons_not_object
+      submission_not_found: cli.filing.errors.submission_not_found
+      submission_validation_failed: cli.filing.errors.submission_validation_failed
+      unsupported_value_type: cli.filing.errors.unsupported_value_type
+    field:
+      approved_at: cli.filing.field.approved_at
+      approved_by: cli.filing.field.approved_by
+      casilla: cli.filing.field.casilla (box)
+      code: cli.filing.field.code
+      created_at: cli.filing.field.created_at
+      draft_id: cli.filing.field.draft_id
+      kind: cli.filing.field.kind
+      message: cli.filing.field.message
+      modelo: cli.filing.field.modelo (tax form)
+      new: cli.filing.field.new
+      old: cli.filing.field.old
+      original_csv: cli.filing.field.original_csv
+      path: cli.filing.field.path
+      period: cli.filing.field.period
+      profile_tax_id: cli.filing.field.profile_tax_id
+      reason: cli.filing.field.reason
+      review_checksum: cli.filing.field.review_checksum
+      schema_version: cli.filing.field.schema_version
+      severity: cli.filing.field.severity
+      source: cli.filing.field.source
+      stale_reason: cli.filing.field.stale_reason
+      status: cli.filing.field.status
+      submission_id: cli.filing.field.submission_id
+      updated_at: cli.filing.field.updated_at
+      value: cli.filing.field.value
+    import:
+      actual: cli.filing.import.actual
+      borrador_unsupported: cli.filing.import.borrador_unsupported
+      casilla_label: cli.filing.import.casilla_label
+      cause: cli.filing.import.cause
+      expected: cli.filing.import.expected
+      extraction_complete: cli.filing.import.extraction_complete
+      from_borrador_help: cli.filing.import.from_borrador_help
+      from_declaracion_help: cli.filing.import.from_declaracion_help
+      from_justificante_help: cli.filing.import.from_justificante_help
+      importing_declaration: cli.filing.import.importing_declaration
+      justificante_success: cli.filing.import.justificante_success
+      modelo_help: cli.filing.import.modelo_help
+      scaffold_created: cli.filing.import.scaffold_created
+      verification_result: cli.filing.import.verification_result
+      warning_label: cli.filing.import.warning_label
+      warnings_found: cli.filing.import.warnings_found
+    init:
+      findings_table_title: cli.filing.init.findings_table_title
+    list:
+      modelo_help: cli.filing.list.modelo_help
+      status_help: cli.filing.list.status_help
+      table_title: cli.filing.list.table_title
+    show:
+      findings_only_help: cli.filing.show.findings_only_help
+    validate:
+      draft_path_help: cli.filing.validate.draft_path_help
+      success: cli.filing.validate.success
+  financial:
+    app_help: cli.financial.app_help
+    catalogue:
+      errors:
+        not_found: cli.financial.catalogue.errors.not_found
+    ingest:
+      catalogue_dir_help: cli.financial.ingest.catalogue_dir_help
+      help: cli.financial.ingest.help
+      output_json_help: cli.financial.ingest.output_json_help
+      path_help: cli.financial.ingest.path_help
+      persist_help: cli.financial.ingest.persist_help
+      provider_help: cli.financial.ingest.provider_help
+      verbose_help: cli.financial.ingest.verbose_help
+    invoices:
+      app_help: cli.financial.invoices.app_help
+      apply_help: cli.financial.invoices.apply_help
+      consistent: cli.financial.invoices.consistent
+      errors:
+        final_save_failed: cli.financial.invoices.errors.final_save_failed
+        not_found: cli.financial.invoices.errors.not_found
+        not_found_after_update: cli.financial.invoices.errors.not_found_after_update
+        skipped_suggestion: cli.financial.invoices.errors.skipped_suggestion
+      headers:
+        list: cli.financial.invoices.headers.list
+        unmatched: cli.financial.invoices.headers.unmatched
+      id_help: cli.financial.invoices.id_help
+      kind_help: cli.financial.invoices.kind_help
+      labels:
+        applied: cli.financial.invoices.labels.applied
+      link_help: cli.financial.invoices.link_help
+      link_invoice_id_help: cli.financial.invoices.link_invoice_id_help
+      link_transaction_id_help: cli.financial.invoices.link_transaction_id_help
+      list_help: cli.financial.invoices.list_help
+      no_invoices: cli.financial.invoices.no_invoices
+      no_suggestions: cli.financial.invoices.no_suggestions
+      no_unmatched: cli.financial.invoices.no_unmatched
+      reconcile_help: cli.financial.invoices.reconcile_help
+      show_help: cli.financial.invoices.show_help
+      unmatched_help: cli.financial.invoices.unmatched_help
+      verify_help: cli.financial.invoices.verify_help
+    profile:
+      app_help: cli.financial.profile.app_help
+      errors:
+        at_least_one: cli.financial.profile.errors.at_least_one
+        did_you_mean: cli.financial.profile.errors.did_you_mean
+        eligible_categories: cli.financial.profile.errors.eligible_categories
+        family_aliases: cli.financial.profile.errors.family_aliases
+        invalid_ratio: cli.financial.profile.errors.invalid_ratio
+        unknown_key: cli.financial.profile.errors.unknown_key
+      headers:
+        ratios: cli.financial.profile.headers.ratios
+      labels:
+        no_active: cli.financial.profile.labels.no_active
+        profile_not_found: cli.financial.profile.labels.profile_not_found
+        switched: cli.financial.profile.labels.switched
+      ratios_help: cli.financial.profile.ratios_help
+      ratios_list_help: cli.financial.profile.ratios_list_help
+      set_ratio_help: cli.financial.profile.set_ratio_help
+      set_ratio_key_help: cli.financial.profile.set_ratio_key_help
+      set_ratio_value_help: cli.financial.profile.set_ratio_value_help
+      unset_ratio_help: cli.financial.profile.unset_ratio_help
+      unset_ratio_key_help: cli.financial.profile.unset_ratio_key_help
+    txs:
+      app_help: cli.financial.txs.app_help
+  financial_invoices:
+    errors:
+      catalogue_not_found: cli.financial_invoices.errors.catalogue_not_found
+    headers:
+      inconsistencies: cli.financial_invoices.headers.inconsistencies
+      suggestions: cli.financial_invoices.headers.suggestions
+    labels:
+      'no': cli.financial_invoices.labels.no
+      'yes': cli.financial_invoices.labels.yes
+  ingest:
+    errors:
+      at_least_one_row: cli.ingest.errors.at_least_one_row
+      auto_detect_failed: cli.ingest.errors.auto_detect_failed
+      ingest_failed: cli.ingest.errors.ingest_failed
+    labels:
+      complete: cli.ingest.labels.complete
+      ingesting: cli.ingest.labels.ingesting
+      rows_found: cli.ingest.labels.rows_found
+  inventory:
+    app_help: cli.inventory.app_help
+    create:
+      actividad_help: cli.inventory.create.actividad_help
+      help: cli.inventory.create.help
+      opening_quantity_help: cli.inventory.create.opening_quantity_help
+      opening_stock_help: cli.inventory.create.opening_stock_help
+      opening_unit_cost_help: cli.inventory.create.opening_unit_cost_help
+      sku_help: cli.inventory.create.sku_help
+      storage_dir_help: cli.inventory.create.storage_dir_help
+      valuation_method_help: cli.inventory.create.valuation_method_help
+      year_help: cli.inventory.create.year_help
+    errors:
+      invalid_valuation: cli.inventory.errors.invalid_valuation
+      ledger_not_found: cli.inventory.errors.ledger_not_found
+      missing_opening_fields: cli.inventory.errors.missing_opening_fields
+      valuation_failed: cli.inventory.errors.valuation_failed
+    labels:
+      ledger_created: cli.inventory.labels.ledger_created
+      ledger_empty: cli.inventory.labels.ledger_empty
+      movement_added: cli.inventory.labels.movement_added
+    list:
+      help: cli.inventory.list.help
+      opening_label: cli.inventory.list.opening_label
+      storage_dir_help: cli.inventory.list.storage_dir_help
+    movement:
+      actividad_help: cli.inventory.movement.actividad_help
+      add_help: cli.inventory.movement.add_help
+      date_help: cli.inventory.movement.date_help
+      kind_help: cli.inventory.movement.kind_help
+      movement_id_help: cli.inventory.movement.movement_id_help
+      quantity_help: cli.inventory.movement.quantity_help
+      sku_help: cli.inventory.movement.sku_help
+      storage_dir_help: cli.inventory.movement.storage_dir_help
+      taxable_base_help: cli.inventory.movement.taxable_base_help
+      unit_cost_help: cli.inventory.movement.unit_cost_help
+      vat_rate_help: cli.inventory.movement.vat_rate_help
+      year_help: cli.inventory.movement.year_help
+    movement_help: cli.inventory.movement_help
+    valuation:
+      actividad_help: cli.inventory.valuation.actividad_help
+      closing_label: cli.inventory.valuation.closing_label
+      cogs_label: cli.inventory.valuation.cogs_label
+      preview_help: cli.inventory.valuation.preview_help
+      preview_line: cli.inventory.valuation.preview_line
+      storage_dir_help: cli.inventory.valuation.storage_dir_help
+      year_help: cli.inventory.valuation.year_help
+    valuation_help: cli.inventory.valuation_help
+  invoice:
+    app_help: cli.invoice.app_help
+    edit:
+      help: cli.invoice.edit.help
+      id_help: cli.invoice.edit.id_help
+      reason_help: cli.invoice.edit.reason_help
+      set_help: cli.invoice.edit.set_help
+    errors:
+      at_least_one_edit: cli.invoice.errors.at_least_one_edit
+      file_not_found: cli.invoice.errors.file_not_found
+      filter_parse_error: cli.invoice.errors.filter_parse_error
+      invalid_kind: cli.invoice.errors.invalid_kind
+      invoice_not_found: cli.invoice.errors.invoice_not_found
+      match_both_required: cli.invoice.errors.match_both_required
+      set_parse_error: cli.invoice.errors.set_parse_error
+    import:
+      dry_run_help: cli.invoice.import.dry_run_help
+      help: cli.invoice.import.help
+      kind_help: cli.invoice.import.kind_help
+      path_help: cli.invoice.import.path_help
+    labels:
+      base: cli.invoice.labels.base
+      dry_run: cli.invoice.labels.dry_run
+      fields: cli.invoice.labels.fields
+      id: cli.invoice.labels.id
+      imported: cli.invoice.labels.imported
+      iva: cli.invoice.labels.iva
+      kind: cli.invoice.labels.kind
+      matched: cli.invoice.labels.matched
+      payment: cli.invoice.labels.payment
+      period: cli.invoice.labels.period
+      rows: cli.invoice.labels.rows
+      skipped: cli.invoice.labels.skipped
+      status: cli.invoice.labels.status
+      unmatched: cli.invoice.labels.unmatched
+      'yes': cli.invoice.labels.yes
+    match:
+      help: cli.invoice.match.help
+      invoice_help: cli.invoice.match.invoice_help
+      ledger_help: cli.invoice.match.ledger_help
+      period_help: cli.invoice.match.period_help
+    review:
+      filter_help: cli.invoice.review.filter_help
+      header: cli.invoice.review.header
+      help: cli.invoice.review.help
+      id_help: cli.invoice.review.id_help
+      no_invoices: cli.invoice.review.no_invoices
+      verbose_help: cli.invoice.review.verbose_help
+  ledger:
+    app_help: cli.ledger.app_help
+    edit:
+      help: cli.ledger.edit.help
+      id_help: cli.ledger.edit.id_help
+      reason_help: cli.ledger.edit.reason_help
+      set_help: cli.ledger.edit.set_help
+      skip_help: cli.ledger.edit.skip_help
+      split_help: cli.ledger.edit.split_help
+    errors:
+      auto_detect_failed: cli.ledger.errors.auto_detect_failed
+      edit_requires_one: cli.ledger.errors.edit_requires_one
+      filter_parse_error: cli.ledger.errors.filter_parse_error
+      invalid_skip: cli.ledger.errors.invalid_skip
+      invalid_split_format: cli.ledger.errors.invalid_split_format
+      invalid_split_value: cli.ledger.errors.invalid_split_value
+      match_both_required: cli.ledger.errors.match_both_required
+      n26_auto_detect_failed: cli.ledger.errors.n26_auto_detect_failed
+      row_not_found: cli.ledger.errors.row_not_found
+      set_parse_error: cli.ledger.errors.set_parse_error
+      unknown_provider: cli.ledger.errors.unknown_provider
+    import:
+      dry_run_help: cli.ledger.import.dry_run_help
+      help: cli.ledger.import.help
+      path_help: cli.ledger.import.path_help
+      period_help: cli.ledger.import.period_help
+      provider_help: cli.ledger.import.provider_help
+      source_help: cli.ledger.import.source_help
+      verbose_help: cli.ledger.import.verbose_help
+      verify_help: cli.ledger.import.verify_help
+    labels:
+      amount: cli.ledger.labels.amount
+      date: cli.ledger.labels.date
+      description: cli.ledger.labels.description
+      dry_run: cli.ledger.labels.dry_run
+      fields: cli.ledger.labels.fields
+      id: cli.ledger.labels.id
+      imported: cli.ledger.labels.imported
+      'no': cli.ledger.labels.no
+      rows: cli.ledger.labels.rows
+      skipped: cli.ledger.labels.skipped
+      status: cli.ledger.labels.status
+      'yes': cli.ledger.labels.yes
+    review:
+      filter_help: cli.ledger.review.filter_help
+      header: cli.ledger.review.header
+      help: cli.ledger.review.help
+      id_help: cli.ledger.review.id_help
+      no_rows: cli.ledger.review.no_rows
+      verbose_help: cli.ledger.review.verbose_help
+  llm:
+    app_help: cli.llm.app_help
+    cache_app_help: cli.llm.cache_app_help
+    cache_prune_help: cli.llm.cache_prune_help
+    cache_stats_help: cli.llm.cache_stats_help
+    complete_help: cli.llm.complete_help
+    context_help: cli.llm.context_help
+    errors:
+      invalid_input: cli.llm.errors.invalid_input
+      missing_variable: cli.llm.errors.missing_variable
+    from_help: cli.llm.from_help
+    input_help: cli.llm.input_help
+    labels:
+      removed_cache_files: cli.llm.labels.removed_cache_files
+    language_help: cli.llm.language_help
+    prompt_id_help: cli.llm.prompt_id_help
+    since_help: cli.llm.since_help
+    text_help: cli.llm.text_help
+    to_help: cli.llm.to_help
+    translate_help: cli.llm.translate_help
+    until_help: cli.llm.until_help
+    usage_help: cli.llm.usage_help
+  normatives:
+    app_help: cli.normatives.app_help
+    errors:
+      load_failed: cli.normatives.errors.load_failed
+    headers:
+      citation: cli.normatives.headers.citation
+      code: cli.normatives.headers.code
+      level: cli.normatives.headers.level
+      message: cli.normatives.headers.message
+      numero: cli.normatives.headers.numero
+      reference_id: cli.normatives.headers.reference_id
+      titulo: cli.normatives.headers.titulo
+    labels:
+      articles: cli.normatives.labels.articles
+      articulos: cli.normatives.labels.articulos
+      boe_id: cli.normatives.labels.boe_id
+      boe_url: cli.normatives.labels.boe_url
+      found: cli.normatives.labels.found
+      id: cli.normatives.labels.id
+      kind: cli.normatives.labels.kind
+      last_reviewed_at: cli.normatives.labels.last_reviewed_at
+      no_articulos: cli.normatives.labels.no_articulos
+      number: cli.normatives.labels.number
+      published_at: cli.normatives.labels.published_at
+      reviewed_by: cli.normatives.labels.reviewed_by
+      short_title: cli.normatives.labels.short_title
+      tags: cli.normatives.labels.tags
+    list_help: cli.normatives.list_help
+    list_tag_help: cli.normatives.list_tag_help
+    show_help: cli.normatives.show_help
+    show_ref_id_help: cli.normatives.show_ref_id_help
+    success:
+      clean: cli.normatives.success.clean
+      verification_results: cli.normatives.success.verification_results
+    verify_help: cli.normatives.verify_help
+  oauth:
+    app_help: cli.oauth.app_help
+    errors:
+      invalid_json: cli.oauth.errors.invalid_json
+    init:
+      help: cli.oauth.init.help
+      json_help: cli.oauth.init.json_help
+      success: cli.oauth.init.success
+    labels:
+      next_step: cli.oauth.labels.next_step
+      open_url: cli.oauth.labels.open_url
+      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+    success:
+      copied: cli.oauth.success.copied
+      written: cli.oauth.success.written
+  overview:
+    app_help: cli.overview.app_help
+    calendar_help: cli.overview.calendar_help
+    calendar_requires_dates: cli.overview.calendar_requires_dates
+    drafts: cli.overview.drafts
+    from_help: cli.overview.from_help
+    header: cli.overview.header
+    invoices: cli.overview.invoices
+    period: cli.overview.period
+    period_help: cli.overview.period_help
+    profile: cli.overview.profile
+    status_help: cli.overview.status_help
+    to_help: cli.overview.to_help
+    transactions: cli.overview.transactions
+    verbose_help: cli.overview.verbose_help
+  registry:
+    app_help: cli.registry.app_help
+    capture_filed_data_help: cli.registry.capture_filed_data_help
+    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
+    capture_limit_help: cli.registry.capture_limit_help
+    errors:
+      invalid_year_range: cli.registry.errors.invalid_year_range
+    expediente_help: cli.registry.expediente_help
+    from_year_help: cli.registry.from_year_help
+    inspect_help: cli.registry.inspect_help
+    inspect_registry_root_help: cli.registry.inspect_registry_root_help
+    json_help: cli.registry.json_help
+    list_filed_data_help: cli.registry.list_filed_data_help
+    list_filed_data_json_help: cli.registry.list_filed_data_json_help
+    modelo_help: cli.registry.modelo_help
+    output_root_help: cli.registry.output_root_help
+    period_help: cli.registry.period_help
+    to_year_help: cli.registry.to_year_help
+    verify_help: cli.registry.verify_help
+    verify_source_root_help: cli.registry.verify_source_root_help
+    workbooks_app_help: cli.registry.workbooks_app_help
+    workbooks_limit_help: cli.registry.workbooks_limit_help
+    workbooks_output_help: cli.registry.workbooks_output_help
+    workbooks_resume_help: cli.registry.workbooks_resume_help
+    workbooks_root_help: cli.registry.workbooks_root_help
+    workbooks_timeout_help: cli.registry.workbooks_timeout_help
+    workbooks_verify_help: cli.registry.workbooks_verify_help
+    year_help: cli.registry.year_help
+  root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    format_help: cli.root.format_help
+  sanitize:
+    app_help: cli.sanitize.app_help
+    labels:
+      available: cli.sanitize.labels.available
+    status_help: cli.sanitize.status_help
+  setup:
+    app_help: cli.setup.app_help
+    auth:
+      app_help: cli.setup.auth.app_help
+      configure:
+        file_help: cli.setup.auth.configure.file_help
+        help: cli.setup.auth.configure.help
+        provider_help: cli.setup.auth.configure.provider_help
+      login:
+        help: cli.setup.auth.login.help
+      logout:
+        help: cli.setup.auth.logout.help
+      providers:
+        help: cli.setup.auth.providers.help
+      status:
+        help: cli.setup.auth.status.help
+      whoami:
+        help: cli.setup.auth.whoami.help
+    errors:
+      certificate_file_required: cli.setup.errors.certificate_file_required
+      file_not_found: cli.setup.errors.file_not_found
+      not_configured: cli.setup.errors.not_configured
+      unknown_profile_key: cli.setup.errors.unknown_profile_key
+      unknown_provider: cli.setup.errors.unknown_provider
+    headers:
+      active: cli.setup.headers.active
+      auth_provider: cli.setup.headers.auth_provider
+      authenticated_at: cli.setup.headers.authenticated_at
+      availability: cli.setup.headers.availability
+      description: cli.setup.headers.description
+      id: cli.setup.headers.id
+      key: cli.setup.headers.key
+      login_ready: cli.setup.headers.login_ready
+      logout: cli.setup.headers.logout
+      missing: cli.setup.headers.missing
+      next: cli.setup.headers.next
+      profile: cli.setup.headers.profile
+      profile_ready: cli.setup.headers.profile_ready
+      provider: cli.setup.headers.provider
+      ready: cli.setup.headers.ready
+      requirement: cli.setup.headers.requirement
+      subject: cli.setup.headers.subject
+      unknown: cli.setup.headers.unknown
+      valid: cli.setup.headers.valid
+    init:
+      activity_help: cli.setup.init.activity_help
+      help: cli.setup.init.help
+      name_help: cli.setup.init.name_help
+      tax_id_help: cli.setup.init.tax_id_help
+    labels:
+      'no': cli.setup.labels.no
+      unset: cli.setup.labels.unset
+      'yes': cli.setup.labels.yes
+    profile:
+      app_help: cli.setup.profile.app_help
+      get_help: cli.setup.profile.get_help
+      get_key_help: cli.setup.profile.get_key_help
+      list_help: cli.setup.profile.list_help
+      list_keys_help: cli.setup.profile.list_keys_help
+      set_help: cli.setup.profile.set_help
+      set_key_help: cli.setup.profile.set_key_help
+      set_value_help: cli.setup.profile.set_value_help
+      show_help: cli.setup.profile.show_help
+      unset_help: cli.setup.profile.unset_help
+      unset_key_help: cli.setup.profile.unset_key_help
+      use_help: cli.setup.profile.use_help
+      use_name_help: cli.setup.profile.use_name_help
+      validate_help: cli.setup.profile.validate_help
+    status:
+      help: cli.setup.status.help
+  txs:
+    app_help: cli.txs.app_help
+    build:
+      exists_err: cli.txs.build.exists_err
+      help: cli.txs.build.help
+      replace_help: cli.txs.build.replace_help
+      source_help: cli.txs.build.source_help
+      success: cli.txs.build.success
+    classify:
+      as_help: cli.txs.classify.as_help
+      business_category_err: cli.txs.classify.business_category_err
+      category_help: cli.txs.classify.category_help
+      confidence_help: cli.txs.classify.confidence_help
+      confidence_range_err: cli.txs.classify.confidence_range_err
+      help: cli.txs.classify.help
+      id_help: cli.txs.classify.id_help
+      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
+      invalid_pct_err: cli.txs.classify.invalid_pct_err
+      mixed_pct_err: cli.txs.classify.mixed_pct_err
+      no_changes_err: cli.txs.classify.no_changes_err
+      outgoing_category_err: cli.txs.classify.outgoing_category_err
+      pct_help: cli.txs.classify.pct_help
+      reason_help: cli.txs.classify.reason_help
+    classify_llm:
+      all_help: cli.txs.classify_llm.all_help
+      category_hint_help: cli.txs.classify_llm.category_hint_help
+      dry_run_help: cli.txs.classify_llm.dry_run_help
+      dry_run_label: cli.txs.classify_llm.dry_run_label
+      errors:
+        classification_failed: cli.txs.classify_llm.errors.classification_failed
+        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
+        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
+        missing_target: cli.txs.classify_llm.errors.missing_target
+        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
+        save_failed: cli.txs.classify_llm.errors.save_failed
+      help: cli.txs.classify_llm.help
+      id_help: cli.txs.classify_llm.id_help
+      labels:
+        no_targets: cli.txs.classify_llm.labels.no_targets
+      llm_suffix: cli.txs.classify_llm.llm_suffix
+      max_seconds_help: cli.txs.classify_llm.max_seconds_help
+      model_alias_help: cli.txs.classify_llm.model_alias_help
+      model_help: cli.txs.classify_llm.model_help
+      pct_override_help: cli.txs.classify_llm.pct_override_help
+      persisted_label: cli.txs.classify_llm.persisted_label
+      provider_help: cli.txs.classify_llm.provider_help
+      reason_help: cli.txs.classify_llm.reason_help
+      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
+      summary: cli.txs.classify_llm.summary
+      tier_help: cli.txs.classify_llm.tier_help
+      timeout: cli.txs.classify_llm.timeout
+    list:
+      confidence_below_help: cli.txs.list.confidence_below_help
+      header: cli.txs.list.header
+      help: cli.txs.list.help
+      no_matches_confidence: cli.txs.list.no_matches_confidence
+      no_transactions: cli.txs.list.no_transactions
+      state_help: cli.txs.list.state_help
+    show:
+      help: cli.txs.show.help
+      id_help: cli.txs.show.id_help
+      not_found_err: cli.txs.show.not_found_err
+filing:
+  validation:
+    deadline_missed: filing.validation.deadline_missed
+    formula_divergence: filing.validation.formula_divergence
+    out_of_range: filing.validation.out_of_range
+    required_missing: filing.validation.required_missing
+    schema_mismatch: filing.validation.schema_mismatch
 profile:
   test_keys:
-    description_105989: x
     description_490119: x
-  errors:
-    message: No tax-residence profile is configured for RENTA.
-vat:
-  test_rules:
-    translatable: x
-    translatable_es_ok: x
-  catalogue:
-    label_587258: Domestic supply at the general 21 % rate
-    description_811453: Supplies of goods and services carried out in the Spanish
-      VAT territory at the 21 % general rate.
-    triggers_when_652065: The good or service is neither listed in Art. 91 reduced
-      tables nor exempt under Art. 20.
-    iva_treatment_375461: Charge 21 % on the invoice and declare on Modelo 303.
-    label_247329: Domestic supply at the reduced 10 % rate
-    description_140564: Goods and services taxed at the 10 % reduced rate under Art.
-      91.Uno (general food, hospitality, passenger transport, new housing).
-    triggers_when_135246: The good or service is listed in Art. 91.Uno.
-    iva_treatment_180667: Charge 10 % on the invoice and declare on Modelo 303.
-    label_152655: Domestic supply at the super-reduced 4 % rate
-    description_669130: Essential goods and services taxed at the super-reduced 4
-      % rate under Art. 91.Dos (basic bread, milk, eggs, fruit, books, medicines,
-      prostheses, special-regime social housing).
-    triggers_when_337687: The good or service is listed in Art. 91.Dos.
-    iva_treatment_850584: Charge 4 % on the invoice and declare on Modelo 303.
-    label_335037: Domestic supply at the zero rate
-    description_650743: Supplies taxed at a transitional or structural zero rate (full
-      exemptions with right of deduction).
-    triggers_when_900269: A transitional law or the Art. 24 exemption enables the
-      zero rate.
-    iva_treatment_801453: Invoice at 0 % and declare on Modelo 303 while preserving
-      input-VAT deduction.
-    label_251820: Domestic exempt supply
-    description_279007: 'Domestic supplies exempt under Art. 20: health, education,
-      financial, insurance, immovable (without waiver).'
-    triggers_when_752126: The activity or good is listed in Art. 20.Uno.
-    iva_treatment_461076: No VAT charged; the exemption is limited (no input-VAT deduction)
-      and declared on dedicated Modelo 303 boxes.
-    label_721417: Non-subject operation
-    description_795493: 'Operations outside the VAT taxable event per Art. 7: transfer
-      of a going concern, services rendered by employees, free samples.'
-    triggers_when_890848: The scenario is enumerated in Art. 7 as non-subject.
-    iva_treatment_236002: There is no taxable event; no VAT is charged or declared.
-    label_799700: Domestic operation with reverse charge
-    description_496471: 'Domestic supplies of goods or services where the recipient
-      becomes the taxable person and self-assesses VAT (Art. 84.Uno.2º): construction
-      works, waste / recovery materials, B2B supplies of mobile phones, video consoles,
-      laptops and tablets.'
-    triggers_when_019278: The transaction matches one of the Art. 84.Uno.2º sub-paragraphs
-      (construction, waste, B2B consumer electronics, etc.).
-    iva_treatment_632365: The issuer raises the invoice without output VAT and records
-      'reverse charge'. The recipient self-assesses the output VAT and may simultaneously
-      deduct it on the same Modelo 303.
-    label_718631: Intra-community supply (exempt)
-    description_746004: Supply of goods dispatched from Spain to another member state
-      to a buyer holding a valid VAT-ID; exempt under Art. 25.
-    triggers_when_621296: The buyer is VAT-registered in another member state and
-      the goods leave the Spanish VAT territory.
-    iva_treatment_977632: Invoice without VAT with the 'exenta Art. 25 Ley 37/1992'
-      mention; declare on Modelo 303 and Modelo 349.
-    label_196484: Intra-community acquisition (reverse charge)
-    description_609600: Purchase of goods from another member state by a Spanish business;
-      the buyer self-assesses and deducts the VAT in the same return.
-    triggers_when_030936: The buyer is a Spanish business and the supplier acts with
-      its intra-community VAT-ID.
-    iva_treatment_124024: Self-assess VAT on Modelo 303 (both output and input) and
-      declare on Modelo 349.
-    label_772607: Intra-community triangulation
-    description_869664: Chain transaction between three businesses in three member
-      states where the intermediary does not tax in destination.
-    triggers_when_430467: The simplified triangulation conditions of Art. 26.tres
-      are met.
-    iva_treatment_816317: Declared as an intra-community operation with key T on Modelo
-      349.
-    label_486415: Export to a third country (zero rated)
-    description_233971: Supply of goods dispatched outside the Community, exempt with
-      input-VAT deduction right under Art. 21.
-    triggers_when_283979: The goods leave the Union customs territory with an export
-      declaration.
-    iva_treatment_781772: Invoice without VAT with the 'exenta Art. 21 Ley 37/1992'
-      mention; keep the DUA as evidence; declare on Modelo 303.
-    label_362155: Import from a third country
-    description_847172: Entry of goods from non-member countries into the Spanish
-      VAT territory; accrual at customs per Arts. 17 and 18.
-    triggers_when_791426: A DUA is filed and import VAT is assessed at customs.
-    iva_treatment_861572: VAT is assessed at customs (or deferred via Modelo 303 under
-      the deferred import-VAT regime).
-    label_014211: Equivalence surcharge regime
-    description_763220: Mandatory special regime for retail sole traders charging
-      an additional surcharge on top of the supplier's VAT (5.2 / 1.4 / 0.5).
-    triggers_when_309904: The recipient is a natural-person retail trader subject
-      to the equivalence-surcharge regime.
-    iva_treatment_535387: The supplier charges VAT plus the surcharge; the retailer
-      does not file Modelo 303 or 390 for that activity.
-    label_089574: Simplified VAT regime (módulos)
-    description_187074: Special regime computing VAT via indices and modules for activities
-      listed in the yearly Ministerial Order.
-    triggers_when_519525: The self-employed activity is listed in the current Ministerial
-      Order and the taxpayer has not opted out.
-    iva_treatment_958350: Quarterly Modelo 303 settlements computed via yearly indices.
-    label_097134: Out-of-scope operation (place of supply outside Spain)
-    description_904421: Operations whose place of supply is outside the Spanish VAT
-      territory per Arts. 68-74 place-of-supply rules.
-    triggers_when_667229: Place-of-supply rules place the operation outside the Spanish
-      VAT territory and Law 37/1992 does not tax it.
-    iva_treatment_483772: No Spanish VAT is charged; the operation is reported but
-      may require VAT registration in the destination country.
-    label_377629: Erroneous invoice (rectifiable)
-    description_194881: Received or issued invoice with incorrect data (base, VAT
-      amount, recipient, rate) that must be rectified before being declared.
-    triggers_when_429116: An error is detected on the invoice before or after the
-      return.
-    iva_treatment_872751: Issue a rectifying invoice under Art. 89 and adjust the
-      corresponding period's return.
-    label_313422: Unknown VAT regime
-    description_635057: Sentinel for transactions whose VAT category cannot be determined
-      automatically and require human review.
-    triggers_when_617948: The classifier cannot find any applicable rule with sufficient
-      confidence.
-    iva_treatment_366559: Flag the transaction for human review before declaring.
-    label_365838: Domestic supply at the general 21 % rate
-    description_217010: Supplies of goods and services carried out in the Spanish
-      VAT territory at the 21 % general rate.
-    triggers_when_142813: The good or service is neither listed in Art. 91 reduced
-      tables nor exempt under Art. 20.
-    iva_treatment_888336: Charge 21 % on the invoice and declare on Modelo 303.
-    label_027962: Domestic supply at the reduced 10 % rate
-    description_983244: Goods and services taxed at the 10 % reduced rate under Art.
-      91.Uno (general food, hospitality, passenger transport, new housing).
-    triggers_when_029777: The good or service is listed in Art. 91.Uno.
-    iva_treatment_786939: Charge 10 % on the invoice and declare on Modelo 303.
-    label_915730: Domestic supply at the super-reduced 4 % rate
-    description_069076: Essential goods and services taxed at the super-reduced 4
-      % rate under Art. 91.Dos (basic bread, milk, eggs, fruit, books, medicines,
-      prostheses, special-regime social housing).
-    triggers_when_352485: The good or service is listed in Art. 91.Dos.
-    iva_treatment_774580: Charge 4 % on the invoice and declare on Modelo 303.
-    label_996028: Domestic supply at the zero rate
-    description_640356: Supplies taxed at a transitional or structural zero rate (full
-      exemptions with right of deduction).
-    triggers_when_739440: A transitional law or the Art. 24 exemption enables the
-      zero rate.
-    iva_treatment_872035: Invoice at 0 % and declare on Modelo 303 while preserving
-      input-VAT deduction.
-    label_342635: Domestic exempt supply
-    description_311472: 'Domestic supplies exempt under Art. 20: health, education,
-      financial, insurance, immovable (without waiver).'
-    triggers_when_049241: The activity or good is listed in Art. 20.Uno.
-    iva_treatment_795653: No VAT charged; the exemption is limited (no input-VAT deduction)
-      and declared on dedicated Modelo 303 boxes.
-    label_385669: Non-subject operation
-    description_196978: 'Operations outside the VAT taxable event per Art. 7: transfer
-      of a going concern, services rendered by employees, free samples.'
-    triggers_when_425274: The scenario is enumerated in Art. 7 as non-subject.
-    iva_treatment_078140: There is no taxable event; no VAT is charged or declared.
-    label_198815: Domestic operation with reverse charge
-    description_425875: 'Domestic supplies of goods or services where the recipient
-      becomes the taxable person and self-assesses VAT (Art. 84.Uno.2º): construction
-      works, waste / recovery materials, B2B supplies of mobile phones, video consoles,
-      laptops and tablets.'
-    triggers_when_234924: The transaction matches one of the Art. 84.Uno.2º sub-paragraphs
-      (construction, waste, B2B consumer electronics, etc.).
-    iva_treatment_847858: The issuer raises the invoice without output VAT and records
-      'reverse charge'. The recipient self-assesses the output VAT and may simultaneously
-      deduct it on the same Modelo 303.
-    label_375372: Intra-community supply (exempt)
-    description_170404: Supply of goods dispatched from Spain to another member state
-      to a buyer holding a valid VAT-ID; exempt under Art. 25.
-    triggers_when_605383: The buyer is VAT-registered in another member state and
-      the goods leave the Spanish VAT territory.
-    iva_treatment_816799: Invoice without VAT with the 'exenta Art. 25 Ley 37/1992'
-      mention; declare on Modelo 303 and Modelo 349.
-    label_576993: Intra-community acquisition (reverse charge)
-    description_027697: Purchase of goods from another member state by a Spanish business;
-      the buyer self-assesses and deducts the VAT in the same return.
-    triggers_when_477522: The buyer is a Spanish business and the supplier acts with
-      its intra-community VAT-ID.
-    iva_treatment_373587: Self-assess VAT on Modelo 303 (both output and input) and
-      declare on Modelo 349.
-    label_357358: Intra-community triangulation
-    description_747833: Chain transaction between three businesses in three member
-      states where the intermediary does not tax in destination.
-    triggers_when_253417: The simplified triangulation conditions of Art. 26.tres
-      are met.
-    iva_treatment_660394: Declared as an intra-community operation with key T on Modelo
-      349.
-    label_620271: Export to a third country (zero rated)
-    description_889069: Supply of goods dispatched outside the Community, exempt with
-      input-VAT deduction right under Art. 21.
-    triggers_when_824512: The goods leave the Union customs territory with an export
-      declaration.
-    iva_treatment_338490: Invoice without VAT with the 'exenta Art. 21 Ley 37/1992'
-      mention; keep the DUA as evidence; declare on Modelo 303.
-    label_889802: Import from a third country
-    description_247574: Entry of goods from non-member countries into the Spanish
-      VAT territory; accrual at customs per Arts. 17 and 18.
-    triggers_when_775302: A DUA is filed and import VAT is assessed at customs.
-    iva_treatment_869170: VAT is assessed at customs (or deferred via Modelo 303 under
-      the deferred import-VAT regime).
-    label_243153: Equivalence surcharge regime
-    description_951487: Mandatory special regime for retail sole traders charging
-      an additional surcharge on top of the supplier's VAT (5.2 / 1.4 / 0.5).
-    triggers_when_060209: The recipient is a natural-person retail trader subject
-      to the equivalence-surcharge regime.
-    iva_treatment_837679: The supplier charges VAT plus the surcharge; the retailer
-      does not file Modelo 303 or 390 for that activity.
-    label_574464: Simplified VAT regime (módulos)
-    description_837760: Special regime computing VAT via indices and modules for activities
-      listed in the yearly Ministerial Order.
-    triggers_when_809073: The self-employed activity is listed in the current Ministerial
-      Order and the taxpayer has not opted out.
-    iva_treatment_720111: Quarterly Modelo 303 settlements computed via yearly indices.
-    label_765009: Out-of-scope operation (place of supply outside Spain)
-    description_113281: Operations whose place of supply is outside the Spanish VAT
-      territory per Arts. 68-74 place-of-supply rules.
-    triggers_when_020809: Place-of-supply rules place the operation outside the Spanish
-      VAT territory and Law 37/1992 does not tax it.
-    iva_treatment_703895: No Spanish VAT is charged; the operation is reported but
-      may require VAT registration in the destination country.
-    label_947785: Erroneous invoice (rectifiable)
-    description_243075: Received or issued invoice with incorrect data (base, VAT
-      amount, recipient, rate) that must be rectified before being declared.
-    triggers_when_035779: An error is detected on the invoice before or after the
-      return.
-    iva_treatment_592112: Issue a rectifying invoice under Art. 89 and adjust the
-      corresponding period's return.
-    label_775396: Unknown VAT regime
-    description_306964: Sentinel for transactions whose VAT category cannot be determined
-      automatically and require human review.
-    triggers_when_512869: The classifier cannot find any applicable rule with sufficient
-      confidence.
-    iva_treatment_732254: Flag the transaction for human review before declaring.
-cli:
-  bootstrap:
-    t_115877: Resource
-    t_558798: ID
-    t_490630: scratch folder
-    t_478529: scratch sheet
-    t_301797: scratch doc
-    t_107758: 'bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env'
-    t_465133: 'f"bootstrap: credentials unavailable: {exc}'
-    t_436721: Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.
-    t_107956: 'bootstrap: cannot create Drive resources under the active credentials.'
-    t_378702: "Service accounts on consumer (non-Workspace) Google accounts have zero\
-      \ \"\n                        \"Drive storage quota and cannot own Drive files."
-    t_912574: "u opera desde un tenant Google Workspace donde \"\n               \
-      \         \"la SA pueda ser propietaria en una unidad compartida."
-    t_791600: 'bootstrap: env/.env updated. Re-run `aeat doctor` to verify.'
-    t_682855: 'bootstrap: GOOGLE_CLOUD_PROJECT is empty in env/.env'
-    t_078117: 'f"bootstrap: credentials unavailable: {exc}'
-    t_524692: Configure GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`.
-    t_457020: 'bootstrap: cannot create Drive resources under the active credentials.'
-    t_272641: "Service accounts on consumer (non-Workspace) Google accounts have zero\
-      \ \"\n                        \"Drive storage quota and cannot own Drive files."
-    t_047210: "u opera desde un tenant Google Workspace donde \"\n               \
-      \         \"la SA pueda ser propietaria en una unidad compartida."
-    t_011711: Resource
-    t_673036: ID
-    t_630898: scratch folder
-    t_762170: scratch sheet
-    t_115599: scratch doc
-    t_488785: 'bootstrap: env/.env updated. Re-run `aeat doctor` to verify.'
-  normatives:
-    t_663483: id
-    t_685100: kind
-    t_130420: number
-    t_853221: short title
-    t_022643: articulos
-    t_603642: tags
-    t_033405: numero
-    t_021549: titulo
-    t_412680: cite
-    t_284896: verify findings
-    t_123721: level
-    t_621240: code
-    t_469146: reference
-    t_884332: message
-    t_400377: title
-    t_674439: published_at
-    t_589274: reviewed_by
-    t_445972: last_reviewed_at
-    t_527335: f"{count} normative(s)
-    t_208308: (no articulos codified)
-    t_198005: 'f"verify failed: {exc}'
-    t_449672: ✓ verify clean
-    t_708509: id
-    t_484866: kind
-    t_532988: number
-    t_033361: short title
-    t_849756: articulos
-    t_232960: tags
-    t_360736: f"{count} normative(s)
-    t_329493: kind
-    t_896602: number
-    t_528486: title
-    t_032146: published_at
-    t_888840: tags
-    t_628053: reviewed_by
-    t_596645: last_reviewed_at
-    t_506342: (no articulos codified)
-    t_876125: articulos
-    t_956665: numero
-    t_908462: titulo
-    t_300148: cite
-    t_688044: 'f"verify failed: {exc}'
-    t_838663: ✓ verify clean
-    t_757078: verify findings
-    t_668112: level
-    t_253101: code
-    t_311779: reference
-    t_756958: message
-  oauth:
-    t_069252: 'Next step:'
-    t_409941: 'Open this URL in a browser:'
-    t_230163: Run `aeat oauth-client init --json <path>` after downloading the JSON
-      to write env/.env.
-    t_389131: 'f"json file does not exist: {json_path}'
-    t_825524: 'f"could not parse json: {exc}'
-    t_901667: f"copied OAuth client JSON to {stable_client_path}
-    t_788993: _SECRET
-    t_784359: run `just gcloud-auth`
-    t_516471: 'Open this URL in a browser:'
-    t_068820: Run `aeat oauth-client init --json <path>` after downloading the JSON
-      to write env/.env.
-    t_603335: 'f"json file does not exist: {json_path}'
-    t_977712: 'f"could not parse json: {exc}'
-    t_011367: f"copied OAuth client JSON to {stable_client_path}
-    t_119877: _SECRET
-    t_379147: 'Next step:'
-    t_822917: run `just gcloud-auth`
-  test_no_hardcoded_user_strings:
-    t_915315: hello
-    t_342476: en
-    t_535146: en
-    t_182298: hello
-  attachments:
-    t_367843: --source-reference must not be blank
-    t_576293: --mime-type must not be blank
-    t_668551: No attachments found.
-    t_456518: 'f"--metadata entry must be key=value: {raw!r}'
-    t_782346: 'f"--metadata key must not be blank: {raw!r}'
-    t_847558: 'f"--metadata value must not be blank: {raw!r}'
-    t_924712: 'f"--metadata key repeated: {key!r}'
-    t_847658: --source-reference must not be blank
-    t_813758: --mime-type must not be blank
-    t_397885: No attachments found.
-    t_693468: 'f"--metadata entry must be key=value: {raw!r}'
-    t_146769: 'f"--metadata key must not be blank: {raw!r}'
-    t_973889: 'f"--metadata value must not be blank: {raw!r}'
-    t_094739: 'f"--metadata key repeated: {key!r}'
-  cloud:
-    t_090770: GOOGLE_CLOUD_PROJECT is empty in env/.env
-    t_445360: f"{count} function(s)
-    t_020102: f"{count} service(s)
-    t_638870: f"{count} bucket(s)
-    t_339951: f"{count} object(s)
-    t_626960: GOOGLE_CLOUD_PROJECT is empty in env/.env
-    t_776970: f"{count} function(s)
-    t_829017: f"{count} service(s)
-    t_742684: f"{count} bucket(s)
-    t_754075: f"{count} object(s)
-  docs:
-    t_946853: text must not be empty
-    t_489738: f"appended {len(text)} characters at index {end_index}
-    t_890669: f"replaced {occurrences} occurrence(s)
-    t_771049: text must not be empty
-    t_372230: f"appended {len(text)} characters at index {end_index}
-    t_327883: f"replaced {occurrences} occurrence(s)
-  doctor:
-    t_279934: f"{n} required check(s) failing
-    t_836703: all required checks passing
-    t_480369: f"{n} required check(s) failing
-    t_599915: all required checks passing
-  drive:
-    t_812324: f"no Drive file matched name {name!r}.
-    t_081792: "f\"{len(files)} Drive files matched name {name!r}; \"\n           \
-      \         f\"narrow down by visiting the Drive UI and using a unique name. Matches:\
-      \ {match_ids!r}"
-    t_546944: f"{target} already exists. Pass --overwrite to replace it.
-    t_687155: f"wrote {target} ({byte_count} bytes)
-    t_851653: 'f"local file does not exist: {local}'
-    t_940486: f"deleted {file_id}
-    t_291305: f"trashed {file_id}
-    t_054217: f"no Drive file matched name {name!r}.
-    t_189509: "f\"{len(files)} Drive files matched name {name!r}; \"\n           \
-      \         f\"narrow down by visiting the Drive UI and using a unique name. Matches:\
-      \ {match_ids!r}"
-    t_821830: f"{target} already exists. Pass --overwrite to replace it.
-    t_226571: f"wrote {target} ({byte_count} bytes)
-    t_351741: 'f"local file does not exist: {local}'
-    t_090079: f"deleted {file_id}
-    t_737010: f"trashed {file_id}
-  registry:
-    t_407997: line
-    t_899563: line
-  i18n:
-    t_399040: locale=output_language()
-    t_540950: 'en: str'
-ledgers:
-  inventory:
-    t_050404: opening
-    t_260715: closing
-    t_853976: No inventory ledgers.
-    t_651428: 'f"Inventory ledger created: {actividad} {year}.'
-    t_135732: 'f"Inventory movement recorded: {movement_id}.'
-    t_451750: 'f"invalid decimal: {raw}'
-    t_121323: 'f"invalid date: {raw}'
-    t_352942: No inventory ledgers.
-    t_979405: opening
-    t_090463: 'f"Inventory ledger created: {actividad} {year}.'
-    t_531632: 'f"Inventory movement recorded: {movement_id}.'
-    t_067126: closing
-    t_047048: 'f"invalid decimal: {raw}'
-    t_740982: 'f"invalid date: {raw}'
-deadlines:
-  next:
-    t_234598: closes
-    t_027622: 'f"no upcoming obligations for {year}: every entry is overdue'
-    t_688927: 'f"no upcoming obligations for {year}: every entry is overdue'
-    t_744197: closes
-  list:
-    t_542331: f"{n} obligation(s)
-    t_125112: f"{n} obligation(s)
-  helpers:
-    t_492787: no profile path supplied; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH
-      in env/.env
-    t_751621: no profile path supplied; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH
-      in env/.env
-financial:
-  ingest:
-    t_122870: ingested
-    t_698715: record(s) via
-    t_433516: persisted
-    t_314937: 'f"refusing: no provider can handle {path}'
-    t_503694: 'f"validation error: {warning}'
-    t_118103: 'f"warning: {warning}'
-    t_301335: 'f"ingest error: {exc}'
-    t_032626: f"ingested {len(transactions)} record(s) via {provider_impl.name}
-    t_865065: 'f"refusing: no provider can handle {path}'
-    t_845188: 'f"validation error: {warning}'
-    t_985130: 'f"warning: {warning}'
-    t_965742: 'f"ingest error: {exc}'
-    t_480489: f"ingested {len(transactions)} record(s) via {provider_impl.name}
-    t_434310: ingested
-    t_591400: record(s) via
-    t_860156: persisted
-  txs:
-    t_457577: dry-run
-    t_080819: persisted
-    t_222454: classified
-    t_315628: failed
-    t_727361: "\n                        \"así que --confidence-below \"\n       \
-      \                 \"solo muestra resultados cuando un motor de reglas o un clasificador\
-      \ LLM ha asignado una \"\n                        \"puntuación menor."
-    t_537014: No transactions found.
-    t_834955: f"transaction catalogue already exists at {target}; rerun with --replace
-      to overwrite it
-    t_578483: f"built {len(catalogue)} transaction(s) into {target}
-    t_280845: 'f"transaction not found: {transaction_id}'
-    t_627061: --category
-    t_652583: 'f"invalid --pct value: {pct}'
-    t_140855: --pct can only be used together with --as MIXED; omit --pct for non-MIXED
-      classifications
-    t_485520: "spending categories apply only to outgoing expense transactions; \"\
-      \n                        \"incoming payments should not be assigned an expense\
-      \ category"
-    t_498874: PERSONAL o MIXED antes de asignar una categoría
-    t_481849: --all is mutually exclusive with a transaction-id argument.
-    t_971537: Pass a transaction-id argument or use --all.
-    t_712952: --max-total-seconds must be strictly positive.
-    t_192763: No transactions selected for LLM classification.
-    t_737405: f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes}
-      classified so far.
-    t_368309: 'f"{prefix} {provider} error: {exc}'
-    t_168103: 'f"{prefix} persist error: {exc}'
-    t_272460: 'f"final save error: {exc}'
-    t_428267: ' (stopped at --max-total-seconds)'
-    t_461729: 'f"transaction not found: {transaction_id}'
-    t_004844: 'f"invalid --confidence-below value: {value}'
-    t_929822: --confidence-below must be within the inclusive 0..1 range
-    t_578676: 'f"invalid --confidence value: {value}'
-    t_380463: --confidence must be within the inclusive 0..1 range
-    t_245971: "\n                        \"así que --confidence-below \"\n       \
-      \                 \"solo muestra resultados cuando un motor de reglas o un clasificador\
-      \ LLM ha asignado una \"\n                        \"puntuación menor."
-    t_121365: No transactions found.
-    t_199417: f"transaction catalogue already exists at {target}; rerun with --replace
-      to overwrite it
-    t_700793: f"built {len(catalogue)} transaction(s) into {target}
-    t_217036: 'f"transaction not found: {transaction_id}'
-    t_384718: --category
-    t_475858: 'f"invalid --pct value: {pct}'
-    t_492743: --pct can only be used together with --as MIXED; omit --pct for non-MIXED
-      classifications
-    t_757092: "spending categories apply only to outgoing expense transactions; \"\
-      \n                        \"incoming payments should not be assigned an expense\
-      \ category"
-    t_091408: PERSONAL o MIXED antes de asignar una categoría
-    t_532646: --all is mutually exclusive with a transaction-id argument.
-    t_074603: Pass a transaction-id argument or use --all.
-    t_338582: --max-total-seconds must be strictly positive.
-    t_184654: No transactions selected for LLM classification.
-    t_917316: f"[{index - 1}/{total}] --max-total-seconds reached; keeping {successes}
-      classified so far.
-    t_725301: 'f"{prefix} {provider} error: {exc}'
-    t_735916: 'f"{prefix} persist error: {exc}'
-    t_044885: 'f"final save error: {exc}'
-    t_510476: dry-run
-    t_594729: persisted
-    t_222239: ' (stopped at --max-total-seconds)'
-    t_341377: classified
-    t_577243: failed
-    t_268130: 'f"transaction not found: {transaction_id}'
-    t_993328: 'f"invalid --confidence-below value: {value}'
-    t_725396: --confidence-below must be within the inclusive 0..1 range
-    t_410287: 'f"invalid --confidence value: {value}'
-    t_065677: --confidence must be within the inclusive 0..1 range
-  invoices:
-    t_939792: No invoices found.
-    t_538928: 'f"invoice not found: {invoice_id}'
-    t_366680: 'f"invoice not found after update: {invoice_id}'
-    t_205790: No reconciliation suggestions.
-    t_413996: 'f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}:
-      {exc}'
-    t_553082: 'f"final save failed; no changes persisted: {exc}'
-    t_313284: f"applied {applied} of {len(suggestions)} suggestions.
-    t_769483: Invoice and transaction catalogues are consistent.
-    t_424939: No unmatched invoices.
-    t_969951: f"invoice catalogue not found at {repository.envelope_path}
-    t_151516: No invoices found.
-    t_346820: 'f"invoice not found: {invoice_id}'
-    t_950400: 'f"invoice not found after update: {invoice_id}'
-    t_395612: No reconciliation suggestions.
-    t_238826: 'f"skipped {suggestion.invoice_id} <-> {suggestion.transaction_id}:
-      {exc}'
-    t_486268: 'f"final save failed; no changes persisted: {exc}'
-    t_403031: f"applied {applied} of {len(suggestions)} suggestions.
-    t_515965: Invoice and transaction catalogues are consistent.
-    t_188960: No unmatched invoices.
-    t_241070: f"invoice catalogue not found at {repository.envelope_path}
-  profile:
-    t_120774: No usage ratios configured.
-    t_699908: f"set {category.value} = {_format_decimal(ratio)}
-    t_329069: f"no user ratio set for {key}
-    t_766299: f"unset {category.value}
-    t_928044: f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}
-    t_315053: 'f"invalid ratio: {raw!r}'
-    t_421626: f"ratio must be finite (got {ratio})
-    t_203663: 1] (recibido {ratio})
-    t_695847: No usage ratios configured.
-    t_407379: f"set {category.value} = {_format_decimal(ratio)}
-    t_344840: f"no user ratio set for {key}
-    t_620920: f"unset {category.value}
-    t_538938: f"{category.value!r} does not accept a usage ratio\n{_format_eligible_list()}
-    t_338721: 'f"invalid ratio: {raw!r}'
-    t_323949: f"ratio must be finite (got {ratio})
-    t_496708: 1] (recibido {ratio})
-  catalogue:
-    t_361804: f"transaction catalogue not found at {repo.envelope_path}
-    t_854600: f"transaction catalogue not found at {repo.envelope_path}
-aggregation:
-  errors:
-    t_266857: 'en: str'
-    t_066157: 'en: str'
-  models:
-    t_492196: YYYYQn
-    t_944805: YYYYQn
-llm:
-  init:
-    t_271736: f"Missing prompt variable {exc.args[0]!r}.
-    t_172682: f"removed {n} cache file(s)
-    t_398390: f"Missing prompt variable {exc.args[0]!r}.
-    t_029483: f"removed {n} cache file(s)
-i18n:
-  test_diacritic_consistency:
-    t_535146: en
+review:
+  adapters:
+    t_135562: internal transfer
+    t_142007: business
+    t_145612: review.adapters.t_145612
+    t_167733: overdue
+    t_189155: reason
+    t_298389: payment pending
+    t_352338: failed validation
+    t_352928: partially paid
+    t_551826: unmatched
+    t_607122: skipped by rule
+    t_619063: mixed
+    t_629803: outgoing
+    t_754183: unprocessed
+    t_787894: approval stale — re-review required (status=APPROVAL_STALE)
+    t_791512: processed unclassified
+    t_870243: personal
+    t_968325: incoming
+setup:
+  verifier:
+    t_049382: setup.verifier.t_049382
+    t_104932: setup.verifier.t_104932
+    t_104938: setup.verifier.t_104938
+    t_193582: setup.verifier.t_193582
+    t_204938: setup.verifier.t_204938
+    t_293847: setup.verifier.t_293847
+    t_394821: setup.verifier.t_394821
+    t_394827: setup.verifier.t_394827
+    t_501723: setup.verifier.t_501723
+    t_649302: setup.verifier.t_649302
+    t_749321: setup.verifier.t_749321
+    t_837462: setup.verifier.t_837462
+    t_938472: setup.verifier.t_938472
+    t_938475: setup.verifier.t_938475
+  wizard:
+    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
+    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
+    aeat_live_tests_google_prompt: setup.wizard.aeat_live_tests_google_prompt
+    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
+    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
+    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
+    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
+    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
+    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
+    certificate_path_prompt: setup.wizard.certificate_path_prompt
+    default_language_prompt: setup.wizard.default_language_prompt
+    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
+    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
+    has_employees_prompt: setup.wizard.has_employees_prompt
+    iva_regime_prompt: setup.wizard.iva_regime_prompt
+    output_language_prompt: setup.wizard.output_language_prompt
+    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
+    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
+    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
+    provision_google_fixtures_prompt: setup.wizard.provision_google_fixtures_prompt
+    tax_id_prompt: setup.wizard.tax_id_prompt
+    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
+    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
+    welcome: setup.wizard.welcome
+transactions:
+  import:
+    message_053465: Duplicate transaction detected within imported file.
+    message_082074: Duplicate transaction already in ledger.
+    message_185962: The source file contains no valid transactions.
+    message_829073: 'Potential gap: more than 35 days between transactions.'
+    unreadable: transactions.import.unreadable
+    verified: transactions.import.verified
+  test_diagnostics:
+    message: Month 2026-03 is missing from the imported file.
