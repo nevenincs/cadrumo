@@ -352,6 +352,26 @@ required_text = [
     "pagos fraccionados como pagos a cuenta del IRPF",
 ]
 
+[legal."rd-439-2007:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-30"
+document_id = "BOE-A-2007-6820"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a30"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Reglas de estimacion directa simplificada para actividades economicas."
+required_text = [
+    "gastos de dificil justificacion",
+    "5 por ciento",
+    "2.000 euros anuales",
+]
+
 [legal."rd-439-2007:art-109"]
 evidence_tier = "legal_authority"
 authority = "boe"

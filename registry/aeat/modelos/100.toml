@@ -11,6 +11,7 @@ legal_refs = [
     "ley-35-2006:art-30",
     "ley-35-2006:art-31",
     "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
@@ -901,6 +902,40 @@ source_refs = [
     "aeat-renta-web-open",
 ]
 
+[[revisions."2025".parameters]]
+id = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["5 por 100", "gastos de dificil justificacion"]
+
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-439-2007:art-30"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["5 por 100", "dificil justificacion"]
+
+[[revisions."2025".parameters.values]]
+value = "2000"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
 [[revisions."2025".casillas]]
 id = "0224"
 number = "0224"
@@ -1408,8 +1443,9 @@ label = "Provisiones deducibles y gastos de dificil justificacion"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 data_type = "money"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-35-2006:art-30"]
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-gastos-dificil-justificacion"
+legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-30"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -1766,6 +1802,50 @@ source_refs = [
 ]
 
 [[revisions."2025".application_links]]
+id = "modelo-100-approval"
+surface = "approval"
+consumer = "aeat.application.filing.approval"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.filing.reconciliation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2025".application_links]]
 id = "modelo-100-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
@@ -1818,6 +1898,8 @@ application_links = [
     "modelo-100-calculation",
     "modelo-100-verification",
     "modelo-100-review",
+    "modelo-100-approval",
+    "modelo-100-reconciliation",
     "modelo-100-workflow",
 ]
 
@@ -2022,6 +2104,7 @@ legal_refs = [
     "ley-35-2006:art-30",
     "ley-35-2006:art-31",
     "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
 ]
@@ -2035,6 +2118,10 @@ bindings = [
     "renta-2025-modelo-100-estimacion-directa-es-normal",
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
+]
+parameters = [
+    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
 ]
 casillas = [
     "0171",
@@ -2102,6 +2189,7 @@ formulas = [
     "renta-2025-estimacion-directa-gastos-previos",
     "renta-2025-estimacion-directa-gastos-normal",
     "renta-2025-estimacion-directa-diferencia-previa",
+    "renta-2025-estimacion-directa-gastos-dificil-justificacion",
     "renta-2025-estimacion-directa-gastos-simplificada",
     "renta-2025-estimacion-directa-rendimiento-neto",
     "renta-2025-estimacion-directa-rendimiento-neto-reducido",
@@ -2551,6 +2639,30 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Fase 1", "Determinacion del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-gastos-dificil-justificacion"
+target = "0222"
+expression = { op = "min", args = [
+    { op = "max", args = [
+        { op = "percent", args = [
+            { op = "subtract", args = [
+                { casilla = "0180" },
+                { casilla = "0218" },
+            ] },
+            { parameter = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate" },
+        ] },
+        { literal = "0" },
+    ] },
+    { parameter = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["5 por 100", "gastos de dificil justificacion"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-estimacion-directa-gastos-simplificada"
