@@ -88,12 +88,12 @@ cli:
         sa_key_not_found: 'Service Account JSON key file not found: {path}'
         session_stale: The current session is stale and cannot be used
         signed_in: Signed in successfully
-        signed_out: Signed out successfully
-        signed_out_many: Successfully signed out of {n} sessions
+        signed_out: Signed out of {label}
+        signed_out_many: Signed out of {joined}
         stale_or_revoked: The session is stale or has been revoked
-        unknown_provider: 'Unknown authentication provider: {name}'
+        unknown_provider: 'Unknown authentication provider: {raw}. Supported providers: {valid}'
         unsupported_env_file: Unsupported environment file (.env) format
-        unsupported_provider: The specified provider is not supported in this environment
+        unsupported_provider: 'Unsupported provider: {raw}. Supported providers: {valid}'
       help: Initialize the project's authentication state (Google, AEAT)
       json_help: Path to the JSON credentials file
       labels:

@@ -89,13 +89,14 @@ cli:
           servei (Service Account): {path}'
         session_stale: La sessió actual ha caducat i no es pot utilitzar
         signed_in: Sessió iniciada correctament
-        signed_out: Sessió tancada correctament
-        signed_out_many: S'han tancat {n} sessions correctament
+        signed_out: Sessió tancada per a {label}
+        signed_out_many: Sessió tancada per a {joined}
         stale_or_revoked: La sessió ha caducat o ha estat revocada
-        unknown_provider: 'Proveïdor d''autenticació desconegut: {name}'
+        unknown_provider: 'Proveïdor d''autenticació desconegut: {raw}. Proveïdors
+          compatibles: {valid}'
         unsupported_env_file: Format de fitxer d'entorn (.env) no compatible
-        unsupported_provider: El proveïdor especificat no és compatible en aquest
-          entorn
+        unsupported_provider: 'Proveïdor no compatible: {raw}. Proveïdors compatibles:
+          {valid}'
       help: Inicialitzar l'estat d'autenticació del projecte (Google, AEAT)
       json_help: Ruta al fitxer JSON de credencials
       labels:
