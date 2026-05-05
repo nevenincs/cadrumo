@@ -1143,6 +1143,36 @@ class TestFiledObservationRelations:
             "modelo-180-rel-115-retenciones-anual": sum(values["03"] for values in quarterly_values.values()),
         }
 
+    def test_modelo_193_relations_resolve_from_quarterly_filed_observations(self) -> None:
+        snapshot = _modelo_snapshot("193", filing_year=2026, period="0A")
+        quarterly_values = {
+            "1T": {"03": Decimal("5"), "06": Decimal("1201.00"), "09": Decimal("228.19")},
+            "2T": {"03": Decimal("4"), "06": Decimal("800.25"), "09": Decimal("152.05")},
+            "3T": {"03": Decimal("7"), "06": Decimal("999.75"), "09": Decimal("189.95")},
+            "4T": {"03": Decimal("6"), "06": Decimal("500.00"), "09": Decimal("95.00")},
+        }
+
+        resolved = resolve_relation_values_from_filed_declarations(
+            snapshot.revision,
+            tuple(
+                _filed_observation(
+                    modelo="123",
+                    ejercicio=2026,
+                    period=period,
+                    casilla_values=casilla_values,
+                )
+                for period, casilla_values in quarterly_values.items()
+            ),
+            filing_year=2026,
+            period="0A",
+        )
+
+        assert resolved == {
+            "modelo-193-rel-123-perceptores-anual": sum(values["03"] for values in quarterly_values.values()),
+            "modelo-193-rel-123-base-anual": sum(values["06"] for values in quarterly_values.values()),
+            "modelo-193-rel-123-retenciones-anual": sum(values["09"] for values in quarterly_values.values()),
+        }
+
     def test_missing_relation_source_filing_is_rejected(self) -> None:
         snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
         observations = tuple(
