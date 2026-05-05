@@ -9,6 +9,9 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from aeat.domain.invoices import InvoiceCatalogueRepository
+from aeat.domain.transactions import TransactionCatalogueRepository
+
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -39,6 +42,33 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+
+
+@pytest.fixture
+def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+
+    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
+    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
+    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
+    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
+    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield tmp_path
+    finally:
+        override_master_key_provider(None)
+
+
+def _assert_ciphertext_envelope(path: Path, *plaintext_canaries: str) -> None:
+    on_disk = path.read_text(encoding="utf-8")
+    assert '"classification":"financial"' in on_disk
+    assert '"encryption":' in on_disk
+    assert '"ciphertext_b64":' in on_disk
+    assert '"payload":' not in on_disk
+    for canary in plaintext_canaries:
+        assert canary not in on_disk
 
 
 def test_root_surface_contains_setup_and_app_only() -> None:
@@ -210,6 +240,33 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
     assert payload["imported"] == 0
     assert overview.exit_code == 0, overview.output
     assert json.loads(_json_output(overview))["transactions"] == 0
+
+
+def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
+    tmp_path = encrypted_user_cli
+    canary = "CLI_ENCRYPTED_LEDGER_CANARY_5A2F"
+    transaction_ref = "n26-secure-row-001"
+    statement = tmp_path / "n26-secure.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                f"2026-01-05,{canary},Invoice 2026-SEC,121.00,EUR,{transaction_ref}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "n26"])
+
+    assert imported.exit_code == 0, imported.output
+    envelope_path = tmp_path / "txs" / "transactions.envelope.json"
+    assert envelope_path.exists()
+    _assert_ciphertext_envelope(envelope_path, canary, transaction_ref)
+    catalogue = TransactionCatalogueRepository(store_dir=tmp_path / "txs").load()
+    [stored] = list(catalogue.transactions.values())
+    assert stored.raw.counterparty == canary
+    assert stored.raw.transaction_id == transaction_ref
 
 
 def test_ledger_import_verify_source_records_original_file_digest(
@@ -411,6 +468,40 @@ def test_invoice_import_edit_review_round_trip(monkeypatch: pytest.MonkeyPatch, 
     assert row["base"] == "120"
     assert row["iva"] == "25.2"
     assert row["payment.id"] == payment_id
+
+
+def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
+    tmp_path = encrypted_user_cli
+    canary = "CLI_ENCRYPTED_INVOICE_CANARY_7B1D"
+    invoice_number = "INV-SEC-001"
+    invoice_path = tmp_path / "invoice-secure.json"
+    invoice_path.write_text(
+        json.dumps(
+            {
+                "kind": "issued",
+                "invoice_number": invoice_number,
+                "issued_at": "2026-04-01",
+                "counterparty_name": canary,
+                "counterparty_tax_id": "B12345674",
+                "base_total": "100.00",
+                "iva_total": "21.00",
+                "grand_total": "121.00",
+                "iva_rate": "21",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    imported = _invoke(["app", "invoice", "import", str(invoice_path), "--kind", "issued"])
+
+    assert imported.exit_code == 0, imported.output
+    envelope_path = tmp_path / "invoices" / "invoices.envelope.json"
+    assert envelope_path.exists()
+    _assert_ciphertext_envelope(envelope_path, canary, invoice_number)
+    catalogue = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
+    [stored] = list(catalogue.values())
+    assert stored.counterparty_name == canary
+    assert stored.invoice_number == invoice_number
 
 
 def test_profile_validate_no_active_profile_blocks(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
