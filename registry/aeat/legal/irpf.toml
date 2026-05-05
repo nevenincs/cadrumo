@@ -475,6 +475,27 @@ required_text = [
     "CÓDIGO PROVINCIA",
 ]
 
+[legal."orden-eha-3377-2011:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3377-2011.html#articulo-1"
+document_id = "BOE-A-2011-19396"
+article = "1"
+section = "Anexos I y II"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396#a1"
+published_at = 2011-12-12
+effective_from = 2011-12-13
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
+required_text = [
+    "Se aprueba el modelo 193",
+    "Declaración resumen anual de retenciones e ingresos a cuenta",
+    "Ambos diseños, físicos y lógicos, figuran en el anexo II",
+]
+
 [sources."aeat-dr-130-2019-v12"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -836,6 +857,44 @@ retrieved_at = 2026-05-05
 published_at = 2024-01-31
 applies_from = 2024-02-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."aeat-dr-193-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf"
+sha256 = "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e"
+bytes = 359614
+retrieved_at = 2026-05-05
+published_at = 2024-01-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-193-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_193/files/modelo-193-procedure.html"
+sha256 = "d6b7a7149965ab27ac5b3af4467226f306b12340d12ec4514450c3daed464d27"
+bytes = 57001
+retrieved_at = 2026-05-05
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI12.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-193-2011-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3377-2011.html"
+sha256 = "6a5405402732de445caf7bbb801142f4dd0e7247f79747e2f0cf289b59cfcb6b"
+bytes = 251495
+retrieved_at = 2026-05-05
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19396"
 review_status = "reviewed"
 
 [sources."aeat-modelo-131-procedure"]
