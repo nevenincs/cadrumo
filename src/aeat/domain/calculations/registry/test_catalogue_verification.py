@@ -35,8 +35,7 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
     verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
-    for modelo in modelos:
-        validator.validate_modelo(modelo)
+    validator.validate_registry(modelos)
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:

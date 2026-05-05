@@ -62,6 +62,8 @@ class RegistryTreeReport(BaseModel):
     verification_expectation_count: int
     application_link_count: int
     application_link_surfaces: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
     filing_schedule_count: int
     modelos: tuple[str, ...]
     revision_details: tuple[RegistryRevisionDetailReport, ...]
@@ -95,6 +97,9 @@ class RegistryRevisionDetailReport(BaseModel):
     export_field_count: int
     deadline_window_count: int
     deadline_periods: tuple[str, ...]
+    relation_ids: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
     filing_schedule_ids: tuple[str, ...]
     filing_schedule_count: int
     portal_guard_policy_ids: tuple[str, ...]
@@ -153,12 +158,15 @@ class RegistryRevisionInventory(NamedTuple):
     verification_expectation_count: int
     application_link_count: int
     application_link_surfaces: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
     filing_schedule_count: int
 
 
 def _revision_inventory(modelos) -> RegistryRevisionInventory:
     revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
     application_surfaces = {link.surface for revision in revisions for link in revision.application_links}
+    relation_roles = {relation.dependency_role for revision in revisions for relation in revision.relations}
     return RegistryRevisionInventory(
         casilla_count=sum(len(revision.casillas) for revision in revisions),
         formula_count=sum(len(revision.formulas) for revision in revisions),
@@ -168,6 +176,8 @@ def _revision_inventory(modelos) -> RegistryRevisionInventory:
         verification_expectation_count=sum(len(revision.verification_expectations) for revision in revisions),
         application_link_count=sum(len(revision.application_links) for revision in revisions),
         application_link_surfaces=tuple(sorted(application_surfaces)),
+        relation_count=sum(len(revision.relations) for revision in revisions),
+        relation_dependency_roles=tuple(sorted(relation_roles)),
         filing_schedule_count=sum(len(revision.filing_schedules) for revision in revisions),
     )
 
@@ -200,6 +210,11 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
                     export_field_count=len(export_fields),
                     deadline_window_count=len(revision.deadline_windows),
                     deadline_periods=tuple(sorted(window.period for window in revision.deadline_windows)),
+                    relation_ids=tuple(str(relation.id) for relation in revision.relations),
+                    relation_count=len(revision.relations),
+                    relation_dependency_roles=tuple(
+                        sorted({relation.dependency_role for relation in revision.relations})
+                    ),
                     filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
                     filing_schedule_count=len(revision.filing_schedules),
                     portal_guard_policy_ids=tuple(
@@ -236,6 +251,8 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
         verification_expectation_count=inventory.verification_expectation_count,
         application_link_count=inventory.application_link_count,
         application_link_surfaces=inventory.application_link_surfaces,
+        relation_count=inventory.relation_count,
+        relation_dependency_roles=inventory.relation_dependency_roles,
         filing_schedule_count=inventory.filing_schedule_count,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         revision_details=_revision_details(modelos),
@@ -248,8 +265,7 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
 
     modelos, catalogues = load_registry_tree(registry_root)
     validator = RegistryValidator(catalogues, source_root=source_root)
-    for modelo in modelos:
-        validator.validate_modelo(modelo)
+    validator.validate_registry(modelos)
     inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
@@ -266,6 +282,8 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         verification_expectation_count=inventory.verification_expectation_count,
         application_link_count=inventory.application_link_count,
         application_link_surfaces=inventory.application_link_surfaces,
+        relation_count=inventory.relation_count,
+        relation_dependency_roles=inventory.relation_dependency_roles,
         filing_schedule_count=inventory.filing_schedule_count,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         revision_details=_revision_details(modelos),

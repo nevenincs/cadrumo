@@ -560,6 +560,13 @@ class AlgorithmBindingDefinition(RegistryModel):
 class RelationDefinition(RegistryModel):
     id: RelationId
     kind: Literal["previous_period", "annual_summary", "cross_model_output"]
+    dependency_role: Literal[
+        "profile_schedule",
+        "periodic_to_annual_summary",
+        "instalment_to_final_settlement",
+        "direct_calculation",
+        "factual_evidence",
+    ]
     source_modelo: ModeloId
     source_revision_selector: Mapping[str, str | int]
     source_output: CasillaId | str
@@ -577,6 +584,12 @@ class RelationDefinition(RegistryModel):
         if len(set(value)) != len(value):
             raise ValueError("relation periods must be unique")
         return value
+
+    @model_validator(mode="after")
+    def _validate_dependency_role(self) -> RelationDefinition:
+        if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
+            raise ValueError(f"annual summary relation {self.id!r} must use periodic_to_annual_summary role")
+        return self
 
 
 class ExportFieldDefinition(RegistryModel):

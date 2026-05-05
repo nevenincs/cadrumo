@@ -90,6 +90,10 @@ modelo is production-ready only when all of the following are true:
   be tied to legal basis for filing-grade calculations. AEAT Open/help
   programs are executable parity only when guarded and safe. Record designs are
   layout authority only.
+- Every upstream and downstream modelo dependency is classified through the
+  cross-dependency ledger as a profile/schedule dependency, periodic-to-annual
+  summary relation, instalment-to-final-settlement relation, evidence-only
+  relation, or explicit non-dependency.
 - Every casilla is classified as manual, bound, computed, or informational, and
   no casilla can be populated by an unregistered rule, old filing builder,
   hydrate projection, generated schema, generated export module, or hidden
@@ -135,6 +139,69 @@ safe and correctly classified, the wave is not done.
 If a wave cannot prove that its official workbook parity surface has been
 discovered, classified, and either executed or recorded as a coverage gap, the
 wave is not done.
+
+## Modelo Cross-Dependency and Hierarchy Ledger
+
+Every modelo wave must classify its upstream and downstream relations before it
+can be marked complete. A relation is not allowed to exist as an implied Python
+helper, parser side effect, extractor convention, or workflow shortcut. It must
+be represented in the registry as typed modelo evidence with direction,
+periodicity, required observations, legal refs, source refs, aggregation rules,
+failure semantics, and trace output.
+
+The hierarchy is:
+
+- Censal/profile authority: Modelos 036 and 037 provide taxpayer identity,
+  activity, regime, enrolment, and monthly/quarterly schedule facts for the
+  modelos whose filing cadence depends on profile.
+- Periodic filing children: Modelos 111, 115, 123, 130, 131, 202, 303, 349,
+  and 369 represent periodic obligations and must declare whether their values
+  feed an annual summary, a final settlement, or evidence-only reconciliation.
+- Annual informative summaries: Modelos 180, 190, 193, and 347 reconcile
+  declared third-party/perceptor facts and must not silently replace the
+  underlying periodic obligations.
+- Annual settlement parents: Modelo 100 is the Renta settlement parent for IRPF
+  facts; Modelo 200 is the corporate-tax settlement parent; Modelo 390 is the
+  annual IVA summary parent for Modelo 303.
+- Evidence-only declarations: Modelos 232, 720, 840, 347, 349, and 369 can
+  provide audit context or consistency checks only unless the target modelo
+  registry declares a law-backed calculation binding for a specific casilla.
+
+Dependency completion requires acyclic calculation relations, explicit
+evidence-only classifications for non-calculation links, and hard failure when
+a required upstream observation is missing, malformed, contradictory, outside
+its valid period, or unsupported by legal/source evidence.
+
+| Modelo | Dependency role | Required relation work |
+| --- | --- | --- |
+| 036 | Censal/profile authority for identity, activity, tax regime, enrolment, and filing cadence selection. | [ ] Define profile facts consumed by each profile-dependent modelo, with legal/source refs, effective dates, read-only live-data capture rules, and schedule-selection tests. |
+| 037 | Simplified censal/profile authority only where official evidence supports current filing-grade use. | [ ] Classify each supported profile fact as equivalent to Modelo 036, narrower than Modelo 036, or unsupported; remove app linkage for unsupported facts. |
+| 100 | Renta final-settlement parent for IRPF facts and cross-model income, withholding, instalment, deduction, and evidence observations. | [ ] Build a Renta dependency map covering 130, 131, 180, 190, 193, 347, 349, 369, 720, 840, and any censal/profile facts; classify each as calculation input, deduction/input fact, withholding evidence, activity context, or non-dependency. |
+| 111 | Periodic withholding child for work/professional/agricultural income and source for Modelo 190. | [x] Define profile-based monthly/quarterly schedules; [ ] define all Modelo 190 annual-summary relations and any Renta observation requirements with source periods. |
+| 115 | Periodic rental withholding child and source for Modelo 180. | [ ] Define all Modelo 180 annual-summary relations and any Renta rental/withholding observation requirements with source periods. |
+| 123 | Periodic capital-income withholding child and source for Modelo 193. | [ ] Define all Modelo 193 annual-summary relations and any Renta capital-income observation requirements with source periods. |
+| 130 | Periodic IRPF instalment child and Renta payment-on-account observation source. | [x] Define required previous-filing/live observation capability; [ ] define Modelo 100 downstream payment-on-account bindings and failure semantics for missing prior-period observations. |
+| 131 | Periodic IRPF objective-estimation instalment child and Renta payment-on-account observation source. | [ ] Define Modelo 100 downstream payment-on-account bindings, objective-estimation activity context, module-year dependencies, and profile/schedule inputs. |
+| 180 | Annual informative summary parent for Modelo 115 and evidence source for Renta rental withholding facts. | [x] Define quarterly Modelo 115 source-period relation; [ ] define downstream Modelo 100 rental evidence bindings and perceptor/property consistency checks. |
+| 190 | Annual informative summary parent for Modelo 111 and evidence source for Renta withholding and income facts. | [ ] Define quarterly/monthly Modelo 111 source-period relation; [ ] define downstream Modelo 100 work/professional/agricultural withholding evidence bindings. |
+| 193 | Annual informative summary parent for Modelo 123 and evidence source for Renta capital-income facts. | [ ] Define Modelo 123 source-period relation; [ ] define downstream Modelo 100 capital-income and withholding evidence bindings. |
+| 200 | Corporate-tax final-settlement parent. | [ ] Define Modelo 202 instalment-payment bindings and Modelo 232 evidence-only or calculation-backed relation classification. |
+| 202 | Corporate-tax instalment child and source for Modelo 200. | [ ] Define Modelo 200 downstream payment-on-account bindings, method-specific base dependencies, and profile/period schedule rules. |
+| 232 | Corporate related-party/tax-haven informative evidence for Modelo 200. | [ ] Classify relation to Modelo 200 as evidence-only unless a specific legally grounded corporate-tax calculation binding is declared. |
+| 303 | Periodic IVA child and source for Modelo 390. | [ ] Define monthly/quarterly profile schedule selection, all Modelo 390 source-period relations, and IVA consistency traces. |
+| 390 | Annual IVA summary parent for Modelo 303 and possible Renta economic-activity reconciliation evidence. | [ ] Define Modelo 303 source-period relation and classify any Modelo 100 link as evidence-only unless a law-backed Renta casilla binding is declared. |
+| 347 | Annual third-party operations informative declaration and possible Renta/IVA/corporate reconciliation evidence. | [ ] Define thresholds and party aggregation; classify downstream links to Modelo 100, 200, 303, or 390 as evidence-only unless a target registry declares calculation authority. |
+| 349 | Periodic intra-community operations declaration and possible IVA/Renta activity evidence. | [ ] Define downstream relation to IVA/Renta as evidence-only unless a law-backed target casilla binding is declared. |
+| 369 | OSS/IOSS IVA declaration and possible Renta activity evidence. | [ ] Define downstream relation to Renta as evidence-only unless a law-backed target casilla binding is declared. |
+| 720 | Foreign assets informative declaration and possible Renta wealth/income consistency evidence. | [ ] Classify downstream relation to Modelo 100 as evidence-only unless a target registry declares a specific law-backed calculation binding. |
+| 840 | IAE activity declaration and source for activity/profile context. | [ ] Define profile/activity facts consumed by Renta, IVA, and periodic obligations; classify amount calculations as unsupported unless law-backed target bindings exist. |
+
+Each modelo wave must copy the applicable row from this ledger into its own
+checklist before completion. The registry verifier must enforce, before a
+modelo wave can close, that every declared dependency points to an existing
+modelo revision, valid source periods, valid target periods, registered
+legal/source refs, and real behaviour tests that calculate or validate the
+relation without embedding schema copies in the test suite.
 
 ## Model Wave Coverage Matrix
 
@@ -1634,6 +1701,16 @@ own ledger is checked.
   - [x] Extend legal grounding so legal catalogue references can require BOE
      corpus text and registry validation fails when the cited local legal text
      does not contain the required legal anchors.
+  - [x] Extend registry verification so cross-model relations are validated
+     against the loaded modelo registry: source modelo existence, source
+     revision selector closure, declared source periods, target periods,
+     source outputs, and supported aggregation operations.
+  - [x] Extend relation schema so every cross-model relation declares its
+     dependency role, and annual-summary relations cannot validate unless they
+     are explicitly classified as periodic-to-annual summary dependencies.
+  - [x] Extend registry inspection and verification reports so relation counts
+     and dependency roles are visible at tree and revision level for plan
+     tracking and audit review.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.
