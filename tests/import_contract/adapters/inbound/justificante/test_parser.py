@@ -1,8 +1,8 @@
-"""Unit tests for :mod:`aeat.adapters.inbound.justificante` (#44).
+"""Unit tests for :mod:`aeat.adapters.inbound.justificante`.
 
-These tests exercise the parser end-to-end against the committed synthetic
-fixture PDFs under ``tests/fixtures/justificantes/``. They use *real* PDF
-files and *real* pdfplumber — no mocks, no patches, no fakes.
+These tests exercise the parser end-to-end against the committed fixture
+PDFs under ``tests/fixtures/justificantes/``. They use real PDF files and
+real pdfplumber.
 """
 
 from __future__ import annotations
@@ -32,24 +32,24 @@ FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 
 @pytest.fixture(scope="module")
 def modelo_130_pdf() -> Path:
-    """Path to the committed Modelo 130 synthetic fixture."""
+    """Path to the committed Modelo 130 fixture."""
     return FIXTURES_DIR / "modelo_130_2026Q1.pdf"
 
 
 @pytest.fixture(scope="module")
 def modelo_303_pdf() -> Path:
-    """Path to the committed Modelo 303 synthetic fixture."""
+    """Path to the committed Modelo 303 fixture."""
     return FIXTURES_DIR / "modelo_303_2026Q1.pdf"
 
 
 @pytest.fixture(scope="module")
 def modelo_100_pdf() -> Path:
-    """Path to the committed Modelo 100 synthetic fixture."""
+    """Path to the committed Modelo 100 fixture."""
     return FIXTURES_DIR / "modelo_100_2025A.pdf"
 
 
 class TestParseJustificante:
-    """End-to-end parsing on the synthetic fixture corpus."""
+    """End-to-end parsing on the fixture corpus."""
 
     def test_modelo_130(self, modelo_130_pdf: Path) -> None:
         record = parse_justificante(modelo_130_pdf)
@@ -159,13 +159,16 @@ class TestRealCorpusParses:
     def test_corpus_pdf_parses(self, fixture: Path) -> None:
         record = parse_justificante(fixture)
         assert isinstance(record, Justificante)
-        # Filesystem layout is the source of truth for expected fields.
+        # Filesystem layout identifies the fixture. Annual receipt PDFs in this
+        # corpus name the filing period as 0A, but several bodies print only
+        # the ejercicio; the adapter preserves the observed PDF token.
         modelo_expected = fixture.parent.name
         ejercicio_expected, period_expected = fixture.stem.split("-", 1)
+        observed_period_expected = _observed_period_expected(fixture, ejercicio_expected, period_expected)
         assert record.modelo == modelo_expected, f"modelo mismatch for {fixture}: got {record.modelo}"
-        assert record.period == period_expected, f"period mismatch for {fixture}: got {record.period}"
+        assert record.period == observed_period_expected, f"period mismatch for {fixture}: got {record.period}"
         assert record.ejercicio == ejercicio_expected, f"ejercicio mismatch for {fixture}: got {record.ejercicio}"
-        # Synthetic NIE/NIF survives the round-trip.
+        # Redacted NIE/NIF survives the round-trip.
         assert record.tax_id == "Y0000001S", f"tax_id mismatch for {fixture}: got {record.tax_id}"
         # CSV shape always conforms to AEAT's 8-24 uppercase alphanum.
         assert record.csv.isalnum() and record.csv.isupper()
@@ -173,15 +176,24 @@ class TestRealCorpusParses:
         # presented_at must be a real datetime — surfaces any
         # timestamp-extraction drift across the corpus's three
         # layouts (Spanish modern, Spanish column-split, English).
-        # The synthetic date 01-01-1900 (or 01/01/1900 for the
-        # birthday-shape sub-token) appears in every sanitised
-        # PDF, so the parser must always bind a non-None datetime.
+        # The redacted date 01-01-1900 (or 01/01/1900 for the
+        # birthday-shape sub-token) appears in every sanitised PDF.
         assert record.presented_at is not None
         # source_pdf_sha256 always populated.
         assert record.source_pdf_sha256
         assert len(record.source_pdf_sha256) == 64
         # verification_url must point at the AEAT cotejo surface.
         assert "agenciatributaria.gob.es" in str(record.verification_url)
+
+
+def _observed_period_expected(fixture: Path, ejercicio: str, filename_period: str) -> str:
+    explicit_annual_fixtures = {
+        ("100", "2021-0A"),
+        ("100", "2022-0A"),
+    }
+    if filename_period == "0A" and (fixture.parent.name, fixture.stem) not in explicit_annual_fixtures:
+        return ejercicio
+    return filename_period
 
 
 class TestJustificanteErrorRehome:

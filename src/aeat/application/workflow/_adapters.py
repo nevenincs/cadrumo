@@ -23,7 +23,6 @@ from pathlib import Path
 from typing import cast
 
 from ...adapters.outbound.aeat.auth import AeatSession
-from ...adapters.outbound.aeat.export import FilingDraftLike
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...domain.deadlines import (
@@ -45,6 +44,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
+    RegistryFilingDraftProtocol,
     SubmissionEngineProtocol,
 )
 
@@ -89,7 +89,7 @@ class FilingDraftBuilderAdapter:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> FilingDraftLike:
+    ) -> RegistryFilingDraftProtocol:
         """Delegate to :func:`build_draft`.
 
         ``cast`` is used for the filing-engine cross-module types because
@@ -106,7 +106,7 @@ class FilingDraftBuilderAdapter:
             schema_provider=cast("CasillaSchemaProvider", self._schema_provider),
             fail_on_warning=fail_on_warning,
         )
-        return cast("FilingDraftLike", draft)
+        return cast("RegistryFilingDraftProtocol", draft)
 
 
 class SubmissionEngineAdapter:
@@ -121,7 +121,7 @@ class SubmissionEngineAdapter:
         """Store the wrapped :class:`SubmissionEngine`."""
         self._engine = engine
 
-    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
+    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
         """Delegate to the engine's public preflight method."""
         self._engine.preflight(draft, today=today)
 
@@ -129,11 +129,10 @@ class SubmissionEngineAdapter:
 class JsonFileInputsProvider:
     """Read casilla inputs from the settings-configured JSON file.
 
-    The JSON file is expected to hold a top-level object whose keys
-    are casilla IDs and whose values are the raw casilla inputs (the
-    shape the filing draft builder expects). Missing files raise
-    :class:`WorkflowError` so the caller's draft stage translates the
-    failure into ``DRAFT_HAS_ERRORS``.
+    The JSON file must hold ``modelo -> period -> inputs``. The workflow
+    refuses root-level casilla payloads so a caller cannot bypass the
+    explicit modelo/period registry selection performed by the filing
+    draft builder.
     """
 
     def __init__(self, path: Path | None) -> None:
@@ -160,14 +159,15 @@ class JsonFileInputsProvider:
             raise WorkflowError(f"workflow draft inputs file {self._path} is not valid JSON: {exc}") from exc
         if not isinstance(raw, dict):
             raise WorkflowError(f"workflow draft inputs file {self._path} must be a JSON object")
-        # The structure is "modelo -> period -> {casilla: value}" if the
-        # user nests; otherwise the root is treated as casilla -> value.
         modelo_section = raw.get(modelo)
-        if isinstance(modelo_section, dict):
-            period_section = modelo_section.get(period, modelo_section)
-            if isinstance(period_section, dict):
-                return period_section
-        return raw
+        if not isinstance(modelo_section, dict):
+            raise WorkflowError(f"workflow draft inputs file {self._path} must contain object for modelo {modelo!r}")
+        period_section = modelo_section.get(period)
+        if not isinstance(period_section, dict):
+            raise WorkflowError(
+                f"workflow draft inputs file {self._path} must contain object for modelo {modelo!r} period {period!r}"
+            )
+        return period_section
 
 
 def default_engine(

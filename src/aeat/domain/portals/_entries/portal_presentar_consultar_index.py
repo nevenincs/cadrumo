@@ -21,6 +21,6 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_presentar_consultar_index.label_621468",
-    purpose_es="Índice oficial de modelos y procedimientos de presentación y consulta.",
+    purpose="entries.portal_presentar_consultar_index.purpose",
 )
 """Portal entry for the AEAT submit-and-consult declarations index."""

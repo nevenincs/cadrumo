@@ -15,263 +15,292 @@ auth:
     clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
-    display_label_851219: Anyag
+    display_label_851219: Megjelenítési címke 851219
 cli:
   attachments:
-    add_help: cli.attachments.add_help
-    add_kind_help: cli.attachments.add_kind_help
-    add_link_invoice_help: cli.attachments.add_link_invoice_help
-    add_link_tx_help: cli.attachments.add_link_tx_help
-    add_metadata_help: cli.attachments.add_metadata_help
-    add_mime_type_help: cli.attachments.add_mime_type_help
-    add_notes_help: cli.attachments.add_notes_help
-    add_path_help: cli.attachments.add_path_help
-    add_source_help: cli.attachments.add_source_help
-    add_source_ref_help: cli.attachments.add_source_ref_help
-    app_help: cli.attachments.app_help
+    add_help: Hozzáadás egy justificante (nyugta) vagy melléklet
+    add_kind_help: Melléklet típusa (pl. számla, justificante (nyugta), szerződés)
+    add_link_invoice_help: A justificante (nyugta) hozzákapcsolása egy létező számla
+      azonosítójához
+    add_link_tx_help: A justificante (nyugta) hozzákapcsolása egy banki tranzakció
+      azonosítójához
+    add_metadata_help: Egyéni metaadatok (kulcs=érték) hozzáadása a justificante (nyugta)
+      fájlhoz
+    add_mime_type_help: MIME-típus kényszerítése a justificante (nyugta) fájlhoz
+    add_notes_help: Jegyzetek vagy megjegyzések hozzáadása a justificante (nyugta)
+      fájlhoz
+    add_path_help: A hozzáadni kívánt justificante (nyugta) fájl helyi útvonala
+    add_source_help: A justificante (nyugta) forrása vagy eredete (pl. e-mail, szkennelés,
+      portál)
+    add_source_ref_help: A justificante (nyugta) forráshivatkozása (pl. e-mail Message-ID,
+      URL, azonosító)
+    app_help: Justificantes (nyugták) és mellékletek kezelése (hozzáadás, listázás,
+      megtekintés)
     errors:
-      duplicate_metadata_key: cli.attachments.errors.duplicate_metadata_key
-      empty_metadata_key: cli.attachments.errors.empty_metadata_key
-      empty_metadata_value: cli.attachments.errors.empty_metadata_value
-      empty_mime_type: cli.attachments.errors.empty_mime_type
-      empty_source_reference: cli.attachments.errors.empty_source_reference
-      invalid_metadata_format: cli.attachments.errors.invalid_metadata_format
+      duplicate_metadata_key: 'A justificante (nyugta) metaadat kulcs duplikálva van:
+        {key}'
+      empty_metadata_key: A justificante (nyugta) metaadat kulcs nem lehet üres
+      empty_metadata_value: A justificante (nyugta) metaadat érték nem lehet üres
+      empty_mime_type: A justificante (nyugta) MIME-típus nem lehet üres
+      empty_source_reference: A justificante (nyugta) forráshivatkozása nem lehet
+        üres
+      invalid_metadata_format: Érvénytelen justificante (nyugta) metaadat formátum.
+        Kulcs=érték formátumúnak kell lennie
     list:
-      no_attachments: cli.attachments.list.no_attachments
-    list_header: cli.attachments.list_header
-    list_help: cli.attachments.list_help
-    list_kind_filter_help: cli.attachments.list_kind_filter_help
-    list_linked_to_help: cli.attachments.list_linked_to_help
-    show_help: cli.attachments.show_help
-    show_id_help: cli.attachments.show_id_help
+      no_attachments: Nem találhatók justificantes (nyugták) vagy mellékletek
+    list_header: Justificantes (nyugták) és mellékletek
+    list_help: A regisztrált justificantes (nyugták) és mellékletek listázása
+    list_kind_filter_help: Justificantes (nyugták) szűrése típus szerint (pl. számla,
+      jegy, szerződés)
+    list_linked_to_help: Egy adott azonosítóhoz (tranzakcióhoz vagy számlához) kapcsolódó
+      justificantes (nyugták) szűrése
+    show_help: Egy justificante (nyugta) részleteinek és metaadatainak megjelenítése
+    show_id_help: A megjelenítendő justificante (nyugta) azonosítója
   auth:
-    app_help: cli.auth.app_help
+    app_help: Hitelesítés és hitelesítő adatok kezelése
     configure:
-      dni_fecha_help: cli.auth.configure.dni_fecha_help
-      dni_nie_help: cli.auth.configure.dni_nie_help
-      help: cli.auth.configure.help
-      nie_soporte_help: cli.auth.configure.nie_soporte_help
-      non_interactive_help: cli.auth.configure.non_interactive_help
-      prefer_non_qr_help: cli.auth.configure.prefer_non_qr_help
-      provider_help: cli.auth.configure.provider_help
-      set_default_help: cli.auth.configure.set_default_help
+      dni_fecha_help: A DNI érvényességi vagy kiállítási dátuma (ÉÉÉÉ-HH-NN)
+      dni_nie_help: Az adózó DNI vagy NIE száma
+      help: Hitelesítési adatok és paraméterek helyi konfigurálása
+      nie_soporte_help: A NIE támogatási száma
+      non_interactive_help: A konfiguráció futtatása nem interaktív módban (megerősítés
+        kérése nélkül)
+      prefer_non_qr_help: A QR-kód nélküli módszer (DNI/NIE használata) előnyben részesítése
+        a Cl@ve Móvilhoz
+      provider_help: Hitelesítési szolgáltató (pl. certificate, clave_movil)
+      set_default_help: Ennek a szolgáltatónak a beállítása alapértelmezett hitelesítési
+        módszerként
     init:
-      acquire_cli_token_help: cli.auth.init.acquire_cli_token_help
-      doctor_help: cli.auth.init.doctor_help
+      acquire_cli_token_help: Google token beszerzése a CLI-hez (megnyitja a böngészőt)
+      doctor_help: Környezet-ellenőrzés (doctor) futtatása inicializálás után
       errors:
-        accepted_cached: cli.auth.init.errors.accepted_cached
-        auth_failed: cli.auth.init.errors.auth_failed
-        clave_movil_config_purpose: cli.auth.init.errors.clave_movil_config_purpose
-        desktop_client_not_found: cli.auth.init.errors.desktop_client_not_found
-        dni_fecha_required: cli.auth.init.errors.dni_fecha_required
-        dni_nie_required: cli.auth.init.errors.dni_nie_required
-        interactive_required: cli.auth.init.errors.interactive_required
-        missing_provider_or_all: cli.auth.init.errors.missing_provider_or_all
-        nie_soporte_required: cli.auth.init.errors.nie_soporte_required
-        no_env_file: cli.auth.init.errors.no_env_file
-        no_session_found: cli.auth.init.errors.no_session_found
-        probe_failed: cli.auth.init.errors.probe_failed
-        provider_not_supported: cli.auth.init.errors.provider_not_supported
-        sa_key_not_found: cli.auth.init.errors.sa_key_not_found
-        session_stale: cli.auth.init.errors.session_stale
-        signed_in: cli.auth.init.errors.signed_in
-        signed_out: cli.auth.init.errors.signed_out
-        signed_out_many: cli.auth.init.errors.signed_out_many
-        stale_or_revoked: cli.auth.init.errors.stale_or_revoked
-        unknown_provider: cli.auth.init.errors.unknown_provider
-        unsupported_env_file: cli.auth.init.errors.unsupported_env_file
-        unsupported_provider: cli.auth.init.errors.unsupported_provider
-      help: cli.auth.init.help
-      json_help: cli.auth.init.json_help
+        accepted_cached: Gyorsítótárazott hitelesítő adatok elfogadva
+        auth_failed: A hitelesítés sikertelen
+        clave_movil_config_purpose: Kötelező beállítás a Cl@ve Móvil-on keresztüli
+          hozzáféréshez
+        desktop_client_not_found: 'Az asztali OAuth-kliens JSON-fájlja nem található:
+          {path}'
+        dni_fecha_required: A DNI érvényességi dátuma kötelező a Cl@ve Móvil használatakor
+          QR-kód nélkül
+        dni_nie_required: DNI vagy NIE kötelező a Cl@ve Móvil használatához
+        interactive_required: Ehhez a művelethez interaktív terminál szükséges
+        missing_provider_or_all: Meg kell adnia egy szolgáltatót (--provider) vagy
+          használnia kell az --all kapcsolót
+        nie_soporte_required: A NIE támogatási száma kötelező a Cl@ve Móvil használatakor
+          QR-kód nélkül
+        no_env_file: A környezeti fájl (.env) nem található
+        no_session_found: Nem található aktív munkamenet
+        probe_failed: A kapcsolat vagy hitelesítés tesztje sikertelen
+        provider_not_supported: A hitelesítési szolgáltató nem támogatott
+        sa_key_not_found: 'A szolgáltatásfiók (Service Account) JSON-kulcsfájlja nem
+          található: {path}'
+        session_stale: Az aktuális munkamenet lejárt és nem használható
+        signed_in: Sikeres bejelentkezés
+        signed_out: Sikeres kijelentkezés
+        signed_out_many: Sikeres kijelentkezés {n} munkamenetből
+        stale_or_revoked: A munkamenet lejárt vagy visszavonásra került
+        unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {name}'
+        unsupported_env_file: Nem támogatott környezeti fájl (.env) formátum
+        unsupported_provider: A megadott szolgáltató nem támogatott ebben a környezetben
+      help: A projekt hitelesítési állapotának inicializálása (Google, AEAT)
+      json_help: A JSON hitelesítő adatfájl útvonala
       labels:
-        action: cli.auth.init.labels.action
-        and: cli.auth.init.labels.and
-        browser: cli.auth.init.labels.browser
-        next: cli.auth.init.labels.next
-        purpose: cli.auth.init.labels.purpose
-        source: cli.auth.init.labels.source
-        success: cli.auth.init.labels.success
-      login_instruction: cli.auth.init.login_instruction
-      path_help: cli.auth.init.path_help
-      prepare_mcp_help: cli.auth.init.prepare_mcp_help
+        action: Művelet
+        and: és
+        browser: Böngésző
+        next: Következő
+        purpose: Cél
+        source: Forrás
+        success: Siker
+      login_instruction: Kérjük, jelentkezzen be az éppen megnyílt böngészőablakban
+      path_help: Inicializálandó útvonalcsalád (pl. desktop-oauth-local-dev, service-account)
+      prepare_mcp_help: Az MCP (Model Context Protocol) szerver konfigurációjának
+        előkészítése
       prompts:
-        dni_fecha: cli.auth.init.prompts.dni_fecha
-        dni_nie: cli.auth.init.prompts.dni_nie
-        nie_soporte: cli.auth.init.prompts.nie_soporte
-      reset_cli_token_help: cli.auth.init.reset_cli_token_help
-      saved_config: cli.auth.init.saved_config
-      service_account_json_help: cli.auth.init.service_account_json_help
-      step_acq_action: cli.auth.init.step_acq_action
-      step_acq_browser: cli.auth.init.step_acq_browser
-      step_acq_next: cli.auth.init.step_acq_next
-      step_acq_purpose: cli.auth.init.step_acq_purpose
-      step_acq_source: cli.auth.init.step_acq_source
-      step_acq_success: cli.auth.init.step_acq_success
-      step_acq_title: cli.auth.init.step_acq_title
-      step_desktop_imported_action: cli.auth.init.step_desktop_imported_action
-      step_desktop_imported_browser: cli.auth.init.step_desktop_imported_browser
-      step_desktop_imported_next: cli.auth.init.step_desktop_imported_next
-      step_desktop_imported_purpose: cli.auth.init.step_desktop_imported_purpose
-      step_desktop_imported_source: cli.auth.init.step_desktop_imported_source
-      step_desktop_imported_success: cli.auth.init.step_desktop_imported_success
-      step_desktop_imported_title: cli.auth.init.step_desktop_imported_title
-      step_mcp_action: cli.auth.init.step_mcp_action
-      step_mcp_browser: cli.auth.init.step_mcp_browser
-      step_mcp_next: cli.auth.init.step_mcp_next
-      step_mcp_purpose: cli.auth.init.step_mcp_purpose
-      step_mcp_source: cli.auth.init.step_mcp_source
-      step_mcp_success: cli.auth.init.step_mcp_success
-      step_mcp_title: cli.auth.init.step_mcp_title
-      step_repair_action: cli.auth.init.step_repair_action
-      step_repair_browser: cli.auth.init.step_repair_browser
-      step_repair_next: cli.auth.init.step_repair_next
-      step_repair_purpose: cli.auth.init.step_repair_purpose
-      step_repair_source: cli.auth.init.step_repair_source
-      step_repair_success: cli.auth.init.step_repair_success
-      step_repair_title: cli.auth.init.step_repair_title
-      step_sa_imported_action: cli.auth.init.step_sa_imported_action
-      step_sa_imported_browser: cli.auth.init.step_sa_imported_browser
-      step_sa_imported_next: cli.auth.init.step_sa_imported_next
-      step_sa_imported_purpose: cli.auth.init.step_sa_imported_purpose
-      step_sa_imported_source: cli.auth.init.step_sa_imported_source
-      step_sa_imported_success: cli.auth.init.step_sa_imported_success
-      step_sa_imported_title: cli.auth.init.step_sa_imported_title
-      step_sa_req_action: cli.auth.init.step_sa_req_action
-      step_sa_req_browser: cli.auth.init.step_sa_req_browser
-      step_sa_req_next: cli.auth.init.step_sa_req_next
-      step_sa_req_purpose: cli.auth.init.step_sa_req_purpose
-      step_sa_req_source: cli.auth.init.step_sa_req_source
-      step_sa_req_success: cli.auth.init.step_sa_req_success
-      step_sa_req_title: cli.auth.init.step_sa_req_title
-      step_sa_status_action: cli.auth.init.step_sa_status_action
-      step_sa_status_browser: cli.auth.init.step_sa_status_browser
-      step_sa_status_next: cli.auth.init.step_sa_status_next
-      step_sa_status_purpose: cli.auth.init.step_sa_status_purpose
-      step_sa_status_source: cli.auth.init.step_sa_status_source
-      step_sa_status_success: cli.auth.init.step_sa_status_success
-      step_sa_status_title: cli.auth.init.step_sa_status_title
-      step_setup_req_action: cli.auth.init.step_setup_req_action
-      step_setup_req_browser: cli.auth.init.step_setup_req_browser
-      step_setup_req_next: cli.auth.init.step_setup_req_next
-      step_setup_req_purpose: cli.auth.init.step_setup_req_purpose
-      step_setup_req_source: cli.auth.init.step_setup_req_source
-      step_setup_req_success: cli.auth.init.step_setup_req_success
-      step_setup_req_title: cli.auth.init.step_setup_req_title
-      step_status_action: cli.auth.init.step_status_action
-      step_status_browser: cli.auth.init.step_status_browser
-      step_status_next: cli.auth.init.step_status_next
-      step_status_purpose: cli.auth.init.step_status_purpose
-      step_status_source: cli.auth.init.step_status_source
-      step_status_success: cli.auth.init.step_status_success
-      step_status_title: cli.auth.init.step_status_title
-      step_token_reset_action: cli.auth.init.step_token_reset_action
-      step_token_reset_browser: cli.auth.init.step_token_reset_browser
-      step_token_reset_next: cli.auth.init.step_token_reset_next
-      step_token_reset_purpose: cli.auth.init.step_token_reset_purpose
-      step_token_reset_source: cli.auth.init.step_token_reset_source
-      step_token_reset_success: cli.auth.init.step_token_reset_success
-      step_token_reset_title: cli.auth.init.step_token_reset_title
+        dni_fecha: A DNI érvényességi dátuma (ÉÉÉÉ-HH-NN)
+        dni_nie: Az adózó DNI vagy NIE száma
+        nie_soporte: A NIE támogatási száma
+      reset_cli_token_help: A meglévő Google token törlése és új kérése
+      saved_config: 'Konfiguráció sikeresen mentve ide: {path}'
+      service_account_json_help: A szolgáltatásfiók (Service Account) JSON-kulcsfájljának
+        útvonala
+      step_acq_action: Token beszerzése
+      step_acq_browser: Alapértelmezett böngésző
+      step_acq_next: Folytatás
+      step_acq_purpose: Hozzáférés a Google Drive-hoz, Sheets-hez és Docs-hoz fájlkezelés
+        céljából
+      step_acq_source: Google Cloud Konzol
+      step_acq_success: Token sikeresen beszerezve
+      step_acq_title: 'Lépés: Google CLI Token beszerzése'
+      step_desktop_imported_action: Kliens JSON importálása
+      step_desktop_imported_browser: Fájlkezelő
+      step_desktop_imported_next: Folytatás
+      step_desktop_imported_purpose: Az asztali kliens konfigurálása OAuth 2.0 hitelesítéshez
+      step_desktop_imported_source: Google Cloud Konzol
+      step_desktop_imported_success: Kliens JSON sikeresen importálva
+      step_desktop_imported_title: 'Lépés: Asztali OAuth-kliens importálása'
+      step_mcp_action: MCP konfigurálása
+      step_mcp_browser: N/A
+      step_mcp_next: Befejezés
+      step_mcp_purpose: AI ágensek számára lehetővé teszi a CLI eszközök használatát
+      step_mcp_source: Helyi fájl
+      step_mcp_success: MCP sikeresen konfigurálva
+      step_mcp_title: 'Lépés: MCP szerver konfigurálása'
+      step_repair_action: Környezet javítása
+      step_repair_browser: N/A
+      step_repair_next: Folytatás
+      step_repair_purpose: A konfigurációban észlelt ellentmondások javítása
+      step_repair_source: Automatikus javítás
+      step_repair_success: A környezet sikeresen javítva
+      step_repair_title: 'Lépés: Környezet javítása'
+      step_sa_imported_action: SA-kulcs importálása
+      step_sa_imported_browser: Fájlkezelő
+      step_sa_imported_next: Folytatás
+      step_sa_imported_purpose: A szolgáltatásfiók konfigurálása headless automatizáláshoz
+      step_sa_imported_source: Google Cloud Konzol
+      step_sa_imported_success: Szolgáltatásfiók-kulcs sikeresen importálva
+      step_sa_imported_title: 'Lépés: Szolgáltatásfiók (SA) kulcs importálása'
+      step_sa_req_action: Szolgáltatásfiók ellenőrzése
+      step_sa_req_browser: N/A
+      step_sa_req_next: Folytatás
+      step_sa_req_purpose: A szolgáltatásfiók felhőalapú hozzáférési jogosultságainak
+        ellenőrzése
+      step_sa_req_source: Google API
+      step_sa_req_success: Szolgáltatásfiók sikeresen ellenőrizve
+      step_sa_req_title: 'Lépés: Szolgáltatásfiók (SA) ellenőrzése'
+      step_sa_status_action: Állapot ellenőrzése
+      step_sa_status_browser: N/A
+      step_sa_status_next: Folytatás
+      step_sa_status_purpose: A szolgáltatásfiók aktív és működőképes állapotának
+        biztosítása
+      step_sa_status_source: Google IAM
+      step_sa_status_success: Szolgáltatásfiók állapota ellenőrizve
+      step_sa_status_title: 'Lépés: Szolgáltatásfiók állapotának ellenőrzése'
+      step_setup_req_action: Beállítások ellenőrzése
+      step_setup_req_browser: N/A
+      step_setup_req_next: Folytatás
+      step_setup_req_purpose: A helyi konfigurációs fájlok épségének ellenőrzése
+      step_setup_req_source: Helyi fájlrendszer
+      step_setup_req_success: Beállítások sikeresen ellenőrizve
+      step_setup_req_title: 'Lépés: Beállítások ellenőrzése'
+      step_status_action: Állapot ellenőrzése
+      step_status_browser: N/A
+      step_status_next: Folytatás
+      step_status_purpose: Aktív hitelesítési munkamenet létezésének ellenőrzése
+      step_status_source: Token gyorsítótár
+      step_status_success: Hitelesítési állapot ellenőrizve
+      step_status_title: 'Lépés: Hitelesítési állapot ellenőrzése'
+      step_token_reset_action: Token alaphelyzetbe állítása
+      step_token_reset_browser: N/A
+      step_token_reset_next: Folytatás
+      step_token_reset_purpose: Újbóli hitelesítés kényszerítése a tárolt token törlésével
+      step_token_reset_source: Helyi gyorsítótár
+      step_token_reset_success: Token sikeresen alaphelyzetbe állítva
+      step_token_reset_title: 'Lépés: Google token alaphelyzetbe állítása'
       terms:
-        default_provider: cli.auth.init.terms.default_provider
-        direct_push: cli.auth.init.terms.direct_push
-        dni_fecha: cli.auth.init.terms.dni_fecha
-        dni_nie: cli.auth.init.terms.dni_nie
-        nie_soporte: cli.auth.init.terms.nie_soporte
-        qr_code: cli.auth.init.terms.qr_code
-      url_prompt: cli.auth.init.url_prompt
+        default_provider: alapértelmezett szolgáltató
+        direct_push: közvetlen (push) értesítés
+        dni_fecha: DNI érvényességi dátuma
+        dni_nie: DNI/NIE
+        nie_soporte: NIE támogatási száma
+        qr_code: QR-kód
+      url_prompt: 'Ha a böngésző nem nyílt meg automatikusan, látogasson el erre az
+        URL-re:'
     list_providers:
-      all_help: cli.auth.list_providers.all_help
-      configured_help: cli.auth.list_providers.configured_help
-      help: cli.auth.list_providers.help
-      json_help: cli.auth.list_providers.json_help
+      all_help: Az összes támogatott szolgáltató listázása, nem csak a konfiguráltaké
+      configured_help: A konfigurált hitelesítési szolgáltatók listázása
+      help: Az elérhető hitelesítési szolgáltatók és állapotuk listázása
+      json_help: A szolgáltatók listájának megjelenítése JSON formátumban
     login:
-      help: cli.auth.login.help
-      json_help: cli.auth.login.json_help
-      non_interactive_help: cli.auth.login.non_interactive_help
-      provider_help: cli.auth.login.provider_help
+      help: Bejelentkezés az AEAT E-Hivatalba (Sede Electrónica)
+      json_help: A bejelentkezés eredményének megjelenítése JSON formátumban
+      non_interactive_help: Bejelentkezési kísérlet emberi beavatkozás nélkül (konfigurált
+        tanúsítvány szükséges)
+      provider_help: Használandó hitelesítési szolgáltató (pl. certificate, clave_movil)
     logout:
-      all_help: cli.auth.logout.all_help
-      help: cli.auth.logout.help
-      json_output_help: cli.auth.logout.json_output_help
-      provider_help: cli.auth.logout.provider_help
+      all_help: Az összes aktív munkamenet kijelentkeztetése
+      help: Az aktuális AEAT munkamenet kijelentkeztetése
+      json_output_help: A kijelentkezés eredményének megjelenítése JSON formátumban
+      provider_help: Kijelentkezendő hitelesítési szolgáltató (pl. certificate, clave_movil)
     status:
-      help: cli.auth.status.help
-      json_help: cli.auth.status.json_help
-      provider_help: cli.auth.status.provider_help
+      help: Az aktuális AEAT hitelesítési állapot megjelenítése
+      json_help: A hitelesítési állapot megjelenítése JSON formátumban
+      provider_help: Ellenőrizendő hitelesítési szolgáltató (pl. certificate, clave_movil)
     whoami:
-      help: cli.auth.whoami.help
-      json_help: cli.auth.whoami.json_help
-      provider_help: cli.auth.whoami.provider_help
+      help: Részletes információk megjelenítése a jelenleg hitelesített alanyról
+      json_help: Az alany információinak megjelenítése JSON formátumban
+      provider_help: Ellenőrizendő hitelesítési szolgáltató (pl. certificate, clave_movil)
   bootstrap:
     errors:
-      already_bootstrapped: cli.bootstrap.errors.already_bootstrapped
-      destructive_warning: cli.bootstrap.errors.destructive_warning
-      force_instruction: cli.bootstrap.errors.force_instruction
-      missing_env: cli.bootstrap.errors.missing_env
-      missing_target: cli.bootstrap.errors.missing_target
-      target_instruction: cli.bootstrap.errors.target_instruction
+      already_bootstrapped: A környezet már inicializálva lett (bootstrapped)
+      destructive_warning: FIGYELEM! Ez a művelet destruktív lehet, és felülírhatja
+        a meglévő erőforrásokat
+      force_instruction: Használja a --force kapcsolót a folytatáshoz, ha biztos benne
+      missing_env: Az inicializáláshoz szükséges környezeti változók hiányoznak
+      missing_target: Nincs megadva az inicializálás célja (target)
+      target_instruction: Kérjük, adjon meg egy érvényes célt a --target kapcsolóval
     labels:
-      active_env: cli.bootstrap.labels.active_env
-      active_target: cli.bootstrap.labels.active_target
-      auth_method: cli.bootstrap.labels.auth_method
-      auth_path: cli.bootstrap.labels.auth_path
-      mcp_status: cli.bootstrap.labels.mcp_status
+      active_env: Aktív környezet
+      active_target: Aktív cél
+      auth_method: Hitelesítési módszer
+      auth_path: Hitelesítési útvonal
+      mcp_status: MCP állapota
     success:
-      complete: cli.bootstrap.success.complete
+      complete: A környezet inicializálása sikeresen befejeződött
   browser:
-    app_help: cli.browser.app_help
+    app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
-      json_help: cli.browser.health.json_help
-    health_help: cli.browser.health_help
+      json_help: A böngésző egészségi állapotának megjelenítése JSON formátumban
+    health_help: A böngésző automatizálás egészségi állapotának és kapcsolatának ellenőrzése
     labels:
-      http_status: cli.browser.labels.http_status
-      markers: cli.browser.labels.markers
-      none: cli.browser.labels.none
-      retry_after_seconds: cli.browser.labels.retry_after_seconds
-      state: cli.browser.labels.state
+      http_status: HTTP állapot
+      markers: Észlelt jelölők
+      none: Nincs
+      retry_after_seconds: Újrapróbálkozás ennyi másodperc után
+      state: Működési állapot
   categories:
-    app_help: cli.categories.app_help
-    id_help: cli.categories.id_help
-    list_help: cli.categories.list_help
-    show_help: cli.categories.show_help
-    year_help: cli.categories.year_help
+    app_help: Az AEAT eljárási kategóriák kezelése
+    id_help: A kategória egyedi azonosítója
+    list_help: Az összes elérhető eljárási kategória listázása
+    show_help: Egy adott kategória részleteinek megjelenítése
+    year_help: Adóév
   cloud:
-    app_help: cli.cloud.app_help
-    environment_col: cli.cloud.environment_col
+    app_help: Felhőalapú funkciók kezelése (Google Cloud)
+    environment_col: Környezet
     errors:
-      missing_project: cli.cloud.errors.missing_project
-    functions_app_help: cli.cloud.functions_app_help
-    functions_describe_help: cli.cloud.functions_describe_help
-    functions_describe_name_help: cli.cloud.functions_describe_name_help
-    functions_list_help: cli.cloud.functions_list_help
-    functions_list_title: cli.cloud.functions_list_title
-    generation_col: cli.cloud.generation_col
+      missing_project: A Google Cloud projekt azonosító nincs konfigurálva
+    functions_app_help: Google Cloud Functions kezelése
+    functions_describe_help: Egy adott felhőalapú funkció részleteinek megjelenítése
+    functions_describe_name_help: A leírandó funkció neve
+    functions_list_help: Az összes telepített felhőalapú funkció listázása
+    functions_list_title: Felhőalapú funkciók (Google Cloud Functions)
+    generation_col: Generáció
     labels:
-      buckets_found: cli.cloud.labels.buckets_found
-      functions_found: cli.cloud.labels.functions_found
-      objects_found: cli.cloud.labels.objects_found
-      services_found: cli.cloud.labels.services_found
-    location_col: cli.cloud.location_col
-    name_col: cli.cloud.name_col
-    run_app_help: cli.cloud.run_app_help
-    run_describe_help: cli.cloud.run_describe_help
-    run_describe_name_help: cli.cloud.run_describe_name_help
-    run_list_help: cli.cloud.run_list_help
-    run_list_title: cli.cloud.run_list_title
-    size_col: cli.cloud.size_col
-    state_col: cli.cloud.state_col
-    storage_app_help: cli.cloud.storage_app_help
-    storage_buckets_help: cli.cloud.storage_buckets_help
-    storage_buckets_title: cli.cloud.storage_buckets_title
-    storage_class_col: cli.cloud.storage_class_col
-    storage_ls_bucket_help: cli.cloud.storage_ls_bucket_help
-    storage_ls_help: cli.cloud.storage_ls_help
-    storage_ls_prefix_help: cli.cloud.storage_ls_prefix_help
-    update_time_col: cli.cloud.update_time_col
-    updated_col: cli.cloud.updated_col
+      buckets_found: Talált bucketek
+      functions_found: Talált funkciók
+      objects_found: Talált objektumok
+      services_found: Talált szolgáltatások
+    location_col: Helyszín
+    name_col: Név
+    run_app_help: Google Cloud Run kezelése
+    run_describe_help: Egy adott Cloud Run szolgáltatás részleteinek megjelenítése
+    run_describe_name_help: A leírandó szolgáltatás neve
+    run_list_help: Az összes telepített Cloud Run szolgáltatás listázása
+    run_list_title: Cloud Run szolgáltatások (Google Cloud Run)
+    size_col: Méret
+    state_col: Állapot
+    storage_app_help: Google Cloud Storage kezelése
+    storage_buckets_help: Az összes elérhető tárolási bucket listázása
+    storage_buckets_title: Tárolási bucketek (Google Cloud Storage)
+    storage_class_col: Tárolási osztály
+    storage_ls_bucket_help: A listázandó bucket neve
+    storage_ls_help: Egy bucketben található objektumok listázása
+    storage_ls_prefix_help: Előtag (útvonal) az objektumok szűréséhez
+    update_time_col: Frissítés ideje
+    updated_col: Frissítve
   common:
     errors:
-      invalid_iso_date: cli.common.errors.invalid_iso_date
+      invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
       period_empty: cli.common.errors.period_empty
       period_unrecognised: cli.common.errors.period_unrecognised
   data:

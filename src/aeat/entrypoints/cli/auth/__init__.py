@@ -54,10 +54,7 @@ logger = get_logger(__name__)
 app = typer.Typer(
     name="auth",
     no_args_is_help=True,
-    help=(
-        "Operator-facing auth setup plus AEAT authentication provider management: "
-        "init, configure, list-providers, login, status, whoami, logout."
-    ),
+    help=tr("cli.auth.app_help"),
 )
 
 _CONSOLE = Console()
@@ -177,12 +174,12 @@ def _print_step(
     success: str,
     continuation: str,
 ) -> None:
-    purpose_label = tr("auth.init.t_954326")
-    action_label = tr("auth.init.t_714790")
-    source_label = tr("auth.init.t_322689")
-    browser_label = tr("auth.init.t_853374")
-    success_label = tr("auth.init.t_105867")
-    next_label = tr("auth.init.t_351011")
+    purpose_label = tr("cli.auth.init.labels.purpose")
+    action_label = tr("cli.auth.init.labels.action")
+    source_label = tr("cli.auth.init.labels.source")
+    browser_label = tr("cli.auth.init.labels.browser")
+    success_label = tr("cli.auth.init.labels.success")
+    next_label = tr("cli.auth.init.labels.next")
     console.print(f"[bold]{title}[/bold]")
     console.print(f"{purpose_label} {purpose}")
     console.print(f"{action_label} {action}")
@@ -268,50 +265,50 @@ def _parse_kind(raw: str) -> AuthProviderKind:
     try:
         kind = AuthProviderKind(raw)
     except ValueError as exc:
-        ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(tr("auth.init.t_686896")) from exc
+        valid = ", ".join(k.value for k in _registry.iter_kinds())
+        raise typer.BadParameter(tr("cli.auth.init.errors.unknown_provider", raw=raw, valid=valid)) from exc
     if kind not in _registry.iter_kinds():
-        ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(tr("auth.init.t_151679"))
+        valid = ", ".join(k.value for k in _registry.iter_kinds())
+        raise typer.BadParameter(tr("cli.auth.init.errors.unsupported_provider", raw=raw, valid=valid))
     return kind
 
 
-@app.command("init", help="Guide the operator through the supported Google authentication paths.")
+@app.command("init", help=tr("cli.auth.init.help"))
 def init(
     path: GoogleAuthPath | None = typer.Option(
         None,
         "--path",
-        help="Choose the active auth path. Defaults to the inferred path or Desktop OAuth local-dev.",
+        help=tr("cli.auth.init.path_help"),
     ),
     json_path: Path | None = typer.Option(
         None,
         "--json",
-        help="Downloaded Desktop OAuth client JSON to ingest into env/.env.",
+        help=tr("cli.auth.init.json_help"),
     ),
     service_account_json: Path | None = typer.Option(
         None,
         "--service-account-json",
-        help="Service-account JSON key to ingest into env/.env.",
+        help=tr("cli.auth.init.service_account_json_help"),
     ),
     acquire_cli_token: bool = typer.Option(
         True,
         "--acquire-cli-token/--no-acquire-cli-token",
-        help="Acquire or refresh the repo-local CLI OAuth token for the Desktop OAuth path.",
+        help=tr("cli.auth.init.acquire_cli_token_help"),
     ),
     reset_cli_token: bool = typer.Option(
         False,
         "--reset-cli-token/--no-reset-cli-token",
-        help="Delete the cached CLI OAuth token first so Desktop OAuth consent is reacquired from scratch.",
+        help=tr("cli.auth.init.reset_cli_token_help"),
     ),
     prepare_mcp: bool = typer.Option(
         True,
         "--prepare-mcp/--no-prepare-mcp",
-        help="Create the repo-local MCP credentials directory for the selected path.",
+        help=tr("cli.auth.init.prepare_mcp_help"),
     ),
     run_doctor: bool = typer.Option(
         False,
         "--doctor/--no-doctor",
-        help="Run `aeat doctor` after the auth path has been prepared.",
+        help=tr("cli.auth.init.doctor_help"),
     ),
 ) -> None:
     """Prepare the selected Google auth path and explain the remaining steps."""
@@ -323,18 +320,27 @@ def init(
     if selected_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         if json_path is not None:
             if not json_path.exists():
-                console.print("[red]" + tr("auth.init.t_263360") + "[/]")
+                console.print(
+                    "[red]" + tr("cli.auth.init.errors.desktop_client_not_found", json_path=json_path) + "[/]"
+                )
                 raise typer.Exit(code=1)
             stable_path = _copy_oauth_client_json(json_path)
             _print_step(
                 console,
-                "Desktop OAuth client imported",
-                purpose="Persist the Desktop OAuth local-dev client in a stable repo-local path.",
-                action=f"Imported {json_path} into env/.env and copied it to {stable_path}.",
-                source="The JSON comes from Google Cloud Console -> APIs & Services -> Credentials.",
-                browser="No browser opens during the import step.",
-                success=f"env/oauth-client.json exists and GOOGLE_AUTH_PATH={selected_path.value}.",
-                continuation="Continue with the CLI OAuth token step below.",
+                tr("cli.auth.init.step_desktop_imported_title"),
+                purpose=tr("cli.auth.init.step_desktop_imported_purpose"),
+                action=tr(
+                    "cli.auth.init.step_desktop_imported_action",
+                    json_path=json_path,
+                    stable_path=stable_path,
+                ),
+                source=tr("cli.auth.init.step_desktop_imported_source"),
+                browser=tr("cli.auth.init.step_desktop_imported_browser"),
+                success=tr(
+                    "cli.auth.init.step_desktop_imported_success",
+                    path=selected_path.value,
+                ),
+                continuation=tr("cli.auth.init.step_desktop_imported_next"),
             )
 
         inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
@@ -343,44 +349,30 @@ def init(
             inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
             _print_step(
                 console,
-                "CLI OAuth token reset",
-                purpose=(
-                    "Force a fresh Desktop OAuth consent flow when the cached "
-                    "token no longer carries the required Drive or Workspace scopes."
-                ),
-                action="The cached CLI OAuth token has been deleted.",
-                source="The previous Desktop OAuth local-dev consent flow created the cached token.",
-                browser="The next CLI token acquisition step opens a fresh browser consent flow.",
-                success="The repo-local CLI token cache is empty and ready for re-consent.",
-                continuation="Continue with CLI OAuth token acquisition below.",
+                tr("cli.auth.init.step_token_reset_title"),
+                purpose=tr("cli.auth.init.step_token_reset_purpose"),
+                action=tr("cli.auth.init.step_token_reset_action"),
+                source=tr("cli.auth.init.step_token_reset_source"),
+                browser=tr("cli.auth.init.step_token_reset_browser"),
+                success=tr("cli.auth.init.step_token_reset_success"),
+                continuation=tr("cli.auth.init.step_token_reset_next"),
             )
         if not inspection.desktop_oauth_complete:
             project = _google_settings().google_cloud_project or "<your-project-id>"
             console.print(
-                f"[bold]Open this URL in a browser:[/bold]\n  {CREDENTIALS_PAGE_TEMPLATE.format(project=project)}"
+                f"[bold]{tr('cli.auth.init.url_prompt')}[/bold]\n  {CREDENTIALS_PAGE_TEMPLATE.format(project=project)}"
             )
             console.print()
             console.print(REQUIRED_BLOCK)
             _print_step(
                 console,
-                "Desktop OAuth local-dev setup required",
-                purpose=(
-                    "Desktop OAuth local-dev is the primary workstation path and "
-                    "is required before CLI or MCP Google work can proceed."
-                ),
-                action=(
-                    "Create the Desktop app OAuth client in Cloud Console, "
-                    "download the JSON, then re-run this command with --json."
-                ),
-                source=(
-                    "Google Cloud Console -> APIs & Services -> Credentials -> Create credentials -> OAuth client ID."
-                ),
-                browser=(
-                    "Your browser opens the Cloud Console now. No Google consent "
-                    "screen opens until the later CLI token step."
-                ),
-                success="You have a downloaded OAuth client JSON file on disk.",
-                continuation="uv run aeat auth init --path desktop-oauth-local-dev --json <downloaded-json>",
+                tr("cli.auth.init.step_setup_req_title"),
+                purpose=tr("cli.auth.init.step_setup_req_purpose"),
+                action=tr("cli.auth.init.step_setup_req_action"),
+                source=tr("cli.auth.init.step_setup_req_source"),
+                browser=tr("cli.auth.init.step_setup_req_browser"),
+                success=tr("cli.auth.init.step_setup_req_success"),
+                continuation=tr("cli.auth.init.step_setup_req_next"),
             )
             raise typer.Exit(code=1)
 
@@ -390,15 +382,13 @@ def init(
         if inspection.oauth_token_issue is not None and not acquire_cli_token:
             _print_step(
                 console,
-                "CLI OAuth token needs repair",
-                purpose=(
-                    "Desktop OAuth local-dev cannot drive CLI or bootstrap work until the repo-local token is usable."
-                ),
-                action="Rerun this command without --no-acquire-cli-token so the token can be reacquired.",
-                source="The current repo-local CLI token cache is incomplete or stale.",
-                browser="The repair run opens a fresh browser consent flow if the token must be reacquired.",
-                success="The repo-local CLI token cache can be loaded with the required scope set.",
-                continuation="uv run aeat auth init --path desktop-oauth-local-dev",
+                tr("cli.auth.init.step_repair_title"),
+                purpose=tr("cli.auth.init.step_repair_purpose"),
+                action=tr("cli.auth.init.step_repair_action"),
+                source=tr("cli.auth.init.step_repair_source"),
+                browser=tr("cli.auth.init.step_repair_browser"),
+                success=tr("cli.auth.init.step_repair_success"),
+                continuation=tr("cli.auth.init.step_repair_next"),
             )
             raise typer.Exit(code=1)
 
@@ -407,18 +397,16 @@ def init(
                 inspection.oauth_token_path.unlink(missing_ok=True)
             _print_step(
                 console,
-                "CLI OAuth token acquisition",
-                purpose=(
-                    "The CLI/bootstrap path needs a repo-local OAuth token so "
-                    "AEAT commands can call Drive, Sheets, Docs, and Service Usage."
+                tr("cli.auth.init.step_acq_title"),
+                purpose=tr("cli.auth.init.step_acq_purpose"),
+                action=tr("cli.auth.init.step_acq_action"),
+                source=tr("cli.auth.init.step_acq_source"),
+                browser=tr("cli.auth.init.step_acq_browser"),
+                success=tr(
+                    "cli.auth.init.step_acq_success",
+                    path=inspection.oauth_token_path,
                 ),
-                action="Continue and complete the Google consent flow in the browser window that opens.",
-                source="The Desktop OAuth client already stored in env/.env is reused automatically.",
-                browser=(
-                    "A local OAuth callback flow opens in your browser and asks you to consent to the requested scopes."
-                ),
-                success=f"{inspection.oauth_token_path} exists after consent completes.",
-                continuation="The command will return here and continue with MCP preparation.",
+                continuation=tr("cli.auth.init.step_acq_next"),
             )
             _ = get_credentials(_google_settings(), scopes=SCOPES)
             inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
@@ -428,68 +416,65 @@ def init(
             inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
             _print_step(
                 console,
-                "MCP cache preparation",
-                purpose=(
-                    "The Google Workspace MCP server keeps its refresh material in a repo-local gitignored directory."
-                ),
-                action="The directory has been created for the selected path.",
-                source="No external file is needed for this step.",
-                browser="No browser opens during MCP cache preparation.",
-                success=f"{_mcp_credentials_dir()} now exists.",
-                continuation=("Launch the Google Workspace MCP server once to finish MCP credential preparation."),
+                tr("cli.auth.init.step_mcp_title"),
+                purpose=tr("cli.auth.init.step_mcp_purpose"),
+                action=tr("cli.auth.init.step_mcp_action"),
+                source=tr("cli.auth.init.step_mcp_source"),
+                browser=tr("cli.auth.init.step_mcp_browser"),
+                success=tr("cli.auth.init.step_mcp_success", dir=_mcp_credentials_dir()),
+                continuation=tr("cli.auth.init.step_mcp_next"),
             )
 
         _print_step(
             console,
-            "Desktop OAuth local-dev status",
-            purpose=(
-                "Confirm which remaining step is on the path from local auth to verified CLI/bootstrap readiness."
-            ),
-            action=(
-                "If you need MCP access, launch the Google Workspace MCP server once. "
-                "Then verify the current state with aeat doctor."
-            ),
-            source="This decision depends on whether your workflow needs MCP credential preparation.",
-            browser="Launching the MCP server may open a browser-managed OAuth flow. aeat doctor does not.",
-            success=(
-                "Desktop OAuth client material is present, the CLI token is usable, "
-                "and the MCP cache directory is prepared for first launch."
-            ),
-            continuation="uv run aeat doctor",
+            tr("cli.auth.init.step_status_title"),
+            purpose=tr("cli.auth.init.step_status_purpose"),
+            action=tr("cli.auth.init.step_status_action"),
+            source=tr("cli.auth.init.step_status_source"),
+            browser=tr("cli.auth.init.step_status_browser"),
+            success=tr("cli.auth.init.step_status_success"),
+            continuation=tr("cli.auth.init.step_status_next"),
         )
     else:
         if service_account_json is not None:
             if not service_account_json.exists():
-                console.print("[red]" + tr("auth.init.t_352935") + "[/]")
+                console.print(
+                    "[red]"
+                    + tr("cli.auth.init.errors.sa_key_not_found", service_account_json=service_account_json)
+                    + "[/]"
+                )
                 raise typer.Exit(code=1)
             stable_path = _copy_service_account_json(service_account_json)
             _print_step(
                 console,
-                "Service-account key imported",
-                purpose="Persist the Service-account automation key in a stable repo-local path.",
-                action=f"Imported {service_account_json} into env/.env and copied it to {stable_path}.",
-                source="The JSON key comes from Google Cloud Console -> IAM & Admin -> Service Accounts.",
-                browser="No browser opens during the import step.",
-                success=f"{stable_path} exists and GOOGLE_AUTH_PATH={selected_path.value}.",
-                continuation="Continue with MCP preparation or final verification.",
+                tr("cli.auth.init.step_sa_imported_title"),
+                purpose=tr("cli.auth.init.step_sa_imported_purpose"),
+                action=tr(
+                    "cli.auth.init.step_sa_imported_action",
+                    json_path=service_account_json,
+                    stable_path=stable_path,
+                ),
+                source=tr("cli.auth.init.step_sa_imported_source"),
+                browser=tr("cli.auth.init.step_sa_imported_browser"),
+                success=tr(
+                    "cli.auth.init.step_sa_imported_success",
+                    stable_path=stable_path,
+                    path=selected_path.value,
+                ),
+                continuation=tr("cli.auth.init.step_sa_imported_next"),
             )
 
         inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
         if inspection.service_account_existing_path is None:
             _print_step(
                 console,
-                "Service-account automation setup required",
-                purpose="Service-account automation is the headless path for CI and background execution.",
-                action=(
-                    "Create or locate the service-account key JSON, then re-run "
-                    "this command with --service-account-json."
-                ),
-                source="Google Cloud Console -> IAM & Admin -> Service Accounts -> Keys.",
-                browser="No browser consent flow should occur on the service-account path.",
-                success="A readable service-account JSON key exists on disk.",
-                continuation=(
-                    "uv run aeat auth init --path service-account-automation --service-account-json <downloaded-json>"
-                ),
+                tr("cli.auth.init.step_sa_req_title"),
+                purpose=tr("cli.auth.init.step_sa_req_purpose"),
+                action=tr("cli.auth.init.step_sa_req_action"),
+                source=tr("cli.auth.init.step_sa_req_source"),
+                browser=tr("cli.auth.init.step_sa_req_browser"),
+                success=tr("cli.auth.init.step_sa_req_success"),
+                continuation=tr("cli.auth.init.step_sa_req_next"),
             )
             raise typer.Exit(code=1)
 
@@ -501,13 +486,13 @@ def init(
 
         _print_step(
             console,
-            "Service-account automation status",
-            purpose="Confirm the headless path is selected and point the operator to the final readiness check.",
-            action="Run aeat doctor to verify the active path, API readiness, and any inactive-path drift.",
-            source="The service-account key path is already stored in env/.env.",
-            browser="No browser flow should be required on this path.",
-            success="The service-account key exists and the MCP cache directory exists or was prepared.",
-            continuation="uv run aeat doctor",
+            tr("cli.auth.init.step_sa_status_title"),
+            purpose=tr("cli.auth.init.step_sa_status_purpose"),
+            action=tr("cli.auth.init.step_sa_status_action"),
+            source=tr("cli.auth.init.step_sa_status_source"),
+            browser=tr("cli.auth.init.step_sa_status_browser"),
+            success=tr("cli.auth.init.step_sa_status_success"),
+            continuation=tr("cli.auth.init.step_sa_status_next"),
         )
 
     if run_doctor:
@@ -516,22 +501,22 @@ def init(
         doctor()
 
 
-@app.command("list-providers", help="List supported AEAT auth providers and their current state.")
+@app.command("list-providers", help=tr("cli.auth.list_providers.help"))
 def list_providers(
     configured_only: bool = typer.Option(
         False,
         "--configured",
-        help="Filter to providers that are fully configured and available.",
+        help=tr("cli.auth.list_providers.configured_help"),
     ),
     show_all: bool = typer.Option(
         False,
         "--all",
-        help="Include hidden provider entries when the registry defines any.",
+        help=tr("cli.auth.list_providers.all_help"),
     ),
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit JSON instead of a pretty table.",
+        help=tr("cli.auth.list_providers.json_help"),
     ),
 ) -> None:
     """Operator-facing overview of every supported auth provider in the registry."""
@@ -608,7 +593,7 @@ def _resolve_env_file(settings: Settings) -> Path:
     """Return the env file Settings is bound to (``env/.env`` by default)."""
     env_file = settings.model_config.get("env_file")
     if env_file is None:
-        raise typer.BadParameter(tr("auth.init.t_178097"))
+        raise typer.BadParameter(tr("cli.auth.init.errors.no_env_file"))
     if isinstance(env_file, Path):
         return env_file
     if isinstance(env_file, str):
@@ -625,7 +610,7 @@ def _resolve_env_file(settings: Settings) -> Path:
         "_resolve_env_file: Settings.env_file has unsupported shape %s; cannot determine env file path",
         type(env_file).__name__,
     )
-    raise typer.BadParameter(tr("auth.init.t_589739"))
+    raise typer.BadParameter(tr("cli.auth.init.errors.unsupported_env_file", type=type(env_file).__name__))
 
 
 def _classify_identity_for_cli(raw: str) -> str:
@@ -643,58 +628,44 @@ def _classify_identity_for_cli(raw: str) -> str:
 
 @app.command(
     "configure",
-    help=("Persist auth-provider configuration to env/.env without a manual shell export."),
+    help=tr("cli.auth.configure.help"),
 )
 def configure(
     provider: str = typer.Option(
         AuthProviderKind.CLAVE_MOVIL.value,
         "--provider",
         "-p",
-        help="Provider to configure.",
+        help=tr("cli.auth.configure.provider_help"),
     ),
     dni_nie: str | None = typer.Option(
         None,
         "--dni-nie",
-        help="Set your Spanish DNI or NIE. The CLI prompts for it when omitted.",
+        help=tr("cli.auth.configure.dni_nie_help"),
     ),
     dni_fecha: str | None = typer.Option(
         None,
         "--dni-fecha",
-        help=(
-            "Set the DNI validity date printed on your card (YYYY-MM-DD). "
-            "Required only when --prefer-non-qr is used with a DNI identity."
-        ),
+        help=tr("cli.auth.configure.dni_fecha_help"),
     ),
     nie_soporte: str | None = typer.Option(
         None,
         "--nie-soporte",
-        help=(
-            "Set the NIE support number printed on your document. "
-            "Required only when --prefer-non-qr is used with a NIE identity."
-        ),
+        help=tr("cli.auth.configure.nie_soporte_help"),
     ),
     prefer_non_qr: bool | None = typer.Option(
         None,
         "--prefer-non-qr/--prefer-qr",
-        help=(
-            "Choose how AEAT triggers the Cl@ve app push. "
-            "--prefer-non-qr (default): type DNI/NIE + contraste in the "
-            "browser and get a direct push notification on your phone. "
-            "--prefer-qr: AEAT displays a QR you scan with the Cl@ve app's "
-            "'Scan QR' feature; slightly slower but works when you don't "
-            "have your DNI's expiry date handy. Both paths still require "
-            "you to approve every login on your phone."
-        ),
+        help=tr("cli.auth.configure.prefer_non_qr_help"),
     ),
     set_default: bool = typer.Option(
         True,
         "--set-default/--no-set-default",
-        help="Also set AEAT_AUTH_PROVIDER=<provider> so `aeat auth login` picks this provider by default.",
+        help=tr("cli.auth.configure.set_default_help"),
     ),
     non_interactive: bool = typer.Option(
         False,
         "--non-interactive",
-        help="Never prompt. Fail if a required value is missing.",
+        help=tr("cli.auth.configure.non_interactive_help"),
     ),
 ) -> None:
     """Write Cl@ve Móvil configuration to ``env/.env`` idempotently.
@@ -705,18 +676,18 @@ def configure(
     """
     kind = _parse_kind(provider)
     if kind is not AuthProviderKind.CLAVE_MOVIL:
-        raise typer.BadParameter(tr("auth.init.t_549784"))
+        raise typer.BadParameter(tr("cli.auth.init.errors.provider_not_supported", provider=provider))
 
     settings = _load_settings()
     env_file = _resolve_env_file(settings)
 
     if dni_nie is None and not non_interactive:
-        _CONSOLE.print(tr("auth.init.t_201308"))
+        _CONSOLE.print(tr("cli.auth.init.errors.clave_movil_config_purpose"))
 
     if dni_nie is None:
         if non_interactive:
-            raise typer.BadParameter(tr("auth.init.t_833547"))
-        dni_nie = typer.prompt(tr("auth.init.t_834743")).strip().upper()
+            raise typer.BadParameter(tr("cli.auth.init.errors.dni_nie_required"))
+        dni_nie = typer.prompt(tr("cli.auth.init.prompts.dni_nie")).strip().upper()
     else:
         dni_nie = dni_nie.strip().upper()
 
@@ -730,12 +701,12 @@ def configure(
     if resolved_prefer_non_qr:
         if identity_kind == "DNI" and not dni_fecha:
             if non_interactive:
-                raise typer.BadParameter(tr("auth.init.t_386762"))
-            dni_fecha = typer.prompt(tr("auth.init.t_958045")).strip()
+                raise typer.BadParameter(tr("cli.auth.init.errors.dni_fecha_required"))
+            dni_fecha = typer.prompt(tr("cli.auth.init.prompts.dni_fecha")).strip()
         if identity_kind == "NIE" and not nie_soporte:
             if non_interactive:
-                raise typer.BadParameter(tr("auth.init.t_479907"))
-            nie_soporte = typer.prompt(tr("auth.init.t_944378")).strip()
+                raise typer.BadParameter(tr("cli.auth.init.errors.nie_soporte_required"))
+            nie_soporte = typer.prompt(tr("cli.auth.init.prompts.nie_soporte")).strip()
 
     from ....core.env_io import write_env_vars
 
@@ -759,42 +730,49 @@ def configure(
     # sentence confirms what the CLI saved and where.
     human_terms: list[str] = []
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_NIE"):
-        human_terms.append(tr("auth.init.t_994186"))
+        human_terms.append(tr("cli.auth.init.terms.dni_nie"))
     if mapping.get("AEAT_CLAVE_MOVIL_DNI_FECHA"):
-        human_terms.append(tr("auth.init.t_316510"))
+        human_terms.append(tr("cli.auth.init.terms.dni_fecha"))
     if mapping.get("AEAT_CLAVE_MOVIL_NIE_SOPORTE"):
-        human_terms.append(tr("auth.init.t_770369"))
+        human_terms.append(tr("cli.auth.init.terms.nie_soporte"))
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "true":
-        human_terms.append(tr("auth.init.t_912253"))
+        human_terms.append(tr("cli.auth.init.terms.direct_push"))
     if mapping.get("AEAT_CLAVE_PREFER_NON_QR") == "false":
-        human_terms.append(tr("auth.init.t_725014"))
+        human_terms.append(tr("cli.auth.init.terms.qr_code"))
     if mapping.get("AEAT_AUTH_PROVIDER"):
-        human_terms.append(tr("auth.init.t_542731"))
+        human_terms.append(tr("cli.auth.init.terms.default_provider"))
+
+    human_list: str
     if len(human_terms) == 1:
-        human_terms[0]
+        human_list = human_terms[0]
     else:
-        and_word = tr("auth.init.t_497666")
-        ", ".join(human_terms[:-1]) + and_word + human_terms[-1]
-    _CONSOLE.print("[green]" + tr("auth.init.t_637763") + "[/green]\n" + tr("auth.init.t_370466"))
+        and_word = tr("cli.auth.init.labels.and")
+        human_list = ", ".join(human_terms[:-1]) + and_word + human_terms[-1]
+    _CONSOLE.print(
+        "[green]"
+        + tr("cli.auth.init.saved_config", human_list=human_list, env_file=env_file)
+        + "[/green]\n"
+        + tr("cli.auth.init.login_instruction")
+    )
 
 
-@app.command("login", help="Authenticate with the selected provider and cache the session.")
+@app.command("login", help=tr("cli.auth.login.help"))
 def login(
     provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
-        help="Auth provider kind (certificate, clave_movil).",
+        help=tr("cli.auth.login.provider_help"),
     ),
     non_interactive: bool = typer.Option(
         False,
         "--non-interactive",
-        help="Refuse to run providers that need a human in the loop (Cl@ve Móvil).",
+        help=tr("cli.auth.login.non_interactive_help"),
     ),
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit JSON instead of a human confirmation line.",
+        help=tr("cli.auth.login.json_help"),
     ),
 ) -> None:
     """Run the login flow for one provider."""
@@ -802,7 +780,7 @@ def login(
     kind = _resolve_kind(settings, _parse_kind(provider) if provider else None)
 
     if non_interactive and kind in _registry.INTERACTIVE_KINDS:
-        msg = tr("auth.init.t_273946")
+        msg = tr("cli.auth.init.errors.interactive_required", kind=kind.value)
         if json_output or json_output_requested():
             raise CliRefusedBoundaryError(msg)
         _CONSOLE.print(f"[red]{msg}[/red]")
@@ -820,7 +798,7 @@ def login(
         logger.error("login: authentication failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print("[red]" + tr("auth.init.t_938392") + "[/red]")
+        _CONSOLE.print("[red]" + tr("cli.auth.init.errors.auth_failed", exc=exc) + "[/red]")
         raise typer.Exit(code=1) from exc
 
     logger.info("login: authenticated via %s", kind.value)
@@ -843,24 +821,33 @@ def login(
     now = datetime.now(UTC)
     remaining_seconds = int((session.idle_deadline - now).total_seconds())
     if remaining_seconds <= 0:
-        _CONSOLE.print("[yellow]" + tr("auth.init.t_092134") + "[/yellow]")
+        _CONSOLE.print("[yellow]" + tr("cli.auth.init.errors.session_stale") + "[/yellow]")
     else:
-        max(1, remaining_seconds // 60)
-        _CONSOLE.print("[green]" + tr("auth.init.t_941077") + "[/green]")
+        remaining_minutes = max(1, remaining_seconds // 60)
+        _CONSOLE.print(
+            "[green]"
+            + tr(
+                "cli.auth.init.errors.signed_in",
+                nif=session.identity_nif,
+                label=_registry.get_entry(kind).label,
+                remaining=remaining_minutes,
+            )
+            + "[/green]"
+        )
 
 
-@app.command("status", help="Show whether a session is active and how much idle TTL remains.")
+@app.command("status", help=tr("cli.auth.status.help"))
 def status(
     provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
-        help="Only report the session for this provider kind.",
+        help=tr("cli.auth.status.provider_help"),
     ),
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit JSON instead of a single human-readable line.",
+        help=tr("cli.auth.status.json_help"),
     ),
 ) -> None:
     """Read persisted session metadata and render the TTL view."""
@@ -914,19 +901,19 @@ async def _do_whoami(settings: Settings, kind: AuthProviderKind) -> tuple[AeatSe
 
 @app.command(
     "whoami",
-    help="Probe AEAT with the cached session and confirm it unlocks a live surface.",
+    help=tr("cli.auth.whoami.help"),
 )
 def whoami(
     provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
-        help="Use only the session for this provider kind.",
+        help=tr("cli.auth.whoami.provider_help"),
     ),
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit JSON with the probe result instead of the human line.",
+        help=tr("cli.auth.whoami.json_help"),
     ),
 ) -> None:
     """Re-open the cached session and hit AEAT Sede to confirm it still works."""
@@ -958,7 +945,7 @@ def whoami(
         logger.error("whoami: probe failed for provider %s", kind.value, exc_info=True)
         if json_output or json_output_requested():
             raise
-        _CONSOLE.print("[red]" + tr("auth.init.t_908949") + "[/red]")
+        _CONSOLE.print("[red]" + tr("cli.auth.init.errors.probe_failed", exc=exc) + "[/red]")
         raise typer.Exit(code=1) from exc
 
     if json_output or json_output_requested():
@@ -982,35 +969,38 @@ def whoami(
         emit_json_success("auth whoami", payload)
         return
 
+    label = _registry.get_entry(kind).label
     if assertion.is_valid:
-        _CONSOLE.print("[green]" + tr("auth.init.t_888711") + "[/green]")
+        _CONSOLE.print(
+            "[green]" + tr("cli.auth.init.errors.accepted_cached", nif=refreshed.identity_nif, label=label) + "[/green]"
+        )
     else:
-        _CONSOLE.print("[yellow]" + tr("auth.init.t_906241") + "[/yellow]")
+        _CONSOLE.print("[yellow]" + tr("cli.auth.init.errors.stale_or_revoked", label=label) + "[/yellow]")
         raise typer.Exit(code=1)
 
 
-@app.command("logout", help="Clear the cached storage_state for the active (or selected) provider.")
+@app.command("logout", help=tr("cli.auth.logout.help"))
 def logout(
     provider: str | None = typer.Option(
         None,
         "--provider",
         "-p",
-        help="Only clear the session for this provider kind.",
+        help=tr("cli.auth.logout.provider_help"),
     ),
     all_providers: bool = typer.Option(
         False,
         "--all",
-        help="Clear every registered provider's cached session.",
+        help=tr("cli.auth.logout.all_help"),
     ),
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit JSON with the list of removed paths.",
+        help=tr("cli.auth.logout.json_output_help"),
     ),
 ) -> None:
     """Delete the storage-state + metadata pair for the selected provider(s)."""
     if all_providers and provider is not None:
-        raise typer.BadParameter(tr("auth.init.t_950022"))
+        raise typer.BadParameter(tr("cli.auth.init.errors.missing_provider_or_all"))
     settings = _load_settings()
 
     removed: list[Path] = []
@@ -1067,15 +1057,15 @@ def logout(
         return
 
     if not removed:
-        _CONSOLE.print(tr("auth.init.t_594919"))
+        _CONSOLE.print(tr("cli.auth.init.errors.no_session_found"))
         return
 
     labels = [_registry.get_entry(k).label for k in cleared_kinds]
     if len(labels) == 1:
-        _CONSOLE.print(tr("auth.init.t_186277"))
+        _CONSOLE.print(tr("cli.auth.init.errors.signed_out", label=labels[0]))
     else:
-        ", ".join(labels)
-        _CONSOLE.print(tr("auth.init.t_979591"))
+        joined = ", ".join(labels)
+        _CONSOLE.print(tr("cli.auth.init.errors.signed_out_many", joined=joined))
 
 
 __all__ = ["app"]

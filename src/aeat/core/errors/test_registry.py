@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ...entrypoints.cli._i18n import tr
 from ..access_gate import LiveSubmitForbiddenError
 from ..observability._errors import RunContextMissingError
 from . import (
@@ -21,9 +22,7 @@ def _sample_code(code: str) -> ErrorCode:
     return ErrorCode(
         code=code,
         category=ErrorCategory.ERROR,
-        default_message_es="Error de ejemplo.",
-        default_message_en="Sample error.",
-        default_message_hu="Minta hiba.",
+        message_key="errors.error.sample_error",
         default_suggestion="aeat modelos list",
         retryable=False,
         runbook_id=None,
@@ -41,9 +40,7 @@ def test_duplicate_registration_raises_clear_error() -> None:
     duplicate = ErrorCode(
         code=existing.code,
         category=ErrorCategory.FAIL,
-        default_message_es="Error duplicado.",
-        default_message_en="Duplicate error.",
-        default_message_hu="Duplikalt hiba.",
+        message_key="errors.fail.duplicate_error",
         default_suggestion=None,
         retryable=False,
         runbook_id=None,
@@ -52,16 +49,20 @@ def test_duplicate_registration_raises_clear_error() -> None:
         register(duplicate)
 
 
-def test_default_messages_do_not_leak_sphinx_role_markup() -> None:
+def test_messages_do_not_leak_sphinx_role_markup() -> None:
+    """Verify that resolved messages do not contain Sphinx markup roles."""
     for code in ERROR_REGISTRY.values():
-        assert ":mod:" not in code.default_message_en
-        assert ":meth:" not in code.default_message_en
-        assert ":func:" not in code.default_message_en
-        assert ":class:" not in code.default_message_en
-        assert ":data:" not in code.default_message_en
+        for locale in ("es", "en", "ca", "hu"):
+            message = tr(code.message_key, locale=locale)
+            assert ":mod:" not in message
+            assert ":meth:" not in message
+            assert ":func:" not in message
+            assert ":class:" not in message
+            assert ":data:" not in message
 
 
-def test_default_messages_do_not_contain_known_broken_fragments() -> None:
+def test_messages_do_not_contain_known_broken_fragments() -> None:
+    """Verify that resolved messages do not contain known broken fragments."""
     disallowed_fragments = (
         "Error de no configured proveedor.",
         "No configured szolgaltato hiba.",
@@ -88,8 +89,8 @@ def test_default_messages_do_not_contain_known_broken_fragments() -> None:
         "Munkafolyamat aborted hiba.",
     )
     for code in ERROR_REGISTRY.values():
-        messages = (code.default_message_es, code.default_message_en, code.default_message_hu)
-        for message in messages:
+        for locale in ("es", "en", "ca", "hu"):
+            message = tr(code.message_key, locale=locale)
             for fragment in disallowed_fragments:
                 assert fragment not in message
 

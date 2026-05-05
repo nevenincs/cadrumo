@@ -7,9 +7,10 @@ mirroring the pattern established by :mod:`aeat.domain.normatives._schema`.
 
 Closed catalogues (:class:`VATCategory`, :class:`EUMemberState`,
 :class:`VATRateKind`, :class:`VatCitationSource`) are :class:`enum.StrEnum`
-subclasses. Multilingual fields use :class:`aeat.core.i18n.str` and
-the authoritative Spanish (``es``) key is enforced at construction time on
-every :class:`VATRegulation`.
+subclasses. Multilingual fields use :class:`aeat.core.i18n.tr` to ensure
+the internationalization engine can dynamically resolve the correct locale
+at runtime for UI labels and descriptions. Legal quotes remain Spanish-
+authoritative.
 """
 
 from __future__ import annotations
@@ -27,6 +28,8 @@ from pydantic import (
     StringConstraints,
     model_validator,
 )
+
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 
 class VATCategory(StrEnum):
@@ -120,25 +123,11 @@ _ArticleRef = Annotated[
 """Free-form article reference shape, for example ``Art. 91.Uno.2.1º``."""
 
 
-_SpanishQuote = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=2048),
-]
-"""Non-empty Spanish quote extracted from, or paraphrased for, the citation."""
-
-
 _BoeOrDirectiveRef = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
 ]
 """Free-form reference to the BOE entry or Council Directive backing a rate."""
-
-
-_ModeloRef = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, pattern=r"^[0-9]{3}$"),
-]
-"""AEAT modelo number shape — three ASCII digits, for example ``303``."""
 
 
 _NormativeId = Annotated[
@@ -160,18 +149,18 @@ _ManualRef = Annotated[
 """Free-form reference to a Manual práctico IVA rule id or section reference."""
 
 
-def _require_spanish(translatable: str, field_name: str) -> None:
-    """Assert a :class:`aeat.core.i18n.str` carries the ``es`` key.
+def _require_translatable(translatable: tr, field_name: str) -> None:
+    """Assert a :class:`aeat.core.i18n.tr` carries a non-empty translation key.
 
     Args:
         translatable: The translatable mapping under validation.
         field_name: Dotted field name surfaced in the error message.
 
     Raises:
-        :exc:`ValueError`: If the ``es`` key is missing or empty.
+        :exc:`ValueError`: If the translation key is missing or empty.
     """
     if not translatable:
-        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
+        raise ValueError(f"{field_name}: missing authoritative translation key")
 
 
 class _VatStrictFrozen(BaseModel):
@@ -242,18 +231,17 @@ class VATRate(_VatStrictFrozen):
 class VatCitation(_VatStrictFrozen):
     """A legal or regulatory citation backing a :class:`VATRegulation`.
 
-    The :attr:`quoted_text_es` field must be a non-empty Spanish string. It
-    may be a faithful paraphrase of the article's statutory language when a
-    verbatim extract is not practical; the paraphrase must match the
-    article's subject matter and preserve the operative fiscal meaning.
-    Auditability relies on the combination of :attr:`source`, :attr:`article`
-    and :attr:`quoted_text_es`.
+    The :attr:`quoted_text` field must be an authoritative translation key
+    pointing to a non-empty Spanish string. It may be a faithful paraphrase
+    of the article's statutory language when a verbatim extract is not
+    practical. Auditability relies on the combination of :attr:`source`,
+    :attr:`article` and :attr:`quoted_text`.
 
     Attributes:
         source: Legal source of the citation.
         article: Article reference, for example ``Art. 91.Uno.2.1º``.
         url: Optional deep link to the cited article.
-        quoted_text_es: Non-empty Spanish quote or faithful paraphrase.
+        quoted_text: Non-empty Spanish quote or faithful paraphrase.
         retrieval_date: Date the citation was retrieved or last reviewed.
     """
 
@@ -265,7 +253,7 @@ class VatCitation(_VatStrictFrozen):
         default=None,
         description="Optional deep link to the cited article.",
     )
-    quoted_text_es: _SpanishQuote = Field(
+    quoted_text: tr = Field(
         description="Non-empty Spanish quote (or faithful paraphrase).",
     )
     retrieval_date: date = Field(
@@ -279,17 +267,15 @@ class VATRegulation(_VatStrictFrozen):
     Every regulation carries at least one :class:`VatCitation`. The
     substrate-level invariant enforced by
     :func:`aeat.domain.vat.verify_catalogue` additionally requires every
-    shipped regulation to cite real Ley 37/1992 articles so downstream tools
+    shipped regulation to cite real legal articles so downstream tools
     can surface the legal backing of any classification.
 
     Attributes:
         category: The VAT situation codified by this rule.
-        label: Short human-readable label.
-        description: One-paragraph plain-language description.
-        triggers_when: Plain-language description of when this rule fires.
-        iva_treatment: Plain-language description of the fiscal treatment.
-        declares_in_modelos: AEAT modelo numbers (for example
-            ``("303", "349")``) where this rule appears.
+        label: Short human-readable label key.
+        description: One-paragraph plain-language description key.
+        triggers_when: Plain-language description of when this rule fires (key).
+        iva_treatment: Plain-language description of the fiscal treatment (key).
         requires_reverse_charge: Whether the rule triggers
             *inversión del sujeto pasivo*.
         requires_supplier_vat_id: Whether a supplier NIF-VAT is mandatory.
@@ -302,16 +288,13 @@ class VATRegulation(_VatStrictFrozen):
     """
 
     category: VATCategory = Field(description="The VAT situation codified by this rule.")
-    label: str = Field(description="Short human-readable label.")
-    description: str = Field(description="One-paragraph plain-language description.")
-    triggers_when: str = Field(
-        description="Plain-language description of when this rule fires.",
+    label: tr = Field(description="Short human-readable label key.")
+    description: tr = Field(description="One-paragraph plain-language description key.")
+    triggers_when: tr = Field(
+        description="Plain-language description of when this rule fires (key).",
     )
-    iva_treatment: str = Field(
-        description="Plain-language description of the fiscal treatment.",
-    )
-    declares_in_modelos: tuple[_ModeloRef, ...] = Field(
-        description="AEAT modelo numbers (e.g. ('303', '349')) where this appears.",
+    iva_treatment: tr = Field(
+        description="Plain-language description of the fiscal treatment (key).",
     )
     requires_reverse_charge: bool = Field(
         description="Whether the rule triggers inversión del sujeto pasivo.",
@@ -335,11 +318,11 @@ class VATRegulation(_VatStrictFrozen):
 
     @model_validator(mode="after")
     def _validate(self) -> VATRegulation:
-        """Enforce the multilingual-Spanish and at-least-one-citation invariants."""
-        _require_spanish(self.label, f"VATRegulation[{self.category.value}].label")
-        _require_spanish(self.description, f"VATRegulation[{self.category.value}].description")
-        _require_spanish(self.triggers_when, f"VATRegulation[{self.category.value}].triggers_when")
-        _require_spanish(self.iva_treatment, f"VATRegulation[{self.category.value}].iva_treatment")
+        """Enforce the translation-key and at-least-one-citation invariants."""
+        _require_translatable(self.label, f"VATRegulation[{self.category.value}].label")
+        _require_translatable(self.description, f"VATRegulation[{self.category.value}].description")
+        _require_translatable(self.triggers_when, f"VATRegulation[{self.category.value}].triggers_when")
+        _require_translatable(self.iva_treatment, f"VATRegulation[{self.category.value}].iva_treatment")
         if not self.citations:
             raise ValueError(f"VATRegulation[{self.category.value}]: at least one VatCitation is required")
         return self

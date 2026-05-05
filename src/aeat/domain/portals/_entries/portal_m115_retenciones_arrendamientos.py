@@ -27,9 +27,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m115_retenciones_arrendamientos.label_841139",
-    purpose_es=(
-        "Autoliquidación periódica de retenciones e ingresos a cuenta "
-        "sobre rendimientos de arrendamiento de inmuebles urbanos."
-    ),
+    purpose="entries.portal_m115_retenciones_arrendamientos.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""

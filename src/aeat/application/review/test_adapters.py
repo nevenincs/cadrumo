@@ -41,6 +41,7 @@ from ..filing import (
     FilingValidationFinding,
     FilingValue,
     FilingValueKind,
+    build_runtime_schema_provider,
 )
 from . import (
     FindingReviewItem,
@@ -72,6 +73,10 @@ def _build_settings(tmp_path: Path) -> Settings:
 
 def _summary(text: str = "demo") -> tr:
     return tr("translation")
+
+
+def _schema_version(modelo: str = "130") -> str:
+    return build_runtime_schema_provider(filing_year=2026, period="1T").get_subview(modelo).schema_version
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -304,7 +309,7 @@ def _draft(
         findings=findings,
         created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
-        schema_version="filing-schema-0.1.0",
+        schema_version=_schema_version(modelo),
     )
 
 
@@ -363,8 +368,8 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
-    summary_en = items[0].summary
-    assert "DRAFT" in summary_en
+    summary_key = items[0].summary
+    assert summary_key == "review.adapters.t_397611"
 
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
@@ -385,8 +390,8 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
     assert items[0].draft_id == "d_stale"
-    summary_en = items[0].summary
-    assert "APPROVAL_STALE" in summary_en
+    summary_key = items[0].summary
+    assert summary_key == "review.adapters.t_787894"
     assert items[0].drill_command.startswith("aeat review show ")
 
 

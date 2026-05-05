@@ -1,6 +1,6 @@
-"""Per-modelo synthetic PDF generators (EPIC #305 cluster C scaffolding).
+"""Per-modelo synthetic PDF generators.
 
-Each concrete ``modelo_N_generator.py`` module (landed by clusters D and
-F) exposes a ``generate(params) -> tuple[bytes, GroundTruth]`` function.
-The shared rendering primitives live in ``_generator_shared.py``.
+Each concrete ``modelo_N_generator.py`` module exposes a
+``generate(params) -> tuple[bytes, GroundTruth]`` function. The shared
+rendering primitives live in ``_generator_shared.py``.
 """

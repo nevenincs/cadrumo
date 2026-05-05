@@ -35,6 +35,7 @@ from ..filing import (
     FilingValidationFinding,
     FilingValue,
     FilingValueKind,
+    build_runtime_schema_provider,
 )
 from . import (
     ReviewItemKind,
@@ -48,6 +49,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 def _summary(text: str = "demo") -> tr:
     return tr("translation")
+
+
+def _schema_version(modelo: str = "130") -> str:
+    return build_runtime_schema_provider(filing_year=2026, period="1T").get_subview(modelo).schema_version
 
 
 def _build_settings(tmp_path: Path) -> Settings:
@@ -138,7 +143,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         findings=(finding,),
         created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
-        schema_version="filing-schema-0.1.0",
+        schema_version=_schema_version(),
     )
     from ...domain.filing import FilingDraftRepository
 

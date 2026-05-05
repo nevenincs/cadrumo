@@ -32,9 +32,7 @@ _log = get_logger(__name__)
 # but the ``href`` is already valid as a GET with session cookies).
 _EXPEDIENTE_LINK_HANDLERS: Final[tuple[str, ...]] = ("lanzarTewvForm",)
 
-# Modelo-code pattern inside a category label, e.g.
-#   "Modelo 100- Modelo 102. IRPF. Declaración y documento..."
-#   "Modelo 303. IVA. Autoliquidación..."
+# Modelo-code pattern inside a category label.
 _MODELO_IN_LABEL: Final[re.Pattern[str]] = re.compile(r"\bModelo\s+(?P<modelo>\d{2,4})\b")
 
 # Per-year IRPF endpoint: /wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>

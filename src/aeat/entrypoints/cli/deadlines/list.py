@@ -20,11 +20,11 @@ _CONSOLE = Console()
 
 
 def list_schedule(
-    year: int = typer.Option(..., "--year", help="Fiscal year to compute the schedule for."),
+    year: int = typer.Option(..., "--year", help=tr("cli.deadlines.list.year_help")),
     profile: Path | None = typer.Option(
         None,
         "--profile",
-        help="Path to a JSON AutonomoProfile (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        help=tr("cli.deadlines.list.profile_help"),
     ),
 ) -> None:
     """Print the full :class:`aeat.domain.deadlines.Schedule` for the given year."""
@@ -33,12 +33,12 @@ def list_schedule(
     engine = build_engine()
     schedule = engine.compute(loaded_profile, year)
 
-    table = Table(title=f"filing schedule {year}", header_style="bold")
-    table.add_column("modelo", style="cyan")
-    table.add_column("period")
-    table.add_column("opens_on")
-    table.add_column("closes_on")
-    table.add_column("status")
+    table = Table(title=tr("cli.deadlines.list.table_title", year=year), header_style="bold")
+    table.add_column(tr("cli.deadlines.list.modelo_col"), style="cyan")
+    table.add_column(tr("cli.deadlines.list.period_col"))
+    table.add_column(tr("cli.deadlines.list.opens_on_col"))
+    table.add_column(tr("cli.deadlines.list.closes_on_col"))
+    table.add_column(tr("cli.deadlines.list.status_col"))
     for obligation in schedule.obligations:
         table.add_row(
             obligation.modelo,
@@ -48,6 +48,6 @@ def list_schedule(
             obligation.status.value,
         )
     _CONSOLE.print(table)
-    len(schedule.obligations)
-    label = tr("deadlines.list.t_125112")
-    _CONSOLE.print(f"[dim]{label}[/dim]")
+    count = len(schedule.obligations)
+    label = tr("cli.deadlines.list.labels.tax_deadlines")
+    _CONSOLE.print(f"[dim]{count} {label}[/dim]")

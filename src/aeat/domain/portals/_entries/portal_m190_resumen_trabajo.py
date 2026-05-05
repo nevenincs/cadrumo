@@ -26,8 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m190_resumen_trabajo.label_059630",
-    purpose_es=(
-        "Resumen anual de retenciones e ingresos a cuenta sobre trabajo y actividades (complementa al Modelo 111)."
-    ),
+    purpose="entries.portal_m190_resumen_trabajo.purpose",
 )
 """Portal entry for Modelo 190 (annual summary of labour withholdings)."""

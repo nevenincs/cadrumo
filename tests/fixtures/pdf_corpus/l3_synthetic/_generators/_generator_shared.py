@@ -54,9 +54,9 @@ class CasillaBox:
 def format_amount(value: Decimal, *, thousands_sep: str = ".") -> str:
     """Format ``value`` as an AEAT-style Spanish amount.
 
-    Wave 56 H1: accepts a ``thousands_sep`` opt-in parameter so the
-    synthetic generator can exercise the wave-51 NBSP fix end-to-end.
-    AEAT per UNE 82100 may use ``"."`` (canonical), ``"\\xa0"``
+    Accepts a ``thousands_sep`` opt-in parameter so the synthetic
+    generator can exercise NBSP handling end-to-end. AEAT per UNE 82100
+    may use ``"."`` (canonical), ``"\\xa0"``
     (U+00A0 NBSP) or ``"\\u202f"`` (U+202F narrow NBSP) between
     thousand groups. Default stays ``"."`` — existing fixtures and
     tests continue to match the pre-wave-56 behaviour.
@@ -108,16 +108,15 @@ def draw_casilla_box(
     x coordinates) dodges pdfplumber's reading-order heuristic which
     interleaves columns unreliably on tight A4 layouts. Real AEAT
     declaración PDFs render boxed values in their own column; the
-    extractor's bbox-anchored primitive (cluster D ADR §5 stack) is
-    the MVP's fallback against the visual layout.
+    extractor can use bbox-anchored parsing against the visual layout.
 
     Blank values still render the casilla label so extractors can
     distinguish ``not-present`` (no label emitted) from ``blank``
     (label emitted, no value).
 
-    Wave 61d: forwards ``thousands_sep`` to :func:`format_amount` so
-    synthetic fixtures can exercise the NBSP / narrow-NBSP label-regex
-    path (wave 51 H1) end-to-end, not just via string-level tests.
+    The ``thousands_sep`` option lets synthetic fixtures exercise the
+    NBSP / narrow-NBSP label-regex path end-to-end, not just via
+    string-level tests.
     """
     y = A4_HEIGHT - box.y_mm * mm
     canvas.setFont(VALUE_FONT, VALUE_FONT_SIZE)

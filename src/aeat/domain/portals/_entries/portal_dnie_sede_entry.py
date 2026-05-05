@@ -20,6 +20,6 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.DNIE,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_dnie_sede_entry.label_508736",
-    purpose_es="Acceso mediante DNI electrónico a la Sede; reutiliza la pasarela de certificado.",
+    purpose="entries.portal_dnie_sede_entry.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the DNIe Sede entry page."""

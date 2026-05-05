@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from ._legal import verify_legal_catalogue
 from ._loader import load_registry_tree
 from ._schema import LegalReference, RegistryCatalogues, SourceReference
 from ._sources import verify_source_catalogue, verify_source_file
+from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -22,6 +24,47 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _catalogues() -> RegistryCatalogues:
     _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     return catalogues
+
+
+def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+
+    assert modelos
+    assert catalogues.legal
+    assert catalogues.sources
+    verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
+    verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
+    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    for modelo in modelos:
+        validator.validate_modelo(modelo)
+
+
+def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    checked: list[str] = []
+
+    for source in catalogues.sources.values():
+        path = Path(source.corpus_path)
+        parts = path.parts
+        if len(parts) < 5 or parts[:3] != ("corpus", "aeat_official", "disenos_registro"):
+            continue
+        modelo_dir = PROJECT_ROOT.joinpath(*parts[:4])
+        manifest_path = modelo_dir / "manifest.json"
+        assert manifest_path.is_file(), f"{source.id} missing corpus manifest {manifest_path}"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        stored_path = Path(*parts[4:]).as_posix()
+        artefact = next(
+            (item for item in manifest["artefacts"] if item["stored_path"] == stored_path),
+            None,
+        )
+
+        assert artefact is not None, f"{source.id} missing manifest artefact for {stored_path}"
+        assert source.sha256 == artefact["sha256"], source.id
+        assert source.bytes == artefact["bytes"], source.id
+        assert source.source_url == artefact["url"], source.id
+        checked.append(source.id)
+
+    assert checked
 
 
 def _legal_reference(
@@ -105,7 +148,7 @@ def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked) -> None:
         ref_id=f"{blocked.source}:{blocked.article}",
         kind=blocked.source,
         article=blocked.article,
-        notes=blocked.role_substring_es,
+        notes=blocked.role_substring,
     )
     text = " ".join(part for part in (reference.section, reference.notes) if part)
 
@@ -118,7 +161,7 @@ def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
     blocked = find_known_bad("ley", "77", "cuota integra autonomica")
 
     assert blocked is not None
-    assert blocked.role_substring_es == "cuota íntegra autonómica"
+    assert blocked.role_substring == "cuota íntegra autonómica"
 
 
 def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
@@ -136,3 +179,35 @@ def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
     reference = _legal_reference()
 
     verify_legal_catalogue({reference.id: reference})
+
+
+def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text('{"articulos": [{"numero": "110", "text_es": "other legal text"}]}', encoding="utf-8")
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
+            "required_text": ("20 por ciento del rendimiento neto",),
+        }
+    )
+
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
+    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text(
+        '{"articulos": [{"numero": "110", "text_es": "20 por ciento del rendimiento neto"}]}',
+        encoding="utf-8",
+    )
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
+            "required_text": ("20 por ciento del rendimiento neto",),
+        }
+    )
+
+    verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)

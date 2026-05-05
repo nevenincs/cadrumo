@@ -14,7 +14,6 @@ from . import (
     ManualCatalogue,
     ManualId,
     ManualPart,
-    RuleKind,
     find_rules,
     load_catalogue,
     load_manual,
@@ -50,8 +49,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
     section_payload = {
         "section_id": "sec1",
         "chapter_id": "cap1",
-        "title": {"es": "Régimen general"},
-        "summary": {"es": "Resumen"},
+        "title": "Régimen general",
+        "summary": "Resumen",
         "prose": [{"paragraph_id": "p1", "text": "Texto", "page": 12}],
         "rules": [
             {
@@ -61,12 +60,12 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 "part": "single",
                 "chapter_id": "cap1",
                 "section_id": "sec1",
-                "kind": "obligation",
-                "statement": {"es": "Regla IVA", "en": "VAT rule"},
+                "kind": "formal_obligation",
+                "statement": "Regla IVA",
                 "applies_when": None,
                 "references_casillas": ["MODELO_303:01"],
                 "references_sections": [],
-                "references_legal_acts": ["Ley 37/1992"],
+                "references_legal_acts": ["LEY_37_1992|art. 1"],
                 "source": {
                     "manual_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
                     "page": 12,
@@ -97,8 +96,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
     chapters_payload = [
         {
             "chapter_id": "cap1",
-            "title": {"es": "Capítulo 1"},
-            "summary": {"es": "Introducción"},
+            "title": "Capítulo 1",
+            "summary": "Introducción",
             "sections": [
                 {
                     "section_id": "sec1",
@@ -113,8 +112,8 @@ def _seed_iva(tmp_path: Path) -> Settings:
         "manual_id": "iva",
         "year": 2025,
         "part": "single",
-        "title": {"es": "Manual práctico IVA 2025"},
-        "summary": {"es": "Resumen"},
+        "title": "Manual práctico IVA 2025",
+        "summary": "Resumen",
         "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
         "source_html_url": None,
         "fetched_at": "2026-04-12T00:00:00Z",
@@ -148,7 +147,7 @@ class TestLoader:
             part=ManualPart.PARTE_1,
             settings=settings,
         )
-        assert path == tmp_path / "renta" / "2025" / "parte1"
+        assert path == tmp_path / "renta" / "2025" / "part1"
 
     def test_load_manual_happy_path(self, tmp_path: Path) -> None:
         """A seeded IVA manual loads and reports one chapter."""
@@ -170,8 +169,8 @@ class TestLoader:
         bad_section = {
             "section_id": "sec1",
             "chapter_id": "cap1",
-            "title": {"en": "English only"},
-            "summary": {"es": "Resumen"},
+            "title": "   ",
+            "summary": "Resumen",
             "prose": [],
             "rules": [],
             "references_sections": [],
@@ -208,7 +207,7 @@ class TestLoader:
         catalogue = load_catalogue([(ManualId.IVA, 2025, ManualPart.SINGLE)], settings=settings)
         assert isinstance(catalogue, ManualCatalogue)
         assert len(catalogue) == 1
-        rules = list(find_rules(catalogue, kind=RuleKind.OBLIGATION, settings=settings))
+        rules = list(find_rules(catalogue, kind="formal_obligation", settings=settings))
         assert len(rules) == 1
         assert rules[0].rule_id == "iva-2025-cap1-sec1-rule0001"
 

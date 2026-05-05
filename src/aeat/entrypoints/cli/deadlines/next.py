@@ -24,12 +24,12 @@ def next_obligation(
     year: int = typer.Option(
         date.today().year,
         "--year",
-        help="Fiscal year to compute the schedule for (default: current year).",
+        help=tr("cli.deadlines.next.year_help"),
     ),
     profile: Path | None = typer.Option(
         None,
         "--profile",
-        help="Path to a JSON AutonomoProfile (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        help=tr("cli.deadlines.next.profile_help"),
     ),
 ) -> None:
     """Print the next :class:`aeat.domain.deadlines.FilingObligation` due."""
@@ -39,10 +39,10 @@ def next_obligation(
     schedule = engine.compute(loaded_profile, year)
     obligation = next_deadline(schedule)
     if obligation is None:
-        msg = tr("deadlines.next.t_688927")
+        msg = tr("cli.deadlines.next.labels.no_upcoming")
         _CONSOLE.print(f"[yellow]{msg}[/yellow]")
         raise typer.Exit(code=0)
-    closes_label = tr("deadlines.next.t_744197")
+    closes_label = tr("cli.deadlines.next.labels.closes")
     _CONSOLE.print(
         f"[bold cyan]{obligation.modelo}[/bold cyan] {obligation.period} - "
         f"{closes_label} {obligation.closes_on.isoformat()} ({obligation.status.value})"

@@ -28,6 +28,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m100_renta.label_331643",
-    purpose_es="Presentación de la declaración anual del IRPF (Renta).",
+    purpose="entries.portal_m100_renta.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""

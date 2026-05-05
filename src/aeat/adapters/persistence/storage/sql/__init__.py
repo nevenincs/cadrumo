@@ -1,6 +1,6 @@
 """SQL substrate: ORM, engine, session, repositories, records, and schema setup.
 
-Public surface for the SQLAlchemy-backed relational storage cluster.
+Public surface for the SQLAlchemy-backed relational storage components.
 Re-exports the engine factory (:func:`create_engine_from_settings`,
 :func:`get_engine`, :func:`dispose_engine`), session helpers
 (:func:`get_sessionmaker`, :func:`session_scope`), the Alembic upgrade

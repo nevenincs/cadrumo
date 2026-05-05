@@ -14,6 +14,7 @@ from ._ids import (
     BindingId,
     CasillaId,
     CrossReferenceId,
+    DeadlineWindowId,
     ExportFieldId,
     ExportLayoutId,
     ExtractionProfileId,
@@ -25,6 +26,7 @@ from ._ids import (
     RelationId,
     RevisionId,
     SourceRefId,
+    SupportRemovalDecisionId,
     VerificationExpectationId,
     WorkbookParityRefId,
 )
@@ -44,14 +46,26 @@ DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 
 ReviewStatus = Literal["reviewed", "provisional", "rejected"]
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
+EvidenceTier = Literal[
+    "legal_authority",
+    "official_source_guidance",
+    "executable_parity_evidence",
+    "layout_authority",
+]
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
+SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]
 FormulaOperator = Literal[
     "add",
     "subtract",
     "multiply",
     "divide",
     "percent",
+    "less_than",
+    "less_equal",
+    "greater_than",
+    "greater_equal",
+    "equal",
     "sum",
     "min",
     "max",
@@ -124,6 +138,7 @@ class TemporalApplicability(RegistryModel):
 
 class LegalReference(RegistryModel):
     id: LegalRefId
+    evidence_tier: Literal["legal_authority"]
     authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
     kind: Literal["ley", "real_decreto", "orden", "reglamento", "directiva", "manual", "instruction"]
     corpus_ref: str
@@ -139,6 +154,7 @@ class LegalReference(RegistryModel):
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None
+    required_text: tuple[str, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
@@ -146,11 +162,16 @@ class LegalReference(RegistryModel):
             raise ValueError("legal reference effective_to must be on or after effective_from")
         if self.review_status != "reviewed":
             raise ValueError(f"legal reference {self.id!r} is not reviewed")
+        if any(not item.strip() for item in self.required_text):
+            raise ValueError("legal reference required_text entries must be non-empty")
+        if len(set(self.required_text)) != len(self.required_text):
+            raise ValueError("legal reference required_text entries must be unique")
         return self
 
 
 class SourceReference(RegistryModel):
     id: SourceRefId
+    evidence_tier: EvidenceTier
     authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
     kind: Literal["record_design", "manual_pdf", "instructions", "xsd", "dictionary", "form_spec"]
     corpus_path: str
@@ -182,27 +203,47 @@ class SourceReference(RegistryModel):
         return value
 
 
+class SourceCitation(RegistryModel):
+    source_ref: SourceRefId
+    required_text: SourceCitationText
+
+    @field_validator("required_text")
+    @classmethod
+    def _required_text_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not item.strip() for item in value):
+            raise ValueError("source citation required_text entries must be non-empty")
+        if len(set(value)) != len(value):
+            raise ValueError("source citation required_text entries must be unique")
+        return value
+
+
 class ExtractionProfileDefinition(RegistryModel):
     id: ExtractionProfileId
     surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
     artefact_kind: str
+    accepted_artefact_kinds: tuple[
+        Literal["submitted_file", "declaration_pdf", "justificante_pdf", "official_workbook"],
+        ...,
+    ] = Field(min_length=1)
     parser: str
     target_casillas: tuple[CasillaId, ...] = Field(min_length=1)
     confidence: Literal["strict", "review_required"]
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
+    failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    @field_validator("target_casillas")
+    @field_validator("accepted_artefact_kinds", "target_casillas")
     @classmethod
-    def _target_casillas_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("extraction profile target_casillas must be unique")
+            raise ValueError("extraction profile tuple entries must be unique")
         return value
 
 
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
+    evidence_tier: EvidenceTier
     surface: Literal["open_simulator", "integration_test_service", "static_official_documentation"]
     guard_policy_id: str
     allowed_hosts: tuple[str, ...] = ()
@@ -216,6 +257,13 @@ class LiveCrossReferenceDecision(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
+        if (
+            self.surface in {"open_simulator", "integration_test_service"}
+            and self.evidence_tier != "executable_parity_evidence"
+        ):
+            raise ValueError(f"cross-reference {self.id!r} live surface requires executable parity evidence")
+        if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
+            raise ValueError(f"cross-reference {self.id!r} static documentation is not executable parity evidence")
         if self.surface in {"open_simulator", "integration_test_service"} and not self.allowed_hosts:
             raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
         if self.surface == "open_simulator" and self.requires_authentication:
@@ -241,6 +289,10 @@ class WorkbookParityReference(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_workbook_reference(self) -> WorkbookParityReference:
+        if self.formula_coverage == "formula_form" and not self.runner_required:
+            raise ValueError(f"workbook parity reference {self.id!r} formula coverage requires a runner")
+        if self.formula_coverage != "formula_form" and self.runner_required:
+            raise ValueError(f"workbook parity reference {self.id!r} runner requires formula coverage")
         if self.runner_required and not self.output_cells:
             raise ValueError(f"workbook parity reference {self.id!r} requires output_cells")
         if self.workbook_source not in self.source_refs:
@@ -251,6 +303,7 @@ class WorkbookParityReference(RegistryModel):
 class VerificationExpectationDefinition(RegistryModel):
     id: VerificationExpectationId
     computed_casillas: tuple[CasillaId, ...]
+    reconciliation_totals: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(default_factory=dict)
     tolerance: DecimalValue
     rounding: str
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
@@ -288,10 +341,77 @@ class ApplicationLinkDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
+class SupportRemovalDecisionDefinition(RegistryModel):
+    id: SupportRemovalDecisionId
+    subject_type: Literal[
+        "export_layout",
+        "extraction_profile",
+        "filing_path",
+        "application_link",
+        "live_cross_reference",
+        "workbook_parity_ref",
+        "verification_expectation",
+        "deadline_window",
+    ]
+    subject_id: str = Field(min_length=1, max_length=160)
+    decision: Literal["remove_from_filing_grade"]
+    reason: Literal[
+        "missing_legal_authority",
+        "missing_official_source",
+        "unsafe_remote_state",
+        "unsupported_official_format",
+        "out_of_scope",
+    ]
+    evidence_note: str = Field(min_length=1, max_length=2048)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
+class DeadlineApplicabilityCondition(RegistryModel):
+    field: Literal[
+        "has_employees",
+        "pays_professionals_with_retencion",
+        "professional_income_withholding_ge_70pct",
+        "pays_rent_with_retencion",
+        "pays_capital_income_with_retencion",
+        "uses_objective_estimation_irpf",
+    ]
+    op: Literal["equals"]
+    value: bool
+    explanation: str = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
+class DeadlineWindowDefinition(RegistryModel):
+    id: DeadlineWindowId
+    filing_year: int = Field(ge=1900, le=2999)
+    period: str = Field(min_length=1)
+    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    opens_on: date
+    closes_on: date
+    payment_cutoff_on: date | None = None
+    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_conditions: tuple[DeadlineApplicabilityCondition, ...] = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> DeadlineWindowDefinition:
+        if self.opens_on > self.closes_on:
+            raise ValueError(f"deadline window {self.id!r} opens_on must not be after closes_on")
+        if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
+            raise ValueError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
+        if self.applicability_condition_mode == "any" and not self.applicability_conditions:
+            raise ValueError(f"deadline window {self.id!r} any-mode requires applicability conditions")
+        return self
+
+
 class FormulaExpression(RegistryModel):
     op: FormulaOperator | None = None
     args: tuple[FormulaExpression, ...] = ()
     casilla: CasillaId | None = None
+    binding: BindingId | None = None
     parameter: ParameterId | None = None
     relation: RelationId | None = None
     literal: DecimalValue | None = None
@@ -300,6 +420,7 @@ class FormulaExpression(RegistryModel):
     def _validate_expression(self) -> FormulaExpression:
         populated_leaves = [
             self.casilla is not None,
+            self.binding is not None,
             self.parameter is not None,
             self.relation is not None,
             self.literal is not None,
@@ -337,15 +458,17 @@ class ParameterDefinition(RegistryModel):
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal["ledger", "invoice", "rental", "vat", "category", "profile", "previous_filing", "manual_input"]
-    selector: Mapping[str, str | int | DecimalValue | bool]
+    selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
 class FormulaDefinition(RegistryModel):
@@ -355,6 +478,7 @@ class FormulaDefinition(RegistryModel):
     rounding: str | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
 class CasillaDefinition(RegistryModel):
@@ -426,9 +550,12 @@ class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
     offset: int | None = Field(default=None, ge=0)
     length: int | None = Field(default=None, gt=0)
-    kind: Literal["literal", "casilla", "computed", "filler", "checksum"]
+    kind: Literal["literal", "casilla", "computed", "draft", "filler", "header", "checksum"]
     casilla: CasillaId | None = None
     literal: str | None = None
+    header_key: str | None = None
+    draft_attribute: Literal["modelo", "period", "profile_tax_id", "filing_year", "period_code"] | None = None
+    computed_key: Literal["envelope_closing_tag"] | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
     padding: Literal["left_zero", "left_space", "right_space", "none"]
@@ -444,6 +571,14 @@ class ExportFieldDefinition(RegistryModel):
             raise ValueError(f"export field {self.id!r} must declare casilla")
         if self.kind == "literal" and self.literal is None:
             raise ValueError(f"export field {self.id!r} must declare literal")
+        if self.kind == "header" and self.header_key is None:
+            raise ValueError(f"export field {self.id!r} must declare header_key")
+        if self.kind == "draft" and self.draft_attribute is None:
+            raise ValueError(f"export field {self.id!r} must declare draft_attribute")
+        if self.kind == "computed" and self.computed_key is None:
+            raise ValueError(f"export field {self.id!r} must declare computed_key")
+        if self.kind == "filler" and self.length is None:
+            raise ValueError(f"export field {self.id!r} filler must declare length")
         return self
 
 
@@ -484,6 +619,8 @@ class ModeloRevision(RegistryModel):
     workbook_parity_refs: tuple[WorkbookParityReference, ...] = ()
     verification_expectations: tuple[VerificationExpectationDefinition, ...] = ()
     application_links: tuple[ApplicationLinkDefinition, ...] = ()
+    deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
+    support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
@@ -528,3 +665,5 @@ class RegistrySnapshot(RegistryModel):
     workbook_parity_refs: Mapping[WorkbookParityRefId, WorkbookParityReference]
     verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
     application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]
+    deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
+    support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]

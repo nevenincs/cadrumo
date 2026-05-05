@@ -73,7 +73,7 @@ class DeclarationCalculateSummary(BaseModel):
     Attributes:
         draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
             the summary was produced from.
-        modelo: AEAT modelo identifier (e.g. ``"130"``, ``"303"``).
+        modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
         status: The draft's :class:`FilingDraftStatus` after validation.
         blocker_count: Number of findings at
@@ -172,7 +172,7 @@ def summarise_calculation(
             surface a silent blocker); rejected
             otherwise. Passing the existing draft findings unchanged
             is acceptable; callers that derive richer hints from
-            upstream catalogues can synthesise their own.
+            upstream catalogues can provide their own.
         narrative: Optional override for the translation key summary
             line. When ``None``, a default narrative key
             is used.

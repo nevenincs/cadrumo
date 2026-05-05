@@ -186,7 +186,7 @@ def bootstrap() -> None:
     settings = Settings()
 
     if not settings.google_cloud_project:
-        console.print("[red]" + tr("cli.bootstrap.t_682855") + "[/]")
+        console.print("[red]" + tr("cli.bootstrap.errors.missing_env") + "[/]")
         raise typer.Exit(code=1)
 
     _logger.info("bootstrap: starting scratch resource provisioning for project %s", settings.google_cloud_project)
@@ -194,8 +194,8 @@ def bootstrap() -> None:
         creds = get_credentials_for_scopes(REQUIRED_ADC_SCOPES)
     except Exception as exc:
         _logger.warning("bootstrap: failed to obtain ADC credentials", exc_info=True)
-        console.print("[red]" + tr("cli.bootstrap.t_078117") + "[/]")
-        console.print(tr("cli.bootstrap.t_524692"))
+        console.print("[red]" + tr("cli.bootstrap.errors.missing_target") + "[/]")
+        console.print(tr("cli.bootstrap.errors.target_instruction"))
         raise typer.Exit(code=1) from exc
 
     drive = build_drive_service(creds)
@@ -209,9 +209,11 @@ def bootstrap() -> None:
         _logger.warning("bootstrap: Drive resource creation failed", exc_info=True)
         text = repr(exc).lower()
         if "storagequotaexceeded" in text or "storage quota" in text:
-            console.print("[yellow]" + tr("cli.bootstrap.t_457020") + "[/]")
-            console.print(tr("cli.bootstrap.t_272641"))
-            console.print(tr("cli.bootstrap.t_047210"))
+            console.print(
+                "[yellow]" + tr("cli.bootstrap.errors.already_bootstrapped", env=settings.google_cloud_project) + "[/]"
+            )
+            console.print(tr("cli.bootstrap.errors.force_instruction"))
+            console.print(tr("cli.bootstrap.errors.destructive_warning"))
             raise typer.Exit(code=2) from exc
         raise
 
@@ -226,21 +228,21 @@ def bootstrap() -> None:
 
     table = Table(title="aeat bootstrap", show_lines=False, header_style="bold")
     table.add_column(
-        tr("cli.bootstrap.t_011711"),
+        tr("cli.bootstrap.labels.active_env"),
         style="cyan",
     )
-    table.add_column(tr("cli.bootstrap.t_673036"), style="white", overflow="fold")
+    table.add_column(tr("cli.bootstrap.labels.active_target"), style="white", overflow="fold")
     table.add_row(
-        tr("cli.bootstrap.t_630898"),
+        tr("cli.bootstrap.labels.auth_path"),
         folder_id,
     )
     table.add_row(
-        tr("cli.bootstrap.t_762170"),
+        tr("cli.bootstrap.labels.auth_method"),
         sheet_id,
     )
     table.add_row(
-        tr("cli.bootstrap.t_115599"),
+        tr("cli.bootstrap.labels.mcp_status"),
         doc_id,
     )
     console.print(table)
-    console.print("[green]" + tr("cli.bootstrap.t_488785") + "[/]")
+    console.print("[green]" + tr("cli.bootstrap.success.complete") + "[/]")

@@ -1,4 +1,4 @@
-"""PDF corpus fixture scaffolding (EPIC #305 cluster C).
+"""PDF corpus fixture scaffolding.
 
 Three layers:
 

@@ -47,4 +47,5 @@ def tr(key: str, **kwargs) -> str:
     Returns:
         The translated string.
     """
-    return i18n.t(key, locale=output_language(), **kwargs)
+    kwargs.setdefault("locale", output_language())
+    return i18n.t(key, **kwargs)

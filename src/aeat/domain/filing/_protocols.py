@@ -23,7 +23,7 @@ class ModeloIdentity(Protocol):
 
     @property
     def id(self) -> str:
-        """Return the stable string ID of the modelo (e.g. ``"130"``)."""
+        """Return the stable string ID of the modelo."""
 
     @property
     def display_name(self) -> str:
@@ -144,10 +144,6 @@ class FilingProfile(Protocol):
     @property
     def display_name(self) -> str:
         """Return a short human-readable label for the taxpayer."""
-
-    @property
-    def applicable_modelos(self) -> tuple[str, ...]:
-        """Return the modelos this profile is obliged to file."""
 
 
 # A typed alias for the raw input mapping passed into builders.

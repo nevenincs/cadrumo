@@ -1,0 +1,486 @@
+[modelo]
+id = "131"
+title = "IRPF pago fraccionado estimacion objetiva"
+official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimacion Objetiva. Pago fraccionado."
+tax_domain = "irpf"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "boe-modelo-131-2007-form",
+]
+
+[revisions."2026"]
+id = "2026"
+label = "Ejercicio 2026"
+valid_from = 2026-01-01
+period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "boe-modelo-131-2007-form",
+]
+
+[[revisions."2026".parameters]]
+id = "irpf.objective_no_base_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+
+[[revisions."2026".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2026".parameters]]
+id = "irpf.objective_agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+
+[[revisions."2026".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2026".casillas]]
+id = "01"
+number = "01"
+label = "Suma de rendimientos netos"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "02"
+number = "02"
+label = "Pago fraccionado previo por datos-base"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "03"
+number = "03"
+label = "Volumen de ventas o ingresos sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "04"
+number = "04"
+label = "Pago fraccionado previo sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "05"
+number = "05"
+label = "Volumen de ingresos agrarios del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "06"
+number = "06"
+label = "Pago fraccionado previo agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "07"
+number = "07"
+label = "Suma de pagos fraccionados previos"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones e ingresos a cuenta"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "09"
+number = "09"
+label = "Minoracion por rendimientos netos de actividades economicas"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "10"
+number = "10"
+label = "Diferencia"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-diferencia"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "11"
+number = "11"
+label = "Resultados negativos de trimestres anteriores"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "12"
+number = "12"
+label = "Pago de prestamos para vivienda habitual"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "13"
+number = "13"
+label = "Total"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-total"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".casillas]]
+id = "15"
+number = "15"
+label = "Resultado de la declaracion"
+section = ["resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-resultado"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-pago-fraccionado-sin-datos-base"
+target = "04"
+expression = { op = "percent", args = [{ casilla = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-pago-fraccionado-agrario"
+target = "06"
+expression = { op = "percent", args = [{ casilla = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-suma-pagos-previos"
+target = "07"
+expression = { op = "add", args = [{ casilla = "02" }, { casilla = "04" }, { casilla = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-diferencia"
+target = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "07" }, { casilla = "08" }] },
+    { casilla = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-total"
+target = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "10" }, { casilla = "11" }] },
+    { casilla = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-resultado"
+target = "15"
+expression = { op = "subtract", args = [{ casilla = "13" }, { casilla = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]
+
+[[revisions."2026".extraction_profiles]]
+id = "modelo-131-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".live_cross_references]]
+id = "modelo-131-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-131-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]
+
+[[revisions."2026".workbook_parity_refs]]
+id = "modelo-131-dr-xlsx-2026"
+workbook_source = "aeat-dr-131-2026"
+fixture_id = "modelo-131-2026-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".verification_expectations]]
+id = "modelo-131-2026-calculation-verification"
+computed_casillas = ["04", "06", "07", "10", "13", "15"]
+reconciliation_totals = { ingresar = "15" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-portal-cross-reference"
+surface = "portal"
+consumer = "portal_m131_pago_fraccionado_eo"
+requires_snapshot = true
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-131-2026-1t"
+filing_year = 2026
+period = "2026Q1"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+payment_cutoff_on = 2026-04-15
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "uses_objective_estimation_irpf"
+op = "equals"
+value = true
+explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-131-2026-2t"
+filing_year = 2026
+period = "2026Q2"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+payment_cutoff_on = 2026-07-15
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "uses_objective_estimation_irpf"
+op = "equals"
+value = true
+explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-131-2026-3t"
+filing_year = 2026
+period = "2026Q3"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+payment_cutoff_on = 2026-10-15
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "uses_objective_estimation_irpf"
+op = "equals"
+value = true
+explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".deadline_windows]]
+id = "modelo-131-2026-4t"
+filing_year = 2026
+period = "2026Q4"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+payment_cutoff_on = 2027-01-15
+legal_refs = ["orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "uses_objective_estimation_irpf"
+op = "equals"
+value = true
+explanation = "Modelo 131 applies to IRPF economic activities under estimacion objetiva."
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]

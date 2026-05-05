@@ -13,17 +13,18 @@ import typer
 from rich.console import Console
 
 from ....domain.deadlines import explain
+from .._i18n import tr
 from ._helpers import load_profile, resolve_profile_path
 
 _CONSOLE = Console()
 
 
 def explain_modelo(
-    modelo: str = typer.Argument(..., help="The modelo string identifier (e.g. '303')."),
+    modelo: str = typer.Argument(..., help=tr("cli.deadlines.explain.modelo_help")),
     profile: Path | None = typer.Option(
         None,
         "--profile",
-        help="Path to a JSON AutonomoProfile (defaults to AEAT_DEFAULT_PROFILE_PATH).",
+        help=tr("cli.deadlines.explain.profile_help"),
     ),
 ) -> None:
     """Print the human-readable rule that determines whether ``modelo`` applies."""

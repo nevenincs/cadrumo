@@ -18,11 +18,19 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
-from ...domain.deadlines import PeriodKind
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._errors import AggregationPeriodError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
+
+
+class PeriodKind(StrEnum):
+    """Authoritative period cadences used by the calculation registry."""
+
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
 
 
 class Quarter(StrEnum):
@@ -61,7 +69,7 @@ class Period(BaseModel):
         year: Calendar year, inclusive [1990, 2100].
         quarter: Optional quarter for quarterly periods.
         month: Optional 1-based month for monthly periods.
-        kind: The :class:`aeat.domain.deadlines.PeriodKind` discriminator.
+        kind: The :class:`PeriodKind` discriminator.
     """
 
     model_config = _STRICT_FROZEN
@@ -82,7 +90,7 @@ class Period(BaseModel):
             match = _PERIOD_RE.fullmatch(text)
             if match is None:
                 raise AggregationPeriodError(
-                    translated_message="aggregation.models.t_944805",
+                    message=tr("aggregation.models.t_944805"),
                     context={"period": data},
                 )
             year = int(match.group("year"))

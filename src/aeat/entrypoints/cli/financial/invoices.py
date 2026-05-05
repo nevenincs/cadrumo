@@ -43,17 +43,17 @@ from ._catalogue import catalogue_repository as _transaction_catalogue_repositor
 app = typer.Typer(
     name="invoices",
     no_args_is_help=True,
-    help="Invoice catalogue helpers.",
+    help=tr("cli.financial.invoices.app_help"),
 )
 
 
-@app.command(name="list", help="List stored invoices, optionally filtering by kind.")
+@app.command(name="list", help=tr("cli.financial.invoices.list_help"))
 def list_cmd(
     kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         case_sensitive=False,
-        help="Filter by invoice kind: issued or received.",
+        help=tr("cli.financial.invoices.kind_help"),
     ),
 ) -> None:
     """List invoices from the configured catalogue file.
@@ -70,9 +70,9 @@ def list_cmd(
     catalogue = _load_invoice_catalogue_or_empty()
     invoices = tuple(invoice for invoice in catalogue.values() if kind is None or invoice.kind is kind)
     if not invoices:
-        typer.echo(tr("financial.invoices.t_151516"))
+        typer.echo(tr("cli.financial.invoices.no_invoices"))
         return
-    typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency\tpayment_status")
+    typer.echo(tr("cli.financial.invoices.headers.list"))
     for invoice in sorted(invoices, key=lambda item: (item.issued_at, item.invoice_id)):
         typer.echo(
             "\t".join(
@@ -89,9 +89,9 @@ def list_cmd(
         )
 
 
-@app.command(name="show", help="Show one stored invoice as JSON.")
+@app.command(name="show", help=tr("cli.financial.invoices.show_help"))
 def show_cmd(
-    invoice_id: str = typer.Argument(..., help="Stable invoice identifier."),
+    invoice_id: str = typer.Argument(..., help=tr("cli.financial.invoices.id_help")),
 ) -> None:
     """Show one invoice from the configured catalogue file.
 
@@ -107,7 +107,7 @@ def show_cmd(
     invoice = find_invoice(catalogue, invoice_id)
     if invoice is None:
         typer.echo(
-            tr("financial.invoices.t_346820"),
+            tr("cli.financial.invoices.errors.not_found", id=invoice_id),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -116,11 +116,11 @@ def show_cmd(
 
 @app.command(
     name="link",
-    help="Link one transaction to one invoice across both catalogues.",
+    help=tr("cli.financial.invoices.link_help"),
 )
 def link_cmd(
-    invoice_id: str = typer.Argument(..., help="Stable invoice identifier."),
-    transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
+    invoice_id: str = typer.Argument(..., help=tr("cli.financial.invoices.link_invoice_id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.financial.invoices.link_transaction_id_help")),
 ) -> None:
     """Perform a bidirectional link and print the updated invoice.
 
@@ -148,7 +148,7 @@ def link_cmd(
     updated_invoice = find_invoice(updated_invoices, invoice_id)
     if updated_invoice is None:
         typer.echo(
-            tr("financial.invoices.t_950400"),
+            tr("cli.financial.invoices.errors.not_found_after_update", id=invoice_id),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -157,13 +157,13 @@ def link_cmd(
 
 @app.command(
     name="reconcile",
-    help="Print auto-suggested transaction/invoice links by amount and counterparty.",
+    help=tr("cli.financial.invoices.reconcile_help"),
 )
 def reconcile_cmd(
     apply: bool = typer.Option(
         False,
         "--apply",
-        help="Persist each suggestion via link_transaction_bidirectional.",
+        help=tr("cli.financial.invoices.apply_help"),
     ),
 ) -> None:
     """Print reconciliation suggestions and optionally apply them.
@@ -189,7 +189,7 @@ def reconcile_cmd(
     transactions = _load_transaction_catalogue_or_empty()
     suggestions = suggest_reconciliations(invoices, transactions)
     if not suggestions:
-        typer.echo(tr("financial.invoices.t_395612"))
+        typer.echo(tr("cli.financial.invoices.no_suggestions"))
         return
     _print_suggestions(suggestions)
     if not apply:
@@ -210,9 +210,14 @@ def reconcile_cmd(
                 suggestion.transaction_id,
                 suggestion.invoice_id,
             )
-        except (InvoiceError, TransactionError):
+        except (InvoiceError, TransactionError) as exc:
             typer.echo(
-                tr("financial.invoices.t_238826"),
+                tr(
+                    "cli.financial.invoices.errors.skipped_suggestion",
+                    invoice=suggestion.invoice_id,
+                    transaction=suggestion.transaction_id,
+                    exc=str(exc),
+                ),
                 err=True,
             )
             continue
@@ -227,16 +232,16 @@ def reconcile_cmd(
             _transaction_catalogue_repository().save(pending_transactions)
         except (InvoiceError, TransactionError) as exc:
             typer.echo(
-                tr("financial.invoices.t_486268"),
+                tr("cli.financial.invoices.errors.final_save_failed", exc=str(exc)),
                 err=True,
             )
             raise typer.Exit(code=2) from exc
-    typer.echo(tr("financial.invoices.t_403031"))
+    typer.echo(tr("cli.financial.invoices.labels.applied", applied=applied, total=len(suggestions)))
 
 
 @app.command(
     name="verify",
-    help="Report one-sided links between the invoice and transaction catalogues.",
+    help=tr("cli.financial.invoices.verify_help"),
 )
 def verify_cmd() -> None:
     """Print any inconsistencies and exit non-zero when present.
@@ -253,7 +258,7 @@ def verify_cmd() -> None:
     transactions = _load_transaction_catalogue_or_empty()
     inconsistencies = verify_link_consistency(invoices, transactions)
     if not inconsistencies:
-        typer.echo(tr("financial.invoices.t_515965"))
+        typer.echo(tr("cli.financial.invoices.consistent"))
         return
     _print_inconsistencies(inconsistencies)
     raise typer.Exit(code=2)
@@ -261,14 +266,14 @@ def verify_cmd() -> None:
 
 @app.command(
     name="unmatched",
-    help="List invoices that have no linked transactions yet.",
+    help=tr("cli.financial.invoices.unmatched_help"),
 )
 def unmatched_cmd(
     kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         case_sensitive=False,
-        help="Filter by invoice kind: issued or received.",
+        help=tr("cli.financial.invoices.kind_help"),
     ),
 ) -> None:
     """Print invoices that no transaction cites yet.
@@ -280,9 +285,9 @@ def unmatched_cmd(
     invoices = _load_invoice_catalogue_or_empty()
     unmatched = find_unmatched(invoices, kind=kind)
     if not unmatched:
-        typer.echo(tr("financial.invoices.t_188960"))
+        typer.echo(tr("cli.financial.invoices.no_unmatched"))
         return
-    typer.echo("invoice_id\tkind\tissued_at\tcounterparty\tgrand_total\tcurrency")
+    typer.echo(tr("cli.financial.invoices.headers.unmatched"))
     for invoice in unmatched:
         typer.echo(
             "\t".join(
@@ -319,7 +324,7 @@ def _load_invoice_catalogue_required() -> InvoiceCatalogue:
     repository = _invoice_catalogue_repository()
     if not repository.envelope_path.exists():
         typer.echo(
-            tr("financial.invoices.t_241070"),
+            tr("cli.financial_invoices.errors.catalogue_not_found", path=repository.envelope_path),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -364,15 +369,19 @@ def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
 
 def _print_suggestions(suggestions: tuple[ReconciliationSuggestion, ...]) -> None:
     """Print one tab-separated row per :class:`~aeat.application.invoices.ReconciliationSuggestion`."""
-    typer.echo("invoice_id\ttransaction_id\tamount_match\tcounterparty_match\tscore")
+    typer.echo(tr("cli.financial_invoices.headers.suggestions"))
     for suggestion in suggestions:
         typer.echo(
             "\t".join(
                 [
                     suggestion.invoice_id,
                     suggestion.transaction_id,
-                    "yes" if suggestion.amount_match else "no",
-                    "yes" if suggestion.counterparty_match else "no",
+                    tr("cli.financial_invoices.labels.yes")
+                    if suggestion.amount_match
+                    else tr("cli.financial_invoices.labels.no"),
+                    tr("cli.financial_invoices.labels.yes")
+                    if suggestion.counterparty_match
+                    else tr("cli.financial_invoices.labels.no"),
                     _format_decimal(suggestion.score),
                 ]
             )
@@ -381,7 +390,7 @@ def _print_suggestions(suggestions: tuple[ReconciliationSuggestion, ...]) -> Non
 
 def _print_inconsistencies(items: tuple[LinkInconsistency, ...]) -> None:
     """Print one tab-separated row per :class:`~aeat.application.invoices.LinkInconsistency`."""
-    typer.echo("invoice_id\ttransaction_id\tdirection")
+    typer.echo(tr("cli.financial_invoices.headers.inconsistencies"))
     for item in items:
         typer.echo("\t".join([item.invoice_id, item.transaction_id, item.direction]))
 

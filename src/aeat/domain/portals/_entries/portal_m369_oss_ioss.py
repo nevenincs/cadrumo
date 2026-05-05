@@ -24,6 +24,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m369_oss_ioss.label_354748",
-    purpose_es="Autoliquidación del IVA de servicios y ventas a distancia intracomunitarias bajo el régimen OSS/IOSS.",
+    purpose="entries.portal_m369_oss_ioss.purpose",
 )
 """Portal entry for Modelo 369 (OSS / IOSS one-stop-shop VAT return)."""

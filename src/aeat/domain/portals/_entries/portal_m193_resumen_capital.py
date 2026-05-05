@@ -26,9 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m193_resumen_capital.label_188618",
-    purpose_es=(
-        "Resumen anual de retenciones e ingresos a cuenta sobre determinados rendimientos "
-        "del capital mobiliario (complementa al Modelo 123)."
-    ),
+    purpose="entries.portal_m193_resumen_capital.purpose",
 )
 """Portal entry for Modelo 193 (annual summary of movable-capital withholdings)."""

@@ -27,9 +27,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m111_retenciones_trabajo.label_774262",
-    purpose_es=(
-        "Autoliquidación periódica de retenciones e ingresos a cuenta "
-        "sobre rendimientos del trabajo y actividades económicas."
-    ),
+    purpose="entries.portal_m111_retenciones_trabajo.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 111 procedure page."""

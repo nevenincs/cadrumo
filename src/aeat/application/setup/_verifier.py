@@ -13,6 +13,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ._models import SetupAnswers, VerifyFinding, VerifySeverity
 
@@ -23,20 +24,10 @@ def _finding(
     *,
     name: str,
     severity: VerifySeverity,
-    es: str,
-    en: str,
-    ca: str,
-    hu: str,
-    remediation_es: str | None = None,
-    remediation_en: str | None = None,
-    remediation_ca: str | None = None,
-    remediation_hu: str | None = None,
+    message: tr,
+    remediation: tr | None = None,
 ) -> VerifyFinding:
-    """Construct a :class:`VerifyFinding` with a multilingual message."""
-    message: str = "translation"
-    remediation: str | None = None
-    if any(slot is not None for slot in (remediation_es, remediation_en, remediation_ca, remediation_hu)):
-        remediation = "translation"
+    """Construct a :class:`VerifyFinding` with a translatable message."""
     return VerifyFinding(
         name=name,
         severity=severity,
@@ -51,31 +42,19 @@ def _check_certificate_path(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="certificate_path_exists",
             severity=VerifySeverity.ERROR,
-            es=f"No se encontró el certificado: {path}",
-            en=f"Certificate file not found: {path}",
-            ca=f"No s'ha trobat el certificat: {path}",
-            hu=f"A tanúsítvány fájl nem található: {path}",
-            remediation_es="Coloca el archivo .p12 / .pfx en la ruta configurada.",
-            remediation_en="Place your .p12 / .pfx bundle at the configured path.",
-            remediation_ca="Col·loca el fitxer .p12 / .pfx a la ruta configurada.",
-            remediation_hu="Helyezd a .p12 / .pfx fájlt a beállított útvonalra.",
+            message=tr("setup.verifier.t_501723", path=str(path)),
+            remediation=tr("setup.verifier.t_193582"),
         )
     if not path.is_file():
         return _finding(
             name="certificate_path_exists",
             severity=VerifySeverity.ERROR,
-            es=f"La ruta del certificado no es un fichero: {path}",
-            en=f"Certificate path is not a file: {path}",
-            ca=f"La ruta del certificat no és un fitxer: {path}",
-            hu=f"A tanúsítvány útvonala nem fájl: {path}",
+            message=tr("setup.verifier.t_049382", path=str(path)),
         )
     return _finding(
         name="certificate_path_exists",
         severity=VerifySeverity.OK,
-        es=f"Certificado presente en {path}",
-        en=f"Certificate present at {path}",
-        ca=f"Certificat present a {path}",
-        hu=f"A tanúsítvány elérhető: {path}",
+        message=tr("setup.verifier.t_749321", path=str(path)),
     )
 
 
@@ -85,22 +64,13 @@ def _check_password_env_var(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="certificate_password_env_var_set",
             severity=VerifySeverity.WARNING,
-            es=f"La variable {var} no está definida; establézcala antes de ejecutar comandos en vivo.",
-            en=f"Environment variable {var} is unset; set it before running live commands.",
-            ca=f"La variable {var} no està definida; defineix-la abans d'executar ordres en viu.",
-            hu=f"A(z) {var} változó nincs beállítva; állítsa be az éles parancsok futtatása előtt.",
-            remediation_es=f"Exporta {var}=<tu-contraseña> en tu shell o gestor de secretos.",
-            remediation_en=f"Export {var}=<your-passphrase> in your shell or secret store.",
-            remediation_ca=f"Exporta {var}=<la-teva-contrasenya> al teu intèrpret o gestor de secrets.",
-            remediation_hu=f"Exportáld a {var}=<jelszavad> változót a shellben vagy a titokkezelőben.",
+            message=tr("setup.verifier.t_938472", var=var),
+            remediation=tr("setup.verifier.t_394821", var=var),
         )
     return _finding(
         name="certificate_password_env_var_set",
         severity=VerifySeverity.OK,
-        es=f"La variable {var} está definida.",
-        en=f"Environment variable {var} is set.",
-        ca=f"La variable {var} està definida.",
-        hu=f"A(z) {var} változó be van állítva.",
+        message=tr("setup.verifier.t_104932", var=var),
     )
 
 
@@ -112,18 +82,12 @@ def _check_directory(name: str, path: Path) -> VerifyFinding:
         return _finding(
             name=f"{name}_creatable",
             severity=VerifySeverity.ERROR,
-            es=f"No se puede crear {name} en {path}: {exc}",
-            en=f"Cannot create {name} at {path}: {exc}",
-            ca=f"No es pot crear {name} a {path}: {exc}",
-            hu=f"Nem lehet létrehozni a(z) {name}-t itt: {path}: {exc}",
+            message=tr("setup.verifier.t_649302", name=name, path=str(path), exc=str(exc)),
         )
     return _finding(
         name=f"{name}_creatable",
         severity=VerifySeverity.OK,
-        es=f"{name} listo en {path}",
-        en=f"{name} ready at {path}",
-        ca=f"{name} llest a {path}",
-        hu=f"{name} elérhető itt: {path}",
+        message=tr("setup.verifier.t_204938", name=name, path=str(path)),
     )
 
 
@@ -133,10 +97,7 @@ def _check_profile_file(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="autonomo_profile_json_valid",
             severity=VerifySeverity.WARNING,
-            es=f"Sobre cifrado del perfil no encontrado en {path}; el asistente lo escribirá.",
-            en=f"Profile envelope not found at {path}; the wizard will write it.",
-            ca=f"Sobre xifrat del perfil no trobat a {path}; l'assistent l'escriurà.",
-            hu=f"A profil titkosított csomagja nincs itt: {path}; a varázsló létrehozza.",
+            message=tr("setup.verifier.t_394827", path=str(path)),
         )
     from ._env_writer import load_profile_envelope
 
@@ -146,18 +107,12 @@ def _check_profile_file(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="autonomo_profile_json_valid",
             severity=VerifySeverity.ERROR,
-            es=f"El sobre del perfil en {path} no es válido: {exc}",
-            en=f"Profile envelope at {path} is invalid: {exc}",
-            ca=f"El sobre del perfil a {path} no és vàlid: {exc}",
-            hu=f"A profil csomag érvénytelen itt: {path}: {exc}",
+            message=tr("setup.verifier.t_837462", path=str(path), exc=str(exc)),
         )
     return _finding(
         name="autonomo_profile_json_valid",
         severity=VerifySeverity.OK,
-        es=f"El sobre del perfil en {path} se valida correctamente.",
-        en=f"Profile envelope at {path} round-trips through the substrate.",
-        ca=f"El sobre del perfil a {path} es valida correctament.",
-        hu=f"A profil csomag itt: {path} érvényes.",
+        message=tr("setup.verifier.t_104938", path=str(path)),
     )
 
 
@@ -169,18 +124,12 @@ def _check_answers_self_consistency(answers: SetupAnswers) -> VerifyFinding:
         return _finding(
             name="setup_answers_self_consistent",
             severity=VerifySeverity.ERROR,
-            es=f"SetupAnswers no pasó la autovalidación: {exc}",
-            en=f"SetupAnswers failed self-validation: {exc}",
-            ca=f"SetupAnswers no ha passat l'autovalidació: {exc}",
-            hu=f"A SetupAnswers önellenőrzése sikertelen: {exc}",
+            message=tr("setup.verifier.t_938475", exc=str(exc)),
         )
     return _finding(
         name="setup_answers_self_consistent",
         severity=VerifySeverity.OK,
-        es="SetupAnswers pasa la autovalidación estricta.",
-        en="SetupAnswers round-trips through strict pydantic.",
-        ca="SetupAnswers passa l'autovalidació estricta.",
-        hu="A SetupAnswers érvényes szigorú pydantic szerint.",
+        message=tr("setup.verifier.t_293847"),
     )
 
 

@@ -1,8 +1,8 @@
 """Synthetic Modelo 100 (IRPF / Renta) summary-block PDF generator.
 
 Renders a two-page Renta artefact with the summary-block casillas
-the MVP extractor targets. The caller picks the artefact kind
-(BORRADOR / PREDECLARACION / DECLARACION); the generator stamps the
+the extractor targets. The caller picks the artefact kind (BORRADOR /
+PREDECLARACION / DECLARACION); the generator stamps the
 matching marker (BORRADOR header / VISTA PREVIA watermark / CSV foot)
 so ``detect_artefact_kind`` routes correctly.
 """

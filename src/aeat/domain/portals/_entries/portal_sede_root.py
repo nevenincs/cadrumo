@@ -21,6 +21,6 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_sede_root.label_323061",
-    purpose_es="Página raíz de la Sede Electrónica de la AEAT.",
+    purpose="entries.portal_sede_root.purpose",
 )
 """Portal entry for the Sede Electrónica root URL."""

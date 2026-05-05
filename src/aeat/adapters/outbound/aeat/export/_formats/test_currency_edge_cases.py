@@ -2,15 +2,14 @@
 
 The CURRENCY encoders in
 :mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` must handle
-every registry-calculated value across both the 13-byte (Modelo 130) and
-17-byte (Modelo 303) column widths, and under both the UNSIGNED and
-INLINE_SIGN conventions. Golden-SHA tests lock a single happy-path scenario
-per modelo; this matrix exercises:
+registry-calculated values across common fixed-width currency field widths,
+and under both the UNSIGNED and INLINE_SIGN conventions. This matrix
+exercises:
 
 * Zero (``Decimal("0.00")``).
 * Smallest positive: 0.01 (1 cent).
 * Typical: 1234.56.
-* Large within modelo capacity: 99 999 999.99 (under the 13-byte limit).
+* Large value within the 13-byte limit.
 * Signed negative: -100.00 (INLINE_SIGN only).
 * Signed zero: -0.00 canonicalises to +0.00.
 
@@ -30,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 class TestUnsignedCurrency13Byte:
-    """Modelo 130 column: 13-byte zero-padded cents, unsigned."""
+    """13-byte zero-padded cents, unsigned."""
 
     @pytest.mark.parametrize(
         ("value", "expected_text"),
@@ -54,7 +53,7 @@ class TestUnsignedCurrency13Byte:
 
 
 class TestUnsignedCurrency17Byte:
-    """Modelo 303 column: 17-byte zero-padded cents, unsigned."""
+    """17-byte zero-padded cents, unsigned."""
 
     @pytest.mark.parametrize(
         ("value", "expected_text"),
@@ -65,7 +64,7 @@ class TestUnsignedCurrency17Byte:
             (Decimal("20000.00"), "00000000002000000"),
             (Decimal("999999999999999.99"), "99999999999999999"),
         ],
-        ids=["zero", "one_cent", "typical", "kent_base", "max"],
+        ids=["zero", "one_cent", "typical", "large", "max"],
     )
     def test_round_trip_text(self, value: Decimal, expected_text: str) -> None:
         encoded = encode_currency(value, length=17, encoding="iso-8859-1")
@@ -73,7 +72,7 @@ class TestUnsignedCurrency17Byte:
 
 
 class TestInlineSignedCurrency17Byte:
-    """Modelo 303 column with INLINE_SIGN — 1-byte sign ('N'/' ') + 16-digit magnitude."""
+    """INLINE_SIGN: 1-byte sign plus 16-digit magnitude."""
 
     @pytest.mark.parametrize(
         ("value", "expected_text"),
@@ -85,7 +84,7 @@ class TestInlineSignedCurrency17Byte:
             (Decimal("-2500.50"), "N0000000000250050"),
             (Decimal("-3150.00"), "N0000000000315000"),
         ],
-        ids=["zero", "one_cent", "positive_typical", "neg_cent", "neg_typical", "neg_resultado"],
+        ids=["zero", "one_cent", "positive_typical", "neg_cent", "neg_typical", "neg_large"],
     )
     def test_round_trip_text(self, value: Decimal, expected_text: str) -> None:
         encoded = encode_currency(value, length=17, signed=True, inline_sign=True, encoding="iso-8859-1")

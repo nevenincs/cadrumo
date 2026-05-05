@@ -102,6 +102,8 @@ class SetupAnswers(BaseModel):
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
+    pays_capital_income_with_retencion: bool = False
+    uses_objective_estimation_irpf: bool = False
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False

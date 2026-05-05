@@ -1,7 +1,7 @@
 """Shared fichero-BOE export primitives.
 
 The package contains only reusable fixed-width encoding primitives.
-Reviewed registry-backed modelo definitions provide the concrete field
+Reviewed registry-backed export definitions provide the concrete field
 and segment declarations after legal-source validation. This module
 re-exports the shared primitives needed to validate and use those
 declarations:
@@ -15,7 +15,6 @@ declarations:
 from __future__ import annotations
 
 from ._record_spec import (
-    DEFAULT_ENCODING,
     DateFmt,
     FicheroBoeEncoding,
     FieldKind,
@@ -32,7 +31,6 @@ from ._record_spec import (
 )
 
 __all__ = [
-    "DEFAULT_ENCODING",
     "DateFmt",
     "FicheroBoeEncoding",
     "FieldKind",

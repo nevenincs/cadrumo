@@ -15,263 +15,289 @@ auth:
     clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
-    display_label_851219: Material
+    display_label_851219: Etiqueta de visualización 851219
 cli:
   attachments:
-    add_help: cli.attachments.add_help
-    add_kind_help: cli.attachments.add_kind_help
-    add_link_invoice_help: cli.attachments.add_link_invoice_help
-    add_link_tx_help: cli.attachments.add_link_tx_help
-    add_metadata_help: cli.attachments.add_metadata_help
-    add_mime_type_help: cli.attachments.add_mime_type_help
-    add_notes_help: cli.attachments.add_notes_help
-    add_path_help: cli.attachments.add_path_help
-    add_source_help: cli.attachments.add_source_help
-    add_source_ref_help: cli.attachments.add_source_ref_help
-    app_help: cli.attachments.app_help
+    add_help: Añadir un justificante o archivo adjunto
+    add_kind_help: Tipo de archivo adjunto (ej. factura, justificante, contrato)
+    add_link_invoice_help: Vincular el justificante a un ID de factura existente
+    add_link_tx_help: Vincular el justificante a un ID de transacción bancaria
+    add_metadata_help: Añadir metadatos personalizados (clave=valor) al justificante
+    add_mime_type_help: Forzar un tipo MIME específico para el justificante
+    add_notes_help: Añadir notas u observaciones al justificante
+    add_path_help: Ruta local del archivo justificante a añadir
+    add_source_help: Origen o fuente del justificante (ej. correo, escáner, portal)
+    add_source_ref_help: Referencia de origen del justificante (ej. Message-ID de
+      correo, URL, localizador)
+    app_help: Gestión de justificantes y archivos adjuntos (añadir, listar, visualizar)
     errors:
-      duplicate_metadata_key: cli.attachments.errors.duplicate_metadata_key
-      empty_metadata_key: cli.attachments.errors.empty_metadata_key
-      empty_metadata_value: cli.attachments.errors.empty_metadata_value
-      empty_mime_type: cli.attachments.errors.empty_mime_type
-      empty_source_reference: cli.attachments.errors.empty_source_reference
-      invalid_metadata_format: cli.attachments.errors.invalid_metadata_format
+      duplicate_metadata_key: 'La clave de metadatos del justificante está duplicada:
+        {key}'
+      empty_metadata_key: La clave de metadatos del justificante no puede estar vacía
+      empty_metadata_value: El valor de metadatos del justificante no puede estar
+        vacío
+      empty_mime_type: El tipo MIME del justificante no puede estar vacío
+      empty_source_reference: La referencia de origen del justificante no puede estar
+        vacía
+      invalid_metadata_format: Formato de metadatos del justificante no válido. Debe
+        ser clave=valor
     list:
-      no_attachments: cli.attachments.list.no_attachments
-    list_header: cli.attachments.list_header
-    list_help: cli.attachments.list_help
-    list_kind_filter_help: cli.attachments.list_kind_filter_help
-    list_linked_to_help: cli.attachments.list_linked_to_help
-    show_help: cli.attachments.show_help
-    show_id_help: cli.attachments.show_id_help
+      no_attachments: No se encontraron justificantes o archivos adjuntos
+    list_header: Justificantes y archivos adjuntos
+    list_help: Listar los justificantes y archivos adjuntos registrados
+    list_kind_filter_help: Filtrar justificantes por tipo (ej. factura, ticket, contrato)
+    list_linked_to_help: Filtrar justificantes vinculados a un ID específico (transacción
+      o factura)
+    show_help: Mostrar los detalles y metadatos de un justificante
+    show_id_help: Identificador del justificante a mostrar
   auth:
-    app_help: cli.auth.app_help
+    app_help: Gestión de autenticación y credenciales
     configure:
-      dni_fecha_help: cli.auth.configure.dni_fecha_help
-      dni_nie_help: cli.auth.configure.dni_nie_help
-      help: cli.auth.configure.help
-      nie_soporte_help: cli.auth.configure.nie_soporte_help
-      non_interactive_help: cli.auth.configure.non_interactive_help
-      prefer_non_qr_help: cli.auth.configure.prefer_non_qr_help
-      provider_help: cli.auth.configure.provider_help
-      set_default_help: cli.auth.configure.set_default_help
+      dni_fecha_help: Fecha de validez o expedición del DNI (YYYY-MM-DD)
+      dni_nie_help: Número de DNI o NIE del contribuyente
+      help: Configurar las credenciales y parámetros de autenticación localmente
+      nie_soporte_help: Número de soporte del NIE
+      non_interactive_help: Ejecutar la configuración en modo no interactivo (sin
+        pedir confirmación)
+      prefer_non_qr_help: Preferir el método sin código QR (usando DNI/NIE) para Cl@ve
+        Móvil
+      provider_help: Proveedor de autenticación (ej. certificado, clave_movil)
+      set_default_help: Establecer este proveedor como el método de autenticación
+        por defecto
     init:
-      acquire_cli_token_help: cli.auth.init.acquire_cli_token_help
-      doctor_help: cli.auth.init.doctor_help
+      acquire_cli_token_help: Adquirir el token de Google para la CLI (abre el navegador)
+      doctor_help: Ejecutar la validación del entorno (doctor) tras inicializar
       errors:
-        accepted_cached: cli.auth.init.errors.accepted_cached
-        auth_failed: cli.auth.init.errors.auth_failed
-        clave_movil_config_purpose: cli.auth.init.errors.clave_movil_config_purpose
-        desktop_client_not_found: cli.auth.init.errors.desktop_client_not_found
-        dni_fecha_required: cli.auth.init.errors.dni_fecha_required
-        dni_nie_required: cli.auth.init.errors.dni_nie_required
-        interactive_required: cli.auth.init.errors.interactive_required
-        missing_provider_or_all: cli.auth.init.errors.missing_provider_or_all
-        nie_soporte_required: cli.auth.init.errors.nie_soporte_required
-        no_env_file: cli.auth.init.errors.no_env_file
-        no_session_found: cli.auth.init.errors.no_session_found
-        probe_failed: cli.auth.init.errors.probe_failed
-        provider_not_supported: cli.auth.init.errors.provider_not_supported
-        sa_key_not_found: cli.auth.init.errors.sa_key_not_found
-        session_stale: cli.auth.init.errors.session_stale
-        signed_in: cli.auth.init.errors.signed_in
-        signed_out: cli.auth.init.errors.signed_out
-        signed_out_many: cli.auth.init.errors.signed_out_many
-        stale_or_revoked: cli.auth.init.errors.stale_or_revoked
-        unknown_provider: cli.auth.init.errors.unknown_provider
-        unsupported_env_file: cli.auth.init.errors.unsupported_env_file
-        unsupported_provider: cli.auth.init.errors.unsupported_provider
-      help: cli.auth.init.help
-      json_help: cli.auth.init.json_help
+        accepted_cached: Credenciales en caché aceptadas
+        auth_failed: Fallo en la autenticación
+        clave_movil_config_purpose: Configuración obligatoria para el acceso mediante
+          Cl@ve Móvil
+        desktop_client_not_found: 'No se encontró el archivo JSON del cliente OAuth
+          de escritorio: {path}'
+        dni_fecha_required: Se requiere la fecha de validez del DNI al usar Cl@ve
+          Móvil sin código QR
+        dni_nie_required: Se requiere el DNI o NIE para usar Cl@ve Móvil
+        interactive_required: Se requiere un terminal interactivo para esta operación
+        missing_provider_or_all: Debe especificar un proveedor (--provider) o usar
+          el flag --all
+        nie_soporte_required: Se requiere el número de soporte del NIE al usar Cl@ve
+          Móvil sin código QR
+        no_env_file: No se encontró el archivo de entorno (.env)
+        no_session_found: No se encontró ninguna sesión activa
+        probe_failed: La prueba de conexión o autenticación ha fallado
+        provider_not_supported: El proveedor de autenticación no es compatible
+        sa_key_not_found: 'No se encontró el archivo JSON de la clave de cuenta de
+          servicio (Service Account): {path}'
+        session_stale: La sesión actual ha caducado y no se puede utilizar
+        signed_in: Sesión iniciada correctamente
+        signed_out: Sesión cerrada correctamente
+        signed_out_many: Se han cerrado {n} sesiones correctamente
+        stale_or_revoked: La sesión ha caducado o ha sido revocada
+        unknown_provider: 'Proveedor de autenticación desconocido: {name}'
+        unsupported_env_file: Formato de archivo de entorno (.env) no compatible
+        unsupported_provider: El proveedor especificado no es compatible en este entorno
+      help: Inicializar el estado de autenticación del proyecto (Google, AEAT)
+      json_help: Ruta al archivo JSON de credenciales
       labels:
-        action: cli.auth.init.labels.action
-        and: cli.auth.init.labels.and
-        browser: cli.auth.init.labels.browser
-        next: cli.auth.init.labels.next
-        purpose: cli.auth.init.labels.purpose
-        source: cli.auth.init.labels.source
-        success: cli.auth.init.labels.success
-      login_instruction: cli.auth.init.login_instruction
-      path_help: cli.auth.init.path_help
-      prepare_mcp_help: cli.auth.init.prepare_mcp_help
+        action: Acción
+        and: y
+        browser: Navegador
+        next: Siguiente
+        purpose: Propósito
+        source: Origen
+        success: Éxito
+      login_instruction: Por favor, inicie sesión en el navegador que se acaba de
+        abrir
+      path_help: Familia de rutas a inicializar (ej. desktop-oauth-local-dev, service-account)
+      prepare_mcp_help: Preparar la configuración del servidor MCP (Model Context
+        Protocol)
       prompts:
-        dni_fecha: cli.auth.init.prompts.dni_fecha
-        dni_nie: cli.auth.init.prompts.dni_nie
-        nie_soporte: cli.auth.init.prompts.nie_soporte
-      reset_cli_token_help: cli.auth.init.reset_cli_token_help
-      saved_config: cli.auth.init.saved_config
-      service_account_json_help: cli.auth.init.service_account_json_help
-      step_acq_action: cli.auth.init.step_acq_action
-      step_acq_browser: cli.auth.init.step_acq_browser
-      step_acq_next: cli.auth.init.step_acq_next
-      step_acq_purpose: cli.auth.init.step_acq_purpose
-      step_acq_source: cli.auth.init.step_acq_source
-      step_acq_success: cli.auth.init.step_acq_success
-      step_acq_title: cli.auth.init.step_acq_title
-      step_desktop_imported_action: cli.auth.init.step_desktop_imported_action
-      step_desktop_imported_browser: cli.auth.init.step_desktop_imported_browser
-      step_desktop_imported_next: cli.auth.init.step_desktop_imported_next
-      step_desktop_imported_purpose: cli.auth.init.step_desktop_imported_purpose
-      step_desktop_imported_source: cli.auth.init.step_desktop_imported_source
-      step_desktop_imported_success: cli.auth.init.step_desktop_imported_success
-      step_desktop_imported_title: cli.auth.init.step_desktop_imported_title
-      step_mcp_action: cli.auth.init.step_mcp_action
-      step_mcp_browser: cli.auth.init.step_mcp_browser
-      step_mcp_next: cli.auth.init.step_mcp_next
-      step_mcp_purpose: cli.auth.init.step_mcp_purpose
-      step_mcp_source: cli.auth.init.step_mcp_source
-      step_mcp_success: cli.auth.init.step_mcp_success
-      step_mcp_title: cli.auth.init.step_mcp_title
-      step_repair_action: cli.auth.init.step_repair_action
-      step_repair_browser: cli.auth.init.step_repair_browser
-      step_repair_next: cli.auth.init.step_repair_next
-      step_repair_purpose: cli.auth.init.step_repair_purpose
-      step_repair_source: cli.auth.init.step_repair_source
-      step_repair_success: cli.auth.init.step_repair_success
-      step_repair_title: cli.auth.init.step_repair_title
-      step_sa_imported_action: cli.auth.init.step_sa_imported_action
-      step_sa_imported_browser: cli.auth.init.step_sa_imported_browser
-      step_sa_imported_next: cli.auth.init.step_sa_imported_next
-      step_sa_imported_purpose: cli.auth.init.step_sa_imported_purpose
-      step_sa_imported_source: cli.auth.init.step_sa_imported_source
-      step_sa_imported_success: cli.auth.init.step_sa_imported_success
-      step_sa_imported_title: cli.auth.init.step_sa_imported_title
-      step_sa_req_action: cli.auth.init.step_sa_req_action
-      step_sa_req_browser: cli.auth.init.step_sa_req_browser
-      step_sa_req_next: cli.auth.init.step_sa_req_next
-      step_sa_req_purpose: cli.auth.init.step_sa_req_purpose
-      step_sa_req_source: cli.auth.init.step_sa_req_source
-      step_sa_req_success: cli.auth.init.step_sa_req_success
-      step_sa_req_title: cli.auth.init.step_sa_req_title
-      step_sa_status_action: cli.auth.init.step_sa_status_action
-      step_sa_status_browser: cli.auth.init.step_sa_status_browser
-      step_sa_status_next: cli.auth.init.step_sa_status_next
-      step_sa_status_purpose: cli.auth.init.step_sa_status_purpose
-      step_sa_status_source: cli.auth.init.step_sa_status_source
-      step_sa_status_success: cli.auth.init.step_sa_status_success
-      step_sa_status_title: cli.auth.init.step_sa_status_title
-      step_setup_req_action: cli.auth.init.step_setup_req_action
-      step_setup_req_browser: cli.auth.init.step_setup_req_browser
-      step_setup_req_next: cli.auth.init.step_setup_req_next
-      step_setup_req_purpose: cli.auth.init.step_setup_req_purpose
-      step_setup_req_source: cli.auth.init.step_setup_req_source
-      step_setup_req_success: cli.auth.init.step_setup_req_success
-      step_setup_req_title: cli.auth.init.step_setup_req_title
-      step_status_action: cli.auth.init.step_status_action
-      step_status_browser: cli.auth.init.step_status_browser
-      step_status_next: cli.auth.init.step_status_next
-      step_status_purpose: cli.auth.init.step_status_purpose
-      step_status_source: cli.auth.init.step_status_source
-      step_status_success: cli.auth.init.step_status_success
-      step_status_title: cli.auth.init.step_status_title
-      step_token_reset_action: cli.auth.init.step_token_reset_action
-      step_token_reset_browser: cli.auth.init.step_token_reset_browser
-      step_token_reset_next: cli.auth.init.step_token_reset_next
-      step_token_reset_purpose: cli.auth.init.step_token_reset_purpose
-      step_token_reset_source: cli.auth.init.step_token_reset_source
-      step_token_reset_success: cli.auth.init.step_token_reset_success
-      step_token_reset_title: cli.auth.init.step_token_reset_title
+        dni_fecha: Fecha de validez del DNI (YYYY-MM-DD)
+        dni_nie: Número de DNI o NIE del contribuyente
+        nie_soporte: Número de soporte del NIE
+      reset_cli_token_help: Eliminar el token de Google existente y solicitar uno
+        nuevo
+      saved_config: Configuración guardada correctamente en {path}
+      service_account_json_help: Ruta al archivo JSON de la clave de cuenta de servicio
+        (Service Account)
+      step_acq_action: Adquirir token
+      step_acq_browser: Navegador por defecto
+      step_acq_next: Continuar
+      step_acq_purpose: Acceso a Google Drive, Sheets y Docs para gestión de archivos
+      step_acq_source: Consola de Google Cloud
+      step_acq_success: Token adquirido correctamente
+      step_acq_title: 'Paso: Adquirir Token de Google CLI'
+      step_desktop_imported_action: Importar JSON de cliente
+      step_desktop_imported_browser: Explorador de archivos
+      step_desktop_imported_next: Continuar
+      step_desktop_imported_purpose: Configurar el cliente de escritorio para autenticación
+        OAuth 2.0
+      step_desktop_imported_source: Consola de Google Cloud
+      step_desktop_imported_success: JSON del cliente importado correctamente
+      step_desktop_imported_title: 'Paso: Importar Cliente OAuth de Escritorio'
+      step_mcp_action: Configurar MCP
+      step_mcp_browser: N/A
+      step_mcp_next: Finalizar
+      step_mcp_purpose: Permitir que agentes de IA utilicen las herramientas de la
+        CLI
+      step_mcp_source: Archivo local
+      step_mcp_success: MCP configurado correctamente
+      step_mcp_title: 'Paso: Configurar Servidor MCP'
+      step_repair_action: Reparar entorno
+      step_repair_browser: N/A
+      step_repair_next: Continuar
+      step_repair_purpose: Corregir inconsistencias detectadas en la configuración
+      step_repair_source: Auto-reparación
+      step_repair_success: Entorno reparado correctamente
+      step_repair_title: 'Paso: Reparar Entorno'
+      step_sa_imported_action: Importar clave de SA
+      step_sa_imported_browser: Explorador de archivos
+      step_sa_imported_next: Continuar
+      step_sa_imported_purpose: Configurar la cuenta de servicio para automatización
+        headless
+      step_sa_imported_source: Consola de Google Cloud
+      step_sa_imported_success: Clave de cuenta de servicio importada correctamente
+      step_sa_imported_title: 'Paso: Importar Clave de Cuenta de Servicio (SA)'
+      step_sa_req_action: Verificar Cuenta de Servicio
+      step_sa_req_browser: N/A
+      step_sa_req_next: Continuar
+      step_sa_req_purpose: Verificar permisos de la cuenta de servicio para acceso
+        a la nube
+      step_sa_req_source: API de Google
+      step_sa_req_success: Cuenta de servicio verificada correctamente
+      step_sa_req_title: 'Paso: Verificar Cuenta de Servicio (SA)'
+      step_sa_status_action: Consultar estado
+      step_sa_status_browser: N/A
+      step_sa_status_next: Continuar
+      step_sa_status_purpose: Asegurar que la cuenta de servicio esté activa y operativa
+      step_sa_status_source: Google IAM
+      step_sa_status_success: Estado de la cuenta de servicio verificado
+      step_sa_status_title: 'Paso: Consultar Estado de Cuenta de Servicio'
+      step_setup_req_action: Verificar configuración
+      step_setup_req_browser: N/A
+      step_setup_req_next: Continuar
+      step_setup_req_purpose: Verificar la integridad de los archivos de configuración
+        locales
+      step_setup_req_source: Sistema de archivos local
+      step_setup_req_success: Configuración verificada correctamente
+      step_setup_req_title: 'Paso: Verificar Configuración'
+      step_status_action: Consultar estado
+      step_status_browser: N/A
+      step_status_next: Continuar
+      step_status_purpose: Verificar si ya existe una sesión de autenticación activa
+      step_status_source: Caché de tokens
+      step_status_success: Estado de autenticación verificado
+      step_status_title: 'Paso: Verificar Estado de Autenticación'
+      step_token_reset_action: Reiniciar token
+      step_token_reset_browser: N/A
+      step_token_reset_next: Continuar
+      step_token_reset_purpose: Forzar la re-autenticación borrando el token almacenado
+      step_token_reset_source: Caché local
+      step_token_reset_success: Token reiniciado correctamente
+      step_token_reset_title: 'Paso: Reiniciar Token de Google'
       terms:
-        default_provider: cli.auth.init.terms.default_provider
-        direct_push: cli.auth.init.terms.direct_push
-        dni_fecha: cli.auth.init.terms.dni_fecha
-        dni_nie: cli.auth.init.terms.dni_nie
-        nie_soporte: cli.auth.init.terms.nie_soporte
-        qr_code: cli.auth.init.terms.qr_code
-      url_prompt: cli.auth.init.url_prompt
+        default_provider: proveedor por defecto
+        direct_push: notificación directa (push)
+        dni_fecha: fecha de validez del DNI
+        dni_nie: DNI/NIE
+        nie_soporte: número de soporte del NIE
+        qr_code: código QR
+      url_prompt: 'Si el navegador no se ha abierto automáticamente, visite esta URL:'
     list_providers:
-      all_help: cli.auth.list_providers.all_help
-      configured_help: cli.auth.list_providers.configured_help
-      help: cli.auth.list_providers.help
-      json_help: cli.auth.list_providers.json_help
+      all_help: Listar todos los proveedores compatibles, no solo los configurados
+      configured_help: Listar los proveedores de autenticación configurados
+      help: Listar los proveedores de autenticación disponibles y su estado
+      json_help: Mostrar la lista de proveedores en formato JSON
     login:
-      help: cli.auth.login.help
-      json_help: cli.auth.login.json_help
-      non_interactive_help: cli.auth.login.non_interactive_help
-      provider_help: cli.auth.login.provider_help
+      help: Iniciar sesión en la Sede Electrónica de la AEAT
+      json_help: Mostrar el resultado del inicio de sesión en formato JSON
+      non_interactive_help: Intentar el inicio de sesión sin intervención humana (requiere
+        certificado configurado)
+      provider_help: Proveedor de autenticación a utilizar (ej. certificado, clave_movil)
     logout:
-      all_help: cli.auth.logout.all_help
-      help: cli.auth.logout.help
-      json_output_help: cli.auth.logout.json_output_help
-      provider_help: cli.auth.logout.provider_help
+      all_help: Cerrar todas las sesiones activas
+      help: Cerrar la sesión actual en la AEAT
+      json_output_help: Mostrar el resultado del cierre de sesión en formato JSON
+      provider_help: Proveedor de autenticación a cerrar (ej. certificado, clave_movil)
     status:
-      help: cli.auth.status.help
-      json_help: cli.auth.status.json_help
-      provider_help: cli.auth.status.provider_help
+      help: Mostrar el estado actual de la autenticación en la AEAT
+      json_help: Mostrar el estado de la autenticación en formato JSON
+      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
     whoami:
-      help: cli.auth.whoami.help
-      json_help: cli.auth.whoami.json_help
-      provider_help: cli.auth.whoami.provider_help
+      help: Mostrar información detallada del sujeto autenticado actualmente
+      json_help: Mostrar la información del sujeto en formato JSON
+      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
   bootstrap:
     errors:
-      already_bootstrapped: cli.bootstrap.errors.already_bootstrapped
-      destructive_warning: cli.bootstrap.errors.destructive_warning
-      force_instruction: cli.bootstrap.errors.force_instruction
-      missing_env: cli.bootstrap.errors.missing_env
-      missing_target: cli.bootstrap.errors.missing_target
-      target_instruction: cli.bootstrap.errors.target_instruction
+      already_bootstrapped: El entorno ya ha sido inicializado (bootstrapped)
+      destructive_warning: ¡ADVERTENCIA! Esta operación puede ser destructiva y sobrescribir
+        recursos existentes
+      force_instruction: Use el flag --force para proceder si está seguro
+      missing_env: Faltan variables de entorno requeridas para la inicialización
+      missing_target: No se ha especificado el objetivo (target) para la inicialización
+      target_instruction: Por favor, especifique un objetivo válido usando --target
     labels:
-      active_env: cli.bootstrap.labels.active_env
-      active_target: cli.bootstrap.labels.active_target
-      auth_method: cli.bootstrap.labels.auth_method
-      auth_path: cli.bootstrap.labels.auth_path
-      mcp_status: cli.bootstrap.labels.mcp_status
+      active_env: Entorno activo
+      active_target: Objetivo activo
+      auth_method: Método de autenticación
+      auth_path: Ruta de autenticación
+      mcp_status: Estado de MCP
     success:
-      complete: cli.bootstrap.success.complete
+      complete: Inicialización del entorno completada correctamente
   browser:
-    app_help: cli.browser.app_help
+    app_help: Gestión de la automatización del navegador (Playwright)
     health:
-      json_help: cli.browser.health.json_help
-    health_help: cli.browser.health_help
+      json_help: Mostrar el estado de salud del navegador en formato JSON
+    health_help: Comprobar el estado de salud y conectividad del navegador
     labels:
-      http_status: cli.browser.labels.http_status
-      markers: cli.browser.labels.markers
-      none: cli.browser.labels.none
-      retry_after_seconds: cli.browser.labels.retry_after_seconds
-      state: cli.browser.labels.state
+      http_status: Estado HTTP
+      markers: Marcadores detectados
+      none: Ninguno
+      retry_after_seconds: Reintentar después (segundos)
+      state: Estado operativo
   categories:
-    app_help: cli.categories.app_help
-    id_help: cli.categories.id_help
-    list_help: cli.categories.list_help
-    show_help: cli.categories.show_help
-    year_help: cli.categories.year_help
+    app_help: Gestión de categorías de trámites de la AEAT
+    id_help: Identificador único de la categoría
+    list_help: Listar todas las categorías de trámites disponibles
+    show_help: Mostrar detalles de una categoría específica
+    year_help: Ejercicio fiscal
   cloud:
-    app_help: cli.cloud.app_help
-    environment_col: cli.cloud.environment_col
+    app_help: Gestión de funciones en la nube (Google Cloud)
+    environment_col: Entorno
     errors:
-      missing_project: cli.cloud.errors.missing_project
-    functions_app_help: cli.cloud.functions_app_help
-    functions_describe_help: cli.cloud.functions_describe_help
-    functions_describe_name_help: cli.cloud.functions_describe_name_help
-    functions_list_help: cli.cloud.functions_list_help
-    functions_list_title: cli.cloud.functions_list_title
-    generation_col: cli.cloud.generation_col
+      missing_project: No se ha configurado el ID del proyecto de Google Cloud
+    functions_app_help: Gestión de Google Cloud Functions
+    functions_describe_help: Mostrar detalles de una función específica en la nube
+    functions_describe_name_help: Nombre de la función a describir
+    functions_list_help: Listar todas las funciones en la nube desplegadas
+    functions_list_title: Funciones en la Nube (Google Cloud Functions)
+    generation_col: Generación
     labels:
-      buckets_found: cli.cloud.labels.buckets_found
-      functions_found: cli.cloud.labels.functions_found
-      objects_found: cli.cloud.labels.objects_found
-      services_found: cli.cloud.labels.services_found
-    location_col: cli.cloud.location_col
-    name_col: cli.cloud.name_col
-    run_app_help: cli.cloud.run_app_help
-    run_describe_help: cli.cloud.run_describe_help
-    run_describe_name_help: cli.cloud.run_describe_name_help
-    run_list_help: cli.cloud.run_list_help
-    run_list_title: cli.cloud.run_list_title
-    size_col: cli.cloud.size_col
-    state_col: cli.cloud.state_col
-    storage_app_help: cli.cloud.storage_app_help
-    storage_buckets_help: cli.cloud.storage_buckets_help
-    storage_buckets_title: cli.cloud.storage_buckets_title
-    storage_class_col: cli.cloud.storage_class_col
-    storage_ls_bucket_help: cli.cloud.storage_ls_bucket_help
-    storage_ls_help: cli.cloud.storage_ls_help
-    storage_ls_prefix_help: cli.cloud.storage_ls_prefix_help
-    update_time_col: cli.cloud.update_time_col
-    updated_col: cli.cloud.updated_col
+      buckets_found: Buckets encontrados
+      functions_found: Funciones encontradas
+      objects_found: Objetos encontrados
+      services_found: Servicios encontrados
+    location_col: Ubicación
+    name_col: Nombre
+    run_app_help: Gestión de Google Cloud Run
+    run_describe_help: Mostrar detalles de un servicio específico en Cloud Run
+    run_describe_name_help: Nombre del servicio a describir
+    run_list_help: Listar todos los servicios de Cloud Run desplegados
+    run_list_title: Servicios de Cloud Run (Google Cloud Run)
+    size_col: Tamaño
+    state_col: Estado
+    storage_app_help: Gestión de Google Cloud Storage
+    storage_buckets_help: Listar todos los buckets de almacenamiento disponibles
+    storage_buckets_title: Buckets de Almacenamiento (Google Cloud Storage)
+    storage_class_col: Clase de almacenamiento
+    storage_ls_bucket_help: Nombre del bucket a listar
+    storage_ls_help: Listar los objetos contenidos en un bucket
+    storage_ls_prefix_help: Prefijo (ruta) para filtrar los objetos
+    update_time_col: Fecha de actualización
+    updated_col: Actualizado
   common:
     errors:
-      invalid_iso_date: cli.common.errors.invalid_iso_date
+      invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
       period_empty: cli.common.errors.period_empty
       period_unrecognised: cli.common.errors.period_unrecognised
   data:

@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_mis_expedientes.label_909741",
-    purpose_es="Consulta del estado de los expedientes administrativos del contribuyente.",
+    purpose="entries.portal_mis_expedientes.purpose",
 )
 """Portal entry for administrative case-file status consultation."""

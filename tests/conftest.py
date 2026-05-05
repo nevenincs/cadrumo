@@ -169,7 +169,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             if "live_read" in _marker_names(item):
                 item.add_marker(skip_marker)
 
-    # #305 cluster H: fixture_tier_l1 / l2 / l3 marker-driven skips.
     _apply_fixture_tier_gates(items)
 
 

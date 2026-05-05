@@ -1,4 +1,5 @@
 [legal."rd-439-2007:art-110"]
+evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto"
 corpus_ref = "corpus/normatives/rd-439-2007.json#art-110"
@@ -11,8 +12,134 @@ review_status = "reviewed"
 reviewed_at = 2026-04-12
 reviewed_by = "wgergely"
 notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas."
+required_text = [
+    "20 por ciento del rendimiento neto",
+    "2 por ciento del volumen de ingresos del trimestre",
+    "se reducirán en un 60 por ciento",
+    "33.007,2 euros",
+]
+
+[legal."orden-eha-672-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-672-2007.html#articulo-1"
+document_id = "BOE-A-2007-6032"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
+published_at = 2007-03-22
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de los modelos 130 y 131 para autoliquidacion de pagos fraccionados de IRPF."
+required_text = [
+    "modelos 130 y 131",
+    "actividades económicas en estimación objetiva",
+    "pagos fraccionados a cuenta del Impuesto sobre la Renta",
+]
+
+[legal."ley-35-2006:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-99"
+document_id = "BOE-A-2006-20764"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Obligacion general de practicar pagos a cuenta del IRPF."
+required_text = [
+    "obligación general de practicar retenciones",
+    "pagos fraccionados como pagos a cuenta del IRPF",
+]
+
+[legal."rd-439-2007:art-109"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-109"
+document_id = "BOE-A-2007-6820"
+article = "109"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Obligaciones formales de retenedores y obligados a ingresar a cuenta."
+required_text = [
+    "obligaciones formales de los retenedores",
+    "modelo, el plazo de presentación",
+]
+
+[legal."rd-439-2007:art-100"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-100"
+document_id = "BOE-A-2007-6820"
+article = "100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base reglamentaria del importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles urbanos."
+required_text = [
+    "arrendamiento o subarrendamiento de inmuebles urbanos",
+    "19 por ciento",
+    "excluido el Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-eha-3435-2007:anexo-ii"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3435-2007.html#anexo-ii"
+document_id = "BOE-A-2007-20485"
+section = "Anexo II"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485#ai-2"
+published_at = 2007-11-29
+effective_from = 2008-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
+required_text = [
+    "Modelo 123",
+    "Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario",
+    "Autoliquidación periódica-Modelo 123",
+]
+
+[legal."orden-hac-56-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-56-2024.html#articulo-primero"
+document_id = "BOE-A-2024-1772"
+article = "primero"
+section = "Anexo I"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+published_at = 2024-01-31
+effective_from = 2024-02-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participacion frente al resto de rentas."
+required_text = [
+    "El anexo II, modelo 123",
+    "se sustituye por el anexo I de esta orden",
+    "dividendos y otras rentas de participación",
+]
 
 [sources."aeat-dr-130-2019-v12"]
+evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
@@ -21,4 +148,265 @@ bytes = 180736
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-130-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_130/files/modelo-130-instrucciones.html"
+sha256 = "e5d4efd180d393bee60f1563db0bb4e664d8df3e900b5e4e85700b5e5693fa19"
+bytes = 40060
+retrieved_at = 2026-05-04
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
+sha256 = "6d7704aa438c30dd538dbba471ac68f28d22e478bcd679ba8b49b2776a6c964a"
+bytes = 183978
+retrieved_at = 2026-05-03
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx"
+sha256 = "df4c23a10d836c7d1b4ba16a7758e735c6ae113c5c6c01ff6c439692d0ad4935"
+bytes = 183949
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DR131e2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx"
+sha256 = "83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f"
+bytes = 184936
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR131e2024.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-131-2019-2023-v101"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx"
+sha256 = "2b36ae9d4712a94d3b0a798d813c9f560b29fdd2a00062b7d7b4ba9f72f970f3"
+bytes = 115613
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/DR131e2020_v1.01.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html"
+sha256 = "c1f4f33bbfc55e81028899e67b5f8496e3130be63abf733374b4ec8745c9c913"
+bytes = 43884
+retrieved_at = 2026-05-05
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-111-2019-v18"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xls"
+sha256 = "ad26dbb538caaba681d6869e7ef7c8d472602f55f94b7adf67e1f011402d97af"
+bytes = 182784
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-111-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_111/files/modelo-111-instrucciones.html"
+sha256 = "d09e47cced458ac0d7beccafc27882af1974a34a7bde596626d157d8015ab835"
+bytes = 34567
+retrieved_at = 2026-05-05
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/pagos-cuenta/modelo-111-reten_____moniales-imputaciones-renta-autoliquidacion_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-115-2019-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls"
+sha256 = "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694"
+bytes = 176640
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-obligaciones-retenedor"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-obligaciones-retenedor.html"
+sha256 = "1ed25dcfc9dcce77d75ccf179bf0cca031aca26497a14ae8969a0626fa2f8393"
+bytes = 21560
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-115.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-guia-censal"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-guia-censal-036.html"
+sha256 = "c911d118f14617bb29d23568814c0c387c48b6fbec1e97c5342ecebc51ddb974"
+bytes = 9867
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-09-retenciones-ingresos-cuenta/modelo-115.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-115-180-folleto-actividades"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-180-folleto-actividades.html"
+sha256 = "2e5fd7a83743f84bb88bc6924e2ccd3754b9ffee9eb3e316cb4856f86833321f"
+bytes = 9852
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/folleto-actividades-economicas/7-otras-obligaciones-fiscales-retenciones/7_3-retenciones-arrendamiento-bienes-inmuebles-180.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2024-v20"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
+sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"
+bytes = 194560
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2019-2023-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"
+sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"
+bytes = 173568
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2024-v20-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
+sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"
+bytes = 194560
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-123-2019-2023-v13-form-text"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"
+sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"
+bytes = 173568
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-123-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_123/files/modelo-123-procedure.html"
+sha256 = "107a4d45310f651e52374853b7554defb763aec413ac2feadfb2c2d2d069ed6d"
+bytes = 21512
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH04.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2007-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
+sha256 = "da31a85431f52b5d6c1904689ea893c5b605e1d1a8edb9a6a92607075f85fe35"
+bytes = 150155
+retrieved_at = 2026-05-05
+published_at = 2007-11-29
+applies_from = 2008-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20485"
+review_status = "reviewed"
+
+[sources."boe-modelo-123-2024-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ec5d6e081d3b548e20366fac2b9ca04a882de4c610ee972706819e5fb894b7e4"
+bytes = 141328
+retrieved_at = 2026-05-05
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-procedure.html"
+sha256 = "2ea3d1ec26667a7338a49736f450a62cc028fd489b5fa5d57ec3915b8ff4b537"
+bytes = 20696
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G602.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-131-2007-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-672-2007.html"
+sha256 = "57a9e8c5aadd45dccbcbb20a3abc683aa9368aee46614b1f621ef285bf5e3c96"
+bytes = 132550
+retrieved_at = 2026-05-05
+published_at = 2007-03-22
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
 review_status = "reviewed"

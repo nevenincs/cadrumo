@@ -45,7 +45,7 @@ _SAMPLE_DATES: list[date] = [
 class TestYYYYMMDDRoundTrip:
     @pytest.mark.parametrize("value", _SAMPLE_DATES, ids=lambda v: v.isoformat())
     def test_round_trip(self, value: date) -> None:
-        encoded = encode_date(value, DateFmt.YYYYMMDD)
+        encoded = encode_date(value, DateFmt.YYYYMMDD, encoding="cp1252")
         assert len(encoded) == 8
         assert encoded == value.strftime("%Y%m%d").encode("ascii")
         assert _decode_date(encoded, DateFmt.YYYYMMDD) == value
@@ -54,7 +54,7 @@ class TestYYYYMMDDRoundTrip:
 class TestDDMMYYYYRoundTrip:
     @pytest.mark.parametrize("value", _SAMPLE_DATES, ids=lambda v: v.isoformat())
     def test_round_trip(self, value: date) -> None:
-        encoded = encode_date(value, DateFmt.DDMMYYYY)
+        encoded = encode_date(value, DateFmt.DDMMYYYY, encoding="cp1252")
         assert len(encoded) == 8
         assert encoded == value.strftime("%d%m%Y").encode("ascii")
         assert _decode_date(encoded, DateFmt.DDMMYYYY) == value
@@ -85,7 +85,7 @@ class TestDateFormatsAreNotInterchangeable:
         """A YYYYMMDD-encoded date fed to DDMMYYYY must either raise or
         produce a clearly wrong date. The fail mode is defensive: callers
         must pass the correct format."""
-        encoded = encode_date(date(2024, 3, 15), DateFmt.YYYYMMDD)  # b"20240315"
+        encoded = encode_date(date(2024, 3, 15), DateFmt.YYYYMMDD, encoding="cp1252")  # b"20240315"
         # Decoded as DDMMYYYY: day=20, month=24 → ValueError (month > 12).
         with pytest.raises(ValueError):
             _decode_date(encoded, DateFmt.DDMMYYYY)

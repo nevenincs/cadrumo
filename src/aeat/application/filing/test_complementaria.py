@@ -1,4 +1,4 @@
-"""Unit tests for complementaria registry-boundary behaviour."""
+"""Tests for complementaria registry-boundary behaviour."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ...domain.filing import FilingDraftStatus, FilingValue, FilingValueKind
 from ...domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
 from . import (
     FilingAmendmentError,
@@ -18,7 +19,7 @@ from . import (
     build_runtime_schema_provider,
     load_amendment,
 )
-from .testing import SyntheticProfile, synthesize_filing_draft
+from .testing import FilingTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -65,7 +66,12 @@ def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dra
     FilingDraftRepository(store_dir=drafts_dir).save(draft)
 
 
-def _submitted_filing(draft: FilingDraft, *, submission_id: str = "sub-1") -> SubmittedFiling:
+def _submitted_filing(
+    draft: FilingDraft,
+    *,
+    submission_id: str = "sub-1",
+    justificante_csv: str | None = None,
+) -> SubmittedFiling:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     return SubmittedFiling(
         submission_id=submission_id,
@@ -74,7 +80,7 @@ def _submitted_filing(draft: FilingDraft, *, submission_id: str = "sub-1") -> Su
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
         status=SubmissionStatus.SUBMITTED,
-        justificante_csv=f"CSV-{submission_id}",
+        justificante_csv=justificante_csv if justificante_csv is not None else f"CSV-{submission_id}",
         justificante_pdf_path=None,
         submitted_at=now,
         acknowledged_at=None,
@@ -90,11 +96,26 @@ def _submitted_filing(draft: FilingDraft, *, submission_id: str = "sub-1") -> Su
 
 
 def _draft(modelo: str, period: str, casillas: dict[str, Decimal]) -> FilingDraft:
-    return synthesize_filing_draft(
+    now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
+    values = tuple(
+        FilingValue(
+            casilla_id=casilla_id,
+            value=value,
+            kind=FilingValueKind.LITERAL,
+            source="input",
+        )
+        for casilla_id, value in sorted(casillas.items())
+    )
+    return FilingDraft(
+        draft_id=f"unsupported-{modelo}-{period}",
         modelo=modelo,
         period=period,
-        casilla_values=casillas,
         profile_tax_id="00000000T",
+        status=FilingDraftStatus.SUBMITTED,
+        values=values,
+        created_at=now,
+        updated_at=now,
+        schema_version=f"registry:{modelo}:missing",
     )
 
 
@@ -102,10 +123,9 @@ def _registry_draft(*, casillas: dict[str, Decimal]) -> FilingDraft:
     return build_draft(
         modelo="130",
         period="2024Q1",
-        profile=SyntheticProfile(
+        profile=FilingTestProfile(
             tax_id="00000000T",
             display_name="Complementaria registry test",
-            applicable_modelos=("130",),
         ),
         inputs=casillas,
         schema_provider=build_runtime_schema_provider(),
@@ -124,6 +144,7 @@ class TestBuildComplementaria:
                 "06": Decimal("100"),
                 "08": Decimal("2000"),
                 "10": Decimal("10"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
                 "13": Decimal("0"),
                 "15": Decimal("0"),
                 "16": Decimal("0"),
@@ -140,6 +161,7 @@ class TestBuildComplementaria:
                 "02": Decimal("3500"),
                 "05": Decimal("400"),
                 "06": Decimal("0"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             },
             schema_provider=build_runtime_schema_provider(),
         )
@@ -156,6 +178,48 @@ class TestBuildComplementaria:
         monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
         with pytest.raises(FilingAmendmentError, match="simple filename token"):
             load_amendment("../escape")
+
+    def test_complementaria_requires_official_justificante_csv(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        original_draft = _registry_draft(
+            casillas={
+                "01": Decimal("10000"),
+                "02": Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            }
+        )
+        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        original = _submitted_filing(original_draft, justificante_csv="")
+
+        with pytest.raises(FilingBuilderError, match="official justificante CSV"):
+            build_complementaria(
+                original,
+                {"01": Decimal("11000")},
+                schema_provider=build_runtime_schema_provider(),
+            )
+        assert not (tmp_path / "submissions" / "amendments").exists()
+
+    def test_complementaria_requires_original_registry_snapshot(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        original_draft = _registry_draft(
+            casillas={
+                "01": Decimal("10000"),
+                "02": Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            }
+        ).model_copy(update={"schema_version": "registry:130:wrong-revision"})
+        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        original = _submitted_filing(original_draft)
+
+        with pytest.raises(FilingBuilderError, match="active registry snapshot"):
+            build_complementaria(
+                original,
+                {"01": Decimal("11000")},
+                schema_provider=build_runtime_schema_provider(),
+            )
+        assert not (tmp_path / "submissions" / "amendments").exists()
 
     def test_modelo_303_requires_registry_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         original_draft = _draft("303", "2024Q2", {"69": Decimal("1900.00")})

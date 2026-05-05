@@ -43,6 +43,13 @@ class DeadlineEngineProtocol(Protocol):
 
 
 @runtime_checkable
+class RegistryFilingDraftProtocol(FilingDraftLike, Protocol):
+    """Workflow draft surface after registry-backed filing construction."""
+
+    schema_version: str
+
+
+@runtime_checkable
 class FilingDraftBuilderProtocol(Protocol):
     """Narrow surface over :func:`aeat.application.filing.build_draft`."""
 
@@ -54,8 +61,8 @@ class FilingDraftBuilderProtocol(Protocol):
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> FilingDraftLike:
-        """Build and return a :class:`FilingDraftLike`."""
+    ) -> RegistryFilingDraftProtocol:
+        """Build and return a registry-backed filing draft."""
         ...
 
 
@@ -63,7 +70,7 @@ class FilingDraftBuilderProtocol(Protocol):
 class SubmissionEngineProtocol(Protocol):
     """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
-    def preflight(self, draft: FilingDraftLike, *, today: date) -> None:
+    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
         """Run preflight gates against ``draft``; raise on failure."""
         ...
 
@@ -86,11 +93,10 @@ class CertificateBundleProtocol(Protocol):
 
 @runtime_checkable
 class FilingInputsProviderProtocol(Protocol):
-    """Provides raw casilla inputs for the draft stage.
+    """Provides filing inputs for the draft stage.
 
     The default adapter reads the inputs from a JSON file at
-    ``settings.aeat_workflow_draft_inputs_path``; tests inject a
-    hand-rolled Protocol-conforming provider to control the shape.
+    ``settings.aeat_workflow_draft_inputs_path``.
     """
 
     def load_inputs(
@@ -100,7 +106,7 @@ class FilingInputsProviderProtocol(Protocol):
         period: str,
         profile: AutonomoProfile,
     ) -> Mapping[str, object]:
-        """Return the raw casilla inputs for the draft build."""
+        """Return the filing inputs for the draft build."""
         ...
 
 
@@ -111,5 +117,6 @@ __all__ = [
     "DeadlineEngineProtocol",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
+    "RegistryFilingDraftProtocol",
     "SubmissionEngineProtocol",
 ]

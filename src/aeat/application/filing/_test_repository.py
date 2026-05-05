@@ -24,13 +24,13 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...domain.filing._repository import FilingDraftRepository
 from ...domain.filing._schema import FilingDraft
-from .testing import synthesize_filing_draft
+from .testing import build_registry_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft:
-    return synthesize_filing_draft(
+    return build_registry_filing_draft(
         modelo="130",
         period=period,
         casilla_values={
@@ -38,6 +38,12 @@ def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft
             "02": Decimal("3500"),
             "05": Decimal("400"),
             "06": Decimal("0"),
+            "08": Decimal("2000"),
+            "10": Decimal("10"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
         },
         profile_tax_id="00000000T",
     )

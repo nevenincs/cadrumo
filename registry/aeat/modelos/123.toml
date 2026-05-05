@@ -1,0 +1,1901 @@
+[modelo]
+id = "123"
+title = "Retenciones sobre capital mobiliario"
+official_name = "Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades e IRNR establecimientos permanentes. Determinados rendimientos del capital mobiliario o determinadas rentas."
+tax_domain = "cross_tax"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+]
+
+[revisions."2024-y-siguientes"]
+label = "Orden HAC/56/2024, ejercicios 2024 y siguientes"
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Numero de rentas dividendos y participaciones"
+section = ["numero_rentas", "dividendos_participaciones"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-01"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Numero de rentas resto"
+section = ["numero_rentas", "resto_rentas"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-02"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Numero de rentas total"
+section = ["numero_rentas", "total"]
+data_type = "integer"
+required = false
+input_kind = "computed"
+formula = "modelo-123-total-rentas"
+export_refs = ["modelo-123-casilla-03"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Base dividendos y participaciones"
+section = ["base_retenciones", "dividendos_participaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-04"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Base resto de rentas"
+section = ["base_retenciones", "resto_rentas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-05"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "Base total"
+section = ["base_retenciones", "total"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-total-base"
+export_refs = ["modelo-123-casilla-06"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "Retenciones dividendos y participaciones"
+section = ["retenciones_ingresos_cuenta", "dividendos_participaciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-07"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones resto de rentas"
+section = ["retenciones_ingresos_cuenta", "resto_rentas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-08"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "09"
+number = "09"
+label = "Retenciones total"
+section = ["retenciones_ingresos_cuenta", "total"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-total-retenciones"
+export_refs = ["modelo-123-casilla-09"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "10"
+number = "10"
+label = "Ingresos de ejercicios anteriores"
+section = ["periodificacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-10"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "11"
+number = "11"
+label = "Regularizacion"
+section = ["periodificacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-11"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "12"
+number = "12"
+label = "Suma de retenciones y regularizacion"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-total-liquidacion"
+export_refs = ["modelo-123-casilla-12"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "13"
+number = "13"
+label = "Resultado de anteriores autoliquidaciones"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-casilla-13"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-resultado-ingresar"
+export_refs = ["modelo-123-casilla-14"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-123-total-rentas"
+target = "03"
+expression = { op = "add", args = [{ casilla = "01" }, { casilla = "02" }] }
+rounding = "integer"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-dr-123-2024-v20-form-text"
+required_text = ["Totales [03]"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-123-total-base"
+target = "06"
+expression = { op = "add", args = [{ casilla = "04" }, { casilla = "05" }] }
+rounding = "money-2"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-dr-123-2024-v20-form-text"
+required_text = ["Base de retenciones e ingresos a cuenta. Totales [06]"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-123-total-retenciones"
+target = "09"
+expression = { op = "add", args = [{ casilla = "07" }, { casilla = "08" }] }
+rounding = "money-2"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-dr-123-2024-v20-form-text"
+required_text = ["Retenciones e ingresos a cuenta. Totales [09]"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-123-total-liquidacion"
+target = "12"
+expression = { op = "add", args = [{ casilla = "09" }, { casilla = "11" }] }
+rounding = "money-2"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-dr-123-2024-v20-form-text"
+required_text = ["Suma de retenciones"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-123-resultado-ingresar"
+target = "14"
+expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
+rounding = "money-2"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-dr-123-2024-v20-form-text"
+required_text = ["Resultado a ingresar ( [12] - [13] ) [14]"]
+
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-123-fichero-boe"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-123-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "123"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-page"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-developer-tax-id"
+offset = 101
+length = 9
+kind = "header"
+header_key = "developer_tax_id"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-123-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-page-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-page-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "123"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-page-number"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-page-marker"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-complementaria-page-reserved"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-declaration-type"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-tax-id"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-legal-name"
+offset = 23
+length = 80
+kind = "header"
+header_key = "legal_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-period"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-01"
+offset = 109
+length = 15
+kind = "casilla"
+casilla = "01"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-02"
+offset = 124
+length = 15
+kind = "casilla"
+casilla = "02"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-03"
+offset = 139
+length = 15
+kind = "casilla"
+casilla = "03"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-04"
+offset = 154
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-05"
+offset = 171
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-06"
+offset = 188
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-07"
+offset = 205
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-08"
+offset = 222
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-09"
+offset = 239
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-10"
+offset = 256
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-11"
+offset = 273
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-12"
+offset = 290
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-13"
+offset = 307
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-casilla-14"
+offset = 324
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-complementaria-flag"
+offset = 341
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "boolean"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-previous-receipt"
+offset = 342
+length = 13
+kind = "header"
+header_key = "previous_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-iban"
+offset = 355
+length = 34
+kind = "header"
+header_key = "iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-reserved-aeat"
+offset = 389
+length = 200
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-page-close"
+offset = 589
+length = 12
+kind = "literal"
+literal = "</T12301000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-123-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-123-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".extraction_profiles]]
+id = "modelo-123-export-record"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".extraction_profiles]]
+id = "modelo-123-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".live_cross_references]]
+id = "modelo-123-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-123-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".workbook_parity_refs]]
+id = "modelo-123-dr-xls-2024"
+workbook_source = "aeat-dr-123-2024-v20"
+fixture_id = "modelo-123-2024-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".verification_expectations]]
+id = "modelo-123-calculation-verification"
+computed_casillas = ["03", "06", "09", "12", "14"]
+reconciliation_totals = { ingresar = "14" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-portal-cross-reference"
+surface = "portal"
+consumer = "portal_m123_retenciones_capital"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-1t"
+filing_year = 2026
+period = "2026Q1"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+payment_cutoff_on = 2026-04-15
+applicability_condition_mode = "any"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-2t"
+filing_year = 2026
+period = "2026Q2"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+payment_cutoff_on = 2026-07-15
+applicability_condition_mode = "any"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-3t"
+filing_year = 2026
+period = "2026Q3"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+payment_cutoff_on = 2026-10-15
+applicability_condition_mode = "any"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows]]
+id = "modelo-123-2026-4t"
+filing_year = 2026
+period = "2026Q4"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-20
+payment_cutoff_on = 2027-01-15
+applicability_condition_mode = "any"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rendimientos de capital mobiliario o determinadas rentas sujetas a retencion o ingreso a cuenta."
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-123-procedure"]
+
+[revisions."2019-2023"]
+label = "Orden EHA/3435/2007, ejercicios 2019 a 2023"
+valid_from = 2019-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = [
+    "aeat-dr-123-2019-2023-v13",
+    "aeat-dr-123-2019-2023-v13-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2007-form",
+]
+
+[[revisions."2019-2023".casillas]]
+id = "01"
+number = "01"
+label = "Numero de perceptores"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-01"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "02"
+number = "02"
+label = "Base de retenciones e ingresos a cuenta"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-02"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "03"
+number = "03"
+label = "Retenciones e ingresos a cuenta"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-03"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "04"
+number = "04"
+label = "Ingresos de ejercicios anteriores"
+section = ["periodificacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-04"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "05"
+number = "05"
+label = "Regularizacion"
+section = ["periodificacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-05"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "06"
+number = "06"
+label = "Suma de retenciones y regularizacion"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-2019-total-liquidacion"
+export_refs = ["modelo-123-2019-casilla-06"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "07"
+number = "07"
+label = "Resultado de anteriores autoliquidaciones"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-07"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "08"
+number = "08"
+label = "Resultado a ingresar"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-123-2019-resultado-ingresar"
+export_refs = ["modelo-123-2019-casilla-08"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-123-2019-total-liquidacion"
+target = "06"
+expression = { op = "add", args = [{ casilla = "03" }, { casilla = "05" }] }
+rounding = "money-2"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-dr-123-2019-2023-v13-form-text"
+required_text = ["[03] + [05]"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-123-2019-resultado-ingresar"
+target = "08"
+expression = { op = "subtract", args = [{ casilla = "06" }, { casilla = "07" }] }
+rounding = "money-2"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-dr-123-2019-2023-v13-form-text"
+required_text = ["Resultado a ingresar. [08]"]
+
+[[revisions."2019-2023".export_layouts]]
+id = "modelo-123-2019-fichero-boe"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records]]
+id = "modelo-123-2019-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "123"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-page"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-developer-tax-id"
+offset = 101
+length = 9
+kind = "header"
+header_key = "developer_tax_id"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records]]
+id = "modelo-123-2019-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-page-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-page-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "123"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-page-number"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-page-marker"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-complementaria-page-reserved"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-declaration-type"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-tax-id"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-surnames"
+offset = 23
+length = 60
+kind = "header"
+header_key = "surnames"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-name"
+offset = 83
+length = 20
+kind = "header"
+header_key = "name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-period"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-01"
+offset = 109
+length = 15
+kind = "casilla"
+casilla = "01"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-02"
+offset = 124
+length = 17
+kind = "casilla"
+casilla = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-03"
+offset = 141
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-04"
+offset = 158
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-05"
+offset = 175
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-06"
+offset = 192
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-07"
+offset = 209
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-casilla-08"
+offset = 226
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-complementaria-flag"
+offset = 243
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "boolean"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-previous-receipt"
+offset = 244
+length = 13
+kind = "header"
+header_key = "previous_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-iban"
+offset = 257
+length = 34
+kind = "header"
+header_key = "iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-reserved-aeat"
+offset = 291
+length = 185
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-seal"
+offset = 476
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-page-close"
+offset = 489
+length = 12
+kind = "literal"
+literal = "</T12301000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".export_layouts.records]]
+id = "modelo-123-2019-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-123-2019-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".extraction_profiles]]
+id = "modelo-123-2019-export-record"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".extraction_profiles]]
+id = "modelo-123-2019-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".live_cross_references]]
+id = "modelo-123-2019-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-123-2019-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".workbook_parity_refs]]
+id = "modelo-123-dr-xls-2019"
+workbook_source = "aeat-dr-123-2019-2023-v13"
+fixture_id = "modelo-123-2019-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".verification_expectations]]
+id = "modelo-123-2019-calculation-verification"
+computed_casillas = ["06", "08"]
+reconciliation_totals = { ingresar = "08" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-portal-cross-reference"
+surface = "portal"
+consumer = "portal_m123_retenciones_capital"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure"]

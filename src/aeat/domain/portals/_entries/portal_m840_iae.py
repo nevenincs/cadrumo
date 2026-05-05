@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m840_iae.label_017824",
-    purpose_es="Alta, variación y baja en el Impuesto sobre Actividades Económicas (IAE).",
+    purpose="entries.portal_m840_iae.purpose",
 )
 """Portal entry for Modelo 840 (Impuesto sobre Actividades Económicas — IAE)."""

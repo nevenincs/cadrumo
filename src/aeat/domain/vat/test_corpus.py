@@ -1,33 +1,21 @@
-"""Unit tests for :func:`aeat.domain.vat.load_vat_rules_from_manual`.
-
-Verifies the in-memory fallback for the supported 2025 year and the
-:exc:`aeat.domain.vat.VatCatalogueError` for every other year.
-"""
+"""VAT catalogue access tests."""
 
 from __future__ import annotations
 
-import logging
+from datetime import date
 
 import pytest
 
-from . import (
-    VAT_CATALOGUE_2025,
-    VatCatalogueError,
-    load_vat_rules_from_manual,
-)
+from . import VatCatalogueError, load_vat_rules_from_manual, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_load_2025_returns_fallback_catalogue(caplog: pytest.LogCaptureFixture) -> None:
-    """The 2025 loader returns :data:`VAT_CATALOGUE_2025` and logs INFO."""
-    caplog.set_level(logging.INFO, logger="aeat.domain.vat._corpus")
+def test_load_2025_returns_committed_catalogue() -> None:
     catalogue = load_vat_rules_from_manual(2025)
-    assert catalogue is VAT_CATALOGUE_2025
-    assert any("falling back to in-memory VAT_CATALOGUE_2025" in record.getMessage() for record in caplog.records)
+    assert catalogue is resolve_catalogue(on=date(2025, 1, 1))
 
 
-def test_load_unsupported_year_raises() -> None:
-    """Any year other than 2025 must raise :exc:`VatCatalogueError`."""
-    with pytest.raises(VatCatalogueError):
+def test_load_missing_year_raises() -> None:
+    with pytest.raises(VatCatalogueError, match="year=2024"):
         load_vat_rules_from_manual(2024)

@@ -1,22 +1,44 @@
-"""Public ``parse_declaracion`` entry point for declaración PDFs.
-
-Detection resolves a
-:class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
-from document content and caller overrides. That tuple is a detected
-template identity only. Casilla-complete extraction requires validated
-registry snapshots.
-"""
+"""Public ``parse_declaracion`` entry point for declaración PDFs."""
 
 from __future__ import annotations
 
+import re
+from datetime import UTC, datetime
+from decimal import Decimal
+from hashlib import sha256
 from pathlib import Path
 
 from ....core.logging import get_logger
+from ....core.paths import PROJECT_ROOT
+from ....domain.calculations.registry import (
+    ExtractionProfileDefinition,
+    ModeloDefinition,
+    RegistrySnapshot,
+    RegistrySnapshotError,
+    build_snapshot,
+    load_registry_tree,
+)
+from ..pdf import ExtractedCasilla
+from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ._detect import detect_template_revision
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
-from ._schema import DeclaracionFiling, TemplateRevision
+from ._parsers import extract_pages_text
+from ._schema import DeclaracionObservation, TemplateRevision
 
 _logger = get_logger(__name__)
+
+_TAX_ID_RE = re.compile(
+    r"\bNIF\s*[:\-]?\s*(?P<tax_id>[A-Z0-9][A-Z0-9 .\-]{3,31}?)(?=\s+(?:CSV|Fecha)\b|\s*$)",
+    re.IGNORECASE,
+)
+_PERIOD_RE = re.compile(
+    r"\bPer[ií]odo\s*[:\-]?\s*(?P<period>[1-4]T|0A|[0-1][0-9]|[A-Z0-9]{1,4})\b",
+    re.IGNORECASE,
+)
+_DECLARANT_ROW_RE = re.compile(
+    r"\b(?P<tax_id>[XYZ]?[0-9]{7,8}[A-Z])\s+(?P<year>20[0-9]{2})\s+(?P<period>[1-4]T|0A|[0-1][0-9])\b",
+    re.IGNORECASE,
+)
 
 
 def parse_declaracion(
@@ -25,23 +47,34 @@ def parse_declaracion(
     modelo_override: str | None = None,
     template_revision_override: str | None = None,
     año_override: int | None = None,
-) -> DeclaracionFiling:
-    """Parse an AEAT declaración PDF into a :class:`DeclaracionFiling`.
-
-    Resolves the
-    :class:`aeat.adapters.inbound.declaracion._schema.TemplateRevision`
-    triple by combining auto-detection with any caller-supplied
-    overrides, then requires a validated registry-backed extraction
-    implementation.
+    period_override: str | None = None,
+    extraction_profile_id: str | None = None,
+    registry_snapshot: RegistrySnapshot | None = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> DeclaracionObservation:
+    """Parse an AEAT declaración PDF into a :class:`DeclaracionObservation`.
 
     Args:
         pdf_path: Path to the declaración PDF.
         modelo_override: Explicit modelo identifier (skips detection).
         template_revision_override: Explicit revision string (skips detection).
         año_override: Explicit four-digit tax year (skips detection).
+        period_override: Explicit printed period when the PDF text does
+            not expose a stable period marker.
+        extraction_profile_id: Registry extraction profile to use when
+            the selected snapshot contains more than one declaration-PDF
+            profile.
+        registry_snapshot: Pre-built validated registry snapshot. When
+            omitted, the parser loads the committed registry and builds
+            one from the detected modelo, tax year, and period.
+        registry_root: Optional registry TOML root used when
+            ``registry_snapshot`` is omitted.
+        source_root: Optional source root used for source integrity
+            checks while building a snapshot.
 
     Returns:
-        A strict :class:`DeclaracionFiling` populated with the extracted
+        A strict :class:`DeclaracionObservation` populated with the extracted
         casillas, warnings, and provenance metadata.
 
     Raises:
@@ -51,9 +84,12 @@ def parse_declaracion(
         :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
             For other parse errors (PDF not found, empty text, required
             header field missing, override conflicts with detected
-            metadata, or missing registry-backed extraction coverage).
+            metadata, malformed casilla values, or missing extraction
+            coverage).
     """
     path = Path(pdf_path)
+    pages = extract_pages_text(path)
+    text = "\n".join(pages)
 
     template = _resolve_template(
         path=path,
@@ -61,18 +97,38 @@ def parse_declaracion(
         template_revision_override=template_revision_override,
         año_override=año_override,
     )
+    period = _resolve_period(text, period_override=period_override)
+    snapshot = registry_snapshot or _load_registry_snapshot(
+        template=template,
+        period=period,
+        registry_root=registry_root,
+        source_root=source_root,
+    )
+    _validate_snapshot_matches_template(snapshot, template)
+    profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
+    tax_id = _extract_tax_id(text)
+    values = _extract_profile_values(pages, profile)
     _logger.debug(
-        "parse_declaracion: path=%s modelo=%s año=%s revision=%s source=%s",
+        "parse_declaracion: path=%s modelo=%s año=%s period=%s revision=%s profile=%s",
         path.name,
         template.modelo,
         template.año,
+        period,
         template.revision,
-        template.detected_from,
+        profile.id,
     )
 
-    raise DeclaracionParseError(
-        "declaracion extraction requires validated registry snapshots "
-        f"for modelo={template.modelo} año={template.año} revision={template.revision}"
+    return DeclaracionObservation(
+        modelo=template.modelo,
+        period=period,
+        ejercicio=str(template.año),
+        tax_id=tax_id,
+        template_revision=template,
+        values=values,
+        warnings=(),
+        source_pdf_path=path.resolve(),
+        source_pdf_sha256=sha256(path.read_bytes()).hexdigest(),
+        parsed_at=datetime.now(tz=UTC),
     )
 
 
@@ -142,3 +198,145 @@ def _resolve_template(
             detected_from="explicit_override",
         )
     return detected
+
+
+def _resolve_period(text: str, *, period_override: str | None) -> str:
+    if period_override:
+        return period_override.upper()
+    match = _PERIOD_RE.search(text)
+    if match is None:
+        raise DeclaracionParseError("declaracion period could not be resolved from the PDF text")
+    return match.group("period").upper()
+
+
+def _extract_tax_id(text: str) -> str:
+    match = _TAX_ID_RE.search(text)
+    if match is not None:
+        return re.sub(r"\s+", "", match.group("tax_id").strip().rstrip("."))
+    row_match = _DECLARANT_ROW_RE.search(text)
+    if row_match is not None:
+        return row_match.group("tax_id").upper()
+    raise DeclaracionParseError("declaracion tax id could not be resolved from the PDF text")
+
+
+def _load_registry_snapshot(
+    *,
+    template: TemplateRevision,
+    period: str,
+    registry_root: Path | None,
+    source_root: Path | None,
+) -> RegistrySnapshot:
+    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
+    modelos, catalogues = load_registry_tree(root)
+    modelo = _select_modelo(modelos, template.modelo)
+    try:
+        return build_snapshot(
+            modelo,
+            catalogues,
+            source_root=source_root or PROJECT_ROOT,
+            filing_year=template.año,
+            period=period,
+        )
+    except RegistrySnapshotError as exc:
+        raise DeclaracionParseError(
+            "declaracion extraction requires a validated registry snapshot "
+            f"for modelo={template.modelo} año={template.año} period={period}"
+        ) from exc
+
+
+def _select_modelo(modelos: tuple[ModeloDefinition, ...], modelo_id: str) -> ModeloDefinition:
+    for modelo in modelos:
+        if modelo.id == modelo_id:
+            return modelo
+    raise DeclaracionParseError(f"modelo {modelo_id!r} is not present in the calculation registry")
+
+
+def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: TemplateRevision) -> None:
+    if snapshot.modelo.id != template.modelo:
+        raise DeclaracionParseError(
+            f"registry snapshot modelo {snapshot.modelo.id!r} conflicts with detected {template.modelo!r}"
+        )
+
+
+def _select_extraction_profile(
+    snapshot: RegistrySnapshot,
+    *,
+    extraction_profile_id: str | None,
+) -> ExtractionProfileDefinition:
+    profiles = tuple(
+        profile
+        for profile in snapshot.extraction_profiles.values()
+        if profile.surface == "declaracion_pdf" and "declaration_pdf" in profile.accepted_artefact_kinds
+    )
+    if extraction_profile_id:
+        for profile in profiles:
+            if profile.id == extraction_profile_id:
+                return profile
+        raise DeclaracionParseError(
+            f"declaracion extraction profile {extraction_profile_id!r} is not available for modelo={snapshot.modelo.id}"
+        )
+    if len(profiles) != 1:
+        available = ", ".join(sorted(profile.id for profile in profiles)) or "none"
+        raise DeclaracionParseError(
+            f"expected exactly one declaration PDF extraction profile for modelo={snapshot.modelo.id}; "
+            f"available: {available}"
+        )
+    return profiles[0]
+
+
+def _extract_profile_values(
+    pages: tuple[str, ...],
+    profile: ExtractionProfileDefinition,
+) -> tuple[ExtractedCasilla, ...]:
+    values: list[ExtractedCasilla] = []
+    missing: list[str] = []
+    malformed: list[str] = []
+    ambiguous: list[str] = []
+
+    for casilla_id in profile.target_casillas:
+        hits = _find_casilla_hits(pages, casilla_id)
+        if not hits:
+            missing.append(casilla_id)
+            continue
+        if len(hits) > 1:
+            ambiguous.append(casilla_id)
+            continue
+        page_number, raw_value = hits[0]
+        value = parse_spanish_decimal(raw_value)
+        if value is None:
+            malformed.append(casilla_id)
+            continue
+        values.append(
+            ExtractedCasilla(
+                casilla_id=casilla_id,
+                printed_value=value,
+                source_page=page_number,
+                source_bbox=None,
+                extraction_confidence=1.0,
+            )
+        )
+
+    coverage = Decimal(len(values)) / Decimal(len(profile.target_casillas))
+    if ambiguous or malformed or missing or coverage < profile.min_coverage:
+        details = []
+        if missing:
+            details.append(f"missing={','.join(missing)}")
+        if malformed:
+            details.append(f"malformed={','.join(malformed)}")
+        if ambiguous:
+            details.append(f"ambiguous={','.join(ambiguous)}")
+        details.append(f"coverage={coverage}")
+        raise DeclaracionParseError(f"declaracion extraction failed profile {profile.id}: {'; '.join(details)}")
+    return tuple(values)
+
+
+def _find_casilla_hits(pages: tuple[str, ...], casilla_id: str) -> list[tuple[int, str]]:
+    pattern = re.compile(
+        rf"(?m)^\s*{re.escape(casilla_id)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",
+        re.IGNORECASE,
+    )
+    hits: list[tuple[int, str]] = []
+    for page_index, page in enumerate(pages, start=1):
+        for match in pattern.finditer(page):
+            hits.append((page_index, match.group(1).strip()))
+    return hits

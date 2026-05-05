@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.inbound.declaracion import (
-    DeclaracionFiling,
-    ExtractionStatus,
+    DeclaracionObservation,
     ExtractionWarning,
     TemplateRevision,
 )
@@ -32,10 +31,8 @@ def _build_filing(
     modelo: str = "130",
     period: str = "2025Q1",
     ejercicio: str = "2025",
-) -> DeclaracionFiling:
-    """Assemble a synthetic
-    :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling`.
-    """
+) -> DeclaracionObservation:
+    """Build a parsed declaration boundary object for verification."""
     extracted = tuple(
         ExtractedCasilla(
             casilla_id=casilla_id,
@@ -46,7 +43,7 @@ def _build_filing(
         )
         for casilla_id, value in values
     )
-    return DeclaracionFiling(
+    return DeclaracionObservation(
         modelo=modelo,
         period=period,
         ejercicio=ejercicio,
@@ -58,10 +55,9 @@ def _build_filing(
         ),
         values=extracted,
         warnings=warnings,
-        source_pdf_path=Path("synthetic.pdf"),
+        source_pdf_path=Path(f"modelo-{modelo}-declaracion.pdf"),
         source_pdf_sha256="0" * 64,
         parsed_at=datetime.now(tz=UTC),
-        extraction_status=ExtractionStatus.COMPLETE,
     )
 
 
@@ -90,9 +86,13 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
         )
     )
 
-    verdict = verify_declaracion(filing)
+    verdict = verify_declaracion(
+        filing,
+        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+    )
 
     assert verdict.registry_snapshot_id == "registry:130:2019-y-siguientes"
+    assert verdict.verification_expectation_ids == ("modelo-130-calculation-verification",)
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
     assert verdict.discrepancies == ()
@@ -107,10 +107,94 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
         )
     )
 
-    verdict = verify_declaracion(filing)
+    verdict = verify_declaracion(
+        filing,
+        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+    )
 
     assert verdict.status is VerificationStatus.NEEDS_REVIEW
     assert verdict.discrepancies[0].casilla_id == "19"
+
+
+def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
+    filing = _build_filing(
+        modelo="115",
+        period="2026Q1",
+        ejercicio="2026",
+        values=(
+            ("01", Decimal("1")),
+            ("02", Decimal("1250.50")),
+            ("03", Decimal("237.60")),
+            ("04", Decimal("10.00")),
+            ("05", Decimal("227.60")),
+        ),
+    )
+
+    verdict = verify_declaracion(filing)
+
+    assert verdict.registry_snapshot_id == "registry:115:2019-y-siguientes"
+    assert verdict.verification_expectation_ids == ("modelo-115-calculation-verification",)
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.coverage == 1.0
+    assert verdict.discrepancies == ()
+
+
+def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
+    filing = _build_filing(
+        modelo="123",
+        period="2026Q1",
+        ejercicio="2026",
+        values=(
+            ("01", Decimal("2")),
+            ("02", Decimal("3")),
+            ("03", Decimal("5")),
+            ("04", Decimal("1000.25")),
+            ("05", Decimal("200.75")),
+            ("06", Decimal("1201.00")),
+            ("07", Decimal("190.05")),
+            ("08", Decimal("38.14")),
+            ("09", Decimal("228.19")),
+            ("10", Decimal("0")),
+            ("11", Decimal("7.50")),
+            ("12", Decimal("235.69")),
+            ("13", Decimal("12.25")),
+            ("14", Decimal("223.44")),
+        ),
+    )
+
+    verdict = verify_declaracion(filing)
+
+    assert verdict.registry_snapshot_id == "registry:123:2024-y-siguientes"
+    assert verdict.verification_expectation_ids == ("modelo-123-calculation-verification",)
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.coverage == 1.0
+    assert verdict.discrepancies == ()
+
+
+def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> None:
+    filing = _build_filing(
+        modelo="123",
+        period="2023Q1",
+        ejercicio="2023",
+        values=(
+            ("01", Decimal("2")),
+            ("02", Decimal("1000.25")),
+            ("03", Decimal("190.05")),
+            ("04", Decimal("0")),
+            ("05", Decimal("7.50")),
+            ("06", Decimal("197.55")),
+            ("07", Decimal("12.25")),
+            ("08", Decimal("185.30")),
+        ),
+    )
+
+    verdict = verify_declaracion(filing)
+
+    assert verdict.registry_snapshot_id == "registry:123:2019-2023"
+    assert verdict.verification_expectation_ids == ("modelo-123-2019-calculation-verification",)
+    assert verdict.status is VerificationStatus.VERIFIED
+    assert verdict.coverage == 1.0
+    assert verdict.discrepancies == ()
 
 
 def test_verify_declaracion_fails_without_registry_snapshot() -> None:
@@ -131,6 +215,7 @@ class TestVerdictJsonRoundTrip:
             modelo="130",
             period="2025Q1",
             registry_snapshot_id="registry:130:2019-y-siguientes",
+            verification_expectation_ids=("modelo-130-calculation-verification",),
             status=VerificationStatus.VERIFIED,
             discrepancies=(),
             coverage=1.0,

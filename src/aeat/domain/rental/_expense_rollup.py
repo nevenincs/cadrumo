@@ -68,8 +68,8 @@ class GastosForYear(BaseModel):
             capped_categories_applied).
         carry_forward_after: Carry-forward queue after the rollup
             (post-FIFO consumption + 4-year expiration).
-        total_deductible: Sum across all categories included in
-            casilla 0066 (capped + uncapped categories).
+        total_deductible: Sum across all deductible categories after
+            applying caps and carry-forward consumption.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

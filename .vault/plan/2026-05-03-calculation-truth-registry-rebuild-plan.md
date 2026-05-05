@@ -7,6 +7,10 @@ related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
+  - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
+  - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
+  - '[[2026-05-04-live-filing-data-capture-research]]'
+  - '[[2026-05-04-live-filing-data-capture-adr]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -24,7 +28,7 @@ This plan implements the accepted central AEAT legal calculation registry as a
 hard teardown and rebuild. It is not an additive compatibility layer. Existing
 formula rulesets, modelo metadata entries, casilla corpus projections, hydrate
 surfaces, filing builders, VAT/category casilla maps, deadline/applicability
-rules, schema generation, and export generation are migration sources only.
+rules, schema generation, and export generation are source material only.
 They must be audited, harvested into reviewed registry data, verified, and then
 removed as legal or filing authorities.
 
@@ -44,7 +48,7 @@ The work is governed by these non-negotiable rules:
   state.
 - No model snapshot exists until legal evidence, source evidence, calculations,
   export bindings, and programmatic filing linkage all validate.
-- Existing code may be read as migration evidence, but the old folders and
+- Existing code may be read as source evidence, but the old folders and
   modules are deleted or reduced to non-authoritative plumbing by the end of
   their wave.
 - Tests must verify real behaviour, legal reference closure, source integrity,
@@ -53,7 +57,7 @@ The work is governed by these non-negotiable rules:
 Each modelo wave is a complete implementation of exactly one modelo. A wave is
 not complete until audit, research, discovery, registry data, calculation
 runtime linkage, export or filing linkage, legal verification, calculation
-verification, deletion of old authorities, and import-contract enforcement are
+verification, deletion of old authorities, and registry-backed behaviour tests are
 done for that modelo.
 
 Modelo 100 is handled as the Renta universe: it is still one modelo, but it is
@@ -79,6 +83,13 @@ modelo is production-ready only when all of the following are true:
   presence alone is not enough; the cited law or official guidance must support
   the calculation, threshold, rate, parameter, relation, or filing condition
   that uses it.
+- Every calculation and verification artefact is assigned to the evidence tier
+  it can actually prove: legal authority, official source guidance, executable
+  parity evidence, or layout authority. BOE law/regulation references are the
+  binding legal tier. AEAT instructions/manuals are official guidance and must
+  be tied to legal basis for filing-grade calculations. AEAT Open/help
+  programs are executable parity only when guarded and safe. Record designs are
+  layout authority only.
 - Every casilla is classified as manual, bound, computed, or informational, and
   no casilla can be populated by an unregistered rule, old filing builder,
   hydrate projection, generated schema, generated export module, or hidden
@@ -97,9 +108,11 @@ modelo is production-ready only when all of the following are true:
   document-submission actions. Unknown or unresearched AEAT surfaces fail
   closed.
 - Every modelo revision has an XLS/XLSX parity coverage decision recorded in
-  its model-law coverage ledger. Formula-bearing official AEAT workbooks become
-  parity targets; static layouts, unsupported binary XLS files, and unreadable
-  artefacts become explicit coverage gaps.
+  its model-law coverage ledger. Formula-form official AEAT workbooks become
+  parity targets only when their formulas calculate tax/model outputs. Static
+  layouts, record-design layouts, unsupported binary XLS files, converted XLS
+  record designs, and unreadable artefacts become explicit coverage gaps for
+  executable calculation parity and may only satisfy layout/source evidence.
 - Synthetic parity input sets are single-source fixtures for each
   modelo/revision. The same inputs must be applied to the registry engine and
   the workbook/simulator parity surface before comparing outputs.
@@ -107,8 +120,8 @@ modelo is production-ready only when all of the following are true:
   layouts and validated snapshots. A model with no supported export or filing
   linkage is not production-ready.
 - Every old model-specific authority is deleted or reduced to non-authoritative
-  plumbing. The import-contract tests must prove it cannot be used for
-  filing-grade calculation.
+  plumbing. Behaviour tests must exercise only current public workflows backed
+  by validated registry snapshots and must fail fast on missing coverage.
 - The wave has positive tests, negative tests, boundary tests, date-axis tests,
   legal-reference tests, source-integrity tests, export tests where applicable,
   and trace tests. Tests must use real behaviour and may not rely on mocks,
@@ -153,6 +166,1317 @@ production-readiness definition above.
 | 20 | 037 | Simplified censal declaration if reviewed official evidence exists; otherwise explicit removal from filing-grade support. | Censal hydrate tables, declaration extractor truth, any implied support without official evidence. | Classify official live/static surface; if current filing-grade evidence is absent, remove app entry points and retain only evidence-backed historical records. |
 | 21 | 100 | Renta universe: source governance, summary, anexos, income types, reductions, minimos, bases, cuotas, CCAA rules, rental, amortization, deductions, borrador/declaration linkage, export or filing linkage. | All Renta rulesets, Renta helper modules, CCAA hardcoding, rental legal-calculation authority, borrador/extractor casilla truth. | Research Renta WEB Open as read-only cross-reference evidence; authenticated Renta WEB/borrador/data-fiscal flows are forbidden for synthetic calculation tests. |
 
+## Per-Modelo Parity Tracking Ledger
+
+Every supported modelo has an explicit parity ledger. These rows intentionally
+repeat across modelos so an implementing agent can mark each legal, source,
+live-read, registry, verification, and teardown gate independently. A modelo is
+not done because its parent phase is done; it is done only when every row in its
+own ledger is checked.
+
+### Wave 1 Modelo 130 Parity Ledger
+
+- [x] Modelo 130 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 130 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [x] Modelo 130 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [x] Modelo 130 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [x] Modelo 130 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [x] Modelo 130 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [x] Modelo 130 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [x] Modelo 130 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [x] Modelo 130 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/130.toml`.
+- [x] Modelo 130 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [x] Modelo 130 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [x] Modelo 130 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [x] Modelo 130 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [x] Modelo 130 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [x] Modelo 130 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and previous-filing
+  bindings are correct against official authority.
+- [x] Modelo 130 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests, and binding-resolution tests without defaults or silent degradation.
+- [ ] Modelo 130 teardown: delete or neutralize all old Modelo 130 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+  - [x] Neutralize shared runtime examples, default suggestions, and generic
+    parser comments that used Modelo 130 as a de facto sample outside the
+    registry, official corpus, or explicit Modelo 130 fixture surfaces.
+  - [x] Replace generic recovery-command placeholders and public API examples
+    that implied Modelo 130 as the default declaration path; retain only real
+    Modelo 130 registry, corpus, portal, fixture, and explicit behaviour-test
+    surfaces.
+- [ ] Modelo 130 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 130 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 130 filing-grade values.
+
+### Wave 2 Modelo 111 Parity Ledger
+
+- [x] Modelo 111 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 111 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [x] Modelo 111 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [x] Modelo 111 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [x] Modelo 111 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [x] Modelo 111 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [x] Modelo 111 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [x] Modelo 111 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [x] Modelo 111 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/111.toml`.
+- [x] Modelo 111 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [x] Modelo 111 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [x] Modelo 111 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [x] Modelo 111 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [x] Modelo 111 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+  - [x] Modelo 111 calculation draft linkage: `build_draft` computes casillas
+     28 and 30 from the committed registry snapshot.
+  - [x] Modelo 111 export layout linkage: `export_draft` writes the committed
+     registry record design and parsed casillas 28 and 30 round-trip from the
+     exported payload.
+  - [x] Modelo 111 verify linkage: `verify_export` re-reads the registry export
+     payload and reports a match for the approved draft.
+  - [x] Modelo 111 approval linkage: `approve_draft` approves a Modelo 111
+     draft with a registry schema/formula fingerprint.
+  - [x] Modelo 111 public CLI linkage: filing build, show, validate, list, and
+     complementaria paths exercise the committed Modelo 111 registry surface.
+  - [x] Modelo 111 review and reconciliation linkage: review and reconciliation
+     derive Modelo 111 payable totals from registry-declared verification
+     expectations instead of Python-side model branching.
+- [x] Modelo 111 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and any filed-data
+  bindings are correct against official authority.
+- [x] Modelo 111 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [x] Modelo 111 teardown: delete or neutralize all old Modelo 111 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+  - [x] Modelo 111 deadline applicability moved into registry TOML; Python
+     profile documentation no longer encodes Modelo-specific obligation
+     mappings, and CLI deadline tests exercise current registry behaviour.
+  - [x] Modelo 111 parser comments sanitized to remove capture-date and
+     development-observation metadata while preserving the parser contract.
+  - [x] Modelo 111 generic CLI filing smoke helper no longer selects Modelo
+     111 as a convenient hardcoded model; it selects a calculable modelo from
+     the active registry provider.
+  - [x] Modelo 111 remaining authority scan: review filing CLI helpers,
+     portal metadata, justificante fixtures, submitted-file fixtures, and
+     workbook-parity tests to ensure none can populate filing-grade values
+     outside the registry.
+- [x] Modelo 111 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 111 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 111 filing-grade values.
+
+### Wave 3 Modelo 115 Parity Ledger
+
+- [x] Modelo 115 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 115 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [x] Modelo 115 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [x] Modelo 115 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [x] Modelo 115 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [x] Modelo 115 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 115 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [x] Modelo 115 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [x] Modelo 115 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/115.toml`.
+- [x] Modelo 115 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [x] Modelo 115 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [x] Modelo 115 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [x] Modelo 115 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [x] Modelo 115 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+  - [x] Modelo 115 application filing boundary: `build_draft` and
+    `approve_draft` execute against the committed runtime registry provider and
+    expose computed casillas 03 and 05 with registry schema fingerprinting.
+  - [x] Modelo 115 export verification boundary: `export_draft` writes the
+    committed registry record design and `verify_export` re-reads the exported
+    payload against the approved draft.
+  - [x] Modelo 115 declaration verification boundary: `verify_declaracion`
+    compares parsed declaration casillas against the committed registry
+    calculation expectation for casillas 03 and 05.
+- [x] Modelo 115 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and any filed-data
+  bindings are correct against official authority.
+- [ ] Modelo 115 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 115 teardown: delete or neutralize all old Modelo 115 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [x] Modelo 115 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 115 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 115 filing-grade values.
+
+### Wave 4 Modelo 123 Parity Ledger
+
+- [x] Modelo 123 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 123 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [x] Modelo 123 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [x] Modelo 123 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [x] Modelo 123 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [x] Modelo 123 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 123 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [x] Modelo 123 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [x] Modelo 123 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/123.toml`.
+  - [x] Modelo 123 current deadline applicability: 2026 quarterly windows for
+    the current revision resolve from the registry when
+    `pays_capital_income_with_retencion` is true.
+- [x] Modelo 123 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [x] Modelo 123 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [x] Modelo 123 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+  - [x] Modelo 123 declaration parser boundary: current 2026 and 2019-2023
+    declaration PDFs are parsed through the registry-selected extraction
+    profile and must return every target casilla for the selected revision.
+- [x] Modelo 123 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [x] Modelo 123 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+  - [x] Modelo 123 application filing boundary: `build_draft` and
+    `approve_draft` execute against the committed runtime registry provider and
+    expose computed casillas 03, 06, 09, 12, and 14 with registry schema
+    fingerprinting.
+  - [x] Modelo 123 export verification boundary: `export_draft` writes the
+    committed current and 2019-2023 record designs and `verify_export`
+    re-reads each exported payload against the approved draft.
+  - [x] Modelo 123 declaration verification boundary: `verify_declaracion`
+    compares parsed current and historical declaration casillas against their
+    selected registry calculation expectations.
+  - [x] Modelo 123 reconciliation boundary: `reconcile` projects the
+    justificante payable total from the registry-declared verification
+    expectation instead of Python-side modelo branching.
+- [x] Modelo 123 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and any filed-data
+  bindings are correct against official authority.
+- [ ] Modelo 123 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [x] Modelo 123 teardown: delete or neutralize all old Modelo 123 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [x] Modelo 123 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 123 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 123 filing-grade values.
+
+### Wave 5 Modelo 131 Parity Ledger
+
+- [ ] Modelo 131 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 131 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 131 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+  - [x] Modelo 131 current 2026 legal basis: catalogue RD 439/2007 article 110
+    and Orden EHA/672/2007 article 1 for the current objective-estimation
+    payment foundation.
+- [x] Modelo 131 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [x] Modelo 131 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [x] Modelo 131 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 131 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 131 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+  - [x] Modelo 131 current 2026 catalogue closure: add current instructions,
+    procedure, BOE form authority, and 2026 record-design source references
+    with corpus paths and integrity data.
+- [ ] Modelo 131 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/131.toml`.
+  - [x] Modelo 131 current 2026 registry foundation: define the current
+    casilla-level liquidacion schema, calculation formulas, extraction
+    profiles, source-backed verification expectation, static portal guard,
+    workbook parity reference, and application links.
+- [ ] Modelo 131 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+  - [x] Modelo 131 current 2026 liquidacion casillas: define casillas 01
+    through 15 with manual/computed classification, sections, legal refs, and
+    source refs.
+- [ ] Modelo 131 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+  - [x] Modelo 131 current 2026 liquidacion formulas: define 2 percent payment
+    rates and computed casillas 04, 06, 07, 10, 13, and 15 through the registry
+    runtime.
+- [ ] Modelo 131 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+  - [x] Modelo 131 current 2026 declaration-copy profile: define strict
+    declaration-PDF extraction coverage for casillas 01 through 15.
+- [ ] Modelo 131 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+  - [x] Modelo 131 current 2026 static surface decision: register the official
+    static documentation cross-reference and forbidden AEAT write actions.
+- [ ] Modelo 131 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+  - [x] Modelo 131 current 2026 application links: register calculation,
+    filing, verification, review, extraction, portal, and deadline consumers
+    against validated snapshots.
+  - [ ] Modelo 131 export layout support: extend or model the official
+    activity-detail record structures before adding export roundtrips.
+- [ ] Modelo 131 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and any filed-data
+  bindings are correct against official authority.
+  - [x] Modelo 131 current 2026 behaviour tests: calculate objective-estimation
+    totals through the committed registry and verify deadline applicability
+    through the registry-backed deadline engine.
+- [ ] Modelo 131 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 131 teardown: delete or neutralize all old Modelo 131 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 131 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+  - [x] Modelo 131 current 2026 focused gate: run registry verification,
+    calculation/deadline/setup tests, `ruff`, `ty`, `git diff --check`, and
+    development-metadata sanitization scans for the touched surfaces.
+- [ ] Modelo 131 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 131 filing-grade values.
+
+### Wave 6 Modelo 180 Parity Ledger
+
+- [ ] Modelo 180 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 180 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 180 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 180 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 180 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 180 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 180 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 180 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 180 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/180.toml`.
+- [ ] Modelo 180 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 180 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 180 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 180 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 180 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 180 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relation to Modelo
+  115, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 180 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 180 teardown: delete or neutralize all old Modelo 180 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 180 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 180 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 180 filing-grade values.
+
+### Wave 7 Modelo 190 Parity Ledger
+
+- [ ] Modelo 190 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 190 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 190 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 190 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 190 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 190 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 190 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 190 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 190 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/190.toml`.
+- [ ] Modelo 190 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 190 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 190 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 190 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 190 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 190 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relation to Modelo
+  111, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 190 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 190 teardown: delete or neutralize all old Modelo 190 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 190 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 190 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 190 filing-grade values.
+
+### Wave 8 Modelo 193 Parity Ledger
+
+- [ ] Modelo 193 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 193 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 193 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 193 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 193 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 193 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 193 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 193 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 193 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/193.toml`.
+- [ ] Modelo 193 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 193 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 193 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 193 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 193 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 193 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relation to Modelo
+  123, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 193 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 193 teardown: delete or neutralize all old Modelo 193 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 193 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 193 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 193 filing-grade values.
+
+### Wave 9 Modelo 303 Parity Ledger
+
+- [ ] Modelo 303 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 303 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 303 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 303 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 303 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 303 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 303 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 303 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 303 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/303.toml`.
+- [ ] Modelo 303 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 303 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 303 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 303 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 303 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 303 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, VAT rate treatment,
+  and any filed-data bindings are correct against official authority.
+- [ ] Modelo 303 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 303 teardown: delete or neutralize all old Modelo 303 authorities
+  in rulesets, filing builders, category mappings, VAT rate mappings, casilla
+  projections, deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 303 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 303 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 303 filing-grade values.
+
+### Wave 10 Modelo 390 Parity Ledger
+
+- [ ] Modelo 390 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 390 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 390 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 390 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 390 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 390 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 390 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 390 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 390 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/390.toml`.
+- [ ] Modelo 390 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 390 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 390 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 390 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 390 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 390 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relation to Modelo
+  303, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 390 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 390 teardown: delete or neutralize all old Modelo 390 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 390 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 390 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 390 filing-grade values.
+
+### Wave 11 Modelo 349 Parity Ledger
+
+- [ ] Modelo 349 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 349 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 349 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 349 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 349 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 349 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 349 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 349 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 349 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/349.toml`.
+- [ ] Modelo 349 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 349 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 349 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 349 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 349 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 349 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, and any filed-data
+  bindings are correct against official authority.
+- [ ] Modelo 349 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 349 teardown: delete or neutralize all old Modelo 349 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 349 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 349 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 349 filing-grade values.
+
+### Wave 12 Modelo 347 Parity Ledger
+
+- [ ] Modelo 347 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 347 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 347 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 347 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 347 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 347 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 347 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 347 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 347 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/347.toml`.
+- [ ] Modelo 347 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 347 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 347 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 347 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 347 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 347 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, aggregation
+  thresholds, and any filed-data bindings are correct against official
+  authority.
+- [ ] Modelo 347 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 347 teardown: delete or neutralize all old Modelo 347 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 347 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 347 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 347 filing-grade values.
+
+### Wave 13 Modelo 369 Parity Ledger
+
+- [ ] Modelo 369 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 369 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 369 legal basis: identify and catalogue BOE, EU, and applicable
+  Spanish legal references for every filing-grade calculation, parameter,
+  filing condition, and temporal applicability rule.
+- [ ] Modelo 369 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 369 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 369 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 369 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 369 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 369 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/369.toml`.
+- [ ] Modelo 369 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 369 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 369 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 369 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 369 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 369 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, OSS/IOSS regime
+  handling, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 369 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 369 teardown: delete or neutralize all old Modelo 369 authorities
+  in rulesets, filing builders, category mappings, VAT rate mappings, casilla
+  projections, deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 369 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 369 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 369 filing-grade values.
+
+### Wave 14 Modelo 202 Parity Ledger
+
+- [ ] Modelo 202 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 202 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 202 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 202 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 202 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 202 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 202 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 202 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 202 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/202.toml`.
+- [ ] Modelo 202 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 202 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 202 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 202 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 202 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 202 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, corporate instalment
+  methods, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 202 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 202 teardown: delete or neutralize all old Modelo 202 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 202 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 202 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 202 filing-grade values.
+
+### Wave 15 Modelo 200 Parity Ledger
+
+- [ ] Modelo 200 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 200 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 200 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 200 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 200 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 200 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 200 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 200 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 200 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/200.toml`.
+- [ ] Modelo 200 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 200 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 200 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 200 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 200 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 200 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relation to Modelo
+  202, and any filed-data bindings are correct against official authority.
+- [ ] Modelo 200 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 200 teardown: delete or neutralize all old Modelo 200 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 200 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 200 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 200 filing-grade values.
+
+### Wave 16 Modelo 232 Parity Ledger
+
+- [ ] Modelo 232 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 232 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 232 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 232 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 232 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 232 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 232 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 232 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 232 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/232.toml`.
+- [ ] Modelo 232 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 232 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 232 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 232 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 232 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 232 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, reporting
+  thresholds, and any filed-data bindings are correct against official
+  authority.
+- [ ] Modelo 232 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 232 teardown: delete or neutralize all old Modelo 232 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 232 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 232 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 232 filing-grade values.
+
+### Wave 17 Modelo 720 Parity Ledger
+
+- [ ] Modelo 720 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 720 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 720 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 720 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 720 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 720 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 720 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 720 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 720 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/720.toml`.
+- [ ] Modelo 720 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 720 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 720 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 720 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 720 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 720 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, asset thresholds,
+  and any filed-data bindings are correct against official authority.
+- [ ] Modelo 720 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 720 teardown: delete or neutralize all old Modelo 720 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 720 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 720 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 720 filing-grade values.
+
+### Wave 18 Modelo 840 Parity Ledger
+
+- [ ] Modelo 840 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 840 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 840 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 840 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 840 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 840 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 840 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 840 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 840 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/840.toml`.
+- [ ] Modelo 840 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 840 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 840 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 840 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 840 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 840 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, census/activity
+  conditions, and any filed-data bindings are correct against official
+  authority.
+- [ ] Modelo 840 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 840 teardown: delete or neutralize all old Modelo 840 authorities
+  in rulesets, filing builders, category mappings, casilla projections,
+  deadlines, generated exports, hydrate paths, and legacy fixtures.
+- [ ] Modelo 840 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 840 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 840 filing-grade values.
+
+### Wave 19 Modelo 036 Parity Ledger
+
+- [ ] Modelo 036 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 036 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 036 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, and temporal
+  applicability rule.
+- [ ] Modelo 036 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 036 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 036 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 036 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact, sanitize identity data, commit
+  the redacted fixture, and prove it parses through the registry layout.
+- [ ] Modelo 036 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 036 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/036.toml`.
+- [ ] Modelo 036 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs.
+- [ ] Modelo 036 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output.
+- [ ] Modelo 036 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs.
+- [ ] Modelo 036 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 036 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 036 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, censal registration
+  conditions, and any filed-data bindings are correct against official
+  authority.
+- [ ] Modelo 036 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 036 teardown: delete or neutralize all old Modelo 036 authorities
+  in rulesets, filing builders, category mappings, censal hydrate tables,
+  casilla projections, deadlines, generated exports, and legacy fixtures.
+- [ ] Modelo 036 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 036 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 036 filing-grade values.
+
+### Wave 20 Modelo 037 Parity Ledger
+
+- [ ] Modelo 037 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 037 identity,
+  casillas, rules, calculations, deadlines, exports, or live filed data.
+- [ ] Modelo 037 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, retirement rule,
+  historical support rule, and temporal applicability rule.
+- [ ] Modelo 037 AEAT official guidance: capture and hash AEAT instructions,
+  manuals, record designs, and other official source artefacts required by the
+  registry definition.
+- [ ] Modelo 037 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 037 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, and justificante availability.
+- [ ] Modelo 037 live sanitized fixture: capture at least one read-only live
+  submitted-file or declaration-copy artefact if official support remains,
+  sanitize identity data, commit the redacted fixture, and prove it parses
+  through the registry layout.
+- [ ] Modelo 037 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 037 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported or removed revision, period selector,
+  deadline windows, support-removal decision, and application links in
+  `registry/aeat/modelos/037.toml`.
+- [ ] Modelo 037 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, and source
+  refs, or prove filing-grade support is removed.
+- [ ] Modelo 037 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, relation, rounding rule, legal ref,
+  source ref, and trace output, or prove no filing-grade calculation remains.
+- [ ] Modelo 037 extraction profiles: define submitted-file and declaration PDF
+  extraction profiles with target casillas, accepted artefacts, min coverage,
+  failure semantics, legal refs, and source refs, or prove removal.
+- [ ] Modelo 037 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, and cancellation actions.
+- [ ] Modelo 037 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots, or delete unsupported filing-grade entry points.
+- [ ] Modelo 037 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, historical/current
+  support semantics, and any filed-data bindings are correct against official
+  authority.
+- [ ] Modelo 037 live/filed-data tests: run committed sanitized submitted-file
+  and declaration-copy parser tests, encrypted observation-store roundtrip
+  tests where applicable, and filed-data parser tests without defaults or
+  silent degradation.
+- [ ] Modelo 037 teardown: delete or neutralize all old Modelo 037 authorities
+  in rulesets, filing builders, category mappings, censal hydrate tables,
+  casilla projections, deadlines, generated exports, and legacy fixtures.
+- [ ] Modelo 037 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 037 completion gate: mark complete only when no unchecked row
+  remains and no old authority can populate Modelo 037 filing-grade values.
+
+### Wave 21 Modelo 100 Parity Ledger
+
+- [ ] Modelo 100 audit: enumerate every current code, corpus, TOML, parser,
+  fixture, workflow, and test surface that codifies Modelo 100 identity,
+  casillas, rules, calculations, deadlines, exports, borrador data, Renta WEB
+  data, rental data, CCAA rules, or live filed data.
+- [ ] Modelo 100 legal basis: identify and catalogue BOE legal references for
+  every filing-grade calculation, parameter, filing condition, autonomous
+  community rule, deduction, reduction, rental rule, and temporal applicability
+  rule.
+- [ ] Modelo 100 AEAT official guidance: capture and hash AEAT Renta manuals,
+  practical handbooks, instructions, record designs, and other official source
+  artefacts required by the registry definition.
+- [ ] Modelo 100 workbook/layout coverage: discover official XLS/XLSX coverage,
+  classify each artefact by evidence tier, and record whether it proves layout
+  only or executable calculation parity.
+- [ ] Modelo 100 live filed-data discovery: list available AEAT filed rows
+  through the read-only surface and record the periods, submitted-file
+  availability, declaration-copy availability, justificante availability,
+  borrador/data-fiscal availability, and forbidden authenticated surfaces.
+- [ ] Modelo 100 live sanitized fixture: capture at least one read-only live
+  submitted-file, declaration-copy, or official filed-data artefact, sanitize
+  identity data, commit the redacted fixture, and prove it parses through the
+  registry layout.
+- [ ] Modelo 100 legal/source catalogue closure: add every legal ref and source
+  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
+  applicability dates.
+- [ ] Modelo 100 TOML identity and revisions: define modelo identity, title,
+  jurisdiction, cadence, every supported revision, period selector, deadline
+  windows, and application links in `registry/aeat/modelos/100.toml`.
+- [ ] Modelo 100 casilla schema: define every filing-grade casilla with data
+  type, input kind, requiredness, section, export refs, legal refs, source
+  refs, and Renta epoch grouping.
+- [ ] Modelo 100 formulas, parameters, and bindings: define every computation,
+  dated value, previous-filing binding, cross-model relation, CCAA parameter,
+  rental algorithm, rounding rule, legal ref, source ref, and trace output.
+- [ ] Modelo 100 extraction profiles: define submitted-file, declaration PDF,
+  borrador, and data-fiscal extraction profiles with target casillas, accepted
+  artefacts, min coverage, failure semantics, legal refs, and source refs.
+- [ ] Modelo 100 live cross-reference guard: record the official live/static
+  cross-reference decision and prove remote-state guards reject AEAT writes,
+  saves, presentation, signing, payment, amendment, cancellation, and
+  authenticated Renta WEB synthetic-test actions.
+- [ ] Modelo 100 export/filing linkage: route export, verify, calculation,
+  review, approval, reconciliation, and workflow entry points through validated
+  registry snapshots.
+- [ ] Modelo 100 legal correctness tests: run behaviour tests that prove formula
+  outputs, trace legal refs, source refs, date boundaries, relations to Modelos
+  130 and 131, Renta epochs, CCAA behaviour, rental behaviour, and any
+  filed-data bindings are correct against official authority.
+- [ ] Modelo 100 live/filed-data tests: run committed sanitized submitted-file,
+  declaration-copy, borrador, or data-fiscal parser tests, encrypted
+  observation-store roundtrip tests where applicable, and filed-data parser
+  tests without defaults or silent degradation.
+- [ ] Modelo 100 teardown: delete or neutralize all old Modelo 100 authorities
+  in Renta rulesets, CCAA helpers, rental legal-calculation modules, filing
+  builders, category mappings, casilla projections, deadlines, generated
+  exports, hydrate paths, borrador casilla truth, and legacy fixtures.
+- [ ] Modelo 100 quality gate: run registry verification, focused public
+  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+  `git diff --check`, and development-metadata sanitization checks.
+- [ ] Modelo 100 completion gate: mark complete only when no unchecked Renta
+  epoch row remains and no old authority can populate Modelo 100 filing-grade
+  values.
+
 ## Tasks
 
 - `Mandatory per-step quality and sanitization gate`
@@ -187,18 +1511,19 @@ production-readiness definition above.
      validates, and what it refuses. They must not describe why the current
      development pass changed something or which plan step caused it.
   - [ ] Verify tests exercise current behaviour through committed registry data
-     and public APIs. Tests must not assert previous architecture, transition
-     paths, migration steps, deprecated surfaces, old names, or compatibility
-     survival.
+     and public APIs. Tests must focus on loading, validation, calculation,
+     export, filing, source closure, legal closure, and failure semantics.
   - [ ] Run static discovery over touched files for the banned vocabulary and
      metadata patterns. Any hit must be removed or justified as stable domain
      language before the item is complete.
-  - [ ] Extend `tests/import_contract/test_runtime_authority_hard_cut.py` when a
-     new forbidden metadata embedding or old authority pattern is discovered, so
-     the same class of drift cannot re-enter the repository.
-  - [ ] Run `git diff --check`, focused tests for the touched module, focused
-     import-contract tests, `ruff`, and `ty` for every completed batch. A batch
-     with sanitization drift is not complete even if behaviour tests pass.
+  - [ ] Add or extend behaviour tests through public APIs when a removed
+     authority surface would otherwise affect runtime behaviour. Tests must
+     exercise loading, validation, calculation, export, or filing behaviour,
+     with assertions grounded in current product behaviour.
+  - [ ] Run `git diff --check`, focused tests for the touched module,
+     registry-backed public behaviour tests, `ruff`, and `ty` for every
+     completed batch. A batch with sanitization drift is not complete even if
+     behaviour tests pass.
 
 - `Phase 0` Live and workbook parity infrastructure buildout
   - [x] Create the workbook/live parity backend under the calculation registry
@@ -223,6 +1548,15 @@ production-readiness definition above.
   - [x] Research and decide the binary XLS reader/conversion path. Until a safe
      parser exists, every XLS artefact is recorded as unsupported coverage
      rather than silently skipped.
+  - [x] Implement safe isolated LibreOffice conversion for binary XLS official
+     artefacts so the registry can inspect converted XLSX/CSV output without
+     mutating the committed corpus. Converted artefacts must retain the original
+     XLS hash as source identity and must be classified by evidence tier after
+     inspection.
+  - [x] Keep workbook execution platform-neutral. LibreOffice headless is the
+     default local recalculation route when available; Windows Excel COM is an
+     optional runner only and must never be required for registry validation,
+     export rendering, or production runtime.
   - [x] Define the workbook parity runner contract: load official workbook,
      inject synthetic inputs, recalculate with a sanctioned local spreadsheet
      engine or documented equivalent, read output cells, and emit a trace.
@@ -242,15 +1576,21 @@ production-readiness definition above.
   - [x] Run and pass the workbook/live parity backend verification suite. No
      modelo refactor wave may start until this backend exists and the
      verification suite passes.
+  - [x] Correct workbook classifier so official `disenos_registro` XLSX files
+     with positional helper formulas are classified as record-design layouts,
+     not tax calculation formula oracles. Current committed corpus evidence is
+     72 workbook artefacts: 47 record-design XLSX files, 25 unsupported binary
+     XLS files, and zero committed official formula-form tax calculation
+     workbooks.
 
-- `Phase 0A` Approval, governance, and hard-cut controls
+- `Phase 0A` Approval, governance, and teardown controls
   - [x] Treat the accepted ADR as the controlling architecture for all subsequent
      registry work.
   - [x] Define the wave completion contract: each modelo must have reviewed TOML,
      strict registry validation, legal/source evidence, calculation tests,
      export or filing linkage, trace output, and deletion of old model-specific
      authority.
-  - [x] Define the teardown contract: old code may be read for migration and may
+  - [x] Define the teardown contract: old code may be read for evidence and may
      be cited in execution records, but it is not retained as a runtime fallback
      or alternate source of truth.
   - [x] Establish import-boundary rules that forbid filing, review, export, CLI,
@@ -258,8 +1598,172 @@ production-readiness definition above.
      generated export modules, or model-specific filing builders as calculation
      authorities.
   - [x] Establish execution-record requirements for every wave: audit notes,
-     source/legal evidence notes, migrated formula notes, verification evidence,
+     source/legal evidence notes, formula evidence notes, verification evidence,
      and deletion evidence.
+
+- `Phase 0B` Authority-tier verification framework
+  - [x] Codify the evidence hierarchy in a companion ADR: BOE legal texts are
+     legal authority; AEAT instructions/manuals are official source guidance;
+     AEAT Open/help programs and true formula-form workbooks are executable
+     parity evidence when safe; record designs are layout authority only.
+  - [x] Record official-source research for the hierarchy, including BOE law
+     and regulations, AEAT Modelo instructions, AEAT manual surfaces, AEAT
+     Open/help services, and AEAT record-design artefacts.
+  - [x] Extend shared legal/source catalogue schema with explicit evidence-tier
+     classification for each retained source reference.
+  - [x] Extend workbook/source verification reports so every artefact states
+     which tier it satisfies and which tier it cannot satisfy.
+  - [x] Extend model-law coverage ledgers so each modelo/revision reports legal
+     authority coverage, official source guidance coverage, executable parity
+     coverage, and layout/export coverage as separate gates.
+  - [x] Extend validator failure semantics so a filing-grade formula cannot be
+     validated from layout authority alone and cannot use executable parity as
+     a substitute for BOE legal basis.
+  - [x] Extend formula and parameter source grounding so official-source
+     guidance citations must resolve to reviewed source text in the local AEAT
+     corpus before a registry snapshot validates.
+  - [x] Extend legal grounding so legal catalogue references can require BOE
+     corpus text and registry validation fails when the cited local legal text
+     does not contain the required legal anchors.
+  - [x] Extend workbook parity tests so converted XLS record-design files are
+     accepted as layout evidence only and rejected as calculation parity
+     oracles.
+  - [x] Extend live/simulator verification tests so AEAT web/help programs are
+     executable parity evidence only when remote-state guards prove the surface
+     is read-only or explicitly authorized for test use.
+  - [x] Re-run registry validation, workbook/source verification, remote-state
+     guard tests, filing/export tests, `ruff`, `ty`, and `git diff --check`
+     before starting or continuing concrete modelo implementation waves.
+
+- `Phase 0C` Live filed-declaration data capture backend
+  - [x] Treat live AEAT reads as observed filed-declaration data capture, not
+     as a calculation authority and not as a justificante-only metadata lookup.
+  - [x] Extend the read-only declaration-register backend so a query against
+     `Consultar declaraciones presentadas` can capture register metadata,
+     submitted TXT or model-specific file, full declaration-copy PDF,
+     justificante PDF, source URLs, content types, byte counts, SHA-256 hashes,
+     retrieval timestamps, and authenticated identity.
+     - [x] Register row metadata capture implemented with source URL, byte
+        count, hash, retrieval timestamp, and authenticated identity.
+     - [x] Submitted-file capture implemented with source URL, content type,
+        byte count, hash, and retrieval timestamp.
+     - [x] Justificante PDF capture implemented with source URL, content type,
+        byte count, hash, and retrieval timestamp.
+     - [x] Full declaration-copy PDF capture is implemented through a distinct
+        declaration-copy surface when AEAT exposes that register column, not
+        inferred from justificante metadata.
+  - [x] Add a typed `FiledDeclarationObservation` schema for normalized live
+     read results. It must carry modelo, ejercicio, period, expediente id,
+     status, presented timestamp, authenticated identity, source artefacts,
+     observed casilla values, metadata, extraction coverage, and optional
+     registry snapshot id.
+  - [x] Add a typed `FiledDeclarationArtefact` schema for each captured
+     register row, submitted file, declaration PDF, and justificante PDF. It
+     must preserve artefact kind, source URL, content type, byte count, SHA-256,
+     and capture timestamp.
+  - [x] Persist live filed-declaration artefacts and observation manifests only
+     through the encrypted storage substrate before any modelo implementation
+     wave consumes them.
+     - [x] Store register rows, submitted files, declaration-copy PDFs, and
+        justificantes as `FINANCIAL` encrypted blob records.
+     - [x] Store normalized filed-declaration observations as encrypted
+        `FINANCIAL` envelopes.
+     - [x] Report encrypted storage references from the CLI instead of
+        local filesystem locations.
+     - [x] Test encrypted artefact and observation roundtrip through the store
+        API and assert filing bytes, identity values, expediente ids, and
+        casilla values are absent from disk plaintext.
+     - [x] Store observation manifests under opaque hashed paths so filing
+        metadata is not embedded in directory names.
+     - [x] Store and read submitted-filing audit records through
+        `SubmissionRepository` encrypted envelopes; plaintext submission JSON is
+        not a supported history backend.
+  - [x] Add a typed `ObservedCasillaValue` schema for parsed casilla
+     observations. It must preserve casilla id, value, source artefact kind,
+     source locator, and extraction confidence.
+  - [x] Prefer submitted TXT or model-specific filed data as the machine-readable
+     source for casilla observations whenever AEAT exposes it. The parser must
+     map submitted-file fields through registry export layouts or extraction
+     profiles; it must not hardcode modelo/casilla layouts in Python.
+  - [x] Implement full declaration-copy PDF parsing as required fallback and
+     evidence capture. The parser must use registry extraction profiles for
+     labels, form fields, bounding boxes, or other extraction primitives; it
+     must not define filing-grade casilla completeness by itself.
+     - [x] `parse_declaracion` loads or accepts a validated registry snapshot,
+        selects the declaration-PDF extraction profile, extracts only the
+        target casillas declared by that profile, and fails hard on missing,
+        malformed, ambiguous, or below-coverage values.
+  - [x] Keep justificante parsing as provenance and receipt metadata only:
+     CSV, presentation id, presentation timestamp, tax id, totals, verification
+     URL, source path, and source hash. Do not use justificante metadata as a
+     substitute for full casilla data.
+  - [x] Extend registry extraction-profile validation so every live filed-data
+     parser declares accepted artefact kinds, target casillas, required
+     coverage, source references, legal references where applicable, confidence
+     rules, and fail-hard semantics.
+  - [x] Extend previous-filing binding resolution so bindings such as
+     previous-year economic-activity net income resolve through
+     `FiledDeclarationObservation` and a validated registry selector or
+     relation, not through ad hoc Python logic.
+     - [x] Add partial backend resolution through `RegistryFilingObservation`,
+        validated in `_bindings.py`, with the Modelo 130 `previous_filing`
+        selector declared in `130.toml`.
+     - [x] Add registry requirement discovery for previous-filing bindings so
+        consumers can determine which filed modelo/year/period observations
+        must be captured before calculation.
+     - [x] Add guarded sede capture plumbing for required previous-filing
+        observations.
+     - [x] Resolve previous-filing bindings directly through
+        `FiledDeclarationObservation`.
+  - [x] Add no-write guard coverage for declaration-register search,
+     submitted-file download, declaration-copy PDF download, justificante PDF
+     download, CSV verifier access, and any archive fetch. Allowed operations
+     are read navigation and read downloads only.
+     - [x] Cover declaration-register search, submitted-file download, and
+        justificante PDF download runtime operations through
+        `authenticated_read_surface` and tests.
+     - [x] Cover declaration-copy PDF download runtime operations.
+     - [x] Cover CSV verifier runtime operations.
+     - [x] Cover archive fetch runtime operations.
+  - [x] Add repository checks proving live-read code cannot perform AEAT
+     presentation, signing, payment, direct debit, server-side save, amendment,
+     cancellation, or document submission.
+  - [ ] Add real-behaviour parser tests against captured, identity-redacted AEAT
+     register HTML, submitted-file artefacts, declaration-copy PDFs, and
+     justificante PDFs. Tests must exercise the parser and registry extraction
+     profile together, not redefine modelo or casilla schemas in test fixtures.
+     - [x] Exercise identity-redacted register HTML through the declaration
+        register parser.
+     - [x] Exercise an identity-redacted Modelo 130 declaration-copy PDF through
+        the registry-backed declaration parser and fail hard on the observed
+        coverage gap.
+     - [x] Add committed identity-redacted Modelo 130 submitted-file artefact
+        coverage that parses through the registry export layout and declaration
+        row context without generating the artefact inside the test.
+     - [x] Add live-captured Modelo 130 submitted-file artefact coverage after
+        reauthentication. The live observation is persisted only through the
+        encrypted store and verifies as 19 submitted-file casillas with
+        extraction coverage `1.0`.
+     - [x] Add full success coverage once a declaration-copy or submitted-file
+        artefact with complete registry target casillas is committed.
+  - [ ] Add integration tests proving a live-read observation can populate
+     registry binding values for Modelo 130 without defaults or silent
+     degradation, and fails hard when the required previous-filing observation
+     is missing, malformed, contradictory, or below required coverage.
+     - [x] Add registry-backed `FiledDeclarationObservation` tests for Modelo
+        130 previous-filing binding success and fail-hard missing, malformed,
+        contradictory, justificante-only, and incomplete-coverage cases.
+     - [x] Add encrypted observation-store roundtrip coverage proving a
+        decrypted `FiledDeclarationObservation` can populate Modelo 130
+        previous-filing binding values.
+     - [ ] Add full live-read capture-to-binding integration coverage after a
+        supported source-modelo live observation is available. Modelo 130's
+        previous-filing binding currently depends on Modelo 100 casillas, which
+        are not yet backed by a committed Modelo 100 registry/parser snapshot.
+  - [ ] Re-run live-read parser tests, registry extraction-profile validation,
+     remote-state guard tests, Modelo 130 binding tests, `ruff`, `ty`, and
+     `git diff --check` before continuing concrete modelo implementation
+     waves.
 
 - `Phase 1` Registry framework rebuild
   - [x] Create the registry package under
@@ -325,7 +1829,7 @@ production-readiness definition above.
      must declare which filing, review, verification, export, deadline, portal,
      extractor, and workflow surfaces consume the snapshot. Missing application
      linkage is a validation failure for filing-grade support.
-  - [ ] Add explicit schema objects for support/removal decisions. If a modelo,
+  - [x] Add explicit schema objects for support/removal decisions. If a modelo,
      revision, export, extraction surface, or filing path lacks official
      evidence, the registry must represent that by absence from filing-grade
      support and by deletion from app entry points, not by disabled placeholders
@@ -333,14 +1837,14 @@ production-readiness definition above.
   - [x] Extend TOML loading so every new schema object is parsed from
      `registry/aeat/modelos/*.toml` with strict no-extra validation and no local
      legal/source catalogues.
-  - [ ] Extend registry validation so extraction profiles, live/static
+  - [x] Extend registry validation so extraction profiles, live/static
      cross-reference decisions, workbook parity refs, verification
      expectations, application links, and support/removal decisions all resolve
      legal/source evidence and cannot reference unknown casillas, formulas,
      parameters, bindings, relations, export fields, or corpus artefacts.
      - [x] Validate extraction profiles, live/static cross-reference decisions,
         workbook parity refs, verification expectations, and application links.
-     - [ ] Validate support/removal decisions after their schema is introduced.
+     - [x] Validate support/removal decisions after their schema is introduced.
   - [ ] Extend snapshot building so consumers receive typed subviews for
      calculation, filing schema, extraction, verification, export, deadlines,
      portals, workbook parity, and live/static AEAT cross-reference.
@@ -349,9 +1853,10 @@ production-readiness definition above.
         expectations, and application links.
      - [x] Resolve portal filing lookup from validated registry application
         links instead of portal-entry metadata.
-     - [ ] Add or verify typed consumer subviews for deadline and portal
+     - [x] Add or verify typed consumer subviews for deadline and portal
         consumption.
-  - [ ] Extend the registry CLI so operators can inspect and verify schema
+     - [x] Add typed snapshot map for support/removal decisions.
+  - [x] Extend the registry CLI so operators can inspect and verify schema
      closure per modelo/revision: legal closure, source closure, calculation
      closure, extraction closure, export closure, application-link closure,
      workbook parity coverage, and remote-state guard policy.
@@ -359,7 +1864,7 @@ production-readiness definition above.
         inspect/verify output: casillas, formulas, extraction profiles,
         live/static cross-references, workbook parity refs, verification
         expectations, application links, and application-link surfaces.
-     - [ ] Add per-modelo/revision closure detail output for export fields,
+     - [x] Add per-modelo/revision closure detail output for export fields,
         deadlines, portal guard policies, and workbook parity coverage.
   - [x] Add behavioural tests for the closed schema. Tests must load committed
      registry TOML and verify real validation/runtime behaviour; they must not
@@ -369,7 +1874,7 @@ production-readiness definition above.
      parity tests, filing schema projection tests, verification tests, export
      tests, import-contract tests, `ruff`, and `ty` before starting any further
      model wave or deleting additional old authorities.
-     - [x] Re-run focused registry, categories, registry CLI, hard-cut
+     - [x] Re-run focused registry, categories, registry CLI, authority
         import-contract, `ruff`, and `ty` checks for the completed batch.
      - [ ] Re-run filing schema projection, verification, and export suites
         after their consumers are switched to the new snapshot sections.
@@ -423,9 +1928,10 @@ production-readiness definition above.
      casilla values are compared only against a validated snapshot. Missing
      snapshot coverage fails hard instead of becoming an extractor-owned
      casilla truth surface.
-  - [ ] Add import-contract tests proving no filing-grade path can reach old
-     ruleset registries, model-specific filing builders, generated export
-     modules, or hydrate writers.
+  - [ ] Add behaviour tests proving filing-grade calculation, review, approval,
+     import, export, and workflow paths require validated registry snapshots and
+     fail fast on missing coverage. Tests must assert current public workflow
+     behaviour only.
   - [ ] Add repository-wide checks that fail on process metadata, issue numbers,
      wave names, PR references, hydrate provenance, generated provenance, or
      transient development commentary inside runtime modules and registry TOML.
@@ -470,7 +1976,7 @@ application surface, and the old authority has been deleted.
 | VAT rates and `declares_in_modelos` mappings | Registry parameters and factual VAT bindings | VAT modules classify factual events; legal rates, effective dates, modelo bindings, and casilla targets come from registry snapshots. |
 | Category-to-casilla mappings | Registry data bindings | Category modules classify expenses and income facts; registry bindings decide if a fact populates a modelo revision. |
 | Rental-to-Modelo-100 casilla mappings and passthroughs | Registry algorithm/data bindings for Modelo 100 | Rental modules produce factual ledgers and traceable aggregates; Modelo 100 registry definitions own target casillas and legal treatment. |
-| Filing builders, import normalizers, complementaria helpers, and test synthesizers | Application filing plumbing over validated `RegistrySnapshot` | Draft creation, amendments, complementarias, imports, and synthetic fixtures require snapshot validation first and fail on coverage gaps. |
+| Filing builders, import normalizers, complementaria helpers, and test draft helpers | Application filing plumbing over validated `RegistrySnapshot` | Draft creation, amendments, complementarias, imports, and test draft helpers require snapshot validation first and fail on coverage gaps. |
 | Verification and reconciliation casilla assumptions | Snapshot-backed reconciliation | Extracted artefact values are observations only; expected casillas, computed targets, tolerances, and coverage come from the snapshot. |
 | Borrador, declaración, justificante extractor casilla targets | Registry extraction profiles plus observed-value parser plumbing | Extractors identify observed values only; they cannot certify completeness, formulas, or filing validity. |
 | Export record specs and generated export layouts | Registry export layouts plus generic encoders | Encoders can format fields; offsets, literals, casilla bindings, signedness, padding, record ids, and layout selection resolve from registry definitions. |
@@ -486,23 +1992,23 @@ application surface, and the old authority has been deleted.
      registry metadata. Portal modules may describe read-only portal endpoints,
      but they must not define filing-grade modelo support, retirement carve-outs,
      or legal applicability.
-  - [ ] `src/aeat/domain/deadlines`: move modelo cadence, period applicability,
+  - [x] `src/aeat/domain/deadlines`: move modelo cadence, period applicability,
      deadline windows, and filing-year support into registry temporal
      applicability. Deadline code becomes a pure calculator over registry
      effective periods and calendar rules.
-  - [ ] `src/aeat/domain/vat`: remove hardcoded VAT fallback years,
+  - [x] `src/aeat/domain/vat`: remove hardcoded VAT fallback years,
      `declares_in_modelos` mappings, and VAT-to-modelo/casilla authority.
      VAT modules may classify factual VAT events; legal rates, effective dates,
      and declaration bindings belong in registry parameters and bindings.
-  - [ ] `src/aeat/domain/categories`: remove category-to-modelo/casilla mapping
+  - [x] `src/aeat/domain/categories`: remove category-to-modelo/casilla mapping
      authority. Category modules may classify facts; registry bindings decide
      whether and how facts populate a modelo revision.
-  - [ ] `src/aeat/domain/rental`: remove rental-to-Modelo-100 casilla authority
+  - [x] `src/aeat/domain/rental`: remove rental-to-Modelo-100 casilla authority
      and passthrough behaviour. Rental modules may calculate factual rental
      ledgers and traceable aggregates; Modelo 100 decides target casillas and
      legal filing treatment through registry bindings and algorithm bindings.
   - [ ] `src/aeat/application/filing`: remove any filing builder, testing
-     synthesizer, import normalizer, complementaria helper, or export wrapper
+     test draft helper, import normalizer, complementaria helper, or export wrapper
      that can construct a filing-grade draft without a validated registry
      snapshot.
   - [ ] `src/aeat/application/workflow`: remove draft stages that accept
@@ -567,137 +2073,222 @@ application surface, and the old authority has been deleted.
   - [x] `src/aeat/domain/portals/test_registry.py`: verify endpoint catalogue
      behaviour and registry binding closure; do not assert support from portal
      entries alone.
-  - [ ] `src/aeat/domain/deadlines/_calendar.py`: move modelo cadence, filing
+  - [x] `src/aeat/domain/deadlines/_calendar.py`: move modelo cadence, filing
      windows, and supported periods into registry temporal applicability.
-  - [ ] `src/aeat/domain/deadlines/_applies.py`: remove hardcoded profile-to-
+  - [x] `src/aeat/domain/deadlines/_applies.py`: remove hardcoded profile-to-
      modelo applicability gates; consume registry applicability and factual
      profile bindings.
-  - [ ] `src/aeat/domain/deadlines/_engine.py`: keep date computation plumbing
+  - [x] `src/aeat/domain/deadlines/_engine.py`: keep date computation plumbing
      only; input must be validated registry temporal data.
-  - [ ] `src/aeat/domain/deadlines/_models.py`: remove fields or enums that
+  - [x] `src/aeat/domain/deadlines/_models.py`: remove fields or enums that
      imply supported modelo catalogues outside registry data.
-  - [ ] `src/aeat/domain/deadlines/test_applies.py`: replace hardcoded
+  - [x] `src/aeat/domain/deadlines/test_applies.py`: replace hardcoded
      applicability cases with registry-backed applicability behaviour.
-  - [ ] `src/aeat/domain/deadlines/test_calendar.py`: replace fixed modelo
+  - [x] `src/aeat/domain/deadlines/test_calendar.py`: replace fixed modelo
      deadline expectations with registry temporal fixtures loaded from TOML.
-  - [ ] `src/aeat/domain/deadlines/test_engine.py`: verify calculator behaviour
+  - [x] `src/aeat/domain/deadlines/test_engine.py`: verify calculator behaviour
      over registry temporal inputs, not built-in support lists.
-  - [ ] `src/aeat/domain/vat/_catalogue.py`: move legal VAT rates, effective
-     dates, and `declares_in_modelos` authority into registry parameters and
-     bindings.
-  - [ ] `src/aeat/domain/vat/_corpus.py`: remove hardcoded fallback years and
+  - [x] `src/aeat/domain/vat/_catalogue.py`: move VAT category catalogue data
+     out of Python into committed registry TOML and keep only read-only loading
+     and exact-year resolution in runtime code.
+  - [x] `src/aeat/domain/vat/_corpus.py`: remove hardcoded fallback years and
      runtime fallback catalogue authority.
-  - [ ] `src/aeat/domain/vat/_rates.py`: ensure rate lookup consumes registry
+  - [x] `src/aeat/domain/vat/_rates.py`: ensure rate lookup consumes registry
      parameters or factual VAT data only; no legal rate constants remain here.
-  - [ ] `src/aeat/domain/vat/_lookup.py`: convert lookup to factual
+  - [x] `src/aeat/domain/vat/_lookup.py`: convert lookup to factual
      classification over registry-provided rates/bindings.
-  - [ ] `src/aeat/domain/vat/_schema.py`: remove schema fields that make VAT
+  - [x] `src/aeat/domain/vat/_schema.py`: remove schema fields that make VAT
      records own modelo/casilla declaration targets.
-  - [ ] `src/aeat/domain/vat/_verify.py`: validate factual VAT catalogue
+  - [x] `src/aeat/domain/vat/_verify.py`: validate factual VAT catalogue
      integrity only; registry validates legal declaration binding closure.
-  - [ ] `src/aeat/domain/vat/test_*.py`: replace tests that encode VAT rates,
+  - [x] `src/aeat/domain/vat/test_*.py`: replace tests that encode VAT rates,
      model mappings, or fallback years with registry-backed behaviour tests.
-  - [ ] `src/aeat/domain/categories/_registry.py`: remove category-to-casilla
+  - [x] `registry/aeat/vat/rates.toml`: persisted VAT rate registry owns
+     member-state, rate-kind, percentage, effective-window, and source-reference
+     strings for the current VAT lookup surface.
+  - [x] `registry/aeat/vat/catalogues/2025.toml`: persisted VAT catalogue
+     registry owns category-level citation text, treatment flags, declaration
+     bindings, and reviewer notes for the current catalogue surface.
+  - [x] `src/aeat/domain/vat/test_rates.py`: exercise committed VAT registry
+     lookup, coverage, and missing-rate failures through public runtime calls.
+  - [x] `src/aeat/domain/vat/test_rates_temporal.py`: exercise committed VAT
+     registry effective-window behaviour and overlap absence without defining
+     an alternate in-test rate authority.
+  - [x] `src/aeat/domain/vat/test_catalogue_period_keyed.py`: verify exact
+     year-keyed catalogue resolution and fail-fast missing-year behaviour.
+  - [x] `src/aeat/domain/vat/test_corpus.py`: verify VAT catalogue access reads
+     committed registry data and rejects unregistered years.
+  - [x] `src/aeat/domain/vat/test_rules.py`: verify committed catalogue
+     category coverage, citation coverage, citation text, and rendered
+     references without defining alternate regulations inside the test.
+  - [x] `src/aeat/domain/vat/__init__.py`: remove year-specific catalogue
+     exports and document VAT as registry-backed lookup and classification.
+  - [x] `src/aeat/domain/vat/_classification.py`: keep factual decision-table
+     classification but remove generic `_RULES` naming that overlaps with
+     removed deadline/ruleset authority.
+  - [x] `src/aeat/domain/vat/errors.py`: remove stale in-memory catalogue
+     wording from VAT error documentation.
+  - [x] `env/.env.example`: point VAT catalogue configuration at
+     `registry/aeat/vat` without fallback wording.
+  - [x] `src/aeat/domain/categories/_registry.py`: remove category-to-casilla
      and category-to-modelo authority; keep factual category classification.
-  - [ ] `src/aeat/domain/categories/_corpus.py`: remove fallback-to-hardcoded
+  - [x] `src/aeat/domain/categories/_corpus.py`: remove fallback-to-hardcoded
      category registry behaviour for filing-grade decisions.
-  - [ ] `src/aeat/domain/categories/_profile.py`: ensure category profile data
+  - [x] `src/aeat/domain/categories/_profile.py`: ensure category profile data
      cannot decide modelo applicability or casilla targets.
-  - [ ] `src/aeat/domain/categories/_proportionality.py`: keep factual
+  - [x] `src/aeat/domain/categories/_proportionality.py`: keep factual
      proportionality calculations only; legal treatment must be registry-bound.
-  - [ ] `src/aeat/domain/categories/test_*.py`: replace filing-target
+  - [x] `src/aeat/domain/categories/test_*.py`: replace filing-target
      assertions with factual-classification tests plus registry binding tests.
-  - [ ] `src/aeat/domain/rental/_anexo_c_aggregator.py`: keep factual rental
-     aggregate calculation; remove Modelo 100 target casilla authority.
-  - [ ] `src/aeat/domain/rental/anexo_c_provider.py`: remove passthrough and
+  - [x] `registry/aeat/categories/profiles/2025.toml`: persisted category
+     profile registry owns category labels, proportionality rules, caps, VAT
+     hints, citations, and reviewer notes for the current profile surface.
+  - [x] `src/aeat/domain/categories/__init__.py`: document category profiles as
+     registry-backed data and expose registry resolution helpers.
+  - [x] `src/aeat/domain/rental/_aggregates.py`: keep factual rental
+     aggregate calculation and remove Modelo 100 target casilla authority.
+  - [x] `src/aeat/domain/rental/anexo_c_provider.py`: delete passthrough and
      Modelo 100 merge authority; registry algorithm/data bindings must own the
      filing treatment.
-  - [ ] `src/aeat/domain/rental/_amortization_ledger.py`: keep factual
+  - [x] `src/aeat/domain/rental/_amortization_ledger.py`: keep factual
      amortization ledger behaviour and move filing/legal target use to registry
      algorithm bindings.
-  - [ ] `src/aeat/domain/rental/_expense_rollup.py`: keep factual rollups only;
+  - [x] `src/aeat/domain/rental/_expense_rollup.py`: keep factual rollups only;
      remove any implied Modelo 100 casilla ownership.
-  - [ ] `src/aeat/domain/rental/_tier_resolver.py`: keep factual tier
+  - [x] `src/aeat/domain/rental/_tier_resolver.py`: keep factual tier
      resolution only; legal filing consequences must be registry-bound.
-  - [ ] `src/aeat/domain/rental/_test_*.py`: test factual rental behaviour and
+  - [x] `src/aeat/domain/rental/__init__.py`: expose only the neutral rental
+     aggregate API and remove filing-target provider exports.
+  - [x] `src/aeat/domain/rental/_errors.py`: rename aggregate error surface to
+     neutral rental terminology with no filing-target naming.
+  - [x] `src/aeat/domain/rental/_models.py`: remove filing-line wording from
+     rental record docstrings.
+  - [x] `src/aeat/domain/rental/_enums.py`: keep use-type semantics factual and
+     remove filing-line wording.
+  - [x] `tests/import_contract/domain/rental/_test_aggregates.py`: test factual
+     rental aggregation through real persisted repositories.
+  - [x] `src/aeat/domain/rental/_test_*.py`: test factual rental behaviour and
      registry algorithm binding integration, not caller-supplied casilla
      passthroughs.
-  - [ ] `src/aeat/application/filing/runtime.py`: replace collection projection
-     with snapshot subviews that include revision, filing period, extraction,
-     verification, export, and application linkage closure.
-  - [ ] `src/aeat/application/filing/__init__.py`: ensure `build_draft` and
+  - [x] `src/aeat/application/filing/runtime.py`: replace collection projection
+     with snapshot subviews that include revision, registry period selector,
+     extraction, verification, export, and application linkage details.
+  - [x] `src/aeat/application/filing/__init__.py`: ensure `build_draft` and
      related public APIs require validated snapshots and cannot construct
      filing-grade drafts from old schema providers.
-  - [ ] `src/aeat/application/filing/_calculate.py`: keep summary rendering
-     logic only; no next-action or status gate may substitute for registry
-     validation.
-  - [ ] `src/aeat/application/filing/_import.py`: normalize imported values only
-     after snapshot selection validates modelo, period, and casilla ids.
-  - [ ] `src/aeat/application/filing/_export.py`: resolve export layouts from
+  - [x] `src/aeat/application/filing/_calculate.py`: audited as summary
+     rendering only; no next-action or status gate substitutes for registry
+     validation, and its tests now build drafts through registry-backed public
+     helpers.
+  - [x] `src/aeat/application/filing/_import.py`: normalize imported values only
+     after snapshot selection validates modelo, registry period support, and
+     casilla ids.
+  - [x] `src/aeat/application/filing/_export.py`: resolve export layouts from
      registry snapshots; remove old layout/spec selection paths.
-  - [ ] `src/aeat/application/filing/_complementaria.py`: require registry
-     snapshot and official linkage before amendment/complementaria handling.
-  - [ ] `src/aeat/application/filing/_review.py`: review only snapshot-backed
-     drafts and registry trace outputs.
-  - [ ] `src/aeat/application/filing/_testing_schema.py`: remove test-owned
-     modelo/casilla schema authority; fixture schemas must come from committed
-     registry TOML.
-  - [ ] `src/aeat/application/filing/_testing_synthesize.py`: synthesize inputs
+  - [x] `src/aeat/application/filing/_complementaria.py`: require official
+     justificante CSV linkage and an active registry-backed original draft
+     before amendment/complementaria handling.
+  - [x] `src/aeat/application/filing/_review.py`: approval recomputes registry
+     schema and trace validation before stamping approval metadata, while
+     review refresh still derives staleness from the persisted approval basis.
+  - [x] `src/aeat/application/filing/_testing_schema.py`: remove test-owned
+     modelo/casilla schema authority instead of retaining a parallel fixture
+     schema.
+  - [x] `src/aeat/application/filing/_testing_registry.py`: build test drafts
      against registry snapshots only; do not encode model-specific schemas in
      test helpers.
-  - [ ] `src/aeat/application/filing/testing.py`: expose test helpers that load
-     real registry data rather than migration-era fixtures.
-  - [ ] `src/aeat/application/filing/reconciliation/_reconcile.py`: compare
-     values through registry verification expectations, not local casilla
-     assumptions.
-  - [ ] `src/aeat/application/filing/test_*.py`: rewrite filing tests to load
-     committed registry TOML and exercise current runtime behaviour only.
-  - [ ] `src/aeat/application/workflow/_adapters.py`: accept raw input payloads
-     only after registry snapshot validation; remove implicit nested casilla
-     truth handling.
-  - [ ] `src/aeat/application/workflow/_engine.py`: make workflow draft,
-     review, approval, and export stages depend on validated registry snapshots.
-  - [ ] `src/aeat/application/workflow/_models.py`: remove workflow status or
-     stage fields that encode old catalogue/support gates.
-  - [ ] `src/aeat/application/workflow/_protocols.py`: replace raw schema
-     provider protocols with snapshot-backed input/provider protocols.
-  - [ ] `src/aeat/application/workflow/test_*.py`: verify workflow orchestration
+  - [x] `src/aeat/application/filing/testing.py`: expose test helpers that load
+     real registry data rather than ad hoc fixtures.
+  - [x] `src/aeat/application/filing/reconciliation/_reconcile.py`: require
+     active registry-backed draft snapshots and registry verification
+     expectations before comparing AEAT justificante metadata; year-only
+     receipt periods only canonicalize as annual when the active registry
+     revision declares `0A`.
+  - [x] `src/aeat/application/filing/test_schema_completeness.py`: verify
+     runtime schema provider exposes snapshot-backed filing subviews and
+     formula-input closure over committed registry TOML without restating
+     Modelo 130 casilla counts, formula inputs, or linkage ids in the test.
+  - [x] `src/aeat/application/filing/test_import.py`: verify justificante-only
+     import fails through the registry boundary when required binding data is
+     absent, verify unsupported modelos fail before draft creation, and verify
+     year-only receipts are rejected for quarterly registry revisions.
+  - [x] `src/aeat/application/filing/test_export.py`: verify export and verify
+     paths consult registry snapshot export-layout closure and fail closed when
+     no layout is declared.
+  - [x] `src/aeat/application/filing/test_*.py`: rewrite filing tests to load
+     registry TOML and exercise current runtime behaviour only.
+     - [x] `src/aeat/application/filing/test_filing.py`: remove test-local
+        casilla schema providers; validate draft behaviour and approval-gate
+        failures through the registry-backed runtime schema provider.
+     - [x] `src/aeat/application/filing/test_testing_registry.py`: exercise
+        registry-backed filing draft helper behaviour and fail fast for
+        unsupported modelos.
+     - [x] `tests/import_contract/application/filing/test_testing.py`: remove
+        filing-history fixture schema tests that validated a separate
+        modelo/casilla corpus instead of public registry-backed behaviour.
+  - [x] `src/aeat/application/workflow/_adapters.py`: default JSON input
+     loading now requires explicit modelo/period nesting and rejects root-level
+     casilla payloads before the filing builder performs registry validation.
+  - [x] `src/aeat/application/workflow/_engine.py`: workflow draft and
+     preflight stages now require a registry-backed draft matching the resolved
+     modelo, period, taxpayer, and active registry schema version before
+     continuing.
+  - [x] `src/aeat/application/workflow/_models.py`: audited as workflow result
+     schema only; docstrings now describe stable diagnostics behaviour rather
+     than enum mirror contracts or old support gates.
+  - [x] `src/aeat/application/workflow/_protocols.py`: replace generic draft
+     return surfaces with a registry-backed draft protocol that carries
+     `schema_version`.
+  - [x] `src/aeat/application/workflow/test_*.py`: verify workflow orchestration
      over registry snapshots, not hardcoded model/casilla dictionaries.
-  - [ ] `src/aeat/application/verification/_schema.py`: align discrepancy and
-     coverage schema with registry verification expectations.
-  - [ ] `src/aeat/application/verification/_verify.py`: remove local tolerance,
-     coverage, expected-casilla, and classification authority; consume snapshot
-     verification subviews.
-  - [ ] `src/aeat/application/verification/test_verify.py`: load registry TOML
-     and assert actual verification behaviour against snapshot expectations.
-  - [ ] `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`:
+     - [x] `src/aeat/application/workflow/test_adapters.py`: verify explicit
+        modelo/period JSON input shape and root-level casilla payload rejection.
+     - [x] `src/aeat/application/workflow/test_engine.py`: verify registry draft
+        identity guards for active schema version and resolved obligation
+        period.
+     - [x] `src/aeat/application/workflow/test_models.py`: remove enum mirror
+        assertions and keep behavioural validation, hashing, alert, and JSON
+        round-trip coverage.
+  - [x] `src/aeat/application/verification/_schema.py`: verification verdicts
+     now record the registry verification expectation ids that governed
+     discrepancy and coverage evaluation.
+  - [x] `src/aeat/application/verification/_verify.py`: verification now fails
+     without registry verification expectations and derives computed casillas,
+     tolerance, and minimum coverage from the active registry snapshot.
+  - [x] `src/aeat/application/verification/test_verify.py`: load registry TOML
+     and assert verification behaviour against Modelo 130 snapshot
+     expectations, including required external binding values.
+  - [x] `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`:
      replace hardcoded summary casilla list with registry extraction profile
      data or reduce the file to observed-value parsing only.
-  - [ ] `src/aeat/adapters/inbound/borrador/_parser.py`: require registry
+  - [x] `src/aeat/adapters/inbound/borrador/_parser.py`: require registry
      extraction profile when caller asks for coverage or filing-grade use.
-  - [ ] `src/aeat/adapters/inbound/borrador/_schema.py`: mark parsed values as
+  - [x] `src/aeat/adapters/inbound/borrador/_schema.py`: mark parsed values as
      observations and remove any implied Modelo 100 completeness authority.
-  - [ ] `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`: test
+  - [x] `src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`: test
      parser behaviour against registry extraction profiles, not hardcoded
      summary rules.
-  - [ ] `src/aeat/adapters/inbound/declaracion/_parser.py`: parse observed
+  - [x] `src/aeat/adapters/inbound/declaracion/_parser.py`: parse observed
      modelo/casilla values only; registry validates support and completeness.
-  - [ ] `src/aeat/adapters/inbound/declaracion/_schema.py`: ensure declaration
+  - [x] `src/aeat/adapters/inbound/declaracion/_schema.py`: ensure declaration
      schema cannot represent filing-grade model completeness by itself.
-  - [ ] `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`: test
+  - [x] `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`: test
      parser boundaries without encoding model support or casilla truth.
-  - [ ] `src/aeat/adapters/inbound/justificante/_extract.py`: keep receipt
+  - [x] `src/aeat/adapters/inbound/justificante/_extract.py`: keep receipt
      extraction as observed artefact data; no support or formula authority.
-  - [ ] `src/aeat/adapters/inbound/justificante/_parser.py`: same observed-data
+  - [x] `src/aeat/adapters/inbound/justificante/_parser.py`: same observed-data
      boundary as extract; registry owns filing-grade interpretation.
-  - [ ] `src/aeat/adapters/inbound/justificante/test_extract_modelos.py`:
+  - [x] `src/aeat/adapters/inbound/justificante/test_extract_modelos.py`:
      verify observed extraction only and move support checks to registry tests.
-  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`:
+  - [x] `tests/import_contract/adapters/inbound/justificante/test_parser.py`:
+     assert observed fixture PDF period output rather than treating fixture
+     filenames as period authority.
+  - [x] `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`:
      remove model-specific layout authority; keep generic field-format
      primitives only.
-  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_serialise.py`:
+  - [x] `src/aeat/adapters/outbound/aeat/export/_formats/_serialise.py`:
      serialize registry export layout subviews only.
-  - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`:
+  - [x] `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`:
      deserialize into observed field/casilla values and let registry validate
      layout meaning.
   - [ ] `src/aeat/adapters/outbound/aeat/export/_formats/test_*.py`: test
@@ -706,23 +2297,21 @@ application surface, and the old authority has been deleted.
   - [ ] `src/aeat/entrypoints/cli/registry.py`: expose schema-closure,
      model-closure, source/legal, extraction, verification, export, workbook,
      and remote-state guard validation commands.
-  - [ ] `src/aeat/entrypoints/cli/filing/__init__.py`: require registry
+  - [x] `src/aeat/entrypoints/cli/filing/__init__.py`: require registry
      snapshots for calculate, import, verify, review, approve, and export
      commands.
-  - [ ] `src/aeat/entrypoints/cli/_declaration.py`: remove command behaviour
+  - [x] `src/aeat/entrypoints/cli/_declaration.py`: remove command behaviour
      that edits or exports casillas without registry snapshot validation.
-  - [ ] `src/aeat/entrypoints/cli/deadlines/*.py`: consume registry temporal
+  - [x] `src/aeat/entrypoints/cli/deadlines/*.py`: consume registry temporal
      applicability and remove CLI-level model support gates.
-  - [ ] `src/aeat/entrypoints/cli/categories.py`: expose factual category tools
+  - [x] `src/aeat/entrypoints/cli/categories.py`: expose factual category tools
      only; no filing target or casilla implication.
-  - [ ] `src/aeat/entrypoints/cli/test_registry_cli.py`: assert registry
+  - [x] `src/aeat/entrypoints/cli/test_registry_cli.py`: assert registry
      closure commands over committed TOML.
-  - [ ] `src/aeat/entrypoints/cli/filing/test_filing_cli.py`: assert filing CLI
+  - [x] `src/aeat/entrypoints/cli/filing/test_filing_cli.py`: assert filing CLI
      refuses coverage gaps and succeeds only through validated snapshots.
-  - [ ] `tests/import_contract/test_runtime_authority_hard_cut.py`: extend
-     guards for every removed file/module authority in this Phase 2B list.
   - [ ] `tests/import_contract/application/filing/test_testing.py`: remove
-     migration/test-owned casilla schema expectations and use committed registry
+     test-owned casilla schema expectations and use committed registry
      data.
   - [ ] `tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_*.py`:
      classify generators as parser fixtures only; they cannot define legal
@@ -764,6 +2353,9 @@ application surface, and the old authority has been deleted.
      unsupported binary XLS files, and unreadable artefacts.
   - [ ] Run identical synthetic data through the registry engine and every
      supported workbook/simulator parity surface for the selected modelo.
+     Computed outputs must match within the declared tolerance, and
+     non-executable workbook coverage must be recorded as a source/legal
+     evidence decision before the modelo can be production-ready.
   - [ ] Discover all current duplicate authorities for the selected modelo across
      formulas, modelos, casillas, filing builders, VAT/category/deadline
      mappings, inbound declaration extractors, schema extraction, and export.
@@ -781,8 +2373,73 @@ application surface, and the old authority has been deleted.
   - [ ] Delete old model-specific authorities and update imports. The wave is not
      complete while an old model-specific ruleset, filing builder, generated
      export authority, hydrate table, or standalone casilla truth remains.
-  - [ ] Run registry validation, import-contract tests, model tests, filing/export
-     tests, and vault checks before marking the wave complete.
+  - [ ] Run registry validation, public API behaviour tests, model tests,
+     filing/export tests, and vault checks before marking the wave complete.
+
+- `Phase 4A` Per-modelo workbook verification gates
+  - [ ] Modelo 130: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 111: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 115: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 123: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 131: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 180: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 190: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 193: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 303: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 390: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 349: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 347: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 369: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 202: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 200: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 232: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 720: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 840: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 036: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 037: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
+  - [ ] Modelo 100: discover and classify every official XLS/XLSX artefact, run
+     executable parity where formula workbooks are supported, and record
+     non-executable coverage decisions with source/legal evidence.
 
 - `Wave 1` Modelo 130 complete implementation
   - [ ] Audit every Modelo 130 authority in rulesets, modelo metadata, casilla
@@ -799,110 +2456,159 @@ application surface, and the old authority has been deleted.
   - [ ] Classify the Modelo 130 live AEAT cross-reference surface and add
      remote-state guard tests; no authenticated presentation, signing, payment,
      server-side save, or other AEAT write action is allowed.
+  - [ ] Inspect the committed official Modelo 130 workbook
+     `corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls`
+     and classify whether it is an executable calculation workbook, a record
+     design/static layout workbook, or unreadable binary evidence. The wave
+     cannot claim XLS calculation parity until this is proven from the workbook
+     contents.
+  - [ ] If the official Modelo 130 workbook is executable, implement a supported
+     local runner or conversion path for that binary XLS, inject one committed
+     synthetic input set into both the workbook and registry engine, and compare
+     computed casillas `03`, `04`, `07`, `09`, `11`, `12`, `14`, `17`, and `19`
+     with legal/source trace output.
+  - [ ] If the official Modelo 130 workbook is not executable calculation
+     evidence, record that fact in the Modelo 130 coverage ledger and replace
+     the parity oracle with reviewed official worked examples, static AEAT
+     documentation, or an approved read-only AEAT calculation surface. Do not
+     mark unsupported XLS as passing parity.
   - [ ] Write `registry/aeat/modelos/130.toml` with every reviewed revision,
      casilla, formula, parameter, data binding, relation, legal reference,
      source reference, and export layout.
+  - [ ] Implement the Modelo 130 registry export layout from the official record
+     design workbook: record ids, offsets, lengths, literals, casilla fields,
+     padding, signedness, line endings, source refs, and legal refs. Export must
+     fail closed until this layout is complete.
   - [ ] Link Modelo 130 to registry-backed calculation, trace, review, approval,
      filing draft, and export workflows.
+  - [ ] Link Modelo 130 previous-filing bindings to committed Modelo 100
+     registry observations once Modelo 100 has a reviewed registry/parser
+     snapshot. This remains pending until the source modelo can provide the
+     required prior-year annual filing casillas through the same central
+     observation schema and encrypted storage backend.
   - [ ] Verify Modelo 130 with real calculation examples, invalid inputs,
      date-axis boundaries, legal-reference checks, source-integrity checks,
      export roundtrips, and stale/contradictory registry failure cases.
+  - [ ] Prune filing tests and helpers so Modelo 130 behaviour is exercised by
+     committed registry data and public APIs. Direct draft synthesis may remain
+     only for repository/storage tests that do not claim filing-grade
+     calculation behaviour.
   - [ ] Delete Modelo 130 old authorities in rulesets, filing builders, category
      casilla mappings, hydrate/casilla projections, duplicated metadata, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 130 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 130 can be calculated, reviewed,
+     imported, and exported only through validated registry snapshots and fails
+     fast on missing legal/source/export/calculation coverage.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
 - `Wave 2` Modelo 111 complete implementation
-  - [ ] Audit every Modelo 111 authority in rulesets, modelo metadata, casilla
+  - [x] Add the official AEAT Modelo 111 instructions artefact to the corpus and
+     register it as reviewed `official_source_guidance`.
+  - [x] Register the reviewed Modelo 111 legal basis needed for the periodic
+     withholding declaration surface: LIRPF article 99 and RIRPF article 109.
+  - [x] Register the current AEAT Modelo 111 record-design workbook as reviewed
+     `layout_authority`.
+  - [x] Build the first centralized Modelo 111 registry definition for the
+     current `2019-y-siguientes` revision with the official 30-casilla
+     liquidation surface, supported calculation formulas for casillas 28 and
+     30, export-record layout, declaration/submitted-file extraction profiles,
+     static official cross-reference guard, workbook layout evidence, and 2026
+     quarterly deadline windows.
+  - [x] Verify the Modelo 111 registry definition through source-integrity
+     validation and real registry runtime calculation tests.
+  - [x] Audit every Modelo 111 authority in rulesets, modelo metadata, casilla
      corpus, hydrate augment data, declaration extractors, deadline logic,
      export specs, tests, manuals, BOE references, and official AEAT record
      designs.
-  - [ ] Produce a Modelo 111 model-law coverage ledger covering all revisions,
+  - [x] Produce a Modelo 111 model-law coverage ledger covering all revisions,
      legal withholding parameters, casillas, formulas, bindings, recipient
      counts, source artefacts, export fields, filing paths, tests, and old
      authorities to delete.
-  - [ ] Research and verify the official AEAT and BOE basis for retenciones and
+  - [x] Research and verify the official AEAT and BOE basis for retenciones and
      ingresos a cuenta for work, professional, and related income categories.
-  - [ ] Classify the Modelo 111 live AEAT cross-reference surface and add
+  - [x] Classify the Modelo 111 live AEAT cross-reference surface and add
      remote-state guard tests; no authenticated presentation, signing, payment,
      server-side save, or other AEAT write action is allowed.
-  - [ ] Write `registry/aeat/modelos/111.toml` with every reviewed revision,
+  - [x] Write `registry/aeat/modelos/111.toml` with every reviewed revision,
      casilla, formula, parameter, data binding, legal reference, source
      reference, and export layout.
-  - [ ] Link Modelo 111 to registry-backed calculation, trace, review, approval,
+  - [x] Link Modelo 111 to registry-backed calculation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
-  - [ ] Verify Modelo 111 with real withholding examples, invalid inputs,
+  - [x] Prove submitted-file parsing for Modelo 111 against the centralized
+     export layout and preserve any captured live AEAT artefacts only through
+     encrypted financial storage.
+  - [x] Capture or classify available live AEAT filed-declaration artefacts for
+     Modelo 111 and map observed casillas into the standard observation schema.
+  - [x] Verify Modelo 111 with real withholding examples, invalid inputs,
      date-axis boundaries, legal-reference checks, source-integrity checks,
      export roundtrips, and registry failure cases.
-  - [ ] Delete Modelo 111 old authorities in rulesets, hydrate augment data,
+  - [x] Delete Modelo 111 old authorities in rulesets, hydrate augment data,
      casilla projections, declaration extractor truth, duplicated metadata, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 111 cannot be calculated or filed
-     through old authorities.
+  - [x] Add behaviour tests proving Modelo 111 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
 - `Wave 3` Modelo 115 complete implementation
-  - [ ] Audit every Modelo 115 authority in rulesets, modelo metadata, casilla
+  - [x] Audit every Modelo 115 authority in rulesets, modelo metadata, casilla
      corpus, rental/category mappings, declaration extractors, deadline logic,
      export specs, tests, manuals, BOE references, and official AEAT record
      designs.
-  - [ ] Produce a Modelo 115 model-law coverage ledger covering all revisions,
+  - [x] Produce a Modelo 115 model-law coverage ledger covering all revisions,
      source artefacts, legal references, rental withholding casillas, formulas,
      parameters, data bindings, export fields, filing paths, tests, and old
      authorities to delete.
-  - [ ] Research and verify the official AEAT and BOE basis for rental withholding
+  - [x] Research and verify the official AEAT and BOE basis for rental withholding
      taxable bases, withholding amounts, recipient counts, and filing/export
      obligations.
-  - [ ] Classify the Modelo 115 live AEAT cross-reference surface and add
+  - [x] Classify the Modelo 115 live AEAT cross-reference surface and add
      remote-state guard tests; no authenticated presentation, signing, payment,
      server-side save, or other AEAT write action is allowed.
-  - [ ] Write `registry/aeat/modelos/115.toml` with every reviewed revision,
+  - [x] Write `registry/aeat/modelos/115.toml` with every reviewed revision,
      casilla, formula, parameter, data binding, legal reference, source
      reference, and export layout.
-  - [ ] Link Modelo 115 to registry-backed calculation, trace, review, approval,
+  - [x] Link Modelo 115 to registry-backed calculation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
-  - [ ] Verify Modelo 115 with real rental withholding examples, invalid inputs,
+  - [x] Verify Modelo 115 with real rental withholding examples, invalid inputs,
      legal-reference checks, source-integrity checks, export roundtrips, and
      registry failure cases.
-  - [ ] Delete Modelo 115 old authorities in rulesets, rental/category casilla
+  - [x] Delete Modelo 115 old authorities in rulesets, rental/category casilla
      mappings, casilla projections, declaration extractor truth, duplicated
      metadata, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 115 cannot be calculated or filed
-     through old authorities.
+  - [x] Add behaviour tests proving Modelo 115 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
 - `Wave 4` Modelo 123 complete implementation
-  - [ ] Audit every Modelo 123 authority in rulesets, modelo metadata, casilla
+  - [x] Audit every Modelo 123 authority in rulesets, modelo metadata, casilla
      corpus, declaration extractors, annual-summary links, deadline logic,
      export specs, tests, manuals, BOE references, and official AEAT record
      designs.
-  - [ ] Produce a Modelo 123 model-law coverage ledger covering all revisions,
+  - [x] Produce a Modelo 123 model-law coverage ledger covering all revisions,
      capital-income withholding bases, retentions, income-account treatment,
      casillas, formulas, source artefacts, export fields, filing paths, tests,
      and old authorities to delete.
-  - [ ] Research and verify the official AEAT and BOE basis for capital income
+  - [x] Research and verify the official AEAT and BOE basis for capital income
      retentions and ingresos a cuenta.
-  - [ ] Classify the Modelo 123 live AEAT cross-reference surface and add
+  - [x] Classify the Modelo 123 live AEAT cross-reference surface and add
      remote-state guard tests; no authenticated presentation, signing, payment,
      server-side save, or other AEAT write action is allowed.
-  - [ ] Write `registry/aeat/modelos/123.toml` with every reviewed revision,
+  - [x] Write `registry/aeat/modelos/123.toml` with every reviewed revision,
      casilla, formula, parameter, data binding, legal reference, source
      reference, and export layout.
-  - [ ] Link Modelo 123 to registry-backed calculation, trace, review, approval,
+  - [x] Link Modelo 123 to registry-backed calculation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
-  - [ ] Verify Modelo 123 with real capital-income examples, invalid inputs,
+  - [x] Verify Modelo 123 with real capital-income examples, invalid inputs,
      legal-reference checks, source-integrity checks, export roundtrips, and
      registry failure cases.
-  - [ ] Delete Modelo 123 old authorities in rulesets, annual-summary shadow
+  - [x] Delete Modelo 123 old authorities in rulesets, annual-summary shadow
      links, declaration extractor truth, casilla projections, duplicated
      metadata, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 123 cannot be calculated or filed
-     through old authorities.
+  - [x] Add behaviour tests proving Modelo 123 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -923,16 +2629,29 @@ application surface, and the old authority has been deleted.
   - [ ] Write `registry/aeat/modelos/131.toml` with every reviewed revision,
      casilla, formula, parameter, data binding, legal reference, source
      reference, and export layout.
+     - [x] Current 2026 liquidacion schema and formulas are committed; historical
+       2019-2023, 2024, and 2025 revisions and activity-detail export records
+       remain open.
   - [ ] Link Modelo 131 to registry-backed calculation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
+     - [x] Current 2026 calculation, deadline, extraction, verification,
+       review, filing, portal, and static cross-reference links are committed.
+     - [ ] Export workflow remains open until the record-design activity-detail
+       structures are represented without flattening or filler fields.
   - [ ] Verify Modelo 131 with real module examples, invalid inputs, date-axis
      boundaries, legal-reference checks, source-integrity checks, export
      roundtrips, and registry failure cases.
+     - [x] Current 2026 registry calculation and deadline applicability tests
+       pass through the committed runtime.
+     - [ ] Export roundtrips, historical date-axis tests, and live filed-data
+       parser tests remain open.
   - [ ] Delete Modelo 131 old authorities in rulesets, category/deadline
      hardcoding, casilla projections, declaration extractor truth, duplicated
      metadata, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 131 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 131 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
+     - [x] Current 2026 calculation and deadline membership are covered by
+       committed behaviour tests.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -961,8 +2680,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 180 old authorities in rulesets, annual summary code,
      declaration extractor truth, casilla projections, duplicated metadata, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 180 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 180 relation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -992,8 +2711,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 190 old authorities in annual summary code, declaration
      extractor truth, hydrate/casilla projections, duplicated metadata, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 190 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 190 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1022,8 +2741,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 193 old authorities in annual summary code, declaration
      extractor truth, casilla projections, duplicated metadata, and generated
      export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 193 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 193 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1054,8 +2773,8 @@ application surface, and the old authority has been deleted.
      tables, VAT-to-casilla mappings, category bridge mappings, declaration
      extractor truth, casilla projections, duplicated metadata, and generated
      export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 303 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 303 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1085,8 +2804,9 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 390 old authorities in rulesets, filing builders, annual IVA
      summary code, declaration extractor truth, casilla projections, duplicated
      metadata, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 390 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 390 annual-summary and filing
+     workflows require a validated registry snapshot and fail fast on coverage
+     gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1114,8 +2834,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 349 old authorities in declaration extractor truth, modelo
      metadata duplicates, casilla projections, operation mapping code, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 349 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 349 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1143,8 +2863,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 347 old authorities in category/aggregation hardcoding,
      declaration extractor truth, modelo metadata duplicates, casilla
      projections, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 347 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 347 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1174,8 +2894,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 369 old authorities in VAT/category mapping code,
      declaration extractor truth, modelo metadata duplicates, casilla
      projections, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 369 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 369 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1204,8 +2924,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 202 old authorities in rulesets, corporate-tax helper
      hardcoding, declaration extractor truth, modelo metadata duplicates,
      casilla projections, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 202 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 202 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1234,8 +2954,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 200 old authorities in rulesets, corporate-tax helpers,
      declaration extractor truth, schema-generation truth, modelo metadata
      duplicates, casilla projections, and generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 200 cannot be calculated or filed
-     through old authorities.
+  - [ ] Add behaviour tests proving Modelo 200 calculation and filing workflows
+     require a validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1263,8 +2983,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 232 old authorities in declaration extractor truth, modelo
      metadata duplicates, casilla projections, related-party hardcoding, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 232 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 232 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1292,8 +3012,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 720 old authorities in declaration extractor truth, modelo
      metadata duplicates, casilla projections, foreign-asset hardcoding, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 720 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 720 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1322,8 +3042,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 840 old authorities in declaration extractor truth, modelo
      metadata duplicates, censal/IAE hydrate data, casilla projections, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 840 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 840 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1354,8 +3074,8 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 036 old authorities in censal hydrate tables, declaration
      extractor truth, modelo metadata duplicates, casilla projections, and
      generated export/layout paths.
-  - [ ] Add import-contract tests proving Modelo 036 cannot be filed through old
-     authorities.
+  - [ ] Add behaviour tests proving Modelo 036 filing workflows require a
+     validated registry snapshot and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1387,8 +3107,9 @@ application surface, and the old authority has been deleted.
   - [ ] Delete Modelo 037 old authorities in censal hydrate tables, declaration
      extractor truth, retired portal hardcoding, modelo metadata duplicates,
      casilla projections, and any implied support path outside the registry.
-  - [ ] Add import-contract tests proving Modelo 037 cannot be filed, imported, or
-     validated through old authorities.
+  - [ ] Add behaviour tests proving Modelo 037 filing, import, and validation
+     workflows require a validated registry snapshot and fail fast on coverage
+     gaps.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -1443,14 +3164,15 @@ application surface, and the old authority has been deleted.
      extractor casilla truth, declaration extractor casilla truth, modelo
      metadata duplicates, casilla projections, and generated/export layout
      paths.
-  - [ ] Add import-contract tests proving Modelo 100 cannot be calculated,
-     parsed, reviewed, approved, exported, or filed through old authorities.
+  - [ ] Add behaviour tests proving Modelo 100 calculation, parsing, review,
+     approval, export, and filing workflows require validated registry snapshots
+     and fail fast on coverage gaps.
   - [ ] Mark the wave complete only after every Renta epoch, full registry
      validation, project tests, and vault checks pass.
 
 - `Phase 5` Global teardown completion
   - [ ] Delete remaining old formula ruleset registration surfaces once every
-     migrated modelo has registry-backed calculations.
+     completed modelo has registry-backed calculations.
   - [ ] Delete old modelo metadata entries as authorities once their identity,
      cadence, applicability, portals, and legal basis are represented in TOML.
   - [ ] Delete old casilla corpus JSON as authority or retain only non-runtime
@@ -1475,9 +3197,11 @@ application surface, and the old authority has been deleted.
   - [ ] Run workbook parity tests for every formula-bearing official workbook
      that has a supported local runner.
   - [ ] Run model-by-model calculation tests, date-axis tests, relation tests,
-     export roundtrips, filing workflow tests, and import-contract tests.
-  - [ ] Run checks that prove no filing-grade workflow can access old authorities
-     or generated legal-rule files.
+     export roundtrips, filing workflow tests, and registry-backed public
+     behaviour tests.
+  - [ ] Run behaviour checks that exercise every filing-grade workflow through
+     validated registry snapshots and fail fast on generated or incomplete
+     legal-rule data.
   - [ ] Run static discovery for hardcoded legal rates, thresholds, casilla maps,
      revision ids, process metadata, generated provenance, and hydrate remnants.
   - [ ] Run full project tests and vault checks.

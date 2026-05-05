@@ -26,10 +26,11 @@ from ._common import (
     _state,
     _tx_repo,
 )
+from ._i18n import tr
 
 app = typer.Typer(
     name="ledger",
-    help="Transaction ledger: import, review, edit.",
+    help=tr("cli.ledger.app_help"),
     no_args_is_help=True,
 )
 
@@ -39,18 +40,16 @@ def _direction_resolver(raw: Any) -> TransactionDirection:
     return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
 
-@app.command("import", help="Import a bank statement / invoice file into the ledger.")
+@app.command("import", help=tr("cli.ledger.import.help"))
 def ledger_import(
     ctx: typer.Context,
-    path: Path = typer.Argument(..., help="Source file path."),
-    provider: str = typer.Option(..., "--provider", help="Provider id (n26, csv, ofx, xlsx, pdf, auto)."),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Parse only; do not persist."),
-    verify: bool = typer.Option(False, "--verify", help="Run import-time diagnostics (gap / duplicate)."),
-    source: Path | None = typer.Option(
-        None, "--source", help="Original source-file path for original-file diagnostics."
-    ),
-    verbose: bool = typer.Option(False, "--verbose", help="Emit verbose diagnostic detail."),
-    period: str | None = typer.Option(None, "--period", help="Optional period hint for diagnostics."),
+    path: Path = typer.Argument(..., help=tr("cli.ledger.import.path_help")),
+    provider: str = typer.Option(..., "--provider", help=tr("cli.ledger.import.provider_help")),
+    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
+    verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
+    source: Path | None = typer.Option(None, "--source", help=tr("cli.ledger.import.source_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
 ) -> None:
     """Import a financial-statement file via the existing provider registry."""
     from ...adapters.inbound.financial.providers import (
@@ -65,7 +64,7 @@ def ledger_import(
     if pid == "auto":
         chosen = detect_provider(path)
         if chosen is None:
-            raise _bad(f"could not auto-detect provider for {path}")
+            raise _bad(tr("cli.ledger.errors.auto_detect_failed", path=str(path)))
     elif pid in {"csv"}:
         chosen = CsvProvider()
     elif pid in {"ofx", "qfx"}:
@@ -75,22 +74,35 @@ def ledger_import(
     elif pid == "n26":
         chosen = detect_provider(path)
         if chosen is None:
-            raise _bad(f"could not auto-detect N26 format for {path}")
+            raise _bad(tr("cli.ledger.errors.n26_auto_detect_failed", path=str(path)))
     elif pid in {"pdf", "pdf-n26"}:
         chosen = PdfN26Provider()
     else:
-        raise _bad(f"unknown provider {provider!r}; allowed: auto, csv, ofx, xlsx, n26")
+        raise _bad(tr("cli.ledger.errors.unknown_provider", provider=provider))
     raws = list(chosen.ingest(path))
     if dry_run:
-        payload = {"rows": len(raws), "imported": 0, "skipped": 0, "dry_run": True, "verify": verify}
-        _emit(ctx, payload, [f"rows\t{len(raws)}", "dry_run\tyes"])
+        payload = {
+            tr("cli.ledger.labels.rows"): len(raws),
+            tr("cli.ledger.labels.imported"): 0,
+            tr("cli.ledger.labels.skipped"): 0,
+            tr("cli.ledger.labels.dry_run"): True,
+            "verify": verify,
+        }
+        _emit(
+            ctx,
+            payload,
+            [
+                f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
+                f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}",
+            ],
+        )
         return
     summary = _tx_repo().merge_raw_transactions(raws, direction_resolver=_direction_resolver)
     payload = {
-        "rows": len(raws),
-        "imported": summary.imported,
-        "skipped": summary.skipped,
-        "dry_run": False,
+        tr("cli.ledger.labels.rows"): len(raws),
+        tr("cli.ledger.labels.imported"): summary.imported,
+        tr("cli.ledger.labels.skipped"): summary.skipped,
+        tr("cli.ledger.labels.dry_run"): False,
         "verify": verify,
         "period": _canonical_period(period) if period else None,
     }
@@ -98,25 +110,25 @@ def ledger_import(
         ctx,
         payload,
         [
-            f"rows\t{len(raws)}",
-            f"imported\t{summary.imported}",
-            f"skipped\t{summary.skipped}",
+            f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
+            f"{tr('cli.ledger.labels.imported')}\t{summary.imported}",
+            f"{tr('cli.ledger.labels.skipped')}\t{summary.skipped}",
         ],
     )
 
 
-@app.command("review", help="List ledger rows, optionally filtered, or show one row.")
+@app.command("review", help=tr("cli.ledger.review.help"))
 def ledger_review(
     ctx: typer.Context,
-    filters: list[str] = typer.Option([], "--filter", help="--filter KEY=VALUE (status, period, issue, import)."),
-    record_id: str | None = typer.Option(None, "--id", help="Show one row in detail."),
-    verbose: bool = typer.Option(False, "--verbose", help="Show row provenance and edit history."),
+    filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.review.filter_help")),
+    record_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.review.id_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.review.verbose_help")),
 ) -> None:
     """Render rows or a single row using the typed filter spec."""
     try:
         spec = LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}") from exc
+        raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     catalogue = _load_transactions()
     state = _state()
     rows: list[Transaction] = list(catalogue.transactions.values())
@@ -134,10 +146,10 @@ def ledger_review(
                     amount_val = Decimal(review.fields["amount"])
 
                 payload = {
-                    "id": tx.transaction_id,
-                    "date": (tx.raw.value_date or tx.raw.booked_date).isoformat(),
-                    "amount": _fmt_decimal(amount_val),
-                    "description": tx.raw.description,
+                    tr("cli.ledger.labels.id"): tx.transaction_id,
+                    tr("cli.ledger.labels.date"): (tx.raw.value_date or tx.raw.booked_date).isoformat(),
+                    tr("cli.ledger.labels.amount"): _fmt_decimal(amount_val),
+                    tr("cli.ledger.labels.description"): tx.raw.description,
                     "review": review,
                     "verbose": verbose,
                 }
@@ -145,35 +157,35 @@ def ledger_review(
                     ctx,
                     payload,
                     [
-                        f"id\t{tx.transaction_id}",
-                        f"date\t{(tx.raw.value_date or tx.raw.booked_date).isoformat()}",
-                        f"amount\t{_fmt_decimal(amount_val)}",
-                        f"description\t{tx.raw.description}",
+                        f"{tr('cli.ledger.labels.id')}\t{tx.transaction_id}",
+                        f"{tr('cli.ledger.labels.date')}\t{(tx.raw.value_date or tx.raw.booked_date).isoformat()}",
+                        f"{tr('cli.ledger.labels.amount')}\t{_fmt_decimal(amount_val)}",
+                        f"{tr('cli.ledger.labels.description')}\t{tx.raw.description}",
                     ],
                 )
                 return
-        raise _bad(f"row {record_id!r} not found")
+        raise _bad(tr("cli.ledger.errors.row_not_found", id=record_id))
     payload = {
         "rows": [
             {
-                "id": tx.transaction_id,
-                "date": (tx.raw.value_date or tx.raw.booked_date).isoformat(),
-                "amount": format(tx.raw.amount, "f"),
-                "description": tx.raw.description,
-                "status": _ledger_row_status(tx, state),
+                tr("cli.ledger.labels.id"): tx.transaction_id,
+                tr("cli.ledger.labels.date"): (tx.raw.value_date or tx.raw.booked_date).isoformat(),
+                tr("cli.ledger.labels.amount"): format(tx.raw.amount, "f"),
+                tr("cli.ledger.labels.description"): tx.raw.description,
+                tr("cli.ledger.labels.status"): _ledger_row_status(tx, state),
             }
             for tx in rows
         ],
         "filters": list(spec.clauses),
     }
-    lines: list[str] = ["id\tdate\tamount\tdescription\tstatus"]
+    lines: list[str] = [tr("cli.ledger.review.header")]
     lines.extend(
         f"{tx.transaction_id[:8]}\t{(tx.raw.value_date or tx.raw.booked_date).isoformat()}\t"
         f"{format(tx.raw.amount, 'f')}\t{tx.raw.description}\t{_ledger_row_status(tx, state)}"
         for tx in rows
     )
     if not rows:
-        lines.append("(no rows)")
+        lines.append(tr("cli.ledger.review.no_rows"))
     _emit(ctx, payload, lines)
 
 
@@ -186,23 +198,23 @@ def _ledger_row_status(tx: Transaction, state: UserCliState) -> str:
     return "pending"
 
 
-@app.command("edit", help="Edit one ledger row via --set, --skip, or --split (all gated by --reason).")
+@app.command("edit", help=tr("cli.ledger.edit.help"))
 def ledger_edit(
     ctx: typer.Context,
-    record_id: str = typer.Option(..., "--id", help="Ledger row id."),
-    sets: list[str] = typer.Option([], "--set", help="--set KEY=VALUE column override."),
-    skip: str | None = typer.Option(None, "--skip", help="--skip true|false."),
-    splits: list[str] = typer.Option([], "--split", help="--split SHARE=DECIMAL or --split clear."),
-    reason: str = typer.Option(..., "--reason", help="Audit-trail reason for the edit."),
+    record_id: str = typer.Option(..., "--id", help=tr("cli.ledger.edit.id_help")),
+    sets: list[str] = typer.Option([], "--set", help=tr("cli.ledger.edit.set_help")),
+    skip: str | None = typer.Option(None, "--skip", help=tr("cli.ledger.edit.skip_help")),
+    splits: list[str] = typer.Option([], "--split", help=tr("cli.ledger.edit.split_help")),
+    reason: str = typer.Option(..., "--reason", help=tr("cli.ledger.edit.reason_help")),
 ) -> None:
     """Apply a typed edit to one ledger row."""
     catalogue = _load_transactions()
     if record_id not in catalogue.transactions:
-        raise _bad(f"row {record_id!r} not found")
+        raise _bad(tr("cli.ledger.errors.row_not_found", id=record_id))
     try:
         spec = LedgerEditSpec.from_strings(sets)
     except EditParseError as exc:
-        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}") from exc
+        raise _bad(tr("cli.ledger.errors.set_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     fields: dict[str, str] = {}
     if spec.category is not None:
         fields["category"] = spec.category
@@ -223,7 +235,7 @@ def ledger_edit(
         elif skip_normalised in {"false", "no", "0"}:
             skip_flag = False
         else:
-            raise _bad("--skip accepts true|false")
+            raise _bad(tr("cli.ledger.errors.invalid_skip"))
 
     split_value: LedgerSplit | None = None
     clear_split = False
@@ -234,20 +246,20 @@ def ledger_edit(
             shares: dict[str, Decimal] = {}
             for raw in splits:
                 if "=" not in raw:
-                    raise _bad(f"--split expects SHARE=DECIMAL; got {raw!r}")
+                    raise _bad(tr("cli.ledger.errors.invalid_split_format", raw=raw))
                 k, _, v = raw.partition("=")
                 try:
                     shares[k.strip().lower()] = Decimal(v.strip())
                 except Exception as exc:
-                    raise _bad(f"--split value {v!r} is not a Decimal") from exc
+                    raise _bad(tr("cli.ledger.errors.invalid_split_value", v=v)) from exc
             if "business" not in shares or "personal" not in shares:
-                raise _bad("--split requires both business=… and personal=…")
+                raise _bad(tr("cli.ledger.errors.match_both_required"))
             split_value = LedgerSplit(
                 business_share=shares["business"], personal_share=shares["personal"], reason=reason
             )
 
     if not (fields or skip_flag is not None or split_value is not None or clear_split):
-        raise _bad("ledger edit requires at least one of --set, --skip, --split")
+        raise _bad(tr("cli.ledger.errors.edit_requires_one"))
 
     updated = state_repository().update(
         lambda current: update_ledger_review(
@@ -262,13 +274,13 @@ def ledger_edit(
         )
     )
     review = updated.ledger_reviews.get(record_id)
-    payload = {"id": record_id, "review": review}
+    payload = {tr("cli.ledger.labels.id"): record_id, "review": review}
     _emit(
         ctx,
         payload,
         [
-            f"id\t{record_id}",
-            f"skipped\t{'yes' if review and review.skipped else 'no'}",
-            f"fields\t{', '.join(sorted(review.fields)) if review else '-'}",
+            f"{tr('cli.ledger.labels.id')}\t{record_id}",
+            f"{tr('cli.ledger.labels.skipped')}\t{tr('cli.ledger.labels.yes') if review and review.skipped else tr('cli.ledger.labels.no')}",
+            f"{tr('cli.ledger.labels.fields')}\t{', '.join(sorted(review.fields)) if review else '-'}",
         ],
     )

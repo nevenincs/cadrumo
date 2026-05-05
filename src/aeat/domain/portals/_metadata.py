@@ -35,15 +35,14 @@ class PortalMetadata(BaseModel):
         url_stability: :class:`UrlStability` tier for read-only portal
             monitoring priority.
         label: Translation key for the display label.
-        purpose_es: One-sentence Spanish purpose, non-empty after
-            stripping.
+        purpose: Translation key for the purpose description.
         active: ``False`` marks retired portals preserved for
             historical lookup.
         replaced_by: When ``active is False``, optionally points to the
             :class:`Portal` member that supersedes this one. When
-            ``None`` and ``active is False``, ``notes_es`` must carry
+            ``None`` and ``active is False``, ``notes`` must carry
             a non-empty discontinuation rationale.
-        notes_es: Tuple of Spanish short-form notes / gotchas.
+        notes: Tuple of translation keys for notes.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -55,17 +54,17 @@ class PortalMetadata(BaseModel):
     auth_methods: frozenset[AuthMethod] = Field(min_length=1)
     url_stability: UrlStability
     label: tr
-    purpose_es: str = Field(min_length=1)
+    purpose: tr
     active: bool = True
     replaced_by: Portal | None = None
-    notes_es: tuple[str, ...] = ()
+    notes: tuple[tr, ...] = ()
 
-    @field_validator("purpose_es")
+    @field_validator("purpose")
     @classmethod
-    def _purpose_not_blank(cls, value: str) -> str:
-        """Reject whitespace-only purpose strings."""
+    def _purpose_not_blank(cls, value: tr) -> tr:
+        """Reject whitespace-only purpose keys."""
         if not value.strip():
-            raise ValueError("purpose_es must not be empty or whitespace-only")
+            raise ValueError("purpose must not be empty or whitespace-only")
         return value
 
     @field_validator("label")
@@ -106,8 +105,8 @@ class PortalMetadata(BaseModel):
                 )
 
         # Retired-without-replacement fallback.
-        if not self.active and self.replaced_by is None and not self.notes_es:
-            raise ValueError("retired portal without replaced_by must carry a non-empty notes_es rationale")
+        if not self.active and self.replaced_by is None and not self.notes:
+            raise ValueError("retired portal without replaced_by must carry a non-empty notes rationale")
 
         # Replaced-by may only be set when active is False.
         if self.active and self.replaced_by is not None:

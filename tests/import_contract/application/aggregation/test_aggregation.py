@@ -8,7 +8,6 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.application.aggregation import AggregationPeriodError, Period, PeriodKind
-from aeat.domain.deadlines import PeriodKind as DeadlinePeriodKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -23,9 +22,10 @@ def test_period_accepts_quarter_with_dash_and_is_frozen() -> None:
         period.year = 2026  # type: ignore[misc]
 
 
-def test_aggregation_reuses_deadline_period_kind() -> None:
-    assert PeriodKind is DeadlinePeriodKind
+def test_aggregation_period_kind_values() -> None:
     assert PeriodKind.QUARTERLY.value == "quarterly"
+    assert PeriodKind.MONTHLY.value == "monthly"
+    assert PeriodKind.ANNUAL.value == "annual"
 
 
 def test_period_mapping_accepts_canonical_kind() -> None:

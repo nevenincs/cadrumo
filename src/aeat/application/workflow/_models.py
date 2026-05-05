@@ -3,9 +3,8 @@
 Every boundary-crossing type in :mod:`aeat.application.workflow` is
 defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
-enumerations. The module also pins the ordering contract for
-:class:`WorkflowStage` and the sole sanctioned ``dict[str, str]`` escape
-hatch on :attr:`WorkflowStep.details`.
+enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
+diagnostics emitted by workflow stages.
 """
 
 from __future__ import annotations
@@ -116,11 +115,9 @@ class WorkflowStep(BaseModel):
             still-running step; always set on completed steps.
         summary: Multilingual human-readable summary of what happened in
             this step.
-        details: Optional human-readable diagnostics dictionary. This
-            is the **single** sanctioned ``dict[str, str]`` in the public
-            schema: per-stage diagnostics are inherently free-form and
-            modelling every possible shape as a dedicated pydantic union
-            adds no type-safety over a string-valued dict.
+        details: Optional human-readable diagnostics dictionary. Per-stage
+            diagnostics are string-valued so the result can carry useful
+            context without adding one envelope type per workflow step.
     """
 
     model_config = _STRICT_FROZEN
@@ -209,7 +206,7 @@ def compute_run_id(
 
     Args:
         tax_id: The profile tax ID.
-        modelo: The target modelo (e.g. ``"130"``), or ``"-"`` when the
+        modelo: The target modelo, or ``"-"`` when the
             engine has not yet determined one.
         period: The target period (e.g. ``"2026Q1"``), or ``"-"``.
         started_at: The UTC start timestamp of the run.

@@ -23,8 +23,8 @@ import typer
 from ....adapters.outbound.llm import LLMCache, LLMClient, LLMRequest, PromptRegistry, Translator, UsageRecorder
 from .._i18n import tr
 
-app = typer.Typer(name="llm", no_args_is_help=True, help="LLM helpers.")
-cache_app = typer.Typer(name="cache", no_args_is_help=True, help="LLM cache helpers.")
+app = typer.Typer(name="llm", no_args_is_help=True, help=tr("cli.llm.app_help"))
+cache_app = typer.Typer(name="cache", no_args_is_help=True, help=tr("cli.llm.cache_app_help"))
 app.add_typer(cache_app, name="cache")
 
 
@@ -38,18 +38,17 @@ def _parse_inputs(values: list[str]) -> dict[str, str]:
     parsed: dict[str, str] = {}
     for item in values:
         if "=" not in item:
-            msg = f"Invalid --input value {item!r}; expected key=value."
-            raise typer.BadParameter(msg)
+            raise typer.BadParameter(tr("cli.llm.errors.invalid_input", raw=item))
         key, value = item.split("=", 1)
         parsed[key] = value
     return parsed
 
 
-@app.command(name="complete")
+@app.command(name="complete", help=tr("cli.llm.complete_help"))
 def complete(
-    prompt_id: str = typer.Argument(..., help="Prompt id from the registry."),
-    language: str | None = typer.Option(None, "--language", help="Optional output language."),
-    inputs: list[str] | None = typer.Option(None, "--input", help="Prompt variable assignment as key=value."),
+    prompt_id: str = typer.Argument(..., help=tr("cli.llm.prompt_id_help")),
+    language: str | None = typer.Option(None, "--language", help=tr("cli.llm.language_help")),
+    inputs: list[str] | None = typer.Option(None, "--input", help=tr("cli.llm.input_help")),
 ) -> None:
     """Render and execute a registered prompt once.
 
@@ -74,18 +73,18 @@ def complete(
     try:
         prompt = definition.template.format_map(_parse_inputs(inputs or []))
     except KeyError as exc:
-        raise typer.BadParameter(tr("llm.init.t_398390")) from exc
+        raise typer.BadParameter(tr("cli.llm.errors.missing_variable", name=str(exc))) from exc
     client = LLMClient(prompt_id=definition.id)
     response = asyncio.run(client.complete(LLMRequest(prompt=prompt, language=language)))
     typer.echo(response.text)
 
 
-@app.command(name="translate")
+@app.command(name="translate", help=tr("cli.llm.translate_help"))
 def translate(
-    source_lang: str = typer.Option(..., "--from", help="Source language code."),
-    target_lang: str = typer.Option(..., "--to", help="Target language code."),
-    text: str = typer.Argument(..., help="Text to translate."),
-    context: str | None = typer.Option(None, "--context", help="Optional translation context."),
+    source_lang: str = typer.Option(..., "--from", help=tr("cli.llm.from_help")),
+    target_lang: str = typer.Option(..., "--to", help=tr("cli.llm.to_help")),
+    text: str = typer.Argument(..., help=tr("cli.llm.text_help")),
+    context: str | None = typer.Option(None, "--context", help=tr("cli.llm.context_help")),
 ) -> None:
     """Translate a single text with the configured provider.
 
@@ -102,25 +101,25 @@ def translate(
     typer.echo(translation.text)
 
 
-@cache_app.command(name="stats")
+@cache_app.command(name="stats", help=tr("cli.llm.cache_stats_help"))
 def cache_stats() -> None:
     """Print :class:`~aeat.adapters.outbound.llm.LLMCache` statistics as JSON."""
 
     typer.echo(LLMCache().stats().model_dump_json(indent=2))
 
 
-@cache_app.command(name="prune")
+@cache_app.command(name="prune", help=tr("cli.llm.cache_prune_help"))
 def cache_prune() -> None:
     """Delete cached LLM responses and report the count removed."""
 
-    LLMCache().prune()
-    typer.echo(tr("llm.init.t_029483"))
+    n = LLMCache().prune()
+    typer.echo(tr("cli.llm.labels.removed_cache_files", n=n))
 
 
-@app.command(name="usage")
+@app.command(name="usage", help=tr("cli.llm.usage_help"))
 def usage(
-    since: str | None = typer.Option(None, "--since", help="Inclusive lower date bound as YYYY-MM-DD."),
-    until: str | None = typer.Option(None, "--until", help="Inclusive upper date bound as YYYY-MM-DD."),
+    since: str | None = typer.Option(None, "--since", help=tr("cli.llm.since_help")),
+    until: str | None = typer.Option(None, "--until", help=tr("cli.llm.until_help")),
 ) -> None:
     """Summarise LLM usage and estimated cost via :class:`~aeat.adapters.outbound.llm.UsageRecorder`.
 

@@ -1,4 +1,4 @@
-"""Synthetic Modelo 130 declaración PDF generator (EPIC #305 cluster D).
+"""Synthetic Modelo 130 declaración PDF generator.
 
 Mirrors AEAT's real Modelo 130 layout closely enough that the same
 label-anchored regex extractor designed for real AEAT PDFs succeeds
@@ -42,9 +42,8 @@ from ._generator_shared import (
 # A4 page. Positions roughly mirror AEAT's real form but are not
 # pixel-identical — parity targets text content, not rendering.
 #
-# Issue #321 (Tier-L per-modelo calc-verify-roundtrip): the casilla
-# inventory is the full 19-casilla liquidación block. Casillas 01-07
-# preserve their existing y_mm positions (back-compat); casillas
+# The casilla inventory is the full 19-casilla liquidación block.
+# Casillas 01-07 keep their established y_mm positions; casillas
 # 08-19 occupy y_mm=140..250 with a 10 mm vertical pitch.
 _MODELO_130_BOXES: tuple[CasillaBox, ...] = (
     CasillaBox(casilla_id="01", label_es="Ingresos integros del periodo", x_mm=20, y_mm=60),

@@ -46,6 +46,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
+    RegistryFilingDraftProtocol,
     SubmissionEngineProtocol,
 )
 
@@ -57,6 +58,7 @@ __all__ = [
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
     "JsonFileInputsProvider",
+    "RegistryFilingDraftProtocol",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",
     "SubmissionEngineProtocol",
