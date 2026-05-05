@@ -91,6 +91,47 @@ def test_modelo_131_recent_record_designs_share_coordinates_but_not_source_text(
     )
 
 
+@pytest.mark.parametrize(
+    ("filing_year", "period", "workbook_name", "binding_id", "source_ref"),
+    (
+        (
+            2024,
+            "1T",
+            "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+            "modelo-131-2024.did.012-045.iban",
+            "aeat-dr-131-2024",
+        ),
+        (
+            2025,
+            "1T",
+            "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
+            "modelo-131-2025.did.012-045.iban",
+            "aeat-dr-131-2025",
+        ),
+    ),
+)
+def test_modelo_131_historical_did_registry_binding_matches_official_workbook(
+    filing_year: int,
+    period: str,
+    workbook_name: str,
+    binding_id: str,
+    source_ref: str,
+) -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period=period)
+    binding = next(item for item in snapshot.revision.bindings if item.id == binding_id)
+    sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
+    official_iban = next(field for field in sheets["DID"].fields if field.description == "Domiciliación - IBAN")
+
+    assert binding.selector["record"] == "DID"
+    assert binding.selector["field"] == "iban"
+    assert binding.selector["offset"] == official_iban.offset
+    assert binding.selector["length"] == official_iban.length
+    assert binding.selector["data_type"] == ("integer" if official_iban.type_code == "Num" else "text")
+    assert source_ref in binding.source_refs
+
+
 def test_modelo_131_current_registry_bindings_cover_official_structured_records() -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "131")
