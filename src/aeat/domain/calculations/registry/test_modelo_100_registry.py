@@ -102,12 +102,17 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     source_foundation = snapshot.constructs["renta-source-foundation"]
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     payments_retentions = snapshot.constructs["renta-payments-retentions"]
+    economic_activities = snapshot.constructs["renta-economic-activities"]
     observation_parsing = snapshot.constructs["renta-observation-parsing"]
+    filed_dependency_bindings = {
+        binding.id for binding in snapshot.revision.bindings if binding.source == "previous_filing"
+    }
 
-    assert set(dependencies.bindings) == {binding.id for binding in snapshot.revision.bindings}
+    assert set(dependencies.bindings) == filed_dependency_bindings
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
-    assert set(payments_retentions.bindings) == {binding.id for binding in snapshot.revision.bindings}
+    assert set(payments_retentions.bindings) == filed_dependency_bindings
     assert set(payments_retentions.relations) == {relation.id for relation in snapshot.revision.relations}
+    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
@@ -120,12 +125,15 @@ def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
     revision = modelos_by_id["100"].revisions["2025"]
     constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
     dependencies = constructs["renta-dependent-modelos"]
+    economic_activities = constructs["renta-economic-activities"]
+    filed_dependency_binding_ids = {binding.id for binding in revision.bindings if binding.source == "previous_filing"}
 
-    assert {member.id for member in dependencies.members_of_kind("binding")} == {
-        binding.id for binding in revision.bindings
-    }
+    assert {member.id for member in dependencies.members_of_kind("binding")} == filed_dependency_binding_ids
     assert {member.id for member in dependencies.members_of_kind("relation")} == {
         relation.id for relation in revision.relations
+    }
+    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in {
+        member.id for member in economic_activities.members_of_kind("binding")
     }
     for member in dependencies.members:
         assert cast(Any, member.value).id == member.id
@@ -197,6 +205,7 @@ def test_modelo_100_payments_on_account_calculate_from_registry_relations() -> N
             "0606": Decimal("13.00"),
         },
         date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("140.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("220.00"),
@@ -277,6 +286,7 @@ def test_modelo_100_direct_estimation_subtotals_calculate_from_registry() -> Non
             "0227": Decimal("24.00"),
         },
         date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -321,6 +331,53 @@ def test_modelo_100_direct_estimation_subtotals_calculate_from_registry() -> Non
         "0216",
         "0217",
     )
+
+
+def test_modelo_100_direct_estimation_net_returns_and_reductions_branch_on_mode_binding() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    inputs = {
+        "0171": Decimal("80.00"),
+        "0172": Decimal("20.00"),
+        "0181": Decimal("20.00"),
+        "0222": Decimal("10.00"),
+        "0225": Decimal("5.00"),
+        "0232": Decimal("1.00"),
+        "0233": Decimal("2.00"),
+        "0234": Decimal("3.00"),
+        "0236": Decimal("2.00"),
+        "0237": Decimal("4.00"),
+    }
+
+    normal = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+    simplified = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+
+    assert normal.values["0224"] == Decimal("80.00")
+    assert normal.values["0226"] == Decimal("73.00")
+    assert normal.values["0231"] == Decimal("73.00")
+    assert normal.values["0235"] == Decimal("63.00")
+    assert simplified.values["0224"] == Decimal("70.00")
+    assert simplified.values["0226"] == Decimal("63.00")
+    assert simplified.values["0231"] == Decimal("63.00")
+    assert simplified.values["0235"] == Decimal("53.00")
 
 
 def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_only() -> None:

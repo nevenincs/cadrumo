@@ -8,7 +8,7 @@ import pytest
 
 from ....core.paths import PROJECT_ROOT
 from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
-from ._bindings import RegistryFilingObservation
+from ._bindings import RegistryFilingObservation, resolve_previous_filing_binding_values
 from ._relations import (
     RegistryRelationSourceRequirement,
     relation_source_requirements,
@@ -98,6 +98,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         inputs={},
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values=relation_values,
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
     )
 
     assert relation_values["renta-2025-rel-111-retenciones-trimestrales"] == Decimal("10")
@@ -114,6 +115,81 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
     )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "source_year", "source_values", "expected_binding", "expected_minoracion", "expected_result"),
+    [
+        (
+            2022,
+            2021,
+            {
+                "0224": Decimal("4000"),
+                "1479": Decimal("2000"),
+                "1553": Decimal("1500"),
+                "1577": Decimal("1000"),
+            },
+            Decimal("8500"),
+            Decimal("100.00"),
+            Decimal("780.00"),
+        ),
+        (
+            2026,
+            2025,
+            {
+                "0224": Decimal("5000"),
+                "1479": Decimal("2000"),
+                "1553": Decimal("1500"),
+                "1577": Decimal("1000"),
+            },
+            Decimal("9500"),
+            Decimal("75.00"),
+            Decimal("805.00"),
+        ),
+    ],
+)
+def test_modelo_130_calculation_resolves_previous_year_modelo_100_filed_casillas(
+    filing_year: int,
+    source_year: int,
+    source_values: dict[str, Decimal],
+    expected_binding: Decimal,
+    expected_minoracion: Decimal,
+    expected_result: Decimal,
+) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "130")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period="1T",
+    )
+
+    binding_values = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        (
+            RegistryFilingObservation(
+                modelo="100",
+                filing_year=source_year,
+                period="0A",
+                casilla_values=source_values,
+            ),
+        ),
+        filing_year=filing_year,
+        period="1T",
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=_modelo_130_inputs(),
+        date_context={"filing_period": date(filing_year, 3, 31)},
+        binding_values=binding_values,
+    )
+
+    assert binding_values["irpf.previous_year_economic_activity_net_income"] == expected_binding
+    assert result.values["13"] == expected_minoracion
+    assert result.values["14"] == expected_result
+    assert result.values["19"] == expected_result
 
 
 def _observations_from_requirements(
@@ -154,3 +230,17 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
     if relation_id == "renta-2025-rel-180-retenciones-anuales":
         return Decimal("30")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
+
+
+def _modelo_130_inputs() -> dict[str, Decimal]:
+    return {
+        "01": Decimal("10000"),
+        "02": Decimal("4000"),
+        "05": Decimal("250"),
+        "06": Decimal("100"),
+        "08": Decimal("2000"),
+        "10": Decimal("10"),
+        "15": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
