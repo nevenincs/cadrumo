@@ -777,6 +777,7 @@ application_links = [
     "modelo-190-verification",
     "modelo-190-extractor",
 ]
+dependency_classifications = ["modelo-190-dep-111"]
 
 [[revisions."2025-y-siguientes".dependency_classifications]]
 id = "modelo-190-dep-111"

@@ -130,6 +130,7 @@ casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total
 formulas = ["modelo-180-total-perceptores", "modelo-180-base-total", "modelo-180-retenciones-total"]
 bindings = ["modelo-180-115-perceptores-anual", "modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"]
 relations = ["modelo-180-rel-115-perceptores-anual", "modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"]
+dependency_classifications = ["modelo-180-dep-115"]
 
 [[revisions."2019-2022".dependency_classifications]]
 id = "modelo-180-dep-115"
@@ -1394,6 +1395,7 @@ casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total
 formulas = ["modelo-180-total-perceptores", "modelo-180-base-total", "modelo-180-retenciones-total"]
 bindings = ["modelo-180-115-perceptores-anual", "modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"]
 relations = ["modelo-180-rel-115-perceptores-anual", "modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"]
+dependency_classifications = ["modelo-180-dep-115"]
 
 [[revisions."2023-y-siguientes".dependency_classifications]]
 id = "modelo-180-dep-115"

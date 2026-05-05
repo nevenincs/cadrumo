@@ -3907,6 +3907,10 @@ application surface, and the old authority has been deleted.
        `RegistrySnapshot.constructs`, and validator closure checks.
      - [x] Include dependency classifications in construct closure so Renta
        constructs fail hard when they point at undeclared dependency members.
+     - [x] Enforce reciprocal dependency-classification ownership: a
+       classification that targets a construct must be listed by that construct,
+       and Modelo 180, Modelo 190, and Modelo 193 annual-summary constructs now
+       declare their source dependency classifications.
   - [ ] Implement the cross-model dependency resolver for Modelo 100 so
      dependent periodic, monthly, quarterly, and annual filings are selected by
      filing period, ejercicio, taxpayer, relation type, source evidence, and
