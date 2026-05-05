@@ -236,6 +236,34 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
     assert rows[("modelo-131.dpa.031-032.vehiculos-afectos", 2)] == 3
 
 
+def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -> None:
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            "modelo-131.page1.109-109.discapacidad-33": "yes",
+            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
+            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.page1.131-135.actividad-1-porcentaje": Decimal("2"),
+            "modelo-131.page1.692-692.declaracion-complementaria": "no",
+            "modelo-131.page1.693-705.justificante-anterior": "1234567890123",
+        },
+        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+    )
+
+    binding_values = {value.binding_id: value.value for value in draft.binding_values}
+
+    assert binding_values["modelo-131.page1.109-109.discapacidad-33"] is True
+    assert binding_values["modelo-131.page1.110-113.actividad-1-epigrafe"] == "722"
+    assert binding_values["modelo-131.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
+    assert binding_values["modelo-131.page1.131-135.actividad-1-porcentaje"] == Decimal("2")
+    assert binding_values["modelo-131.page1.692-692.declaracion-complementaria"] is False
+    assert binding_values["modelo-131.page1.693-705.justificante-anterior"] == "1234567890123"
+
+
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)

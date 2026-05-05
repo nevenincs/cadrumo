@@ -86,6 +86,24 @@ def test_modelo_131_current_registry_bindings_cover_official_structured_records(
     assert all("rd-439-2007:art-110" in binding.legal_refs for binding in snapshot.revision.bindings)
 
 
+def test_modelo_131_current_registry_bindings_cover_official_page_one_structured_fields() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+    page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
+
+    official_fields = {
+        (field.offset, field.length) for field in page.fields if _is_page_one_structured_input_field(field.description)
+    }
+    registry_fields = {
+        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"]))
+        for binding in snapshot.revision.bindings
+        if binding.selector.get("record") == "page_1"
+    }
+
+    assert registry_fields == official_fields
+
+
 def _is_structured_input_field(description: str) -> bool:
     if description in {
         "Inicio del identificador de modelo y página.",
@@ -97,6 +115,27 @@ def _is_structured_input_field(description: str) -> bool:
     }:
         return False
     return "RESERVADO" not in description.upper()
+
+
+def _is_page_one_structured_input_field(description: str) -> bool:
+    if description in {
+        "Inicio del identificador de modelo y página.",
+        "Modelo.",
+        "Página.",
+        "Fin de identificador de modelo.",
+        "Indicador de página complementaria.",
+        "Tipo de autoliquidación",
+        "Declarante (1) - Nif",
+        "Declarante (1) - Apellidos",
+        "Declarante (1) - Nombre (solo personas físicas)",
+        "Devengo (2) - Ejercicio",
+        "Devengo (2) - Período",
+        "Indicador de fin de registro",
+    }:
+        return False
+    if "RESERVADO" in description.upper():
+        return False
+    return "[" not in description and "]" not in description
 
 
 def _selector_int(value: str | int | Decimal | tuple[str, ...]) -> int:
