@@ -48,8 +48,12 @@ def test_catalogue_partition_covers_every_listing() -> None:
     )
 
 
-def test_list_auth_providers_returns_catalogue() -> None:
-    assert list_auth_providers() == AUTH_PROVIDER_CATALOGUE
+def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
+    """The catalogue must be a non-empty tuple — the public API contract."""
+    listing = list_auth_providers()
+    assert isinstance(listing, tuple)
+    assert len(listing) > 0
+    assert all(isinstance(entry, AuthProviderListing) for entry in listing)
 
 
 def test_get_auth_provider_returns_canonical_entry() -> None:

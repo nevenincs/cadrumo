@@ -32,14 +32,31 @@ def _response() -> LLMResponse:
     )
 
 
-def test_cache_key_is_deterministic(tmp_path: Path) -> None:
-    """The same request should derive the same cache key every time."""
+def test_cache_key_distinguishes_request_axes(tmp_path: Path) -> None:
+    """The cache key must vary across every dimension that should miss the cache."""
 
     cache = LLMCache(root_dir=tmp_path)
-    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    assert cache.build_key(request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6") == cache.build_key(
-        request, LLMProvider.ANTHROPIC, "claude-sonnet-4-6"
+    base = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    base_key = cache.build_key(base, LLMProvider.ANTHROPIC, "claude-sonnet-4-6")
+
+    different_prompt = cache.build_key(
+        LLMRequest(prompt="World", temperature=0.0, language="es"),
+        LLMProvider.ANTHROPIC,
+        "claude-sonnet-4-6",
     )
+    different_temperature = cache.build_key(
+        LLMRequest(prompt="Hello", temperature=0.7, language="es"),
+        LLMProvider.ANTHROPIC,
+        "claude-sonnet-4-6",
+    )
+    different_language = cache.build_key(
+        LLMRequest(prompt="Hello", temperature=0.0, language="en"),
+        LLMProvider.ANTHROPIC,
+        "claude-sonnet-4-6",
+    )
+    different_model = cache.build_key(base, LLMProvider.ANTHROPIC, "claude-haiku-4-5")
+
+    assert len({base_key, different_prompt, different_temperature, different_language, different_model}) == 5
 
 
 def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
