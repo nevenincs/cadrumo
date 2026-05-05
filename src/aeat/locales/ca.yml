@@ -920,17 +920,97 @@ cli:
     errors:
       invalid_input: Entrada per al LLM no vàlida
       missing_variable: Falta una variable requerida en la plantilla del prompt
+    from_help: cli.llm.from_help
+    input_help: cli.llm.input_help
+    labels:
+      removed_cache_files: cli.llm.labels.removed_cache_files
+    language_help: cli.llm.language_help
+    prompt_id_help: cli.llm.prompt_id_help
+    since_help: cli.llm.since_help
+    text_help: cli.llm.text_help
+    to_help: cli.llm.to_help
+    translate_help: cli.llm.translate_help
+    until_help: cli.llm.until_help
+    usage_help: cli.llm.usage_help
+  normatives:
+    app_help: cli.normatives.app_help
+    errors:
+      load_failed: cli.normatives.errors.load_failed
+    headers:
+      citation: cli.normatives.headers.citation
+      code: cli.normatives.headers.code
+      level: cli.normatives.headers.level
+      message: cli.normatives.headers.message
+      numero: cli.normatives.headers.numero
+      reference_id: cli.normatives.headers.reference_id
+      titulo: cli.normatives.headers.titulo
+    labels:
+      articles: cli.normatives.labels.articles
+      articulos: cli.normatives.labels.articulos
+      boe_id: cli.normatives.labels.boe_id
+      boe_url: cli.normatives.labels.boe_url
+      found: cli.normatives.labels.found
+      id: cli.normatives.labels.id
+      kind: cli.normatives.labels.kind
+      last_reviewed_at: cli.normatives.labels.last_reviewed_at
+      no_articulos: cli.normatives.labels.no_articulos
+      number: cli.normatives.labels.number
+      published_at: cli.normatives.labels.published_at
+      reviewed_by: cli.normatives.labels.reviewed_by
+      short_title: cli.normatives.labels.short_title
+      tags: cli.normatives.labels.tags
+    list_help: cli.normatives.list_help
+    list_tag_help: cli.normatives.list_tag_help
+    show_help: cli.normatives.show_help
+    show_ref_id_help: cli.normatives.show_ref_id_help
+    success:
+      clean: cli.normatives.success.clean
+      verification_results: cli.normatives.success.verification_results
+    verify_help: cli.normatives.verify_help
+  oauth:
+    app_help: cli.oauth.app_help
+    errors:
+      invalid_json: cli.oauth.errors.invalid_json
+    init:
+      help: cli.oauth.init.help
+      json_help: cli.oauth.init.json_help
+      success: cli.oauth.init.success
+    labels:
+      next_step: cli.oauth.labels.next_step
+      open_url: cli.oauth.labels.open_url
+      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+    success:
+      copied: cli.oauth.success.copied
+      written: cli.oauth.success.written
+  overview:
+    app_help: cli.overview.app_help
+    calendar_help: cli.overview.calendar_help
+    calendar_requires_dates: cli.overview.calendar_requires_dates
+    drafts: cli.overview.drafts
+    from_help: cli.overview.from_help
+    header: cli.overview.header
+    invoices: cli.overview.invoices
+    period: cli.overview.period
+    period_help: cli.overview.period_help
+    profile: cli.overview.profile
+    status_help: cli.overview.status_help
+    to_help: cli.overview.to_help
+    transactions: cli.overview.transactions
+    verbose_help: cli.overview.verbose_help
   registry:
     app_help: cli.registry.app_help
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
-    capture_source_filed_data_help: Capturar observacions font presentades requerides pel càlcul d'un model objectiu
-    capture_source_filed_data_json_help: Emetre l'informe de captura de dades font presentades com a JSON
-    casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles calculades per defecte
+    capture_source_filed_data_help: Capturar observacions font presentades requerides
+      pel càlcul d'un model objectiu
+    capture_source_filed_data_json_help: Emetre l'informe de captura de dades font
+      presentades com a JSON
+    casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
+      calculades per defecte
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range
-      unknown_modelo: "El registre no conté cap definició del model {modelo}"
+      unknown_modelo: El registre no conté cap definició del model {modelo}
     expediente_help: cli.registry.expediente_help
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
@@ -938,22 +1018,16 @@ cli:
     json_help: cli.registry.json_help
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
-    metrics:
-      compared_casillas: caselles_comparades
-      drift: desviacio
-      drift_count: nombre_desviacions
-      missing_filed_casillas: caselles_presentades_absents
-      missing_local_casillas: caselles_locals_absents
-      modelo: model
-      revision: revisio
-      status: estat
     modelo_help: cli.registry.modelo_help
-    observation_help: Manifest xifrat d'observació de declaració presentada que cal verificar
+    observation_help: Manifest xifrat d'observació de declaració presentada que cal
+      verificar
     output_root_help: cli.registry.output_root_help
     period_help: cli.registry.period_help
-    source_observation_help: Manifest xifrat d'observació font requerit per vinculacions de declaracions prèvies o relacions
+    source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
+      de declaracions prèvies o relacions
     to_year_help: cli.registry.to_year_help
-    verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat capturat de l'AEAT
+    verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
+      capturat de l'AEAT
     verify_help: cli.registry.verify_help
     verify_source_root_help: cli.registry.verify_source_root_help
     workbooks_app_help: cli.registry.workbooks_app_help
@@ -964,3 +1038,224 @@ cli:
     workbooks_timeout_help: cli.registry.workbooks_timeout_help
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
+  root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    format_help: cli.root.format_help
+  sanitize:
+    app_help: cli.sanitize.app_help
+    labels:
+      available: cli.sanitize.labels.available
+    status_help: cli.sanitize.status_help
+  setup:
+    app_help: cli.setup.app_help
+    auth:
+      app_help: cli.setup.auth.app_help
+      configure:
+        file_help: cli.setup.auth.configure.file_help
+        help: cli.setup.auth.configure.help
+        provider_help: cli.setup.auth.configure.provider_help
+      login:
+        help: cli.setup.auth.login.help
+      logout:
+        help: cli.setup.auth.logout.help
+      providers:
+        help: cli.setup.auth.providers.help
+      status:
+        help: cli.setup.auth.status.help
+      whoami:
+        help: cli.setup.auth.whoami.help
+    errors:
+      certificate_file_required: cli.setup.errors.certificate_file_required
+      file_not_found: cli.setup.errors.file_not_found
+      not_configured: cli.setup.errors.not_configured
+      unknown_profile_key: cli.setup.errors.unknown_profile_key
+      unknown_provider: cli.setup.errors.unknown_provider
+    headers:
+      active: cli.setup.headers.active
+      auth_provider: cli.setup.headers.auth_provider
+      authenticated_at: cli.setup.headers.authenticated_at
+      availability: cli.setup.headers.availability
+      description: cli.setup.headers.description
+      id: cli.setup.headers.id
+      key: cli.setup.headers.key
+      login_ready: cli.setup.headers.login_ready
+      logout: cli.setup.headers.logout
+      missing: cli.setup.headers.missing
+      next: cli.setup.headers.next
+      profile: cli.setup.headers.profile
+      profile_ready: cli.setup.headers.profile_ready
+      provider: cli.setup.headers.provider
+      ready: cli.setup.headers.ready
+      requirement: cli.setup.headers.requirement
+      subject: cli.setup.headers.subject
+      unknown: cli.setup.headers.unknown
+      valid: cli.setup.headers.valid
+    init:
+      activity_help: cli.setup.init.activity_help
+      help: cli.setup.init.help
+      name_help: cli.setup.init.name_help
+      tax_id_help: cli.setup.init.tax_id_help
+    labels:
+      'no': cli.setup.labels.no
+      unset: cli.setup.labels.unset
+      'yes': cli.setup.labels.yes
+    profile:
+      app_help: cli.setup.profile.app_help
+      get_help: cli.setup.profile.get_help
+      get_key_help: cli.setup.profile.get_key_help
+      list_help: cli.setup.profile.list_help
+      list_keys_help: cli.setup.profile.list_keys_help
+      set_help: cli.setup.profile.set_help
+      set_key_help: cli.setup.profile.set_key_help
+      set_value_help: cli.setup.profile.set_value_help
+      show_help: cli.setup.profile.show_help
+      unset_help: cli.setup.profile.unset_help
+      unset_key_help: cli.setup.profile.unset_key_help
+      use_help: cli.setup.profile.use_help
+      use_name_help: cli.setup.profile.use_name_help
+      validate_help: cli.setup.profile.validate_help
+    status:
+      help: cli.setup.status.help
+  txs:
+    app_help: cli.txs.app_help
+    build:
+      exists_err: cli.txs.build.exists_err
+      help: cli.txs.build.help
+      replace_help: cli.txs.build.replace_help
+      source_help: cli.txs.build.source_help
+      success: cli.txs.build.success
+    classify:
+      as_help: cli.txs.classify.as_help
+      business_category_err: cli.txs.classify.business_category_err
+      category_help: cli.txs.classify.category_help
+      confidence_help: cli.txs.classify.confidence_help
+      confidence_range_err: cli.txs.classify.confidence_range_err
+      help: cli.txs.classify.help
+      id_help: cli.txs.classify.id_help
+      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
+      invalid_pct_err: cli.txs.classify.invalid_pct_err
+      mixed_pct_err: cli.txs.classify.mixed_pct_err
+      no_changes_err: cli.txs.classify.no_changes_err
+      outgoing_category_err: cli.txs.classify.outgoing_category_err
+      pct_help: cli.txs.classify.pct_help
+      reason_help: cli.txs.classify.reason_help
+    classify_llm:
+      all_help: cli.txs.classify_llm.all_help
+      category_hint_help: cli.txs.classify_llm.category_hint_help
+      dry_run_help: cli.txs.classify_llm.dry_run_help
+      dry_run_label: cli.txs.classify_llm.dry_run_label
+      errors:
+        classification_failed: cli.txs.classify_llm.errors.classification_failed
+        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
+        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
+        missing_target: cli.txs.classify_llm.errors.missing_target
+        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
+        save_failed: cli.txs.classify_llm.errors.save_failed
+      help: cli.txs.classify_llm.help
+      id_help: cli.txs.classify_llm.id_help
+      labels:
+        no_targets: cli.txs.classify_llm.labels.no_targets
+      llm_suffix: cli.txs.classify_llm.llm_suffix
+      max_seconds_help: cli.txs.classify_llm.max_seconds_help
+      model_alias_help: cli.txs.classify_llm.model_alias_help
+      model_help: cli.txs.classify_llm.model_help
+      pct_override_help: cli.txs.classify_llm.pct_override_help
+      persisted_label: cli.txs.classify_llm.persisted_label
+      provider_help: cli.txs.classify_llm.provider_help
+      reason_help: cli.txs.classify_llm.reason_help
+      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
+      summary: cli.txs.classify_llm.summary
+      tier_help: cli.txs.classify_llm.tier_help
+      timeout: cli.txs.classify_llm.timeout
+    list:
+      confidence_below_help: cli.txs.list.confidence_below_help
+      header: cli.txs.list.header
+      help: cli.txs.list.help
+      no_matches_confidence: cli.txs.list.no_matches_confidence
+      no_transactions: cli.txs.list.no_transactions
+      state_help: cli.txs.list.state_help
+    show:
+      help: cli.txs.show.help
+      id_help: cli.txs.show.id_help
+      not_found_err: cli.txs.show.not_found_err
+filing:
+  validation:
+    deadline_missed: filing.validation.deadline_missed
+    formula_divergence: filing.validation.formula_divergence
+    out_of_range: filing.validation.out_of_range
+    required_missing: filing.validation.required_missing
+    schema_mismatch: filing.validation.schema_mismatch
+profile:
+  test_keys:
+    description_490119: profile.test_keys.description_490119
+review:
+  adapters:
+    t_135562: review.adapters.t_135562
+    t_142007: review.adapters.t_142007
+    t_145612: review.adapters.t_145612
+    t_167733: review.adapters.t_167733
+    t_189155: review.adapters.t_189155
+    t_298389: review.adapters.t_298389
+    t_352338: review.adapters.t_352338
+    t_352928: review.adapters.t_352928
+    t_551826: review.adapters.t_551826
+    t_607122: review.adapters.t_607122
+    t_619063: review.adapters.t_619063
+    t_629803: review.adapters.t_629803
+    t_754183: review.adapters.t_754183
+    t_787894: review.adapters.t_787894
+    t_791512: review.adapters.t_791512
+    t_870243: review.adapters.t_870243
+    t_968325: review.adapters.t_968325
+setup:
+  verifier:
+    t_049382: setup.verifier.t_049382
+    t_104932: setup.verifier.t_104932
+    t_104938: setup.verifier.t_104938
+    t_193582: setup.verifier.t_193582
+    t_204938: setup.verifier.t_204938
+    t_293847: setup.verifier.t_293847
+    t_394821: setup.verifier.t_394821
+    t_394827: setup.verifier.t_394827
+    t_501723: setup.verifier.t_501723
+    t_649302: setup.verifier.t_649302
+    t_749321: setup.verifier.t_749321
+    t_837462: setup.verifier.t_837462
+    t_938472: setup.verifier.t_938472
+    t_938475: setup.verifier.t_938475
+  wizard:
+    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
+    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
+    aeat_live_tests_google_prompt: setup.wizard.aeat_live_tests_google_prompt
+    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
+    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
+    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
+    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
+    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
+    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
+    certificate_path_prompt: setup.wizard.certificate_path_prompt
+    default_language_prompt: setup.wizard.default_language_prompt
+    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
+    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
+    has_employees_prompt: setup.wizard.has_employees_prompt
+    iva_regime_prompt: setup.wizard.iva_regime_prompt
+    output_language_prompt: setup.wizard.output_language_prompt
+    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
+    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
+    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
+    provision_google_fixtures_prompt: setup.wizard.provision_google_fixtures_prompt
+    tax_id_prompt: setup.wizard.tax_id_prompt
+    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
+    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
+    welcome: setup.wizard.welcome
+transactions:
+  import:
+    message_053465: transactions.import.message_053465
+    message_082074: transactions.import.message_082074
+    message_185962: transactions.import.message_185962
+    message_829073: transactions.import.message_829073
+    unreadable: transactions.import.unreadable
+    verified: transactions.import.verified
+  test_diagnostics:
+    message: transactions.test_diagnostics.message
