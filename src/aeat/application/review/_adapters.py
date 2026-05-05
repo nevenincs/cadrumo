@@ -163,17 +163,15 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
 def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
     from ...domain.transactions import TransactionCatalogueRepository
 
-    store_dir = settings.aeat_financial_txs_dir.resolve()
-    repository = TransactionCatalogueRepository(store_dir=store_dir)
-    if not repository.envelope_path.exists():
-        _LOGGER.debug("transactions catalogue envelope absent at %s", repository.envelope_path)
+    del settings
+    repository = TransactionCatalogueRepository()
+    if not repository.exists():
+        _LOGGER.debug("transactions catalogue secure object absent")
         return None
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(
-            f"failed to load transactions catalogue at {repository.envelope_path}: {exc}"
-        ) from exc
+        raise ReviewSourceLoadError(f"failed to load transactions catalogue from secure backend: {exc}") from exc
 
 
 def _to_transaction_item(
@@ -233,15 +231,15 @@ def invoices_pending(
 def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
     from ...domain.invoices import InvoiceCatalogueRepository
 
-    store_dir = settings.aeat_invoices_dir.resolve()
-    repository = InvoiceCatalogueRepository(store_dir=store_dir)
-    if not repository.envelope_path.exists():
-        _LOGGER.debug("invoices catalogue envelope absent at %s", repository.envelope_path)
+    del settings
+    repository = InvoiceCatalogueRepository()
+    if not repository.exists():
+        _LOGGER.debug("invoices catalogue secure object absent")
         return None
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load invoices catalogue at {repository.envelope_path}: {exc}") from exc
+        raise ReviewSourceLoadError(f"failed to load invoices catalogue from secure backend: {exc}") from exc
 
 
 def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:

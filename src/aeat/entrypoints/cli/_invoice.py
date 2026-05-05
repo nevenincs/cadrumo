@@ -60,7 +60,7 @@ def invoice_import(
         )
         return
     repo = _invoice_repo()
-    catalogue = repo.load() if repo.envelope_path.exists() else InvoiceCatalogue()
+    catalogue = repo.load()
     existing = dict(catalogue.invoices)
     imported = 0
     skipped = 0
