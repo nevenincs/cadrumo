@@ -207,6 +207,7 @@ class RegistryValidator:
         deadline_window_by_id = {window.id: window for window in revision.deadline_windows}
         filing_schedule_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
         support_removal_decision_by_id = {decision.id: decision for decision in revision.support_removal_decisions}
+        construct_by_id = {construct.id: construct for construct in revision.constructs}
         dependency_classification_by_id = {
             classification.id: classification for classification in revision.dependency_classifications
         }
@@ -398,10 +399,17 @@ class RegistryValidator:
                 )
             )
             for construct_id in classification.target_constructs:
-                if construct_id not in construct_ids:
+                construct = construct_by_id.get(construct_id)
+                if construct is None:
                     failures.append(
                         f"{prefix}: dependency classification {classification.id!r} references unknown construct "
                         f"{construct_id!r}"
+                    )
+                    continue
+                if classification.id not in construct.dependency_classifications:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} targets construct "
+                        f"{construct_id!r} but the construct does not list it"
                     )
             for relation_id in classification.relation_refs:
                 relation = relation_by_id.get(relation_id)

@@ -301,6 +301,7 @@ application_links = [
     "modelo-193-verification",
     "modelo-193-extractor",
 ]
+dependency_classifications = ["modelo-193-dep-123"]
 
 [[revisions."2024-y-siguientes".dependency_classifications]]
 id = "modelo-193-dep-123"

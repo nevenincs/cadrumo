@@ -107,6 +107,11 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     filed_dependency_bindings = {
         binding.id for binding in snapshot.revision.bindings if binding.source == "previous_filing"
     }
+    payments_dependency_classifications = {
+        classification.id
+        for classification in snapshot.dependency_classifications.values()
+        if "renta-payments-retentions" in classification.target_constructs
+    }
 
     assert set(dependencies.bindings) == filed_dependency_bindings
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
@@ -118,7 +123,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
-    assert set(payments_retentions.dependency_classifications) == set(snapshot.dependency_classifications)
+    assert set(payments_retentions.dependency_classifications) == payments_dependency_classifications
 
 
 def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
@@ -174,7 +179,7 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
     classifications_by_source = {
         classification.source_modelo: classification
         for classification in snapshot.revision.dependency_classifications
-        if classification.treatment != "non_dependency"
+        if classification.relation_refs
     }
 
     assert set(classifications_by_source) == set(relations_by_source)
@@ -625,6 +630,15 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
 
 
+def test_schema_rejects_direct_dependency_classification_without_relation_refs() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    revision = modelos_by_id["100"].revisions["2025"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+
+    with pytest.raises(ValueError, match="must declare relation_refs"):
+        classification.__class__.model_validate({**classification.model_dump(mode="python"), "relation_refs": ()})
+
+
 def test_validator_rejects_duplicate_dependency_classification_source() -> None:
     modelos_by_id, catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
@@ -637,6 +651,30 @@ def test_validator_rejects_duplicate_dependency_classification_source() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="duplicate dependency classification source modelo '130'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_dependency_classification_target_construct_drift() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "190")
+    construct = next(item for item in revision.constructs if item.id == "renta-work-income")
+    mutated_construct = construct.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in construct.dependency_classifications if item != classification.id
+            )
+        }
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="but the construct does not list it"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
 
 
