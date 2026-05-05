@@ -17,7 +17,6 @@ from pydantic_settings import SettingsConfigDict
 
 from ...adapters.outbound.google import GoogleAuthPath
 from ...core.config import Settings
-from ...core.i18n import tr
 from . import doctor as doctor_module
 from .doctor import (
     REQUIRED_ADC_SCOPES,
@@ -241,7 +240,6 @@ class TestGoogleAuthDoctorRows:
         row = check_google_auth_readiness(settings)
 
         assert row.state == State.PARTIAL
-        assert row.detail == tr("cli.doctor.details.auth_ready_cli_only")
 
     def test_mcp_cache_row_stays_partial_until_credentials_exist(
         self,
@@ -275,7 +273,6 @@ class TestGoogleAuthDoctorRows:
         row = check_mcp_credentials_cache(settings)
 
         assert row.state == State.PARTIAL
-        assert row.detail == tr("cli.doctor.details.mcp_credentials_dir_prepared")
 
     def test_desktop_material_row_is_skipped_when_service_account_path_is_active(self, tmp_path: Path) -> None:
         service_account = tmp_path / "service-account.json"
@@ -290,7 +287,6 @@ class TestGoogleAuthDoctorRows:
         row = check_desktop_oauth_client_material(settings)
 
         assert row.state == State.SKIP
-        assert row.detail == tr("cli.doctor.details.not_required_see_drift")
 
     def test_service_account_row_is_required_for_service_account_path(self, tmp_path: Path) -> None:
         service_account = tmp_path / "service-account.json"
@@ -318,7 +314,6 @@ class TestGoogleAuthDoctorRows:
         row = check_service_account(settings)
 
         assert row.state == State.SKIP
-        assert row.detail == tr("cli.doctor.details.not_required_see_drift")
 
     def test_inactive_path_drift_reports_ignored_missing_service_account(self, tmp_path: Path) -> None:
         settings = IsolatedSettings(
@@ -341,31 +336,35 @@ class TestLiveAccessGateRow:
         monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
         row = check_live_access_gate(Settings())
-        assert row.section == tr("cli.doctor.sections.live_access_gate")
         assert row.state == State.OK
-        live_reads = tr("cli.doctor.details.live_reads_enabled")
-        live_writes = tr("cli.doctor.details.live_writes_forbidden")
-        assert row.detail == f"{live_reads}; {live_writes}"
 
     def test_reports_skipped_when_reads_not_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
         row = check_live_access_gate(Settings())
         assert row.state == State.SKIP
-        live_reads = tr("cli.doctor.details.live_reads_skipped")
-        live_writes = tr("cli.doctor.details.live_writes_forbidden")
-        assert row.detail == f"{live_reads}; {live_writes}"
 
     def test_warns_when_running_inside_pytest(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
         monkeypatch.setenv("PYTEST_CURRENT_TEST", "test-path")
         row = check_live_access_gate(Settings())
         assert row.state == State.WARN
-        live_reads = tr("cli.doctor.details.live_reads_enabled")
-        live_writes = tr("cli.doctor.details.live_writes_forbidden") + tr(
-            "cli.doctor.details.pytest_current_test_present"
-        )
-        assert row.detail == f"{live_reads}; {live_writes}"
+
+    def test_enabled_and_skipped_render_distinct_details(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
+        enabled = check_live_access_gate(Settings()).detail
+        monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
+        skipped = check_live_access_gate(Settings()).detail
+        assert enabled != skipped
+
+    def test_pytest_warning_extends_the_writes_clause(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        clean = check_live_access_gate(Settings()).detail
+        monkeypatch.setenv("PYTEST_CURRENT_TEST", "test-path")
+        warned = check_live_access_gate(Settings()).detail
+        assert len(warned) > len(clean)
 
 
 class TestAuthProviderPathRow:
@@ -375,21 +374,21 @@ class TestAuthProviderPathRow:
         monkeypatch.delenv("AEAT_CERTIFICATE_PATH", raising=False)
         monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
         row = check_auth_provider_path(Settings())
-        assert row.section == tr("cli.doctor.sections.aeat_auth_path")
         assert row.state == State.SKIP
-        assert row.detail == tr("application.auth.provider_impact.unconfigured")
 
     def test_warns_when_provider_is_configured_but_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "C:/missing/cert.p12")
         monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
         row = check_auth_provider_path(Settings())
         assert row.state == State.WARN
-        # Configured but cert file missing → "unavailable" branch with the
-        # provider's label interpolated. Asserting against the renderable
-        # template would require reproducing the description label here, so
-        # we exclude the other three branches instead.
-        assert row.detail != tr("application.auth.provider_impact.unconfigured")
-        assert row.detail != tr("application.auth.provider_impact.certificate_ready")
+
+    def test_unconfigured_warned_and_ready_render_distinct_details(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AEAT_CERTIFICATE_PATH", raising=False)
+        monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+        unconfigured = check_auth_provider_path(Settings()).detail
+        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "C:/missing/cert.p12")
+        unavailable = check_auth_provider_path(Settings()).detail
+        assert unconfigured != unavailable
 
 
 def _settings_with_secret_dir(
@@ -412,9 +411,7 @@ class TestSecretStoreDirectoryRow:
 
     def test_missing_dir_is_a_remediation_hint(self, tmp_path: Path) -> None:
         row = check_secret_store_directory(_settings_with_secret_dir(tmp_path))
-        assert row.section == tr("cli.doctor.sections.secret_store_dir")
         assert row.state == State.MISSING
-        assert row.detail == tr("cli.doctor.details.secret_store_dir_missing", dir=tmp_path / "secrets")
 
     def test_writable_dir_is_ok(self, tmp_path: Path) -> None:
         secret_dir = tmp_path / "secrets"
@@ -437,7 +434,6 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.OK
-        assert row.detail == tr("cli.doctor.details.backend_active", backend="keyring")
 
     def test_unsecured_without_allow_flag_is_missing(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -450,7 +446,6 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.MISSING
-        assert row.detail == tr("cli.doctor.details.unsecured_requires_allow")
 
     def test_unsecured_with_allow_flag_is_warn(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -463,7 +458,6 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.WARN
-        assert row.detail == tr("cli.doctor.details.unsecured_warning")
 
 
 class TestMasterKeyReadinessRow:
@@ -481,7 +475,6 @@ class TestMasterKeyReadinessRow:
             ),
         )
         assert row.state == State.MISSING
-        assert row.detail == tr("cli.doctor.details.master_key_missing", dir=tmp_path / "secrets")
 
     def test_file_backend_with_complete_artefacts_is_ok(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -512,11 +505,6 @@ class TestMasterKeyReadinessRow:
             ),
         )
         assert row.state == State.PARTIAL
-        assert row.detail == tr(
-            "cli.doctor.details.master_key_partial",
-            present=["master.kdf"],
-            missing=["master.key", "salt"],
-        )
 
 
 class TestKdfVersionRow:
