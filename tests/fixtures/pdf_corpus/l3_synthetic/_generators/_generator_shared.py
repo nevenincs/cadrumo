@@ -58,8 +58,8 @@ def format_amount(value: Decimal, *, thousands_sep: str = ".") -> str:
     generator can exercise NBSP handling end-to-end. AEAT per UNE 82100
     may use ``"."`` (canonical), ``"\\xa0"``
     (U+00A0 NBSP) or ``"\\u202f"`` (U+202F narrow NBSP) between
-    thousand groups. Default stays ``"."`` — existing fixtures and
-    tests continue to match the pre-wave-56 behaviour.
+    thousand groups. Default stays ``"."`` so existing fixtures and
+    tests continue to match the committed canonical rendering.
 
     Negative values carry a leading minus; zero prints as ``0,00``.
     """

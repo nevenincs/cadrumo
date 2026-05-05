@@ -734,25 +734,25 @@ cli:
     profile:
       app_help: Pénzügyi profilok kezelése
       errors:
-        at_least_one: Legalább egy mező vagy profil szükséges
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: Úgy értette, hogy...?
         eligible_categories: Választható kategóriák
         family_aliases: Családi álnevek
         invalid_ratio: Érvénytelen arány vagy százalék
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Ismeretlen kulcs vagy tulajdonság a profilban
       headers:
         ratios: Arányok / Felosztások
       labels:
         no_active: Nincs kiválasztott aktív profil
-        profile_not_found: Pénzügyi profil nem található
-        switched: Pénzügyi profil sikeresen átváltva
       ratios_help: Felosztási arányok meghatározása a pénzügyi profilhoz
       ratios_list_help: A profilban meghatározott felosztási arányok listázása
       set_ratio_help: Egy adott felosztási arány beállítása
-      set_ratio_key_help: Arány kulcsa vagy kategóriája
+      set_ratio_key_help: 'Arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
       set_ratio_value_help: Arány értéke (pl. 0.5 az 50%-hoz)
       unset_ratio_help: Egy adott felosztási arány törlése
-      unset_ratio_key_help: A törlendő arány kulcsa vagy kategóriája
+      unset_ratio_key_help: 'A törlendő arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
     txs:
       app_help: Banki tranzakciók kezelése
   financial_invoices:
@@ -827,7 +827,7 @@ cli:
       help: Számla adatainak manuális szerkesztése
       id_help: A szerkesztendő számla azonosítója
       reason_help: A szerkesztés vagy javítás indoka
-      set_help: Adott mezőértékek beállítása (mező=érték)
+      set_help: Számlamezők beállítása (base, iva.rate, iva.amount, payment.id, document.path)
     errors:
       at_least_one_edit: Legalább egy mezőmódosítás szükséges
       file_not_found: Számlafájl nem található
@@ -864,7 +864,6 @@ cli:
       period_help: A párosítás adózási időszaka
     review:
       filter_help: A felülvizsgálandó számlák szűrése (pl. dátum vagy összeg szerint)
-      header: SZÁMLA FELÜLVIZSGÁLATI ÜLÉS
       help: Számlák interaktív felülvizsgálata és ellenőrzése
       id_help: A felülvizsgálandó adott számla azonosítója
       no_invoices: Nincsenek felülvizsgálatra váró számlák
@@ -911,7 +910,6 @@ cli:
       'no': Nem
       rows: Sorok
       skipped: Kihagyva
-      status: Állapot
       'yes': Igen
     review:
       filter_help: A felülvizsgálandó naplóbejegyzések szűrése (pl. dátum vagy összeg
@@ -994,7 +992,7 @@ cli:
       copied: cli.oauth.success.copied
       written: cli.oauth.success.written
   overview:
-    app_help: cli.overview.app_help
+    app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: cli.overview.calendar_help
     calendar_requires_dates: cli.overview.calendar_requires_dates
     drafts: cli.overview.drafts
@@ -1004,7 +1002,7 @@ cli:
     period: cli.overview.period
     period_help: cli.overview.period_help
     profile: cli.overview.profile
-    status_help: cli.overview.status_help
+    status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     to_help: cli.overview.to_help
     transactions: cli.overview.transactions
     verbose_help: cli.overview.verbose_help
@@ -1033,6 +1031,15 @@ cli:
     observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
       manifeszt
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Paritási forgatókönyvek és szalagok futtatása manuális ellenőrzésekhez
+    parity_output_help: A generált paritási szalag cél JSON fájlja
+    parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry
+      runtime ellen
+    parity_run_help: Egy mentett paritási forgatókönyv futtatása és az eredmény szalag
+      archiválása
+    parity_scenario_help: Paritási forgatókönyv JSON fájl elérési útja
+    parity_store_root_help: A generált paritási szalagok tárolására használt gyökérkönyvtár
+    parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
     period_help: cli.registry.period_help
     source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
       titkosított forrásmegfigyelési manifeszt
@@ -1050,18 +1057,18 @@ cli:
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    format_help: cli.root.format_help
+    app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
+    app_help: Spanyol adóbevallási segéd
+    format_help: A parancseredmények kimeneti formátuma
   sanitize:
     app_help: cli.sanitize.app_help
     labels:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: cli.setup.app_help
+    app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
     auth:
-      app_help: cli.setup.auth.app_help
+      app_help: AEAT-hitelesítés beállítása és ellenőrzése
       configure:
         file_help: cli.setup.auth.configure.file_help
         help: cli.setup.auth.configure.help
@@ -1104,7 +1111,7 @@ cli:
       valid: cli.setup.headers.valid
     init:
       activity_help: cli.setup.init.activity_help
-      help: cli.setup.init.help
+      help: Adózói profil létrehozása vagy aktiválása
       name_help: cli.setup.init.name_help
       tax_id_help: cli.setup.init.tax_id_help
     labels:
@@ -1112,7 +1119,7 @@ cli:
       unset: cli.setup.labels.unset
       'yes': cli.setup.labels.yes
     profile:
-      app_help: cli.setup.profile.app_help
+      app_help: Adózói profiladatok kezelése
       get_help: cli.setup.profile.get_help
       get_key_help: cli.setup.profile.get_key_help
       list_help: cli.setup.profile.list_help
@@ -1127,7 +1134,7 @@ cli:
       use_name_help: cli.setup.profile.use_name_help
       validate_help: cli.setup.profile.validate_help
     status:
-      help: cli.setup.status.help
+      help: Beállítási állapot és következő szükséges művelet megjelenítése
   txs:
     app_help: cli.txs.app_help
     build:

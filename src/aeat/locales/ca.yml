@@ -730,25 +730,25 @@ cli:
     profile:
       app_help: Gestió de perfils financers
       errors:
-        at_least_one: Es requereix almenys un camp o perfil
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: Volia dir...?
         eligible_categories: Categories elegibles
         family_aliases: Àlies familiars
         invalid_ratio: Ràtio o percentatge no vàlid
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Clau o propietat desconeguda al perfil
       headers:
         ratios: Ràtios / Repartiments
       labels:
         no_active: No hi ha cap perfil actiu seleccionat
-        profile_not_found: Perfil financer no trobat
-        switched: Perfil financer canviat correctament
       ratios_help: Definir ràtios de repartiment per al perfil financer
       ratios_list_help: Llistar els ràtios de repartiment definits al perfil
       set_ratio_help: Establir un ràtio de repartiment específic
-      set_ratio_key_help: Clau o categoria del ràtio
+      set_ratio_key_help: 'Clau o categoria del ràtio. Àlies de família: %{aliases}'
       set_ratio_value_help: Valor del ràtio (p. ex., 0.5 per a 50%)
       unset_ratio_help: Eliminar un ràtio de repartiment específic
-      unset_ratio_key_help: Clau o categoria del ràtio a eliminar
+      unset_ratio_key_help: 'Clau o categoria del ràtio a eliminar. Àlies de família: %{aliases}'
     txs:
       app_help: Gestió de transaccions bancàries
   financial_invoices:
@@ -823,7 +823,8 @@ cli:
       help: Editar manualment les dades d'una factura
       id_help: Identificador de la factura a editar
       reason_help: Motiu de l'edició o correcció
-      set_help: Establir valors de camps específics (camp=valor)
+      set_help: Establir camps de factura (base, iva.rate, iva.amount, payment.id,
+        document.path)
     errors:
       at_least_one_edit: Es requereix almenys una modificació de camp
       file_not_found: Arxiu de factura no trobat
@@ -861,7 +862,6 @@ cli:
       period_help: Periode fiscal per a l'aparellament
     review:
       filter_help: Filtrar factures a revisar (p. ex., per data o import)
-      header: SESSIÓ DE REVISIÓ DE FACTURES
       help: Revisió interactiva i validació de factures
       id_help: Identificador de la factura específica a revisar
       no_invoices: No hi ha factures pendents de revisió
@@ -908,7 +908,6 @@ cli:
       'no': 'No'
       rows: Files
       skipped: Omesos
-      status: Estat
       'yes': Sí
     review:
       filter_help: Filtrar entrades del llibre a revisar (p. ex., per data o import)
@@ -990,7 +989,7 @@ cli:
       copied: cli.oauth.success.copied
       written: cli.oauth.success.written
   overview:
-    app_help: cli.overview.app_help
+    app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: cli.overview.calendar_help
     calendar_requires_dates: cli.overview.calendar_requires_dates
     drafts: cli.overview.drafts
@@ -1000,7 +999,7 @@ cli:
     period: cli.overview.period
     period_help: cli.overview.period_help
     profile: cli.overview.profile
-    status_help: cli.overview.status_help
+    status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     to_help: cli.overview.to_help
     transactions: cli.overview.transactions
     verbose_help: cli.overview.verbose_help
@@ -1029,6 +1028,14 @@ cli:
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
+    parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
+    parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
+      actual del registre
+    parity_run_help: Executar un escenari de paritat desat i arxivar la cinta resultant
+    parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
+    parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
+    parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
     period_help: cli.registry.period_help
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
@@ -1046,18 +1053,18 @@ cli:
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    format_help: cli.root.format_help
+    app_app_help: Espai de treball fiscal per a llibres, factures i declaracions
+    app_help: Assistent per preparar declaracions tributàries espanyoles
+    format_help: Format de sortida per als resultats de l'ordre
   sanitize:
     app_help: cli.sanitize.app_help
     labels:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: cli.setup.app_help
+    app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
     auth:
-      app_help: cli.setup.auth.app_help
+      app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:
         file_help: cli.setup.auth.configure.file_help
         help: cli.setup.auth.configure.help
@@ -1100,7 +1107,7 @@ cli:
       valid: cli.setup.headers.valid
     init:
       activity_help: cli.setup.init.activity_help
-      help: cli.setup.init.help
+      help: Crear o activar un perfil de contribuent
       name_help: cli.setup.init.name_help
       tax_id_help: cli.setup.init.tax_id_help
     labels:
@@ -1108,7 +1115,7 @@ cli:
       unset: cli.setup.labels.unset
       'yes': cli.setup.labels.yes
     profile:
-      app_help: cli.setup.profile.app_help
+      app_help: Gestionar les dades del perfil de contribuent
       get_help: cli.setup.profile.get_help
       get_key_help: cli.setup.profile.get_key_help
       list_help: cli.setup.profile.list_help
@@ -1123,7 +1130,7 @@ cli:
       use_name_help: cli.setup.profile.use_name_help
       validate_help: cli.setup.profile.validate_help
     status:
-      help: cli.setup.status.help
+      help: Mostrar la preparació de l'entorn i la següent acció requerida
   txs:
     app_help: cli.txs.app_help
     build:

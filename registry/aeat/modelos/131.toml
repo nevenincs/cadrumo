@@ -101,6 +101,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-01"]
 
 [[revisions."2019-2023".casillas]]
 id = "02"
@@ -112,6 +113,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-02"]
 
 [[revisions."2019-2023".casillas]]
 id = "03"
@@ -123,6 +125,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-03"]
 
 [[revisions."2019-2023".casillas]]
 id = "04"
@@ -135,6 +138,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-04"]
 
 [[revisions."2019-2023".casillas]]
 id = "05"
@@ -146,6 +150,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-05"]
 
 [[revisions."2019-2023".casillas]]
 id = "06"
@@ -158,6 +163,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-06"]
 
 [[revisions."2019-2023".casillas]]
 id = "07"
@@ -170,6 +176,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-07"]
 
 [[revisions."2019-2023".casillas]]
 id = "08"
@@ -181,6 +188,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-08"]
 
 [[revisions."2019-2023".casillas]]
 id = "09"
@@ -192,6 +200,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-09"]
 
 [[revisions."2019-2023".casillas]]
 id = "10"
@@ -204,6 +213,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-diferencia"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-10"]
 
 [[revisions."2019-2023".casillas]]
 id = "11"
@@ -215,6 +225,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-11"]
 
 [[revisions."2019-2023".casillas]]
 id = "12"
@@ -226,6 +237,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-12"]
 
 [[revisions."2019-2023".casillas]]
 id = "13"
@@ -238,6 +250,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-total"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-13"]
 
 [[revisions."2019-2023".casillas]]
 id = "14"
@@ -249,6 +262,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-14"]
 
 [[revisions."2019-2023".casillas]]
 id = "15"
@@ -261,6 +275,7 @@ input_kind = "computed"
 formula = "modelo-131-2019-2023-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-15"]
 
 [[revisions."2019-2023".formulas]]
 id = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
@@ -358,6 +373,381 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 
+[[revisions."2019-2023".export_layouts]]
+id = "modelo-131-2019-2023-fichero-boe"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records]]
+id = "modelo-131-2019-2023-page-01"
+record_type = "page_1"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "131"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-complementaria-indicator"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "boolean"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-declaration-type"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-tax-id"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-filing-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-period-code"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-01"
+offset = 324
+length = 17
+kind = "casilla"
+casilla = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-02"
+offset = 341
+length = 17
+kind = "casilla"
+casilla = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-03"
+offset = 358
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-04"
+offset = 375
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-05"
+offset = 392
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-06"
+offset = 409
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-07"
+offset = 426
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-08"
+offset = 443
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-09"
+offset = 460
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-10"
+offset = 477
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-11"
+offset = 494
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-12"
+offset = 511
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-13"
+offset = 528
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-14"
+offset = 545
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-casilla-15"
+offset = 562
+length = 17
+kind = "casilla"
+casilla = "15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".export_layouts.records.fields]]
+id = "modelo-131-2019-2023-page-close"
+offset = 740
+length = 12
+kind = "literal"
+literal = "</T13101000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".extraction_profiles]]
+id = "modelo-131-2019-2023-submitted-file"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
 [[revisions."2019-2023".verification_expectations]]
 id = "modelo-131-2019-2023-calculation-verification"
 computed_casillas = ["04", "06", "07", "10", "13", "15"]
@@ -407,6 +797,22 @@ consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-procedure"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-export"
+surface = "export"
+consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-extractor"
+surface = "extractor"
+consumer = "aeat.domain.calculations.registry.parse_export_payload"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
 
 [[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-verification"
@@ -482,6 +888,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-01"]
 
 [[revisions."2024".casillas]]
 id = "02"
@@ -493,6 +900,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-02"]
 
 [[revisions."2024".casillas]]
 id = "03"
@@ -504,6 +912,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-03"]
 
 [[revisions."2024".casillas]]
 id = "04"
@@ -516,6 +925,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-04"]
 
 [[revisions."2024".casillas]]
 id = "05"
@@ -527,6 +937,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-05"]
 
 [[revisions."2024".casillas]]
 id = "06"
@@ -539,6 +950,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-06"]
 
 [[revisions."2024".casillas]]
 id = "07"
@@ -551,6 +963,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-07"]
 
 [[revisions."2024".casillas]]
 id = "08"
@@ -562,6 +975,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-08"]
 
 [[revisions."2024".casillas]]
 id = "09"
@@ -573,6 +987,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-09"]
 
 [[revisions."2024".casillas]]
 id = "10"
@@ -585,6 +1000,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-diferencia"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-10"]
 
 [[revisions."2024".casillas]]
 id = "11"
@@ -596,6 +1012,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-11"]
 
 [[revisions."2024".casillas]]
 id = "12"
@@ -607,6 +1024,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-12"]
 
 [[revisions."2024".casillas]]
 id = "13"
@@ -619,6 +1037,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-total"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-13"]
 
 [[revisions."2024".casillas]]
 id = "14"
@@ -630,6 +1049,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-14"]
 
 [[revisions."2024".casillas]]
 id = "15"
@@ -642,6 +1062,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+export_refs = ["modelo-131-2024-casilla-15"]
 
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.109-109.discapacidad-33"
@@ -1569,6 +1990,201 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-131-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-01"
+offset = 325
+length = 17
+kind = "casilla"
+casilla = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-02"
+offset = 342
+length = 17
+kind = "casilla"
+casilla = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-03"
+offset = 390
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-04"
+offset = 407
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-05"
+offset = 488
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-06"
+offset = 505
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-07"
+offset = 522
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-08"
+offset = 539
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-09"
+offset = 562
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-10"
+offset = 579
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-11"
+offset = 596
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-12"
+offset = 624
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-13"
+offset = 641
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-14"
+offset = 658
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-131-2024-casilla-15"
+offset = 675
+length = 17
+kind = "casilla"
+casilla = "15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".export_layouts.records.fields]]
 id = "modelo-131-2024-page-close"
 offset = 820
 length = 12
@@ -1667,7 +2283,9 @@ record_type = "DID"
 order = 2
 encoding = "latin-1"
 line_ending = "none"
+required = false
 binding_record = "DID"
+requires_positive_casilla = "15"
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-131-2024-did-open"
@@ -1739,6 +2357,19 @@ signed = false
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-131-2024"]
 
+[[revisions."2024".extraction_profiles]]
+id = "modelo-131-2024-submitted-file"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-dr-131-2024"]
+
 [[revisions."2024".verification_expectations]]
 id = "modelo-131-2024-calculation-verification"
 computed_casillas = ["04", "06", "07", "10", "13", "15"]
@@ -1793,6 +2424,14 @@ source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure"]
 id = "modelo-131-2024-export"
 surface = "export"
 consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-extractor"
+surface = "extractor"
+consumer = "aeat.domain.calculations.registry.parse_export_payload"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-dr-131-2024"]
@@ -1871,6 +2510,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-01"]
 
 [[revisions."2025".casillas]]
 id = "02"
@@ -1882,6 +2522,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-02"]
 
 [[revisions."2025".casillas]]
 id = "03"
@@ -1893,6 +2534,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-03"]
 
 [[revisions."2025".casillas]]
 id = "04"
@@ -1905,6 +2547,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-04"]
 
 [[revisions."2025".casillas]]
 id = "05"
@@ -1916,6 +2559,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-05"]
 
 [[revisions."2025".casillas]]
 id = "06"
@@ -1928,6 +2572,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-06"]
 
 [[revisions."2025".casillas]]
 id = "07"
@@ -1940,6 +2585,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-07"]
 
 [[revisions."2025".casillas]]
 id = "08"
@@ -1951,6 +2597,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-08"]
 
 [[revisions."2025".casillas]]
 id = "09"
@@ -1962,6 +2609,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-09"]
 
 [[revisions."2025".casillas]]
 id = "10"
@@ -1974,6 +2622,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-diferencia"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-10"]
 
 [[revisions."2025".casillas]]
 id = "11"
@@ -1985,6 +2634,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-11"]
 
 [[revisions."2025".casillas]]
 id = "12"
@@ -1996,6 +2646,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-12"]
 
 [[revisions."2025".casillas]]
 id = "13"
@@ -2008,6 +2659,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-total"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-13"]
 
 [[revisions."2025".casillas]]
 id = "14"
@@ -2019,6 +2671,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-14"]
 
 [[revisions."2025".casillas]]
 id = "15"
@@ -2031,6 +2684,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+export_refs = ["modelo-131-2025-casilla-15"]
 
 [[revisions."2025".bindings]]
 id = "modelo-131-2025.page1.109-109.discapacidad-33"
@@ -2895,6 +3549,201 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-131-2025"]
 
 [[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-01"
+offset = 325
+length = 17
+kind = "casilla"
+casilla = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-02"
+offset = 342
+length = 17
+kind = "casilla"
+casilla = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-03"
+offset = 390
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-04"
+offset = 407
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-05"
+offset = 488
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-06"
+offset = 505
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-07"
+offset = 522
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-08"
+offset = 539
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-09"
+offset = 562
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-10"
+offset = 579
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-11"
+offset = 596
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-12"
+offset = 624
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-13"
+offset = 641
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-14"
+offset = 658
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-131-2025-casilla-15"
+offset = 675
+length = 17
+kind = "casilla"
+casilla = "15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2025"]
+[[revisions."2025".export_layouts.records.fields]]
 id = "modelo-131-2025-page-close"
 offset = 820
 length = 12
@@ -2993,7 +3842,9 @@ record_type = "DID"
 order = 2
 encoding = "latin-1"
 line_ending = "none"
+required = false
 binding_record = "DID"
+requires_positive_casilla = "15"
 
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-131-2025-did-open"
@@ -3065,6 +3916,19 @@ signed = false
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-131-2025"]
 
+[[revisions."2025".extraction_profiles]]
+id = "modelo-131-2025-submitted-file"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-131-2025"]
+
 [[revisions."2025".verification_expectations]]
 id = "modelo-131-2025-calculation-verification"
 computed_casillas = ["04", "06", "07", "10", "13", "15"]
@@ -3119,6 +3983,14 @@ source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-procedure"]
 id = "modelo-131-2025-export"
 surface = "export"
 consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-extractor"
+surface = "extractor"
+consumer = "aeat.domain.calculations.registry.parse_export_payload"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-dr-131-2025"]
@@ -3196,6 +4068,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-01"]
 
 [[revisions."2026".casillas]]
 id = "02"
@@ -3207,6 +4080,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-02"]
 
 [[revisions."2026".casillas]]
 id = "03"
@@ -3218,6 +4092,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-03"]
 
 [[revisions."2026".casillas]]
 id = "04"
@@ -3230,6 +4105,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-04"]
 
 [[revisions."2026".casillas]]
 id = "05"
@@ -3241,6 +4117,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-05"]
 
 [[revisions."2026".casillas]]
 id = "06"
@@ -3253,6 +4130,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-06"]
 
 [[revisions."2026".casillas]]
 id = "07"
@@ -3265,6 +4143,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-07"]
 
 [[revisions."2026".casillas]]
 id = "08"
@@ -3276,6 +4155,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-08"]
 
 [[revisions."2026".casillas]]
 id = "09"
@@ -3287,6 +4167,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-09"]
 
 [[revisions."2026".casillas]]
 id = "10"
@@ -3299,6 +4180,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-diferencia"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-10"]
 
 [[revisions."2026".casillas]]
 id = "11"
@@ -3310,6 +4192,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-11"]
 
 [[revisions."2026".casillas]]
 id = "12"
@@ -3321,6 +4204,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-12"]
 
 [[revisions."2026".casillas]]
 id = "13"
@@ -3333,6 +4217,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-total"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-13"]
 
 [[revisions."2026".casillas]]
 id = "14"
@@ -3344,6 +4229,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-14"]
 
 [[revisions."2026".casillas]]
 id = "15"
@@ -3356,6 +4242,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+export_refs = ["modelo-131-casilla-15"]
 
 [[revisions."2026".bindings]]
 id = "modelo-131.page1.109-109.discapacidad-33"
@@ -4127,6 +5014,19 @@ failure_semantics = "fail_hard"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]
 
+[[revisions."2026".extraction_profiles]]
+id = "modelo-131-submitted-file"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026"]
+
 [[revisions."2026".live_cross_references]]
 id = "modelo-131-static-official"
 evidence_tier = "layout_authority"
@@ -4289,6 +5189,201 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-131-2026"]
 
 [[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-01"
+offset = 325
+length = 17
+kind = "casilla"
+casilla = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-02"
+offset = 342
+length = 17
+kind = "casilla"
+casilla = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-03"
+offset = 390
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-04"
+offset = 407
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-05"
+offset = 488
+length = 17
+kind = "casilla"
+casilla = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-06"
+offset = 505
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-07"
+offset = 522
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-08"
+offset = 539
+length = 17
+kind = "casilla"
+casilla = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-09"
+offset = 562
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-10"
+offset = 579
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-11"
+offset = 596
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-12"
+offset = 624
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-13"
+offset = 641
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-14"
+offset = 658
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
+id = "modelo-131-casilla-15"
+offset = 675
+length = 17
+kind = "casilla"
+casilla = "15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-page-close"
 offset = 820
 length = 12
@@ -4387,7 +5482,9 @@ record_type = "DID"
 order = 2
 encoding = "latin-1"
 line_ending = "none"
+required = false
 binding_record = "DID"
+requires_positive_casilla = "15"
 
 [[revisions."2026".export_layouts.records.fields]]
 id = "modelo-131-did-open"

@@ -41,14 +41,22 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
 
 
-def test_root_surface_contains_setup_auth_and_app() -> None:
+def test_root_surface_contains_setup_and_app_only() -> None:
     result = _invoke(["--help"])
 
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
-    assert "auth" in result.output
     assert "app" in result.output
-    for removed_command in ("financial", "filing", "bootstrap", "doctor", "declarations", "workspaces", "audits"):
+    for removed_command in (
+        "auth",
+        "financial",
+        "filing",
+        "bootstrap",
+        "doctor",
+        "declarations",
+        "workspaces",
+        "audits",
+    ):
         assert removed_command not in result.output
 
 
@@ -58,6 +66,8 @@ def test_removed_developer_commands_are_not_registered() -> None:
         ["filing", "--help"],
         ["bootstrap", "--help"],
         ["doctor", "--help"],
+        ["auth", "--help"],
+        ["app", "registry", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
@@ -87,7 +97,7 @@ def test_ledger_split_is_nested_inside_edit() -> None:
     assert ledger.exit_code == 0, ledger.output
     assert edit.exit_code == 0, edit.output
     assert "--split" in edit.output
-    assert "Edit one ledger row" in edit.output
+    assert "--reason" in edit.output
 
 
 def test_invoice_and_ledger_share_review_wording() -> None:
@@ -397,5 +407,5 @@ def test_kent_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
     assert calculated.exit_code != 0
-    assert "not present in the calculation registry" in str(calculated.exception)
+    assert "not present in the calculation registry" in calculated.output
     assert not export_path.exists()

@@ -779,8 +779,10 @@ class ExportRecordDefinition(RegistryModel):
     order: int = Field(ge=0)
     encoding: str
     line_ending: Literal["crlf", "lf", "none"]
+    required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
+    requires_positive_casilla: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
 
     @field_validator("binding_record")

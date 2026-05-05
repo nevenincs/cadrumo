@@ -687,7 +687,7 @@ own ledger is checked.
   failure semantics, legal refs, and source refs.
   - [x] Modelo 131 current 2026 declaration-copy profile: define strict
     declaration-PDF extraction coverage for casillas 01 through 15.
-  - [ ] Modelo 131 submitted-file extraction profile: add registry-backed
+  - [x] Modelo 131 submitted-file extraction profile: add registry-backed
     submitted-file extraction only after the export layout has complete
     official field coverage.
   - [ ] Modelo 131 preview-PDF extraction profile: add registry-backed preview
@@ -711,7 +711,7 @@ own ledger is checked.
   - [x] Modelo 131 current 2026 application links: register calculation,
     filing, verification, review, extraction, portal, and deadline consumers
     against validated snapshots.
-  - [ ] Modelo 131 export layout support: extend or model the official
+  - [x] Modelo 131 export layout support: extend or model the official
     activity-detail record structures before adding export roundtrips.
   - [x] Modelo 131 export binding schema: extend the Python-side registry
     schema so export fields can reference structured data bindings, allowing
@@ -723,29 +723,37 @@ own ledger is checked.
     exporter to read binding values from approved drafts and to render
     binding-row repeated records when an official export layout declares that
     structure.
-  - [ ] Modelo 131 2024 export layout: implement the official 2024 workbook
+  - [x] Modelo 131 2024 export layout: implement the official 2024 workbook
     record layout, including envelope records, liquidacion fields, DPA records,
     and any DID/direct-debit structures that are present in the source.
-  - [ ] Modelo 131 2025 export layout: implement or explicitly reuse the 2025
+  - [x] Modelo 131 2025 export layout: implement or explicitly reuse the 2025
     official record layout after comparing workbook field positions, lengths,
     record names, and requiredness against 2024.
-  - [ ] Modelo 131 2026 export layout: implement or explicitly reuse the 2026
+  - [x] Modelo 131 2026 export layout: implement or explicitly reuse the 2026
     official record layout after comparing workbook field positions, lengths,
     record names, and requiredness against 2025.
-  - [ ] Modelo 131 DPA layout support: represent the official activity detail
+  - [x] Modelo 131 DPA layout support: represent the official activity detail
     page for 2024, 2025, and 2026 without flattening it into synthetic
     casillas.
-  - [ ] Modelo 131 DID layout support: represent the official direct-debit page
+  - [x] Modelo 131 DID layout support: represent the official direct-debit page
     only through guarded payment/export semantics and never through live AEAT
     write actions.
-  - [ ] Modelo 131 DID guard linkage: ensure direct-debit fields can be exported
+  - [x] Modelo 131 DID guard linkage: ensure direct-debit fields can be exported
     or reviewed locally but cannot trigger live payment, domiciliation, or AEAT
     remote-state mutation.
-  - [ ] Modelo 131 2019-2023 export support: model the flatter historical
+  - [x] Modelo 131 2019-2023 export support: model the flatter historical
     record-design structure separately from the 2024-and-later DPA/DID shape.
-  - [ ] Modelo 131 export roundtrip tests: prove registry export serialization
+  - [x] Modelo 131 export roundtrip tests: prove registry export serialization
     and parsing for each implemented revision using official field positions
     and real registry data, not schema definitions embedded in tests.
+    - [x] Modelo 131 current export roundtrip: prove 2026 page-one, DPA, and
+      DID binding values serialize and parse through the registry layout, omit
+      empty DID records, and reject direct-debit export unless the payable
+      casilla is positive.
+    - [x] Modelo 131 2024 and 2025 export roundtrip: run the same behaviour
+      against the year-scoped export layouts.
+    - [x] Modelo 131 2019-2023 export roundtrip: prove the flatter historical
+      record-design shape serializes and parses through the registry layout.
 - [ ] Modelo 131 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, and any filed-data
   bindings are correct against official authority.
@@ -797,7 +805,7 @@ own ledger is checked.
     development-metadata sanitization scans for the touched surfaces.
   - [x] Modelo 131 full registry gate: run whole-tree registry verification
     after concurrent Modelo 180 duplicate IDs were resolved.
-  - [ ] Modelo 131 export/schema quality gate: run registry verification,
+  - [x] Modelo 131 export/schema quality gate: run registry verification,
     export roundtrip tests, source-integrity checks, `ruff`, `ty`, and
     development-metadata sanitization scans after DPA/DID/export work lands.
   - [ ] Modelo 131 live-read quality gate: run remote-state guard tests,
