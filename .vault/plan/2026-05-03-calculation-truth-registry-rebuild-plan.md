@@ -1718,6 +1718,9 @@ own ledger is checked.
   - [x] Resolve registry relation values from normalized filed-declaration
      observations with hard failures for missing source filings, duplicate
      source filings, missing observed outputs, and unsupported aggregations.
+  - [x] Add generalized cross-dependency contract tests for role semantics,
+     source-requirement derivation, formula consumption of calculation
+     relations, and casilla attachment for formula relation dependencies.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.
