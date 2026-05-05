@@ -165,6 +165,70 @@ required_text = [
     "aplicables durante el año\u00a02024",
 ]
 
+[legal."orden-hfp-1359-2023:da-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-quinta"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional quinta"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en el termino municipal de Lorca."
+required_text = [
+    "Disposición adicional quinta",
+    "término municipal de Lorca",
+    "rendimiento neto de módulos de\u00a02024",
+]
+
+[legal."orden-hfp-1359-2023:da-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-sexta"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional sexta"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en la Isla de La Palma."
+required_text = [
+    "Disposición adicional sexta",
+    "Isla de la Palma",
+    "rendimiento neto de módulos de\u00a02024",
+]
+
+[legal."real-decreto-ley-7-2024:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-7-2024-art-11.html#articulo-11"
+document_id = "BOE-A-2024-23422"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422#a1-3"
+published_at = 2024-11-12
+effective_from = 2024-11-13
+effective_to = 2024-12-31
+consolidated_as_of = 2025-10-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados."
+required_text = [
+    "Artículo 11",
+    "rendimiento neto de módulos de\u00a02024",
+    "pago fraccionado correspondiente al último trimestre de\u00a02024",
+]
+
 [legal."orden-hac-1347-2024:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"

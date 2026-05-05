@@ -142,7 +142,16 @@ class LegalReference(RegistryModel):
     id: LegalRefId
     evidence_tier: Literal["legal_authority"]
     authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
-    kind: Literal["ley", "real_decreto", "orden", "reglamento", "directiva", "manual", "instruction"]
+    kind: Literal[
+        "ley",
+        "real_decreto",
+        "real_decreto_ley",
+        "orden",
+        "reglamento",
+        "directiva",
+        "manual",
+        "instruction",
+    ]
     corpus_ref: str
     document_id: str
     article: str | None = None
