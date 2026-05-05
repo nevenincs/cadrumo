@@ -39,6 +39,26 @@ required_text = [
     "pagos fraccionados a cuenta del Impuesto sobre la Renta",
 ]
 
+[legal."ley-35-2006:art-68.4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-4.html#articulo-68-4"
+document_id = "BOE-A-2006-20764"
+article = "68.4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Deduccion por rentas obtenidas en Ceuta o Melilla, including economic activities effectively carried out there."
+required_text = [
+    "Deducción por rentas obtenidas en Ceuta o Melilla",
+    "ejercicio de actividades económicas",
+    "60 por ciento",
+]
+
 [legal."orden-hac-1264-2018:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -229,6 +249,27 @@ required_text = [
     "pago fraccionado correspondiente al último trimestre de\u00a02024",
 ]
 
+[legal."real-decreto-ley-4-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-4-2024-art-3.html#articulo-3"
+document_id = "BOE-A-2024-12944"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-12944"
+published_at = 2024-06-27
+effective_from = 2024-06-28
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2024 tax period."
+required_text = [
+    "disposición adicional quincuagésima séptima",
+    "períodos impositivos 2022, 2023 y 2024",
+    "pago fraccionado",
+]
+
 [legal."orden-hac-1347-2024:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -248,6 +289,27 @@ required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
     "método de estimación objetiva",
     "aplicables durante el año\u00a02025",
+]
+
+[legal."real-decreto-ley-13-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-13-2025-art-2.html#articulo-2"
+document_id = "BOE-A-2025-23911"
+article = "2"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23911"
+published_at = 2025-11-26
+effective_from = 2025-11-27
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2025 tax period."
+required_text = [
+    "disposición adicional quincuagésima séptima",
+    "períodos impositivos 2022, 2023, 2024 y 2025",
+    "pago fraccionado",
 ]
 
 [legal."orden-hac-1425-2025:art-4"]

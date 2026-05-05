@@ -161,22 +161,111 @@ def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_b
             assert "real-decreto-ley-7-2024:art-11" in binding.legal_refs
 
 
-def test_modelo_131_current_registry_bindings_cover_official_page_one_structured_fields() -> None:
+@pytest.mark.parametrize(
+    ("filing_year", "workbook_name"),
+    (
+        (2024, "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx"),
+        (2025, "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx"),
+        (2026, "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"),
+    ),
+)
+def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
+    filing_year: int,
+    workbook_name: str,
+) -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
-    page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    page = next(
+        sheet
+        for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
+        if sheet.name == "Pág. 1"
+    )
 
     official_fields = {
-        (field.offset, field.length) for field in page.fields if _is_page_one_structured_input_field(field.description)
+        (
+            field.offset,
+            field.length,
+            _page_one_data_type(field.offset, field.type_code),
+        )
+        for field in page.fields
+        if _is_page_one_structured_input_field(field.description)
     }
     registry_fields = {
-        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"]))
+        (
+            _selector_int(binding.selector["offset"]),
+            _selector_int(binding.selector["length"]),
+            str(binding.selector["data_type"]),
+        )
         for binding in snapshot.revision.bindings
         if binding.selector.get("record") == "page_1"
     }
 
     assert registry_fields == official_fields
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "workbook_name", "palma_legal_ref"),
+    (
+        (
+            2024,
+            "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+            "real-decreto-ley-4-2024:art-3",
+        ),
+        (
+            2025,
+            "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
+            "real-decreto-ley-13-2025:art-2",
+        ),
+    ),
+)
+def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
+    filing_year: int,
+    workbook_name: str,
+    palma_legal_ref: str,
+) -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    page = next(
+        sheet
+        for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
+        if sheet.name == "Pág. 1"
+    )
+    bindings = {
+        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"])): binding
+        for binding in snapshot.revision.bindings
+        if binding.selector.get("record") == "page_1"
+    }
+
+    for field in page.fields:
+        if "Palma" not in field.description or not _is_page_one_structured_input_field(field.description):
+            continue
+        binding = bindings[(field.offset, field.length)]
+        if "RENTAS OBTENIDAS" in field.description or "Deducción por rentas obtenidas" in field.description:
+            assert "la-palma" in str(binding.selector["field"])
+        assert palma_legal_ref in binding.legal_refs
+
+
+def test_modelo_131_current_page_one_agrarian_fields_do_not_shadow_territorial_meaning() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+    page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
+    descriptions = {(field.offset, field.length): field.description for field in page.fields}
+
+    for binding in snapshot.revision.bindings:
+        if binding.selector.get("record") != "page_1":
+            continue
+        offset = _selector_int(binding.selector["offset"])
+        if offset not in {424, 434, 448, 458}:
+            continue
+        description = descriptions[(offset, _selector_int(binding.selector["length"]))]
+        field_name = str(binding.selector["field"])
+        if "RENTAS OBTENIDAS EN CEUTA" in description:
+            assert "ceuta-melilla" in field_name
+        else:
+            assert "ceuta-melilla" not in field_name
 
 
 def _is_structured_input_field(description: str) -> bool:
@@ -211,6 +300,20 @@ def _is_page_one_structured_input_field(description: str) -> bool:
     if "RESERVADO" in description.upper():
         return False
     return "[" not in description and "]" not in description
+
+
+def _page_one_data_type(offset: int, type_code: str) -> str:
+    if offset in {109, 613, 692}:
+        return "boolean"
+    if offset in {360, 374, 424, 434, 448, 458, 472, 614}:
+        return "money"
+    if type_code in {"N"}:
+        return "money"
+    if type_code == "An":
+        return "text"
+    if offset in {359, 556}:
+        return "integer"
+    return "decimal"
 
 
 def _selector_int(value: str | int | Decimal | tuple[str, ...]) -> int:
