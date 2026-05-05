@@ -119,6 +119,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
     assert set(payments_retentions.dependency_classifications) == set(snapshot.dependency_classifications)
+    assert {"0384", "1479", "1553", "1577", "1583", "1605"}.issubset(economic_activities.casillas)
 
 
 def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
@@ -504,14 +505,15 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
           <E5AK>315.00</E5AK>
         </ActividadAgr>
       </RegEstimaObjAgricola>
-      <RegimenesEspeciales>
-        <REAtRentas>
-          <ENTIDADAR>
-            <F1EH>128.00</F1EH>
-          </ENTIDADAR>
-        </REAtRentas>
-      </RegimenesEspeciales>
-    </TomaDatosAmpliada>
+        <RegimenesEspeciales>
+          <REAtRentas>
+            <ENTIDADAR>
+              <F1EH>128.00</F1EH>
+              <F1EIR4>19.00</F1EIR4>
+            </ENTIDADAR>
+          </REAtRentas>
+        </RegimenesEspeciales>
+      </TomaDatosAmpliada>
   </DatosEconomicos>
 </Renta>
 """
@@ -527,7 +529,34 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         "1479": Decimal("214.00"),
         "1553": Decimal("315.00"),
         "1577": Decimal("128.00"),
+        "0384": Decimal("19.00"),
     }
+
+
+def test_modelo_100_objective_estimation_net_computable_calculates_from_registry() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "1577": Decimal("1000.00"),
+            "1578": Decimal("20.00"),
+            "1579": Decimal("30.00"),
+            "1580": Decimal("40.00"),
+            "1581": Decimal("50.00"),
+            "1582": Decimal("60.00"),
+            "0384": Decimal("70.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+
+    assert result.values["1583"] == Decimal("730.00")
+    assert result.values["1605"] == Decimal("730.00")
 
 
 def test_construct_reader_rejects_unknown_construct_id() -> None:

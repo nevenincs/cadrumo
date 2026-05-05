@@ -1559,6 +1559,96 @@ input_kind = "informational"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
 
+[[revisions."2025".casillas]]
+id = "1578"
+number = "1578"
+label = "Minoraciones aplicables"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1579"
+number = "1579"
+label = "Provisiones deducibles y gastos de dificil justificacion"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1580"
+number = "1580"
+label = "Reduccion aplicable articulo 32 1 y DT 25 de la Ley del Impuesto"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1581"
+number = "1581"
+label = "Reduccion aplicable articulo 32 2.3 de la Ley del Impuesto"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1582"
+number = "1582"
+label = "Reduccion aplicable articulo 32 3 de la Ley del Impuesto"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0384"
+number = "0384"
+label = "Reduccion por rendimientos de actividades artisticas obtenidos de manera excepcional"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1583"
+number = "1583"
+label = "Rendimiento neto computable"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-regimenes-especiales-rentas-rendimiento-neto-computable"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "1605"
+number = "1605"
+label = "Suma de rendimientos netos de actividades economicas, atribuidos"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-regimenes-especiales-rentas-suma-rendimientos-netos-actividades-economicas"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
 [[revisions."2025".workbook_parity_refs]]
 id = "modelo-100-2025-record-design-layout"
 workbook_source = "aeat-dr-100-2025-xsd"
@@ -1775,7 +1865,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
 ]
 bindings = [
-    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
     "renta-2025-modelo-115-retenciones-periodicas",
     "renta-2025-modelo-123-retenciones-periodicas",
     "renta-2025-modelo-130-pagos-fraccionados",
@@ -1815,7 +1906,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
 ]
 bindings = [
-    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
     "renta-2025-modelo-115-retenciones-periodicas",
     "renta-2025-modelo-123-retenciones-periodicas",
     "renta-2025-modelo-130-pagos-fraccionados",
@@ -1853,7 +1945,10 @@ source_refs = [
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
 ]
-bindings = ["renta-2025-modelo-111-retenciones-periodicas"]
+bindings = [
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
+]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
     "renta-2025-rel-111-retenciones-mensuales",
@@ -1977,9 +2072,17 @@ casillas = [
     "0235",
     "0236",
     "0237",
+    "1578",
+    "1579",
+    "1580",
+    "1581",
+    "1582",
+    "0384",
     "1479",
     "1553",
     "1577",
+    "1583",
+    "1605",
     "0604",
 ]
 formulas = [
@@ -1992,6 +2095,8 @@ formulas = [
     "renta-2025-estimacion-directa-rendimiento-neto-reducido",
     "renta-2025-estimacion-directa-total-rendimiento-neto-reducido",
     "renta-2025-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2025-regimenes-especiales-rentas-rendimiento-neto-computable",
+    "renta-2025-regimenes-especiales-rentas-suma-rendimientos-netos-actividades-economicas",
     "renta-2025-pagos-fraccionados-ingresados",
 ]
 relations = [
@@ -2413,6 +2518,54 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Fase 3ª. Determinacion del rendimiento neto reducido total", "gastos de dificil justificacion"]
 
 [[revisions."2025".formulas]]
+id = "renta-2025-regimenes-especiales-rentas-rendimiento-neto-computable"
+target = "1583"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [
+        { op = "subtract", args = [
+            { op = "subtract", args = [
+                { op = "subtract", args = [
+                    { op = "subtract", args = [
+                        { casilla = "1577" },
+                        { casilla = "1578" },
+                    ] },
+                    { casilla = "1579" },
+                ] },
+                { casilla = "1580" },
+            ] },
+            { casilla = "1581" },
+        ] },
+        { casilla = "1582" },
+    ] },
+    { casilla = "0384" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 3ª. Determinacion del rendimiento neto reducido total", "Reduccion por rendimientos de actividades artisticas"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["nuevas casillas para consignar la reduccion aplicable a los rendimientos de actividades artisticas obtenidos de manera excepcional"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-regimenes-especiales-rentas-suma-rendimientos-netos-actividades-economicas"
+target = "1605"
+expression = { op = "copy", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimiento neto reducido de la actividad", "Para 2025 la determinacion del rendimiento neto reducido anual correspondiente a cada"]
+
+[[revisions."2025".formulas]]
 id = "renta-2025-pagos-fraccionados-ingresados"
 target = "0604"
 expression = { op = "sum", args = [
@@ -2467,9 +2620,21 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]
 
 [[revisions."2025".bindings]]
-id = "renta-2025-modelo-111-retenciones-periodicas"
+id = "renta-2025-modelo-111-retenciones-trimestrales"
 source = "previous_filing"
-selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["28"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-111-retenciones-mensuales"
+source = "previous_filing"
+selector = { source_modelo = "111", source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], source_casillas = ["28"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2481,7 +2646,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-115-retenciones-periodicas"
 source = "previous_filing"
-selector = { source_modelo = "115", source_output = "03", relation = "retenciones-arrendamientos-urbanos" }
+selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["03"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2493,7 +2658,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-123-retenciones-periodicas"
 source = "previous_filing"
-selector = { source_modelo = "123", source_output = "09", relation = "retenciones-capital-mobiliario" }
+selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["09"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2505,7 +2670,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-130-pagos-fraccionados"
 source = "previous_filing"
-selector = { source_modelo = "130", source_output = "19", relation = "pagos-fraccionados-estimacion-directa" }
+selector = { source_modelo = "130", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["19"] }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2517,7 +2682,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-131-pagos-fraccionados"
 source = "previous_filing"
-selector = { source_modelo = "131", source_output = "15", relation = "pagos-fraccionados-estimacion-objetiva" }
+selector = { source_modelo = "131", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["15"] }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2529,7 +2694,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-180-retenciones-anuales"
 source = "previous_filing"
-selector = { source_modelo = "180", source_output = "decl.retenciones-total", relation = "resumen-anual-arrendamientos-urbanos" }
+selector = { source_modelo = "180", period = "0A", source_casillas = ["decl.retenciones-total"] }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2545,7 +2710,7 @@ dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
-target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+target_binding = "renta-2025-modelo-111-retenciones-trimestrales"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
@@ -2560,7 +2725,7 @@ dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
-target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+target_binding = "renta-2025-modelo-111-retenciones-mensuales"
 period_alignment = { source_periods = "months", target_period = "0A" }
 source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 target_periods = ["0A"]

@@ -132,9 +132,6 @@ def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:
     source_casillas = binding.selector.get("source_casillas")
     if isinstance(source_casillas, tuple):
         return source_casillas
-    source_output = binding.selector.get("source_output")
-    if isinstance(source_output, str):
-        return (source_output,)
     return ()
 
 

@@ -814,6 +814,14 @@ class RegistryValidator:
                     if source_modelo is None:
                         failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
                         continue
+                    if "source_output" in binding.selector:
+                        failures.append(f"{binding_scope} must use selector source_casillas, not source_output")
+                    has_period = isinstance(binding.selector.get("period"), str)
+                    has_source_periods = isinstance(binding.selector.get("source_periods"), tuple)
+                    if has_period == has_source_periods:
+                        failures.append(
+                            f"{binding_scope} must declare exactly one of selector period or source_periods"
+                        )
 
                     source_periods = RegistryValidator._binding_source_periods(binding)
                     matching_revisions = tuple(
@@ -831,6 +839,7 @@ class RegistryValidator:
 
                     source_outputs = RegistryValidator._binding_source_outputs(binding)
                     if not source_outputs:
+                        failures.append(f"{binding_scope} must declare selector source_casillas")
                         continue
 
                     revision_outputs = set().union(
@@ -862,9 +871,6 @@ class RegistryValidator:
         source_casillas = binding.selector.get("source_casillas")
         if isinstance(source_casillas, tuple) and all(isinstance(casilla, str) for casilla in source_casillas):
             return source_casillas
-        source_output = binding.selector.get("source_output")
-        if isinstance(source_output, str):
-            return (source_output,)
         return ()
 
     @staticmethod
