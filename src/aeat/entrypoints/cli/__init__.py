@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import typer
 
-from . import _declaration, _invoice, _ledger, _overview, _setup, registry
+from . import _declaration, _invoice, _ledger, _overview, _setup
 from ._common import _FORMAT_TEXT
 from ._i18n import tr
 
@@ -64,7 +64,6 @@ app_app.add_typer(_overview.app, name="overview")
 app_app.add_typer(_ledger.app, name="ledger")
 app_app.add_typer(_invoice.app, name="invoice")
 app_app.add_typer(_declaration.app, name="declaration")
-app_app.add_typer(registry.app, name="registry")
 
 
 # ---------------------------------------------------------------------
