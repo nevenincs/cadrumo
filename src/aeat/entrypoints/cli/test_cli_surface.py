@@ -441,6 +441,60 @@ def test_app_declaration_calculate_persists_draft(
     }
 
 
+def test_app_declaration_status_filter_reports_match_state(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from aeat.application.user_cli import state_repository, update_declaration_pointer
+
+    _isolate(monkeypatch, tmp_path)
+    state_repository().update(
+        lambda current: update_declaration_pointer(
+            current,
+            modelo="303",
+            period="2026Q1",
+            draft_id="draft_303_2026Q1",
+            status="READY_TO_SUBMIT",
+        )
+    )
+
+    pending = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "status",
+            "--period",
+            "2026Q1",
+            "--modelo",
+            "303",
+            "--filter",
+            "status=pending",
+        ]
+    )
+    approved = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "status",
+            "--period",
+            "2026Q1",
+            "--modelo",
+            "303",
+            "--filter",
+            "status=approved",
+        ]
+    )
+
+    assert pending.exit_code == 0, pending.output
+    assert approved.exit_code == 0, approved.output
+    assert json.loads(pending.output)["matches_filter"] is True
+    assert json.loads(approved.output)["matches_filter"] is False
+
+
 def test_app_declaration_calculate_requires_profile_tax_id(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

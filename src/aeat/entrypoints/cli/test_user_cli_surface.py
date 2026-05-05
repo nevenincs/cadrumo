@@ -316,14 +316,19 @@ def test_declaration_validate_uses_root_format_option() -> None:
 
 def test_declaration_gate_options_use_user_workflow_descriptions() -> None:
     approve = _invoke(["app", "declaration", "approve", "--help"])
+    status = _invoke(["app", "declaration", "status", "--help"])
     validate = _invoke(["app", "declaration", "validate", "--help"])
     verify = _invoke(["app", "declaration", "verify", "--help"])
 
     assert approve.exit_code == 0, approve.output
+    assert status.exit_code == 0, status.output
     assert validate.exit_code == 0, validate.output
     assert verify.exit_code == 0, verify.output
     assert "Persona que revisó la declaración" in approve.output
     assert "Motivo auditado" in approve.output
+    assert "status=pending" in status.output
+    assert "approved" in status.output
+    assert "stale" in status.output
     assert "Ruta del informe" in validate.output
     assert "Archivo local exportado" in verify.output
 

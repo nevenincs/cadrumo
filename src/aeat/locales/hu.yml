@@ -370,6 +370,7 @@ cli:
       draft_id: Tervezet azonosítója
       edits: Szerkesztések
       findings: Találatok
+      matches_filter: Egyezik a szűrővel
       mismatched: Eltérő
       modelo: Adóbevallási űrlap
       next: Következő
@@ -380,11 +381,13 @@ cli:
       values: Értékek
       verdict: Ítélet
       warnings: Figyelmeztetések
+      'yes': Igen
+      'no': Nem
     opts:
       by: A bevallást ellenőrző személy
       draft_id: Helyi tervezet azonosítója
       file: Ellenőrizendő helyi exportfájl
-      filter: Szűrő
+      filter: Szűrés status=pending|approved|stale|submitted|acknowledged szerint
       modelo: Adóbevallási űrlap
       output: Ellenőrzési jelentés vagy helyi kimeneti útvonal
       period: Időszak

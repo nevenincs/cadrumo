@@ -359,6 +359,7 @@ cli:
       draft_id: Draft ID
       edits: Edits
       findings: Findings
+      matches_filter: Matches filter
       mismatched: Mismatched
       modelo: Tax Form
       next: Next
@@ -373,7 +374,7 @@ cli:
       by: Person who reviewed the declaration
       draft_id: Local draft ID
       file: Local exported file to verify
-      filter: Filter
+      filter: Filter by status=pending|approved|stale|submitted|acknowledged
       modelo: Tax Form
       output: Validation report or local output path
       period: Period
