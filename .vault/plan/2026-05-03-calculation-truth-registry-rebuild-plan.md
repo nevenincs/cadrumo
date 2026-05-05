@@ -1715,6 +1715,9 @@ own ledger is checked.
      expose the exact source modelo, filing year, periods, source output,
      target bindings, dependency role, and aggregation operation that secure
      storage or read-only AEAT observation backends must fetch.
+  - [x] Resolve registry relation values from normalized filed-declaration
+     observations with hard failures for missing source filings, duplicate
+     source filings, missing observed outputs, and unsupported aggregations.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.

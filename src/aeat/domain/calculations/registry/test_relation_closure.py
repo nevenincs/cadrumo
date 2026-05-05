@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -9,8 +10,9 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
+from ._bindings import RegistryFilingObservation
 from ._loader import load_registry_tree
-from ._relations import relation_source_requirements
+from ._relations import relation_source_requirements, resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
 from ._validate import RegistryValidator
 
@@ -41,6 +43,24 @@ def _replace_modelo(
 
 def _copy_committed_modelo_180(path: Path) -> None:
     path.write_text(_MODELO_180_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+
+
+def _modelo_115_observations() -> tuple[RegistryFilingObservation, ...]:
+    values_by_period = {
+        "1T": {"01": Decimal("1"), "02": Decimal("250.10"), "03": Decimal("47.52")},
+        "2T": {"01": Decimal("1"), "02": Decimal("749.90"), "03": Decimal("142.48")},
+        "3T": {"01": Decimal("2"), "02": Decimal("1200.00"), "03": Decimal("228.00")},
+        "4T": {"01": Decimal("1"), "02": Decimal("-50.25"), "03": Decimal("0.00")},
+    }
+    return tuple(
+        RegistryFilingObservation(
+            modelo="115",
+            filing_year=2026,
+            period=period,
+            casilla_values=casilla_values,
+        )
+        for period, casilla_values in values_by_period.items()
+    )
 
 
 def test_registry_validator_checks_cross_model_relation_closure() -> None:
@@ -79,6 +99,39 @@ def test_relation_source_requirements_obey_target_periods() -> None:
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
 
     assert relation_source_requirements(revision, filing_year=2026, period="1T") == ()
+
+
+def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    observations = _modelo_115_observations()
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    values = resolve_relation_values_from_observations(
+        revision,
+        observations,
+        filing_year=2026,
+        period="0A",
+    )
+
+    assert values == {
+        "modelo-180-rel-115-perceptores-anual": Decimal("5"),
+        "modelo-180-rel-115-base-anual": Decimal("2149.75"),
+        "modelo-180-rel-115-retenciones-anual": Decimal("418.00"),
+    }
+
+
+def test_relation_observation_resolution_fails_when_required_source_period_is_missing() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    observations = tuple(item for item in _modelo_115_observations() if item.period != "4T")
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    with pytest.raises(RegistryValidationError, match="expected one observed filing"):
+        resolve_relation_values_from_observations(revision, observations, filing_year=2026, period="0A")
 
 
 def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:

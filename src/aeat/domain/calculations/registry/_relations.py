@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._bindings import RegistryFilingObservation
 from ._errors import RegistryValidationError
 from ._schema import ModeloRevision, RelationDefinition
 
@@ -15,6 +16,7 @@ __all__ = [
     "RelationDefinition",
     "relation_source_requirements",
     "resolve_relation_values",
+    "resolve_relation_values_from_observations",
 ]
 
 
@@ -113,6 +115,33 @@ def resolve_relation_values(
     return resolved
 
 
+def resolve_relation_values_from_observations(
+    revision: ModeloRevision,
+    observations: Iterable[RegistryFilingObservation],
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Resolve relation values from normalized filed-declaration observations."""
+
+    available = tuple(observations)
+    external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
+    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
+        values = tuple(_observed_requirement_values(requirement, available))
+        raw_value: Decimal | tuple[Decimal, ...]
+        if requirement.aggregation_op == "copy":
+            if len(values) != 1:
+                raise RegistryValidationError(
+                    f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
+                )
+            raw_value = values[0]
+        else:
+            raw_value = values
+        for relation_id in requirement.relation_ids:
+            external_outputs[relation_id] = raw_value
+    return resolve_relation_values(revision, external_outputs)
+
+
 def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
     selector = relation.source_revision_selector
     if "year" in selector:
@@ -124,3 +153,32 @@ def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> 
     if not isinstance(delta, int):
         raise RegistryValidationError(f"relation {relation.id!r} source selector filing_year_delta must be an integer")
     return filing_year + delta
+
+
+def _observed_requirement_values(
+    requirement: RegistryRelationSourceRequirement,
+    observations: tuple[RegistryFilingObservation, ...],
+) -> tuple[Decimal, ...]:
+    values: list[Decimal] = []
+    for source_period in requirement.periods:
+        matches = tuple(
+            observation
+            for observation in observations
+            if observation.modelo == requirement.source_modelo
+            and observation.filing_year == requirement.filing_year
+            and observation.period == source_period
+        )
+        if len(matches) != 1:
+            raise RegistryValidationError(
+                f"relation requirement {requirement.relation_ids!r} expected one observed filing "
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}"
+            )
+        value = matches[0].casilla_values.get(requirement.source_output)
+        if value is None:
+            raise RegistryValidationError(
+                f"relation requirement {requirement.relation_ids!r} requires observed output "
+                f"{requirement.source_output!r} from "
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}"
+            )
+        values.append(value)
+    return tuple(values)
