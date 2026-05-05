@@ -818,7 +818,8 @@ class ClaveMovilAuthProvider:
         wait_for = getattr(page, "wait_for_selector", None)
         if click is None or fill is None or type_text is None or wait_for is None:
             raise AeatLoginAssertionError(
-                "Playwright page missing click/fill/type/wait_for_selector; cannot drive the Cl@ve Móvil non-QR fallback"
+                "Playwright page missing click/fill/type/wait_for_selector; "
+                "cannot drive the Cl@ve Móvil non-QR fallback"
             )
         await click('button[name="autoriza-P"]')
         await wait_for(
