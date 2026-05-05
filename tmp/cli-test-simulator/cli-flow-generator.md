@@ -156,7 +156,7 @@ aeat app declaration status --filter status=pending --period PERIOD --modelo MOD
 aeat app declaration edit --id draft_MODELO_PERIOD --set COLUMN=VALUE --reason REASON
 aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON
 aeat app declaration validate --id draft_MODELO_PERIOD
-aeat app declaration validate --id draft_MODELO_PERIOD --format json --output PATH
+aeat --format json app declaration validate --id draft_MODELO_PERIOD --output PATH
 aeat app declaration preview --id draft_MODELO_PERIOD
 aeat app declaration export --id draft_MODELO_PERIOD --output PATH
 aeat app declaration verify --id DRAFT_ID --file PATH

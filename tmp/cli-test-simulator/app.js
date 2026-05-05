@@ -345,7 +345,7 @@ const TAPES = {
       "aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1",
       "aeat app ledger review --filter status=pending --filter period=2026-Q1",
       "aeat app invoice review --filter status=pending --filter period=2026-Q1",
-      "aeat app declaration validate --id draft_303_2026-Q1 --format json --output ./exports/2026-q1-validation.json",
+      "aeat --format json app declaration validate --id draft_303_2026-Q1 --output ./exports/2026-q1-validation.json",
     ],
   },
   normalExport: {
@@ -380,7 +380,7 @@ const TAPES = {
       "aeat app ledger edit --id row_2207 --skip true --reason not-business",
       "aeat app declaration calculate --period 2025-Q4 --modelo 303",
       "aeat app declaration status --filter status=pending --period 2025-Q4 --modelo 303",
-      "aeat app declaration validate --id draft_303_2025-Q4 --format json --output ./exports/2025-q4-validation.json",
+      "aeat --format json app declaration validate --id draft_303_2025-Q4 --output ./exports/2025-q4-validation.json",
     ],
   },
   multiPeriod: {
@@ -540,7 +540,7 @@ function valuesOf(flags, name) {
 function execute(command) {
   const trimmed = command.trim();
   if (!trimmed) return null;
-  const tokens = tokenize(trimmed);
+  let tokens = tokenize(trimmed);
   const flags = parseFlags(tokens);
 
   if (trimmed === "aeat" || trimmed === "aeat --help") return ok(HELP.root);
@@ -554,6 +554,11 @@ function execute(command) {
   if (trimmed === "aeat app declaration" || trimmed === "aeat app declaration --help") return ok(HELP.declaration);
 
   if (tokens[0] !== "aeat") return error("Commands must start with `aeat`.");
+  if (tokens[1] === "--format") {
+    const formatValue = tokens[2];
+    if (!formatValue || formatValue.startsWith("--")) return error("Usage: aeat --format FORMAT COMMAND");
+    tokens = [tokens[0], ...tokens.slice(3)];
+  }
   if (tokens[1] === "setup") return runSetup(tokens, flags);
   if (tokens[1] === "app") return runApp(tokens, flags);
   return error("Unknown root command. Run `aeat --help`.");

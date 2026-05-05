@@ -205,6 +205,17 @@ def test_declaration_verify_accepts_file_not_export_option() -> None:
     assert "--export" not in result.output
 
 
+def test_declaration_validate_uses_root_format_option() -> None:
+    root = _invoke(["--help"])
+    validate = _invoke(["app", "declaration", "validate", "--help"])
+
+    assert root.exit_code == 0, root.output
+    assert validate.exit_code == 0, validate.output
+    assert "--format" in root.output
+    assert "--format" not in validate.output
+    assert "--output" in validate.output
+
+
 def test_declaration_help_uses_local_export_not_live_submission_wording() -> None:
     declaration = _invoke(["app", "declaration", "--help"])
     approve = _invoke(["app", "declaration", "approve", "--help"])

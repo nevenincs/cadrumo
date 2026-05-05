@@ -401,7 +401,7 @@ aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason revie
       shape: `aeat app declaration validate --id draft_303_2026-Q1
   Validate only after human approval.
 
-aeat app declaration validate --id draft_303_2026-Q1 --format json --output ./exports/2026-q1-validation.json
+aeat --format json app declaration validate --id draft_303_2026-Q1 --output ./exports/2026-q1-validation.json
   Write a validation report when unresolved work remains.
 
 aeat app declaration preview --id draft_303_2026-Q1
