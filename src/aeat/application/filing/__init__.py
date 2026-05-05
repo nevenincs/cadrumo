@@ -6,6 +6,7 @@ import re
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import lru_cache
 
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
@@ -199,6 +200,7 @@ def build_draft(
     return apply_validation(draft, findings)
 
 
+@lru_cache(maxsize=128)
 def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
