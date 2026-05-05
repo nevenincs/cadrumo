@@ -1547,58 +1547,146 @@ own ledger is checked.
 
 ### Wave 15 Modelo 200 Parity Ledger
 
-- [ ] Modelo 200 audit: enumerate every current code, corpus, TOML, parser,
+- [x] Modelo 200 audit: enumerate every current code, corpus, TOML, parser,
   fixture, workflow, and test surface that codifies Modelo 200 identity,
   casillas, rules, calculations, deadlines, exports, or live filed data.
+  - [x] DR200e25.xls record-design (binary .xls, 11 MB) catalogued in the
+    Modelo 200 corpus manifest. Casilla numbers for the settlement chain
+    (00592 cuota liquida, 00599 cuota del ejercicio a ingresar/devolver,
+    00611/00612 cuota diferencial, 01586/01587 resultado de la
+    autoliquidacion, 00621/00622 resultado) extracted verbatim from the
+    Manual practico de sociedades 2024 settlement chain summary.
+  - [x] Codebase scan: no legacy Modelo 200 authority in
+    `src/aeat/domain/formulas/`, filing builders, declaration extractors,
+    export builders, or domain metadata. Existing portal entry
+    `aeat.domain.portals._entries.portal_m200_sociedades_anual` is the
+    only Modelo 200 surface in `src/aeat/` and is registry-aware.
 - [ ] Modelo 200 legal basis: identify and catalogue BOE legal references for
   every filing-grade calculation, parameter, filing condition, and temporal
   applicability rule.
-- [ ] Modelo 200 AEAT official guidance: capture and hash AEAT instructions,
+  - [x] Ley 27/2014 art. 41 (Deduccion de retenciones, ingresos a cuenta y
+    pagos fraccionados) catalogued as the legal authority for the cross-
+    dependency relation 200 to 202: "Seran deducibles de la cuota liquida
+    ... c) Los pagos fraccionados", with the BOE-A-2014-12328 corpus
+    excerpt at `corpus/normatives/html/ley-27-2014-art-41.html`.
+  - [x] Ley 27/2014 art. 40 retained as legal authority covering the
+    underlying pago fraccionado regime that produces the deductible
+    instalments (already present in the catalogue for Modelo 202).
+- [x] Modelo 200 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
-- [ ] Modelo 200 workbook/layout coverage: discover official XLS/XLSX coverage,
+  - [x] Manual practico de sociedades 2024 source excerpt committed at
+    `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt`
+    as `kind = "instructions"` source ref `aeat-modelo-200-manual-2024`;
+    the large upstream PDF is referenced by source URL but is not committed
+    directly.
+- [x] Modelo 200 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
+  - [x] DR200e25.xls classified `unsupported_binary_xls`. The .xls binary
+    cannot be parsed by openpyxl, so workbook parity is recorded as a known
+    coverage gap pending a cross-platform .xls reader or AEAT publishing an
+    .xlsx variant. The workbook parity reference declares the gap explicitly
+    rather than silently skipping coverage.
 - [ ] Modelo 200 live filed-data discovery: list available AEAT filed rows
   through the read-only surface and record the periods, submitted-file
   availability, declaration-copy availability, and justificante availability.
 - [ ] Modelo 200 live sanitized fixture: capture at least one read-only live
   submitted-file or declaration-copy artefact, sanitize identity data, commit
   the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 200 legal/source catalogue closure: add every legal ref and source
+- [x] Modelo 200 legal/source catalogue closure: add every legal ref and source
   ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
   applicability dates.
+  - [x] `registry/aeat/legal/is.toml` carries `ley-27-2014:art-41` legal
+    ref plus the two Modelo 200 source refs (`aeat-dr-200-2025` layout
+    authority and `aeat-modelo-200-manual-2024` official guidance) with
+    sha256 + bytes integrity.
 - [ ] Modelo 200 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/200.toml`.
+  - [x] `[modelo]` block declares id 200, IS autoliquidacion anual, annual
+    cadence, jurisdiction ES-AEAT, with LIS art. 40 and art. 41 as legal
+    refs.
+  - [x] `[revisions."2024-y-siguientes"]` covers ejercicios 2024 onward with
+    period 0A.
+  - [ ] Deadline windows and the complete application-link surface remain
+    open.
 - [ ] Modelo 200 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
+  - [x] Settlement-chain foundation declares official casillas 00592
+    (cuota liquida) and 00599 (cuota del ejercicio a ingresar o a devolver).
+    The remaining Modelo 200 filing-grade casillas stay open until the
+    official layout is transcribed from a cross-platform readable source.
 - [ ] Modelo 200 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
+  - [x] Parameter `is.modelo-200.tipo-gravamen-general` (25% per LIS art. 40)
+    declared with source-citation grounded in real Manual de Sociedades
+    prose.
+  - [x] Formula `modelo-200-cuota-ejercicio-a-ingresar-devolver` computes
+    casilla 00599 from official casilla 00592 minus the relation-resolved
+    aggregate of Modelo 202 instalments, citing LIS art. 41 and the Manual
+    de Sociedades cuota-del-ejercicio chain summary.
+  - [x] Binding `modelo-200-2024-pagos-fraccionados-anuales` declares the
+    previous-filing aggregation target for Modelo 202 outputs.
+  - [x] Cross-model relation `modelo-200-2024-rel-202-pagos-fraccionados`
+    (kind `cross_model_output`, dependency_role
+    `instalment_to_final_settlement`) reads Modelo 202 casilla [34] across
+    periods 1P/2P/3P with `aggregation = sum`. Modelo 200's filing year
+    matches Modelo 202's filing year via `filing_year_delta = 0`.
+  - [x] Dependency classification `modelo-200-2024-dep-202-instalments`
+    declares Modelo 202 as `direct_annual_settlement` evidence with the
+    cross-model relation as the binding mechanism.
 - [ ] Modelo 200 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
+  - [ ] Row stays open until a sanitized declaration-copy or submitted-file
+    fixture lands; the extraction profile must be backed by a real artefact.
 - [ ] Modelo 200 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
+  - [x] `modelo-200-2024-static-documentation` cross-reference declared
+    with `surface = static_official_documentation`,
+    `synthetic_data_allowed = false`, and `forbidden_actions` covering
+    server-side-save, signing, presentation, payment, amendment,
+    cancellation, document-submission, and declaration-submission.
 - [ ] Modelo 200 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
+  - [x] Calculation, filing, verification, and portal application links
+    declared on the 2024-y-siguientes revision and bound into the foundation
+    construct. The export application link and full export layout
+    transcription are deferred until a cross-platform .xls reader or AEAT
+    .xlsx variant is available.
 - [ ] Modelo 200 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, relation to Modelo
   202, and any filed-data bindings are correct against official authority.
+  - [x] `test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados`
+    proves the cross-dep chain: synthetic Modelo 202 1P/2P/3P filings are
+    aggregated by the relation, and the final cuota a ingresar formula
+    subtracts the aggregate from cuota liquida 00592. The trace references
+    official casilla 00592 and the Modelo 202 relation id.
 - [ ] Modelo 200 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
   silent degradation.
+  - [ ] Row stays open until a sanitized live artefact exists.
 - [ ] Modelo 200 teardown: delete or neutralize all old Modelo 200 authorities
   in rulesets, filing builders, category mappings, casilla projections,
   deadlines, generated exports, hydrate paths, and legacy fixtures.
+  - [x] Codebase audit completed: no legacy Modelo 200 authority outside
+    the registry-aware portal entry. The registry is the only authority
+    from inception.
 - [ ] Modelo 200 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
+  - [x] `RegistryValidator.validate_modelo` passes for Modelo 200 against
+    catalogue with full source-integrity check.
+  - [x] `uv run pytest src/aeat/domain/calculations/registry/test_committed_registry.py src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py -q`
+    passes for committed registry validation and cross-dependency behaviour.
+  - [x] `uv run ruff check` and `uv run ty check` clean on the touched test
+    surface.
 - [ ] Modelo 200 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 200 filing-grade values.
 

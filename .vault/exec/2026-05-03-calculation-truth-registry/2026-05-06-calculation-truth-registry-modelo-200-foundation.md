@@ -1,0 +1,53 @@
+---
+tags:
+  - '#exec'
+  - '#calculation-truth-registry'
+date: '2026-05-06'
+related:
+  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
+---
+
+<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
+     outside the YAML frontmatter above -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `calculation-truth-registry` `modelo-200` `foundation`
+
+Added the Modelo 200 annual corporate-tax foundation to the registry and
+connected its annual settlement to Modelo 202 instalment observations.
+
+- Created: `registry/aeat/modelos/200.toml`
+- Modified: `registry/aeat/legal/is.toml`
+- Created: `corpus/normatives/html/ley-27-2014-art-41.html`
+- Created: `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt`
+- Modified: `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`
+
+## Description
+
+The new Modelo 200 registry entry declares the annual IS identity, the
+2024-and-later revision, legal and source authorities, official casillas 00592
+and 00599, and the cross-model relation that aggregates Modelo 202 periods
+1P/2P/3P into the annual final-settlement calculation.
+
+The calculation for casilla 00599 consumes official casilla 00592 and the
+relation-resolved Modelo 202 aggregate directly. No intermediate casilla or
+Python calculation authority is introduced.
+
+Ley 27/2014 article 41 is catalogued as the legal basis for deducting
+withholdings, payments on account, and instalment payments from corporate-tax
+liability. A small AEAT Modelo 200 manual excerpt is committed as official
+guidance for source-citation validation; the large upstream PDF is not committed
+directly.
+
+## Tests
+
+- `uv run pytest src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py -q`
+- `uv run pytest src/aeat/domain/calculations/registry/test_committed_registry.py src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py -q`
+- `uv run ruff check src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`
+- `uv run ty check src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`

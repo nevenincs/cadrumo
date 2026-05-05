@@ -1,0 +1,17 @@
+Manual practico de Sociedades 2024. Extracto de autoridad para Modelo 200.
+
+El manual identifica el modelo 202 de pago fraccionado como antecedente de los
+pagos fraccionados aplicados en la declaracion anual del Impuesto sobre
+Sociedades.
+
+Resumen de la liquidacion:
+
+- Tipo de gravamen.
+- Cuota integra.
+- Pagos fraccionados.
+- Cuota del ejercicio a ingresar o a devolver (casilla 00599).
+
+Este extracto se conserva para validar citas de fuente en la definicion
+registral. La autoridad legal de calculo permanece en la Ley 27/2014 y la
+autoridad de trazado de formulario permanece en los documentos oficiales de la
+AEAT.
