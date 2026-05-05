@@ -3879,6 +3879,9 @@ application surface, and the old authority has been deleted.
      - [x] Modelo 100 construct tests: verify snapshot exposure of construct
        ownership and fail validation when a construct references a member not
        declared by the selected revision.
+     - [x] Modelo 100 construct dependency tests: mutate the real registry
+       objects to prove construct-owned dependency classifications cannot
+       reference members outside the selected revision.
      - [x] Modelo 100 dependency classification closure tests: mutate the real
        registry objects to prove validation fails when a relation source lacks
        classification, a classification covers only part of its source
@@ -3899,6 +3902,8 @@ application surface, and the old authority has been deleted.
      formula, extraction, observation, export, and verification coverage.
      - [x] Add generic `ConstructDefinition` schema, `ModeloRevision.constructs`,
        `RegistrySnapshot.constructs`, and validator closure checks.
+     - [x] Include dependency classifications in construct closure so Renta
+       constructs fail hard when they point at undeclared dependency members.
   - [ ] Implement the cross-model dependency resolver for Modelo 100 so
      dependent periodic, monthly, quarterly, and annual filings are selected by
      filing period, ejercicio, taxpayer, relation type, source evidence, and

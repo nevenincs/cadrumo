@@ -555,6 +555,25 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
 
 
+def test_validator_rejects_construct_dependency_classification_outside_revision() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
+    mutated_construct = construct.model_copy(
+        update={"dependency_classifications": (*construct.dependency_classifications, "missing-dependency")}
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="references unknown dependency classification"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
 def test_validator_rejects_dependency_classification_source_drift() -> None:
     modelos_by_id, catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
