@@ -367,6 +367,7 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
             (5, 8): "2026",
             (9, 17): "B12345678",
             (18, 26): "12345678Z",
+            (27, 35): "87654321X",
             (36, 75): "ARRENDADOR EJEMPLO".ljust(40),
             (76, 77): "28",
             (78, 78): "1",
@@ -376,6 +377,20 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
             (110, 113): "2025",
             (114, 114): "1",
             (115, 134): "1234567VK4713C0001XY",
+            (135, 139): "CL".ljust(5),
+            (140, 189): "CALLE MAYOR".ljust(50),
+            (190, 192): "NUM",
+            (193, 197): "12".ljust(5),
+            (198, 200): "BIS",
+            (201, 203): "A".ljust(3),
+            (204, 206): "1".ljust(3),
+            (207, 209): "2".ljust(3),
+            (210, 212): "03".ljust(3),
+            (213, 215): "B".ljust(3),
+            (216, 255): "EDIFICIO CENTRAL".ljust(40),
+            (256, 285): "MADRID".ljust(30),
+            (286, 315): "MADRID".ljust(30),
+            (316, 320): "28079",
             (321, 322): "28",
             (323, 327): "28013",
         },
@@ -388,6 +403,7 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
     assert casillas["decl.base-total"] == Decimal("1000.50")
     assert casillas["decl.retenciones-total"] == Decimal("190.10")
     assert casillas["perc.nif"] == "12345678Z"
+    assert casillas["perc.nif-representante-legal"] == "87654321X"
     assert casillas["perc.nombre"] == "ARRENDADOR EJEMPLO"
     assert casillas["perc.provincia"] == "28"
     assert casillas["perc.modalidad"] == "1"
@@ -397,6 +413,20 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
     assert casillas["perc.ejercicio-devengo"] == Decimal("2025")
     assert casillas["perc.situacion-inmueble"] == "1"
     assert casillas["perc.referencia-catastral"] == "1234567VK4713C0001XY"
+    assert casillas["perc.inmueble-tipo-via"] == "CL"
+    assert casillas["perc.inmueble-nombre-via"] == "CALLE MAYOR"
+    assert casillas["perc.inmueble-tipo-numeracion"] == "NUM"
+    assert casillas["perc.inmueble-numero-casa"] == "12"
+    assert casillas["perc.inmueble-calificador-numero"] == "BIS"
+    assert casillas["perc.inmueble-bloque"] == "A"
+    assert casillas["perc.inmueble-portal"] == "1"
+    assert casillas["perc.inmueble-escalera"] == "2"
+    assert casillas["perc.inmueble-planta"] == "03"
+    assert casillas["perc.inmueble-puerta"] == "B"
+    assert casillas["perc.inmueble-complemento"] == "EDIFICIO CENTRAL"
+    assert casillas["perc.inmueble-localidad"] == "MADRID"
+    assert casillas["perc.inmueble-municipio"] == "MADRID"
+    assert casillas["perc.inmueble-codigo-municipio"] == "28079"
     assert casillas["perc.inmueble-provincia"] == "28"
     assert casillas["perc.inmueble-codigo-postal"] == "28013"
 

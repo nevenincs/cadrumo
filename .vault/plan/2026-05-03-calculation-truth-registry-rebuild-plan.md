@@ -871,6 +871,13 @@ own ledger is checked.
     cadastral reference, property province, and property postal code for both
     covered revisions, with export refs bound to official fixed-width
     positions.
+  - [x] Modelo 180 representative identity field: define the optional type 2
+    legal-representative NIF at positions 27 through 35 for both covered
+    revisions.
+  - [x] Modelo 180 inmueble address block: define the official type 2 address
+    positions 135 through 320 for both covered revisions, including street,
+    numbering, block/access details, complement, locality, municipality, and
+    municipality code.
 - [ ] Modelo 180 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
@@ -889,6 +896,12 @@ own ledger is checked.
   - [x] Modelo 180 submitted-file profile expansion: include the newly declared
     perceptor identity, rent, accrual, cadastral, and property-location fields
     in the committed extraction target set.
+  - [x] Modelo 180 representative identity profile: include legal
+    representative NIF in the committed extraction target set for both covered
+    revisions.
+  - [x] Modelo 180 submitted-file address profile: include the full official
+    inmueble address block in the committed extraction target set for both
+    covered revisions.
 - [x] Modelo 180 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
@@ -914,6 +927,10 @@ own ledger is checked.
     identity, province, modality, retention percentage, accrual year, cadastral
     reference, property province, and property postal code through the committed
     registry layout.
+  - [x] Modelo 180 representative identity parser test: prove fixed-width
+    parsing of the optional legal-representative NIF field.
+  - [x] Modelo 180 address parser tests: prove fixed-width parsing of the type
+    2 inmueble address block through the committed registry layout.
 - [ ] Modelo 180 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or

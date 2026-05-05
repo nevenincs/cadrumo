@@ -216,6 +216,18 @@ legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
 [[revisions."2019-2022".casillas]]
+id = "perc.nif-representante-legal"
+number = "27-35"
+label = "NIF del representante legal del perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-nif-representante-legal"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
 id = "perc.nombre"
 number = "36-75"
 label = "Apellidos y nombre, razon social o denominacion del perceptor"
@@ -296,6 +308,174 @@ data_type = "text"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-referencia-catastral"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-tipo-via"
+number = "135-139"
+label = "Tipo de via del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-nombre-via"
+number = "140-189"
+label = "Nombre de la via publica del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-nombre-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-tipo-numeracion"
+number = "190-192"
+label = "Tipo de numeracion del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-numeracion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-numero-casa"
+number = "193-197"
+label = "Numero de casa del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-numero-casa"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-calificador-numero"
+number = "198-200"
+label = "Calificador del numero del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-calificador-numero"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-bloque"
+number = "201-203"
+label = "Bloque del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-bloque"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-portal"
+number = "204-206"
+label = "Portal del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-portal"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-escalera"
+number = "207-209"
+label = "Escalera del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-escalera"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-planta"
+number = "210-212"
+label = "Planta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-planta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-puerta"
+number = "213-215"
+label = "Puerta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-puerta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-complemento"
+number = "216-255"
+label = "Complemento de domicilio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-complemento"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-localidad"
+number = "256-285"
+label = "Localidad del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-localidad"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-municipio"
+number = "286-315"
+label = "Municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-municipio"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-codigo-municipio"
+number = "316-320"
+label = "Codigo de municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-codigo-municipio"]
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
@@ -573,6 +753,20 @@ legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
 [[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-nif-representante-legal"
+offset = 27
+length = 9
+kind = "casilla"
+casilla = "perc.nif-representante-legal"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-nombre"
 offset = 36
 length = 40
@@ -699,6 +893,202 @@ legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
 [[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-via"
+offset = 135
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-tipo-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-nombre-via"
+offset = 140
+length = 50
+kind = "casilla"
+casilla = "perc.inmueble-nombre-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-numeracion"
+offset = 190
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-tipo-numeracion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-numero-casa"
+offset = 193
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-numero-casa"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-calificador-numero"
+offset = 198
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-calificador-numero"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-bloque"
+offset = 201
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-bloque"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-portal"
+offset = 204
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-portal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-escalera"
+offset = 207
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-escalera"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-planta"
+offset = 210
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-planta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-puerta"
+offset = 213
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-puerta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-complemento"
+offset = 216
+length = 40
+kind = "casilla"
+casilla = "perc.inmueble-complemento"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-localidad"
+offset = 256
+length = 30
+kind = "casilla"
+casilla = "perc.inmueble-localidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-municipio"
+offset = 286
+length = 30
+kind = "casilla"
+casilla = "perc.inmueble-municipio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-codigo-municipio"
+offset = 316
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-codigo-municipio"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-inmueble-provincia"
 offset = 321
 length = 2
@@ -750,6 +1140,7 @@ target_casillas = [
     "decl.base-total",
     "decl.retenciones-total",
     "perc.nif",
+    "perc.nif-representante-legal",
     "perc.nombre",
     "perc.provincia",
     "perc.modalidad",
@@ -759,6 +1150,20 @@ target_casillas = [
     "perc.ejercicio-devengo",
     "perc.situacion-inmueble",
     "perc.referencia-catastral",
+    "perc.inmueble-tipo-via",
+    "perc.inmueble-nombre-via",
+    "perc.inmueble-tipo-numeracion",
+    "perc.inmueble-numero-casa",
+    "perc.inmueble-calificador-numero",
+    "perc.inmueble-bloque",
+    "perc.inmueble-portal",
+    "perc.inmueble-escalera",
+    "perc.inmueble-planta",
+    "perc.inmueble-puerta",
+    "perc.inmueble-complemento",
+    "perc.inmueble-localidad",
+    "perc.inmueble-municipio",
+    "perc.inmueble-codigo-municipio",
     "perc.inmueble-provincia",
     "perc.inmueble-codigo-postal",
 ]
@@ -1075,6 +1480,18 @@ legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284
 source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 
 [[revisions."2023-y-siguientes".casillas]]
+id = "perc.nif-representante-legal"
+number = "27-35"
+label = "NIF del representante legal del perceptor"
+section = ["perceptor", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-nif-representante-legal"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
 id = "perc.nombre"
 number = "36-75"
 label = "Apellidos y nombre, razon social o denominacion del perceptor"
@@ -1155,6 +1572,174 @@ data_type = "text"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-referencia-catastral"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-tipo-via"
+number = "135-139"
+label = "Tipo de via del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-nombre-via"
+number = "140-189"
+label = "Nombre de la via publica del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-nombre-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-tipo-numeracion"
+number = "190-192"
+label = "Tipo de numeracion del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-numeracion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-numero-casa"
+number = "193-197"
+label = "Numero de casa del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-numero-casa"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-calificador-numero"
+number = "198-200"
+label = "Calificador del numero del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-calificador-numero"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-bloque"
+number = "201-203"
+label = "Bloque del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-bloque"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-portal"
+number = "204-206"
+label = "Portal del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-portal"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-escalera"
+number = "207-209"
+label = "Escalera del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-escalera"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-planta"
+number = "210-212"
+label = "Planta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-planta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-puerta"
+number = "213-215"
+label = "Puerta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-puerta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-complemento"
+number = "216-255"
+label = "Complemento de domicilio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-complemento"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-localidad"
+number = "256-285"
+label = "Localidad del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-localidad"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-municipio"
+number = "286-315"
+label = "Municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-municipio"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "perc.inmueble-codigo-municipio"
+number = "316-320"
+label = "Codigo de municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-codigo-municipio"]
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 
@@ -1432,6 +2017,20 @@ legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2023"]
 
 [[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-nif-representante-legal"
+offset = 27
+length = 9
+kind = "casilla"
+casilla = "perc.nif-representante-legal"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-180-perc-nombre"
 offset = 36
 length = 40
@@ -1558,6 +2157,202 @@ legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2023"]
 
 [[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-via"
+offset = 135
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-tipo-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-nombre-via"
+offset = 140
+length = 50
+kind = "casilla"
+casilla = "perc.inmueble-nombre-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-numeracion"
+offset = 190
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-tipo-numeracion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-numero-casa"
+offset = 193
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-numero-casa"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-calificador-numero"
+offset = 198
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-calificador-numero"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-bloque"
+offset = 201
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-bloque"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-portal"
+offset = 204
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-portal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-escalera"
+offset = 207
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-escalera"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-planta"
+offset = 210
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-planta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-puerta"
+offset = 213
+length = 3
+kind = "casilla"
+casilla = "perc.inmueble-puerta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-complemento"
+offset = 216
+length = 40
+kind = "casilla"
+casilla = "perc.inmueble-complemento"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-localidad"
+offset = 256
+length = 30
+kind = "casilla"
+casilla = "perc.inmueble-localidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-municipio"
+offset = 286
+length = 30
+kind = "casilla"
+casilla = "perc.inmueble-municipio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-codigo-municipio"
+offset = 316
+length = 5
+kind = "casilla"
+casilla = "perc.inmueble-codigo-municipio"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-180-perc-inmueble-provincia"
 offset = 321
 length = 2
@@ -1609,6 +2404,7 @@ target_casillas = [
     "decl.base-total",
     "decl.retenciones-total",
     "perc.nif",
+    "perc.nif-representante-legal",
     "perc.nombre",
     "perc.provincia",
     "perc.modalidad",
@@ -1618,6 +2414,20 @@ target_casillas = [
     "perc.ejercicio-devengo",
     "perc.situacion-inmueble",
     "perc.referencia-catastral",
+    "perc.inmueble-tipo-via",
+    "perc.inmueble-nombre-via",
+    "perc.inmueble-tipo-numeracion",
+    "perc.inmueble-numero-casa",
+    "perc.inmueble-calificador-numero",
+    "perc.inmueble-bloque",
+    "perc.inmueble-portal",
+    "perc.inmueble-escalera",
+    "perc.inmueble-planta",
+    "perc.inmueble-puerta",
+    "perc.inmueble-complemento",
+    "perc.inmueble-localidad",
+    "perc.inmueble-municipio",
+    "perc.inmueble-codigo-municipio",
     "perc.inmueble-provincia",
     "perc.inmueble-codigo-postal",
 ]
