@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import UTC, datetime
+from calendar import monthrange
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, NamedTuple
 
@@ -12,21 +14,31 @@ import typer
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.auth import AeatSession
-from ...adapters.outbound.aeat.auth._providers import ClaveMovilSessionDetail
 from ...adapters.outbound.aeat.sede import (
     Declaration,
     FiledDeclarationObservationStore,
-    capture_filed_declaration_observation,
+    open_declarations_register,
+    registry_observation_from_filed_declaration,
     shared_playwright,
-    walk_declarations_register,
 )
-from ...application.auth import AuthProviderKind
+from ...adapters.persistence.storage import MasterKeyProvider
+from ...application.auth import AuthSessionUnavailableError, CorruptAuthSessionError, require_verified_aeat_session
 from ...core.config import Settings, load_settings
-from ...domain.calculations.registry import RegistryValidator, load_registry_tree, verify_workbook_backend
+from ...domain.calculations.registry import (
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+    resolve_previous_filing_binding_values,
+    resolve_relation_values_from_observations,
+    verify_workbook_backend,
+)
+from ...domain.calculations.registry._filed_state import (
+    RegistryFiledStateComparison,
+    compare_calculation_to_filed_observation,
+)
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
 from ._i18n import tr
-from .auth import _session
-from .auth._paths import storage_state_paths
 
 app = typer.Typer(
     name="registry",
@@ -147,6 +159,16 @@ class FiledDataListingReport(BaseModel):
     year_to: int
     row_count: int
     rows: tuple[FiledDataListingRow, ...]
+
+
+class FiledStateVerificationReport(BaseModel):
+    """Local registry calculation versus filed AEAT state verification report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    observation_path: str
+    source_observation_paths: tuple[str, ...]
+    comparison: RegistryFiledStateComparison
 
 
 class RegistryRevisionInventory(NamedTuple):
@@ -328,35 +350,32 @@ def _filed_data_listing_row(declaration: Declaration) -> FiledDataListingRow:
     )
 
 
-def _active_clave_movil_session() -> tuple[AeatSession, Settings]:
+def _load_filed_observation(path: Path, *, master_key_provider: MasterKeyProvider | None = None):
+    return FiledDeclarationObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
+
+
+def _filing_period_date(period: str, filing_year: int) -> date:
+    if period == "1T":
+        return date(filing_year, 3, 31)
+    if period == "2T":
+        return date(filing_year, 6, 30)
+    if period == "3T":
+        return date(filing_year, 9, 30)
+    if period in {"4T", "0A"}:
+        return date(filing_year, 12, 31)
+    if period.isdigit() and len(period) == 2:
+        month = int(period)
+        if 1 <= month <= 12:
+            return date(filing_year, month, monthrange(filing_year, month)[1])
+    return date(filing_year, 12, 31)
+
+
+async def _active_verified_session() -> tuple[AeatSession, Settings]:
     settings = load_settings()
-    persisted_session = _session.load(settings, AuthProviderKind.CLAVE_MOVIL)
-    if persisted_session is None:
-        raise typer.BadParameter(
-            "No active Cl@ve Movil AEAT session; run `aeat auth login --provider clave_movil` before reading filed data"
-        )
-    if persisted_session.is_expired(datetime.now(UTC)):
-        raise typer.BadParameter(
-            "Cl@ve Movil AEAT session is expired; "
-            "run `aeat auth login --provider clave_movil` before reading filed data"
-        )
-    if persisted_session.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
-        raise typer.BadParameter("Filed-data reads currently require an active Cl@ve Movil AEAT session")
-    return (
-        AeatSession(
-            provider_kind=persisted_session.provider_kind,
-            authenticated_at=persisted_session.authenticated_at,
-            idle_deadline=persisted_session.idle_deadline,
-            storage_state_path=storage_state_paths(settings, persisted_session.provider_kind).storage_state,
-            identity_nif=persisted_session.identity_nif,
-            provider_detail=ClaveMovilSessionDetail(
-                dni_nie=persisted_session.identity_nif,
-                used_non_qr_fallback=True,
-                verification_code=None,
-            ),
-        ),
-        settings,
-    )
+    try:
+        return await require_verified_aeat_session(settings), settings
+    except (AuthSessionUnavailableError, CorruptAuthSessionError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
 
 
 async def list_filed_data(
@@ -369,16 +388,20 @@ async def list_filed_data(
 
     if year_from > year_to:
         raise typer.BadParameter(tr("cli.registry.errors.invalid_year_range"))
-    session, settings = _active_clave_movil_session()
+    session, settings = await _active_verified_session()
     rows: list[FiledDataListingRow] = []
-    async with shared_playwright(session) as playwright:
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(
+            session,
+            settings=settings,
+            playwright=playwright,
+        ) as register,
+    ):
         for year in range(year_to, year_from - 1, -1):
-            declarations = await walk_declarations_register(
-                session,
+            declarations = await register.walk(
                 modelo=modelo,
                 ejercicio=year,
-                settings=settings,
-                playwright=playwright,
             )
             rows.extend(_filed_data_listing_row(declaration) for declaration in declarations)
     return FiledDataListingReport(
@@ -401,18 +424,22 @@ async def capture_filed_data(
 ) -> FiledDataCaptureReport:
     """Capture filed-declaration artefacts through the active AEAT session."""
 
-    session, _settings = _active_clave_movil_session()
+    session, _settings = await _active_verified_session()
     store = FiledDeclarationObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
     casilla_count = 0
 
-    async with shared_playwright(session) as playwright:
-        declarations = await walk_declarations_register(
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(
             session,
+            playwright=playwright,
+        ) as register,
+    ):
+        declarations = await register.walk(
             modelo=modelo,
             ejercicio=year,
-            playwright=playwright,
         )
         selected = select_declarations_for_capture(
             declarations,
@@ -421,10 +448,8 @@ async def capture_filed_data(
             limit=limit,
         )
         for declaration in selected:
-            observation = await capture_filed_declaration_observation(
-                session,
+            observation = await register.capture_observation(
                 declaration,
-                playwright=playwright,
                 artefact_sink=store.persist_artefact,
             )
             manifest_path = store.persist_observation(observation)
@@ -445,6 +470,76 @@ async def capture_filed_data(
         observation_paths=tuple(observation_paths),
         artefact_refs=tuple(artefact_refs),
         casilla_count=casilla_count,
+    )
+
+
+def verify_filed_state(
+    *,
+    observation_path: Path,
+    source_observation_paths: tuple[Path, ...] = (),
+    registry_root: Path = Path("registry/aeat"),
+    source_root: Path = Path("."),
+    required_casillas: tuple[str, ...] = (),
+    master_key_provider: MasterKeyProvider | None = None,
+) -> FiledStateVerificationReport:
+    """Compare a local registry calculation to a captured filed observation."""
+
+    filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
+    registry_observation = registry_observation_from_filed_declaration(filed_observation)
+    source_observations = tuple(
+        _load_filed_observation(path, master_key_provider=master_key_provider) for path in source_observation_paths
+    )
+    registry_source_observations = tuple(
+        registry_observation_from_filed_declaration(observation) for observation in source_observations
+    )
+    modelos, catalogues = load_registry_tree(registry_root)
+    modelo = next((item for item in modelos if item.id == filed_observation.modelo), None)
+    if modelo is None:
+        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=filed_observation.modelo))
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=source_root,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != "computed"}
+    inputs: dict[str, Decimal] = {
+        casilla_id: value
+        for casilla_id, value in registry_observation.casilla_values.items()
+        if casilla_id in input_casillas
+    }
+    binding_values = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        registry_source_observations,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        registry_source_observations,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    calculation = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": _filing_period_date(filed_observation.period, filed_observation.ejercicio)},
+        binding_values=binding_values,
+        relation_values=relation_values,
+    )
+    casillas = required_casillas or tuple(
+        casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"
+    )
+    comparison = compare_calculation_to_filed_observation(
+        calculation,
+        registry_observation,
+        required_casillas=casillas,
+    )
+    return FiledStateVerificationReport(
+        observation_path=str(observation_path),
+        source_observation_paths=tuple(str(path) for path in source_observation_paths),
+        comparison=comparison,
     )
 
 
@@ -647,6 +742,88 @@ def capture_filed_data_cmd(
     _emit_metric("artefact_refs", ",".join(report.artefact_refs))
 
 
+@app.command("verify-filed-state", help=tr("cli.registry.verify_filed_state_help"))
+def verify_filed_state_cmd(
+    observation_path: Annotated[
+        Path,
+        typer.Option(
+            "--observation",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            help=tr("cli.registry.observation_help"),
+        ),
+    ],
+    source_observation_paths: Annotated[
+        list[Path] | None,
+        typer.Option(
+            "--source-observation",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            help=tr("cli.registry.source_observation_help"),
+        ),
+    ] = None,
+    registry_root: Annotated[
+        Path,
+        typer.Option(
+            "--registry-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = Path("registry/aeat"),
+    source_root: Annotated[
+        Path,
+        typer.Option(
+            "--source-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.verify_source_root_help"),
+        ),
+    ] = Path("."),
+    required_casillas: Annotated[
+        list[str] | None,
+        typer.Option("--casilla", help=tr("cli.registry.casilla_help")),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help=tr("cli.registry.json_help")),
+    ] = False,
+) -> None:
+    """Verify local registry calculation output against captured filed state."""
+
+    report = verify_filed_state(
+        observation_path=observation_path,
+        source_observation_paths=tuple(source_observation_paths or ()),
+        registry_root=registry_root,
+        source_root=source_root,
+        required_casillas=tuple(required_casillas or ()),
+    )
+    if json_output:
+        typer.echo(report.model_dump_json(indent=2))
+        return
+    comparison = report.comparison
+    _emit_metric("status", comparison.status)
+    _emit_metric("modelo", comparison.modelo)
+    _emit_metric("revision", comparison.revision)
+    _emit_metric("compared_casillas", ",".join(comparison.compared_casillas))
+    _emit_metric("missing_local_casillas", ",".join(comparison.missing_local_casillas))
+    _emit_metric("missing_filed_casillas", ",".join(comparison.missing_filed_casillas))
+    _emit_metric("drift_count", len(comparison.drifts))
+    for drift in comparison.drifts:
+        _emit_metric(
+            "drift",
+            f"{drift.casilla_id}\tlocal={drift.local_value}\tfiled={drift.filed_value}\tdelta={drift.delta}",
+        )
+
+
 @workbooks_app.command("verify", help=tr("cli.registry.workbooks_verify_help"))
 def verify_workbooks_cmd(
     root: Annotated[
@@ -737,6 +914,7 @@ def render_report_json(report: object) -> str:
 
 __all__ = [
     "FiledDataCaptureReport",
+    "FiledStateVerificationReport",
     "RegistryTreeReport",
     "app",
     "capture_filed_data",
@@ -745,6 +923,8 @@ __all__ = [
     "inspect_registry_tree",
     "render_report_json",
     "select_declarations_for_capture",
+    "verify_filed_state",
+    "verify_filed_state_cmd",
     "verify_registry_cmd",
     "verify_registry_tree",
     "verify_workbooks_cmd",

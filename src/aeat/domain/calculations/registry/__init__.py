@@ -16,7 +16,11 @@ from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_ex
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
-from ._relations import resolve_relation_values
+from ._relations import (
+    relation_source_requirements,
+    resolve_relation_values,
+    resolve_relation_values_from_observations,
+)
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -160,12 +164,14 @@ __all__ = [
     "parse_export_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
+    "relation_source_requirements",
     "profile_condition_matches",
     "remote_state_policy_from_cross_reference",
     "resolve_bound_casilla_inputs",
     "resolve_export_layout",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
+    "resolve_relation_values_from_observations",
     "run_registry_workbook_parity",
     "run_workbook_with_excel_com",
     "run_workbook_with_libreoffice",

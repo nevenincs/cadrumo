@@ -90,12 +90,12 @@ cli:
           servicio (Service Account): {path}'
         session_stale: La sesión actual ha caducado y no se puede utilizar
         signed_in: Sesión iniciada correctamente
-        signed_out: Sesión cerrada correctamente
-        signed_out_many: Se han cerrado {n} sesiones correctamente
+        signed_out: Sesión cerrada para {label}
+        signed_out_many: Sesión cerrada para {joined}
         stale_or_revoked: La sesión ha caducado o ha sido revocada
-        unknown_provider: 'Proveedor de autenticación desconocido: {name}'
+        unknown_provider: 'Proveedor de autenticación desconocido: {raw}. Proveedores compatibles: {valid}'
         unsupported_env_file: Formato de archivo de entorno (.env) no compatible
-        unsupported_provider: El proveedor especificado no es compatible en este entorno
+        unsupported_provider: 'Proveedor no compatible: {raw}. Proveedores compatibles: {valid}'
       help: Inicializar el estado de autenticación del proyecto (Google, AEAT)
       json_help: Ruta al archivo JSON de credenciales
       labels:

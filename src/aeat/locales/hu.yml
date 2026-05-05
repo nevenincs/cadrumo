@@ -96,12 +96,14 @@ cli:
           található: {path}'
         session_stale: Az aktuális munkamenet lejárt és nem használható
         signed_in: Sikeres bejelentkezés
-        signed_out: Sikeres kijelentkezés
-        signed_out_many: Sikeres kijelentkezés {n} munkamenetből
+        signed_out: "Kijelentkezés innen: {label}"
+        signed_out_many: "Kijelentkezés innen: {joined}"
         stale_or_revoked: A munkamenet lejárt vagy visszavonásra került
-        unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {name}'
+        unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {raw}. Támogatott
+          szolgáltatók: {valid}'
         unsupported_env_file: Nem támogatott környezeti fájl (.env) formátum
-        unsupported_provider: A megadott szolgáltató nem támogatott ebben a környezetben
+        unsupported_provider: 'Nem támogatott szolgáltató: {raw}. Támogatott szolgáltatók:
+          {valid}'
       help: A projekt hitelesítési állapotának inicializálása (Google, AEAT)
       json_help: A JSON hitelesítő adatfájl útvonala
       labels:
