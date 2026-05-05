@@ -52,7 +52,7 @@ def invoice_import(
     if dry_run:
         _emit(
             ctx,
-            {tr("cli.invoice.labels.rows"): len(rows), tr("cli.invoice.labels.dry_run"): True},
+            {"rows": len(rows), "dry_run": True},
             [
                 f"{tr('cli.invoice.labels.rows')}\t{len(rows)}",
                 f"{tr('cli.invoice.labels.dry_run')}\t{tr('cli.invoice.labels.yes')}",
@@ -72,9 +72,9 @@ def invoice_import(
         imported += 1
     repo.save(InvoiceCatalogue.model_validate({"invoices": existing}))
     payload = {
-        tr("cli.invoice.labels.rows"): len(rows),
-        tr("cli.invoice.labels.imported"): imported,
-        tr("cli.invoice.labels.skipped"): skipped,
+        "rows": len(rows),
+        "imported": imported,
+        "skipped": skipped,
     }
     _emit(
         ctx,
@@ -173,12 +173,12 @@ def invoice_review(
                         iva = (base * rate_decimal).quantize(Decimal("0.01"))
 
                 payload = {
-                    tr("cli.invoice.labels.id"): inv.invoice_id,
-                    tr("cli.invoice.labels.kind"): inv.kind.value,
+                    "id": inv.invoice_id,
+                    "kind": inv.kind.value,
                     "issued_at": inv.issued_at.isoformat() if inv.issued_at else None,
-                    tr("cli.invoice.labels.base"): _fmt_decimal(base),
-                    tr("cli.invoice.labels.iva"): _fmt_decimal(iva),
-                    tr("cli.invoice.labels.payment"): review.fields.get("payment.id") if review else None,
+                    "base": _fmt_decimal(base),
+                    "iva": _fmt_decimal(iva),
+                    "payment": review.fields.get("payment.id") if review else None,
                     "review": review,
                     "verbose": verbose,
                 }
@@ -220,12 +220,12 @@ def invoice_review(
         status = _invoice_row_status(inv, state)
         payload["rows"].append(
             {
-                tr("cli.invoice.labels.id"): inv.invoice_id,
-                tr("cli.invoice.labels.kind"): inv.kind.value,
-                tr("cli.invoice.labels.base"): _fmt_decimal(base),
-                tr("cli.invoice.labels.iva"): _fmt_decimal(iva),
-                tr("cli.invoice.labels.status"): status,
-                tr("cli.invoice.labels.payment"): review.fields.get("payment.id") if review else None,
+                "id": inv.invoice_id,
+                "kind": inv.kind.value,
+                "base": _fmt_decimal(base),
+                "iva": _fmt_decimal(iva),
+                "status": status,
+                "payment": review.fields.get("payment.id") if review else None,
             }
         )
 
@@ -295,7 +295,7 @@ def invoice_edit(
     review = updated.invoice_reviews.get(invoice_id)
     _emit(
         ctx,
-        {tr("cli.invoice.labels.id"): invoice_id, "review": review},
+        {"id": invoice_id, "review": review},
         [
             f"{tr('cli.invoice.labels.id')}\t{invoice_id}",
             f"{tr('cli.invoice.labels.fields')}\t{', '.join(sorted(review.fields)) if review else '-'}",
@@ -330,7 +330,7 @@ def invoice_match(
         )
         _emit(
             ctx,
-            {"invoice": invoice_id, "payment": ledger_id, tr("cli.invoice.labels.status"): "matched"},
+            {"invoice": invoice_id, "payment": ledger_id, "status": "matched"},
             [f"{tr('cli.invoice.labels.matched')}\t{tr('cli.invoice.labels.yes')}"],
         )
         return
@@ -349,9 +349,9 @@ def invoice_match(
         else:
             unmatched.append({"invoice": inv.invoice_id})
     payload = {
-        tr("cli.invoice.labels.period"): canonical,
-        tr("cli.invoice.labels.matched"): matched,
-        tr("cli.invoice.labels.unmatched"): unmatched,
+        "period": canonical,
+        "matched": matched,
+        "unmatched": unmatched,
     }
     lines: list[str] = [
         f"{tr('cli.invoice.labels.period')}\t{canonical}",

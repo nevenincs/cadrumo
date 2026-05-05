@@ -342,7 +342,7 @@ cli:
       missing_id_or_period_modelo: ID or (period + tax form) must be provided
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
-      profile_tax_id_required: The active profile requires a configured Tax ID (NIF/CIF)
+      profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF). Run: aeat setup profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to the official AEAT format
     format_help: Output format (e.g. json, text, table)
