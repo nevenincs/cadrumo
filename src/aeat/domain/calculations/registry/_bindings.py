@@ -94,6 +94,7 @@ def previous_filing_observation_requirements(
     *,
     filing_year: int,
     period: str,
+    source_schedule_ids: Mapping[str, str] | None = None,
 ) -> tuple[RegistryFilingObservationRequirement, ...]:
     """Return filed declarations needed by previous-filing bindings."""
 
@@ -103,7 +104,7 @@ def previous_filing_observation_requirements(
             continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
-        for required_period in selector.required_periods:
+        for required_period in _binding_requirement_periods(selector, source_schedule_ids):
             key = (selector.source_modelo, expected_year, required_period)
             bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
             bucket["binding_ids"].add(binding.id)
@@ -126,6 +127,7 @@ def resolve_previous_filing_binding_values(
     *,
     filing_year: int,
     period: str,
+    source_schedule_ids: Mapping[str, str] | None = None,
 ) -> dict[str, Decimal]:
     """Resolve previous-filing bindings from observed filed declarations."""
 
@@ -137,7 +139,7 @@ def resolve_previous_filing_binding_values(
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         values = []
-        for required_period in selector.required_periods:
+        for required_period in _selected_binding_periods(selector, available, expected_year, source_schedule_ids):
             matches = tuple(
                 observation
                 for observation in available
@@ -162,6 +164,21 @@ def resolve_previous_filing_binding_values(
     return resolved
 
 
+class _PreviousFilingPeriodSet(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    id: str = Field(min_length=1)
+    source_schedule_id: str | None = Field(default=None, min_length=1)
+    source_periods: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("previous-filing source period set entries must be unique")
+        return value
+
+
 class _PreviousFilingSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -169,6 +186,7 @@ class _PreviousFilingSelector(BaseModel):
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
+    source_period_sets: tuple[_PreviousFilingPeriodSet, ...] = ()
     source_casillas: tuple[str, ...] = Field(min_length=1)
 
     @field_validator("source_periods")
@@ -176,6 +194,21 @@ class _PreviousFilingSelector(BaseModel):
     def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise ValueError("previous-filing source_periods entries must be unique")
+        return value
+
+    @field_validator("source_period_sets")
+    @classmethod
+    def _source_period_sets_unique(
+        cls, value: tuple[_PreviousFilingPeriodSet, ...]
+    ) -> tuple[_PreviousFilingPeriodSet, ...]:
+        ids = [period_set.id for period_set in value]
+        if len(set(ids)) != len(ids):
+            raise ValueError("previous-filing source period set ids must be unique")
+        schedule_ids = [
+            period_set.source_schedule_id for period_set in value if period_set.source_schedule_id is not None
+        ]
+        if len(set(schedule_ids)) != len(schedule_ids):
+            raise ValueError("previous-filing source schedule ids must be unique")
         return value
 
     @property
@@ -200,10 +233,9 @@ class _PreviousFilingSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_period_selector(self) -> _PreviousFilingSelector:
-        if self.period is not None and self.source_periods:
-            raise ValueError("previous-filing selector must use period or source_periods, not both")
-        if self.period is None and not self.source_periods:
-            raise ValueError("previous-filing selector must declare period or source_periods")
+        declared = sum((self.period is not None, bool(self.source_periods), bool(self.source_period_sets)))
+        if declared != 1:
+            raise ValueError("previous-filing selector must declare exactly one period selector")
         return self
 
 
@@ -212,6 +244,79 @@ def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFiling
         return _PreviousFilingSelector.model_validate(binding.selector)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+def _binding_requirement_periods(
+    selector: _PreviousFilingSelector,
+    source_schedule_ids: Mapping[str, str] | None,
+) -> tuple[str, ...]:
+    if not selector.source_period_sets:
+        return selector.required_periods
+    selected_schedule = (source_schedule_ids or {}).get(selector.source_modelo)
+    if selected_schedule is None:
+        return tuple(period for period_set in selector.source_period_sets for period in period_set.source_periods)
+    for period_set in selector.source_period_sets:
+        if period_set.source_schedule_id == selected_schedule:
+            return period_set.source_periods
+    raise RegistryValidationError(
+        f"previous-filing selector for {selector.source_modelo!r} has no period set for schedule {selected_schedule!r}"
+    )
+
+
+def _selected_binding_periods(
+    selector: _PreviousFilingSelector,
+    observations: tuple[RegistryFilingObservation, ...],
+    filing_year: int,
+    source_schedule_ids: Mapping[str, str] | None,
+) -> tuple[str, ...]:
+    if not selector.source_period_sets:
+        return selector.required_periods
+    selected_schedule = (source_schedule_ids or {}).get(selector.source_modelo)
+    candidates = (
+        tuple(
+            period_set
+            for period_set in selector.source_period_sets
+            if period_set.source_schedule_id == selected_schedule
+        )
+        if selected_schedule is not None
+        else selector.source_period_sets
+    )
+    complete = tuple(
+        period_set
+        for period_set in candidates
+        if _has_observations_for_period_set(selector, period_set.source_periods, observations, filing_year)
+    )
+    if len(complete) == 1:
+        return complete[0].source_periods
+    if selected_schedule is not None:
+        raise RegistryValidationError(
+            f"previous-filing selector for {selector.source_modelo!r} schedule {selected_schedule!r} "
+            f"does not have one complete observed period set"
+        )
+    if not complete:
+        raise RegistryValidationError(
+            f"previous-filing selector for {selector.source_modelo!r} does not match a complete observed period set"
+        )
+    raise RegistryValidationError(
+        f"previous-filing selector for {selector.source_modelo!r} matches multiple complete period sets"
+    )
+
+
+def _has_observations_for_period_set(
+    selector: _PreviousFilingSelector,
+    periods: tuple[str, ...],
+    observations: tuple[RegistryFilingObservation, ...],
+    filing_year: int,
+) -> bool:
+    return all(
+        any(
+            observation.modelo == selector.source_modelo
+            and observation.filing_year == filing_year
+            and observation.period == period
+            for observation in observations
+        )
+        for period in periods
+    )
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:

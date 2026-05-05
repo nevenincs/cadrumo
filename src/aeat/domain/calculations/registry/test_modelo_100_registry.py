@@ -113,7 +113,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert set(payments_retentions.bindings) == filed_dependency_bindings
     assert set(payments_retentions.relations) == {relation.id for relation in snapshot.revision.relations}
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
-    assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
+    assert {"1474", "1479", "1484", "1553", "1560", "1577"}.issubset(economic_activities.casillas)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
@@ -496,12 +496,13 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     <TomaDatosAmpliada>
       <RegEstimaObj>
         <ActividadEstObj>
-          <E4AL>214.00</E4AL>
+          <E4AE>30.00</E4AE>
+          <E4AL>20.00</E4AL>
         </ActividadEstObj>
       </RegEstimaObj>
       <RegEstimaObjAgricola>
         <ActividadAgr>
-          <E5AK>315.00</E5AK>
+          <E5AK>138.00</E5AK>
         </ActividadAgr>
       </RegEstimaObjAgricola>
       <RegimenesEspeciales>
@@ -512,6 +513,14 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         </REAtRentas>
       </RegimenesEspeciales>
     </TomaDatosAmpliada>
+    <Resultados>
+      <RegEstimaObjRes>
+        <E4TOTAL>20.00</E4TOTAL>
+      </RegEstimaObjRes>
+      <RegEstimaObjAgricolaRes>
+        <E5TOTAL>131.00</E5TOTAL>
+      </RegEstimaObjAgricolaRes>
+    </Resultados>
   </DatosEconomicos>
 </Renta>
 """
@@ -524,10 +533,43 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
-        "1479": Decimal("214.00"),
-        "1553": Decimal("315.00"),
+        "1474": Decimal("30.00"),
+        "1479": Decimal("20.00"),
+        "1484": Decimal("20.00"),
+        "1553": Decimal("138.00"),
+        "1560": Decimal("131.00"),
         "1577": Decimal("128.00"),
     }
+
+
+def test_modelo_100_objective_estimation_totals_are_calculated_from_reduced_activity_rows() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "1479": Decimal("20.00"),
+            "1480": Decimal("3.00"),
+            "1483": Decimal("2.00"),
+            "1553": Decimal("138.00"),
+            "1554": Decimal("8.00"),
+            "1559": Decimal("5.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+        },
+    )
+
+    assert result.values["1481"] == Decimal("17.00")
+    assert result.values["1482"] == Decimal("17.00")
+    assert result.values["1484"] == Decimal("15.00")
+    assert result.values["1555"] == Decimal("130.00")
+    assert result.values["1558"] == Decimal("130.00")
+    assert result.values["1560"] == Decimal("125.00")
 
 
 def test_construct_reader_rejects_unknown_construct_id() -> None:

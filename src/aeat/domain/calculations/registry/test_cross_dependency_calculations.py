@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -38,24 +38,27 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
                     }
                     if active_relation_ids != relation_ids:
                         continue
-                    requirements = relation_source_requirements(
-                        revision,
-                        filing_year=filing_year,
-                        period=period,
-                    )
-                    observations = _observations_from_requirements(
-                        requirements,
-                        lambda _requirement, period_index: Decimal(period_index + 1),
-                    )
+                    for source_schedule_ids in _relation_schedule_scenarios(revision):
+                        requirements = relation_source_requirements(
+                            revision,
+                            filing_year=filing_year,
+                            period=period,
+                            source_schedule_ids=source_schedule_ids,
+                        )
+                        observations = _observations_from_requirements(
+                            requirements,
+                            lambda _requirement, period_index: Decimal(period_index + 1),
+                        )
 
-                    resolved = resolve_relation_values_from_observations(
-                        revision,
-                        observations,
-                        filing_year=filing_year,
-                        period=period,
-                    )
+                        resolved = resolve_relation_values_from_observations(
+                            revision,
+                            observations,
+                            filing_year=filing_year,
+                            period=period,
+                            source_schedule_ids=source_schedule_ids,
+                        )
 
-                    assert set(resolved) == relation_ids, f"{modelo.id}/{revision.id}/{filing_year}/{period}"
+                        assert set(resolved) == relation_ids, f"{modelo.id}/{revision.id}/{filing_year}/{period}"
 
 
 @pytest.mark.parametrize(
@@ -122,7 +125,12 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
         filing_year=2026,
         period="0A",
     )
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=2026,
+        period="0A",
+        source_schedule_ids={"111": "modelo-111-trimestral"},
+    )
     observations = _observations_from_requirements(
         requirements,
         lambda requirement, period_index: {
@@ -153,6 +161,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
         observations,
         filing_year=2026,
         period="0A",
+        source_schedule_ids={"111": "modelo-111-trimestral"},
     )
     result = calculate_registry_snapshot(
         snapshot,
@@ -168,6 +177,66 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
     assert len(entries["decl.total-percepciones"].operand_refs) == 9
     assert len(entries["decl.percepciones-total"].operand_refs) == 9
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
+
+
+def test_modelo_190_calculation_resolves_modelo_111_monthly_filings() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "190")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=2026,
+        period="0A",
+        source_schedule_ids={"111": "modelo-111-mensual"},
+    )
+    observations = _observations_from_requirements(
+        requirements,
+        lambda requirement, period_index: {
+            "01": Decimal("1") if period_index < 6 else Decimal("0"),
+            "04": Decimal("1") if period_index in {0, 6} else Decimal("0"),
+            "07": Decimal("1"),
+            "10": Decimal("0"),
+            "13": Decimal("1") if period_index in {2, 8} else Decimal("0"),
+            "16": Decimal("0"),
+            "19": Decimal("1") if period_index == 11 else Decimal("0"),
+            "22": Decimal("0"),
+            "25": Decimal("0"),
+            "02": Decimal("100.00"),
+            "05": Decimal("25.00") if period_index in {0, 6} else Decimal("0.00"),
+            "08": Decimal("75.00"),
+            "11": Decimal("0.00"),
+            "14": Decimal("40.00") if period_index in {2, 8} else Decimal("0.00"),
+            "17": Decimal("0.00"),
+            "20": Decimal("60.00") if period_index == 11 else Decimal("0.00"),
+            "23": Decimal("0.00"),
+            "26": Decimal("0.00"),
+            "28": Decimal("19.50"),
+        }[requirement.source_output],
+    )
+
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=2026,
+        period="0A",
+        source_schedule_ids={"111": "modelo-111-mensual"},
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2026, 12, 31)},
+        relation_values=relation_values,
+    )
+
+    assert result.values["decl.total-percepciones"] == Decimal("23")
+    assert result.values["decl.percepciones-total"] == Decimal("2290.00")
+    assert result.values["decl.retenciones-total"] == Decimal("234.00")
 
 
 def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() -> None:
@@ -370,6 +439,23 @@ def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
         midpoint = year_from + ((year_to - year_from) // 2)
         return tuple(dict.fromkeys((year_from, midpoint, year_to)))
     return (year_from, year_from + 1, year_from + 7)
+
+
+def _relation_schedule_scenarios(revision: ModeloRevision) -> tuple[Mapping[str, str], ...]:
+    schedule_ids_by_modelo: dict[str, list[str]] = {}
+    for relation in revision.relations:
+        for period_set in relation.source_period_sets:
+            if period_set.source_schedule_id is None:
+                continue
+            schedule_ids = schedule_ids_by_modelo.setdefault(str(relation.source_modelo), [])
+            if period_set.source_schedule_id not in schedule_ids:
+                schedule_ids.append(period_set.source_schedule_id)
+    if not schedule_ids_by_modelo:
+        return ({},)
+    scenarios: list[dict[str, str]] = [{}]
+    for source_modelo, schedule_ids in sorted(schedule_ids_by_modelo.items()):
+        scenarios = [scenario | {source_modelo: schedule_id} for scenario in scenarios for schedule_id in schedule_ids]
+    return tuple(scenarios)
 
 
 def _renta_relation_observed_value(requirement: RegistryRelationSourceRequirement, period_index: int) -> Decimal:

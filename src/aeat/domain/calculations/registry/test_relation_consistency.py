@@ -42,13 +42,14 @@ def test_registry_relations_reference_existing_modelo_outputs_and_target_binding
                 )
 
             revision_periods = set(source_revision.period_selector.periods)
-            relation_periods = set(relation.source_periods)
-            if relation_periods and not relation_periods.issubset(revision_periods):
-                unknown_periods = sorted(relation_periods - revision_periods)
-                errors.append(
-                    f"{modelo.id}/{revision.id}/{relation.id}: source periods {unknown_periods} "
-                    f"not accepted by {source_modelo.id}/{source_revision.id}"
-                )
+            for period_set_id, source_periods in _relation_source_period_sets(relation):
+                relation_periods = set(source_periods)
+                if relation_periods and not relation_periods.issubset(revision_periods):
+                    unknown_periods = sorted(relation_periods - revision_periods)
+                    errors.append(
+                        f"{modelo.id}/{revision.id}/{relation.id}: period set {period_set_id} "
+                        f"source periods {unknown_periods} not accepted by {source_modelo.id}/{source_revision.id}"
+                    )
 
     assert not errors
 
@@ -122,10 +123,25 @@ def _binding_source_periods(binding: DataBindingDefinition) -> tuple[str, ...]:
     source_periods = binding.selector.get("source_periods")
     if isinstance(source_periods, tuple):
         return source_periods
+    source_period_sets = binding.selector.get("source_period_sets")
+    if isinstance(source_period_sets, tuple):
+        periods: list[str] = []
+        for period_set in source_period_sets:
+            if isinstance(period_set, dict):
+                period_set_periods = period_set.get("source_periods")
+                if isinstance(period_set_periods, tuple):
+                    periods.extend(str(period) for period in period_set_periods)
+        return tuple(dict.fromkeys(periods))
     period = binding.selector.get("period")
     if isinstance(period, str):
         return (period,)
     return ()
+
+
+def _relation_source_period_sets(relation: RelationDefinition) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    if relation.source_period_sets:
+        return tuple((period_set.id, period_set.source_periods) for period_set in relation.source_period_sets)
+    return (("default", relation.source_periods),)
 
 
 def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:

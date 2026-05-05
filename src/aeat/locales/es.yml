@@ -733,25 +733,25 @@ cli:
     profile:
       app_help: Gestión de perfiles financieros
       errors:
-        at_least_one: Se requiere al menos un campo o perfil
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: ¿Quiso decir...?
         eligible_categories: Categorías elegibles
         family_aliases: Alias familiares
         invalid_ratio: Ratio o porcentaje no válido
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Clave o propiedad desconocida en el perfil
       headers:
         ratios: Ratios / Repartos
       labels:
         no_active: No hay un perfil activo seleccionado
-        profile_not_found: Perfil financiero no encontrado
-        switched: Perfil financiero cambiado correctamente
       ratios_help: Definir ratios de reparto para el perfil financiero
       ratios_list_help: Listar los ratios de reparto definidos en el perfil
       set_ratio_help: Establecer un ratio de reparto específico
-      set_ratio_key_help: Clave o categoría del ratio
+      set_ratio_key_help: 'Clave o categoría del ratio. Alias de familia: %{aliases}'
       set_ratio_value_help: Valor del ratio (p. ej., 0.5 para 50%)
       unset_ratio_help: Eliminar un ratio de reparto específico
-      unset_ratio_key_help: Clave o categoría del ratio a eliminar
+      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia: %{aliases}'
     txs:
       app_help: Gestión de transacciones bancarias
   financial_invoices:
@@ -911,7 +911,6 @@ cli:
       'no': 'No'
       rows: Filas
       skipped: Omitidos
-      status: Estado
       'yes': Sí
     review:
       filter_help: Filtrar entradas del libro a revisar (p. ej., por fecha o importe)
@@ -1032,6 +1031,16 @@ cli:
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
+    parity_output_help: Archivo JSON de destino para la cinta de paridad generada
+    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
+      actual del registro
+    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
+      resultante
+    parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
+    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
+      generadas
+    parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     period_help: cli.registry.period_help
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones

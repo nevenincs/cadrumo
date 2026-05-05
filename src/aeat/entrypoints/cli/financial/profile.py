@@ -109,8 +109,19 @@ def set_ratio_cmd(
             typer.echo(str(exc), err=True)
             raise typer.Exit(code=2) from exc
     _save_profile(updated)
-    for _category in categories:
-        typer.echo(tr("cli.financial.profile.labels.switched", name=key))
+    for category in categories:
+        # Stable CLI confirmation echo: "set <category> = <value>". The
+        # category id and the formatted ratio are non-translated tokens
+        # that downstream tooling (and the operator's eye) can pin
+        # against; locale-sensitive copy is reserved for help / errors.
+        typer.echo(f"set {category.value} = {_format_ratio(ratio)}")
+
+
+def _format_ratio(value: Decimal) -> str:
+    """Render a ratio without trailing zeros (``Decimal('0.21')`` → ``'0.21'``)."""
+    if value == value.to_integral_value():
+        return format(value.quantize(Decimal("1")), "f")
+    return format(value.normalize(), "f")
 
 
 @app.command(name="unset-ratio", help=tr("cli.financial.profile.unset_ratio_help"))
@@ -137,11 +148,14 @@ def unset_ratio_cmd(
             updated = updated.without_ratio(category)
             removed.append(category)
     if not removed:
-        typer.echo(tr("cli.financial.profile.labels.profile_not_found"))
+        # Idempotent: no-op when the target category had no override.
+        # Echo the (non-translated) key so the operator sees which key
+        # was inspected.
+        typer.echo(f"no user ratio set for {key}")
         return
     _save_profile(updated)
-    for _category in removed:
-        typer.echo(tr("cli.financial.profile.labels.switched", name=key))
+    for category in removed:
+        typer.echo(f"unset {category.value}")
 
 
 def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
@@ -174,10 +188,10 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
         typer.echo(_format_unknown_key_hint(raw), err=True)
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
-        typer.echo(
-            tr("cli.financial.profile.errors.at_least_one", category=category.value),
-            err=True,
-        )
+        eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        lines = [tr("cli.financial.profile.errors.category_not_eligible", category=category.value)]
+        lines.append(_indented_wrap(tr("cli.financial.profile.errors.eligible_categories"), eligible))
+        typer.echo("\n".join(lines), err=True)
         raise typer.Exit(code=2)
     return (category,)
 
@@ -264,19 +278,19 @@ def _parse_ratio(raw: str) -> Decimal:
         ratio = Decimal(raw)
     except InvalidOperation as exc:
         typer.echo(
-            tr("cli.financial.profile.errors.invalid_ratio"),
+            tr("cli.financial.profile.errors.invalid_ratio", raw=raw),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not ratio.is_finite():
         typer.echo(
-            tr("cli.financial.profile.errors.invalid_ratio"),
+            tr("cli.financial.profile.errors.must_be_finite", raw=raw),
             err=True,
         )
         raise typer.Exit(code=2)
     if not (Decimal("0") <= ratio <= Decimal("1")):
         typer.echo(
-            tr("cli.financial.profile.errors.invalid_ratio"),
+            tr("cli.financial.profile.errors.out_of_range", raw=raw),
             err=True,
         )
         raise typer.Exit(code=2)

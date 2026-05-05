@@ -15,6 +15,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._errors.RegistryError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._errors.RegistryLoadError",
+        ErrorCode(
+            code="FAIL_CALCULATIONS_REGISTRY_LOAD",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_calculations_registry_load",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._errors.RegistrySnapshotError",
+        ErrorCode(
+            code="INTEGRITY_CALCULATIONS_REGISTRY_SNAPSHOT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._errors.RegistryValidationError",
+        ErrorCode(
+            code="INTEGRITY_CALCULATIONS_REGISTRY_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_calculations_registry_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.deadlines._errors.DeadlineError",
         ErrorCode(
             code="ERROR_DEADLINES_DEADLINE",

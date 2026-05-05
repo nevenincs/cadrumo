@@ -230,7 +230,14 @@ class SourceCitation(RegistryModel):
 
 class ExtractionProfileDefinition(RegistryModel):
     id: ExtractionProfileId
-    surface: Literal["borrador_pdf", "declaracion_pdf", "justificante_pdf", "export_record", "official_workbook"]
+    surface: Literal[
+        "borrador_pdf",
+        "declaracion_pdf",
+        "justificante_pdf",
+        "export_record",
+        "official_workbook",
+        "filed_declaration_register",
+    ]
     artefact_kind: str
     accepted_artefact_kinds: tuple[
         Literal["submitted_file", "declaration_pdf", "justificante_pdf", "official_workbook"],
@@ -627,10 +634,24 @@ class ParameterDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
+class SourcePeriodSetDefinition(RegistryModel):
+    id: str = Field(min_length=1)
+    source_schedule_id: str | None = Field(default=None, min_length=1)
+    source_periods: tuple[str, ...] = Field(min_length=1)
+    period_alignment: Mapping[str, str | int] = Field(default_factory=dict)
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("source period set entries must be unique")
+        return value
+
+
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal["ledger", "invoice", "rental", "vat", "category", "profile", "previous_filing", "manual_input"]
-    selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
+    selector: Mapping[str, Any]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -715,6 +736,7 @@ class RelationDefinition(RegistryModel):
     target_binding: BindingId
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()
+    source_period_sets: tuple[SourcePeriodSetDefinition, ...] = ()
     target_periods: tuple[str, ...] = ()
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
@@ -727,10 +749,29 @@ class RelationDefinition(RegistryModel):
             raise ValueError("relation periods must be unique")
         return value
 
+    @field_validator("source_period_sets")
+    @classmethod
+    def _relation_source_period_sets_unique(
+        cls, value: tuple[SourcePeriodSetDefinition, ...]
+    ) -> tuple[SourcePeriodSetDefinition, ...]:
+        ids = [period_set.id for period_set in value]
+        if len(set(ids)) != len(ids):
+            raise ValueError("relation source period set ids must be unique")
+        schedule_ids = [
+            period_set.source_schedule_id for period_set in value if period_set.source_schedule_id is not None
+        ]
+        if len(set(schedule_ids)) != len(schedule_ids):
+            raise ValueError("relation source schedule ids must be unique")
+        return value
+
     @model_validator(mode="after")
     def _validate_dependency_role(self) -> RelationDefinition:
         if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
             raise ValueError(f"annual summary relation {self.id!r} must use periodic_to_annual_summary role")
+        if self.source_periods and self.source_period_sets:
+            raise ValueError(f"relation {self.id!r} must use source_periods or source_period_sets, not both")
+        if not self.source_periods and not self.source_period_sets:
+            raise ValueError(f"relation {self.id!r} must declare source periods")
         return self
 
 

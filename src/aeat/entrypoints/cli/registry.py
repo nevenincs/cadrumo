@@ -30,9 +30,15 @@ from ...domain.calculations.registry import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
+    generate_parity_tape_path,
+    load_parity_scenario,
+    load_parity_tape,
     load_registry_tree,
+    replay_parity_tape,
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
+    run_parity_scenario,
+    save_parity_tape,
     verify_workbook_backend,
 )
 from ...domain.calculations.registry._filed_state import (
@@ -54,7 +60,14 @@ workbooks_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+parity_app = typer.Typer(
+    name="parity",
+    help=tr("cli.registry.parity_app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
 app.add_typer(workbooks_app, name="workbooks")
+app.add_typer(parity_app, name="parity")
 
 
 class RegistryTreeReport(BaseModel):
@@ -1066,6 +1079,145 @@ def verify_workbooks_cmd(
     _emit_metric("runner_detail", report.runner.detail)
 
 
+@parity_app.command("run", help=tr("cli.registry.parity_run_help"))
+def run_parity_cmd(
+    scenario_path: Annotated[
+        Path,
+        typer.Option(
+            "--scenario",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            help=tr("cli.registry.parity_scenario_help"),
+        ),
+    ],
+    registry_root: Annotated[
+        Path,
+        typer.Option(
+            "--registry-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = Path("registry/aeat"),
+    source_root: Annotated[
+        Path,
+        typer.Option(
+            "--source-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.verify_source_root_help"),
+        ),
+    ] = Path("."),
+    store_root: Annotated[
+        Path,
+        typer.Option(
+            "--store-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.registry.parity_store_root_help"),
+        ),
+    ] = Path("var/aeat/parity"),
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            file_okay=True,
+            dir_okay=False,
+            writable=True,
+            help=tr("cli.registry.parity_output_help"),
+        ),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help=tr("cli.registry.json_help")),
+    ] = False,
+) -> None:
+    """Run one stored parity scenario and archive the resulting tape."""
+
+    scenario = load_parity_scenario(scenario_path)
+    tape = run_parity_scenario(
+        scenario,
+        registry_root=registry_root,
+        source_root=source_root,
+        scenario_path=scenario_path,
+    )
+    target = output or generate_parity_tape_path(store_root, scenario.id, tape.created_at)
+    save_parity_tape(tape, target)
+    if json_output:
+        typer.echo(tape.model_dump_json(indent=2))
+        return
+    _emit_metric("scenario_id", tape.scenario.id)
+    _emit_metric("status", tape.report.status)
+    _emit_metric("tape_path", target.as_posix())
+    _emit_metric("workbook_path", tape.scenario.workbook_path.as_posix())
+    _emit_metric("comparison_count", len(tape.report.comparisons))
+
+
+@parity_app.command("replay", help=tr("cli.registry.parity_replay_help"))
+def replay_parity_cmd(
+    tape_path: Annotated[
+        Path,
+        typer.Option(
+            "--tape",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            help=tr("cli.registry.parity_tape_help"),
+        ),
+    ],
+    registry_root: Annotated[
+        Path,
+        typer.Option(
+            "--registry-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = Path("registry/aeat"),
+    source_root: Annotated[
+        Path,
+        typer.Option(
+            "--source-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.verify_source_root_help"),
+        ),
+    ] = Path("."),
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help=tr("cli.registry.json_help")),
+    ] = False,
+) -> None:
+    """Replay one archived parity tape against the current registry runtime."""
+
+    tape = load_parity_tape(tape_path)
+    report = replay_parity_tape(
+        tape,
+        registry_root=registry_root,
+        source_root=source_root,
+        tape_path=tape_path,
+    )
+    if json_output:
+        typer.echo(report.model_dump_json(indent=2))
+        return
+    _emit_metric("scenario_id", report.scenario_id)
+    _emit_metric("status", report.status)
+    _emit_metric("difference_count", len(report.differences))
+    _emit_metric("differences", ",".join(report.differences))
+
+
 def _json_default(value: object) -> str:
     return str(value)
 
@@ -1091,6 +1243,7 @@ __all__ = [
     "capture_source_filed_data_cmd",
     "inspect_registry_cmd",
     "inspect_registry_tree",
+    "parity_app",
     "render_report_json",
     "select_declarations_for_capture",
     "verify_filed_state",
