@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     CategoryCitation,
     CategoryCitationSource,
@@ -33,7 +34,7 @@ def _citation() -> CategoryCitation:
         reference="Ley 35/2006",
         locator="art. 30",
         url=parse_http_url("https://example.com/ley"),
-        quote="Texto de prueba.",
+        quote=tr("Texto de prueba."),
     )
 
 
@@ -44,7 +45,7 @@ def test_fixed_percentage_requires_percentage() -> None:
         ProportionalityRule(
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=(_citation(),),
-            notes="Falta el porcentaje.",
+            notes=tr("Falta el porcentaje."),
         )
 
 
@@ -55,7 +56,7 @@ def test_statutory_cap_requires_cap() -> None:
         ProportionalityRule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=(_citation(),),
-            notes="Falta el tope.",
+            notes=tr("Falta el tope."),
         )
 
 
@@ -67,7 +68,7 @@ def test_full_deductible_rejects_default_ratio() -> None:
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             default_ratio=Decimal("0.30"),
             citations=(_citation(),),
-            notes="Valor incompatible.",
+            notes=tr("Valor incompatible."),
         )
 
 
@@ -80,7 +81,7 @@ def test_usage_ratio_rejects_statutory_cap_fields() -> None:
             default_ratio=Decimal("0.30"),
             statutory_cap_eur_per_day=Decimal("50"),
             citations=(_citation(),),
-            notes="Forma incompatible.",
+            notes=tr("Forma incompatible."),
         )
 
 
@@ -92,7 +93,7 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
         statutory_cap_eur=Decimal("500"),
         statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         citations=(_citation(),),
-        notes="Tope anual.",
+        notes=tr("Tope anual."),
     )
 
     assert rule.statutory_cap_eur == Decimal("500")
@@ -107,17 +108,17 @@ def test_statutory_cap_accepts_daily_cap_variants() -> None:
         statutory_cap_variants=(
             StatutoryCapVariant(
                 id="sin-pernocta",
-                label="Sin pernocta",
+                label=tr("Sin pernocta"),
                 statutory_cap_eur_per_day=Decimal("26.67"),
             ),
             StatutoryCapVariant(
                 id="con-pernocta",
-                label="Con pernocta",
+                label=tr("Con pernocta"),
                 statutory_cap_eur_per_day=Decimal("53.34"),
             ),
         ),
         citations=(_citation(),),
-        notes="Límites diarios por condición.",
+        notes=tr("Límites diarios por condición."),
     )
 
     assert {variant.id for variant in rule.statutory_cap_variants} == {"sin-pernocta", "con-pernocta"}
@@ -134,10 +135,10 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
             statutory_cap_variants=(
                 StatutoryCapVariant(
                     id="sin-pernocta",
-                    label="Sin pernocta",
+                    label=tr("Sin pernocta"),
                     statutory_cap_eur_per_day=Decimal("26.67"),
                 ),
             ),
             citations=(_citation(),),
-            notes="Modos incompatibles.",
+            notes=tr("Modos incompatibles."),
         )
