@@ -390,12 +390,12 @@ def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing
 
     # Groups sorted by (country_code, party_tax_id, clave): (DE, DE111, E), (FR, FR222, S)
     assert resolved == {
-        ("row-pais", 0): "DE",
-        ("row-clave", 0): "E",
-        ("row-base", 0): Decimal("1500.00"),
-        ("row-pais", 1): "FR",
-        ("row-clave", 1): "S",
-        ("row-base", 1): Decimal("200.00"),
+        ("row-pais", 1): "DE",
+        ("row-clave", 1): "E",
+        ("row-base", 1): Decimal("1500.00"),
+        ("row-pais", 2): "FR",
+        ("row-clave", 2): "S",
+        ("row-base", 2): Decimal("200.00"),
     }
 
 
@@ -464,16 +464,16 @@ def test_resolve_invoice_binding_row_values_period_grouping_carries_rectificatio
 
     # Sorted by (country_code, party_tax_id, clave, year, period): DE/2T first, IT/4T second.
     assert resolved == {
-        ("rect-pais", 0): "DE",
-        ("rect-year", 0): "2025",
-        ("rect-period", 0): "2T",
-        ("rect-base-new", 0): Decimal("1100.00"),
-        ("rect-base-prev", 0): Decimal("1000.00"),
-        ("rect-pais", 1): "IT",
+        ("rect-pais", 1): "DE",
         ("rect-year", 1): "2025",
-        ("rect-period", 1): "4T",
-        ("rect-base-new", 1): Decimal("200.00"),
-        ("rect-base-prev", 1): Decimal("180.00"),
+        ("rect-period", 1): "2T",
+        ("rect-base-new", 1): Decimal("1100.00"),
+        ("rect-base-prev", 1): Decimal("1000.00"),
+        ("rect-pais", 2): "IT",
+        ("rect-year", 2): "2025",
+        ("rect-period", 2): "4T",
+        ("rect-base-new", 2): Decimal("200.00"),
+        ("rect-base-prev", 2): Decimal("180.00"),
     }
 
 
@@ -499,7 +499,7 @@ def test_resolve_invoice_binding_row_values_skips_scalar_bindings() -> None:
     rows = resolve_invoice_binding_row_values(revision, observations)
     scalars = resolve_invoice_binding_values(revision, observations)
 
-    assert rows == {("row-clave", 0): "E"}
+    assert rows == {("row-clave", 1): "E"}
     assert scalars == {"scalar-base": Decimal("100")}
 
 

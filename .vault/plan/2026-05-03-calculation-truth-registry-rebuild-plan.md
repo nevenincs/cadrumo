@@ -4117,6 +4117,9 @@ application surface, and the old authority has been deleted.
        factual outputs for operator/clave and operator/clave/period groupings,
        with registry validation rejecting period-grouped rows unless they are
        scoped to rectification observations.
+     - [x] Invoice repeated-row outputs now use one-based row indexes so
+       resolved registry binding rows align with filing draft binding values
+       and fixed-width export rendering.
   - [ ] Implement ejercicio 2020 revision from reviewed AEAT dictionaries,
      toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
      parser requirements, legal references, formula coverage ledger, export
