@@ -1,0 +1,225 @@
+error[unresolved-import]: Cannot resolve imported module `.secure_objects`
+  --> src\aeat\adapters\persistence\storage\sql\__init__.py:25:7
+   |
+25 | from .secure_objects import SecureObjectRecord, SecureObjectRepository
+   |       ^^^^^^^^^^^^^^
+   |
+info: Searched in the following paths during module resolution:
+info:   1. Y:\code\aeat-worktrees\chore-476-restructure-execution\src (first-party code)
+info:   2. Y:\code\aeat-worktrees\chore-476-restructure-execution (first-party code)
+info:   3. vendored://stdlib (stdlib typeshed stubs vendored by ty)
+info:   4. Y:\code\aeat-worktrees\chore-476-restructure-execution\.venv\Lib\site-packages (site-packages)
+info:   5. Y:\code\aeat-worktrees\chore-476-restructure-execution\.venv\Lib\site-packages\win32 (editable install)
+info:   ... and 2 more paths. Run with `-v` to see all paths.
+info: make sure your Python environment is properly configured: https://docs.astral.sh/ty/modules/#python-environment
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `TransactionCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:134:36
+    |
+134 |     TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\transactions\_repository.py:74:9
+   |
+74 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `TransactionCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:159:36
+    |
+159 |     TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\transactions\_repository.py:74:9
+   |
+74 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `TransactionCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:180:36
+    |
+180 |     TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\transactions\_repository.py:74:9
+   |
+74 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `InvoiceCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:248:32
+    |
+248 |     InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\invoices\_repository.py:26:9
+   |
+26 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `InvoiceCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:270:32
+    |
+270 |     InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\invoices\_repository.py:26:9
+   |
+26 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `InvoiceCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_adapters.py:277:32
+    |
+277 |     InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\invoices\_repository.py:26:9
+   |
+26 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `TransactionCatalogueRepository.__init__`
+  --> src\aeat\application\review\test_aggregator.py:93:36
+   |
+93 |     TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+info: Method signature here
+  --> src\aeat\domain\transactions\_repository.py:74:9
+   |
+74 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unknown-argument]: Argument `store_dir` does not match any known parameter of `InvoiceCatalogueRepository.__init__`
+   --> src\aeat\application\review\test_aggregator.py:120:32
+    |
+120 |     InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(InvoiceCatalogue.from_invoices((invoice,)))
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+info: Method signature here
+  --> src\aeat\domain\invoices\_repository.py:26:9
+   |
+26 |     def __init__(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-reference]: Name `Path` used when not defined
+   --> src\aeat\application\user_cli.py:198:38
+    |
+198 |     def __init__(self, *, state_dir: Path) -> None:
+    |                                      ^^^^
+    |
+
+error[unresolved-reference]: Name `Path` used when not defined
+   --> src\aeat\application\user_cli.py:199:27
+    |
+199 |         self._state_dir = Path(state_dir)
+    |                           ^^^^
+    |
+
+error[unresolved-reference]: Name `load_settings` used when not defined
+   --> src\aeat\application\user_cli.py:203:32
+    |
+203 |         resolved = settings or load_settings()
+    |                                ^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `Path` used when not defined
+   --> src\aeat\application\user_cli.py:204:30
+    |
+204 |         return cls(state_dir=Path(resolved.aeat_runs_dir) / "cli")
+    |                              ^^^^
+    |
+
+error[unresolved-reference]: Name `Path` used when not defined
+   --> src\aeat\application\user_cli.py:207:32
+    |
+207 |     def envelope_path(self) -> Path:
+    |                                ^^^^
+    |
+
+error[unresolved-reference]: Name `_STATE_FILE_NAME` used when not defined
+   --> src\aeat\application\user_cli.py:208:34
+    |
+208 |         return self._state_dir / _STATE_FILE_NAME
+    |                                  ^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `Path` used when not defined
+   --> src\aeat\application\user_cli.py:211:30
+    |
+211 |     def lock_target(self) -> Path:
+    |                              ^^^^
+    |
+
+error[unresolved-reference]: Name `_STATE_LOCK_NAME` used when not defined
+   --> src\aeat\application\user_cli.py:212:34
+    |
+212 |         return self._state_dir / _STATE_LOCK_NAME
+    |                                  ^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `load_encrypted_envelope` used when not defined
+   --> src\aeat\application\user_cli.py:219:20
+    |
+219 |         envelope = load_encrypted_envelope(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `_resolve_master_key_provider` used when not defined
+   --> src\aeat\application\user_cli.py:223:33
+    |
+223 |             master_key_provider=_resolve_master_key_provider(),
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `_STATE_HKDF_CONTEXT` used when not defined
+   --> src\aeat\application\user_cli.py:224:26
+    |
+224 |             hkdf_context=_STATE_HKDF_CONTEXT,
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `exclusive_file_lock` used when not defined
+   --> src\aeat\application\user_cli.py:233:14
+    |
+233 |         with exclusive_file_lock(self.lock_target):
+    |              ^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `save_encrypted_envelope` used when not defined
+   --> src\aeat\application\user_cli.py:240:13
+    |
+240 |             save_encrypted_envelope(
+    |             ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `_resolve_master_key_provider` used when not defined
+   --> src\aeat\application\user_cli.py:243:37
+    |
+243 |                 master_key_provider=_resolve_master_key_provider(),
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-reference]: Name `_STATE_HKDF_CONTEXT` used when not defined
+   --> src\aeat\application\user_cli.py:244:30
+    |
+244 |                 hkdf_context=_STATE_HKDF_CONTEXT,
+    |                              ^^^^^^^^^^^^^^^^^^^
+    |
+
+Found 24 diagnostics
