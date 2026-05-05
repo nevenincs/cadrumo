@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
@@ -37,6 +39,25 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
         for value in binding.inputs.values()
         if str(value) in relation_ids
     }
+
+
+def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, str | int]) -> bool:
+    year = selector.get("year")
+    if isinstance(year, int):
+        return revision.period_selector.includes_year(year)
+    year_from = selector.get("year_from")
+    if isinstance(year_from, int):
+        year_to = selector.get("year_to")
+        if not isinstance(year_to, int):
+            year_to = 2999
+        revision_from = revision.period_selector.year_from or min(revision.period_selector.years)
+        revision_to = revision.period_selector.year_to
+        if revision_to is None and revision.period_selector.years:
+            revision_to = max(revision.period_selector.years)
+        if revision_to is None:
+            revision_to = 2999
+        return revision_from <= year_to and year_from <= revision_to
+    return False
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
@@ -166,3 +187,34 @@ def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
                     assert set(relation.legal_refs).issubset(formula.legal_refs), (
                         f"{modelo.id}/{revision.id}/{formula.id}: {relation_id}"
                     )
+
+
+def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
+    modelos, catalogues = _registry_tree()
+    modelos_by_id = {modelo.id: modelo for modelo in modelos}
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for relation in revision.relations:
+                source_modelo = modelos_by_id[relation.source_modelo]
+                source_revisions = tuple(
+                    source_revision
+                    for source_revision in source_modelo.revisions.values()
+                    if _revision_matches_selector(source_revision, relation.source_revision_selector)
+                )
+                assert source_revisions, f"{modelo.id}/{revision.id}/{relation.id}"
+                for source_revision in source_revisions:
+                    casillas = {casilla.id: casilla for casilla in source_revision.casillas}
+                    algorithm_outputs = {
+                        str(output)
+                        for algorithm_binding in source_revision.algorithm_bindings
+                        for output in algorithm_binding.outputs.values()
+                    }
+                    if relation.source_output in casillas:
+                        assert casillas[relation.source_output].input_kind != "informational", (
+                            f"{modelo.id}/{revision.id}/{relation.id}"
+                        )
+                    else:
+                        assert relation.source_output in algorithm_outputs, f"{modelo.id}/{revision.id}/{relation.id}"
