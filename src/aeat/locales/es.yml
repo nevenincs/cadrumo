@@ -980,8 +980,10 @@ cli:
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
+    casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas por defecto
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range
+      unknown_modelo: "El registro no contiene una definición del modelo {modelo}"
     expediente_help: cli.registry.expediente_help
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
@@ -989,10 +991,22 @@ cli:
     json_help: cli.registry.json_help
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
+    metrics:
+      compared_casillas: casillas_comparadas
+      drift: desviacion
+      drift_count: numero_desviaciones
+      missing_filed_casillas: casillas_presentadas_ausentes
+      missing_local_casillas: casillas_locales_ausentes
+      modelo: modelo
+      revision: revision
+      status: estado
     modelo_help: cli.registry.modelo_help
+    observation_help: Manifiesto cifrado de observación de declaración presentada que se va a verificar
     output_root_help: cli.registry.output_root_help
     period_help: cli.registry.period_help
+    source_observation_help: Manifiesto cifrado de observación fuente requerido por vínculos de declaraciones previas o relaciones
     to_year_help: cli.registry.to_year_help
+    verify_filed_state_help: Comparar el cálculo local del registro con el estado presentado capturado de AEAT
     verify_help: cli.registry.verify_help
     verify_source_root_help: cli.registry.verify_source_root_help
     workbooks_app_help: cli.registry.workbooks_app_help
