@@ -1775,7 +1775,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
 ]
 bindings = [
-    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
     "renta-2025-modelo-115-retenciones-periodicas",
     "renta-2025-modelo-123-retenciones-periodicas",
     "renta-2025-modelo-130-pagos-fraccionados",
@@ -1815,7 +1816,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
 ]
 bindings = [
-    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
     "renta-2025-modelo-115-retenciones-periodicas",
     "renta-2025-modelo-123-retenciones-periodicas",
     "renta-2025-modelo-130-pagos-fraccionados",
@@ -1853,7 +1855,10 @@ source_refs = [
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
 ]
-bindings = ["renta-2025-modelo-111-retenciones-periodicas"]
+bindings = [
+    "renta-2025-modelo-111-retenciones-trimestrales",
+    "renta-2025-modelo-111-retenciones-mensuales",
+]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
     "renta-2025-rel-111-retenciones-mensuales",
@@ -1914,6 +1919,7 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
     "aeat-dr-100-2025-xsd",
 ]
 bindings = [
@@ -1922,6 +1928,42 @@ bindings = [
     "renta-2025-modelo-131-pagos-fraccionados",
 ]
 casillas = [
+    "1442",
+    "1443",
+    "1444",
+    "1445",
+    "1446",
+    "1447",
+    "1448",
+    "1449",
+    "1450",
+    "1451",
+    "1452",
+    "1453",
+    "1454",
+    "1455",
+    "1456",
+    "1457",
+    "1458",
+    "1459",
+    "1460",
+    "1461",
+    "1462",
+    "1463",
+    "1464",
+    "1465",
+    "1466",
+    "1467",
+    "1468",
+    "1469",
+    "1470",
+    "1471",
+    "1472",
+    "1473",
+    "1474",
+    "1475",
+    "1477",
+    "1478",
     "0171",
     "0172",
     "0173",
@@ -1977,6 +2019,83 @@ casillas = [
     "0235",
     "0236",
     "0237",
+    "1480",
+    "1481",
+    "1482",
+    "1483",
+    "1484",
+    "1486",
+    "1487",
+    "1488",
+    "1489",
+    "1490",
+    "1491",
+    "1492",
+    "1493",
+    "1494",
+    "1495",
+    "1496",
+    "1497",
+    "1498",
+    "1499",
+    "1500",
+    "1501",
+    "1502",
+    "1503",
+    "1504",
+    "1505",
+    "1506",
+    "1507",
+    "1508",
+    "1509",
+    "1510",
+    "1511",
+    "1512",
+    "1513",
+    "1514",
+    "1515",
+    "1516",
+    "1517",
+    "1518",
+    "1519",
+    "1520",
+    "1521",
+    "1522",
+    "1523",
+    "1524",
+    "1525",
+    "1526",
+    "1527",
+    "1528",
+    "1529",
+    "1530",
+    "1531",
+    "1532",
+    "1533",
+    "1534",
+    "1535",
+    "1536",
+    "1537",
+    "1538",
+    "1539",
+    "1540",
+    "1541",
+    "1542",
+    "1543",
+    "1544",
+    "1545",
+    "1546",
+    "1547",
+    "1548",
+    "1549",
+    "1550",
+    "1551",
+    "1552",
+    "1554",
+    "1555",
+    "1558",
+    "1559",
+    "1560",
     "1479",
     "1553",
     "1577",
@@ -2467,9 +2586,21 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]
 
 [[revisions."2025".bindings]]
-id = "renta-2025-modelo-111-retenciones-periodicas"
+id = "renta-2025-modelo-111-retenciones-trimestrales"
 source = "previous_filing"
-selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["28"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-111-retenciones-mensuales"
+source = "previous_filing"
+selector = { source_modelo = "111", source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], source_casillas = ["28"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2481,7 +2612,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-115-retenciones-periodicas"
 source = "previous_filing"
-selector = { source_modelo = "115", source_output = "03", relation = "retenciones-arrendamientos-urbanos" }
+selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["03"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2493,7 +2624,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-123-retenciones-periodicas"
 source = "previous_filing"
-selector = { source_modelo = "123", source_output = "09", relation = "retenciones-capital-mobiliario" }
+selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["09"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2505,7 +2636,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-130-pagos-fraccionados"
 source = "previous_filing"
-selector = { source_modelo = "130", source_output = "19", relation = "pagos-fraccionados-estimacion-directa" }
+selector = { source_modelo = "130", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["19"] }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2517,7 +2648,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-131-pagos-fraccionados"
 source = "previous_filing"
-selector = { source_modelo = "131", source_output = "15", relation = "pagos-fraccionados-estimacion-objetiva" }
+selector = { source_modelo = "131", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["15"] }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2529,7 +2660,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-180-retenciones-anuales"
 source = "previous_filing"
-selector = { source_modelo = "180", source_output = "decl.retenciones-total", relation = "resumen-anual-arrendamientos-urbanos" }
+selector = { source_modelo = "180", period = "0A", source_casillas = ["decl.retenciones-total"] }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -2545,7 +2676,7 @@ dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
-target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+target_binding = "renta-2025-modelo-111-retenciones-trimestrales"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
@@ -2560,7 +2691,7 @@ dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
-target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+target_binding = "renta-2025-modelo-111-retenciones-mensuales"
 period_alignment = { source_periods = "months", target_period = "0A" }
 source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 target_periods = ["0A"]
