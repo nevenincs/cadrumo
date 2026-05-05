@@ -131,13 +131,11 @@ Usage:
 
 const PROFILE_KEYS = [
   ["tax.id", "required", "Tax identifier for the active taxpayer profile."],
-  ["tax.name", "required", "Display name used in local review output."],
-  ["activity.code", "required", "Economic activity code or controlled activity key."],
-  ["activity.label", "optional", "Human label for the activity, such as design."],
-  ["address.postcode", "required", "Tax address postcode used by supported modelos."],
-  ["iva.regime", "backend-audit", "IVA regime key when the backend supports the relevant model."],
-  ["withholding.profile", "backend-audit", "Withholding assumptions and thresholds."],
-  ["usage.default_business_share", "optional", "Default business share used as an initial review hint."],
+  ["activity", "required", "Business activity label or controlled activity key."],
+  ["name", "optional", "Display name used in local review output."],
+  ["surnames", "optional", "Surnames or company name used in export headers."],
+  ["address.postcode", "optional", "Tax address postcode used by supported modelos."],
+  ["declaration.type", "optional", "Declaration type used in export headers."],
 ];
 
 const SCENARIOS = {
@@ -254,11 +252,10 @@ const TAPES = {
       "aeat setup auth configure --provider clave_movil",
       "aeat setup auth login",
       "aeat setup auth whoami",
-      "aeat setup init --name autonomo-2026",
-      "aeat setup profile set tax.id 12345678Z",
-      "aeat setup profile set tax.name Kent",
-      "aeat setup profile set activity.label design",
+      "aeat setup init --name autonomo-2026 --activity design --tax-id 12345678Z",
+      "aeat setup profile set name Kent",
       "aeat setup profile set address.postcode 28013",
+      "aeat setup profile set declaration.type autoliquidacion",
       "aeat setup profile validate",
       "aeat setup status",
     ],
@@ -271,10 +268,10 @@ const TAPES = {
       "aeat setup init --name autonomo-2026",
       "aeat setup profile validate",
       "aeat setup profile set tax.id 12345678Z",
-      "aeat setup profile set tax.name Kent",
-      "aeat setup profile set activity.code design",
-      "aeat setup profile unset activity.code",
-      "aeat setup profile set activity.label design",
+      "aeat setup profile set name Kent",
+      "aeat setup profile set activity design",
+      "aeat setup profile unset activity",
+      "aeat setup profile set activity design",
       "aeat setup profile set address.postcode 28013",
       "aeat setup profile validate",
     ],
@@ -443,7 +440,7 @@ function baseState() {
     authenticated: false,
     profileName: "",
     profileValid: false,
-    profileMissing: 4,
+    profileMissing: 2,
     bank: "",
     period: "",
     imports: 0,
@@ -691,7 +688,10 @@ Editable keys: run aeat setup profile keys`);
     const key = tokens[4];
     const value = tokens[5];
     if (!key || value === undefined) return error("Usage: aeat setup profile set KEY VALUE");
-    state.profileMissing = Math.max(0, state.profileMissing - 1);
+    if (!state.profileName) return error("No active profile. Run `aeat setup init --name NAME` first.");
+    const profileKey = PROFILE_KEYS.find(([candidate]) => candidate === key);
+    if (!profileKey) return error(`Unknown profile key: ${key}. Run \`aeat setup profile list-keys\`.`);
+    if (profileKey[1] === "required") state.profileMissing = Math.max(0, state.profileMissing - 1);
     state.profileValid = state.profileMissing === 0 && Boolean(state.profileName);
     return ok(`Profile value set.
 Key: ${key}
@@ -701,7 +701,10 @@ Missing keys: ${state.profileMissing}`);
   if (action === "unset") {
     const key = tokens[4];
     if (!key) return error("Usage: aeat setup profile unset KEY");
-    state.profileMissing += 1;
+    if (!state.profileName) return error("No active profile. Run `aeat setup init --name NAME` first.");
+    const profileKey = PROFILE_KEYS.find(([candidate]) => candidate === key);
+    if (!profileKey) return error(`Unknown profile key: ${key}. Run \`aeat setup profile list-keys\`.`);
+    if (profileKey[1] === "required") state.profileMissing += 1;
     state.profileValid = false;
     return ok(`Profile value cleared.
 Key: ${key}

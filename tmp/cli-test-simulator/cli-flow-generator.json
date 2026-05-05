@@ -57,7 +57,7 @@
       "id": "setup-profile",
       "templates": [
         "aeat setup profile list-keys",
-        "aeat setup init --name {profile_name}",
+        "aeat setup init --name {profile_name} --activity {activity} --tax-id {tax_id}",
         "aeat setup profile use {profile_name}",
         "aeat setup profile set {key} {value}",
         "aeat setup profile unset {key}",
