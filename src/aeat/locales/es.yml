@@ -341,8 +341,8 @@ cli:
       year_help: Ejercicio fiscal a consultar
     next_help: Mostrar el próximo plazo tributario relevante
   declaration:
-    app_help: Gestión y presentación de declaraciones tributarias
-    approve_help: Aprobar una declaración para su presentación
+    app_help: Preparación y exportación local de declaraciones tributarias
+    approve_help: Aprobar una declaración para exportación local
     calculate_help: Calcular los importes de una declaración
     edit_help: Editar manualmente una declaración existente
     errors:

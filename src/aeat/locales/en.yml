@@ -335,8 +335,8 @@ cli:
       year_help: Fiscal year to query
     next_help: Show the next relevant tax deadline
   declaration:
-    app_help: Management and submission of tax declarations
-    approve_help: Approve a declaration for submission
+    app_help: Prepare and locally export tax declarations
+    approve_help: Approve a declaration for local export
     calculate_help: Calculate the amounts of a declaration
     edit_help: Manually edit an existing declaration
     errors:

@@ -180,6 +180,18 @@ def test_declaration_verify_accepts_file_not_export_option() -> None:
     assert "--export" not in result.output
 
 
+def test_declaration_help_uses_local_export_not_live_submission_wording() -> None:
+    declaration = _invoke(["app", "declaration", "--help"])
+    approve = _invoke(["app", "declaration", "approve", "--help"])
+    combined = f"{declaration.output}\n{approve.output}".lower()
+
+    assert declaration.exit_code == 0, declaration.output
+    assert approve.exit_code == 0, approve.output
+    assert "exportación local" in combined
+    assert "presentación" not in combined
+    assert "submission" not in combined
+
+
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
 

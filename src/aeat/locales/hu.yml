@@ -345,8 +345,8 @@ cli:
       year_help: Lekérdezendő adóév
     next_help: A következő releváns adózási határidő megjelenítése
   declaration:
-    app_help: Adóbevallások kezelése és benyújtása
-    approve_help: Bevallás jóváhagyása benyújtáshoz
+    app_help: Adóbevallások előkészítése és helyi exportálása
+    approve_help: Bevallás jóváhagyása helyi exportáláshoz
     calculate_help: Bevallás összegeinek kiszámítása
     edit_help: Meglévő bevallás kézi szerkesztése
     errors:
