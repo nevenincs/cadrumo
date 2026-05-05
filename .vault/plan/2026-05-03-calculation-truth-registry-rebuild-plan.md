@@ -3886,6 +3886,9 @@ application surface, and the old authority has been deleted.
        registry objects to prove validation fails when a relation source lacks
        classification, a classification covers only part of its source
        relations, or a source is classified more than once.
+     - [x] Formula runtime external-value tests: prove the registry calculator
+       rejects binding and relation values whose identifiers are not declared by
+       the selected revision.
   - [ ] Mark Phase 4R complete only after the audit document, source ledger,
      deletion ledger, schema boundary, live-read classification, observation
      security path, and validation test plan are explicit and reviewable.
@@ -4108,6 +4111,9 @@ application surface, and the old authority has been deleted.
      approval, filing draft, export/import layout, borrador observation,
      declaracion observation, Sede filed-data observation, and justificante
      observation workflows.
+     - [x] Registry calculation runtime now fails fast on unknown binding and
+       relation value identifiers before formula execution, preventing shadowed
+       dependency inputs from feeding calculation traces.
   - [ ] Verify Modelo 100 against official legal/manual examples, Renta WEB Open
      parity where safe, source-integrity checks, legal-reference checks, parser
      linkage checks, encrypted observation-store checks, export/import checks,
