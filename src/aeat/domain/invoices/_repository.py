@@ -1,75 +1,48 @@
 """Governed-persistence repository for the invoice catalogue.
 
-Wraps the storage substrate's :class:`Envelope[InvoiceCatalogue]`
-contract behind a small typed surface
-(:class:`InvoiceCatalogueRepository`). Every read consults the envelope
-file first; every write goes through
-:func:`aeat.adapters.persistence.storage.save_encrypted_envelope` at the
-:attr:`aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
-classification with an exclusive file lock held for the duration so
-concurrent writers serialise rather than race.
-
 The repository is the only sanctioned read/write path for the invoice
-catalogue. There is no plaintext fallback: every CLI command and
-downstream consumer routes through this surface so the on-disk record
-is always the encrypted envelope.
-
-Storage imports are deferred behind the methods that consult them so
-the financial subpackage does not pull
-:mod:`aeat.adapters.persistence.storage` (with its Alembic plugin
-discovery) into every CLI command's import chain; this preserves the
-json-pipe-safety contract.
+catalogue. It stores the catalogue as an encrypted byte object in the
+primary SQL backend at FINANCIAL sensitivity; no plaintext invoice row,
+JSON catalogue, or envelope file lands on disk.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 
 from ...core.logging import get_logger
 from ._models import InvoiceCatalogue
 
-_HKDF_CONTEXT_INVOICE_CATALOGUE = b"aeat.domain.invoices.catalogue.v1"
-
 _log = get_logger(__name__)
 
 _INVOICE_CATALOGUE_VERSION = 1
-_INVOICE_ENVELOPE_FILE_NAME = "invoices.envelope.json"
-_INVOICE_LOCK_FILE_NAME = "invoices.lock"
+_INVOICE_NAMESPACE = "aeat.domain.invoices"
+_INVOICE_OBJECT_KEY = "catalogue"
 
 
 class InvoiceCatalogueRepository:
-    """Repository over the file-locked, envelope-backed invoice catalogue."""
+    """Repository over the encrypted SQL-backed invoice catalogue."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        """Bind the repository to a store directory.
+    def __init__(self) -> None:
+        from ...adapters.persistence.storage.sql import SecureObjectRepository
 
-        Args:
-            store_dir: Directory containing the envelope file and the
-                lock sidecar. Created on first write.
-        """
-        self._store_dir = Path(store_dir)
+        self._objects = SecureObjectRepository()
 
-    @property
-    def envelope_path(self) -> Path:
-        """Return the canonical envelope file path."""
-        return self._store_dir / _INVOICE_ENVELOPE_FILE_NAME
+    def exists(self) -> bool:
+        """Return whether an invoice catalogue has been persisted."""
 
-    @property
-    def lock_target(self) -> Path:
-        """Return the canonical lock sidecar path."""
-        return self._store_dir / _INVOICE_LOCK_FILE_NAME
+        return self._objects.exists(_INVOICE_NAMESPACE, _INVOICE_OBJECT_KEY)
 
     def load(self) -> InvoiceCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
         Returns:
             The deserialised :class:`InvoiceCatalogue`, or a fresh empty
-            instance when the envelope file is not present on disk.
+            instance when no database object is present.
 
         Raises:
             :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
-                If the on-disk envelope's classification is not
+                If the persisted object's classification is not
                 :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`.
             :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
                 If the envelope schema version is higher than the
@@ -78,32 +51,40 @@ class InvoiceCatalogueRepository:
         from ...adapters.persistence.storage import (
             Envelope,
             SensitivityClass,
-            load_encrypted_envelope,
         )
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
-        target = self.envelope_path
-        if not target.exists():
-            _log.debug("no invoice catalogue on disk at %s, returning empty", target)
-            return InvoiceCatalogue()
-        envelope = load_encrypted_envelope(
-            target,
-            Envelope[InvoiceCatalogue],
+        record = self._objects.load(
+            _INVOICE_NAMESPACE,
+            _INVOICE_OBJECT_KEY,
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_INVOICE_CATALOGUE,
             max_supported_version=_INVOICE_CATALOGUE_VERSION,
         )
+        if record is None:
+            _log.debug("no invoice catalogue in database, returning empty")
+            return InvoiceCatalogue()
+        envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            from ...adapters.persistence.storage.errors import ClassificationError
+
+            raise ClassificationError(
+                f"invoice catalogue has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.FINANCIAL}",
+            )
+        if envelope.schema_version > _INVOICE_CATALOGUE_VERSION:
+            from ...adapters.persistence.storage.errors import EnvelopeVersionError
+
+            raise EnvelopeVersionError(
+                f"invoice catalogue is at version {envelope.schema_version}; "
+                f"consumer supports up to {_INVOICE_CATALOGUE_VERSION}",
+            )
         return envelope.payload
 
     def save(self, catalogue: InvoiceCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
 
-        The on-disk envelope is AES-256-GCM ciphertext at the
+        The on-disk database value is an encrypted BLOB at the
         :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
-        classification via the substrate's
-        :func:`~aeat.adapters.persistence.storage.save_encrypted_envelope`
-        helper — no plaintext invoice row lands on disk.
+        classification. No plaintext invoice row lands on disk.
 
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
@@ -111,26 +92,23 @@ class InvoiceCatalogueRepository:
         from ...adapters.persistence.storage import (
             Envelope,
             SensitivityClass,
-            exclusive_file_lock,
-            save_encrypted_envelope,
         )
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[InvoiceCatalogue](
-                schema_version=_INVOICE_CATALOGUE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=catalogue,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_INVOICE_CATALOGUE,
-            )
-        _log.debug("saved invoice catalogue (%d invoices) to %s", len(catalogue.invoices), self.envelope_path)
+        envelope = Envelope[InvoiceCatalogue](
+            schema_version=_INVOICE_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        self._objects.save(
+            namespace=_INVOICE_NAMESPACE,
+            object_key=_INVOICE_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_INVOICE_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
 
 __all__ = [

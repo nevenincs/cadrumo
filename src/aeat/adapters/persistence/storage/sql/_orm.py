@@ -26,7 +26,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto._encrypted_columns import EncryptedString
+from ..crypto._encrypted_columns import EncryptedBytes, EncryptedString
 
 
 class Base(DeclarativeBase):
@@ -116,6 +116,34 @@ class CorpusArtifactRow(Base):
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     modelo: Mapped[ModeloRow] = relationship("ModeloRow", lazy="joined")
+
+
+class SecureObjectRow(Base):
+    """Encrypted byte-object row for sensitive application payloads.
+
+    Domain repositories use this table for financial catalogues and
+    workflow state that must not land as standalone JSON files. The
+    ``payload`` column is a SQL BLOB encrypted by
+    :class:`aeat.adapters.persistence.storage.crypto.EncryptedBytes`;
+    the remaining fields are routing and audit metadata.
+    """
+
+    __tablename__ = "secure_objects"
+    __table_args__ = (
+        UniqueConstraint(
+            "namespace",
+            "object_key",
+            name="uq_secure_objects_identity",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    namespace: Mapped[str] = mapped_column(String(128), nullable=False)
+    object_key: Mapped[str] = mapped_column(String(256), nullable=False)
+    classification: Mapped[str] = mapped_column(String(32), nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[bytes] = mapped_column(EncryptedBytes(), nullable=False)
 
 
 _RENTAL_USE_TYPE_VALUES = (

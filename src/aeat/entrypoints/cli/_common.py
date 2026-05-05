@@ -154,15 +154,11 @@ def _profile_to_autonomo(state: UserCliState) -> AutonomoProfile:
 
 
 def _tx_repo() -> TransactionCatalogueRepository:
-    from ...core.config import load_settings
-
-    return TransactionCatalogueRepository(store_dir=Path(load_settings().aeat_financial_txs_dir).resolve())
+    return TransactionCatalogueRepository()
 
 
 def _invoice_repo() -> InvoiceCatalogueRepository:
-    from ...core.config import load_settings
-
-    return InvoiceCatalogueRepository(store_dir=Path(load_settings().aeat_invoices_dir).resolve())
+    return InvoiceCatalogueRepository()
 
 
 def _draft_repo() -> FilingDraftRepository:
@@ -172,17 +168,11 @@ def _draft_repo() -> FilingDraftRepository:
 
 
 def _load_transactions() -> TransactionCatalogue:
-    repo = _tx_repo()
-    if not repo.envelope_path.exists():
-        return TransactionCatalogue()
-    return repo.load()
+    return _tx_repo().load()
 
 
 def _load_invoices() -> InvoiceCatalogue:
-    repo = _invoice_repo()
-    if not repo.envelope_path.exists():
-        return InvoiceCatalogue()
-    return repo.load()
+    return _invoice_repo().load()
 
 
 def _load_drafts() -> tuple[FilingDraft, ...]:

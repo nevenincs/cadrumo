@@ -225,7 +225,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
                 RemoteOperation(
                     kind="http",
                     method="GET",
-                    url=AnyUrl("https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro.html"),
+                    url=AnyUrl("https://www9.agenciatributaria.gob.es/wlpl/unsafe-state-surface"),
                 ),
             ).decision
             == "blocked"

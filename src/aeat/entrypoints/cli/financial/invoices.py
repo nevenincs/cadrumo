@@ -24,7 +24,6 @@ from ....application.invoices import (
     suggest_reconciliations,
     verify_link_consistency,
 )
-from ....core.config import load_settings
 from ....domain.invoices import (
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
@@ -37,7 +36,6 @@ from ....domain.transactions import (
     link_invoice,
 )
 from .._i18n import tr
-from ._catalogue import catalogue_dir as _transaction_catalogue_dir
 from ._catalogue import catalogue_repository as _transaction_catalogue_repository
 
 app = typer.Typer(
@@ -138,10 +136,8 @@ def link_cmd(
             rejects the link or when the updated invoice cannot be
             located after the save.
     """
-    invoices_dir = _invoice_catalogue_dir()
-    transactions_dir = _transaction_catalogue_dir()
     try:
-        updated_invoices, _ = link_transaction_bidirectional(invoices_dir, transactions_dir, invoice_id, transaction_id)
+        updated_invoices, _ = link_transaction_bidirectional(Path(), Path(), invoice_id, transaction_id)
     except (InvoiceError, TransactionError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -303,14 +299,9 @@ def unmatched_cmd(
         )
 
 
-def _invoice_catalogue_dir() -> Path:
-    """Return the configured invoice catalogue store directory."""
-    return load_settings().aeat_invoices_dir.resolve()
-
-
 def _invoice_catalogue_repository() -> InvoiceCatalogueRepository:
-    """Return an :class:`~aeat.domain.invoices.InvoiceCatalogueRepository` for the configured store."""
-    return InvoiceCatalogueRepository(store_dir=_invoice_catalogue_dir())
+    """Return the invoice catalogue repository bound to the secure backend."""
+    return InvoiceCatalogueRepository()
 
 
 def _load_invoice_catalogue_required() -> InvoiceCatalogue:
@@ -322,9 +313,9 @@ def _load_invoice_catalogue_required() -> InvoiceCatalogue:
             :exc:`aeat.domain.invoices.InvoiceError` surfaces during load.
     """
     repository = _invoice_catalogue_repository()
-    if not repository.envelope_path.exists():
+    if not repository.exists():
         typer.echo(
-            tr("cli.financial_invoices.errors.catalogue_not_found", path=repository.envelope_path),
+            tr("cli.financial_invoices.errors.catalogue_not_found", path="secure database"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -359,7 +350,7 @@ def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
     """
     from ....domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository(store_dir=_transaction_catalogue_dir())
+    repository = TransactionCatalogueRepository()
     try:
         return repository.load()
     except TransactionError as exc:

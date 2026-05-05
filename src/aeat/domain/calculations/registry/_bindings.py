@@ -423,6 +423,11 @@ def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selec
         )
     if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+    if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires rectification_scope "
+            "'only_rectifications'"
+        )
 
 
 def resolve_invoice_binding_values(

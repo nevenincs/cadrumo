@@ -445,52 +445,29 @@ def _require_registry_review_alignment(
 
 
 def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:
-    if path is None:
-        store_dir = _default_transaction_catalogue_dir()
-        envelope_path = store_dir / "transactions.envelope.json"
-        return _load_transaction_catalogue_cached(*_catalogue_cache_key(envelope_path), store_dir)
-    return _read_transaction_catalogue(path)
-
-
-def _default_transaction_catalogue_dir() -> Path:
-    from ...core.config import load_settings
-
-    return load_settings().aeat_financial_txs_dir.resolve()
-
-
-def _catalogue_cache_key(path: Path) -> tuple[Path, int | None, int | None]:
-    if not path.exists():
-        return (path, None, None)
-    stat = path.stat()
-    return (path, stat.st_mtime_ns, stat.st_size)
+    del path
+    return _load_transaction_catalogue_cached()
 
 
 @lru_cache(maxsize=8)
-def _load_transaction_catalogue_cached(
-    envelope_path: Path,
-    mtime_ns: int | None,
-    size: int | None,
-    store_dir: Path,
-) -> TransactionCatalogue:
-    del envelope_path, mtime_ns, size
+def _load_transaction_catalogue_cached() -> TransactionCatalogue:
     from ...domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository(store_dir=store_dir)
+    repository = TransactionCatalogueRepository()
     return repository.load()
 
 
 def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
-    """Load a catalogue from a caller-supplied store directory.
+    """Load the transaction catalogue from the secure backend.
 
-    The ``path`` argument here is the store directory. Loads route through
-    :class:`TransactionCatalogueRepository` so the on-disk record is
-    always the encrypted envelope.
+    ``path`` is ignored because transaction data is not file-backed.
     """
     from ...domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository(store_dir=path)
-    if not repository.envelope_path.exists():
-        _logger.debug("transaction catalogue envelope not found at %s; using empty catalogue", repository.envelope_path)
+    del path
+    repository = TransactionCatalogueRepository()
+    if not repository.exists():
+        _logger.debug("transaction catalogue secure object not found; using empty catalogue")
         return TransactionCatalogue()
     return repository.load()
 

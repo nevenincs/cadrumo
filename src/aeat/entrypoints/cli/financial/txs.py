@@ -162,10 +162,9 @@ def build_cmd(
             raises :exc:`aeat.domain.transactions.TransactionError`.
     """
     repo = catalogue_repository()
-    target = repo.envelope_path
-    if target.exists() and not replace:
+    if repo.exists() and not replace:
         typer.echo(
-            tr("cli.txs.build.exists_err", target=target),
+            tr("cli.txs.build.exists_err", target="secure database"),
             err=True,
         )
         raise typer.Exit(code=2)
