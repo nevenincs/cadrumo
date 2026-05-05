@@ -116,15 +116,17 @@ def setup_status(ctx: typer.Context) -> None:
         "login_ready": login_ready,
         "next_action": next_action,
     }
+    yes_label = tr("cli.setup.labels.yes")
+    no_label = tr("cli.setup.labels.no")
     _emit(
         ctx,
         payload,
         [
             f"{tr('cli.setup.headers.profile')}\t{current.active_profile or ''}",
-            f"{tr('cli.setup.headers.profile_ready')}\t{tr('cli.setup.labels.yes') if profile_ready else tr('cli.setup.labels.no')}",
+            f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if profile_ready else no_label}",
             f"{tr('cli.setup.headers.missing')}\t{', '.join(missing_required) or '-'}",
             f"{tr('cli.setup.headers.auth_provider')}\t{auth_provider}",
-            f"{tr('cli.setup.headers.login_ready')}\t{tr('cli.setup.labels.yes') if login_ready else tr('cli.setup.labels.no')}",
+            f"{tr('cli.setup.headers.login_ready')}\t{yes_label if login_ready else no_label}",
             f"{tr('cli.setup.headers.next')}\t{next_action}",
         ],
     )
@@ -223,13 +225,15 @@ def auth_status(ctx: typer.Context) -> None:
     current = _state()
     ready = current.auth.provider is not None and current.auth.authenticated_at is not None
     payload = {"auth": current.auth, "ready": ready}
+    yes_no = tr("cli.setup.labels.yes") if ready else tr("cli.setup.labels.no")
+    authenticated_at = current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ""
     _emit(
         ctx,
         payload,
         [
             f"{tr('cli.setup.headers.provider')}\t{current.auth.provider or ''}",
-            f"{tr('cli.setup.headers.ready')}\t{tr('cli.setup.labels.yes') if ready else tr('cli.setup.labels.no')}",
-            f"{tr('cli.setup.headers.authenticated_at')}\t{current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ''}",
+            f"{tr('cli.setup.headers.ready')}\t{yes_no}",
+            f"{tr('cli.setup.headers.authenticated_at')}\t{authenticated_at}",
         ],
     )
 

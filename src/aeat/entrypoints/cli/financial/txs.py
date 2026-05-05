@@ -533,7 +533,8 @@ def classify_llm_cmd(
         )
         combined_reason = _combine_reason(kent_reason=reason, llm_reason=response.reason)
         llm_suffix = tr("cli.txs.classify_llm.llm_suffix")
-        line = f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)}{llm_suffix}{combined_reason}"
+        confidence = canonical_decimal(response.confidence)
+        line = f"{prefix} {response.classification.value} @ {confidence}{llm_suffix}{combined_reason}"
         typer.echo(line)
         if not dry_run:
             try:
