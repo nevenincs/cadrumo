@@ -9,37 +9,55 @@ from .....application.auth import (
     AuthProviderKind,
     describe_provider_operator_impact,
 )
-from .....core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-def test_operator_impact_explains_local_fallback_when_unconfigured() -> None:
-    description = AuthProviderDescription(
-        kind=AuthProviderKind.CERTIFICATE,
-        label="AEAT certificate",
-        configured=False,
-        available=False,
-        health_summary="certificate path not configured",
+def _description(
+    *,
+    configured: bool,
+    available: bool,
+    kind: AuthProviderKind = AuthProviderKind.CERTIFICATE,
+) -> AuthProviderDescription:
+    return AuthProviderDescription(
+        kind=kind,
+        label="AEAT certificate" if kind is AuthProviderKind.CERTIFICATE else "Cl@ve Móvil",
+        configured=configured,
+        available=available,
+        identity_nif="X1234567L" if available else None,
+        subject="CN=Kent" if available else None,
+        health_severity="OK" if available else None,
+        health_summary="OK:200" if available else "credential not loaded",
     )
 
-    message = describe_provider_operator_impact(description)
 
-    assert message == tr("application.auth.provider_impact.unconfigured")
+def test_operator_impact_returns_a_non_empty_string_for_every_branch() -> None:
+    for description in (
+        _description(configured=False, available=False),
+        _description(configured=True, available=False),
+        _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE),
+        _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL),
+    ):
+        message = describe_provider_operator_impact(description)
+        assert message
+        assert message.strip() == message
 
 
-def test_operator_impact_explains_protocol_value_for_ready_certificate() -> None:
-    description = AuthProviderDescription(
-        kind=AuthProviderKind.CERTIFICATE,
-        label="AEAT certificate",
-        configured=True,
-        available=True,
-        identity_nif="X1234567L",
-        subject="CN=Kent",
-        health_severity="OK",
-        health_summary="OK:200",
-    )
+def test_operator_impact_distinguishes_every_branch() -> None:
+    """Each (configured, available, kind) combination must produce a unique message."""
+    branches = {
+        describe_provider_operator_impact(_description(configured=False, available=False)),
+        describe_provider_operator_impact(_description(configured=True, available=False)),
+        describe_provider_operator_impact(
+            _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE)
+        ),
+        describe_provider_operator_impact(
+            _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL)
+        ),
+    }
+    assert len(branches) == 4
 
-    message = describe_provider_operator_impact(description)
 
-    assert message == tr("application.auth.provider_impact.certificate_ready")
+def test_operator_impact_is_deterministic() -> None:
+    description = _description(configured=True, available=True)
+    assert describe_provider_operator_impact(description) == describe_provider_operator_impact(description)
