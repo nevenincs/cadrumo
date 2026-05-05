@@ -418,6 +418,8 @@ def _format_money(value: object, *, length: int, signed: bool) -> str:
         if not signed:
             raise ValueError("unsigned money export field cannot render a negative value")
         return "N" + str(cents).zfill(length - 1)
+    if signed:
+        return " " + str(cents).zfill(length - 1)
     return str(cents).zfill(length)
 
 

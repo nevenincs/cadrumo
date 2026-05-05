@@ -38,6 +38,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
+    RegistrySnapshotError,
     RegistryValidator,
     build_snapshot,
     expression_casilla_refs,
@@ -232,16 +233,22 @@ def build_runtime_schema_provider(
     if not modelos:
         raise FilingBuilderError(f"registry root has no modelo definitions: {root}")
     validator = RegistryValidator(catalogues, source_root=resolved_source_root)
-    snapshots = {
-        modelo.id: _snapshot_for_provider(
-            modelo,
-            catalogues,
-            source_root=resolved_source_root,
-            filing_year=filing_year,
-            period=period,
-        )
-        for modelo in modelos
-    }
+    snapshots: dict[str, RegistrySnapshot] = {}
+    for modelo in modelos:
+        try:
+            snapshots[modelo.id] = _snapshot_for_provider(
+                modelo,
+                catalogues,
+                source_root=resolved_source_root,
+                filing_year=filing_year,
+                period=period,
+            )
+        except RegistrySnapshotError:
+            if filing_year is None or period is None:
+                raise
+            continue
+    if not snapshots:
+        raise FilingBuilderError(f"registry root has no modelo definitions for year={filing_year} period={period!r}")
     return RegistrySchemaProvider(
         collections={
             modelo_id: _collection_from_snapshot(snapshot, validator) for modelo_id, snapshot in snapshots.items()
