@@ -1,0 +1,245 @@
+[modelo]
+id = "232"
+title = "Operaciones vinculadas y paraisos fiscales (informativa anual)"
+official_name = "Modelo 232. Declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
+tax_domain = "is"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+]
+source_refs = [
+    "aeat-dr-232-2018",
+    "aeat-dr-232-2016",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
+
+[revisions."2018-y-siguientes"]
+label = "Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)"
+valid_from = 2018-01-01
+period_selector = { year_from = 2018, periods = ["0A"] }
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+]
+source_refs = [
+    "aeat-dr-232-2018",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
+
+[[revisions."2018-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "2.devengo.ejercicio"
+label = "Ejercicio de devengo"
+section = ["declarante", "devengo"]
+data_type = "integer"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".casillas]]
+id = "decl.tipo-ejercicio"
+number = "2.devengo.tipo"
+label = "Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior a 12 meses)"
+section = ["declarante", "devengo"]
+data_type = "integer"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".casillas]]
+id = "decl.cnae"
+number = "2.devengo.cnae"
+label = "C.N.A.E. de la actividad principal"
+section = ["declarante", "devengo"]
+data_type = "text"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".workbook_parity_refs]]
+id = "modelo-232-dr-2018"
+workbook_source = "aeat-dr-232-2018"
+fixture_id = "modelo-232-2018-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".live_cross_references]]
+id = "modelo-232-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-232-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
+
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-portal"
+surface = "portal"
+consumer = "portal_m232_operaciones_vinculadas"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-modelo-232-procedure"]
+
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
+
+[[revisions."2018-y-siguientes".constructs]]
+id = "modelo-232-informative"
+title = "Modelo 232 informative declaration of operaciones vinculadas and paraisos fiscales"
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+]
+source_refs = [
+    "aeat-dr-232-2018",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
+casillas = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+workbook_parity_refs = ["modelo-232-dr-2018"]
+live_cross_references = ["modelo-232-static-documentation"]
+application_links = ["modelo-232-portal", "modelo-232-filing"]
+
+[revisions."2016-2017"]
+label = "Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)"
+valid_from = 2016-01-01
+valid_to = 2017-12-31
+period_selector = { years = [2016, 2017], periods = ["0A"] }
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+]
+source_refs = [
+    "aeat-dr-232-2016",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.ejercicio"
+number = "2.devengo.ejercicio"
+label = "Ejercicio de devengo"
+section = ["declarante", "devengo"]
+data_type = "integer"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.tipo-ejercicio"
+number = "2.devengo.tipo"
+label = "Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior a 12 meses)"
+section = ["declarante", "devengo"]
+data_type = "integer"
+required = false
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.cnae"
+number = "2.devengo.cnae"
+label = "C.N.A.E. de la actividad principal"
+section = ["declarante", "devengo"]
+data_type = "text"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".workbook_parity_refs]]
+id = "modelo-232-dr-2016"
+workbook_source = "aeat-dr-232-2016"
+fixture_id = "modelo-232-2016-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".live_cross_references]]
+id = "modelo-232-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-232-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-portal"
+surface = "portal"
+consumer = "portal_m232_operaciones_vinculadas"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-modelo-232-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]
+
+[[revisions."2016-2017".constructs]]
+id = "modelo-232-informative"
+title = "Modelo 232 informative declaration of operaciones vinculadas and paraisos fiscales"
+legal_refs = [
+    "ley-27-2014:art-18",
+    "rd-634-2015:art-13",
+    "orden-hfp-816-2017:art-1",
+]
+source_refs = [
+    "aeat-dr-232-2016",
+    "aeat-modelo-232-procedure",
+    "boe-modelo-232-2017-form",
+]
+casillas = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+workbook_parity_refs = ["modelo-232-dr-2016"]
+live_cross_references = ["modelo-232-static-documentation"]
+application_links = ["modelo-232-2016-portal", "modelo-232-2016-filing"]

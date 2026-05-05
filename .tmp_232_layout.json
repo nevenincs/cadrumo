@@ -1,0 +1,5352 @@
+{
+  "v14_2018_plus": {
+    "DR23200": {
+      "total_positions": null,
+      "has_comp": false,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Inicio del identificador de modelo y página.",
+          "valid": null,
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Modelo.",
+          "valid": null,
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Discriminante",
+          "valid": null,
+          "content": "Constante \"0\""
+        },
+        {
+          "n": 4,
+          "pos": 7,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Ejercicio de devengo (EEEE)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 5,
+          "pos": 11,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Periodo",
+          "valid": null,
+          "content": "\"0A\""
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 5,
+          "type": "An",
+          "comp": null,
+          "desc": "Tipo y cierre",
+          "valid": null,
+          "content": "\"0000>\""
+        },
+        {
+          "n": 7,
+          "pos": 18,
+          "len": 5,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante",
+          "valid": null,
+          "content": "\"<AUX>\""
+        },
+        {
+          "n": 8,
+          "pos": 23,
+          "len": 70,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 9,
+          "pos": 93,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Versión del Programa (Nota 1)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 97,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 11,
+          "pos": 101,
+          "len": 9,
+          "type": "An",
+          "comp": null,
+          "desc": "NIF Empresa Desarrollo (Nota 1)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 12,
+          "pos": 110,
+          "len": 213,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 13,
+          "pos": 323,
+          "len": 6,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante",
+          "valid": null,
+          "content": "\"</AUX>\""
+        },
+        {
+          "n": 14,
+          "pos": 329,
+          "len": "variable",
+          "type": "An",
+          "comp": null,
+          "desc": "Contenido del fichero. Aquí se debe incluir el contenido de las páginas correspondientes a la declaración según el formato descrito para cada página en este mismo documento",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 15,
+          "pos": "***",
+          "len": 18,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>",
+          "valid": null,
+          "content": "\"</T2320EEEE0A0000>\""
+        }
+      ]
+    },
+    "DR23201": {
+      "total_positions": null,
+      "has_comp": true,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"01\""
+        },
+        {
+          "n": 4,
+          "pos": 8,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        },
+        {
+          "n": 5,
+          "pos": 12,
+          "len": 1,
+          "type": "A",
+          "comp": null,
+          "desc": "Indicador de página complementaria",
+          "valid": "Obligatorio",
+          "content": "C o blanco"
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado AEAT (No hay Forma de Pago)",
+          "valid": null,
+          "content": "Blanco"
+        },
+        {
+          "n": 7,
+          "pos": 14,
+          "len": 9,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - NIF Entidad",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 8,
+          "pos": 23,
+          "len": 60,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - Apellidos o Razón social",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 9,
+          "pos": 83,
+          "len": 20,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - Nombre",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 103,
+          "len": 4,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Ejercicio",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 11,
+          "pos": 107,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "2.Devengo - Período (Uso Interno)",
+          "valid": "Obligatorio",
+          "content": "Constante \"0A\""
+        },
+        {
+          "n": 12,
+          "pos": 109,
+          "len": 1,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Tipo de Ejercicio",
+          "valid": null,
+          "content": "1 - 12 meses dentro del año natural\n2 - 12 meses (365 días)\n3 -  inferior a 12 meses"
+        },
+        {
+          "n": 13,
+          "pos": 110,
+          "len": 8,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Fecha de inicio del período impositivo",
+          "valid": "Obligatorio",
+          "content": "ddmmaaaa"
+        },
+        {
+          "n": 14,
+          "pos": 118,
+          "len": 8,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Fecha de fin del período impositivo",
+          "valid": "Obligatorio",
+          "content": "ddmmaaaa"
+        },
+        {
+          "n": 15,
+          "pos": 126,
+          "len": 4,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - C.N.A.E. actividad principal",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 16,
+          "pos": 130,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Declaración complementaria o sustitutiva",
+          "valid": null,
+          "content": "S, C o blanco"
+        },
+        {
+          "n": 17,
+          "pos": 131,
+          "len": 13,
+          "type": "An",
+          "comp": null,
+          "desc": "Declaración complementaria. Número de justificante de la declaración anterior",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 18,
+          "pos": 144,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 19,
+          "pos": 159,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 20,
+          "pos": 160,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 21,
+          "pos": 220,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 22,
+          "pos": 240,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 23,
+          "pos": 241,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 24,
+          "pos": 243,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 25,
+          "pos": 245,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 26,
+          "pos": 246,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 27,
+          "pos": 248,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 28,
+          "pos": 265,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 29,
+          "pos": 280,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 30,
+          "pos": 281,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 31,
+          "pos": 341,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 32,
+          "pos": 361,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 33,
+          "pos": 362,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 34,
+          "pos": 364,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 35,
+          "pos": 366,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 36,
+          "pos": 367,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 37,
+          "pos": 369,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 38,
+          "pos": 386,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 39,
+          "pos": 401,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 402,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 41,
+          "pos": 462,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 42,
+          "pos": 482,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 43,
+          "pos": 483,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 485,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 45,
+          "pos": 487,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 46,
+          "pos": 488,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 47,
+          "pos": 490,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 507,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 49,
+          "pos": 522,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 523,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 51,
+          "pos": 583,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 52,
+          "pos": 603,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 53,
+          "pos": 604,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 54,
+          "pos": 606,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 55,
+          "pos": 608,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 56,
+          "pos": 609,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 57,
+          "pos": 611,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 58,
+          "pos": 628,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 59,
+          "pos": 643,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 60,
+          "pos": 644,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 61,
+          "pos": 704,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 62,
+          "pos": 724,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 63,
+          "pos": 725,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 727,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 65,
+          "pos": 729,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 66,
+          "pos": 730,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 67,
+          "pos": 732,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 68,
+          "pos": 749,
+          "len": 15,
+          "type": "An",
+          "comp": null,
+          "desc": "4.Operaciones con personas o entidades vinculadas - Nº identifi cación de la matriz",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 69,
+          "pos": 764,
+          "len": 60,
+          "type": "An",
+          "comp": null,
+          "desc": "4.Operaciones con personas o entidades vinculadas - Razón social (matriz)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 824,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 71,
+          "pos": 839,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 -F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 72,
+          "pos": 840,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 73,
+          "pos": 900,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 74,
+          "pos": 920,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 75,
+          "pos": 922,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 76,
+          "pos": 923,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 77,
+          "pos": 940,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 78,
+          "pos": 955,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 79,
+          "pos": 956,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 80,
+          "pos": 1016,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 81,
+          "pos": 1036,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 82,
+          "pos": 1038,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 83,
+          "pos": 1039,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 84,
+          "pos": 1056,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 85,
+          "pos": 1071,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 86,
+          "pos": 1072,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 87,
+          "pos": 1132,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 88,
+          "pos": 1152,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 89,
+          "pos": 1154,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 90,
+          "pos": 1155,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 91,
+          "pos": 1172,
+          "len": 317,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 92,
+          "pos": 1489,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"</T\""
+        },
+        {
+          "n": 93,
+          "pos": 1492,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 94,
+          "pos": 1495,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"01\""
+        },
+        {
+          "n": 95,
+          "pos": 1497,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        }
+      ]
+    },
+    "DR23202": {
+      "total_positions": null,
+      "has_comp": true,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"02\""
+        },
+        {
+          "n": 4,
+          "pos": 8,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        },
+        {
+          "n": 5,
+          "pos": 12,
+          "len": 1,
+          "type": "A",
+          "comp": null,
+          "desc": "Indicador de página complementaria",
+          "valid": "Obligatorio",
+          "content": "C o blanco"
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 7,
+          "pos": 63,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 8,
+          "pos": 123,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 9,
+          "pos": 143,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 144,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 11,
+          "pos": 146,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 12,
+          "pos": 163,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 13,
+          "pos": 213,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 14,
+          "pos": 273,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 15,
+          "pos": 293,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 16,
+          "pos": 294,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 17,
+          "pos": 296,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 18,
+          "pos": 313,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 19,
+          "pos": 363,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 20,
+          "pos": 423,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 21,
+          "pos": 443,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 22,
+          "pos": 444,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 23,
+          "pos": 446,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 24,
+          "pos": 463,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 25,
+          "pos": 513,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 26,
+          "pos": 573,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 27,
+          "pos": 593,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 28,
+          "pos": 594,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 29,
+          "pos": 596,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 30,
+          "pos": 613,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 31,
+          "pos": 663,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 32,
+          "pos": 723,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 33,
+          "pos": 743,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 34,
+          "pos": 744,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 35,
+          "pos": 746,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 36,
+          "pos": 763,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 37,
+          "pos": 813,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 38,
+          "pos": 873,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 39,
+          "pos": 893,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 894,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 41,
+          "pos": 896,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 42,
+          "pos": 913,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 43,
+          "pos": 963,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 1023,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 45,
+          "pos": 1043,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 46,
+          "pos": 1044,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 47,
+          "pos": 1046,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 1063,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 49,
+          "pos": 1113,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 1173,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 51,
+          "pos": 1193,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 52,
+          "pos": 1194,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 53,
+          "pos": 1196,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 54,
+          "pos": 1213,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 55,
+          "pos": 1263,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 56,
+          "pos": 1323,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 57,
+          "pos": 1343,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 58,
+          "pos": 1344,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 59,
+          "pos": 1346,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 60,
+          "pos": 1363,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 61,
+          "pos": 1413,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 62,
+          "pos": 1473,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 63,
+          "pos": 1493,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 1494,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 65,
+          "pos": 1496,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 66,
+          "pos": 1513,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 67,
+          "pos": 1563,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 68,
+          "pos": 1623,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 69,
+          "pos": 1643,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 1644,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 71,
+          "pos": 1646,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 72,
+          "pos": 1663,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12- Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 73,
+          "pos": 1713,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 74,
+          "pos": 1773,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 75,
+          "pos": 1793,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 76,
+          "pos": 1794,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 77,
+          "pos": 1796,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 36,
+          "pos": 1813,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 37,
+          "pos": 1814,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 38,
+          "pos": 1874,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 39,
+          "pos": 1894,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 1896,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 41,
+          "pos": 1913,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 42,
+          "pos": 1918,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 43,
+          "pos": 1919,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 1979,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 45,
+          "pos": 1999,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 46,
+          "pos": 2001,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 47,
+          "pos": 2018,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 2023,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 49,
+          "pos": 2024,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 2084,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 51,
+          "pos": 2104,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 52,
+          "pos": 2106,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 53,
+          "pos": 2123,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 54,
+          "pos": 2128,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 55,
+          "pos": 2129,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 56,
+          "pos": 2189,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 57,
+          "pos": 2209,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 58,
+          "pos": 2211,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 59,
+          "pos": 2228,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 60,
+          "pos": 2233,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 61,
+          "pos": 2234,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 62,
+          "pos": 2294,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 63,
+          "pos": 2314,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 2316,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 65,
+          "pos": 2333,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 66,
+          "pos": 2338,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 67,
+          "pos": 2339,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 68,
+          "pos": 2399,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 69,
+          "pos": 2419,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 2421,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 71,
+          "pos": 2438,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 72,
+          "pos": 2443,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 73,
+          "pos": 2444,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 74,
+          "pos": 2504,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 75,
+          "pos": 2524,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 76,
+          "pos": 2526,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 77,
+          "pos": 2543,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 78,
+          "pos": 2548,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 79,
+          "pos": 2549,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 80,
+          "pos": 2609,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 81,
+          "pos": 2629,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 82,
+          "pos": 2631,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 83,
+          "pos": 2648,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 84,
+          "pos": 2653,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 85,
+          "pos": 2654,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 86,
+          "pos": 2714,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 87,
+          "pos": 2734,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 88,
+          "pos": 2736,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 89,
+          "pos": 2753,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 90,
+          "pos": 2758,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 91,
+          "pos": 2759,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 92,
+          "pos": 2819,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 93,
+          "pos": 2839,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 94,
+          "pos": 2841,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 95,
+          "pos": 2858,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 96,
+          "pos": 2863,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 97,
+          "pos": 2864,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 98,
+          "pos": 2924,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 99,
+          "pos": 2944,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 100,
+          "pos": 2946,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 101,
+          "pos": 2963,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 102,
+          "pos": 2968,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 103,
+          "pos": 2969,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 104,
+          "pos": 3029,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 105,
+          "pos": 3049,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 106,
+          "pos": 3051,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 107,
+          "pos": 3068,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 108,
+          "pos": 3073,
+          "len": 403,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 109,
+          "pos": 3476,
+          "len": 13,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para el sello electrónico de la AEAT",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 110,
+          "pos": 3489,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"</T\""
+        },
+        {
+          "n": 111,
+          "pos": 3492,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 112,
+          "pos": 3495,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"02\""
+        },
+        {
+          "n": 113,
+          "pos": 3497,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        }
+      ]
+    }
+  },
+  "v13_2016_2017": {
+    "DR23200": {
+      "total_positions": null,
+      "has_comp": false,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Inicio del identificador de modelo y página.",
+          "valid": null,
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Modelo.",
+          "valid": null,
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Discriminante",
+          "valid": null,
+          "content": "Constante \"0\""
+        },
+        {
+          "n": 4,
+          "pos": 7,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Ejercicio de devengo (EEEE)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 5,
+          "pos": 11,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Periodo",
+          "valid": null,
+          "content": "\"0A\""
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 5,
+          "type": "An",
+          "comp": null,
+          "desc": "Tipo y cierre",
+          "valid": null,
+          "content": "\"0000>\""
+        },
+        {
+          "n": 7,
+          "pos": 18,
+          "len": 5,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante",
+          "valid": null,
+          "content": "\"<AUX>\""
+        },
+        {
+          "n": 8,
+          "pos": 23,
+          "len": 70,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 9,
+          "pos": 93,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Versión del Programa (Nota 1)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 97,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 11,
+          "pos": 101,
+          "len": 9,
+          "type": "An",
+          "comp": null,
+          "desc": "NIF Empresa Desarrollo (Nota 1)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 12,
+          "pos": 110,
+          "len": 213,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración. Rellenar con blancos",
+          "valid": null,
+          "content": "BLANCOS"
+        },
+        {
+          "n": 13,
+          "pos": 323,
+          "len": 6,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante",
+          "valid": null,
+          "content": "\"</AUX>\""
+        },
+        {
+          "n": 14,
+          "pos": 329,
+          "len": "variable",
+          "type": "An",
+          "comp": null,
+          "desc": "Contenido del fichero. Aquí se debe incluir el contenido de las páginas correspondientes a la declaración según el formato descrito para cada página en este mismo documento",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 15,
+          "pos": "***",
+          "len": 18,
+          "type": "An",
+          "comp": null,
+          "desc": "Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>",
+          "valid": null,
+          "content": "\"</T2320EEEE0A0000>\""
+        },
+        {
+          "n": 16,
+          "pos": "***",
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Fin de Registro. Constante CRLF( Hexadecimal 0D0A, Decimal 1310)",
+          "valid": null,
+          "content": null
+        }
+      ]
+    },
+    "DR23201": {
+      "total_positions": null,
+      "has_comp": true,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"01\""
+        },
+        {
+          "n": 4,
+          "pos": 8,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        },
+        {
+          "n": 5,
+          "pos": 12,
+          "len": 1,
+          "type": "A",
+          "comp": null,
+          "desc": "Indicador de página complementaria",
+          "valid": "Obligatorio",
+          "content": "C o blanco"
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado AEAT (No hay Forma de Pago)",
+          "valid": null,
+          "content": "Blanco"
+        },
+        {
+          "n": 7,
+          "pos": 14,
+          "len": 9,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - NIF Entidad",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 8,
+          "pos": 23,
+          "len": 60,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - Apellidos o Razón social",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 9,
+          "pos": 83,
+          "len": 20,
+          "type": "An",
+          "comp": null,
+          "desc": "1.Identificación - Nombre",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 103,
+          "len": 4,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Ejercicio",
+          "valid": "Obligatorio",
+          "content": null
+        },
+        {
+          "n": 11,
+          "pos": 107,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "2.Devengo - Período (Uso Interno)",
+          "valid": "Obligatorio",
+          "content": "Constante \"0A\""
+        },
+        {
+          "n": 12,
+          "pos": 109,
+          "len": 1,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Tipo de Ejercicio",
+          "valid": null,
+          "content": "1 - 12 meses dentro del año natural\n2 - 12 meses (365 días)\n3 -  inferior a 12 meses"
+        },
+        {
+          "n": 13,
+          "pos": 110,
+          "len": 8,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Fecha de inicio del período impositivo",
+          "valid": "Obligatorio",
+          "content": "ddmmaaaa"
+        },
+        {
+          "n": 14,
+          "pos": 118,
+          "len": 8,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - Fecha de fin del período impositivo",
+          "valid": "Obligatorio",
+          "content": "ddmmaaaa"
+        },
+        {
+          "n": 15,
+          "pos": 126,
+          "len": 4,
+          "type": "Num",
+          "comp": null,
+          "desc": "2.Devengo - C.N.A.E. actividad principal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 16,
+          "pos": 130,
+          "len": 1,
+          "type": "An",
+          "comp": null,
+          "desc": "Declaración complementaria o sustitutiva",
+          "valid": null,
+          "content": "S, C o blanco"
+        },
+        {
+          "n": 17,
+          "pos": 131,
+          "len": 13,
+          "type": "An",
+          "comp": null,
+          "desc": "Declaración complementaria. Número de justificante de la declaración anterior",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 18,
+          "pos": 144,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 19,
+          "pos": 159,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 20,
+          "pos": 160,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 21,
+          "pos": 220,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 22,
+          "pos": 240,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 23,
+          "pos": 241,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 24,
+          "pos": 243,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 25,
+          "pos": 245,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 26,
+          "pos": 246,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 27,
+          "pos": 248,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 1 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 28,
+          "pos": 265,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 29,
+          "pos": 280,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 30,
+          "pos": 281,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 31,
+          "pos": 341,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 32,
+          "pos": 361,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 33,
+          "pos": 362,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 34,
+          "pos": 364,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 35,
+          "pos": 366,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 36,
+          "pos": 367,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 37,
+          "pos": 369,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 2 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 38,
+          "pos": 386,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 39,
+          "pos": 401,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 402,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 41,
+          "pos": 462,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 42,
+          "pos": 482,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 43,
+          "pos": 483,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 485,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 45,
+          "pos": 487,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 46,
+          "pos": 488,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 47,
+          "pos": 490,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 3 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 507,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 49,
+          "pos": 522,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 523,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 51,
+          "pos": 583,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 52,
+          "pos": 603,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 53,
+          "pos": 604,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 54,
+          "pos": 606,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 55,
+          "pos": 608,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 56,
+          "pos": 609,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 57,
+          "pos": 611,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 4 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 58,
+          "pos": 628,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 59,
+          "pos": 643,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 60,
+          "pos": 644,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 61,
+          "pos": 704,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 62,
+          "pos": 724,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 63,
+          "pos": 725,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 727,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Tipo Operación",
+          "valid": null,
+          "content": "(Tabla C)"
+        },
+        {
+          "n": 65,
+          "pos": 729,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Ingreso / Pago",
+          "valid": null,
+          "content": "\"I\" - Ingreso o \"P\" - Pago"
+        },
+        {
+          "n": 66,
+          "pos": 730,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Método Valoración",
+          "valid": null,
+          "content": "(Tabla B)"
+        },
+        {
+          "n": 67,
+          "pos": 732,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "3.Información operaciones con personas o entidades vinculadas 5 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 68,
+          "pos": 749,
+          "len": 15,
+          "type": "An",
+          "comp": null,
+          "desc": "4.Operaciones con personas o entidades vinculadas - Nº identifi cación de la matriz",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 69,
+          "pos": 764,
+          "len": 60,
+          "type": "An",
+          "comp": null,
+          "desc": "4.Operaciones con personas o entidades vinculadas - Razón social (matriz)",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 824,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 71,
+          "pos": 839,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 -F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 72,
+          "pos": 840,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 73,
+          "pos": 900,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 74,
+          "pos": 920,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 75,
+          "pos": 922,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 76,
+          "pos": 923,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 1 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 77,
+          "pos": 940,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 78,
+          "pos": 955,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 79,
+          "pos": 956,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 80,
+          "pos": 1016,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 81,
+          "pos": 1036,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 82,
+          "pos": 1038,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 83,
+          "pos": 1039,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 2 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 84,
+          "pos": 1056,
+          "len": 15,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - NIF Persona o entidad vinculada",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 85,
+          "pos": 1071,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 86,
+          "pos": 1072,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Apellidos y nombre o Razón social",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 87,
+          "pos": 1132,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 88,
+          "pos": 1152,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Código Provincia / País",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 89,
+          "pos": 1154,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Tipo Vinculación",
+          "valid": null,
+          "content": "(Tabla A)"
+        },
+        {
+          "n": 90,
+          "pos": 1155,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "4.Operaciones con personas o entidades vinculadas 3 - Importe Operación",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 91,
+          "pos": 1172,
+          "len": 317,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 92,
+          "pos": 1489,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"</T\""
+        },
+        {
+          "n": 93,
+          "pos": 1492,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 94,
+          "pos": 1495,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"01\""
+        },
+        {
+          "n": 95,
+          "pos": 1497,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        }
+      ]
+    },
+    "DR23202": {
+      "total_positions": null,
+      "has_comp": true,
+      "fields": [
+        {
+          "n": 1,
+          "pos": 1,
+          "len": 2,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"<T\""
+        },
+        {
+          "n": 2,
+          "pos": 3,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 3,
+          "pos": 6,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"02\""
+        },
+        {
+          "n": 4,
+          "pos": 8,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de inicio de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        },
+        {
+          "n": 5,
+          "pos": 12,
+          "len": 1,
+          "type": "A",
+          "comp": null,
+          "desc": "Indicador de página complementaria",
+          "valid": "Obligatorio",
+          "content": "C o blanco"
+        },
+        {
+          "n": 6,
+          "pos": 13,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 7,
+          "pos": 63,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 8,
+          "pos": 123,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 9,
+          "pos": 143,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 10,
+          "pos": 144,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 11,
+          "pos": 146,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 1 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 12,
+          "pos": 163,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 13,
+          "pos": 213,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 14,
+          "pos": 273,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 15,
+          "pos": 293,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 16,
+          "pos": 294,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 17,
+          "pos": 296,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 2 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 18,
+          "pos": 313,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 19,
+          "pos": 363,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 20,
+          "pos": 423,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 21,
+          "pos": 443,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 22,
+          "pos": 444,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 23,
+          "pos": 446,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 3 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 24,
+          "pos": 463,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 25,
+          "pos": 513,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 26,
+          "pos": 573,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 27,
+          "pos": 593,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 28,
+          "pos": 594,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 29,
+          "pos": 596,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 4 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 30,
+          "pos": 613,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 31,
+          "pos": 663,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 32,
+          "pos": 723,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 33,
+          "pos": 743,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 34,
+          "pos": 744,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 35,
+          "pos": 746,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 5 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 36,
+          "pos": 763,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 37,
+          "pos": 813,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 38,
+          "pos": 873,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 39,
+          "pos": 893,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 894,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 41,
+          "pos": 896,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 6 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 42,
+          "pos": 913,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 43,
+          "pos": 963,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 1023,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 45,
+          "pos": 1043,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 46,
+          "pos": 1044,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 47,
+          "pos": 1046,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 7 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 1063,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 49,
+          "pos": 1113,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 1173,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 51,
+          "pos": 1193,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 52,
+          "pos": 1194,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 53,
+          "pos": 1196,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 8 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 54,
+          "pos": 1213,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 55,
+          "pos": 1263,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 56,
+          "pos": 1323,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 57,
+          "pos": 1343,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 58,
+          "pos": 1344,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 59,
+          "pos": 1346,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 9 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 60,
+          "pos": 1363,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 61,
+          "pos": 1413,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 62,
+          "pos": 1473,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 63,
+          "pos": 1493,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 1494,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 65,
+          "pos": 1496,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 10 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 66,
+          "pos": 1513,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 67,
+          "pos": 1563,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 68,
+          "pos": 1623,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 69,
+          "pos": 1643,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 1644,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 71,
+          "pos": 1646,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 11 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 72,
+          "pos": 1663,
+          "len": 50,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12- Descripción de la operación",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 73,
+          "pos": 1713,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Persona o entidad residente en paraíso fiscal",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 74,
+          "pos": 1773,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 75,
+          "pos": 1793,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - F/J/O",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 76,
+          "pos": 1794,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 77,
+          "pos": 1796,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "5.Operaciones relacionadas con paraísos fiscales 12 - Importe",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 36,
+          "pos": 1813,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 37,
+          "pos": 1814,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 38,
+          "pos": 1874,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 39,
+          "pos": 1894,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 40,
+          "pos": 1896,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 41,
+          "pos": 1913,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 1 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 42,
+          "pos": 1918,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 43,
+          "pos": 1919,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 44,
+          "pos": 1979,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 45,
+          "pos": 1999,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 46,
+          "pos": 2001,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 47,
+          "pos": 2018,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 2 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 48,
+          "pos": 2023,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 49,
+          "pos": 2024,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 50,
+          "pos": 2084,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 51,
+          "pos": 2104,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 52,
+          "pos": 2106,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 53,
+          "pos": 2123,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 3 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 54,
+          "pos": 2128,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 55,
+          "pos": 2129,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 56,
+          "pos": 2189,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 57,
+          "pos": 2209,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 58,
+          "pos": 2211,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 59,
+          "pos": 2228,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 4 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 60,
+          "pos": 2233,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 61,
+          "pos": 2234,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 62,
+          "pos": 2294,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 63,
+          "pos": 2314,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 64,
+          "pos": 2316,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 65,
+          "pos": 2333,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 5 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 66,
+          "pos": 2338,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 67,
+          "pos": 2339,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 68,
+          "pos": 2399,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 69,
+          "pos": 2419,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 70,
+          "pos": 2421,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 71,
+          "pos": 2438,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 6 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 72,
+          "pos": 2443,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 73,
+          "pos": 2444,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 74,
+          "pos": 2504,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 75,
+          "pos": 2524,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 76,
+          "pos": 2526,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 77,
+          "pos": 2543,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 7 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 78,
+          "pos": 2548,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 79,
+          "pos": 2549,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 80,
+          "pos": 2609,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 81,
+          "pos": 2629,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 82,
+          "pos": 2631,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 83,
+          "pos": 2648,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 8 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 84,
+          "pos": 2653,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 85,
+          "pos": 2654,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 86,
+          "pos": 2714,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 -  Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 87,
+          "pos": 2734,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 88,
+          "pos": 2736,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 89,
+          "pos": 2753,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 9 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 90,
+          "pos": 2758,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 91,
+          "pos": 2759,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 92,
+          "pos": 2819,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 93,
+          "pos": 2839,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 94,
+          "pos": 2841,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 95,
+          "pos": 2858,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 10 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 96,
+          "pos": 2863,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 97,
+          "pos": 2864,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 98,
+          "pos": 2924,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 99,
+          "pos": 2944,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 100,
+          "pos": 2946,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 101,
+          "pos": 2963,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 11 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 102,
+          "pos": 2968,
+          "len": 1,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Tipo",
+          "valid": null,
+          "content": "(Tabla D)"
+        },
+        {
+          "n": 103,
+          "pos": 2969,
+          "len": 60,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Entidad participada o emisora de los valores",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 104,
+          "pos": 3029,
+          "len": 20,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Reservado AEAT (Nombre)",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 105,
+          "pos": 3049,
+          "len": 2,
+          "type": "An",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 -  Clave País o territorio",
+          "valid": null,
+          "content": null
+        },
+        {
+          "n": 106,
+          "pos": 3051,
+          "len": 17,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - Valor de adquisición",
+          "valid": null,
+          "content": "15 ent + 2 dec"
+        },
+        {
+          "n": 107,
+          "pos": 3068,
+          "len": 5,
+          "type": "Num",
+          "comp": "C",
+          "desc": "6.Tenencia de valores relacionadas con paraísos fiscales 12 - % Participación",
+          "valid": null,
+          "content": "3 ent + 2 dec"
+        },
+        {
+          "n": 108,
+          "pos": 3073,
+          "len": 403,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para la Administración",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 109,
+          "pos": 3476,
+          "len": 13,
+          "type": "An",
+          "comp": null,
+          "desc": "Reservado para el sello electrónico de la AEAT",
+          "valid": null,
+          "content": "Blancos"
+        },
+        {
+          "n": 110,
+          "pos": 3489,
+          "len": 3,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"</T\""
+        },
+        {
+          "n": 111,
+          "pos": 3492,
+          "len": 3,
+          "type": "Num",
+          "comp": null,
+          "desc": "Modelo",
+          "valid": "Obligatorio",
+          "content": "Constante \"232\""
+        },
+        {
+          "n": 112,
+          "pos": 3495,
+          "len": 2,
+          "type": "Num",
+          "comp": null,
+          "desc": "Página",
+          "valid": "Obligatorio",
+          "content": "Constante \"02\""
+        },
+        {
+          "n": 113,
+          "pos": 3497,
+          "len": 4,
+          "type": "An",
+          "comp": null,
+          "desc": "Indicador de fin de registro",
+          "valid": "Obligatorio",
+          "content": "Constante \"000>\""
+        }
+      ]
+    }
+  }
+}
