@@ -9,7 +9,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import build_snapshot, load_registry_tree
+from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import extract_record_design_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -266,6 +266,40 @@ def test_modelo_131_current_page_one_agrarian_fields_do_not_shadow_territorial_m
             assert "ceuta-melilla" in field_name
         else:
             assert "ceuta-melilla" not in field_name
+
+
+@pytest.mark.parametrize("filing_year", [2024, 2025, 2026])
+def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_year: int) -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    layout = resolve_export_layout(snapshot).layout
+    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
+
+    for record in layout.records:
+        if record.binding_record is None:
+            continue
+        expected = {
+            binding.id: binding
+            for binding in bindings.values()
+            if binding.selector.get("record") == record.binding_record
+        }
+        derived = {field.binding: field for field in record.fields if field.kind == "binding"}
+
+        assert expected
+        assert set(derived) == set(expected)
+        assert all(
+            derived[binding_id].offset == _selector_int(binding.selector["offset"])
+            for binding_id, binding in expected.items()
+        )
+        assert all(
+            derived[binding_id].length == _selector_int(binding.selector["length"])
+            for binding_id, binding in expected.items()
+        )
+        assert all(
+            derived[binding_id].data_type == str(binding.selector["data_type"])
+            for binding_id, binding in expected.items()
+        )
 
 
 def _is_structured_input_field(description: str) -> bool:

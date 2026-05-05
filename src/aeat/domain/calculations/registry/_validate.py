@@ -516,7 +516,33 @@ class RegistryValidator:
                 self._require_source_tier(prefix, f"export {layout.id}", layout.source_refs, "layout_authority")
             )
             for record in layout.records:
-                if record.repeat == "binding_rows" and not any(field.kind == "binding" for field in record.fields):
+                if record.binding_record is not None:
+                    matching_bindings = [
+                        binding
+                        for binding in revision.bindings
+                        if binding.selector.get("record") == record.binding_record
+                    ]
+                    if not matching_bindings:
+                        failures.append(
+                            f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
+                            f"{record.binding_record!r}"
+                        )
+                    for binding in matching_bindings:
+                        missing_selector_keys = sorted(
+                            key
+                            for key in ("offset", "length", "data_type")
+                            if key not in binding.selector
+                        )
+                        if missing_selector_keys:
+                            failures.append(
+                                f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
+                                f"{missing_selector_keys!r}"
+                            )
+                if (
+                    record.repeat == "binding_rows"
+                    and not any(field.kind == "binding" for field in record.fields)
+                    and record.binding_record is None
+                ):
                     failures.append(
                         f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
                     )
