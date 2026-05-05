@@ -48,6 +48,7 @@ from .....domain.calculations.registry import (
     ParsedExportFieldValue,
     RegistryFilingObservation,
     RegistrySnapshot,
+    RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
@@ -55,8 +56,11 @@ from .....domain.calculations.registry import (
     load_registry_tree,
     parse_export_payload,
     previous_filing_observation_requirements,
+    relation_source_requirements,
+    remote_state_policy_from_cross_reference,
     resolve_export_layout,
     resolve_previous_filing_binding_values,
+    resolve_relation_values_from_observations,
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion
 from ..browser import Profile
@@ -207,6 +211,75 @@ async def shared_playwright(
         yield pw
 
 
+class DeclarationsRegisterSession:
+    """Reusable read-only session for AEAT's filed-declarations register."""
+
+    def __init__(self, session: AeatSession, page: Page, context: BrowserContext) -> None:
+        self._session = session
+        self._page = page
+        self._context = context
+
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaration, ...]:
+        """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
+
+        await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio)
+        results = _parse_listbox(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
+        log.info(
+            "DeclarationsRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
+            len(results),
+            modelo,
+            ejercicio,
+        )
+        return results
+
+    async def capture_observation(
+        self,
+        declaration: Declaration,
+        *,
+        registry_snapshot: RegistrySnapshot | None = None,
+        artefact_sink: FiledDeclarationArtefactSink | None = None,
+    ) -> FiledDeclarationObservation:
+        """Capture a normalized filed-declaration observation using the active page."""
+
+        snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
+        read_policy = _read_guard_policy_from_snapshot(snapshot)
+        await _drive_search(
+            self._page,
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            read_policy=read_policy,
+        )
+        row_locator = _row_locator_for_expediente(
+            self._page,
+            expediente_id=declaration.expediente_id,
+        )
+        return await _capture_filed_declaration_observation_from_row(
+            self._session,
+            declaration,
+            row_locator=row_locator,
+            page=self._page,
+            context=self._context,
+            registry_snapshot=snapshot,
+            artefact_sink=artefact_sink,
+        )
+
+
+@asynccontextmanager
+async def open_declarations_register(
+    session: AeatSession,
+    *,
+    settings: Settings | None = None,
+    playwright: Playwright | None = None,
+) -> AsyncIterator[DeclarationsRegisterSession]:
+    """Open one browser context for repeated filed-declaration register reads."""
+
+    async with _open_register_page(session, settings=settings, playwright=playwright) as (
+        page,
+        context,
+    ):
+        yield DeclarationsRegisterSession(session, page, context)
+
+
 @asynccontextmanager
 async def _open_register_page(
     session: AeatSession,
@@ -338,6 +411,7 @@ async def _drive_search(
     *,
     modelo: str,
     ejercicio: int,
+    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
 ) -> None:
     """Fill the form and click Buscar. No-op return on success.
 
@@ -347,7 +421,7 @@ async def _drive_search(
     timeout.
     """
     try:
-        _assert_read_http("GET", _LISTING_URL)
+        _assert_read_http("GET", _LISTING_URL, policy=read_policy)
         await page.goto(
             _LISTING_URL,
             wait_until="networkidle",
@@ -356,7 +430,7 @@ async def _drive_search(
     except PlaywrightError as exc:
         raise SedeNavigationError(f"goto {_LISTING_URL!r} failed: {exc}") from exc
     await page.wait_for_timeout(1500)
-    await _continue_alert_modal(page)
+    await _continue_alert_modal(page, read_policy=read_policy)
 
     final_url = page.url
     if "/wlpl/SCEJ-MANT/CONSUL" not in final_url:
@@ -386,15 +460,17 @@ async def _drive_search(
         page,
         label_text="Modelo (*)",
         option_match=f"{modelo} -",
+        read_policy=read_policy,
     )
     await _select_combobox_value(
         page,
         label_text="Ejercicio (*)",
         option_match=str(ejercicio),
+        read_policy=read_policy,
     )
 
     try:
-        _assert_read_browser_action("Buscar")
+        _assert_read_browser_action("Buscar", policy=read_policy)
         await (
             page.locator("button.z-button")
             .filter(has_text="Buscar")
@@ -412,12 +488,13 @@ async def _select_combobox_value(
     *,
     label_text: str,
     option_match: str,
+    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
 ) -> None:
     """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
     label = page.get_by_text(label_text, exact=True).first
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
-        _assert_read_browser_action(label_text)
+        _assert_read_browser_action(label_text, policy=read_policy)
         await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(f"opening combobox after label {label_text!r} failed: {exc}") from exc
@@ -425,17 +502,21 @@ async def _select_combobox_value(
 
     target = page.locator(".z-comboitem-text").filter(has_text=option_match).first
     try:
-        _assert_read_browser_action(option_match)
+        _assert_read_browser_action(option_match, policy=read_policy)
         await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(f"selecting option {option_match!r} for {label_text!r} failed: {exc}") from exc
     await page.wait_for_timeout(300)
 
 
-async def _continue_alert_modal(page: Page) -> None:
+async def _continue_alert_modal(
+    page: Page,
+    *,
+    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
     """Dismiss AEAT's informational alert modal without opening alert actions."""
     try:
-        _assert_read_browser_action("Continuar")
+        _assert_read_browser_action("Continuar", policy=read_policy)
         result = await page.evaluate(
             """
             () => {
@@ -660,8 +741,9 @@ async def capture_declaration(
         SedeParseError: When the cotejo URL cannot be parsed for
             its CSV.
         JustificanteFetchError: When the PDF GET returns non-2xx,
-            an empty body, or a non-PDF content type.
+        an empty body, or a non-PDF content type.
     """
+    read_policy = _read_guard_policy_from_snapshot(_registry_snapshot_for_declaration(declaration))
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
@@ -670,6 +752,7 @@ async def capture_declaration(
             page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
+            read_policy=read_policy,
         )
 
         row_locator = _row_locator_for_expediente(
@@ -684,7 +767,7 @@ async def capture_declaration(
             async with context.expect_page(
                 timeout=_VER_CLICK_TIMEOUT_MS,
             ) as new_page_info:
-                _assert_read_browser_action("Ver")
+                _assert_read_browser_action("Ver", policy=read_policy)
                 await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
@@ -719,7 +802,7 @@ async def capture_declaration(
             pdf_url=AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}"),
         )
 
-        _assert_read_http("GET", str(ref.pdf_url))
+        _assert_read_http("GET", str(ref.pdf_url), policy=read_policy)
         pdf_response = await context.request.get(str(ref.pdf_url))
         if not (200 <= pdf_response.status < 300):
             raise JustificanteFetchError(
@@ -782,13 +865,7 @@ async def capture_filed_declaration_observation(
     if not authenticated_identity:
         raise SedeNavigationError("AeatSession.identity_nif is empty; cannot bind live filing observation")
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
-    observation_key = (
-        declaration.modelo,
-        declaration.ejercicio,
-        declaration.period,
-        declaration.expediente_id,
-    )
-
+    read_policy = _read_guard_policy_from_snapshot(snapshot)
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
@@ -797,111 +874,147 @@ async def capture_filed_declaration_observation(
             page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
+            read_policy=read_policy,
         )
 
         row_locator = _row_locator_for_expediente(
             page,
             expediente_id=declaration.expediente_id,
         )
-        listing_url = AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}")
+        return await _capture_filed_declaration_observation_from_row(
+            session,
+            declaration,
+            row_locator=row_locator,
+            page=page,
+            context=context,
+            registry_snapshot=snapshot,
+            artefact_sink=artefact_sink,
+        )
 
-        register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
-        artefacts: list[FiledDeclarationArtefact] = [
-            _store_artefact(
-                artefact_sink,
-                observation_key=observation_key,
-                artefact=register_row,
-                body=register_row_body,
-            ),
-        ]
-        casillas: tuple[ObservedCasillaValue, ...] = ()
-        extraction_coverage: dict[str, float] = {}
 
-        justificante, justificante_body = await _capture_row_pdf_artefact(
+async def _capture_filed_declaration_observation_from_row(
+    session: AeatSession,
+    declaration: Declaration,
+    *,
+    row_locator,
+    page: Page,
+    context: BrowserContext,
+    registry_snapshot: RegistrySnapshot | None,
+    artefact_sink: FiledDeclarationArtefactSink | None,
+) -> FiledDeclarationObservation:
+    authenticated_identity = (session.identity_nif or "").strip()
+    if not authenticated_identity:
+        raise SedeNavigationError("AeatSession.identity_nif is empty; cannot bind live filing observation")
+    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
+    read_policy = _read_guard_policy_from_snapshot(snapshot)
+    observation_key = (
+        declaration.modelo,
+        declaration.ejercicio,
+        declaration.period,
+        declaration.expediente_id,
+    )
+    listing_url = AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}")
+
+    register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
+    artefacts: list[FiledDeclarationArtefact] = [
+        _store_artefact(
+            artefact_sink,
+            observation_key=observation_key,
+            artefact=register_row,
+            body=register_row_body,
+        ),
+    ]
+    casillas: tuple[ObservedCasillaValue, ...] = ()
+    extraction_coverage: dict[str, float] = {}
+
+    justificante, justificante_body = await _capture_row_pdf_artefact(
+        context=context,
+        row_locator=row_locator,
+        declaration=declaration,
+        cell_index=declaration.justificante_cell_index,
+        kind="justificante_pdf",
+        read_policy=read_policy,
+    )
+    artefacts.append(
+        _store_artefact(
+            artefact_sink,
+            observation_key=observation_key,
+            artefact=justificante,
+            body=justificante_body,
+        )
+    )
+
+    declaration_pdf_body: bytes | None = None
+    if declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None:
+        declaration_pdf, declaration_pdf_body = await _capture_row_pdf_artefact(
             context=context,
             row_locator=row_locator,
             declaration=declaration,
-            cell_index=declaration.justificante_cell_index,
-            kind="justificante_pdf",
+            cell_index=declaration.declaration_copy_cell_index,
+            kind="declaration_pdf",
+            read_policy=read_policy,
         )
         artefacts.append(
             _store_artefact(
                 artefact_sink,
                 observation_key=observation_key,
-                artefact=justificante,
-                body=justificante_body,
-            )
-        )
-
-        declaration_pdf_body: bytes | None = None
-        if declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None:
-            declaration_pdf, declaration_pdf_body = await _capture_row_pdf_artefact(
-                context=context,
-                row_locator=row_locator,
-                declaration=declaration,
-                cell_index=declaration.declaration_copy_cell_index,
-                kind="declaration_pdf",
-            )
-            artefacts.append(
-                _store_artefact(
-                    artefact_sink,
-                    observation_key=observation_key,
-                    artefact=declaration_pdf,
-                    body=declaration_pdf_body,
-                )
-            )
-
-        if declaration.archive_link_text and declaration.archive_cell_index is not None:
-            submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
-                page=page,
-                row_locator=row_locator,
-                declaration=declaration,
-                cell_index=declaration.archive_cell_index,
-            )
-            submitted_artefact = _store_artefact(
-                artefact_sink,
-                observation_key=observation_key,
-                artefact=submitted_artefact,
-                body=submitted_body,
-            )
-            artefacts.append(submitted_artefact)
-            casillas = _observed_casillas_from_submitted_file(
-                snapshot=snapshot,
-                declaration=declaration,
-                body=submitted_body,
-                artefact=submitted_artefact,
-            )
-            expected_casillas = len(resolve_export_layout(snapshot).fields_by_casilla)
-            extraction_coverage["submitted_file"] = len(casillas) / expected_casillas if expected_casillas else 0.0
-        elif declaration_pdf_body is not None:
-            casillas = _observed_casillas_from_declaration_pdf(
-                snapshot=snapshot,
-                declaration=declaration,
+                artefact=declaration_pdf,
                 body=declaration_pdf_body,
             )
-            extraction_coverage["declaration_pdf"] = 1.0
-        else:
-            raise SedeParseError(
-                f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data"
-            )
-
-        return FiledDeclarationObservation(
-            modelo=declaration.modelo,
-            ejercicio=declaration.ejercicio,
-            period=declaration.period,
-            expediente_id=declaration.expediente_id,
-            status=declaration.estado,
-            presented_at=declaration.presented_at,
-            authenticated_identity=authenticated_identity,
-            artefacts=tuple(artefacts),
-            casillas=casillas,
-            metadata={
-                "tipo_solicitud": declaration.tipo_solicitud or "",
-                "observaciones": declaration.observaciones or "",
-            },
-            extraction_coverage=extraction_coverage,
-            registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period}",
         )
+
+    if declaration.archive_link_text and declaration.archive_cell_index is not None:
+        submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
+            page=page,
+            row_locator=row_locator,
+            declaration=declaration,
+            cell_index=declaration.archive_cell_index,
+            read_policy=read_policy,
+        )
+        submitted_artefact = _store_artefact(
+            artefact_sink,
+            observation_key=observation_key,
+            artefact=submitted_artefact,
+            body=submitted_body,
+        )
+        artefacts.append(submitted_artefact)
+        casillas = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=submitted_body,
+            artefact=submitted_artefact,
+        )
+        expected_casillas = len(resolve_export_layout(snapshot).fields_by_casilla)
+        extraction_coverage["submitted_file"] = len(casillas) / expected_casillas if expected_casillas else 0.0
+    elif declaration_pdf_body is not None:
+        casillas = _observed_casillas_from_declaration_pdf(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=declaration_pdf_body,
+        )
+        extraction_coverage["declaration_pdf"] = 1.0
+    else:
+        raise SedeParseError(
+            f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data"
+        )
+
+    return FiledDeclarationObservation(
+        modelo=declaration.modelo,
+        ejercicio=declaration.ejercicio,
+        period=declaration.period,
+        expediente_id=declaration.expediente_id,
+        status=declaration.estado,
+        presented_at=declaration.presented_at,
+        authenticated_identity=authenticated_identity,
+        artefacts=tuple(artefacts),
+        casillas=casillas,
+        metadata={
+            "tipo_solicitud": declaration.tipo_solicitud or "",
+            "observaciones": declaration.observaciones or "",
+        },
+        extraction_coverage=extraction_coverage,
+        registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period}",
+    )
 
 
 async def capture_previous_filing_observations(
@@ -944,6 +1057,45 @@ async def capture_previous_filing_observations(
                 f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}"
             )
         observations.append(observation)
+    return tuple(observations)
+
+
+async def capture_relation_source_observations(
+    session: AeatSession,
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+    settings: Settings | None = None,
+    playwright: Playwright | None = None,
+) -> tuple[FiledDeclarationObservation, ...]:
+    """Capture filed declarations required by registry cross-model relations."""
+
+    required_outputs: dict[tuple[str, int, str], set[str]] = {}
+    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
+        for source_period in requirement.periods:
+            key = (requirement.source_modelo, requirement.filing_year, source_period)
+            required_outputs.setdefault(key, set()).add(requirement.source_output)
+
+    observations: list[FiledDeclarationObservation] = []
+    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
+        for (modelo, source_year, source_period), source_outputs in sorted(required_outputs.items()):
+            rows = await register.walk(modelo=modelo, ejercicio=source_year)
+            matches = tuple(row for row in rows if row.period == source_period)
+            if len(matches) != 1:
+                raise SedeParseError(
+                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
+                    f"expected one filed declaration, found {len(matches)}"
+                )
+            observation = await register.capture_observation(matches[0])
+            observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
+            missing = sorted(source_outputs.difference(observed_casillas))
+            if missing:
+                raise SedeParseError(
+                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
+                    f"missing observed casillas {missing!r}"
+                )
+            observations.append(observation)
     return tuple(observations)
 
 
@@ -996,6 +1148,25 @@ def _registry_snapshot_for_declaration(declaration: Declaration) -> RegistrySnap
         filing_year=declaration.ejercicio,
         period=declaration.period,
     )
+
+
+def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
+    listing_host = urlsplit(_LISTING_URL).hostname
+    if listing_host is None:
+        raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
+    matching_decisions = tuple(
+        decision
+        for decision in snapshot.live_cross_references.values()
+        if decision.surface == "authenticated_read_surface"
+        and listing_host.lower() in {host.lower() for host in decision.allowed_hosts}
+    )
+    if len(matching_decisions) != 1:
+        decision_ids = ", ".join(sorted(decision.id for decision in matching_decisions)) or "none"
+        raise RegistryValidationError(
+            f"expected exactly one authenticated declarations read surface for modelo "
+            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}"
+        )
+    return remote_state_policy_from_cross_reference(matching_decisions[0])
 
 
 def _observed_casillas_from_submitted_file(
@@ -1150,6 +1321,23 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     )
 
 
+def resolve_relation_values_from_filed_declarations(
+    revision: ModeloRevision,
+    observations: tuple[FiledDeclarationObservation, ...],
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Resolve registry cross-model relation values from filed AEAT observations."""
+
+    return resolve_relation_values_from_observations(
+        revision,
+        (registry_observation_from_filed_declaration(observation) for observation in observations),
+        filing_year=filing_year,
+        period=period,
+    )
+
+
 async def _capture_row_pdf_artefact(
     *,
     context: BrowserContext,
@@ -1157,11 +1345,12 @@ async def _capture_row_pdf_artefact(
     declaration: Declaration,
     cell_index: int,
     kind: Literal["justificante_pdf", "declaration_pdf"],
+    read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclarationArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with context.expect_page(timeout=_VER_CLICK_TIMEOUT_MS) as new_page_info:
-            _assert_read_browser_action("Ver")
+            _assert_read_browser_action("Ver", policy=read_policy)
             await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
@@ -1184,7 +1373,7 @@ async def _capture_row_pdf_artefact(
 
     csv = _extract_csv_from_url(cotejo_url)
     pdf_url = AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}")
-    _assert_read_http("GET", str(pdf_url))
+    _assert_read_http("GET", str(pdf_url), policy=read_policy)
     response = await context.request.get(str(pdf_url))
     if not (200 <= response.status < 300):
         raise JustificanteFetchError(f"PDF fetch for CSV={csv!r} returned HTTP {response.status}")
@@ -1213,11 +1402,12 @@ async def _capture_submitted_file_artefact(
     row_locator,
     declaration: Declaration,
     cell_index: int,
+    read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclarationArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=_VER_CLICK_TIMEOUT_MS) as download_info:
-            _assert_read_browser_action("Descarga fichero presentado")
+            _assert_read_browser_action("Descarga fichero presentado", policy=read_policy)
             await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
         download = await download_info.value
         path = await download.path()
@@ -1239,7 +1429,7 @@ async def _capture_submitted_file_artefact(
     source_url = download_url if isinstance(download_url, str) else None
     if not source_url:
         source_url = str(AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}"))
-    _assert_read_http("GET", source_url)
+    _assert_read_http("GET", source_url, policy=read_policy)
     return (
         FiledDeclarationArtefact(
             kind="submitted_file",
@@ -1253,16 +1443,25 @@ async def _capture_submitted_file_artefact(
     )
 
 
-def _assert_read_http(method: str, url: str) -> None:
+def _assert_read_http(
+    method: str,
+    url: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
     assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        policy,
         RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
     )
 
 
-def _assert_read_browser_action(action: str) -> None:
+def _assert_read_browser_action(
+    action: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
     assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        policy,
         RemoteOperation(kind="browser_action", action=action),
     )
 
@@ -1315,11 +1514,15 @@ def _extract_csv_from_url(url: str) -> str:
 
 __all__ = [
     "Declaration",
+    "DeclarationsRegisterSession",
     "capture_declaration",
     "capture_filed_declaration_observation",
     "capture_previous_filing_observations",
+    "capture_relation_source_observations",
+    "open_declarations_register",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
+    "resolve_relation_values_from_filed_declarations",
     "shared_playwright",
     "walk_declarations_register",
 ]
