@@ -158,9 +158,9 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
     }
 
     assert source_modelos_by_construct == {
-        "renta-work-income": {"111"},
+        "renta-work-income": {"111", "190"},
         "renta-real-estate-capital": {"115", "180"},
-        "renta-movable-capital": {"123"},
+        "renta-movable-capital": {"123", "193"},
         "renta-economic-activities": {"130", "131"},
     }
 
@@ -174,7 +174,7 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
     classifications_by_source = {
         classification.source_modelo: classification
         for classification in snapshot.revision.dependency_classifications
-        if classification.treatment == "direct_annual_settlement"
+        if classification.treatment != "non_dependency"
     }
 
     assert set(classifications_by_source) == set(relations_by_source)

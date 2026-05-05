@@ -1767,12 +1767,17 @@ legal_refs = [
     "ley-35-2006:art-99",
     "ley-35-2006:art-30",
     "rd-439-2007:art-109",
+    "orden-eha-3127-2009:art-1",
+    "orden-eha-3377-2011:art-1",
+    "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "boe-modelo-190-2025-form",
+    "boe-modelo-193-2011-form",
 ]
 bindings = [
     "renta-2025-modelo-111-retenciones-periodicas",
@@ -1781,6 +1786,8 @@ bindings = [
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
     "renta-2025-modelo-180-retenciones-anuales",
+    "renta-2025-modelo-190-retenciones-anuales",
+    "renta-2025-modelo-193-retenciones-anuales",
 ]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
@@ -1790,6 +1797,8 @@ relations = [
     "renta-2025-rel-130-pagos-fraccionados",
     "renta-2025-rel-131-pagos-fraccionados",
     "renta-2025-rel-180-retenciones-anuales",
+    "renta-2025-rel-190-retenciones-anuales",
+    "renta-2025-rel-193-retenciones-anuales",
 ]
 dependency_classifications = [
     "renta-2025-dep-111",
@@ -1798,6 +1807,8 @@ dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",
     "renta-2025-dep-180",
+    "renta-2025-dep-190",
+    "renta-2025-dep-193",
 ]
 
 [[revisions."2025".constructs]]
@@ -1807,12 +1818,17 @@ legal_refs = [
     "ley-35-2006:art-99",
     "ley-35-2006:art-30",
     "rd-439-2007:art-109",
+    "orden-eha-3127-2009:art-1",
+    "orden-eha-3377-2011:art-1",
+    "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "boe-modelo-190-2025-form",
+    "boe-modelo-193-2011-form",
 ]
 bindings = [
     "renta-2025-modelo-111-retenciones-periodicas",
@@ -1821,6 +1837,8 @@ bindings = [
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
     "renta-2025-modelo-180-retenciones-anuales",
+    "renta-2025-modelo-190-retenciones-anuales",
+    "renta-2025-modelo-193-retenciones-anuales",
 ]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
@@ -1830,6 +1848,8 @@ relations = [
     "renta-2025-rel-130-pagos-fraccionados",
     "renta-2025-rel-131-pagos-fraccionados",
     "renta-2025-rel-180-retenciones-anuales",
+    "renta-2025-rel-190-retenciones-anuales",
+    "renta-2025-rel-193-retenciones-anuales",
 ]
 dependency_classifications = [
     "renta-2025-dep-111",
@@ -1838,6 +1858,8 @@ dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",
     "renta-2025-dep-180",
+    "renta-2025-dep-190",
+    "renta-2025-dep-193",
 ]
 
 [[revisions."2025".constructs]]
@@ -1846,19 +1868,23 @@ title = "Modelo 100 work income dependency evidence"
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
+    "boe-modelo-190-2025-form",
 ]
-bindings = ["renta-2025-modelo-111-retenciones-periodicas"]
+bindings = ["renta-2025-modelo-111-retenciones-periodicas", "renta-2025-modelo-190-retenciones-anuales"]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
     "renta-2025-rel-111-retenciones-mensuales",
+    "renta-2025-rel-190-retenciones-anuales",
 ]
-dependency_classifications = ["renta-2025-dep-111"]
+dependency_classifications = ["renta-2025-dep-111", "renta-2025-dep-190"]
 
 [[revisions."2025".constructs]]
 id = "renta-real-estate-capital"
@@ -1888,15 +1914,17 @@ title = "Modelo 100 movable-capital dependency evidence"
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
+    "orden-eha-3377-2011:art-1",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
+    "boe-modelo-193-2011-form",
 ]
-bindings = ["renta-2025-modelo-123-retenciones-periodicas"]
-relations = ["renta-2025-rel-123-retenciones-trimestrales"]
-dependency_classifications = ["renta-2025-dep-123"]
+bindings = ["renta-2025-modelo-123-retenciones-periodicas", "renta-2025-modelo-193-retenciones-anuales"]
+relations = ["renta-2025-rel-123-retenciones-trimestrales", "renta-2025-rel-193-retenciones-anuales"]
+dependency_classifications = ["renta-2025-dep-123", "renta-2025-dep-193"]
 
 [[revisions."2025".constructs]]
 id = "renta-economic-activities"
@@ -2053,6 +2081,24 @@ target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "re
 relation_refs = ["renta-2025-rel-180-retenciones-anuales"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-190"
+source_modelo = "190"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-work-income"]
+relation_refs = ["renta-2025-rel-190-retenciones-anuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-193"
+source_modelo = "193"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-movable-capital"]
+relation_refs = ["renta-2025-rel-193-retenciones-anuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2025".casillas]]
 id = "0592"
@@ -2538,6 +2584,30 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 source_ref = "boe-modelo-100-2025-form"
 required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
 
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-190-retenciones-anuales"
+source = "previous_filing"
+selector = { source_modelo = "190", source_output = "decl.retenciones-total", relation = "resumen-anual-trabajo-actividades-premios" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-190-2025-form"
+required_text = ["IMPORTE TOTAL DE LAS RETENCIONES E INGRESOS A CUENTA", "posiciones 95 a 107"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-193-retenciones-anuales"
+source = "previous_filing"
+selector = { source_modelo = "193", source_output = "decl.retenciones-total", relation = "resumen-anual-capital-mobiliario" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-193-2011-form"
+required_text = ["RETENCIONES E INGRESOS A CUENTA", "posiciones 169 a 181"]
+
 [[revisions."2025".relations]]
 id = "renta-2025-rel-111-retenciones-trimestrales"
 kind = "cross_model_output"
@@ -2642,3 +2712,33 @@ target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-190-retenciones-anuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "190"
+source_revision_selector = { year = 2025 }
+source_output = "decl.retenciones-total"
+target_binding = "renta-2025-modelo-190-retenciones-anuales"
+period_alignment = { source_periods = "annual_summary", target_period = "0A" }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-193-retenciones-anuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "193"
+source_revision_selector = { year = 2025 }
+source_output = "decl.retenciones-total"
+target_binding = "renta-2025-modelo-193-retenciones-anuales"
+period_alignment = { source_periods = "annual_summary", target_period = "0A" }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]

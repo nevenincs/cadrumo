@@ -3715,12 +3715,12 @@ application surface, and the old authority has been deleted.
          131, and 180.
        - [x] Dependency classification gate: Modelo 100 ejercicio 2025 now
          classifies every registered dependency source relation for Modelos
-         111, 115, 123, 130, 131, and 180, and the registry validator rejects
-         source/relation drift.
+        111, 115, 123, 130, 131, 180, 190, and 193, and the registry validator
+        rejects source/relation drift.
        - [ ] Direct annual-settlement dependencies:
          - [x] Modelo 111 -> Modelo 100 work/professional/agricultural
            retentions and payments on account.
-         - [ ] Modelo 190 -> Modelo 100 annual work/professional recipient
+         - [x] Modelo 190 -> Modelo 100 annual work/professional recipient
            summary and withholding reconciliation.
          - [x] Modelo 115 -> Modelo 100 urban-rental retentions borne by the
            taxpayer or payer-side evidence where the taxpayer role requires it.
@@ -3728,7 +3728,7 @@ application surface, and the old authority has been deleted.
            and property/payer reconciliation.
          - [x] Modelo 123 -> Modelo 100 movable-capital retentions and income
            account payments.
-         - [ ] Modelo 193 -> Modelo 100 annual movable-capital income and
+         - [x] Modelo 193 -> Modelo 100 annual movable-capital income and
            withholding reconciliation.
          - [x] Modelo 130 -> Modelo 100 direct-estimation instalment payments,
            current-year economic-activity evidence, and previous-year
@@ -3774,8 +3774,8 @@ application surface, and the old authority has been deleted.
        - [x] Initial ejercicio 2025 construct membership now classifies
          registered Modelo 111 dependency relations for work/professional or
          related retentions and payments-on-account evidence.
-       - [ ] Add Modelo 190 relation once Modelo 190 exists as a central
-         registry authority.
+       - [x] Add Modelo 190 annual-summary relation as factual evidence from
+         the central Modelo 190 registry authority.
        - [ ] Add filing-grade work-income casillas, formulas, parameters,
          source citations, and observation profiles.
      - [ ] `renta-real-estate-capital`: rental income, deductible expenses,
@@ -3791,8 +3791,8 @@ application surface, and the old authority has been deleted.
        - [x] Initial ejercicio 2025 construct membership now classifies
          registered Modelo 123 dependency relations for movable-capital
          withholding evidence.
-       - [ ] Add Modelo 193 relation once Modelo 193 exists as a central
-         registry authority.
+       - [x] Add Modelo 193 annual-summary relation as factual evidence from
+         the central Modelo 193 registry authority.
        - [ ] Add filing-grade movable-capital casillas, formulas, parameters,
          source citations, and observation profiles.
      - [ ] `renta-economic-activities`: estimacion directa normal, estimacion
@@ -3836,8 +3836,8 @@ application surface, and the old authority has been deleted.
        previous instalments, annual summaries, fiscal-data observations, and
        dependency reconciliation before final settlement.
        - [x] Initial ejercicio 2025 construct membership now covers registered
-         Modelo 111, 115, 123, 130, 131, and 180 dependency bindings and
-         relations under LIRPF/RIRPF payments-on-account legal refs.
+         Modelo 111, 115, 123, 130, 131, 180, 190, and 193 dependency bindings
+         and relations under LIRPF/RIRPF payments-on-account legal refs.
      - [ ] `renta-final-settlement`: cuota diferencial, result to pay/refund,
        payment/refund structure, Modelo 102 linkage where relevant, and final
        declaration review trace.
@@ -3919,6 +3919,10 @@ application surface, and the old authority has been deleted.
      retentions, recipient/employer summaries, annual withholding totals,
      source/legal references, and contradiction checks against fiscal-data or
      filed-data observations.
+     - [x] Modelo 100 ejercicio 2025 now declares Modelo 190 annual
+       retentions as factual evidence through a registry binding, relation,
+       dependency classification, construct membership, and relation-resolution
+       behaviour test.
   - [ ] Implement dependency inputs from Modelo 115 and Modelo 180:
      urban-rental retentions, annual rental-withholding summaries, property or
      payer records where available, source/legal references, and contradiction
@@ -3926,6 +3930,10 @@ application surface, and the old authority has been deleted.
   - [ ] Implement dependency inputs from Modelo 123 and Modelo 193:
      movable-capital retentions, annual capital-income summaries, source/legal
      references, and contradiction checks against financial-income observations.
+     - [x] Modelo 100 ejercicio 2025 now declares Modelo 193 annual
+       retentions as factual evidence through a registry binding, relation,
+       dependency classification, construct membership, and relation-resolution
+       behaviour test.
   - [ ] Implement dependency inputs from Modelo 130: direct-estimation
      instalment payments, previous-year and current-year economic activity
      evidence, source/legal references, and date-axis checks across quarterly
