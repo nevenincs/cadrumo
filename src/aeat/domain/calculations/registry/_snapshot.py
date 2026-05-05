@@ -75,6 +75,12 @@ def build_snapshot(
         for condition in window.applicability_conditions:
             legal_ids.update(condition.legal_refs)
             source_ids.update(condition.source_refs)
+    for schedule in revision.filing_schedules:
+        legal_ids.update(schedule.legal_refs)
+        source_ids.update(schedule.source_refs)
+        for condition in schedule.profile_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
     for decision in revision.support_removal_decisions:
         legal_ids.update(decision.legal_refs)
         source_ids.update(decision.source_refs)
@@ -91,5 +97,6 @@ def build_snapshot(
         verification_expectations={expectation.id: expectation for expectation in revision.verification_expectations},
         application_links={link.id: link for link in revision.application_links},
         deadline_windows={window.id: window for window in revision.deadline_windows},
+        filing_schedules={schedule.id: schedule for schedule in revision.filing_schedules},
         support_removal_decisions={decision.id: decision for decision in revision.support_removal_decisions},
     )
