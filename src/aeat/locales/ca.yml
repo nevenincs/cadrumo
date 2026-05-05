@@ -372,14 +372,14 @@ cli:
       verdict: Veredicte
       warnings: Advertiments
     opts:
-      by: Per
-      draft_id: ID de l'esborrany
-      file: Arxiu
+      by: Persona que ha revisat la declaració
+      draft_id: ID de l'esborrany local
+      file: Fitxer local exportat a verificar
       filter: Filtre
       modelo: Model
-      output: Sortida
+      output: Ruta de l'informe o fitxer local de sortida
       period: Període
-      reason: Motiu
+      reason: Motiu auditat del canvi o aprovació
       set: Assignar (SET)
     preview_help: Previsualitzar el contingut d'una declaració
     review_help: Revisar les validacions i errors d'una declaració

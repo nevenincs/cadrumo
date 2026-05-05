@@ -370,14 +370,14 @@ cli:
       verdict: Verdict
       warnings: Warnings
     opts:
-      by: By
-      draft_id: Draft ID
-      file: File
+      by: Person who reviewed the declaration
+      draft_id: Local draft ID
+      file: Local exported file to verify
       filter: Filter
       modelo: Tax Form
-      output: Output
+      output: Validation report or local output path
       period: Period
-      reason: Reason
+      reason: Audited reason for the change or approval
       set: Assign (SET)
     preview_help: Preview the content of a declaration
     review_help: Review the validations and errors of a declaration

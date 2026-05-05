@@ -216,6 +216,20 @@ def test_declaration_validate_uses_root_format_option() -> None:
     assert "--output" in validate.output
 
 
+def test_declaration_gate_options_use_user_workflow_descriptions() -> None:
+    approve = _invoke(["app", "declaration", "approve", "--help"])
+    validate = _invoke(["app", "declaration", "validate", "--help"])
+    verify = _invoke(["app", "declaration", "verify", "--help"])
+
+    assert approve.exit_code == 0, approve.output
+    assert validate.exit_code == 0, validate.output
+    assert verify.exit_code == 0, verify.output
+    assert "Persona que revisó la declaración" in approve.output
+    assert "Motivo auditado" in approve.output
+    assert "Ruta del informe" in validate.output
+    assert "Archivo local exportado" in verify.output
+
+
 def test_declaration_help_uses_local_export_not_live_submission_wording() -> None:
     declaration = _invoke(["app", "declaration", "--help"])
     approve = _invoke(["app", "declaration", "approve", "--help"])
