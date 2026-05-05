@@ -112,6 +112,64 @@ def test_modelo_180_cross_dependency_calculation_resolves_historical_current_and
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 
 
+def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "190")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+    requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
+    observations = _observations_from_requirements(
+        requirements,
+        lambda requirement, period_index: {
+            "01": (Decimal("2"), Decimal("1"), Decimal("2"), Decimal("1")),
+            "04": (Decimal("1"), Decimal("0"), Decimal("0"), Decimal("1")),
+            "07": (Decimal("1"), Decimal("1"), Decimal("1"), Decimal("1")),
+            "10": (Decimal("0"), Decimal("1"), Decimal("0"), Decimal("0")),
+            "13": (Decimal("1"), Decimal("0"), Decimal("1"), Decimal("0")),
+            "16": (Decimal("0"), Decimal("1"), Decimal("0"), Decimal("0")),
+            "19": (Decimal("0"), Decimal("0"), Decimal("1"), Decimal("0")),
+            "22": (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("1")),
+            "25": (Decimal("1"), Decimal("0"), Decimal("0"), Decimal("0")),
+            "02": (Decimal("1000"), Decimal("2000"), Decimal("1500"), Decimal("2500")),
+            "05": (Decimal("100"), Decimal("0"), Decimal("0"), Decimal("50")),
+            "08": (Decimal("800"), Decimal("900"), Decimal("850"), Decimal("950")),
+            "11": (Decimal("120"), Decimal("0"), Decimal("0"), Decimal("0")),
+            "14": (Decimal("200"), Decimal("0"), Decimal("300"), Decimal("0")),
+            "17": (Decimal("0"), Decimal("80"), Decimal("0"), Decimal("0")),
+            "20": (Decimal("0"), Decimal("0"), Decimal("250"), Decimal("0")),
+            "23": (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("75")),
+            "26": (Decimal("400"), Decimal("0"), Decimal("0"), Decimal("0")),
+            "28": (Decimal("190"), Decimal("210"), Decimal("175.25"), Decimal("225.75")),
+        }[requirement.source_output][period_index],
+    )
+
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=2026,
+        period="0A",
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2026, 12, 31)},
+        relation_values=relation_values,
+    )
+
+    assert result.values["decl.total-percepciones"] == Decimal("19")
+    assert result.values["decl.percepciones-total"] == Decimal("12075.00")
+    assert result.values["decl.retenciones-total"] == Decimal("801.00")
+    entries = {entry.target: entry for entry in result.entries}
+    assert len(entries["decl.total-percepciones"].operand_refs) == 9
+    assert len(entries["decl.percepciones-total"].operand_refs) == 9
+    assert entries["decl.retenciones-total"].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
+
+
 def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() -> None:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == "193")

@@ -496,6 +496,48 @@ required_text = [
     "Ambos diseños, físicos y lógicos, figuran en el anexo II",
 ]
 
+[legal."orden-eha-3127-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3127-2009.html#articulo-1"
+document_id = "BOE-A-2009-18567"
+article = "1"
+section = "Modelo 190"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567#a1"
+published_at = 2009-11-23
+effective_from = 2009-11-24
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
+required_text = [
+    "Se aprueba el modelo 190",
+    "Retenciones e ingresos a cuenta",
+    "Resumen anual",
+]
+
+[legal."orden-hac-1431-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1431-2025.html#articulo-2"
+document_id = "BOE-A-2025-25390"
+article = "2"
+section = "Modelo 190"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
+published_at = 2025-12-12
+effective_from = 2025-12-13
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190 y aplica por primera vez al ejercicio 2025 y siguientes."
+required_text = [
+    "Modificación de la Orden EHA/3127/2009",
+    "modelo 190",
+    "ejercicio 2025 y siguientes",
+]
+
 [sources."aeat-dr-130-2019-v12"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -870,6 +912,57 @@ retrieved_at = 2026-05-05
 published_at = 2024-01-01
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-190-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/01-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1431-2025-de-3-de-dicie.pdf"
+sha256 = "a7d1092f78620431812354e560a5146a3ae244e0aed69d9d58c353370ba0134d"
+bytes = 1110488
+retrieved_at = 2026-05-03
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-190-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_190/files/modelo-190-procedure.html"
+sha256 = "b845bec1120bbc152b888ea03f15527f04618abe8d35365e5ba91400b2df0e86"
+bytes = 58856
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3127-2009.html"
+sha256 = "f130e3d934a926998f382b2bd1c6304da131c14911dee1a1eee4aacd0d931512"
+bytes = 445578
+retrieved_at = 2026-05-05
+published_at = 2009-11-23
+applies_from = 2025-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2025-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1431-2025.html"
+sha256 = "dcdc2692cb90d8acaabb4ddc967d5941eddbeaf199b85ad02ac3e33ceb8a0af5"
+bytes = 60609
+retrieved_at = 2026-05-05
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
 review_status = "reviewed"
 
 [sources."aeat-modelo-193-procedure"]
