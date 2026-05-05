@@ -791,6 +791,20 @@ class RegistryValidator:
                             failures.append(
                                 f"{source_scope} does not support source periods {unknown_source_periods!r}"
                             )
+                    failures.extend(
+                        RegistryValidator._validate_source_year_coverage(
+                            relation_scope,
+                            target_selector=revision.period_selector,
+                            source_revisions=source_revisions,
+                            source_periods=relation.source_periods,
+                            filing_year_delta=RegistryValidator._relation_filing_year_delta(
+                                relation.source_revision_selector
+                            ),
+                            fixed_source_year=RegistryValidator._relation_fixed_source_year(
+                                relation.source_revision_selector
+                            ),
+                        )
+                    )
         return failures
 
     @staticmethod
@@ -912,6 +926,84 @@ class RegistryValidator:
                 continue
             selected.append(revision)
         return tuple(selected), failures
+
+    @staticmethod
+    def _relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
+        if "year" in selector:
+            return 0
+        delta = selector.get("filing_year_delta", 0)
+        if isinstance(delta, int):
+            return delta
+        return 0
+
+    @staticmethod
+    def _relation_fixed_source_year(selector: Mapping[str, str | int]) -> int | None:
+        year = selector.get("year")
+        if isinstance(year, int):
+            return year
+        return None
+
+    @staticmethod
+    def _validate_source_year_coverage(
+        scope: str,
+        *,
+        target_selector: PeriodSelector,
+        source_revisions: Iterable[ModeloRevision],
+        source_periods: Iterable[str],
+        filing_year_delta: int,
+        fixed_source_year: int | None = None,
+    ) -> list[str]:
+        if fixed_source_year is None:
+            required_intervals = tuple(
+                (start + filing_year_delta, None if end is None else end + filing_year_delta)
+                for start, end in RegistryValidator._selector_year_intervals(target_selector)
+            )
+        else:
+            required_intervals = ((fixed_source_year, fixed_source_year),)
+        source_period_set = set(source_periods)
+        covered_intervals = tuple(
+            interval
+            for source_revision in source_revisions
+            if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
+            for interval in RegistryValidator._selector_year_intervals(source_revision.period_selector)
+        )
+        failures: list[str] = []
+        for start, end in required_intervals:
+            if not RegistryValidator._interval_is_covered(start, end, covered_intervals):
+                if end is None:
+                    failures.append(f"{scope} lacks source revision year coverage from {start}")
+                elif start == end:
+                    failures.append(f"{scope} lacks source revision year coverage for {start}")
+                else:
+                    failures.append(f"{scope} lacks source revision year coverage for {start}-{end}")
+        return failures
+
+    @staticmethod
+    def _selector_year_intervals(selector: PeriodSelector) -> tuple[tuple[int, int | None], ...]:
+        if selector.years:
+            return tuple((year, year) for year in sorted(selector.years))
+        if selector.year_from is None:
+            return ()
+        return ((selector.year_from, selector.year_to),)
+
+    @staticmethod
+    def _interval_is_covered(
+        start: int,
+        end: int | None,
+        intervals: Iterable[tuple[int, int | None]],
+    ) -> bool:
+        remaining_start = start
+        for covered_start, covered_end in sorted(intervals, key=lambda item: item[0]):
+            if covered_start > remaining_start:
+                continue
+            if covered_end is None:
+                return True
+            if covered_end < remaining_start:
+                continue
+            remaining_start = covered_end + 1
+            if end is not None and remaining_start > end:
+                return True
+        return False if end is None else remaining_start > end
 
     @staticmethod
     def _revision_intersects_year_range(
