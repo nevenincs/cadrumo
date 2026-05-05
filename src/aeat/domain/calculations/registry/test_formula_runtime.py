@@ -50,6 +50,22 @@ def _committed_modelo_180_snapshot() -> RegistrySnapshot:
     )
 
 
+def _modelo_180_snapshot_with_inactive_relation_period() -> RegistrySnapshot:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    selector = revision.period_selector.model_copy(update={"periods": ("0A", "1T")})
+    widened_revision = revision.model_copy(update={"period_selector": selector})
+    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: widened_revision}})
+    return build_snapshot(
+        widened_modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="1T",
+    )
+
+
 def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order() -> None:
     snapshot = _committed_modelo_130_snapshot()
 
@@ -285,6 +301,18 @@ def test_registry_formula_runtime_rejects_unknown_relation_values() -> None:
                 "modelo-180-rel-115-retenciones-anual": Decimal("114.00"),
                 "unknown-relation": Decimal("1"),
             },
+        )
+
+
+def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_period() -> None:
+    snapshot = _modelo_180_snapshot_with_inactive_relation_period()
+
+    with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            date_context={"filing_period": date(2026, 4, 20)},
+            relation_values={"modelo-180-rel-115-base-anual": Decimal("1")},
         )
 
 

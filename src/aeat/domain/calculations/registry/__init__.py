@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from ._bindings import (
+    InvoiceObservation,
+    InvoiceObservationRequirement,
     RegistryFilingObservation,
     RegistryFilingObservationRequirement,
+    invoice_binding_requirements,
     previous_filing_observation_requirements,
     resolve_bound_casilla_inputs,
+    resolve_invoice_binding_values,
     resolve_previous_filing_binding_values,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
@@ -125,6 +129,8 @@ __all__ = [
     "FilingScheduleDefinition",
     "FormulaDefinition",
     "FormulaExpression",
+    "InvoiceObservation",
+    "InvoiceObservationRequirement",
     "LegalReference",
     "LiveCrossReferenceDecision",
     "ModelLawCoverageLedger",
@@ -187,6 +193,7 @@ __all__ = [
     "expression_casilla_refs",
     "generate_parity_tape_path",
     "inventory_workbook_coverage",
+    "invoice_binding_requirements",
     "load_catalogue_file",
     "load_modelo_file",
     "load_parity_scenario",
@@ -202,6 +209,7 @@ __all__ = [
     "resolve_bound_casilla_inputs",
     "resolve_construct",
     "resolve_export_layout",
+    "resolve_invoice_binding_values",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",

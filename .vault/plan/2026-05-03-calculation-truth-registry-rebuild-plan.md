@@ -3922,6 +3922,13 @@ application surface, and the old authority has been deleted.
      - [x] Relation observation resolution now respects target filing periods,
        so a quarterly filing cannot be forced to provide annual-summary
        relation observations that are only active for `0A`.
+     - [x] Registry snapshots now carry selected filing year and period as
+       first-class context, and calculation relation validation accepts only
+       relation values active for that selected period.
+     - [x] Invoice-source binding resolution now has a shared observation
+       contract and resolver for modelo-agnostic invoice-ledger facts, including
+       intra-community claves, rectification scope, base totals, and distinct
+       operator counts.
   - [ ] Implement the dependency classification gate for every supported
      modelo. A supported modelo must be declared as direct dependency, factual
      evidence dependency, or non-dependency before Modelo 100 can emit a

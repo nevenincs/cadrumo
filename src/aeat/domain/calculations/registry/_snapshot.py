@@ -95,6 +95,8 @@ def build_snapshot(
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
+        filing_year=filing_year,
+        period=period,
         legal={ref: catalogues.legal[ref] for ref in sorted(legal_ids)},
         sources={ref: catalogues.sources[ref] for ref in sorted(source_ids)},
         extraction_profiles={profile.id: profile for profile in revision.extraction_profiles},
