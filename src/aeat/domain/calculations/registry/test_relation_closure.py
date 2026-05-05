@@ -101,6 +101,16 @@ def test_relation_source_requirements_obey_target_periods() -> None:
     assert relation_source_requirements(revision, filing_year=2026, period="1T") == ()
 
 
+def test_relation_observation_resolution_obeys_target_periods() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    assert resolve_relation_values_from_observations(revision, (), filing_year=2026, period="1T") == {}
+
+
 def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")

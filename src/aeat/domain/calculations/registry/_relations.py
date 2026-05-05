@@ -97,6 +97,8 @@ def relation_source_requirements(
 def resolve_relation_values(
     revision: ModeloRevision,
     external_outputs: Mapping[str, Decimal | tuple[Decimal, ...]],
+    *,
+    period: str | None = None,
 ) -> dict[str, Decimal]:
     """Resolve typed relation values from caller-supplied external outputs.
 
@@ -104,12 +106,13 @@ def resolve_relation_values(
     ``{"op": "sum"}`` sums tuple values for annual summaries.
     """
 
-    relation_ids = {relation.id for relation in revision.relations}
+    relations = tuple(_active_relations(revision, period=period))
+    relation_ids = {relation.id for relation in relations}
     unknown = sorted(set(external_outputs).difference(relation_ids))
     if unknown:
         raise RegistryValidationError(f"unknown relation ids: {unknown!r}")
     resolved: dict[str, Decimal] = {}
-    for relation in revision.relations:
+    for relation in relations:
         if relation.id not in external_outputs:
             raise RegistryValidationError(f"missing relation value for {relation.id!r}")
         raw_value = external_outputs[relation.id]
@@ -151,7 +154,15 @@ def resolve_relation_values_from_observations(
             raw_value = values
         for relation_id in requirement.relation_ids:
             external_outputs[relation_id] = raw_value
-    return resolve_relation_values(revision, external_outputs)
+    return resolve_relation_values(revision, external_outputs, period=period)
+
+
+def _active_relations(revision: ModeloRevision, *, period: str | None) -> tuple[RelationDefinition, ...]:
+    if period is None:
+        return revision.relations
+    return tuple(
+        relation for relation in revision.relations if not relation.target_periods or period in relation.target_periods
+    )
 
 
 def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
