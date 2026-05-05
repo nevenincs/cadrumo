@@ -332,7 +332,7 @@ const TAPES = {
       "aeat app invoice review --id inv_2041",
       "aeat app invoice edit --id inv_2041 --set base=120.00 --set iva.rate=21 --set iva.amount=25.20 --set iva.category=general --set retention.rate=15 --set payment.id=row_1042 --set comments=metadata-completed --reason invoice-review",
       "aeat app invoice match --period 2026-Q1",
-      "aeat app invoice review --filter status=pending --filter period=2026-Q1",
+      "aeat app invoice review --filter status=pending --filter kind=received",
     ],
   },
   blockedExport: {
@@ -344,7 +344,7 @@ const TAPES = {
       "aeat app declaration validate --id draft_303_2026-Q1",
       "aeat app declaration export --id draft_303_2026-Q1 --output ./exports/2026-q1",
       "aeat app ledger review --filter status=pending --filter period=2026-Q1",
-      "aeat app invoice review --filter status=pending --filter period=2026-Q1",
+      "aeat app invoice review --filter status=pending --filter kind=received",
       "aeat --format json app declaration validate --id draft_303_2026-Q1 --output ./exports/2026-q1-validation.json",
     ],
   },

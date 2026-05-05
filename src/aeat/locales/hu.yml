@@ -864,7 +864,7 @@ cli:
       ledger_help: Könyvelési napló azonosítója
       period_help: A párosítás adózási időszaka
     review:
-      filter_help: A felülvizsgálandó számlák szűrése (pl. dátum vagy összeg szerint)
+      filter_help: Számlák szűrése status=pending|reviewed|matched|paid vagy kind=issued|received szerint
       help: Számlák interaktív felülvizsgálata és ellenőrzése
       id_help: A felülvizsgálandó adott számla azonosítója
       no_invoices: Nincsenek felülvizsgálatra váró számlák
@@ -913,8 +913,7 @@ cli:
       skipped: Kihagyva
       'yes': Igen
     review:
-      filter_help: A felülvizsgálandó naplóbejegyzések szűrése (pl. dátum vagy összeg
-        szerint)
+      filter_help: Sorok szűrése status, period, issue vagy import szerint
       header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
       help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
       id_help: A felülvizsgálandó adott bejegyzés azonosítója

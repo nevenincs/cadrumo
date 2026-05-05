@@ -861,7 +861,7 @@ cli:
       ledger_help: Identificador del llibre comptable
       period_help: Periode fiscal per a l'aparellament
     review:
-      filter_help: Filtrar factures a revisar (p. ex., per data o import)
+      filter_help: Filtrar factures per status=pending|reviewed|matched|paid o kind=issued|received
       help: Revisió interactiva i validació de factures
       id_help: Identificador de la factura específica a revisar
       no_invoices: No hi ha factures pendents de revisió
@@ -910,7 +910,7 @@ cli:
       skipped: Omesos
       'yes': Sí
     review:
-      filter_help: Filtrar entrades del llibre a revisar (p. ex., per data o import)
+      filter_help: Filtrar files per status, period, issue o import
       header: SESSIÓ DE REVISIÓ DEL LLIBRE COMPTABLE
       help: Revisió interactiva i validació d'entrades del llibre
       id_help: Identificador de l'entrada específica a revisar
