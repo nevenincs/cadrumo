@@ -27,17 +27,17 @@ def test_availability_enum_carries_provider_states() -> None:
 
 def test_catalogue_carries_supported_entries() -> None:
     ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert ids == {"certificate", "clave-movil", "clave-permanente"}
+    assert ids == {"certificate", "clave_movil", "clave_permanente"}
 
 
 def test_available_providers_are_configurable() -> None:
     available = {entry.id for entry in available_auth_providers()}
-    assert available == {"certificate", "clave-movil"}
+    assert available == {"certificate", "clave_movil"}
 
 
 def test_unavailable_providers_are_listed_but_not_configurable() -> None:
     unavailable = {entry.id for entry in unavailable_auth_providers()}
-    assert unavailable == {"clave-permanente"}
+    assert unavailable == {"clave_permanente"}
 
 
 def test_catalogue_partition_covers_every_listing() -> None:
@@ -57,9 +57,9 @@ def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
 
 
 def test_get_auth_provider_returns_canonical_entry() -> None:
-    entry = get_auth_provider("clave_permanente")
+    entry = get_auth_provider("clave-permanente")
     assert isinstance(entry, AuthProviderListing)
-    assert entry.id == "clave-permanente"
+    assert entry.id == "clave_permanente"
     assert entry.availability is AuthProviderAvailability.UNAVAILABLE
     assert entry.label
     assert entry.description

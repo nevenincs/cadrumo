@@ -31,7 +31,7 @@ class AuthProviderListing(BaseModel):
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,
-            ``"clave-movil"``, ``"clave-permanente"``). The CLI passes
+            ``"clave_movil"``, ``"clave_permanente"``). The CLI passes
             this verbatim through ``--provider``; the configure /
             login commands resolve it against the backend registry.
         label: Translation key for display label.
@@ -56,13 +56,13 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
         description=tr("auth.catalogue.certificate_description"),
     ),
     AuthProviderListing(
-        id="clave-movil",
+        id="clave_movil",
         label=tr("auth.catalogue.clave_movil_label"),
         availability=AuthProviderAvailability.AVAILABLE,
         description=tr("auth.catalogue.clave_movil_description"),
     ),
     AuthProviderListing(
-        id="clave-permanente",
+        id="clave_permanente",
         label=tr("auth.catalogue.clave_permanente_label"),
         availability=AuthProviderAvailability.UNAVAILABLE,
         description=tr("auth.catalogue.clave_permanente_description"),
@@ -83,15 +83,15 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 def get_auth_provider(provider_id: str) -> AuthProviderListing:
     """Resolve a provider id to its catalogue listing.
 
-    Hyphenated ids are canonical; underscores in operator input are
-    normalised to hyphens before lookup.
+    Underscore ids are canonical; hyphens in operator input are
+    normalised to underscores before lookup.
 
     Raises:
         KeyError: When ``provider_id`` is not in the catalogue. The
             CLI's configure / login commands catch this and render
             an operator-facing "unknown provider" error.
     """
-    pid = provider_id.strip().lower().replace("_", "-")
+    pid = provider_id.strip().lower().replace("-", "_")
     for entry in AUTH_PROVIDER_CATALOGUE:
         if entry.id == pid:
             return entry
