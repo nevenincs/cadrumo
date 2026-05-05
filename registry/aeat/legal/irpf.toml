@@ -39,6 +39,69 @@ required_text = [
     "pagos fraccionados a cuenta del Impuesto sobre la Renta",
 ]
 
+[legal."orden-hfp-1359-2023:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#articulo-4"
+document_id = "BOE-A-2023-25882"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2024."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02024",
+]
+
+[legal."orden-hac-1347-2024:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#articulo-4"
+document_id = "BOE-A-2024-24949"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2025."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02025",
+]
+
+[legal."orden-hac-1425-2025:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#articulo-4"
+document_id = "BOE-A-2025-25272"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2026."
+required_text = [
+    "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
+    "método de estimación objetiva",
+    "aplicables durante el año\u00a02026",
+]
+
 [legal."ley-35-2006:art-99"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -138,6 +201,49 @@ required_text = [
     "dividendos y otras rentas de participación",
 ]
 
+[legal."orden-hap-1732-2014:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1732-2014.html#articulo-segundo"
+document_id = "BOE-A-2014-9740"
+article = "segundo"
+section = "Anexo III"
+permalink = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
+published_at = 2014-09-26
+effective_from = 2014-09-27
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los disenos fisicos y logicos del Modelo 180."
+required_text = [
+    "Se sustituye el anexo VI",
+    "modelo 180",
+    "resumen anual de retenciones",
+]
+
+[legal."orden-hfp-1284-2023:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#articulo-7"
+document_id = "BOE-A-2023-24412"
+article = "7"
+section = "Modelo 180"
+permalink = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Actualiza campos del registro de perceptor del Modelo 180 para identificar Isla de La Palma."
+required_text = [
+    "Artículo 7",
+    "modelo 180",
+    "Isla de La Palma",
+    "CÓDIGO PROVINCIA",
+]
+
 [sources."aeat-dr-130-2019-v12"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -155,8 +261,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_130/files/modelo-130-instrucciones.html"
-sha256 = "e5d4efd180d393bee60f1563db0bb4e664d8df3e900b5e4e85700b5e5693fa19"
-bytes = 40060
+sha256 = "39292ded8acc71fe6cdf1cf1deb7565a042a939920dd005485726fff124c3f8f"
+bytes = 40030
 retrieved_at = 2026-05-04
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html"
@@ -219,8 +325,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html"
-sha256 = "c1f4f33bbfc55e81028899e67b5f8496e3130be63abf733374b4ec8745c9c913"
-bytes = 43884
+sha256 = "ff50d8e986968d3c2dd01f7146caa2084406cd083f4041b007b439c4493b9eac"
+bytes = 43854
 retrieved_at = 2026-05-05
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
@@ -243,8 +349,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_111/files/modelo-111-instrucciones.html"
-sha256 = "d09e47cced458ac0d7beccafc27882af1974a34a7bde596626d157d8015ab835"
-bytes = 34567
+sha256 = "baaabd139e1dcff461b0c9b70e3ceb90d2287001fc8be3abb0a7a219fde6f19e"
+bytes = 34536
 retrieved_at = 2026-05-05
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/pagos-cuenta/modelo-111-reten_____moniales-imputaciones-renta-autoliquidacion_/instrucciones.html"
@@ -267,8 +373,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-obligaciones-retenedor.html"
-sha256 = "1ed25dcfc9dcce77d75ccf179bf0cca031aca26497a14ae8969a0626fa2f8393"
-bytes = 21560
+sha256 = "a47173aedb3abd042298de8db3ecc5a3c67b3d3f3922feca14dd2ed8a0d1a1f0"
+bytes = 21553
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-115.html"
@@ -279,8 +385,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-guia-censal-036.html"
-sha256 = "c911d118f14617bb29d23568814c0c387c48b6fbec1e97c5342ecebc51ddb974"
-bytes = 9867
+sha256 = "e254906fcda783466e0b3b51fac6d685a5de2f5e230febb7d1bbc87363652177"
+bytes = 9847
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-09-retenciones-ingresos-cuenta/modelo-115.html"
@@ -291,11 +397,102 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_115/files/modelo-115-180-folleto-actividades.html"
-sha256 = "2e5fd7a83743f84bb88bc6924e2ccd3754b9ffee9eb3e316cb4856f86833321f"
-bytes = 9852
+sha256 = "95795c37241546ebd2461d449c9927e664b398beea7315cbc77ae5202dde78cb"
+bytes = 9832
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/folleto-actividades-economicas/7-otras-obligaciones-fiscales-retenciones/7_3-retenciones-arrendamiento-bienes-inmuebles-180.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf"
+sha256 = "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda"
+bytes = 256994
+retrieved_at = 2026-05-03
+published_at = 2023-11-30
+applies_from = 2023-12-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf"
+sha256 = "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741"
+bytes = 107660
+retrieved_at = 2026-05-03
+published_at = 2014-09-26
+applies_from = 2014-09-27
+applies_to = 2023-11-30
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/180.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-180-2000"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_180/files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf"
+sha256 = "d24f733078f69cd28923ac7d9a3ccab5222634c0cd9d1fb725c1c53214e4ad1f"
+bytes = 454595
+retrieved_at = 2026-05-03
+published_at = 2000-11-28
+applies_from = 2000-11-28
+applies_to = 2014-09-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/TIPOS18000.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-180-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-procedure.html"
+sha256 = "66b503e97bccba1a49816745bcc5d396e2fc2f263730785cc72e5fdcd24cfc51"
+bytes = 49456
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI00.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-180-ayuda-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_180/files/modelo-180-ayuda-presentacion.html"
+sha256 = "92f4b00c9ac56905ad9763268eef463dda274a8b007e15a7b81eec9e0f005663"
+bytes = 21684
+retrieved_at = 2026-05-05
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/AyudaPresentacion/180.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2014-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-1732-2014.html"
+sha256 = "e8f84f86c7ae147a0c7c0617f9ca6180cd61b54258d5277c7e0e06c5897e507e"
+bytes = 200750
+retrieved_at = 2026-05-05
+published_at = 2014-09-26
+applies_from = 2014-09-27
+source_url = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
+review_status = "reviewed"
+
+[sources."boe-modelo-180-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
+sha256 = "cbef954c1142e44e6fe5c50fd31f4fc7502e58ccc2c11ddae36a122fc1a50569"
+bytes = 308005
+retrieved_at = 2026-05-05
+published_at = 2023-11-30
+applies_from = 2023-12-01
+source_url = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
 review_status = "reviewed"
 
 [sources."aeat-dr-123-2024-v20"]
@@ -353,8 +550,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_123/files/modelo-123-procedure.html"
-sha256 = "107a4d45310f651e52374853b7554defb763aec413ac2feadfb2c2d2d069ed6d"
-bytes = 21512
+sha256 = "0bff3b6bc3ad111b5eac728bfd59e8983b3a59993b393fa45e3421925e3ce308"
+bytes = 21475
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH04.shtml"
@@ -365,8 +562,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3435-2007.html"
-sha256 = "da31a85431f52b5d6c1904689ea893c5b605e1d1a8edb9a6a92607075f85fe35"
-bytes = 150155
+sha256 = "8e1bf71197d1eab6f75571bbb8dc3cdc4b7a83bf8725b72c3d3777b0295b3243"
+bytes = 150144
 retrieved_at = 2026-05-05
 published_at = 2007-11-29
 applies_from = 2008-04-01
@@ -378,8 +575,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
-sha256 = "ec5d6e081d3b548e20366fac2b9ca04a882de4c610ee972706819e5fb894b7e4"
-bytes = 141328
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
 retrieved_at = 2026-05-05
 published_at = 2024-01-31
 applies_from = 2024-02-01
@@ -391,8 +588,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-procedure.html"
-sha256 = "2ea3d1ec26667a7338a49736f450a62cc028fd489b5fa5d57ec3915b8ff4b537"
-bytes = 20696
+sha256 = "ecf228f15c1fc3be9884a995400317d396ab25f9511087c3eb1b984e1181702d"
+bytes = 20659
 retrieved_at = 2026-05-05
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G602.shtml"
@@ -403,8 +600,8 @@ evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-672-2007.html"
-sha256 = "57a9e8c5aadd45dccbcbb20a3abc683aa9368aee46614b1f621ef285bf5e3c96"
-bytes = 132550
+sha256 = "c68fdce63a62792afa0dfe9f96ea8dd9a9456c9890269e41921d2d67c7a9fd4d"
+bytes = 132539
 retrieved_at = 2026-05-05
 published_at = 2007-03-22
 applies_from = 2007-04-01

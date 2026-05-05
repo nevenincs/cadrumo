@@ -5,7 +5,7 @@ official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimacion Obj
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
 source_refs = [
     "aeat-dr-131-2026",
     "aeat-modelo-131-procedure",
@@ -18,7 +18,7 @@ id = "2026"
 label = "Ejercicio 2026"
 valid_from = 2026-01-01
 period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
 source_refs = [
     "aeat-dr-131-2026",
     "aeat-modelo-131-procedure",
