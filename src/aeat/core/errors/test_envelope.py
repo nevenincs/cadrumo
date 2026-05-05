@@ -69,19 +69,15 @@ def test_schema_version_is_present() -> None:
     assert payload["error"]["schema_version"] == "1"
 
 
-@pytest.mark.parametrize(
-    ("language", "expected_attribute"),
-    [
-        ("es", "default_message_es"),
-        ("en", "default_message_en"),
-        ("hu", "default_message_hu"),
-    ],
-)
-def test_default_messages_follow_requested_language(language: str, expected_attribute: str) -> None:
+@pytest.mark.parametrize("language", ["es", "en", "hu"])
+def test_default_messages_follow_requested_language(language: str) -> None:
+    from ..i18n import tr
+
     error = LockAcquisitionError()
     code = type(error).code
 
     with _output_language(language):
         envelope = build_error_envelope(error)
+        expected = tr(code.message_key)
 
-    assert envelope.message == getattr(code, expected_attribute)
+    assert envelope.message == expected
