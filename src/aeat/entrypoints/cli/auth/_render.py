@@ -52,7 +52,7 @@ def _format_health(description: AuthProviderDescription, entry: ProviderRegistry
 
     Providers either supply a prose ``health_summary``
     (Cl@ve Móvil emits "ready — requires push approval on the Cl@ve
-    app") that is passed through, or the cert-provider's legacy
+    app") that is passed through, or the cert-provider's
     ``"{severity}:{days_until_expiry}"`` sentinel token (e.g.
     ``"CRITICAL:3"``). The sentinel is translated into operator-readable
     copy here, with a renewal URL surfaced on every non-healthy

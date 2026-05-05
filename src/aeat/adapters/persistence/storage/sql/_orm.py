@@ -6,13 +6,6 @@ public API: the public surface exposes pydantic v2 records (see
 :mod:`aeat.adapters.persistence.storage.sql.records`) and the
 per-domain repositories bridge between the ORM rows and the typed
 records.
-
-Note:
-    str columns (modelo names, portal labels) are stored
-    as plain ``str`` today. Migrating them to a multilingual JSON
-    column shape that round-trips through
-    :class:`aeat.core.i18n.str` is a follow-up; each such
-    column carries an inline ``TODO`` marker.
 """
 
 from __future__ import annotations
@@ -53,7 +46,6 @@ class ModeloRow(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     identifier: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    # TODO: migrate to a str-backed JSON column.
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
 
@@ -84,7 +76,6 @@ class PortalRow(Base):
         ForeignKey("modelos.id", ondelete="SET NULL"),
         nullable=True,
     )
-    # TODO: migrate to a str-backed JSON column.
     label: Mapped[str] = mapped_column(String(255), nullable=False)
 
     modelo: Mapped[ModeloRow | None] = relationship("ModeloRow", lazy="joined")

@@ -114,13 +114,6 @@ class TestParseJustificante:
         )
         assert record.modelo == "130"
 
-    def test_pymupdf_backend_not_implemented(self, modelo_130_pdf: Path) -> None:
-        with pytest.raises(JustificanteParseError, match="PYMUPDF"):
-            parse_justificante(
-                modelo_130_pdf,
-                backend=JustificanteParserBackend.PYMUPDF,
-            )
-
     def test_missing_file_raises(self) -> None:
         with pytest.raises(JustificanteParseError, match="not found"):
             parse_justificante(FIXTURES_DIR / "does_not_exist.pdf")

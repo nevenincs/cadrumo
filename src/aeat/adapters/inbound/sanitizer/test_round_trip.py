@@ -59,8 +59,7 @@ def _parsed_fixture_justificantes() -> dict[Path, Justificante]:
     """Cache of ``parse_justificante`` results keyed by fixture PDF path.
 
     Both round-trip tests below need the same parse for every fixture;
-    the legacy layout parsed each PDF twice. Hosting the cache as a
-    session-scoped fixture halves the parse cost on this directory.
+    a session-scoped cache halves the parse cost on this directory.
     """
     return {pdf_path: parse_justificante(pdf_path) for pdf_path, _ in _FIXTURE_PAIRS}
 
