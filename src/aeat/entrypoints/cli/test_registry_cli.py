@@ -71,6 +71,8 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert payload["workbook_parity_ref_count"] > 0
     assert payload["verification_expectation_count"] > 0
     assert payload["application_link_count"] > 0
+    assert payload["relation_count"] > 0
+    assert "periodic_to_annual_summary" in payload["relation_dependency_roles"]
     assert payload["filing_schedule_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
     assert len(payload["revision_details"]) == payload["revision_count"]
@@ -80,12 +82,14 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert revision["legal_refs"]
     assert revision["source_refs"]
     assert revision["export_layout_count"] == len(revision["export_layout_ids"])
-    assert revision["export_record_count"] > 0
-    assert revision["export_field_count"] > 0
     assert revision["deadline_window_count"] == len(revision["deadline_periods"])
+    assert revision["relation_count"] == len(revision["relation_ids"])
     assert revision["filing_schedule_count"] == len(revision["filing_schedule_ids"])
-    assert revision["portal_guard_policy_ids"]
     assert revision["workbook_parity"]
+    export_revision = next(detail for detail in payload["revision_details"] if detail["export_field_count"] > 0)
+    assert export_revision["export_record_count"] > 0
+    guarded_revision = next(detail for detail in payload["revision_details"] if detail["portal_guard_policy_ids"])
+    assert guarded_revision["portal_guard_policy_ids"]
     workbook_reference = revision["workbook_parity"][0]
     assert workbook_reference["id"]
     assert workbook_reference["workbook_source"] in revision["source_refs"]
@@ -114,8 +118,13 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     assert payload["verified"] is True
     assert payload["source_reference_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
+    assert payload["relation_count"] > 0
+    assert "periodic_to_annual_summary" in payload["relation_dependency_roles"]
     assert payload["filing_schedule_count"] > 0
-    assert payload["revision_details"][0]["export_field_count"] > 0
+    assert any(detail["export_field_count"] > 0 for detail in payload["revision_details"])
+    modelo_180 = next(detail for detail in payload["revision_details"] if detail["modelo"] == "180")
+    assert modelo_180["relation_count"] > 0
+    assert modelo_180["relation_dependency_roles"] == ["periodic_to_annual_summary"]
 
 
 def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> None:

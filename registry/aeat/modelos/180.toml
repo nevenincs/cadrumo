@@ -79,6 +79,7 @@ required_text = ["RETENCIONES E INGRESOS A CUENTA", "Se consignará sin signo la
 [[revisions."2014-2022".relations]]
 id = "modelo-180-rel-115-perceptores-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2014 }
 source_output = "01"
@@ -93,6 +94,7 @@ source_refs = ["boe-modelo-180-2014-form"]
 [[revisions."2014-2022".relations]]
 id = "modelo-180-rel-115-base-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2014 }
 source_output = "02"
@@ -107,6 +109,7 @@ source_refs = ["boe-modelo-180-2014-form"]
 [[revisions."2014-2022".relations]]
 id = "modelo-180-rel-115-retenciones-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2014 }
 source_output = "03"
@@ -609,6 +612,7 @@ required_text = ["RETENCIONES E INGRESOS A CUENTA", "Se consignará sin signo la
 [[revisions."2023-y-siguientes".relations]]
 id = "modelo-180-rel-115-perceptores-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2019 }
 source_output = "01"
@@ -623,6 +627,7 @@ source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 [[revisions."2023-y-siguientes".relations]]
 id = "modelo-180-rel-115-base-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2019 }
 source_output = "02"
@@ -637,6 +642,7 @@ source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 [[revisions."2023-y-siguientes".relations]]
 id = "modelo-180-rel-115-retenciones-anual"
 kind = "annual_summary"
+dependency_role = "periodic_to_annual_summary"
 source_modelo = "115"
 source_revision_selector = { year_from = 2019 }
 source_output = "03"
