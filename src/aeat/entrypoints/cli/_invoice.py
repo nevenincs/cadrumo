@@ -226,18 +226,19 @@ def invoice_review(
                 "iva": _fmt_decimal(iva),
                 "status": status,
                 "payment": review.fields.get("payment.id") if review else None,
+                "payment.id": review.fields.get("payment.id") if review else None,
             }
         )
 
-    lines: list[str] = [tr("cli.invoice.review.header")]
+    lines: list[str] = [
+        f"{tr('cli.invoice.labels.id')}\t"
+        f"{tr('cli.invoice.labels.kind')}\t"
+        f"{tr('cli.invoice.labels.base')}\t"
+        f"{tr('cli.invoice.labels.iva')}\t"
+        f"{tr('cli.invoice.labels.status')}"
+    ]
     for row in payload["rows"]:
-        lines.append(
-            f"{row[tr('cli.invoice.labels.id')][:12]}\t"
-            f"{row[tr('cli.invoice.labels.kind')]}\t"
-            f"{row[tr('cli.invoice.labels.base')]}\t"
-            f"{row[tr('cli.invoice.labels.iva')]}\t"
-            f"{row[tr('cli.invoice.labels.status')]}"
-        )
+        lines.append(f"{row['id'][:12]}\t{row['kind']}\t{row['base']}\t{row['iva']}\t{row['status']}")
 
     if not invoices:
         lines.append(tr("cli.invoice.review.no_invoices"))

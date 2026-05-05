@@ -733,25 +733,25 @@ cli:
     profile:
       app_help: Gestión de perfiles financieros
       errors:
-        at_least_one: Se requiere al menos un campo o perfil
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: ¿Quiso decir...?
         eligible_categories: Categorías elegibles
         family_aliases: Alias familiares
         invalid_ratio: Ratio o porcentaje no válido
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Clave o propiedad desconocida en el perfil
       headers:
         ratios: Ratios / Repartos
       labels:
         no_active: No hay un perfil activo seleccionado
-        profile_not_found: Perfil financiero no encontrado
-        switched: Perfil financiero cambiado correctamente
       ratios_help: Definir ratios de reparto para el perfil financiero
       ratios_list_help: Listar los ratios de reparto definidos en el perfil
       set_ratio_help: Establecer un ratio de reparto específico
-      set_ratio_key_help: Clave o categoría del ratio
+      set_ratio_key_help: 'Clave o categoría del ratio. Alias de familia: %{aliases}'
       set_ratio_value_help: Valor del ratio (p. ej., 0.5 para 50%)
       unset_ratio_help: Eliminar un ratio de reparto específico
-      unset_ratio_key_help: Clave o categoría del ratio a eliminar
+      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia: %{aliases}'
     txs:
       app_help: Gestión de transacciones bancarias
   financial_invoices:
@@ -826,7 +826,8 @@ cli:
       help: Editar manualmente los datos de una factura
       id_help: Identificador de la factura a editar
       reason_help: Motivo de la edición o corrección
-      set_help: Establecer valores de campos específicos (campo=valor)
+      set_help: Establecer campos de factura (base, iva.rate, iva.amount, payment.id,
+        document.path)
     errors:
       at_least_one_edit: Se requiere al menos una modificación de campo
       file_not_found: Archivo de factura no encontrado
@@ -864,7 +865,6 @@ cli:
       period_help: Periodo fiscal para el emparejamiento
     review:
       filter_help: Filtrar facturas a revisar (p. ej., por fecha o importe)
-      header: SESIÓN DE REVISIÓN DE FACTURAS
       help: Revisión interactiva y validación de facturas
       id_help: Identificador de la factura específica a revisar
       no_invoices: No hay facturas pendientes de revisión
@@ -911,7 +911,6 @@ cli:
       'no': 'No'
       rows: Filas
       skipped: Omitidos
-      status: Estado
       'yes': Sí
     review:
       filter_help: Filtrar entradas del libro a revisar (p. ej., por fecha o importe)
@@ -993,7 +992,7 @@ cli:
       copied: cli.oauth.success.copied
       written: cli.oauth.success.written
   overview:
-    app_help: cli.overview.app_help
+    app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: cli.overview.calendar_help
     calendar_requires_dates: cli.overview.calendar_requires_dates
     drafts: cli.overview.drafts
@@ -1003,7 +1002,7 @@ cli:
     period: cli.overview.period
     period_help: cli.overview.period_help
     profile: cli.overview.profile
-    status_help: cli.overview.status_help
+    status_help: Mostrar el estado del perfil, libro, facturas y declaraciones
     to_help: cli.overview.to_help
     transactions: cli.overview.transactions
     verbose_help: cli.overview.verbose_help
@@ -1032,6 +1031,16 @@ cli:
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
+    parity_output_help: Archivo JSON de destino para la cinta de paridad generada
+    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
+      actual del registro
+    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
+      resultante
+    parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
+    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
+      generadas
+    parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     period_help: cli.registry.period_help
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
@@ -1049,18 +1058,18 @@ cli:
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    format_help: cli.root.format_help
+    app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
+    app_help: Asistente para preparar declaraciones tributarias españolas
+    format_help: Formato de salida para los resultados del comando
   sanitize:
     app_help: cli.sanitize.app_help
     labels:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: cli.setup.app_help
+    app_help: Preparar el perfil local y la autenticación necesarios para usar la aplicación
     auth:
-      app_help: cli.setup.auth.app_help
+      app_help: Configurar y comprobar la autenticación de AEAT
       configure:
         file_help: cli.setup.auth.configure.file_help
         help: cli.setup.auth.configure.help
@@ -1103,7 +1112,7 @@ cli:
       valid: cli.setup.headers.valid
     init:
       activity_help: cli.setup.init.activity_help
-      help: cli.setup.init.help
+      help: Crear o activar un perfil de contribuyente
       name_help: cli.setup.init.name_help
       tax_id_help: cli.setup.init.tax_id_help
     labels:
@@ -1111,7 +1120,7 @@ cli:
       unset: cli.setup.labels.unset
       'yes': cli.setup.labels.yes
     profile:
-      app_help: cli.setup.profile.app_help
+      app_help: Gestionar los datos del perfil de contribuyente
       get_help: cli.setup.profile.get_help
       get_key_help: cli.setup.profile.get_key_help
       list_help: cli.setup.profile.list_help
@@ -1126,7 +1135,7 @@ cli:
       use_name_help: cli.setup.profile.use_name_help
       validate_help: cli.setup.profile.validate_help
     status:
-      help: cli.setup.status.help
+      help: Mostrar la preparación del entorno y la siguiente acción requerida
   txs:
     app_help: cli.txs.app_help
     build:

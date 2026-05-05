@@ -4,10 +4,15 @@ aggregation:
 application:
   auth:
     provider_impact:
-      certificate_ready: 'Certificate auth is ready. The operator keeps the same CLI filing flow for AEAT-backed reads; every provider uses the same command workflow.'
-      generic_ready: '%{label} is ready. The operator keeps the same CLI filing flow while this provider plugs into the shared auth protocol.'
-      unavailable: '%{label} is configured but not ready yet. The operator can still produce, verify, and export filings locally, but AEAT-backed reads stay unavailable until auth is fixed.'
-      unconfigured: 'The operator can still produce, verify, and export filings locally, but AEAT-backed reads stay unavailable until an auth provider is configured.'
+      certificate_ready: Certificate auth is ready. The operator keeps the same CLI
+        filing flow for AEAT-backed reads; every provider uses the same command workflow.
+      generic_ready: '%{label} is ready. The operator keeps the same CLI filing flow
+        while this provider plugs into the shared auth protocol.'
+      unavailable: '%{label} is configured but not ready yet. The operator can still
+        produce, verify, and export filings locally, but AEAT-backed reads stay unavailable
+        until auth is fixed.'
+      unconfigured: The operator can still produce, verify, and export filings locally,
+        but AEAT-backed reads stay unavailable until an auth provider is configured.
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or
@@ -342,7 +347,8 @@ cli:
       missing_id_or_period_modelo: ID or (period + tax form) must be provided
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
-      profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF). Run: aeat setup profile set tax.id <NIF/NIE>'
+      profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
+        Run: aeat setup profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to the official AEAT format
     format_help: Output format (e.g. json, text, table)
@@ -709,25 +715,25 @@ cli:
     profile:
       app_help: Management of financial profiles
       errors:
-        at_least_one: At least one field or profile is required
-        did_you_mean: Did you mean...?
-        eligible_categories: Eligible categories
-        family_aliases: Family aliases
-        invalid_ratio: Invalid ratio or percentage
-        unknown_key: Unknown key or property in profile
+        category_not_eligible: category %{category} does not accept a usage ratio
+        did_you_mean: 'did you mean: %{suggestions}'
+        eligible_categories: 'eligible categories:'
+        family_aliases: 'family aliases:'
+        invalid_ratio: 'invalid ratio: %{raw}'
+        must_be_finite: ratio must be finite (got %{raw})
+        out_of_range: 'ratio out of range: %{raw} not in [0, 1]'
+        unknown_key: 'unknown key: %{raw}'
       headers:
         ratios: Ratios / Allocations
       labels:
         no_active: No active profile selected
-        profile_not_found: Financial profile not found
-        switched: Financial profile successfully switched
       ratios_help: Define allocation ratios for the financial profile
       ratios_list_help: List the allocation ratios defined in the profile
       set_ratio_help: Set a specific allocation ratio
-      set_ratio_key_help: Ratio key or category
+      set_ratio_key_help: 'Ratio key or category. Family aliases: %{aliases}'
       set_ratio_value_help: Ratio value (e.g., 0.5 for 50%)
       unset_ratio_help: Unset a specific allocation ratio
-      unset_ratio_key_help: Ratio key or category to unset
+      unset_ratio_key_help: 'Ratio key or category to unset. Family aliases: %{aliases}'
     txs:
       app_help: Management of bank transactions
   financial_invoices:
@@ -802,7 +808,7 @@ cli:
       help: Manually edit invoice data
       id_help: Identifier of the invoice to edit
       reason_help: Reason for the edit or correction
-      set_help: Set specific field values (field=value)
+      set_help: Set invoice fields (base, iva.rate, iva.amount, payment.id, document.path)
     errors:
       at_least_one_edit: At least one field modification is required
       file_not_found: Invoice file not found
@@ -839,7 +845,6 @@ cli:
       period_help: Fiscal period for matching
     review:
       filter_help: Filter invoices to review (e.g., by date or amount)
-      header: INVOICE REVIEW SESSION
       help: Interactive review and validation of invoices
       id_help: Identifier of the specific invoice to review
       no_invoices: No invoices pending review
@@ -885,7 +890,6 @@ cli:
       'no': 'No'
       rows: Rows
       skipped: Skipped
-      status: Status
       'yes': 'Yes'
     review:
       filter_help: Filter ledger entries to review (e.g., by date or amount)
@@ -967,7 +971,7 @@ cli:
       copied: cli.oauth.success.copied
       written: cli.oauth.success.written
   overview:
-    app_help: cli.overview.app_help
+    app_help: Review the current filing workspace
     calendar_help: cli.overview.calendar_help
     calendar_requires_dates: cli.overview.calendar_requires_dates
     drafts: cli.overview.drafts
@@ -977,7 +981,7 @@ cli:
     period: cli.overview.period
     period_help: cli.overview.period_help
     profile: cli.overview.profile
-    status_help: cli.overview.status_help
+    status_help: Show profile, ledger, invoice, and declaration readiness
     to_help: cli.overview.to_help
     transactions: cli.overview.transactions
     verbose_help: cli.overview.verbose_help
@@ -1004,6 +1008,15 @@ cli:
     modelo_help: cli.registry.modelo_help
     observation_help: Encrypted filed-declaration observation manifest to verify
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Scenario and tape parity runner for manual calculation checks
+    parity_output_help: Destination JSON file for the generated parity tape
+    parity_replay_help: Replay an archived parity tape against the current registry
+      runtime
+    parity_run_help: Run a stored parity scenario and archive the resulting parity
+      tape
+    parity_scenario_help: Path to a parity scenario JSON file
+    parity_store_root_help: Root directory used to store generated parity tapes
+    parity_tape_help: Path to a stored parity tape JSON file
     period_help: cli.registry.period_help
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
@@ -1021,18 +1034,18 @@ cli:
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    format_help: cli.root.format_help
+    app_app_help: Tax workspaces for ledgers, invoices, and declarations
+    app_help: Spanish tax filing assistant
+    format_help: Output format for command results
   sanitize:
     app_help: cli.sanitize.app_help
     labels:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: cli.setup.app_help
+    app_help: Prepare the local profile and authentication needed to use the app
     auth:
-      app_help: cli.setup.auth.app_help
+      app_help: Configure and check AEAT authentication
       configure:
         file_help: cli.setup.auth.configure.file_help
         help: cli.setup.auth.configure.help
@@ -1075,7 +1088,7 @@ cli:
       valid: cli.setup.headers.valid
     init:
       activity_help: cli.setup.init.activity_help
-      help: cli.setup.init.help
+      help: Create or activate a taxpayer profile
       name_help: cli.setup.init.name_help
       tax_id_help: cli.setup.init.tax_id_help
     labels:
@@ -1083,7 +1096,7 @@ cli:
       unset: cli.setup.labels.unset
       'yes': cli.setup.labels.yes
     profile:
-      app_help: cli.setup.profile.app_help
+      app_help: Manage taxpayer profile values
       get_help: cli.setup.profile.get_help
       get_key_help: cli.setup.profile.get_key_help
       list_help: cli.setup.profile.list_help
@@ -1098,7 +1111,7 @@ cli:
       use_name_help: cli.setup.profile.use_name_help
       validate_help: cli.setup.profile.validate_help
     status:
-      help: cli.setup.status.help
+      help: Show setup readiness and the next required action
   txs:
     app_help: cli.txs.app_help
     build:

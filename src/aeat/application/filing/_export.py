@@ -300,6 +300,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: FilingDraft, header
     }
     for record in sorted(layout.records, key=lambda item: item.order):
         for row_index in _record_row_indexes(record, binding_values):
+            _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(
                 record,
                 draft=draft,
@@ -321,12 +322,33 @@ def _record_row_indexes(
     binding_values: dict[tuple[str, int | None], object],
 ) -> tuple[int | None, ...]:
     if record.repeat != "binding_rows":
+        if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
+            return ()
         return (None,)
     binding_ids = {field.binding for field in record.fields if field.kind == "binding" and field.binding is not None}
     row_indexes = sorted(
         row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
     )
     return tuple(dict.fromkeys(row_indexes))
+
+
+def _record_has_binding_value(
+    record: ExportRecordDefinition,
+    binding_values: dict[tuple[str, int | None], object],
+) -> bool:
+    binding_ids = {field.binding for field in record.fields if field.kind == "binding" and field.binding is not None}
+    return any(
+        binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
+    )
+
+
+def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict[str, object]) -> None:
+    if record.requires_positive_casilla is None:
+        return
+    raw = casilla_values.get(record.requires_positive_casilla)
+    amount = Decimal("0") if raw in {None, ""} else Decimal(str(raw))
+    if amount <= 0:
+        raise ValueError(f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}")
 
 
 def _render_record(

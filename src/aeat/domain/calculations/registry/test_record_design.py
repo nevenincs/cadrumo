@@ -302,6 +302,28 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
         )
 
 
+@pytest.mark.parametrize("filing_year", [2023, 2024, 2025, 2026])
+def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year: int) -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    layout = resolve_export_layout(snapshot).layout
+    profile = next(
+        item
+        for item in snapshot.revision.extraction_profiles
+        if item.surface == "export_record" and "submitted_file" in item.accepted_artefact_kinds
+    )
+
+    exported_casillas = {
+        field.casilla
+        for record in layout.records
+        for field in record.fields
+        if field.kind == "casilla" and field.casilla is not None
+    }
+
+    assert set(profile.target_casillas) <= exported_casillas
+
+
 def _is_structured_input_field(description: str) -> bool:
     if description in {
         "Inicio del identificador de modelo y página.",

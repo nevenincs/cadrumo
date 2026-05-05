@@ -30,11 +30,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _HEX_DIGEST = "a" * 64
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
+_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None], object] = {}
 
 
 def _narrative() -> str:
     narrative: str = "filing.test_export.narrative"
     return narrative
+
+
+def _schema_provider(*, filing_year: int | None = None, period: str | None = None):
+    """Return a real registry schema provider, cached per period selector."""
+    key = (filing_year, period)
+    provider = _SCHEMA_PROVIDER_CACHE.get(key)
+    if provider is None:
+        provider = build_runtime_schema_provider(filing_year=filing_year, period=period)
+        _SCHEMA_PROVIDER_CACHE[key] = provider
+    return provider
 
 
 def _approved_registry_draft():
@@ -57,7 +68,7 @@ def _approved_registry_draft():
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -89,7 +100,93 @@ def _approved_modelo_131_registry_draft():
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _approved_modelo_131_registry_draft_without_direct_debit():
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
+            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
+            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
+        },
+        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _approved_modelo_131_zero_payable_direct_debit_draft():
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "03": Decimal("0"),
+            "05": Decimal("0"),
+            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+        },
+        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_prefix: str):
+    draft = build_draft(
+        modelo="131",
+        period=f"{filing_year}Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            f"{binding_prefix}.page1.110-113.actividad-1-epigrafe": "722",
+            f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            f"{binding_prefix}.dpa.013-016.epigrafe-iae": ["722"],
+            f"{binding_prefix}.dpa.031-032.vehiculos-afectos": {"1": "2"},
+            f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
+        },
+        schema_provider=_schema_provider(filing_year=filing_year, period="1T"),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _approved_modelo_131_historical_registry_draft():
+    provider = _schema_provider(filing_year=2023, period="4T")
+    draft = build_draft(
+        modelo="131",
+        period="2023Q4",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "01": Decimal("1000"),
+            "02": Decimal("20"),
+            "03": Decimal("500"),
+            "05": Decimal("250"),
+            "08": Decimal("3"),
+            "09": Decimal("2"),
+            "11": Decimal("1"),
+            "12": Decimal("0.50"),
+            "14": Decimal("0.25"),
+        },
+        schema_provider=provider,
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -114,7 +211,7 @@ def _approved_modelo_111_registry_draft():
             "27": Decimal("9.00"),
             "29": Decimal("40.00"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -142,7 +239,7 @@ def _approved_modelo_115_registry_draft():
             "02": Decimal("1250.50"),
             "04": Decimal("10.00"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -176,7 +273,7 @@ def _approved_modelo_123_registry_draft():
             "11": Decimal("7.50"),
             "13": Decimal("12.25"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -191,7 +288,7 @@ def _modelo_123_export_headers() -> dict[str, str]:
 
 
 def _approved_modelo_123_2019_registry_draft():
-    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+    provider = _schema_provider(filing_year=2023, period="4T")
     draft = build_draft(
         modelo="123",
         period="2023Q4",
@@ -363,7 +460,7 @@ def test_verify_result_rejects_short_digest() -> None:
 def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     draft = _approved_registry_draft()
     output = tmp_path / "modelo-130.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
 
     receipt = export_draft(
         draft,
@@ -391,7 +488,7 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 def test_export_writes_modelo_131_binding_derived_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_131_registry_draft()
     output = tmp_path / "modelo-131.txt"
-    provider = build_runtime_schema_provider(filing_year=2026, period="1T")
+    provider = _schema_provider(filing_year=2026, period="1T")
 
     receipt = export_draft(
         draft,
@@ -413,10 +510,106 @@ def test_export_writes_modelo_131_binding_derived_layout(tmp_path: Path) -> None
     assert values[("modelo-131-did", "modelo-131.did.012-045.iban")] == "ES9121000418450200051332"
 
 
+def test_export_writes_modelo_131_historical_flat_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_131_historical_registry_draft()
+    output = tmp_path / "modelo-131-2023.txt"
+    provider = _schema_provider(filing_year=2023, period="4T")
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={"declaration_type": "I"},
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+
+    assert receipt.modelo == "131"
+    assert receipt.byte_size == len(payload)
+    assert exported_values == {
+        "01": Decimal("1000.00"),
+        "02": Decimal("20.00"),
+        "03": Decimal("500.00"),
+        "04": Decimal("10.00"),
+        "05": Decimal("250.00"),
+        "06": Decimal("5.00"),
+        "07": Decimal("35.00"),
+        "08": Decimal("3.00"),
+        "09": Decimal("2.00"),
+        "10": Decimal("30.00"),
+        "11": Decimal("1.00"),
+        "12": Decimal("0.50"),
+        "13": Decimal("28.50"),
+        "14": Decimal("0.25"),
+        "15": Decimal("28.25"),
+    }
+
+
+@pytest.mark.parametrize(("filing_year", "binding_prefix"), ((2024, "modelo-131-2024"), (2025, "modelo-131-2025")))
+def test_export_writes_modelo_131_year_scoped_binding_layouts(
+    tmp_path: Path,
+    filing_year: int,
+    binding_prefix: str,
+) -> None:
+    draft = _approved_modelo_131_year_scoped_registry_draft(filing_year, binding_prefix)
+    output = tmp_path / f"modelo-131-{filing_year}.txt"
+    provider = _schema_provider(filing_year=filing_year, period="1T")
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={"declaration_type": "I"},
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    values = {entry.binding_id: entry.value for entry in parsed.fields if entry.binding_id}
+
+    assert receipt.modelo == "131"
+    assert receipt.byte_size == len(payload)
+    assert values[f"{binding_prefix}.page1.110-113.actividad-1-epigrafe"] == "722"
+    assert values[f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
+    assert values[f"{binding_prefix}.dpa.013-016.epigrafe-iae"] == "722"
+    assert values[f"{binding_prefix}.dpa.031-032.vehiculos-afectos"] == Decimal("2")
+    assert values[f"{binding_prefix}.did.012-045.iban"] == "ES9121000418450200051332"
+
+
+def test_export_omits_modelo_131_direct_debit_record_without_iban(tmp_path: Path) -> None:
+    draft = _approved_modelo_131_registry_draft_without_direct_debit()
+    output = tmp_path / "modelo-131.txt"
+    provider = _schema_provider(filing_year=2026, period="1T")
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers={"declaration_type": "I"},
+        schema_provider=provider,
+    )
+
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], output.read_bytes())
+
+    assert not any(entry.record_id == "modelo-131-did" for entry in parsed.fields)
+
+
+def test_export_rejects_modelo_131_direct_debit_without_positive_payable(tmp_path: Path) -> None:
+    draft = _approved_modelo_131_zero_payable_direct_debit_draft()
+
+    with pytest.raises(ValueError, match="requires positive casilla '15'"):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-131.txt",
+            headers={"declaration_type": "I"},
+            schema_provider=_schema_provider(filing_year=2026, period="1T"),
+        )
+
+
 def test_export_writes_signed_positive_money_with_blank_sign_slot(tmp_path: Path) -> None:
     draft = _approved_registry_draft()
     output = tmp_path / "modelo-130.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
 
     export_draft(
         draft,
@@ -437,7 +630,7 @@ def test_export_writes_signed_positive_money_with_blank_sign_slot(tmp_path: Path
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     output = tmp_path / "modelo-111.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
 
     receipt = export_draft(
         draft,
@@ -468,7 +661,7 @@ def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
 def test_export_writes_modelo_115_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_115_registry_draft()
     output = tmp_path / "modelo-115.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
 
     receipt = export_draft(
         draft,
@@ -495,7 +688,7 @@ def test_export_writes_modelo_115_registry_layout(tmp_path: Path) -> None:
 def test_export_writes_modelo_123_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_registry_draft()
     output = tmp_path / "modelo-123.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
 
     receipt = export_draft(
         draft,
@@ -520,7 +713,7 @@ def test_export_writes_modelo_123_registry_layout(tmp_path: Path) -> None:
 def test_export_writes_modelo_123_2019_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_2019_registry_draft()
     output = tmp_path / "modelo-123-2023.txt"
-    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+    provider = _schema_provider(filing_year=2023, period="4T")
 
     receipt = export_draft(
         draft,
@@ -554,7 +747,7 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
             draft,
             output_path=tmp_path / "modelo-130.txt",
             headers={"surnames": "EXPORT TEST", "name": "ANA"},
-            schema_provider=build_runtime_schema_provider(),
+            schema_provider=_schema_provider(),
         )
 
 
@@ -565,10 +758,10 @@ def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
         draft,
         output_path=exported,
         headers=_modelo_130_export_headers(),
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=_schema_provider(),
     )
 
-    verdict = verify_export(draft, file_path=exported, schema_provider=build_runtime_schema_provider())
+    verdict = verify_export(draft, file_path=exported, schema_provider=_schema_provider())
 
     assert verdict.verdict is DeclarationVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
@@ -578,7 +771,7 @@ def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
 def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     exported = tmp_path / "modelo-111.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     export_draft(
         draft,
         output_path=exported,
@@ -596,7 +789,7 @@ def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
 def test_verify_matches_exported_modelo_115_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_115_registry_draft()
     exported = tmp_path / "modelo-115.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     export_draft(
         draft,
         output_path=exported,
@@ -614,7 +807,7 @@ def test_verify_matches_exported_modelo_115_layout(tmp_path: Path) -> None:
 def test_verify_matches_exported_modelo_123_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_registry_draft()
     exported = tmp_path / "modelo-123.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     export_draft(
         draft,
         output_path=exported,
@@ -632,7 +825,7 @@ def test_verify_matches_exported_modelo_123_layout(tmp_path: Path) -> None:
 def test_verify_matches_exported_modelo_123_2019_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_123_2019_registry_draft()
     exported = tmp_path / "modelo-123-2023.txt"
-    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+    provider = _schema_provider(filing_year=2023, period="4T")
     export_draft(
         draft,
         output_path=exported,
@@ -650,7 +843,7 @@ def test_verify_matches_exported_modelo_123_2019_layout(tmp_path: Path) -> None:
 def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     exported = tmp_path / "modelo-111.txt"
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     export_draft(
         draft,
         output_path=exported,
@@ -667,7 +860,7 @@ def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> 
 
 def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> None:
     draft = _approved_registry_draft()
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     exported = tmp_path / "modelo-130.txt"
     export_draft(
         draft,
@@ -701,7 +894,7 @@ def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> N
 
 def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> None:
     draft = _approved_registry_draft()
-    provider = build_runtime_schema_provider()
+    provider = _schema_provider()
     exported = tmp_path / "modelo-130.txt"
     export_draft(
         draft,
