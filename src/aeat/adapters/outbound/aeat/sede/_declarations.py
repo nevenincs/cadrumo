@@ -222,7 +222,13 @@ class DeclarationsRegisterSession:
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaration, ...]:
         """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
 
-        await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio)
+        if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
+            log.info(
+                "DeclarationsRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
+                modelo,
+                ejercicio,
+            )
+            return ()
         results = _parse_listbox(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
         log.info(
             "DeclarationsRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
@@ -243,12 +249,16 @@ class DeclarationsRegisterSession:
 
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
-        await _drive_search(
+        if not await _drive_search(
             self._page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             read_policy=read_policy,
-        )
+        ):
+            raise SedeNavigationError(
+                f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
+                f"for modelo {declaration.modelo}",
+            )
         row_locator = _row_locator_for_expediente(
             self._page,
             expediente_id=declaration.expediente_id,
@@ -395,7 +405,13 @@ async def walk_declarations_register(
         page,
         _context,
     ):
-        await _drive_search(page, modelo=modelo, ejercicio=ejercicio)
+        if not await _drive_search(page, modelo=modelo, ejercicio=ejercicio):
+            log.info(
+                "walk_declarations_register: ejercicio unavailable modelo=%s ejercicio=%d",
+                modelo,
+                ejercicio,
+            )
+            return ()
         results = _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
     log.info(
         "walk_declarations_register: found %d declaration(s) modelo=%s ejercicio=%d",
@@ -412,8 +428,8 @@ async def _drive_search(
     modelo: str,
     ejercicio: int,
     read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
-) -> None:
-    """Fill the form and click Buscar. No-op return on success.
+) -> bool:
+    """Fill the form and click Buscar.
 
     Raises :class:`SedeNavigationError` early when AEAT redirects to
     the login wall instead of the form (session expired) so callers
@@ -456,18 +472,22 @@ async def _drive_search(
             "session likely expired or AEAT served a maintenance page",
         ) from exc
 
-    await _select_combobox_value(
+    if not await _select_combobox_value(
         page,
         label_text="Modelo (*)",
         option_match=f"{modelo} -",
         read_policy=read_policy,
-    )
-    await _select_combobox_value(
+    ):
+        raise SedeNavigationError(
+            f"AEAT declarations register does not offer modelo {modelo!r}",
+        )
+    if not await _select_combobox_value(
         page,
         label_text="Ejercicio (*)",
         option_match=str(ejercicio),
         read_policy=read_policy,
-    )
+    ):
+        return False
 
     try:
         _assert_read_browser_action("Buscar", policy=read_policy)
@@ -481,6 +501,7 @@ async def _drive_search(
     except PlaywrightError as exc:
         raise SedeNavigationError(f"clicking Buscar failed: {exc}") from exc
     await page.wait_for_timeout(_BUSCAR_SETTLE_MS)
+    return True
 
 
 async def _select_combobox_value(
@@ -489,7 +510,7 @@ async def _select_combobox_value(
     label_text: str,
     option_match: str,
     read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
-) -> None:
+) -> bool:
     """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
     label = page.get_by_text(label_text, exact=True).first
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
@@ -500,13 +521,24 @@ async def _select_combobox_value(
         raise SedeNavigationError(f"opening combobox after label {label_text!r} failed: {exc}") from exc
     await page.wait_for_timeout(400)
 
-    target = page.locator(".z-comboitem-text").filter(has_text=option_match).first
+    options = page.locator(".z-comboitem-text")
+    matching_options = options.filter(has_text=option_match)
+    if await matching_options.count() == 0:
+        log.info(
+            "AEAT combobox option unavailable label=%s option=%s",
+            label_text,
+            option_match,
+        )
+        return False
+
+    target = matching_options.first
     try:
         _assert_read_browser_action(option_match, policy=read_policy)
         await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(f"selecting option {option_match!r} for {label_text!r} failed: {exc}") from exc
     await page.wait_for_timeout(300)
+    return True
 
 
 async def _continue_alert_modal(
@@ -748,12 +780,16 @@ async def capture_declaration(
         page,
         context,
     ):
-        await _drive_search(
+        if not await _drive_search(
             page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             read_policy=read_policy,
-        )
+        ):
+            raise SedeNavigationError(
+                f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
+                f"for modelo {declaration.modelo}",
+            )
 
         row_locator = _row_locator_for_expediente(
             page,
@@ -870,12 +906,16 @@ async def capture_filed_declaration_observation(
         page,
         context,
     ):
-        await _drive_search(
+        if not await _drive_search(
             page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             read_policy=read_policy,
-        )
+        ):
+            raise SedeNavigationError(
+                f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
+                f"for modelo {declaration.modelo}",
+            )
 
         row_locator = _row_locator_for_expediente(
             page,

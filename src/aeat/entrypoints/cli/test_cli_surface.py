@@ -21,6 +21,7 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.application.filing import FilingOperatorProfile, build_draft, build_runtime_schema_provider
+from aeat.domain.calculations.registry import RegistryError
 from aeat.domain.filing import FilingBuilderError
 
 from . import app
@@ -55,7 +56,9 @@ def _registry_modelo_calculable_without_cli_sources() -> str:
                 inputs={},
                 schema_provider=provider,
             )
-        except FilingBuilderError:
+        except (FilingBuilderError, RegistryError):
+            # FilingBuilderError: missing CLI-supplied inputs.
+            # RegistryError: modelo has no revision covering the test period.
             continue
         return modelo
     raise AssertionError("registry has no modelo calculable from current CLI sources")
@@ -75,6 +78,9 @@ def _registry_modelo_requiring_cli_sources() -> str:
             )
         except FilingBuilderError:
             return modelo
+        except RegistryError:
+            # Modelo lacks a revision for the test period — not a CLI-input gap.
+            continue
     raise AssertionError("registry has no modelo requiring additional CLI sources")
 
 

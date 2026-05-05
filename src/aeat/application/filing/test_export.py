@@ -72,6 +72,28 @@ def _modelo_130_export_headers() -> dict[str, str]:
     }
 
 
+def _approved_modelo_131_registry_draft():
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
+            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
+            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
+            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+        },
+        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
 def _approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
@@ -364,6 +386,31 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     }
     assert comparable
     assert all(exported_values[casilla_id] == expected for casilla_id, expected in comparable.items())
+
+
+def test_export_writes_modelo_131_binding_derived_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_131_registry_draft()
+    output = tmp_path / "modelo-131.txt"
+    provider = build_runtime_schema_provider(filing_year=2026, period="1T")
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={"declaration_type": "I"},
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    values = {(entry.record_id, entry.binding_id): entry.value for entry in parsed.fields if entry.binding_id}
+
+    assert receipt.modelo == "131"
+    assert receipt.byte_size == len(payload)
+    assert values[("modelo-131-page-01", "modelo-131.page1.110-113.actividad-1-epigrafe")] == "722"
+    assert values[("modelo-131-page-01", "modelo-131.page1.114-130.actividad-1-rendimiento-neto")] == Decimal("1200.50")
+    assert values[("modelo-131-dpa", "modelo-131.dpa.013-016.epigrafe-iae")] == "722"
+    assert values[("modelo-131-dpa", "modelo-131.dpa.031-032.vehiculos-afectos")] == Decimal("2")
+    assert values[("modelo-131-did", "modelo-131.did.012-045.iban")] == "ES9121000418450200051332"
 
 
 def test_export_writes_signed_positive_money_with_blank_sign_slot(tmp_path: Path) -> None:

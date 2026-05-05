@@ -82,10 +82,10 @@ def ledger_import(
     raws = list(chosen.ingest(path))
     if dry_run:
         payload = {
-            tr("cli.ledger.labels.rows"): len(raws),
-            tr("cli.ledger.labels.imported"): 0,
-            tr("cli.ledger.labels.skipped"): 0,
-            tr("cli.ledger.labels.dry_run"): True,
+            "rows": len(raws),
+            "imported": 0,
+            "skipped": 0,
+            "dry_run": True,
             "verify": verify,
         }
         _emit(
@@ -99,10 +99,10 @@ def ledger_import(
         return
     summary = _tx_repo().merge_raw_transactions(raws, direction_resolver=_direction_resolver)
     payload = {
-        tr("cli.ledger.labels.rows"): len(raws),
-        tr("cli.ledger.labels.imported"): summary.imported,
-        tr("cli.ledger.labels.skipped"): summary.skipped,
-        tr("cli.ledger.labels.dry_run"): False,
+        "rows": len(raws),
+        "imported": summary.imported,
+        "skipped": summary.skipped,
+        "dry_run": False,
         "verify": verify,
         "period": _canonical_period(period) if period else None,
     }
@@ -146,10 +146,10 @@ def ledger_review(
                     amount_val = Decimal(review.fields["amount"])
 
                 payload = {
-                    tr("cli.ledger.labels.id"): tx.transaction_id,
-                    tr("cli.ledger.labels.date"): (tx.raw.value_date or tx.raw.booked_date).isoformat(),
-                    tr("cli.ledger.labels.amount"): _fmt_decimal(amount_val),
-                    tr("cli.ledger.labels.description"): tx.raw.description,
+                    "id": tx.transaction_id,
+                    "date": (tx.raw.value_date or tx.raw.booked_date).isoformat(),
+                    "amount": _fmt_decimal(amount_val),
+                    "description": tx.raw.description,
                     "review": review,
                     "verbose": verbose,
                 }
@@ -168,11 +168,11 @@ def ledger_review(
     payload = {
         "rows": [
             {
-                tr("cli.ledger.labels.id"): tx.transaction_id,
-                tr("cli.ledger.labels.date"): (tx.raw.value_date or tx.raw.booked_date).isoformat(),
-                tr("cli.ledger.labels.amount"): format(tx.raw.amount, "f"),
-                tr("cli.ledger.labels.description"): tx.raw.description,
-                tr("cli.ledger.labels.status"): _ledger_row_status(tx, state),
+                "id": tx.transaction_id,
+                "date": (tx.raw.value_date or tx.raw.booked_date).isoformat(),
+                "amount": format(tx.raw.amount, "f"),
+                "description": tx.raw.description,
+                "status": _ledger_row_status(tx, state),
             }
             for tx in rows
         ],
@@ -274,7 +274,7 @@ def ledger_edit(
         )
     )
     review = updated.ledger_reviews.get(record_id)
-    payload = {tr("cli.ledger.labels.id"): record_id, "review": review}
+    payload = {"id": record_id, "review": review}
     skipped_label = tr("cli.ledger.labels.yes") if review and review.skipped else tr("cli.ledger.labels.no")
     fields_label = ", ".join(sorted(review.fields)) if review else "-"
     _emit(

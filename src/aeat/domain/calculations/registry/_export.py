@@ -3,15 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
+from typing import Literal, cast
 
 from ._errors import RegistryValidationError
 from ._schema import (
+    DataBindingDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    ModeloRevision,
     RegistryModel,
     RegistrySnapshot,
 )
+
+_BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+_ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
+_ExportJustification = Literal["left", "right", "none"]
 
 
 class ResolvedExportLayout(RegistryModel):
@@ -52,6 +60,93 @@ def resolve_export_layout(snapshot: RegistrySnapshot, layout_id: str | None = No
         fields_by_id=fields_by_id,
         fields_by_casilla=fields_by_casilla,
     )
+
+
+def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[ExportLayoutDefinition, ...]:
+    """Return revision export layouts with binding-derived fields resolved.
+
+    Some official AEAT record designs expose structured filing records that are
+    already represented as registry bindings. In those cases the export layout
+    declares the record-level intent via ``binding_record`` and this resolver
+    derives field coordinates from the binding selectors instead of requiring a
+    second coordinate table in TOML.
+    """
+
+    if not revision.export_layouts:
+        return ()
+    bindings_by_record: dict[str, list[DataBindingDefinition]] = {}
+    for binding in revision.bindings:
+        record = binding.selector.get("record")
+        if isinstance(record, str):
+            bindings_by_record.setdefault(record, []).append(binding)
+
+    resolved_layouts: list[ExportLayoutDefinition] = []
+    for layout in revision.export_layouts:
+        resolved_records: list[ExportRecordDefinition] = []
+        for record in layout.records:
+            if record.binding_record is None:
+                resolved_records.append(record)
+                continue
+            derived = tuple(
+                _export_field_from_binding(record, binding)
+                for binding in sorted(
+                    bindings_by_record.get(record.binding_record, ()),
+                    key=lambda item: (int(item.selector["offset"]), item.id),
+                )
+            )
+            resolved_records.append(record.model_copy(update={"fields": (*record.fields, *derived)}))
+        resolved_layouts.append(layout.model_copy(update={"records": tuple(resolved_records)}))
+    return tuple(resolved_layouts)
+
+
+def _export_field_from_binding(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+) -> ExportFieldDefinition:
+    selector = binding.selector
+    data_type = _binding_data_type(binding, selector.get("data_type"))
+    return ExportFieldDefinition(
+        id=f"{record.id}.{binding.id}",
+        offset=_selector_int(binding, "offset"),
+        length=_selector_int(binding, "length"),
+        kind="binding",
+        binding=binding.id,
+        data_type=data_type,
+        required=False,
+        padding=_padding_for_binding_data_type(data_type),
+        justification=_justification_for_binding_data_type(data_type),
+        signed=False,
+        legal_refs=binding.legal_refs,
+        source_refs=binding.source_refs,
+    )
+
+
+def _selector_int(binding: DataBindingDefinition, key: str) -> int:
+    value = binding.selector.get(key)
+    if isinstance(value, tuple) or value is None:
+        raise RegistryValidationError(f"binding {binding.id!r} selector {key!r} must be numeric")
+    if isinstance(value, Decimal):
+        return int(value)
+    return int(value)
+
+
+def _binding_data_type(binding: DataBindingDefinition, value: object) -> _BindingExportDataType:
+    allowed = {"text", "integer", "decimal", "money", "date", "boolean"}
+    if not isinstance(value, str) or value not in allowed:
+        raise RegistryValidationError(f"binding {binding.id!r} selector data_type is not exportable")
+    return cast(_BindingExportDataType, value)
+
+
+def _padding_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportPadding:
+    if data_type in {"money", "integer", "decimal"}:
+        return "left_zero"
+    return "right_space"
+
+
+def _justification_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportJustification:
+    if data_type in {"money", "integer", "decimal"}:
+        return "right"
+    return "left"
 
 
 def export_fields_for_casilla(resolved: ResolvedExportLayout, casilla_id: str) -> tuple[ExportFieldDefinition, ...]:
@@ -135,6 +230,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ResolvedExportLayout",
+    "derive_export_layouts_from_bindings",
     "export_fields_for_casilla",
     "resolve_export_layout",
 ]

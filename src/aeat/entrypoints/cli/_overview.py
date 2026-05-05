@@ -53,9 +53,9 @@ def overview_status(
         cal: OverviewCalendar = build_overview_calendar(_profile_to_autonomo(current), rng, today=_date.today())
         payload = {
             "calendar": cal,
-            tr("cli.overview.transactions"): len(transactions.transactions),
-            tr("cli.overview.invoices"): len(invoices),
-            tr("cli.overview.drafts"): len(drafts),
+            "transactions": len(transactions.transactions),
+            "invoices": len(invoices),
+            "drafts": len(drafts),
         }
         lines: list[str] = [tr("cli.overview.header")]
         lines.extend(
@@ -68,8 +68,8 @@ def overview_status(
         canonical = _canonical_period(period)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]
         payload = {
-            tr("cli.overview.period"): canonical,
-            tr("cli.overview.drafts"): [
+            "period": canonical,
+            "drafts": [
                 {"draft_id": d.draft_id, "modelo": d.modelo, "status": d.status.value} for d in per_modelo_drafts
             ],
             "verbose": verbose,
@@ -84,9 +84,9 @@ def overview_status(
         return
     payload = {
         "active_profile": current.active_profile,
-        tr("cli.overview.transactions"): len(transactions.transactions),
-        tr("cli.overview.invoices"): len(invoices),
-        tr("cli.overview.drafts"): len(drafts),
+        "transactions": len(transactions.transactions),
+        "invoices": len(invoices),
+        "drafts": len(drafts),
     }
     _emit(
         ctx,

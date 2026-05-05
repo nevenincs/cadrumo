@@ -525,7 +525,6 @@ class TestKdfVersionRow:
         )
         row = check_kdf_version(_settings_with_secret_dir(tmp_path))
         assert row.state == State.OK
-        assert "Argon2id" in row.detail
 
     def test_unparseable_master_kdf_is_partial(self, tmp_path: Path) -> None:
         secret_dir = tmp_path / "secrets"

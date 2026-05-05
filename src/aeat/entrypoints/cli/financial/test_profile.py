@@ -67,13 +67,14 @@ def _invoke(*args: str):
 def test_list_on_empty_profile_reports_no_ratios() -> None:
     result = _invoke("ratios", "list")
     assert result.exit_code == 0, result.output
-    assert "No usage ratios configured." in result.output
 
 
 def test_set_ratio_single_category_persists_and_lists() -> None:
     set_result = _invoke("set-ratio", "suministros_home_office_luz", "0.21")
     assert set_result.exit_code == 0, set_result.output
-    assert "set suministros_home_office_luz = 0.21" in set_result.output
+    # Confirmation echo carries the (non-translated) category id and value.
+    assert "suministros_home_office_luz" in set_result.output
+    assert "0.21" in set_result.output
 
     list_result = _invoke("ratios", "list")
     assert list_result.exit_code == 0, list_result.output
@@ -125,7 +126,7 @@ def test_set_ratio_mileage_business_alias_sets_five_vehicle_categories() -> None
 def test_set_ratio_ineligible_category_rejected_with_hint() -> None:
     result = _invoke("set-ratio", "material_oficina", "0.5")
     assert result.exit_code == 2
-    assert "does not accept a usage ratio" in result.output
+    # Hint must list at least one eligible category id (a non-translated identifier).
     assert "suministros_home_office_luz" in result.output
 
 
@@ -138,38 +139,35 @@ def test_set_ratio_out_of_range_rejected() -> None:
 def test_set_ratio_nan_rejected() -> None:
     result = _invoke("set-ratio", "suministros_home_office_luz", "NaN")
     assert result.exit_code == 2
-    assert "must be finite" in result.output
 
 
 def test_set_ratio_infinity_rejected() -> None:
     result = _invoke("set-ratio", "suministros_home_office_luz", "Infinity")
     assert result.exit_code == 2
-    assert "must be finite" in result.output
 
 
 def test_set_ratio_non_numeric_rejected() -> None:
     result = _invoke("set-ratio", "suministros_home_office_luz", "not-a-number")
     assert result.exit_code == 2
-    assert "invalid ratio" in result.output
 
 
 def test_set_ratio_unknown_key_hint_lists_aliases_and_categories() -> None:
     """The unknown-key hint names every family alias, every eligible category, and any close-match suggestion."""
     result = _invoke("set-ratio", "foo", "0.5")
     assert result.exit_code == 2
-    assert "unknown key" in result.output
+    # Family aliases and eligible category ids are non-translated identifiers
+    # and must surface in the hint regardless of locale.
     assert "home_office_area" in result.output
     assert "mileage_business" in result.output
-    # Eligible category ids must appear in the hint:
     assert "suministros_home_office_luz" in result.output
     assert "telefonia_movil" in result.output
 
 
 def test_set_ratio_near_match_suggested_for_typo() -> None:
-    """Misspelling an alias produces a ``did you mean`` suggestion."""
+    """Misspelling an alias produces a near-match suggestion naming the canonical alias."""
     result = _invoke("set-ratio", "home_office_are", "0.21")
     assert result.exit_code == 2
-    assert "did you mean" in result.output
+    # The canonical alias id must appear in the suggestion (non-translated).
     assert "home_office_area" in result.output
 
 
@@ -177,7 +175,9 @@ def test_set_ratio_tolerates_trailing_whitespace() -> None:
     """A trailing space in the key must not derail the command (copy-paste tolerance)."""
     result = _invoke("set-ratio", "suministros_home_office_luz ", "0.21")
     assert result.exit_code == 0, result.output
-    assert "set suministros_home_office_luz = 0.21" in result.output
+    # The (non-translated) category id and value must surface in the confirmation.
+    assert "suministros_home_office_luz" in result.output
+    assert "0.21" in result.output
 
 
 def test_corrupt_file_surfaces_error_not_silent_empty(
@@ -234,11 +234,11 @@ def test_unknown_key_no_near_match_for_unrelated_input(
 
 
 def test_set_ratio_ineligible_hint_wraps_and_stays_consistent() -> None:
-    """The ineligible-category branch reuses the wrapped 80-column ``eligible categories:`` layout."""
+    """The ineligible-category branch reuses the wrapped 80-column eligible-categories layout."""
     result = _invoke("set-ratio", "material_oficina", "0.5")
     assert result.exit_code == 2
-    assert "does not accept a usage ratio" in result.output
-    assert "eligible categories:" in result.output
+    # An eligible category id (non-translated) must appear in the hint.
+    assert "suministros_home_office_luz" in result.output
     # No single output line exceeds 80 columns (terminal-friendliness).
     for line in result.output.splitlines():
         assert len(line) <= 80, f"line too long ({len(line)}): {line!r}"
@@ -249,11 +249,13 @@ def test_unset_ratio_removes_persisted_entry() -> None:
     assert set_result.exit_code == 0
     unset_result = _invoke("unset-ratio", "suministros_home_office_luz")
     assert unset_result.exit_code == 0
-    assert "unset suministros_home_office_luz" in unset_result.output
+    # Confirmation echoes the (non-translated) category id.
+    assert "suministros_home_office_luz" in unset_result.output
 
     second_unset = _invoke("unset-ratio", "suministros_home_office_luz")
     assert second_unset.exit_code == 0
-    assert "no user ratio set for suministros_home_office_luz" in second_unset.output
+    # A second unset on an already-empty entry succeeds silently and still names the category.
+    assert "suministros_home_office_luz" in second_unset.output
 
 
 def test_unset_ratio_family_alias_removes_all_members() -> None:
