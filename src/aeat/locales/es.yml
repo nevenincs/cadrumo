@@ -882,6 +882,8 @@ cli:
       auto_detect_failed: Fallo en la detección automática del formato del libro
       edit_requires_one: Se requiere al menos una modificación de campo para editar
       filter_parse_error: Fallo al analizar el filtro del libro
+      invalid_source: 'El archivo del libro no se puede importar: {reason}'
+      invalid_source_unknown: origen no válido
       invalid_skip: Campo de omisión no válido
       invalid_split_format: Formato de división no válido
       invalid_split_value: Valor de división no válido
@@ -890,6 +892,7 @@ cli:
       n26_auto_detect_failed: Fallo en la detección automática del formato de N26
       row_not_found: Fila del libro no encontrada
       set_parse_error: Fallo al analizar la asignación del campo (campo=valor)
+      source_not_found: 'No se ha encontrado el archivo de origen: {source}'
       unknown_provider: Proveedor de libro contable desconocido
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
@@ -897,7 +900,7 @@ cli:
       path_help: Ruta al archivo del extracto bancario o directorio
       period_help: Periodo fiscal para la importación
       provider_help: Proveedor del formato del extracto (p. ej., N26, Revolut)
-      source_help: Fuente de los datos (p. ej., archivo, api)
+      source_help: Archivo original para verificar las filas importadas
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
     labels:
@@ -911,6 +914,10 @@ cli:
       'no': 'No'
       rows: Filas
       skipped: Omitidos
+      source: Origen
+      dialect: Formato detectado
+      valid: Válido
+      warnings: Avisos
       'yes': Sí
     review:
       filter_help: Filtrar filas por status, period, issue o import

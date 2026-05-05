@@ -879,6 +879,8 @@ cli:
       auto_detect_failed: Fallada en la detecció automàtica del format del llibre
       edit_requires_one: Es requereix almenys una modificació de camp per editar
       filter_parse_error: Fallada en analitzar el filtre del llibre
+      invalid_source: 'No es pot importar el fitxer del llibre: {reason}'
+      invalid_source_unknown: origen no vàlid
       invalid_skip: Camp d'omissió no vàlid
       invalid_split_format: Format de divisió no vàlid
       invalid_split_value: Valor de divisió no vàlid
@@ -887,6 +889,7 @@ cli:
       n26_auto_detect_failed: Fallada en la detecció automàtica del format de N26
       row_not_found: Fila del llibre no trobada
       set_parse_error: Fallada en analitzar l'assignació del camp (camp=valor)
+      source_not_found: 'No s''ha trobat el fitxer d''origen: {source}'
       unknown_provider: Proveïdor de llibre comptable desconegut
     import:
       dry_run_help: Executar la importació en mode de prova (sense desar)
@@ -894,7 +897,7 @@ cli:
       path_help: Ruta a l'arxiu de l'extracte bancari o directori
       period_help: Periode fiscal per a la importació
       provider_help: Proveïdor del format de l'extracte (p. ex., N26, Revolut)
-      source_help: Font de les dades (p. ex., arxiu, api)
+      source_help: Fitxer original per verificar les files importades
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
     labels:
@@ -908,6 +911,10 @@ cli:
       'no': 'No'
       rows: Files
       skipped: Omesos
+      source: Origen
+      dialect: Format detectat
+      valid: Vàlid
+      warnings: Avisos
       'yes': Sí
     review:
       filter_help: Filtrar files per status, period, issue o import
