@@ -3959,16 +3959,22 @@ application surface, and the old authority has been deleted.
        - [x] Ejercicio 2025 direct-estimation income and expense subtotal
          arithmetic is registry-backed for casillas 0171-0180, 0181-0218,
          0219-0221, and 0225 with legal/source closure and behaviour tests.
+       - [x] Final net-return selection and reduction application are now
+         registry-backed for the 2025 direct-estimation branch via casillas
+         0224, 0226, 0231, and 0235, with mode-dependent selection grounded in
+         AEAT manual guidance and covered by behavior tests.
        - [ ] Inventory, amortization-provider linkage, provisions beyond direct
-         manual input, accounting-derived adjustments, final net-return
-         selection, and reduction application remain open.
+         manual input, and accounting-derived adjustments remain open.
      - [ ] Direct simplified estimation: simplified expenses, statutory caps,
        reductions, and source/legal references.
        - [x] Ejercicio 2025 simplified total deductible expenses are computed
          as casilla 0223 from 0218 and 0222 under AEAT manual/source
          citation validation.
-       - [ ] Statutory cap calculation for difficult-justification expenses,
-         reduction application, and final net-return selection remain open.
+       - [x] The direct-estimation reduction chain now includes registry-backed
+         mode selection, reduction application, and reduced-total propagation
+         for the 2025 slice.
+       - [ ] Statutory cap calculation for difficult-justification expenses and
+         simplified-estimation final selection remain open.
      - [ ] Objective estimation: activity modules, signs, indices, reductions,
        annual module orders, and relation to Modelo 131.
      - [x] Payments on account, retentions, and relation to Modelos 130 and 131.

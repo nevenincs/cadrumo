@@ -145,6 +145,14 @@ expense total 0223, and irregular-income reduction input 0225. These formulas
 cite the reviewed AEAT Renta 2025 manual as official source guidance, while the
 record-design dictionary remains layout evidence.
 
+The direct-estimation net-return branch is also now resolved in the registry.
+Casilla 0224 selects the normal or simplified path based on the registered mode
+binding, casilla 0226 applies the irregular-income and accounting adjustment
+reduction chain, casilla 0231 propagates the reduced net return, and casilla
+0235 applies the remaining direct-estimation reductions for the 2025 slice.
+The corresponding registry tests exercise both mode branches against the real
+calculator instead of asserting declaration-state metadata.
+
 The registry validator now extracts text from reviewed AEAT manual PDFs and
 normalizes source text accent-insensitively before checking formula citations.
 That closes the gap where PDF manuals existed in corpus but could not

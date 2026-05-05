@@ -363,6 +363,29 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 
+[[revisions."2019-2023".live_cross_references]]
+id = "modelo-131-2019-2023-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-131-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
 [[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-calculation"
 surface = "calculation"
@@ -386,6 +409,14 @@ consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
 [revisions."2024"]
 id = "2024"
@@ -705,6 +736,29 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 
+[[revisions."2024".live_cross_references]]
+id = "modelo-131-2024-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-131-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
 [[revisions."2024".application_links]]
 id = "modelo-131-2024-calculation"
 surface = "calculation"
@@ -728,6 +782,14 @@ consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
 [revisions."2025"]
 id = "2025"
@@ -1047,6 +1109,29 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
 
+[[revisions."2025".live_cross_references]]
+id = "modelo-131-2025-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-131-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
 [[revisions."2025".application_links]]
 id = "modelo-131-2025-calculation"
 surface = "calculation"
@@ -1070,6 +1155,14 @@ consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
 [revisions."2026"]
 id = "2026"
@@ -1782,6 +1875,29 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
 ]
 
+[[revisions."2026".live_cross_references]]
+id = "modelo-131-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-131-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
 [[revisions."2026".workbook_parity_refs]]
 id = "modelo-131-dr-xlsx-2026"
 workbook_source = "aeat-dr-131-2026"
@@ -1854,6 +1970,14 @@ source_refs = [
     "aeat-modelo-131-formulario-presentacion",
     "aeat-modelo-131-recuperacion-declaraciones",
 ]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
 [[revisions."2026".application_links]]
 id = "modelo-131-deadline"
