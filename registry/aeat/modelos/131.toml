@@ -1383,6 +1383,300 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
 [[revisions."2026".bindings]]
+id = "modelo-131.page1.109-109.discapacidad-33"
+source = "manual_input"
+selector = { record = "page_1", field = "discapacidad-33", offset = 109, length = 1, data_type = "boolean" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.110-113.actividad-1-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-epigrafe", offset = 110, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.114-130.actividad-1-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 114, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.131-135.actividad-1-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-porcentaje", offset = 131, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.136-152.actividad-1-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-resultado", offset = 136, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.153-156.actividad-2-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-epigrafe", offset = 153, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.157-173.actividad-2-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 157, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.174-178.actividad-2-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-porcentaje", offset = 174, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.179-195.actividad-2-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-resultado", offset = 179, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.196-199.actividad-3-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-epigrafe", offset = 196, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.200-216.actividad-3-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 200, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.217-221.actividad-3-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-porcentaje", offset = 217, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.222-238.actividad-3-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-resultado", offset = 222, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.239-242.actividad-4-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-epigrafe", offset = 239, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.243-259.actividad-4-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 243, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.260-264.actividad-4-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-porcentaje", offset = 260, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.265-281.actividad-4-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-resultado", offset = 265, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.282-285.actividad-5-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-epigrafe", offset = 282, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.286-302.actividad-5-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 286, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.303-307.actividad-5-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-porcentaje", offset = 303, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.308-324.actividad-5-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-resultado", offset = 308, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.359-359.sin-datos-base-ceuta-melilla"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-ceuta-melilla", offset = 359, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.360-369.sin-datos-base-volumen"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-volumen", offset = 360, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.370-373.sin-datos-base-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-porcentaje", offset = 370, length = 4, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.374-383.sin-datos-base-vivienda-base"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-vivienda-base", offset = 374, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.384-386.sin-datos-base-vivienda-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-vivienda-porcentaje", offset = 384, length = 3, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.387-389.sin-datos-base-vivienda-limite"
+source = "manual_input"
+selector = { record = "page_1", field = "sin-datos-base-vivienda-limite", offset = 387, length = 3, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.424-433.agraria-ingresos-generales"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-ingresos-generales", offset = 424, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.434-443.agraria-ingresos-ceuta-melilla"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-ingresos-ceuta-melilla", offset = 434, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.444-447.agraria-ingresos-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-ingresos-porcentaje", offset = 444, length = 4, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.448-457.agraria-rentas-ceuta-melilla"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-rentas-ceuta-melilla", offset = 448, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.458-467.agraria-deduccion-base"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-deduccion-base", offset = 458, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.468-471.agraria-deduccion-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-deduccion-porcentaje", offset = 468, length = 4, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.472-481.agraria-vivienda-base"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-vivienda-base", offset = 472, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.482-484.agraria-vivienda-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-vivienda-porcentaje", offset = 482, length = 3, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.485-487.agraria-vivienda-limite"
+source = "manual_input"
+selector = { record = "page_1", field = "agraria-vivienda-limite", offset = 485, length = 3, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.556-556.deduccion-art-110-tramo"
+source = "manual_input"
+selector = { record = "page_1", field = "deduccion-art-110-tramo", offset = 556, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.557-561.deduccion-art-110-cuantia"
+source = "manual_input"
+selector = { record = "page_1", field = "deduccion-art-110-cuantia", offset = 557, length = 5, data_type = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.613-613.vivienda-derecho-deduccion"
+source = "manual_input"
+selector = { record = "page_1", field = "vivienda-derecho-deduccion", offset = 613, length = 1, data_type = "boolean" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.614-623.vivienda-deduccion-aplicada"
+source = "manual_input"
+selector = { record = "page_1", field = "vivienda-deduccion-aplicada", offset = 614, length = 10, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.692-692.declaracion-complementaria"
+source = "manual_input"
+selector = { record = "page_1", field = "declaracion-complementaria", offset = 692, length = 1, data_type = "boolean" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.693-705.justificante-anterior"
+source = "manual_input"
+selector = { record = "page_1", field = "justificante-anterior", offset = 693, length = 13, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
 id = "modelo-131.dpa.013-016.epigrafe-iae"
 source = "manual_input"
 selector = { record = "DPA", field = "epigrafe-iae", offset = 13, length = 4, data_type = "text" }
