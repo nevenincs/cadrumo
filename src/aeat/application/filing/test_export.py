@@ -366,6 +366,27 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     assert all(exported_values[casilla_id] == expected for casilla_id, expected in comparable.items())
 
 
+def test_export_writes_signed_positive_money_with_blank_sign_slot(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    output = tmp_path / "modelo-130.txt"
+    provider = build_runtime_schema_provider()
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    payload = output.read_bytes()
+    field_slice = _field_slice(layout, "modelo-130-page-01", "modelo-130-casilla-03")
+    rendered = payload[field_slice].decode("latin-1")
+
+    assert rendered[0] == " "
+    assert rendered[1:] == "7500".zfill(len(rendered) - 1)
+    assert parse_export_payload(layout, payload).casillas
+
+
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     output = tmp_path / "modelo-111.txt"

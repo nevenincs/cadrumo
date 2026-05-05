@@ -9,7 +9,15 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
+from . import (
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+    parse_export_payload,
+    resolve_export_layout,
+    resolve_relation_values,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -256,3 +264,117 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert entries["10"].operand_refs == ("07", "08", "09")
     assert entries["13"].operand_refs == ("10", "11", "12")
     assert entries["15"].operand_refs == ("13", "14")
+
+
+def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "180")
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+    relation_values = resolve_relation_values(
+        snapshot.revision,
+        {
+            "modelo-180-rel-115-perceptores-anual": (
+                Decimal("1"),
+                Decimal("1"),
+                Decimal("2"),
+                Decimal("1"),
+            ),
+            "modelo-180-rel-115-base-anual": (
+                Decimal("250.10"),
+                Decimal("749.90"),
+                Decimal("1200.00"),
+                Decimal("-50.25"),
+            ),
+            "modelo-180-rel-115-retenciones-anual": (
+                Decimal("47.52"),
+                Decimal("142.48"),
+                Decimal("228.00"),
+                Decimal("0.00"),
+            ),
+        },
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2026, 12, 31)},
+        relation_values=relation_values,
+    )
+
+    assert result.values["decl.total-perceptores"] == Decimal("5")
+    assert result.values["decl.base-total"] == Decimal("2149.75")
+    assert result.values["decl.retenciones-total"] == Decimal("418.00")
+    entries = {entry.target: entry for entry in result.entries}
+    assert entries["decl.total-perceptores"].operand_refs == ("modelo-180-rel-115-perceptores-anual",)
+    assert entries["decl.base-total"].operand_refs == ("modelo-180-rel-115-base-anual",)
+    assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
+
+
+def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_records() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "180")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+    layout = resolve_export_layout(snapshot).layout
+    declarante = _fixed_width_record(
+        500,
+        {
+            (1, 1): "1",
+            (2, 4): "180",
+            (5, 8): "2026",
+            (9, 17): "B12345678",
+            (136, 144): "000000002",
+            (145, 160): " " + "100050".zfill(15),
+            (161, 175): "19010".zfill(15),
+        },
+    )
+    perceptor = _fixed_width_record(
+        500,
+        {
+            (1, 1): "2",
+            (2, 4): "180",
+            (5, 8): "2026",
+            (9, 17): "B12345678",
+            (18, 26): "12345678Z",
+            (36, 75): "ARRENDADOR EJEMPLO".ljust(40),
+            (76, 77): "28",
+            (78, 78): "1",
+            (79, 92): "N" + "2500".zfill(13),
+            (97, 109): "475".zfill(13),
+            (110, 113): "2025",
+            (114, 114): "1",
+            (115, 134): "1234567VK4713C0001XY",
+            (321, 322): "28",
+            (323, 327): "28013",
+        },
+    )
+
+    parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
+    casillas = {field.casilla_id: field.value for field in parsed.casillas}
+
+    assert casillas["decl.total-perceptores"] == Decimal("2")
+    assert casillas["decl.base-total"] == Decimal("1000.50")
+    assert casillas["decl.retenciones-total"] == Decimal("190.10")
+    assert casillas["perc.base"] == Decimal("-25.00")
+    assert casillas["perc.retenciones"] == Decimal("4.75")
+
+
+def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:
+    record = [" "] * length
+    for (start, end), value in fields.items():
+        if len(value) != end - start + 1:
+            raise AssertionError(f"field {start}-{end} has length {len(value)}")
+        record[start - 1 : end] = value
+    return "".join(record)
