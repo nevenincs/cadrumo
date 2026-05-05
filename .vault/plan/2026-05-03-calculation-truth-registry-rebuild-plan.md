@@ -1725,6 +1725,9 @@ own ledger is checked.
      mirror source modelo, source output/casilla, source periods, and
      aggregation, and formula-level relation dependencies must carry the
      relation legal basis.
+  - [x] Extend cross-dependency contract tests so each relation source output
+     resolves to a filing-grade source-modelo casilla or declared algorithm
+     output in every selected source revision.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.
