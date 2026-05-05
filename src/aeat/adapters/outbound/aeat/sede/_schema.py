@@ -183,7 +183,7 @@ class ObservedCasillaValue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_id: str = Field(min_length=1, max_length=16, pattern=r"^[0-9A-Za-z_.-]+$")
+    casilla_id: str = Field(min_length=1, max_length=32, pattern=r"^[0-9A-Za-z_.-]+$")
     value: str = Field(min_length=1, max_length=4096)
     source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"]
     source_locator: str = Field(min_length=1, max_length=512)

@@ -8,7 +8,7 @@ from pydantic import AnyUrl
 from aeat.core.paths import PROJECT_ROOT
 
 from . import build_snapshot, load_registry_tree
-from ._errors import RegistryValidationError
+from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -213,13 +213,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
         for modelo in modelos
-        for cross_reference in build_snapshot(
-            modelo,
-            catalogues,
-            source_root=PROJECT_ROOT,
-            filing_year=2026,
-            period="1T",
-        ).live_cross_references.values()
+        for cross_reference in _first_snapshot(modelo, catalogues).live_cross_references.values()
     ]
 
     assert policies
@@ -243,3 +237,23 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
             ).decision
             == "blocked"
         )
+
+
+def _first_snapshot(modelo, catalogues):
+    for revision in modelo.revisions.values():
+        year = (
+            revision.period_selector.years[0] if revision.period_selector.years else revision.period_selector.year_from
+        )
+        if year is None:
+            continue
+        try:
+            return build_snapshot(
+                modelo,
+                catalogues,
+                source_root=PROJECT_ROOT,
+                filing_year=year,
+                period=revision.period_selector.periods[0],
+            )
+        except RegistrySnapshotError:
+            continue
+    raise AssertionError(f"modelo {modelo.id} has no selectable committed snapshot")

@@ -73,7 +73,7 @@ def test_non_approved_status_clears_approval_fields() -> None:
 def test_unsupported_modelo_fails_at_registry_boundary() -> None:
     with pytest.raises(Exception, match="not present in the calculation registry"):
         build_registry_filing_draft(
-            modelo="100",
+            modelo="999",
             period="0A",
             casilla_values={"0511": Decimal("5550.00")},
         )

@@ -1,0 +1,2440 @@
+[modelo]
+id = "100"
+title = "IRPF declaracion anual"
+official_name = "Modelo 100. Declaracion del Impuesto sobre la Renta de las Personas Fisicas."
+tax_domain = "irpf"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-input-dictionary",
+    "aeat-dr-100-2023-xsd",
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-input-dictionary",
+    "aeat-dr-100-2024-xsd",
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]
+
+[revisions."2020"]
+id = "2020"
+label = "Ejercicio 2020"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+period_selector = { years = [2020], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2020".workbook_parity_refs]]
+id = "modelo-100-2020-record-design-layout"
+workbook_source = "aeat-dr-100-2020-xsd"
+fixture_id = "modelo-100-2020-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-input-dictionary",
+    "aeat-dr-100-2020-xsd",
+]
+
+[[revisions."2020".export_layouts]]
+id = "modelo-100-2020-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2020-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-xsd",
+]
+
+[[revisions."2020".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2020".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2020-dictionary",
+    "aeat-dr-100-2020-xsd",
+]
+
+[[revisions."2020".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[revisions."2021"]
+id = "2021"
+label = "Ejercicio 2021"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+period_selector = { years = [2021], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2021".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]
+
+[[revisions."2021".casillas]]
+id = "1479"
+number = "1479"
+label = "Rendimiento neto de actividades economicas en estimacion objetiva excepto agricolas, ganaderas y forestales"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]
+
+[[revisions."2021".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]
+
+[[revisions."2021".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"]
+
+[[revisions."2021".workbook_parity_refs]]
+id = "modelo-100-2021-record-design-layout"
+workbook_source = "aeat-dr-100-2021-xsd"
+fixture_id = "modelo-100-2021-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-input-dictionary",
+    "aeat-dr-100-2021-xsd",
+]
+
+[[revisions."2021".export_layouts]]
+id = "modelo-100-2021-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2021-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-xsd",
+]
+
+[[revisions."2021".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2021".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-xsd",
+]
+
+[[revisions."2021".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2021".application_links]]
+id = "modelo-100-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2021-dictionary",
+    "aeat-dr-100-2021-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[revisions."2022"]
+id = "2022"
+label = "Ejercicio 2022"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { years = [2022], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2022".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]
+
+[[revisions."2022".casillas]]
+id = "1479"
+number = "1479"
+label = "Rendimiento neto de actividades economicas en estimacion objetiva excepto agricolas, ganaderas y forestales"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]
+
+[[revisions."2022".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]
+
+[[revisions."2022".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]
+
+[[revisions."2022".workbook_parity_refs]]
+id = "modelo-100-2022-record-design-layout"
+workbook_source = "aeat-dr-100-2022-xsd"
+fixture_id = "modelo-100-2022-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+]
+
+[[revisions."2022".export_layouts]]
+id = "modelo-100-2022-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2022-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+]
+
+[[revisions."2022".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+]
+
+[[revisions."2022".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-100-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[revisions."2023"]
+id = "2023"
+label = "Ejercicio 2023"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { years = [2023], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-input-dictionary",
+    "aeat-dr-100-2023-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2023".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"]
+
+[[revisions."2023".casillas]]
+id = "1479"
+number = "1479"
+label = "Rendimiento neto de actividades economicas en estimacion objetiva excepto agricolas, ganaderas y forestales"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"]
+
+[[revisions."2023".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"]
+
+[[revisions."2023".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd"]
+
+[[revisions."2023".workbook_parity_refs]]
+id = "modelo-100-2023-record-design-layout"
+workbook_source = "aeat-dr-100-2023-xsd"
+fixture_id = "modelo-100-2023-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-input-dictionary",
+    "aeat-dr-100-2023-xsd",
+]
+
+[[revisions."2023".export_layouts]]
+id = "modelo-100-2023-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2023-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-xsd",
+]
+
+[[revisions."2023".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-xsd",
+]
+
+[[revisions."2023".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-100-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2023-dictionary",
+    "aeat-dr-100-2023-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[revisions."2024"]
+id = "2024"
+label = "Ejercicio 2024"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { years = [2024], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-input-dictionary",
+    "aeat-dr-100-2024-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2024".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions."2024".casillas]]
+id = "1479"
+number = "1479"
+label = "Rendimiento neto de actividades economicas en estimacion objetiva excepto agricolas, ganaderas y forestales"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions."2024".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions."2024".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]
+
+[[revisions."2024".workbook_parity_refs]]
+id = "modelo-100-2024-record-design-layout"
+workbook_source = "aeat-dr-100-2024-xsd"
+fixture_id = "modelo-100-2024-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-input-dictionary",
+    "aeat-dr-100-2024-xsd",
+]
+
+[[revisions."2024".export_layouts]]
+id = "modelo-100-2024-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2024-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-xsd",
+]
+
+[[revisions."2024".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-xsd",
+]
+
+[[revisions."2024".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-100-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-xsd",
+    "aeat-modelo-100-procedure",
+]
+
+[revisions."2025"]
+id = "2025"
+label = "Ejercicio 2025"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]
+
+[[revisions."2025".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0171"
+number = "0171"
+label = "Ingresos de explotacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0172"
+number = "0172"
+label = "Ingresos financieros derivados del aplazamiento o fraccionamiento"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0173"
+number = "0173"
+label = "Ingresos por subvenciones corrientes"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0174"
+number = "0174"
+label = "Imputacion de ingresos por subvenciones de capital"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0175"
+number = "0175"
+label = "Autoconsumo de bienes y servicios"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0176"
+number = "0176"
+label = "IVA devengado"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0177"
+number = "0177"
+label = "Variacion de existencias por incremento de existencias finales"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0178"
+number = "0178"
+label = "Otros ingresos"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0179"
+number = "0179"
+label = "Exceso de amortizacion por transmision de elementos con libertad de amortizacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0180"
+number = "0180"
+label = "Total ingresos computables"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-ingresos-computables"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0181"
+number = "0181"
+label = "Compra de existencias"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0182"
+number = "0182"
+label = "Variacion de existencias por disminucion de existencias finales"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0183"
+number = "0183"
+label = "Otros consumos de explotacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0184"
+number = "0184"
+label = "Sueldos y salarios"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0185"
+number = "0185"
+label = "Seguridad Social a cargo de la empresa"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0186"
+number = "0186"
+label = "Seguridad Social del titular de la actividad"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0187"
+number = "0187"
+label = "Indemnizaciones"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0188"
+number = "0188"
+label = "Dietas y asignaciones de viajes del personal empleado"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0189"
+number = "0189"
+label = "Aportaciones a sistemas de prevision social del personal empleado"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0190"
+number = "0190"
+label = "Otros gastos de personal"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0191"
+number = "0191"
+label = "Gastos de manutencion del contribuyente"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0192"
+number = "0192"
+label = "Arrendamientos y canones"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0193"
+number = "0193"
+label = "Reparaciones y conservacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0194"
+number = "0194"
+label = "Suministros"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0195"
+number = "0195"
+label = "Aportaciones a mutualidades alternativas del titular de la actividad"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0196"
+number = "0196"
+label = "Regularizacion cuotas RETA a ingresar"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0197"
+number = "0197"
+label = "Regularizacion cuotas RETA a devolver"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0198"
+number = "0198"
+label = "Otros suministros"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0199"
+number = "0199"
+label = "Servicios de profesionales independientes"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0200"
+number = "0200"
+label = "Primas de seguros"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0202"
+number = "0202"
+label = "Otros servicios exteriores"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0203"
+number = "0203"
+label = "Gastos financieros"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0205"
+number = "0205"
+label = "IVA soportado"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0206"
+number = "0206"
+label = "Otros tributos fiscalmente deducibles"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0208"
+number = "0208"
+label = "Amortizacion del inmovilizado material"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0227"
+number = "0227"
+label = "Amortizacion del inmovilizado inmaterial"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0214"
+number = "0214"
+label = "Perdidas por insolvencias de deudores"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0215"
+number = "0215"
+label = "Incentivos al mecenazgo por convenios de colaboracion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0216"
+number = "0216"
+label = "Incentivos al mecenazgo por actividades de interes general"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0217"
+number = "0217"
+label = "Otros conceptos fiscalmente deducibles excepto provisiones"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0218"
+number = "0218"
+label = "Suma de gastos previos de estimacion directa"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-gastos-previos"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0219"
+number = "0219"
+label = "Provisiones fiscalmente deducibles"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0220"
+number = "0220"
+label = "Total gastos deducibles en estimacion directa normal"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-gastos-normal"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0221"
+number = "0221"
+label = "Diferencia entre ingresos y gastos previos"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-diferencia-previa"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0222"
+number = "0222"
+label = "Provisiones deducibles y gastos de dificil justificacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0223"
+number = "0223"
+label = "Total gastos deducibles en estimacion directa simplificada"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-estimacion-directa-gastos-simplificada"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0225"
+number = "0225"
+label = "Reducciones de rendimientos irregulares"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "1479"
+number = "1479"
+label = "Rendimiento neto de actividades economicas en estimacion objetiva excepto agricolas, ganaderas y forestales"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+data_type = "money"
+required = false
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-100-2025-record-design-layout"
+workbook_source = "aeat-dr-100-2025-xsd"
+fixture_id = "modelo-100-2025-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+]
+
+[[revisions."2025".export_layouts]]
+id = "modelo-100-2025-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2025-dictionary"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+]
+
+[[revisions."2025".live_cross_references]]
+id = "modelo-100-renta-web-open"
+evidence_tier = "executable_parity_evidence"
+surface = "open_simulator"
+guard_policy_id = "modelo-100-renta-web-open-read-only"
+allowed_hosts = ["sede.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "authenticated-renta-web",
+    "fiscal-data-read",
+    "borrador-read",
+    "filed-declaration-read",
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+]
+synthetic_data_allowed = true
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-web-open"]
+
+[[revisions."2025".live_cross_references]]
+id = "modelo-100-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-100-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "borrador-confirmation",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-renta-web-open-cross-reference"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.renta_web_open"
+requires_snapshot = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-web-open"]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-export"
+surface = "export"
+consumer = "aeat.application.filing.export"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+]
+
+[[revisions."2025".application_links]]
+id = "modelo-100-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "boe-modelo-100-2025-form",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-source-foundation"
+title = "Modelo 100 source, layout, and simulator evidence"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-web-open",
+]
+workbook_parity_refs = ["modelo-100-2025-record-design-layout"]
+export_layouts = ["modelo-100-2025-xml-dictionary"]
+live_cross_references = ["modelo-100-renta-web-open", "modelo-100-filed-declarations-read"]
+application_links = [
+    "modelo-100-renta-web-open-cross-reference",
+    "modelo-100-export",
+    "modelo-100-filed-declarations-observation",
+    "modelo-100-calculation",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-observation-parsing"
+title = "Modelo 100 filed-data observation capture"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]
+live_cross_references = ["modelo-100-filed-declarations-read"]
+application_links = ["modelo-100-filed-declarations-observation"]
+
+[[revisions."2025".constructs]]
+id = "renta-dependent-modelos"
+title = "Modelo 100 dependent modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+bindings = [
+    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-115-retenciones-periodicas",
+    "renta-2025-modelo-123-retenciones-periodicas",
+    "renta-2025-modelo-130-pagos-fraccionados",
+    "renta-2025-modelo-131-pagos-fraccionados",
+    "renta-2025-modelo-180-retenciones-anuales",
+]
+relations = [
+    "renta-2025-rel-111-retenciones-trimestrales",
+    "renta-2025-rel-111-retenciones-mensuales",
+    "renta-2025-rel-115-retenciones-trimestrales",
+    "renta-2025-rel-123-retenciones-trimestrales",
+    "renta-2025-rel-130-pagos-fraccionados",
+    "renta-2025-rel-131-pagos-fraccionados",
+    "renta-2025-rel-180-retenciones-anuales",
+]
+dependency_classifications = [
+    "renta-2025-dep-111",
+    "renta-2025-dep-115",
+    "renta-2025-dep-123",
+    "renta-2025-dep-130",
+    "renta-2025-dep-131",
+    "renta-2025-dep-180",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-payments-retentions"
+title = "Modelo 100 retentions and payments on account"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+bindings = [
+    "renta-2025-modelo-111-retenciones-periodicas",
+    "renta-2025-modelo-115-retenciones-periodicas",
+    "renta-2025-modelo-123-retenciones-periodicas",
+    "renta-2025-modelo-130-pagos-fraccionados",
+    "renta-2025-modelo-131-pagos-fraccionados",
+    "renta-2025-modelo-180-retenciones-anuales",
+]
+relations = [
+    "renta-2025-rel-111-retenciones-trimestrales",
+    "renta-2025-rel-111-retenciones-mensuales",
+    "renta-2025-rel-115-retenciones-trimestrales",
+    "renta-2025-rel-123-retenciones-trimestrales",
+    "renta-2025-rel-130-pagos-fraccionados",
+    "renta-2025-rel-131-pagos-fraccionados",
+    "renta-2025-rel-180-retenciones-anuales",
+]
+dependency_classifications = [
+    "renta-2025-dep-111",
+    "renta-2025-dep-115",
+    "renta-2025-dep-123",
+    "renta-2025-dep-130",
+    "renta-2025-dep-131",
+    "renta-2025-dep-180",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-work-income"
+title = "Modelo 100 work income dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+bindings = ["renta-2025-modelo-111-retenciones-periodicas"]
+relations = [
+    "renta-2025-rel-111-retenciones-trimestrales",
+    "renta-2025-rel-111-retenciones-mensuales",
+]
+dependency_classifications = ["renta-2025-dep-111"]
+
+[[revisions."2025".constructs]]
+id = "renta-real-estate-capital"
+title = "Modelo 100 real-estate capital dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+]
+bindings = [
+    "renta-2025-modelo-115-retenciones-periodicas",
+    "renta-2025-modelo-180-retenciones-anuales",
+]
+relations = [
+    "renta-2025-rel-115-retenciones-trimestrales",
+    "renta-2025-rel-180-retenciones-anuales",
+]
+dependency_classifications = ["renta-2025-dep-115", "renta-2025-dep-180"]
+
+[[revisions."2025".constructs]]
+id = "renta-movable-capital"
+title = "Modelo 100 movable-capital dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+]
+bindings = ["renta-2025-modelo-123-retenciones-periodicas"]
+relations = ["renta-2025-rel-123-retenciones-trimestrales"]
+dependency_classifications = ["renta-2025-dep-123"]
+
+[[revisions."2025".constructs]]
+id = "renta-economic-activities"
+title = "Modelo 100 economic-activity dependency evidence"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+]
+bindings = [
+    "renta-2025-modelo-130-pagos-fraccionados",
+    "renta-2025-modelo-131-pagos-fraccionados",
+]
+casillas = [
+    "0171",
+    "0172",
+    "0173",
+    "0174",
+    "0175",
+    "0176",
+    "0177",
+    "0178",
+    "0179",
+    "0180",
+    "0181",
+    "0182",
+    "0183",
+    "0184",
+    "0185",
+    "0186",
+    "0187",
+    "0188",
+    "0189",
+    "0190",
+    "0191",
+    "0192",
+    "0193",
+    "0194",
+    "0195",
+    "0196",
+    "0197",
+    "0198",
+    "0199",
+    "0200",
+    "0202",
+    "0203",
+    "0205",
+    "0206",
+    "0208",
+    "0214",
+    "0215",
+    "0216",
+    "0217",
+    "0218",
+    "0219",
+    "0220",
+    "0221",
+    "0222",
+    "0223",
+    "0224",
+    "0225",
+    "0604",
+]
+formulas = [
+    "renta-2025-estimacion-directa-ingresos-computables",
+    "renta-2025-estimacion-directa-gastos-previos",
+    "renta-2025-estimacion-directa-gastos-normal",
+    "renta-2025-estimacion-directa-diferencia-previa",
+    "renta-2025-estimacion-directa-gastos-simplificada",
+    "renta-2025-pagos-fraccionados-ingresados",
+]
+relations = [
+    "renta-2025-rel-130-pagos-fraccionados",
+    "renta-2025-rel-131-pagos-fraccionados",
+]
+dependency_classifications = ["renta-2025-dep-130", "renta-2025-dep-131"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-111"
+source_modelo = "111"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-work-income"]
+relation_refs = ["renta-2025-rel-111-retenciones-trimestrales", "renta-2025-rel-111-retenciones-mensuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-115"
+source_modelo = "115"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-real-estate-capital"]
+relation_refs = ["renta-2025-rel-115-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-123"
+source_modelo = "123"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-movable-capital"]
+relation_refs = ["renta-2025-rel-123-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-130"
+source_modelo = "130"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-economic-activities"]
+relation_refs = ["renta-2025-rel-130-pagos-fraccionados"]
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-131"
+source_modelo = "131"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-economic-activities"]
+relation_refs = ["renta-2025-rel-131-pagos-fraccionados"]
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-180"
+source_modelo = "180"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-real-estate-capital"]
+relation_refs = ["renta-2025-rel-180-retenciones-anuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0592"
+number = "0592"
+label = "Por atribucion de retenciones de rendimientos del capital mobiliario"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0593"
+number = "0593"
+label = "Por atribucion de retenciones de rendimientos del capital inmobiliario"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0594"
+number = "0594"
+label = "Por atribucion de retenciones de rendimientos de actividades economicas"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0596"
+number = "0596"
+label = "Por rendimientos del trabajo"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0597"
+number = "0597"
+label = "Por rendimientos del capital mobiliario"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0598"
+number = "0598"
+label = "Por arrendamientos de inmuebles urbanos"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0599"
+number = "0599"
+label = "Por rendimientos de actividades economicas"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0600"
+number = "0600"
+label = "Por atribucion de retenciones de ganancias y perdidas patrimoniales imputables a 2025"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0601"
+number = "0601"
+label = "Imputados por agrupaciones de interes economico y UTEs"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0602"
+number = "0602"
+label = "Ingresos a cuenta del articulo 92.8 de la Ley del Impuesto"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0603"
+number = "0603"
+label = "Por ganancias patrimoniales, incluidos premios"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0604"
+number = "0604"
+label = "Pagos fraccionados ingresados por actividades economicas"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-pagos-fraccionados-ingresados"
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0605"
+number = "0605"
+label = "Cuotas del Impuesto sobre la Renta de no Residentes"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0606"
+number = "0606"
+label = "Retenciones art. 11 de la Directiva 2003/48/CE devengadas antes de 2019"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0609"
+number = "0609"
+label = "Total pagos a cuenta"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-total-pagos-a-cuenta"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+    { casilla = "0171" },
+    { casilla = "0172" },
+    { casilla = "0173" },
+    { casilla = "0174" },
+    { casilla = "0175" },
+    { casilla = "0176" },
+    { casilla = "0177" },
+    { casilla = "0178" },
+    { casilla = "0179" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Ingresos integros computables", "actividades economicas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-gastos-previos"
+target = "0218"
+expression = { op = "sum", args = [
+    { casilla = "0181" },
+    { casilla = "0182" },
+    { casilla = "0183" },
+    { casilla = "0184" },
+    { casilla = "0185" },
+    { casilla = "0186" },
+    { casilla = "0187" },
+    { casilla = "0188" },
+    { casilla = "0189" },
+    { casilla = "0190" },
+    { casilla = "0191" },
+    { casilla = "0192" },
+    { casilla = "0193" },
+    { casilla = "0194" },
+    { casilla = "0195" },
+    { casilla = "0196" },
+    { op = "negate", args = [{ casilla = "0197" }] },
+    { casilla = "0198" },
+    { casilla = "0199" },
+    { casilla = "0200" },
+    { casilla = "0202" },
+    { casilla = "0203" },
+    { casilla = "0205" },
+    { casilla = "0206" },
+    { casilla = "0208" },
+    { casilla = "0227" },
+    { casilla = "0214" },
+    { casilla = "0215" },
+    { casilla = "0216" },
+    { casilla = "0217" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Otros gastos fiscalmente deducibles", "excepto provisiones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+    { casilla = "0218" },
+    { casilla = "0219" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Provisiones fiscalmente deducibles", "RENDIMIENTO NETO"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+    { casilla = "0180" },
+    { casilla = "0218" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 1", "Determinacion del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+    { casilla = "0218" },
+    { casilla = "0222" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Conjunto de provisiones deducibles", "gastos de dificil justificacion"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-pagos-fraccionados-ingresados"
+target = "0604"
+expression = { op = "sum", args = [
+    { relation = "renta-2025-rel-130-pagos-fraccionados" },
+    { relation = "renta-2025-rel-131-pagos-fraccionados" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-total-pagos-a-cuenta"
+target = "0609"
+expression = { op = "sum", args = [
+    { casilla = "0592" },
+    { casilla = "0593" },
+    { casilla = "0594" },
+    { casilla = "0596" },
+    { casilla = "0597" },
+    { casilla = "0598" },
+    { casilla = "0599" },
+    { casilla = "0600" },
+    { casilla = "0601" },
+    { casilla = "0602" },
+    { casilla = "0603" },
+    { casilla = "0604" },
+    { casilla = "0605" },
+    { casilla = "0606" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-111-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-115-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "115", source_output = "03", relation = "retenciones-arrendamientos-urbanos" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-123-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "123", source_output = "09", relation = "retenciones-capital-mobiliario" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-130-pagos-fraccionados"
+source = "previous_filing"
+selector = { source_modelo = "130", source_output = "19", relation = "pagos-fraccionados-estimacion-directa" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-131-pagos-fraccionados"
+source = "previous_filing"
+selector = { source_modelo = "131", source_output = "15", relation = "pagos-fraccionados-estimacion-objetiva" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-180-retenciones-anuales"
+source = "previous_filing"
+selector = { source_modelo = "180", source_output = "decl.retenciones-total", relation = "resumen-anual-arrendamientos-urbanos" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-111-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "111"
+source_revision_selector = { year = 2025 }
+source_output = "28"
+target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-111-retenciones-mensuales"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "111"
+source_revision_selector = { year = 2025 }
+source_output = "28"
+target_binding = "renta-2025-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "months", target_period = "0A" }
+source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-115-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "115"
+source_revision_selector = { year = 2025 }
+source_output = "03"
+target_binding = "renta-2025-modelo-115-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-123-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "123"
+source_revision_selector = { year = 2025 }
+source_output = "09"
+target_binding = "renta-2025-modelo-123-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-130-pagos-fraccionados"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "130"
+source_revision_selector = { year = 2025 }
+source_output = "19"
+target_binding = "renta-2025-modelo-130-pagos-fraccionados"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-131-pagos-fraccionados"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "131"
+source_revision_selector = { year = 2025 }
+source_output = "15"
+target_binding = "renta-2025-modelo-131-pagos-fraccionados"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-180-retenciones-anuales"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "180"
+source_revision_selector = { year = 2025 }
+source_output = "decl.retenciones-total"
+target_binding = "renta-2025-modelo-180-retenciones-anuales"
+period_alignment = { source_periods = "annual_summary", target_period = "0A" }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]

@@ -183,6 +183,59 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
     assert values["14"].formula_trace == ("12", "13")
 
 
+def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            "08": Decimal("0"),
+            "09": Decimal("0"),
+            "11": Decimal("0"),
+            "12": Decimal("0"),
+            "14": Decimal("0"),
+            "modelo-131.dpa.013-016.epigrafe-iae": "722",
+            "modelo-131.dpa.031-032.vehiculos-afectos": "2",
+            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+        },
+        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+    )
+
+    values = {value.casilla_id: value for value in draft.values}
+    binding_values = {value.binding_id: value.value for value in draft.binding_values}
+
+    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.schema_version == "registry:131:2026"
+    assert values["15"].value == Decimal("30.00")
+    assert binding_values["modelo-131.dpa.013-016.epigrafe-iae"] == "722"
+    assert binding_values["modelo-131.dpa.031-032.vehiculos-afectos"] == 2
+    assert binding_values["modelo-131.did.012-045.iban"] == "ES9121000418450200051332"
+
+
+def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() -> None:
+    draft = build_draft(
+        modelo="131",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "03": Decimal("1000"),
+            "05": Decimal("500"),
+            "modelo-131.dpa.013-016.epigrafe-iae": ["722", "845"],
+            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2", "2": "3"},
+        },
+        schema_provider=build_runtime_schema_provider(filing_year=2026, period="1T"),
+    )
+
+    rows = {(value.binding_id, value.row_index): value.value for value in draft.binding_values}
+
+    assert rows[("modelo-131.dpa.013-016.epigrafe-iae", 1)] == "722"
+    assert rows[("modelo-131.dpa.013-016.epigrafe-iae", 2)] == "845"
+    assert rows[("modelo-131.dpa.031-032.vehiculos-afectos", 1)] == 2
+    assert rows[("modelo-131.dpa.031-032.vehiculos-afectos", 2)] == 3
+
+
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)
@@ -217,6 +270,7 @@ def test_compute_draft_id_excludes_findings_and_status() -> None:
         profile_tax_id=draft.profile_tax_id,
         schema_version=draft.schema_version,
         values=draft.values,
+        binding_values=draft.binding_values,
     )
     assert recomputed == draft.draft_id
 

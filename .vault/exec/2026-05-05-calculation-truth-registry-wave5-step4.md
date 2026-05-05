@@ -15,6 +15,10 @@
   reference.
 - Updated source-catalogue hashes and byte counts for local AEAT and BOE HTML
   corpus files whose catalogue values had drifted from the files on disk.
+- Expanded the Modelo 131 plan ledger with concrete tracking rows for the
+  authenticated zero-row live scan, missing sanitized fixture, historical
+  revisions, DPA activity-detail layout, DID direct-debit layout, and separate
+  2019-2023 export shape.
 
 ## Verification
 

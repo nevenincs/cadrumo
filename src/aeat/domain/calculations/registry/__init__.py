@@ -9,6 +9,7 @@ from ._bindings import (
     resolve_bound_casilla_inputs,
     resolve_previous_filing_binding_values,
 )
+from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
 from ._coverage import EvidenceTierCoverageGate, ModelLawCoverageLedger, build_model_law_coverage_ledger
 from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
 from ._export import ResolvedExportLayout, export_fields_for_casilla, resolve_export_layout
@@ -34,9 +35,11 @@ from ._schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ._schema import (
     ApplicationLinkDefinition,
     CasillaDefinition,
+    ConstructDefinition,
     DataBindingDefinition,
     DeadlineApplicabilityCondition,
     DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
     EvidenceTier,
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -91,9 +94,11 @@ from ._workbook_parity import (
 __all__ = [
     "ApplicationLinkDefinition",
     "CasillaDefinition",
+    "ConstructDefinition",
     "DataBindingDefinition",
     "DeadlineApplicabilityCondition",
     "DeadlineWindowDefinition",
+    "DependencyClassificationDefinition",
     "EvidenceTier",
     "EvidenceTierCoverageGate",
     "ExportFieldDefinition",
@@ -126,6 +131,8 @@ __all__ = [
     "RemoteOperation",
     "RemoteStateGuardPolicy",
     "RemoteStateGuardResult",
+    "ResolvedConstruct",
+    "ResolvedConstructMember",
     "ResolvedExportLayout",
     "SourceReference",
     "SupportRemovalDecisionDefinition",
@@ -164,14 +171,16 @@ __all__ = [
     "parse_export_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
-    "relation_source_requirements",
     "profile_condition_matches",
+    "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "resolve_bound_casilla_inputs",
+    "resolve_construct",
     "resolve_export_layout",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
+    "resolve_revision_constructs",
     "run_registry_workbook_parity",
     "run_workbook_with_excel_com",
     "run_workbook_with_libreoffice",

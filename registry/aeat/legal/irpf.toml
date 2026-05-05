@@ -39,6 +39,111 @@ required_text = [
     "pagos fraccionados a cuenta del Impuesto sobre la Renta",
 ]
 
+[legal."orden-hac-1264-2018:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1264-2018.html#articulo-4"
+document_id = "BOE-A-2018-16340"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2018-16340"
+published_at = 2018-11-30
+effective_from = 2019-01-01
+effective_to = 2019-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2019."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año 2019",
+]
+
+[legal."orden-hac-1164-2019:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1164-2019.html#articulo-4"
+document_id = "BOE-A-2019-17252"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-17252"
+published_at = 2019-11-30
+effective_from = 2020-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2020."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año 2020",
+]
+
+[legal."orden-hac-1155-2020:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1155-2020.html#articulo-4"
+document_id = "BOE-A-2020-15599"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-15599"
+published_at = 2020-12-04
+effective_from = 2021-01-01
+effective_to = 2021-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2021."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02021",
+]
+
+[legal."orden-hfp-1335-2021:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1335-2021.html#articulo-4"
+document_id = "BOE-A-2021-19904"
+article = "4"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904"
+published_at = 2021-12-02
+effective_from = 2022-01-01
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2022."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02022",
+]
+
+[legal."orden-hfp-1172-2022:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1172-2022.html#articulo-4"
+document_id = "BOE-A-2022-20025"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20025"
+published_at = 2022-12-01
+effective_from = 2023-01-01
+effective_to = 2023-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2023."
+required_text = [
+    "Aprobación de los signos, índices o módulos",
+    "método de estimación objetiva",
+    "año\u00a02023",
+]
+
 [legal."orden-hfp-1359-2023:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -332,6 +437,30 @@ applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-131-irpf______sionales-estimacion-objetiva-fraccionado_/instrucciones.html"
 review_status = "reviewed"
 
+[sources."aeat-modelo-131-formulario-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-presentacion-electronica-formulario.html"
+sha256 = "d2ec9e9abff7e611ce533cab27c0d85a5ff8292d0003234e2c930f1d2921ac51"
+bytes = 31857
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-electronica-mediante-formulario-modelo-131.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-131-recuperacion-declaraciones"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_131/files/modelo-131-recuperar-declaraciones-presentadas.html"
+sha256 = "dc828a3b3dcaccc2ffc6ddf2154e1d5416a02e25abf3ad9a8fed0bf4b794fba6"
+bytes = 13973
+retrieved_at = 2026-05-05
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-131/presentacion-utilizando-datos-anteriores.html"
+review_status = "reviewed"
+
 [sources."aeat-dr-111-2019-v18"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -606,4 +735,418 @@ retrieved_at = 2026-05-05
 published_at = 2007-03-22
 applies_from = 2007-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
+review_status = "reviewed"
+
+[legal."ley-35-2006:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-27"
+document_id = "BOE-A-2006-20764"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a27"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para identificar rendimientos integros de actividades economicas en Modelo 100."
+required_text = [
+    "rendimiento de una actividad económica",
+    "rendimientos del trabajo y del capital",
+]
+
+[legal."ley-35-2006:art-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-28"
+document_id = "BOE-A-2006-20764"
+article = "28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para reglas generales de calculo del rendimiento neto de actividades economicas en Modelo 100."
+required_text = [
+    "rendimiento neto de la actividad económica",
+    "Impuesto sobre Sociedades",
+]
+
+[legal."ley-35-2006:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-30"
+document_id = "BOE-A-2006-20764"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a30"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para estimacion directa en actividades economicas de Modelo 100."
+required_text = [
+    "estimación directa",
+    "rendimiento neto de actividades económicas",
+]
+
+[legal."ley-35-2006:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-31"
+document_id = "BOE-A-2006-20764"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a31"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para estimacion objetiva en actividades economicas de Modelo 100."
+required_text = [
+    "estimación objetiva",
+    "renuncia",
+]
+
+[legal."ley-35-2006:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-32"
+document_id = "BOE-A-2006-20764"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Base legal para reducciones aplicables a determinados rendimientos de actividades economicas en Modelo 100."
+required_text = [
+    "reducciones aplicables",
+    "rendimiento neto de la actividad económica",
+]
+
+[legal."orden-hac-277-2026:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#articulo-3"
+document_id = "BOE-A-2026-7041"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
+required_text = [
+    "Artículo 3",
+    "Modelo D-100",
+    "Declaración del Impuesto sobre la Renta de las Personas Físicas. Ejercicio 2025",
+]
+
+[sources."boe-modelo-100-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-277-2026.html"
+sha256 = "d79a4327c1bc875af694041a037b11d05ccbf9d11dba0b37b84b8a4244bb3a28"
+bytes = 129618
+retrieved_at = 2026-05-05
+published_at = 2026-03-27
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+review_status = "reviewed"
+
+[sources."aeat-modelo-100-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_100/files/modelo-100-procedure.html"
+sha256 = "14449bee8f41afa58323418925b6b307f8aa0f6dd0ce8a610d4d6685adee5268"
+bytes = 24886
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G229.shtml"
+review_status = "reviewed"
+
+[sources."aeat-renta-web-open"]
+evidence_tier = "executable_parity_evidence"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/renta_web_open/renta-web-open.html"
+sha256 = "fdf01b116ae0234393ba558885eee9b1a364eb88348297667f6823d27545f1c3"
+bytes = 14376
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/04-100-diccionario-declaracion-individual-ejercicio-2020-actualizado-03-06-2021-296-kb-otros-fi.properties"
+sha256 = "b7639e957131063c48e3774061b8c5c9005b720fb638ab951093833fda9e595f"
+bytes = 303288
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/diccionarioXSD_2020.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/09-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2020-actualizado-30-04-2021-4.properties"
+sha256 = "59c9b58b6f17604d1e1434c1ddf1d99fedb3c7e5fb7c960df19a1c0b186c6a80"
+bytes = 462591
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/diccionarioDlgXSD_2020.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2020-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/25-100-esquema-xsd-ejercicio-2020-actualizado-23-10-2024-529-kb-ejecutable.xsd"
+sha256 = "90b24c21624120a7724d2ea25b9e546126e713914ccb765d42123376df8b3a46"
+bytes = 541059
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/Renta2020.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/05-100-diccionario-declaracion-individual-ejercicio-2021-actualizado-18-03-2022-330-kb-otros-fi.properties"
+sha256 = "2aaf5c7fe7df35458dc50c0b9fe1925853b2778a26f493baee524a926ae6d817"
+bytes = 337669
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/diccionarioXSD_2021.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/10-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2021-actualizado-18-03-2022-6.properties"
+sha256 = "aa0370162f5db5088e6cc8b3be839aea6efac82467af80c2c29c2c142dbd98a2"
+bytes = 705287
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/diccionarioDlgXSD_2021.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2021-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/26-100-esquema-xsd-ejercicio-2021-actualizado-23-10-2024-606-kb-ejecutable.xsd"
+sha256 = "850db5851a715738943c85495c37043f6e5235d5f3f22cd9188533ab18706872"
+bytes = 620508
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_21/Renta2021.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/06-100-diccionario-declaracion-individual-ejercicio-2022-actualizado-17-05-2023-365-kb-otros-fi.properties"
+sha256 = "081d872040b3e7690a0b38f5da49ff1ade390dc806bef72560d00ee0fdb858dc"
+bytes = 373009
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/diccionarioXSD_2022.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/11-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2022-actualizado-28-06-2023-7.properties"
+sha256 = "78dec12e9028fe009d65f56188fedf74f7b5187378a67fe2b35ae0e1a4e54a36"
+bytes = 782610
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/diccionarioDlgXSD_2022.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2022-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/27-100-esquema-xsd-ejercicio-2022-actualizado-07-11-2024-675-kb-ejecutable.xsd"
+sha256 = "68bc8ff758148d5c584cbc5b4ae394aa28792997f3bc40ab6d1123caa0a81016"
+bytes = 691669
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/Renta2022.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/07-100-diccionario-declaracion-individual-ejercicio-2023-actualizado-29-01-2026-382-kb-otros-fi.properties"
+sha256 = "a9b8d0e24878b550870666870107b66af2df3eb7d341739e59accce6f1108024"
+bytes = 391473
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/diccionarioXSD_2023.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/12-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2023-actualizado-29-01-2026-8.properties"
+sha256 = "183692c1a5a4785d9a04508e2ab928b25e44742ced448e19359ea7afb22c37cd"
+bytes = 823153
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/diccionarioDlgXSD_2023.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2023-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/28-100-esquema-xsd-ejercicio-2023-actualizado-19-01-2026-709-kb-ejecutable.xsd"
+sha256 = "dc476d5040051eeb478ba5eb3dd2656ad87afef4b284e0d5cb32702e6fb9e990"
+bytes = 726173
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/Renta2023.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/08-100-diccionario-declaracion-individual-ejercicio-2024-actualizado-29-01-2026-393-kb-otros-fi.properties"
+sha256 = "0e190a5b1fe95047785832797ff15d5070441e37d49e4062d20ca95b65e37884"
+bytes = 402796
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/diccionarioXSD_2024.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/13-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2024-actualizado-29-01-2026-8.properties"
+sha256 = "9c9e64543f26ef2b21e13de41ed9c6f8f591264ea39962a3ec974cde79411be6"
+bytes = 888091
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/diccionarioDlgXSD_2024.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2024-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
+sha256 = "1e6c7a84167de06acc574c1e4965312365c455fbd126e2c2d5ca767be4f5cb12"
+bytes = 765342
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/Renta2024.xsd"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/01-100-diccionario-declaracion-individual-ejercicio-2025-actualizado-14-04-2026-416-kb-otros-fi.properties"
+sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b"
+bytes = 425375
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/diccionarioXSD_2025.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-input-dictionary"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "dictionary"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/02-100-diccionario-declaracion-individual-toma-de-datos-ejercicio-2025-actualizado-14-04-2026-9.properties"
+sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade"
+bytes = 962802
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/diccionarioDlgXSD_2025.properties"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2025-xsd"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "xsd"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+sha256 = "208e9cf5367bd7d009eb66152902f149bc90693f9734fe4831951c763d128864"
+bytes = 812095
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Renta2025.xsd"
+review_status = "reviewed"
+
+[sources."aeat-renta-2025-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2025/parte1/source.pdf"
+sha256 = "60e6b2d71c97d93a9e0943e6ff8c886f4dd6d3741a797cb8001dcbcadfb33528"
+bytes = 7543283
+retrieved_at = 2026-04-12
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2025-manual-deducciones-autonomicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2025/parte2-deducciones-autonomicas/source.pdf"
+sha256 = "88a12fbe5ce9de01fc6a04941db498cd30ef959c85bf6106bfdc3611c13f3481"
+bytes = 3801341
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
 review_status = "reviewed"

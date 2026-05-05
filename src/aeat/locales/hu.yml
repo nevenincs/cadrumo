@@ -303,606 +303,627 @@ cli:
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
-      period_empty: cli.common.errors.period_empty
-      period_unrecognised: cli.common.errors.period_unrecognised
+      period_empty: Az adózási időszak nem lehet üres
+      period_unrecognised: Ismeretlen időszak
   data:
-    app_help: cli.data.app_help
+    app_help: Adóadatok és nyilvántartások kezelése
     ledgers:
-      app_help: cli.data.ledgers.app_help
-      inventory_help: cli.data.ledgers.inventory_help
-    ledgers_help: cli.data.ledgers_help
+      app_help: ÁFA és IRPF nyilvántartási könyvek (főkönyvek) kezelése
+      inventory_help: Az elérhető nyilvántartási könyvek (főkönyvek) leltárának listázása
+    ledgers_help: Az AEAT nyilvántartási könyveinek (főkönyvek) kezelése
   deadlines:
-    app_help: cli.deadlines.app_help
+    app_help: Az adózói naptár és a határidők kezelése
     explain:
-      modelo_help: cli.deadlines.explain.modelo_help
-      profile_help: cli.deadlines.explain.profile_help
-    explain_help: cli.deadlines.explain_help
+      modelo_help: Adónyomtatvány száma (pl. 303, 111)
+      profile_help: Adózói profil (pl. autonomo, pyme)
+    explain_help: Határidők és kötelezettségek ismertetése egy adott nyomtatványhoz
+      és profilhoz
     list:
-      closes_on_col: cli.deadlines.list.closes_on_col
+      closes_on_col: Határidő
       labels:
-        tax_deadlines: cli.deadlines.list.labels.tax_deadlines
-      modelo_col: cli.deadlines.list.modelo_col
-      opens_on_col: cli.deadlines.list.opens_on_col
-      period_col: cli.deadlines.list.period_col
-      profile_help: cli.deadlines.list.profile_help
-      status_col: cli.deadlines.list.status_col
-      table_title: cli.deadlines.list.table_title
-      year_help: cli.deadlines.list.year_help
-    list_help: cli.deadlines.list_help
+        tax_deadlines: Adózási határidők
+      modelo_col: Nyomtatvány
+      opens_on_col: Kezdés
+      period_col: Időszak
+      profile_help: Szűrés adózói profil szerint (pl. pyme, gran_empresa)
+      status_col: Állapot
+      table_title: Adózási határidők naptára
+      year_help: Lekérdezendő adóév
+    list_help: Adózási határidők listázása egy adott adóévre
     next:
       labels:
-        closes: cli.deadlines.next.labels.closes
-        no_upcoming: cli.deadlines.next.labels.no_upcoming
-      profile_help: cli.deadlines.next.profile_help
-      year_help: cli.deadlines.next.year_help
-    next_help: cli.deadlines.next_help
+        closes: Lezárul
+        no_upcoming: Nincsenek közelgő határidők
+      profile_help: Szűrés adózói profil szerint (pl. pyme)
+      year_help: Lekérdezendő adóév
+    next_help: A következő releváns adózási határidő megjelenítése
   declaration:
-    app_help: cli.declaration.app_help
-    approve_help: cli.declaration.approve_help
-    calculate_help: cli.declaration.calculate_help
-    edit_help: cli.declaration.edit_help
+    app_help: Adóbevallások kezelése és benyújtása
+    approve_help: Bevallás jóváhagyása benyújtáshoz
+    calculate_help: Bevallás összegeinek kiszámítása
+    edit_help: Meglévő bevallás kézi szerkesztése
     errors:
-      activate_profile: cli.declaration.errors.activate_profile
-      at_least_one_edit: cli.declaration.errors.at_least_one_edit
-      file_not_found: cli.declaration.errors.file_not_found
-      filter_parse_error: cli.declaration.errors.filter_parse_error
-      missing_id_or_period_modelo: cli.declaration.errors.missing_id_or_period_modelo
-      no_draft_for_period: cli.declaration.errors.no_draft_for_period
-      not_approved_for_export: cli.declaration.errors.not_approved_for_export
-      profile_tax_id_required: cli.declaration.errors.profile_tax_id_required
-      set_parse_error: cli.declaration.errors.set_parse_error
-    export_help: cli.declaration.export_help
-    format_help: cli.declaration.format_help
+      activate_profile: Kérjük, aktiváljon egy profilt a bevallások kezelése előtt
+      at_least_one_edit: Legalább egy mezőt meg kell szerkeszteni
+      file_not_found: Bevallási fájl nem található
+      filter_parse_error: Hiba a szűrő elemzésekor
+      missing_id_or_period_modelo: Meg kell adni az azonosítót (ID) vagy az (időszak
+        + nyomtatvány) párost
+      no_draft_for_period: Nem létezik tervezet a megadott időszakra
+      not_approved_for_export: A bevallást jóvá kell hagyni az exportálás előtt
+      profile_tax_id_required: Az aktív profilhoz beállított adóazonosító (NIF/CIF)
+        szükséges
+      set_parse_error: Hiba a mezőhozzárendelés elemzésekor
+    export_help: Jóváhagyott bevallás exportálása a hivatalos AEAT formátumba
+    format_help: Kimeneti formátum (pl. json, text, table)
     labels:
-      blockers: cli.declaration.labels.blockers
-      by: cli.declaration.labels.by
-      bytes: cli.declaration.labels.bytes
-      draft_id: cli.declaration.labels.draft_id
-      edits: cli.declaration.labels.edits
-      findings: cli.declaration.labels.findings
-      mismatched: cli.declaration.labels.mismatched
-      modelo: cli.declaration.labels.modelo (adóbevallási űrlap)
-      next: cli.declaration.labels.next
-      path: cli.declaration.labels.path
-      period: cli.declaration.labels.period
-      sha256: cli.declaration.labels.sha256
-      status: cli.declaration.labels.status
-      values: cli.declaration.labels.values
-      verdict: cli.declaration.labels.verdict
-      warnings: cli.declaration.labels.warnings
+      blockers: Akadályozó tényezők
+      by: Által
+      bytes: bájt
+      draft_id: Tervezet azonosítója
+      edits: Szerkesztések
+      findings: Találatok
+      mismatched: Eltérő
+      modelo: Adóbevallási űrlap
+      next: Következő
+      path: Útvonal
+      period: Időszak
+      sha256: SHA256
+      status: Állapot
+      values: Értékek
+      verdict: Ítélet
+      warnings: Figyelmeztetések
     opts:
-      by: cli.declaration.opts.by
-      draft_id: cli.declaration.opts.draft_id
-      file: cli.declaration.opts.file
-      filter: cli.declaration.opts.filter
-      modelo: cli.declaration.opts.modelo (adóbevallási űrlap)
-      output: cli.declaration.opts.output
-      period: cli.declaration.opts.period
-      reason: cli.declaration.opts.reason
-      set: cli.declaration.opts.set
-    preview_help: cli.declaration.preview_help
-    review_help: cli.declaration.review_help
+      by: Által
+      draft_id: Tervezet azonosítója
+      file: Fájl
+      filter: Szűrő
+      modelo: Adóbevallási űrlap
+      output: Kimenet
+      period: Időszak
+      reason: Indok
+      set: Hozzárendelés (SET)
+    preview_help: Bevallás tartalmának előnézete
+    review_help: Bevallás ellenőrzéseinek és hibáinak áttekintése
     status:
-      absent: cli.declaration.status.absent
-    status_help: cli.declaration.status_help
-    validate_help: cli.declaration.validate_help
-    verify_help: cli.declaration.verify_help
+      absent: HIÁNYZIK
+    status_help: Bevallás aktuális állapotának megjelenítése
+    validate_help: Hivatalos technikai ellenőrzések futtatása a bevalláson
+    verify_help: Bevallás integritásának és következetességének ellenőrzése
   docs:
-    app_help: cli.docs.app_help
-    append_doc_id_help: cli.docs.append_doc_id_help
-    append_help: cli.docs.append_help
-    append_text_help: cli.docs.append_text_help
+    app_help: AEAT kézikönyvek és szabályozások kezelése
+    append_doc_id_help: A dokumentum azonosítója, amelyhez tartalmat kell fűzni
+    append_help: Új szakasz vagy tartalom hozzáadása egy meglévő dokumentumhoz
+    append_text_help: A dokumentumhoz fűzendő szöveg
     errors:
-      empty_text: cli.docs.errors.empty_text
-    get_doc_id_help: cli.docs.get_doc_id_help
-    get_help: cli.docs.get_help
-    get_plaintext_help: cli.docs.get_plaintext_help
-    new_help: cli.docs.new_help
-    new_title_help: cli.docs.new_title_help
-    replace_doc_id_help: cli.docs.replace_doc_id_help
-    replace_help: cli.docs.replace_help
-    replace_new_text_help: cli.docs.replace_new_text_help
-    replace_old_help: cli.docs.replace_old_help
+      empty_text: A szöveg nem lehet üres
+    get_doc_id_help: A lekérdezni kívánt dokumentum azonosítója
+    get_help: Egy adott dokumentum tartalmának lekérdezése
+    get_plaintext_help: Tartalom megjelenítése egyszerű szöveges formátumban
+    new_help: Új dokumentáció létrehozása
+    new_title_help: Az új dokumentum címe
+    replace_doc_id_help: A dokumentum azonosítója, amelynek tartalmát le kell cserélni
+    replace_help: Egy meglévő dokumentum tartalmának teljes cseréje
+    replace_new_text_help: Új szöveg a dokumentumhoz
+    replace_old_help: Régi, lecserélendő szöveg
     success:
-      appended: cli.docs.success.appended
-      replaced: cli.docs.success.replaced
+      appended: A tartalom sikeresen hozzáadva a dokumentumhoz
+      replaced: A dokumentum tartalma sikeresen lecserélve
   doctor:
     details:
-      adc_granted_scopes: cli.doctor.details.adc_granted_scopes
-      adc_missing_scopes: cli.doctor.details.adc_missing_scopes
-      adc_no_scopes: cli.doctor.details.adc_no_scopes
-      adc_not_configured_advisory: cli.doctor.details.adc_not_configured_advisory
-      adc_substep_json_not_configured: cli.doctor.details.adc_substep_json_not_configured
-      api_call_failed: cli.doctor.details.api_call_failed
-      api_enabled: cli.doctor.details.api_enabled
-      api_needs_billing: cli.doctor.details.api_needs_billing
-      auth_path_active: cli.doctor.details.auth_path_active
-      auth_path_adc: cli.doctor.details.auth_path_adc
-      auth_path_oauth_desktop: cli.doctor.details.auth_path_oauth_desktop
-      auth_path_service_account: cli.doctor.details.auth_path_service_account
-      auth_ready_both: cli.doctor.details.auth_ready_both
-      auth_ready_cli_only: cli.doctor.details.auth_ready_cli_only
-      auth_ready_mcp_only: cli.doctor.details.auth_ready_mcp_only
-      auth_ready_none: cli.doctor.details.auth_ready_none
-      backend_active: cli.doctor.details.backend_active
-      buckets_visible: cli.doctor.details.buckets_visible
-      cert_health_detail: cli.doctor.details.cert_health_detail
-      drive_scope_check_failed: cli.doctor.details.drive_scope_check_failed
-      functions_visible: cli.doctor.details.functions_visible
-      gcloud_env_project_mismatch: cli.doctor.details.gcloud_env_project_mismatch
-      gcloud_installed: cli.doctor.details.gcloud_installed
-      gcloud_version_failed: cli.doctor.details.gcloud_version_failed
-      gcp_project_not_set: cli.doctor.details.gcp_project_not_set
-      install_gcloud_advisory: cli.doctor.details.install_gcloud_advisory
-      live_reads_enabled: cli.doctor.details.live_reads_enabled
-      live_reads_skipped: cli.doctor.details.live_reads_skipped
-      live_tests_disabled: cli.doctor.details.live_tests_disabled
-      live_writes_forbidden: cli.doctor.details.live_writes_forbidden
-      master_kdf_absent: cli.doctor.details.master_kdf_absent
-      master_kdf_argon2id: cli.doctor.details.master_kdf_argon2id
-      master_kdf_not_object: cli.doctor.details.master_kdf_not_object
-      master_kdf_parse_failed: cli.doctor.details.master_kdf_parse_failed
-      master_kdf_unrecognised: cli.doctor.details.master_kdf_unrecognised
-      master_kdf_unsupported: cli.doctor.details.master_kdf_unsupported
-      master_key_file_present: cli.doctor.details.master_key_file_present
-      master_key_keychain_preferred: cli.doctor.details.master_key_keychain_preferred
-      master_key_keyring: cli.doctor.details.master_key_keyring
-      master_key_missing: cli.doctor.details.master_key_missing
-      master_key_partial: cli.doctor.details.master_key_partial
-      master_key_unsecured: cli.doctor.details.master_key_unsecured
-      mcp_credentials_dir_prepared: cli.doctor.details.mcp_credentials_dir_prepared
-      mcp_credentials_present: cli.doctor.details.mcp_credentials_present
-      no_active_auth_path: cli.doctor.details.no_active_auth_path
-      no_credentials_configured: cli.doctor.details.no_credentials_configured
-      no_scratch_doc: cli.doctor.details.no_scratch_doc
-      no_scratch_sheet: cli.doctor.details.no_scratch_sheet
-      no_stale_artifacts: cli.doctor.details.no_stale_artifacts
-      not_required_active_path: cli.doctor.details.not_required_active_path
-      not_required_see_drift: cli.doctor.details.not_required_see_drift
-      oauth_config_missing: cli.doctor.details.oauth_config_missing
-      oauth_config_partial: cli.doctor.details.oauth_config_partial
-      oauth_json_present: cli.doctor.details.oauth_json_present
-      oauth_token_issue: cli.doctor.details.oauth_token_issue
-      provider_not_configured: cli.doctor.details.provider_not_configured
-      provider_unavailable: cli.doctor.details.provider_unavailable
-      pytest_current_test_present: cli.doctor.details.pytest_current_test_present
-      run_auth_init_mcp: cli.doctor.details.run_auth_init_mcp
-      run_env_setup: cli.doctor.details.run_env_setup
-      run_gcloud_auth: cli.doctor.details.run_gcloud_auth
-      run_gcloud_config_set_project: cli.doctor.details.run_gcloud_config_set_project
-      run_gcloud_services_enable: cli.doctor.details.run_gcloud_services_enable
-      sa_key_not_found: cli.doctor.details.sa_key_not_found
-      sa_key_unparseable: cli.doctor.details.sa_key_unparseable
-      sa_key_unset: cli.doctor.details.sa_key_unset
-      secret_store_dir_missing: cli.doctor.details.secret_store_dir_missing
-      secret_store_dir_not_writable: cli.doctor.details.secret_store_dir_not_writable
-      select_auth_path_first: cli.doctor.details.select_auth_path_first
-      select_prepare_auth_path: cli.doctor.details.select_prepare_auth_path
-      service_usage_failed: cli.doctor.details.service_usage_failed
-      services_visible: cli.doctor.details.services_visible
-      set_gcp_project: cli.doctor.details.set_gcp_project
-      unsecured_requires_allow: cli.doctor.details.unsecured_requires_allow
-      unsecured_warning: cli.doctor.details.unsecured_warning
+      adc_granted_scopes: ADC által biztosított hatókörök (scopes)
+      adc_missing_scopes: ADC-ből hiányzó hatókörök (scopes)
+      adc_no_scopes: Nincsenek hatókörök konfigurálva
+      adc_not_configured_advisory: Az ADC nincs konfigurálva. Futtassa a 'gcloud auth
+        application-default login' parancsot az aktiváláshoz.
+      adc_substep_json_not_configured: ADC JSON fájl nincs konfigurálva
+      api_call_failed: Az API hívás sikertelen
+      api_enabled: API engedélyezve
+      api_needs_billing: Az API-hoz számlázás engedélyezése szükséges
+      auth_path_active: Aktív hitelesítési útvonal
+      auth_path_adc: 'Hitelesítési útvonal: ADC (Application Default Credentials)'
+      auth_path_oauth_desktop: 'Hitelesítési útvonal: OAuth Desktop'
+      auth_path_service_account: 'Hitelesítési útvonal: Szolgáltatásfiók (Service
+        Account)'
+      auth_ready_both: A hitelesítés kész mind a Cloud, mind az AEAT számára
+      auth_ready_cli_only: Csak a CLI-alapú (Cloud) hitelesítés kész
+      auth_ready_mcp_only: Csak az MCP (AEAT) hitelesítés kész
+      auth_ready_none: Egyetlen hitelesítési rendszer sem áll készen
+      backend_active: Aktív háttérrendszer (backend)
+      buckets_visible: Látható tárolási bucketek
+      cert_health_detail: Tanúsítvány egészségi részletei
+      drive_scope_check_failed: Google Drive hatókör ellenőrzése sikertelen
+      functions_visible: Látható felhőalapú funkciók
+      gcloud_env_project_mismatch: Eltérés a gcloud projekt és a környezeti konfiguráció
+        között
+      gcloud_installed: Google Cloud SDK (gcloud) telepítve
+      gcloud_version_failed: A gcloud verziójának lekérdezése sikertelen
+      gcp_project_not_set: A Google Cloud projekt azonosító nincs beállítva
+      install_gcloud_advisory: A folytatáshoz kérjük, telepítse a Google Cloud SDK-t
+        (gcloud).
+      live_reads_enabled: Élő lekérdezések engedélyezve
+      live_reads_skipped: Élő lekérdezések kihagyva
+      live_tests_disabled: Élő tesztek letiltva
+      live_writes_forbidden: Élő írási műveletek tiltva
+      master_kdf_absent: Mester KDF hiányzik
+      master_kdf_argon2id: 'Mester KDF: Argon2id'
+      master_kdf_not_object: A mester KDF adatok érvénytelenek (nem objektum)
+      master_kdf_parse_failed: A mester KDF fájl feldolgozása sikertelen
+      master_kdf_unrecognised: Ismeretlen mester KDF algoritmus
+      master_kdf_unsupported: Nem támogatott mester KDF algoritmus
+      master_key_file_present: Mesterkulcs fájl jelen van
+      master_key_keychain_preferred: A kulcstartó (keychain) preferált a mesterkulcs
+        tárolásához
+      master_key_keyring: 'Mesterkulcs: Rendszer kulcstartó (Keyring)'
+      master_key_missing: Mesterkulcs hiányzik
+      master_key_partial: Mesterkulcs adatai hiányosak
+      master_key_unsecured: A mesterkulcs tárolása nem biztonságos
+      mcp_credentials_dir_prepared: MCP hitelesítő adatok könyvtára előkészítve
+      mcp_credentials_present: MCP hitelesítő adatok jelen vannak
+      no_active_auth_path: Nincs aktív hitelesítési útvonal
+      no_credentials_configured: Nincsenek hitelesítő adatok konfigurálva
+      no_scratch_doc: Piszkozat dokumentum nem található
+      no_scratch_sheet: Piszkozat táblázat nem található
+      no_stale_artifacts: Nem találhatók elavult fájlmaradványok (artifacts)
+      not_required_active_path: Az aktív útvonal nem szükséges
+      not_required_see_drift: 'Nem szükséges, lásd: eltérés (drift)'
+      oauth_config_missing: OAuth konfiguráció hiányzik
+      oauth_config_partial: Az OAuth konfiguráció hiányos
+      oauth_json_present: OAuth JSON fájl jelen van
+      oauth_token_issue: Probléma az OAuth tokennel
+      provider_not_configured: A szolgáltató nincs konfigurálva
+      provider_unavailable: A szolgáltató nem érhető el
+      pytest_current_test_present: Tesztkörnyezet észlelve (PYTEST_CURRENT_TEST jelen
+        van)
+      run_auth_init_mcp: Futtassa az 'aeat auth init-mcp' parancsot az AEAT hitelesítő
+        adatok konfigurálásához.
+      run_env_setup: Futtassa a környezeti beállítást a projekt inicializálásához.
+      run_gcloud_auth: Futtassa a 'gcloud auth login' parancsot a Google Cloud hitelesítéshez.
+      run_gcloud_config_set_project: Futtassa a 'gcloud config set project [PROJEKT_AZONOSÍTÓ]'
+        parancsot az aktív projekt beállításához.
+      run_gcloud_services_enable: Futtassa a 'gcloud services enable [SZOLGÁLTATÁS_NEVE]'
+        parancsot a szükséges API engedélyezéséhez.
+      sa_key_not_found: Szolgáltatásfiók kulcsfájlja nem található
+      sa_key_unparseable: A szolgáltatásfiók kulcsfájlja nem feldolgozható (érvénytelen
+        JSON)
+      sa_key_unset: A szolgáltatásfiók kulcsútvonala nincs beállítva
+      secret_store_dir_missing: A titkos tároló könyvtára nem található
+      secret_store_dir_not_writable: A titkos tároló könyvtára nem írható
+      select_auth_path_first: Kérjük, először válasszon egy hitelesítési útvonalat.
+      select_prepare_auth_path: A folytatáshoz válasszon és készítsen elő egy hitelesítési
+        útvonalat.
+      service_usage_failed: A szolgáltatáshasználat ellenőrzése sikertelen
+      services_visible: Látható engedélyezett szolgáltatások (APIs)
+      set_gcp_project: Állítsa be a Google Cloud projekt azonosítót a környezetében.
+      unsecured_requires_allow: A nem biztonságos tároláshoz kifejezett engedélyezés
+        szükséges (pl. --allow-unsecured)
+      unsecured_warning: 'FIGYELEM: Nem biztonságos kulcstárolási módszer van használatban.'
     errors:
-      findings: cli.doctor.errors.findings
+      findings: Diagnosztikai eredmények
     sections:
-      active_google_auth_path: cli.doctor.sections.active_google_auth_path
-      adc_file: cli.doctor.sections.adc_file
-      adc_scopes: cli.doctor.sections.adc_scopes
-      aeat_auth_path: cli.doctor.sections.aeat_auth_path
-      aeat_certificate: cli.doctor.sections.aeat_certificate
-      api_enablement: cli.doctor.sections.api_enablement
-      api_service: cli.doctor.sections.api_service
-      auth_path: cli.doctor.sections.auth_path
-      cli_oauth_cache: cli.doctor.sections.cli_oauth_cache
-      desktop_oauth_client_material: cli.doctor.sections.desktop_oauth_client_material
-      docs_round_trip: cli.doctor.sections.docs_round_trip
-      drive_round_trip: cli.doctor.sections.drive_round_trip
-      env_file: cli.doctor.sections.env_file
-      functions_list: cli.doctor.sections.functions_list
-      gcloud_auth: cli.doctor.sections.gcloud_auth
-      gcloud_binary: cli.doctor.sections.gcloud_binary
-      gcloud_project: cli.doctor.sections.gcloud_project
-      google_auth_readiness: cli.doctor.sections.google_auth_readiness
-      google_cloud_project: cli.doctor.sections.google_cloud_project
-      inactive_path_drift: cli.doctor.sections.inactive_path_drift
-      kdf_version: cli.doctor.sections.kdf_version
-      live_access_gate: cli.doctor.sections.live_access_gate
-      live_tests: cli.doctor.sections.live_tests
-      master_key_readiness: cli.doctor.sections.master_key_readiness
-      mcp_credentials_cache: cli.doctor.sections.mcp_credentials_cache
-      run_list: cli.doctor.sections.run_list
-      secret_store_backend: cli.doctor.sections.secret_store_backend
-      secret_store_dir: cli.doctor.sections.secret_store_dir
-      service_account_key_state: cli.doctor.sections.service_account_key_state
-      sheets_round_trip: cli.doctor.sections.sheets_round_trip
-      storage_list: cli.doctor.sections.storage_list
+      active_google_auth_path: Aktív Google hitelesítési útvonal
+      adc_file: ADC fájl
+      adc_scopes: ADC hatókörök (scopes)
+      aeat_auth_path: AEAT hitelesítési útvonal
+      aeat_certificate: AEAT tanúsítvány
+      api_enablement: API-k engedélyezése
+      api_service: API szolgáltatás
+      auth_path: Hitelesítési útvonal
+      cli_oauth_cache: CLI OAuth gyorsítótár
+      desktop_oauth_client_material: Asztali OAuth kliens adatok
+      docs_round_trip: Google Docs körutazás (round-trip) teszt
+      drive_round_trip: Google Drive körutazás (round-trip) teszt
+      env_file: Környezeti fájl (.env)
+      functions_list: Felhőalapú funkciók listája
+      gcloud_auth: gcloud hitelesítés
+      gcloud_binary: gcloud bináris
+      gcloud_project: gcloud projekt
+      google_auth_readiness: Google hitelesítés készenléte
+      google_cloud_project: Google Cloud projekt
+      inactive_path_drift: Inaktív útvonal eltérése (drift)
+      kdf_version: KDF verzió
+      live_access_gate: Élő hozzáférési kapu
+      live_tests: Élő tesztek
+      master_key_readiness: Mesterkulcs készenléte
+      mcp_credentials_cache: MCP hitelesítő adatok gyorsítótára
+      run_list: Cloud Run szolgáltatások listája
+      secret_store_backend: Titkos tároló háttérrendszere
+      secret_store_dir: Titkos tároló könyvtára
+      service_account_key_state: Szolgáltatásfiók kulcsának állapota
+      sheets_round_trip: Google Sheets körutazás (round-trip) teszt
+      storage_list: Cloud Storage listája
     success:
-      all_clean: cli.doctor.success.all_clean
+      all_clean: Minden tiszta. Nem találhatók problémák.
     table:
-      detail: cli.doctor.table.detail
-      'no': cli.doctor.table.no
-      required: cli.doctor.table.required
-      section: cli.doctor.table.section
-      state: cli.doctor.table.state
-      title: cli.doctor.table.title
-      'yes': cli.doctor.table.yes
+      detail: Részlet
+      'no': Nem
+      required: Szükséges
+      section: Szakasz
+      state: Állapot
+      title: Cím
+      'yes': Igen
   drive:
-    app_help: cli.drive.app_help
-    cat_export_mime_help: cli.drive.cat_export_mime_help
-    cat_file_id_help: cli.drive.cat_file_id_help
-    cat_help: cli.drive.cat_help
+    app_help: Fájlok és mappák kezelése a Google Drive-ban
+    cat_export_mime_help: MIME-típus a fájl exportálásához (pl. Google Docs esetén)
+    cat_file_id_help: A megjelenítendő Google Drive fájl azonosítója
+    cat_help: Egy Google Drive fájl tartalmának megjelenítése a konzolon
     errors:
-      already_exists: cli.drive.errors.already_exists
-      local_not_found: cli.drive.errors.local_not_found
-      multiple_matches: cli.drive.errors.multiple_matches
-      not_found: cli.drive.errors.not_found
-    fetch_help: cli.drive.fetch_help
-    fetch_name_help: cli.drive.fetch_name_help
-    fetch_out_help: cli.drive.fetch_out_help
-    fetch_overwrite_help: cli.drive.fetch_overwrite_help
-    find_help: cli.drive.find_help
-    find_query_help: cli.drive.find_query_help
-    find_table_title: cli.drive.find_table_title
-    ls_folder_help: cli.drive.ls_folder_help
-    ls_help: cli.drive.ls_help
-    ls_page_size_help: cli.drive.ls_page_size_help
-    ls_table_title: cli.drive.ls_table_title
-    mkdir_help: cli.drive.mkdir_help
-    mkdir_name_help: cli.drive.mkdir_name_help
-    mkdir_parent_help: cli.drive.mkdir_parent_help
-    put_folder_help: cli.drive.put_folder_help
-    put_help: cli.drive.put_help
-    put_local_help: cli.drive.put_local_help
-    put_mime_help: cli.drive.put_mime_help
-    put_name_help: cli.drive.put_name_help
-    rm_file_id_help: cli.drive.rm_file_id_help
-    rm_help: cli.drive.rm_help
-    rm_permanent_help: cli.drive.rm_permanent_help
+      already_exists: A fájl vagy mappa már létezik
+      local_not_found: A helyi fájl vagy útvonal nem található
+      multiple_matches: Több egyezés is található
+      not_found: A fájl nem található a Google Drive-on
+    fetch_help: Fájl letöltése Google Drive-ról a helyi rendszerre
+    fetch_name_help: A keresendő és letöltendő Google Drive fájl neve
+    fetch_out_help: Helyi célútvonal a letöltött fájl számára
+    fetch_overwrite_help: Helyi fájl felülírása, ha már létezik
+    find_help: Fájlok vagy mappák keresése a Google Drive-ban név szerint
+    find_query_help: Név vagy keresési minta a fájlok megtalálásához
+    find_table_title: Google Drive-on talált fájlok
+    ls_folder_help: A listázandó mappa azonosítója (alapértelmezés szerint a gyökérmappa)
+    ls_help: Fájlok és mappák listázása egy Google Drive helyen
+    ls_page_size_help: Oldalanként megjelenítendő elemek maximális száma
+    ls_table_title: Mappa tartalma a Google Drive-ban
+    mkdir_help: Új mappa létrehozása a Google Drive-ban
+    mkdir_name_help: Az új mappa neve
+    mkdir_parent_help: A szülőmappa azonosítója (alapértelmezés szerint a gyökérmappa)
+    put_folder_help: A célmappa azonosítója a Google Drive-ban
+    put_help: Helyi fájl feltöltése a Google Drive-ra
+    put_local_help: A feltöltendő helyi fájl útvonala
+    put_mime_help: MIME-típus a feltöltött fájlhoz (pl. Google Docs-szá történő konvertáláshoz)
+    put_name_help: A fájl neve a Google Drive-ban
+    rm_file_id_help: A törlendő Google Drive fájl vagy mappa azonosítója
+    rm_help: Fájl vagy mappa törlése a Google Drive-ról
+    rm_permanent_help: Végleges törlés (kukába helyezés kihagyása)
     success:
-      deleted: cli.drive.success.deleted
-      fetched: cli.drive.success.fetched
-      trashed: cli.drive.success.trashed
-    table_id: cli.drive.table_id
-    table_mime: cli.drive.table_mime
-    table_modified: cli.drive.table_modified
-    table_name: cli.drive.table_name
-    table_size: cli.drive.table_size
+      deleted: A fájl vagy mappa sikeresen törölve a Google Drive-ról
+      fetched: A fájl sikeresen letöltve a Google Drive-ról
+      trashed: A fájl vagy mappa a Google Drive kukájába került
+    table_id: Fájl azonosító
+    table_mime: MIME-típus
+    table_modified: Módosítva
+    table_name: Név
+    table_size: Méret
   filing:
     amendment:
-      delta_table_title: cli.filing.amendment.delta_table_title
-      title: cli.filing.amendment.title
-    app_help: cli.filing.app_help
+      delta_table_title: Módosító bevallás különbségei (delta)
+      title: Módosító / Önellenőrző bevallás
+    app_help: Adóbevallások kezelése és benyújtása
     build:
-      inputs_help: cli.filing.build.inputs_help
-      modelo_help: cli.filing.build.modelo_help
-      period_help: cli.filing.build.period_help
-      profile_help: cli.filing.build.profile_help
-      profile_name_help: cli.filing.build.profile_name_help
-      profile_tax_id_help: cli.filing.build.profile_tax_id_help
-      success: cli.filing.build.success
+      inputs_help: Bemeneti fájlok vagy könyvtárak a bevallás összeállításához
+      modelo_help: Összeállítandó adómodell (pl. 303, 111, 130)
+      period_help: Adózási időszak (pl. 1T, 2T, 01, 12)
+      profile_help: Használandó adózói profil
+      profile_name_help: Adózói profil neve
+      profile_tax_id_help: Az adózó adószáma (NIF)
+      success: A bevallás összeállítása sikeres
     complementaria:
-      app_help: cli.filing.complementaria.app_help
+      app_help: Módosító és önellenőrző bevallások kezelése
       build:
-        delta_json_help: cli.filing.complementaria.build.delta_json_help
+        delta_json_help: JSON fájl, amely a módosító bevallás különbségeit (delta)
+          tartalmazza
     draft:
-      approved_by_you: cli.filing.draft.approved_by_you
-      next_steps_label: cli.filing.draft.next_steps_label
-      title: cli.filing.draft.title
-      values_table_title: cli.filing.draft.values_table_title
+      approved_by_you: Ön által jóváhagyva
+      next_steps_label: Következő lépések
+      title: Bevallás tervezete
+      values_table_title: A bevallás mezőinek (casillas) értékei
     errors:
-      amendment_success: cli.filing.errors.amendment_success
-      casilla_key_not_string: cli.filing.errors.casilla_key_not_string
-      draft_not_found: cli.filing.errors.draft_not_found
-      failed_to_load_draft: cli.filing.errors.failed_to_load_draft
-      inputs_not_found: cli.filing.errors.inputs_not_found
-      inputs_not_object: cli.filing.errors.inputs_not_object
-      invalid_draft_extension: cli.filing.errors.invalid_draft_extension
-      invalid_json: cli.filing.errors.invalid_json
-      invalid_status: cli.filing.errors.invalid_status
-      missing_import_source: cli.filing.errors.missing_import_source
-      missing_original_submission_id: cli.filing.errors.missing_original_submission_id
-      missing_updated_inputs: cli.filing.errors.missing_updated_inputs
-      modelo_mismatch: cli.filing.errors.modelo_mismatch
-      multiple_import_sources: cli.filing.errors.multiple_import_sources
-      period_mismatch: cli.filing.errors.period_mismatch
-      profile_tax_id_required: cli.filing.errors.profile_tax_id_required
-      reasons_not_object: cli.filing.errors.reasons_not_object
-      submission_not_found: cli.filing.errors.submission_not_found
-      submission_validation_failed: cli.filing.errors.submission_validation_failed
-      unsupported_value_type: cli.filing.errors.unsupported_value_type
+      amendment_success: A módosító bevallás feldolgozása sikeres
+      casilla_key_not_string: A mező (casilla) kulcsának szövegesnek (string) kell
+        lennie
+      draft_not_found: A bevallás tervezete nem található
+      failed_to_load_draft: A bevallás tervezetének betöltése sikertelen
+      inputs_not_found: Bemeneti fájlok nem találhatók
+      inputs_not_object: A bemeneti adatoknak objektumnak (JSON) kell lenniük
+      invalid_draft_extension: Érvénytelen tervezet fájlkiterjesztés
+      invalid_json: Érvénytelen JSON fájl
+      invalid_status: Érvénytelen bevallási állapot
+      missing_import_source: Hiányzó importálási forrás
+      missing_original_submission_id: Hiányzik az eredeti benyújtás azonosítója
+      missing_updated_inputs: Hiányoznak a frissített bemeneti fájlok
+      modelo_mismatch: Az adómodell nem egyezik
+      multiple_import_sources: Több importálási forrás is található
+      period_mismatch: Az adózási időszak nem egyezik
+      profile_tax_id_required: Az adózó adószáma (NIF) szükséges a profilban
+      reasons_not_object: Az indokoknak objektumnak (JSON) kell lenniük
+      submission_not_found: Benyújtás nem található
+      submission_validation_failed: A benyújtás ellenőrzése sikertelen
+      unsupported_value_type: Nem támogatott értéktípus
     field:
-      approved_at: cli.filing.field.approved_at
-      approved_by: cli.filing.field.approved_by
-      casilla: cli.filing.field.casilla (mező)
-      code: cli.filing.field.code
-      created_at: cli.filing.field.created_at
-      draft_id: cli.filing.field.draft_id
-      kind: cli.filing.field.kind
-      message: cli.filing.field.message
-      modelo: cli.filing.field.modelo (adóbevallási űrlap)
-      new: cli.filing.field.new
-      old: cli.filing.field.old
-      original_csv: cli.filing.field.original_csv
-      path: cli.filing.field.path
-      period: cli.filing.field.period
-      profile_tax_id: cli.filing.field.profile_tax_id
-      reason: cli.filing.field.reason
-      review_checksum: cli.filing.field.review_checksum
-      schema_version: cli.filing.field.schema_version
-      severity: cli.filing.field.severity
-      source: cli.filing.field.source
-      stale_reason: cli.filing.field.stale_reason
-      status: cli.filing.field.status
-      submission_id: cli.filing.field.submission_id
-      updated_at: cli.filing.field.updated_at
-      value: cli.filing.field.value
+      approved_at: Jóváhagyva ekkor
+      approved_by: Jóváhagyta
+      casilla: Mező
+      code: Kód
+      created_at: Létrehozva ekkor
+      draft_id: Tervezet azonosító
+      kind: Típus / Jelleg
+      message: Üzenet
+      modelo: Adómodell
+      new: Új
+      old: Régi
+      original_csv: Eredeti CSV (biztonsági ellenőrző kód)
+      path: Útvonal
+      period: Időszak
+      profile_tax_id: Profil adószáma (NIF)
+      reason: Indok
+      review_checksum: Ellenőrző összeg (checksum)
+      schema_version: Séma verziója
+      severity: Súlyosság
+      source: Forrás
+      stale_reason: Elavulás oka
+      status: Állapot
+      submission_id: Benyújtás azonosító
+      updated_at: Frissítve ekkor
+      value: Érték
     import:
-      actual: cli.filing.import.actual
-      borrador_unsupported: cli.filing.import.borrador_unsupported
-      casilla_label: cli.filing.import.casilla_label
-      cause: cli.filing.import.cause
-      expected: cli.filing.import.expected
-      extraction_complete: cli.filing.import.extraction_complete
-      from_borrador_help: cli.filing.import.from_borrador_help
-      from_declaracion_help: cli.filing.import.from_declaracion_help
-      from_justificante_help: cli.filing.import.from_justificante_help
-      importing_declaration: cli.filing.import.importing_declaration
-      justificante_success: cli.filing.import.justificante_success
-      modelo_help: cli.filing.import.modelo_help
-      scaffold_created: cli.filing.import.scaffold_created
-      verification_result: cli.filing.import.verification_result
-      warning_label: cli.filing.import.warning_label
-      warnings_found: cli.filing.import.warnings_found
+      actual: Tényleges (Talált)
+      borrador_unsupported: Hivatalos tervezetből történő importálás nem támogatott
+        ennél a modellnél
+      casilla_label: Mező
+      cause: Ok / Indok
+      expected: Várható
+      extraction_complete: Az adatkivonás sikeresen befejeződött
+      from_borrador_help: Adatok importálása hivatalos tervezetből (AEAT PDF)
+      from_declaracion_help: Adatok importálása egy benyújtott bevallásból (AEAT PDF)
+      from_justificante_help: Adatok importálása egy benyújtási igazolásból (AEAT
+        PDF)
+      importing_declaration: Bevallás importálása...
+      justificante_success: Igazolás sikeresen importálva
+      modelo_help: Az importálandó bevallás adómodellje
+      scaffold_created: Az importálási sablon (scaffold) sikeresen létrejött
+      verification_result: Ellenőrzés eredménye
+      warning_label: FIGYELMEZTETÉS
+      warnings_found: Figyelmeztetések találhatók a folyamat során
     init:
-      findings_table_title: cli.filing.init.findings_table_title
+      findings_table_title: Kezdeti észlelés eredményei
     list:
-      modelo_help: cli.filing.list.modelo_help
-      status_help: cli.filing.list.status_help
-      table_title: cli.filing.list.table_title
+      modelo_help: Szűrés adómodell szerint
+      status_help: Szűrés bevallási állapot szerint
+      table_title: Bevallások listája
     show:
-      findings_only_help: cli.filing.show.findings_only_help
+      findings_only_help: Csak a bevallási észlelések (findings) megjelenítése
     validate:
-      draft_path_help: cli.filing.validate.draft_path_help
-      success: cli.filing.validate.success
+      draft_path_help: Az ellenőrizendő tervezetfájl útvonala
+      success: Az ellenőrzés sikeresen befejeződött. A bevallás érvényes.
   financial:
-    app_help: cli.financial.app_help
+    app_help: Pénzügyi adatok és bankszámlák kezelése
     catalogue:
       errors:
-        not_found: cli.financial.catalogue.errors.not_found
+        not_found: Pénzügyi katalógus nem található
     ingest:
-      catalogue_dir_help: cli.financial.ingest.catalogue_dir_help
-      help: cli.financial.ingest.help
-      output_json_help: cli.financial.ingest.output_json_help
-      path_help: cli.financial.ingest.path_help
-      persist_help: cli.financial.ingest.persist_help
-      provider_help: cli.financial.ingest.provider_help
-      verbose_help: cli.financial.ingest.verbose_help
+      catalogue_dir_help: A könyvtár, ahol a pénzügyi katalógus található
+      help: Pénzügyi adatok bevitele (pl. bankszámlakivonatok)
+      output_json_help: Kimeneti JSON fájl a bevitt adatokhoz
+      path_help: A pénzügyi adatokat tartalmazó fájl vagy könyvtár útvonala
+      persist_help: A bevitt adatok tárolása a rendszerben
+      provider_help: Pénzügyi adatszolgáltató (pl. bank neve)
+      verbose_help: Részletes információk megjelenítése a beviteli folyamatról
     invoices:
-      app_help: cli.financial.invoices.app_help
-      apply_help: cli.financial.invoices.apply_help
-      consistent: cli.financial.invoices.consistent
+      app_help: Számlák és költségbizonylatok kezelése
+      apply_help: Változtatások vagy műveletek alkalmazása a számlákon
+      consistent: Konzisztens
       errors:
-        final_save_failed: cli.financial.invoices.errors.final_save_failed
-        not_found: cli.financial.invoices.errors.not_found
-        not_found_after_update: cli.financial.invoices.errors.not_found_after_update
-        skipped_suggestion: cli.financial.invoices.errors.skipped_suggestion
+        final_save_failed: A számlák végső mentése sikertelen
+        not_found: Számla nem található
+        not_found_after_update: A számla nem található a frissítés után
+        skipped_suggestion: Javaslat kihagyva
       headers:
-        list: cli.financial.invoices.headers.list
-        unmatched: cli.financial.invoices.headers.unmatched
-      id_help: cli.financial.invoices.id_help
-      kind_help: cli.financial.invoices.kind_help
+        list: Lista
+        unmatched: Nincs párosítva
+      id_help: Számla azonosítója
+      kind_help: Számla típusa (pl. kiállított, befogadott)
       labels:
-        applied: cli.financial.invoices.labels.applied
-      link_help: cli.financial.invoices.link_help
-      link_invoice_id_help: cli.financial.invoices.link_invoice_id_help
-      link_transaction_id_help: cli.financial.invoices.link_transaction_id_help
-      list_help: cli.financial.invoices.list_help
-      no_invoices: cli.financial.invoices.no_invoices
-      no_suggestions: cli.financial.invoices.no_suggestions
-      no_unmatched: cli.financial.invoices.no_unmatched
-      reconcile_help: cli.financial.invoices.reconcile_help
-      show_help: cli.financial.invoices.show_help
-      unmatched_help: cli.financial.invoices.unmatched_help
-      verify_help: cli.financial.invoices.verify_help
+        applied: Alkalmazva
+      link_help: Számla összekapcsolása banki tranzakcióval
+      link_invoice_id_help: Az összekapcsolandó számla azonosítója
+      link_transaction_id_help: Az összekapcsolandó banki tranzakció azonosítója
+      list_help: Számlák listázása
+      no_invoices: Nem találhatók számlák
+      no_suggestions: Nincsenek elérhető javaslatok
+      no_unmatched: Nincs párosítatlan számla
+      reconcile_help: Számlák és banki tranzakciók interaktív párosítása
+      show_help: Számla részleteinek megjelenítése
+      unmatched_help: Még nem párosított számlák listázása
+      verify_help: A számlák integritásának és konzisztenciájának ellenőrzése
     profile:
-      app_help: cli.financial.profile.app_help
+      app_help: Pénzügyi profilok kezelése
       errors:
-        at_least_one: cli.financial.profile.errors.at_least_one
-        did_you_mean: cli.financial.profile.errors.did_you_mean
-        eligible_categories: cli.financial.profile.errors.eligible_categories
-        family_aliases: cli.financial.profile.errors.family_aliases
-        invalid_ratio: cli.financial.profile.errors.invalid_ratio
-        unknown_key: cli.financial.profile.errors.unknown_key
+        at_least_one: Legalább egy mező vagy profil szükséges
+        did_you_mean: Úgy értette, hogy...?
+        eligible_categories: Választható kategóriák
+        family_aliases: Családi álnevek
+        invalid_ratio: Érvénytelen arány vagy százalék
+        unknown_key: Ismeretlen kulcs vagy tulajdonság a profilban
       headers:
-        ratios: cli.financial.profile.headers.ratios
+        ratios: Arányok / Felosztások
       labels:
-        no_active: cli.financial.profile.labels.no_active
-        profile_not_found: cli.financial.profile.labels.profile_not_found
-        switched: cli.financial.profile.labels.switched
-      ratios_help: cli.financial.profile.ratios_help
-      ratios_list_help: cli.financial.profile.ratios_list_help
-      set_ratio_help: cli.financial.profile.set_ratio_help
-      set_ratio_key_help: cli.financial.profile.set_ratio_key_help
-      set_ratio_value_help: cli.financial.profile.set_ratio_value_help
-      unset_ratio_help: cli.financial.profile.unset_ratio_help
-      unset_ratio_key_help: cli.financial.profile.unset_ratio_key_help
+        no_active: Nincs kiválasztott aktív profil
+        profile_not_found: Pénzügyi profil nem található
+        switched: Pénzügyi profil sikeresen átváltva
+      ratios_help: Felosztási arányok meghatározása a pénzügyi profilhoz
+      ratios_list_help: A profilban meghatározott felosztási arányok listázása
+      set_ratio_help: Egy adott felosztási arány beállítása
+      set_ratio_key_help: Arány kulcsa vagy kategóriája
+      set_ratio_value_help: Arány értéke (pl. 0.5 az 50%-hoz)
+      unset_ratio_help: Egy adott felosztási arány törlése
+      unset_ratio_key_help: A törlendő arány kulcsa vagy kategóriája
     txs:
-      app_help: cli.financial.txs.app_help
+      app_help: Banki tranzakciók kezelése
   financial_invoices:
     errors:
-      catalogue_not_found: cli.financial_invoices.errors.catalogue_not_found
+      catalogue_not_found: Számlakatalógus nem található
     headers:
-      inconsistencies: cli.financial_invoices.headers.inconsistencies
-      suggestions: cli.financial_invoices.headers.suggestions
+      inconsistencies: Inkonzisztenciák
+      suggestions: Javaslatok
     labels:
-      'no': cli.financial_invoices.labels.no
-      'yes': cli.financial_invoices.labels.yes
+      'no': Nem
+      'yes': Igen
   ingest:
     errors:
-      at_least_one_row: cli.ingest.errors.at_least_one_row
-      auto_detect_failed: cli.ingest.errors.auto_detect_failed
-      ingest_failed: cli.ingest.errors.ingest_failed
+      at_least_one_row: Legalább egy adatsor szükséges a bevitelhez
+      auto_detect_failed: A formátum vagy adatszolgáltató automatikus észlelése sikertelen
+      ingest_failed: A beviteli folyamat sikertelen
     labels:
-      complete: cli.ingest.labels.complete
-      ingesting: cli.ingest.labels.ingesting
-      rows_found: cli.ingest.labels.rows_found
+      complete: Kész
+      ingesting: Bevitel...
+      rows_found: Talált sorok
   inventory:
-    app_help: cli.inventory.app_help
+    app_help: Eszköz- és készletnyilvántartás kezelése
     create:
-      actividad_help: cli.inventory.create.actividad_help
-      help: cli.inventory.create.help
-      opening_quantity_help: cli.inventory.create.opening_quantity_help
-      opening_stock_help: cli.inventory.create.opening_stock_help
-      opening_unit_cost_help: cli.inventory.create.opening_unit_cost_help
-      sku_help: cli.inventory.create.sku_help
-      storage_dir_help: cli.inventory.create.storage_dir_help
-      valuation_method_help: cli.inventory.create.valuation_method_help
-      year_help: cli.inventory.create.year_help
+      actividad_help: Kapcsolódó gazdasági tevékenység kódja
+      help: Új tétel rögzítése a nyilvántartásban
+      opening_quantity_help: Kezdő mennyiség (nyitókészlet) a nyilvántartásban
+      opening_stock_help: Nyitókészlet értéke
+      opening_unit_cost_help: Kezdeti egységnyi költség
+      sku_help: A tétel SKU kódja
+      storage_dir_help: A nyilvántartási adatok tárolási könyvtára
+      valuation_method_help: Értékelési módszer (pl. PMP, FIFO, LIFO)
+      year_help: Kapcsolódó adóév
     errors:
-      invalid_valuation: cli.inventory.errors.invalid_valuation
-      ledger_not_found: cli.inventory.errors.ledger_not_found
-      missing_opening_fields: cli.inventory.errors.missing_opening_fields
-      valuation_failed: cli.inventory.errors.valuation_failed
+      invalid_valuation: Érvénytelen készletértékelés
+      ledger_not_found: Készletnyilvántartó könyv nem található
+      missing_opening_fields: Hiányoznak a nyitókészlet kötelező mezői
+      valuation_failed: A készletértékelési folyamat sikertelen
     labels:
-      ledger_created: cli.inventory.labels.ledger_created
-      ledger_empty: cli.inventory.labels.ledger_empty
-      movement_added: cli.inventory.labels.movement_added
+      ledger_created: Készletnyilvántartó könyv sikeresen létrejött
+      ledger_empty: A készletnyilvántartó könyv üres
+      movement_added: Készletmozgás sikeresen hozzáadva
     list:
-      help: cli.inventory.list.help
-      opening_label: cli.inventory.list.opening_label
-      storage_dir_help: cli.inventory.list.storage_dir_help
+      help: Nyilvántartási tételek listázása
+      opening_label: Nyitó
+      storage_dir_help: Készletnyilvántartás tárolási könyvtára
     movement:
-      actividad_help: cli.inventory.movement.actividad_help
-      add_help: cli.inventory.movement.add_help
-      date_help: cli.inventory.movement.date_help
-      kind_help: cli.inventory.movement.kind_help
-      movement_id_help: cli.inventory.movement.movement_id_help
-      quantity_help: cli.inventory.movement.quantity_help
-      sku_help: cli.inventory.movement.sku_help
-      storage_dir_help: cli.inventory.movement.storage_dir_help
-      taxable_base_help: cli.inventory.movement.taxable_base_help
-      unit_cost_help: cli.inventory.movement.unit_cost_help
-      vat_rate_help: cli.inventory.movement.vat_rate_help
-      year_help: cli.inventory.movement.year_help
-    movement_help: cli.inventory.movement_help
+      actividad_help: A mozgáshoz kapcsolódó gazdasági tevékenység kódja
+      add_help: Új készletmozgás hozzáadása (vásárlás, eladás stb.)
+      date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN)
+      kind_help: Mozgás típusa (bevételezés vagy kiadás)
+      movement_id_help: Készletmozgás azonosítója
+      quantity_help: A mozgásban érintett mennyiség
+      sku_help: A mozgásban érintett tétel SKU kódja
+      storage_dir_help: A mozgások készletnyilvántartási tárolási könyvtára
+      taxable_base_help: A mozgás adóalapja
+      unit_cost_help: A mozgás egységnyi költsége
+      vat_rate_help: Alkalmazott ÁFA-kulcs
+      year_help: A mozgás adóéve
+    movement_help: Készletmozgások kezelése
     valuation:
-      actividad_help: cli.inventory.valuation.actividad_help
-      closing_label: cli.inventory.valuation.closing_label
-      cogs_label: cli.inventory.valuation.cogs_label
-      preview_help: cli.inventory.valuation.preview_help
-      preview_line: cli.inventory.valuation.preview_line
-      storage_dir_help: cli.inventory.valuation.storage_dir_help
-      year_help: cli.inventory.valuation.year_help
-    valuation_help: cli.inventory.valuation_help
+      actividad_help: Az értékeléshez kapcsolódó gazdasági tevékenység kódja
+      closing_label: Záró
+      cogs_label: ELÁBÉ (Eladott áruk beszerzési értéke)
+      preview_help: Az értékelési jelentés előnézete a létrehozás előtt
+      preview_line: 'Előnézet: {sku} - {method}'
+      storage_dir_help: Az értékeléshez használt készletnyilvántartási tárolási könyvtár
+      year_help: Az értékelési jelentés adóéve
+    valuation_help: Készletértékelés kezelése (PMP, FIFO, LIFO)
   invoice:
-    app_help: cli.invoice.app_help
+    app_help: Számlák kezelése és feldolgozása
     edit:
-      help: cli.invoice.edit.help
-      id_help: cli.invoice.edit.id_help
-      reason_help: cli.invoice.edit.reason_help
-      set_help: cli.invoice.edit.set_help
+      help: Számla adatainak manuális szerkesztése
+      id_help: A szerkesztendő számla azonosítója
+      reason_help: A szerkesztés vagy javítás indoka
+      set_help: Adott mezőértékek beállítása (mező=érték)
     errors:
-      at_least_one_edit: cli.invoice.errors.at_least_one_edit
-      file_not_found: cli.invoice.errors.file_not_found
-      filter_parse_error: cli.invoice.errors.filter_parse_error
-      invalid_kind: cli.invoice.errors.invalid_kind
-      invoice_not_found: cli.invoice.errors.invoice_not_found
-      match_both_required: cli.invoice.errors.match_both_required
-      set_parse_error: cli.invoice.errors.set_parse_error
+      at_least_one_edit: Legalább egy mezőmódosítás szükséges
+      file_not_found: Számlafájl nem található
+      filter_parse_error: A számlaszűrő elemzése sikertelen
+      invalid_kind: Érvénytelen számlatípus
+      invoice_not_found: Számla nem található
+      match_both_required: A párosításhoz mind a számla, mind a tranzakció szükséges
+      set_parse_error: A mezőhozzárendelés (mező=érték) elemzése sikertelen
     import:
-      dry_run_help: cli.invoice.import.dry_run_help
-      help: cli.invoice.import.help
-      kind_help: cli.invoice.import.kind_help
-      path_help: cli.invoice.import.path_help
+      dry_run_help: Futtatás próba üzemmódban (mentés nélkül)
+      help: Számlák importálása külső forrásokból (pl. PDF, Excel)
+      kind_help: Importálandó számlák típusa (kiállított vagy befogadott)
+      path_help: A számlákat tartalmazó fájl vagy könyvtár útvonala
     labels:
-      base: cli.invoice.labels.base
-      dry_run: cli.invoice.labels.dry_run
-      fields: cli.invoice.labels.fields
-      id: cli.invoice.labels.id
-      imported: cli.invoice.labels.imported
-      iva: cli.invoice.labels.iva
-      kind: cli.invoice.labels.kind
-      matched: cli.invoice.labels.matched
-      payment: cli.invoice.labels.payment
-      period: cli.invoice.labels.period
-      rows: cli.invoice.labels.rows
-      skipped: cli.invoice.labels.skipped
-      status: cli.invoice.labels.status
-      unmatched: cli.invoice.labels.unmatched
-      'yes': cli.invoice.labels.yes
+      base: Adóalap
+      dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
+      fields: Mezők
+      id: Azonosító
+      imported: Számlák importálva
+      iva: ÁFA
+      kind: Típus
+      matched: Számla párosítva
+      payment: Fizetés
+      period: Időszak
+      rows: Sorok
+      skipped: Kihagyva
+      status: Állapot
+      unmatched: Nincs párosítva
+      'yes': Igen
     match:
-      help: cli.invoice.match.help
-      invoice_help: cli.invoice.match.invoice_help
-      ledger_help: cli.invoice.match.ledger_help
-      period_help: cli.invoice.match.period_help
+      help: Számla manuális párosítása egy banki tranzakcióval
+      invoice_help: A párosítandó számla azonosítója
+      ledger_help: Könyvelési napló azonosítója
+      period_help: A párosítás adózási időszaka
     review:
-      filter_help: cli.invoice.review.filter_help
-      header: cli.invoice.review.header
-      help: cli.invoice.review.help
-      id_help: cli.invoice.review.id_help
-      no_invoices: cli.invoice.review.no_invoices
-      verbose_help: cli.invoice.review.verbose_help
+      filter_help: A felülvizsgálandó számlák szűrése (pl. dátum vagy összeg szerint)
+      header: SZÁMLA FELÜLVIZSGÁLATI ÜLÉS
+      help: Számlák interaktív felülvizsgálata és ellenőrzése
+      id_help: A felülvizsgálandó adott számla azonosítója
+      no_invoices: Nincsenek felülvizsgálatra váró számlák
+      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
   ledger:
-    app_help: cli.ledger.app_help
+    app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
     edit:
-      help: cli.ledger.edit.help
-      id_help: cli.ledger.edit.id_help
-      reason_help: cli.ledger.edit.reason_help
-      set_help: cli.ledger.edit.set_help
-      skip_help: cli.ledger.edit.skip_help
-      split_help: cli.ledger.edit.split_help
+      help: Könyvelési naplóbejegyzés manuális szerkesztése
+      id_help: A szerkesztendő naplóbejegyzés azonosítója
+      reason_help: A bejegyzés szerkesztésének vagy javításának indoka
+      set_help: Naplómező értékek beállítása (mező=érték)
+      skip_help: Adott mezők szerkesztésének kihagyása
+      split_help: A bejegyzés felosztása több sorra
     errors:
-      auto_detect_failed: cli.ledger.errors.auto_detect_failed
-      edit_requires_one: cli.ledger.errors.edit_requires_one
-      filter_parse_error: cli.ledger.errors.filter_parse_error
-      invalid_skip: cli.ledger.errors.invalid_skip
-      invalid_split_format: cli.ledger.errors.invalid_split_format
-      invalid_split_value: cli.ledger.errors.invalid_split_value
-      match_both_required: cli.ledger.errors.match_both_required
-      n26_auto_detect_failed: cli.ledger.errors.n26_auto_detect_failed
-      row_not_found: cli.ledger.errors.row_not_found
-      set_parse_error: cli.ledger.errors.set_parse_error
-      unknown_provider: cli.ledger.errors.unknown_provider
+      auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
+      edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges
+      filter_parse_error: A naplószűrő elemzése sikertelen
+      invalid_skip: Érvénytelen kihagyási mező
+      invalid_split_format: Érvénytelen felosztási formátum
+      invalid_split_value: Érvénytelen felosztási érték
+      match_both_required: A párosításhoz mind a naplóbejegyzés, mind a tranzakció
+        szükséges
+      n26_auto_detect_failed: Az N26 formátum automatikus felismerése sikertelen
+      row_not_found: A naplósor nem található
+      set_parse_error: A mezőhozzárendelés (mező=érték) elemzése sikertelen
+      unknown_provider: Ismeretlen naplószolgáltató
     import:
-      dry_run_help: cli.ledger.import.dry_run_help
-      help: cli.ledger.import.help
-      path_help: cli.ledger.import.path_help
-      period_help: cli.ledger.import.period_help
-      provider_help: cli.ledger.import.provider_help
-      source_help: cli.ledger.import.source_help
-      verbose_help: cli.ledger.import.verbose_help
-      verify_help: cli.ledger.import.verify_help
+      dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
+      help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
+      path_help: A bankkivonat fájl vagy könyvtár útvonala
+      period_help: Az importálás adózási időszaka
+      provider_help: Kivonatformátum-szolgáltató (pl. N26, Revolut)
+      source_help: Adatforrás (pl. fájl, api)
+      verbose_help: Részletes információk megjelenítése az importálás során
+      verify_help: Bejegyzések ellenőrzése az importálás után
     labels:
-      amount: cli.ledger.labels.amount
-      date: cli.ledger.labels.date
-      description: cli.ledger.labels.description
-      dry_run: cli.ledger.labels.dry_run
-      fields: cli.ledger.labels.fields
-      id: cli.ledger.labels.id
-      imported: cli.ledger.labels.imported
-      'no': cli.ledger.labels.no
-      rows: cli.ledger.labels.rows
-      skipped: cli.ledger.labels.skipped
-      status: cli.ledger.labels.status
-      'yes': cli.ledger.labels.yes
+      amount: Összeg
+      date: Dátum
+      description: Leírás
+      dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
+      fields: Mezők
+      id: Azonosító
+      imported: Bejegyzések importálva
+      'no': Nem
+      rows: Sorok
+      skipped: Kihagyva
+      status: Állapot
+      'yes': Igen
     review:
-      filter_help: cli.ledger.review.filter_help
-      header: cli.ledger.review.header
-      help: cli.ledger.review.help
-      id_help: cli.ledger.review.id_help
-      no_rows: cli.ledger.review.no_rows
-      verbose_help: cli.ledger.review.verbose_help
+      filter_help: A felülvizsgálandó naplóbejegyzések szűrése (pl. dátum vagy összeg
+        szerint)
+      header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
+      help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
+      id_help: A felülvizsgálandó adott bejegyzés azonosítója
+      no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
+      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
   llm:
-    app_help: cli.llm.app_help
-    cache_app_help: cli.llm.cache_app_help
-    cache_prune_help: cli.llm.cache_prune_help
-    cache_stats_help: cli.llm.cache_stats_help
-    complete_help: cli.llm.complete_help
-    context_help: cli.llm.context_help
+    app_help: Nagy nyelvi modell (LLM) segédprogramok
+    cache_app_help: LLM válasz-gyorsítótár kezelése
+    cache_prune_help: Régi LLM gyorsítótár-bejegyzések törlése
+    cache_stats_help: LLM gyorsítótár-használati statisztikák megjelenítése
+    complete_help: Válasz generálása a megadott szöveg kiegészítésével
+    context_help: További kontextus hozzáadása az LLM kéréshez
     errors:
-      invalid_input: cli.llm.errors.invalid_input
-      missing_variable: cli.llm.errors.missing_variable
+      invalid_input: Érvénytelen LLM bemenet
+      missing_variable: Egy szükséges változó hiányzik a prompt sablonból
     from_help: cli.llm.from_help
     input_help: cli.llm.input_help
     labels:
