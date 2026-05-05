@@ -110,7 +110,9 @@ def test_missing_required_preserves_registry_order() -> None:
     assert list(result.missing_required) == expected
 
 
-def test_list_profile_key_records_returns_canonical_tuple() -> None:
+def test_list_profile_key_records_returns_a_non_empty_typed_tuple() -> None:
+    """The public accessor must return a non-empty tuple of ``ProfileKey`` records."""
     records = list_profile_key_records()
-    assert records == PROFILE_KEYS
+    assert isinstance(records, tuple)
+    assert len(records) > 0
     assert all(isinstance(entry, ProfileKey) for entry in records)

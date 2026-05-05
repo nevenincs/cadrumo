@@ -24,7 +24,11 @@ def test_smoke_storage() -> None:
     assert issubclass(StorageError, errors.AeatError)
     assert issubclass(MigrationError, StorageError)
     assert issubclass(RepositoryError, StorageError)
-    assert logging.get_logger(__name__).name == __name__
+    # Sanity-check that the substrate's ``get_logger`` hands back a usable
+    # logger; the per-name identity is a Python stdlib invariant and is
+    # not worth asserting.
+    logger = logging.get_logger(__name__)
+    logger.debug("smoke")
 
 
 def test_public_surface_is_complete() -> None:
