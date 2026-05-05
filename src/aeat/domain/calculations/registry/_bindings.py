@@ -511,7 +511,8 @@ def resolve_invoice_binding_row_values(
     same grouping/scope/clave-filter share row indexes, so that an export
     record with ``repeat = "binding_rows"`` can correlate field values across
     bindings on the same row. Returns a flat mapping keyed by
-    ``(binding_id, row_index)``.
+    ``(binding_id, row_index)``. Row indexes are one-based to match
+    ``FilingBindingValue.row_index``.
     """
 
     available = tuple(observations)
@@ -545,7 +546,7 @@ def resolve_invoice_binding_row_values(
         rows = _build_invoice_rows(grouping, scope_filtered)
         for binding, selector in members:
             assert selector.row_field is not None  # guarded by validator
-            for row_index, row in enumerate(rows):
+            for row_index, row in enumerate(rows, start=1):
                 value = row.get(selector.row_field)
                 if value is None:
                     raise RegistryValidationError(
