@@ -814,10 +814,11 @@ class ClaveMovilAuthProvider:
     async def _drive_non_qr_fallback(self, page: BrowserPageLike, dni_nie: str) -> None:
         click = getattr(page, "click", None)
         fill = getattr(page, "fill", None)
+        type_text = getattr(page, "type", None)
         wait_for = getattr(page, "wait_for_selector", None)
-        if click is None or fill is None or wait_for is None:
+        if click is None or fill is None or type_text is None or wait_for is None:
             raise AeatLoginAssertionError(
-                "Playwright page missing click/fill/wait_for_selector; cannot drive the Cl@ve Móvil non-QR fallback"
+                "Playwright page missing click/fill/type/wait_for_selector; cannot drive the Cl@ve Móvil non-QR fallback"
             )
         await click('button[name="autoriza-P"]')
         await wait_for(
@@ -826,22 +827,26 @@ class ClaveMovilAuthProvider:
         )
         await click('a[href*="ObtenerClaveMovil?qAA=2"]')
         await wait_for("#NIF", timeout=self._navigation_timeout_ms)
-        await fill("#NIF", dni_nie)
+        await fill("#NIF", "")
+        await type_text("#NIF", dni_nie)
         kind = _classify_identity(dni_nie)
         if kind == "DNI":
+            await wait_for("#FECHA:visible", timeout=self._navigation_timeout_ms)
             fecha = (self._settings.aeat_clave_movil_dni_fecha or "").strip()
             if not fecha:
                 raise ClaveMovilConfigurationError(
                     "AEAT_CLAVE_MOVIL_DNI_FECHA is required for the non-QR DNI fallback (format YYYY-MM-DD)."
                 )
-            await fill("#FECHA", fecha)
+            await type_text("#FECHA", fecha)
         else:
+            await wait_for("#SOPORTE:visible", timeout=self._navigation_timeout_ms)
             soporte = (self._settings.aeat_clave_movil_nie_soporte or "").strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
                     "AEAT_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback."
                 )
-            await fill("#SOPORTE", soporte)
+            await type_text("#SOPORTE", soporte)
+        await wait_for("#botonContinuar:visible", timeout=self._navigation_timeout_ms)
         await click("#botonContinuar")
         await self._raise_if_pending_request_error(page)
 
@@ -946,9 +951,10 @@ class ClaveMovilAuthProvider:
 
         After push approval AEAT may interpose
         ``/wlpl/OVCT-CXEW/DialogoRepresentacion`` — the representation
-        dispatcher. That page requires a remote form submission to choose
-        an acting capacity, so the provider refuses it instead of
-        auto-submitting on the operator's behalf.
+        dispatcher. When AEAT has already selected "own name", the
+        provider confirms that read-only acting scope and continues. It
+        must never select "representative" or enter represented-party
+        data.
         """
         from urllib.parse import urlsplit
 
@@ -965,10 +971,7 @@ class ClaveMovilAuthProvider:
             except ValueError:
                 current_path = ""
             if "DialogoRepresentacion" in current_path and "SelectorAccesos" not in current:
-                raise AeatLoginAssertionError(
-                    "AEAT requested representation selection after Cl@ve approval. "
-                    "The provider will not submit representation forms automatically."
-                )
+                await self._continue_own_name_representation(page)
             await asyncio.sleep(0.5)
         log.warning(
             "ClaveMovilAuthProvider: post-auth landing timeout target_path=%r timeout_ms=%d",
@@ -976,6 +979,63 @@ class ClaveMovilAuthProvider:
             timeout_ms,
         )
         raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
+
+    async def _continue_own_name_representation(self, page: BrowserPageLike) -> None:
+        """Continue AEAT's own-name representation gate after login.
+
+        The page is an authenticated routing gate. The provider only
+        accepts the server-rendered own-name state; it refuses to choose
+        a representative identity or enter represented-party data.
+        """
+        evaluate = getattr(page, "evaluate", None)
+        if evaluate is None:
+            raise AeatLoginAssertionError(
+                "Playwright page does not expose evaluate(); cannot continue AEAT representation gate"
+            )
+        result = await evaluate(
+            """
+            () => {
+              const visible = (el) => {
+                if (!el) return false;
+                const style = window.getComputedStyle(el);
+                return style.display !== "none" && style.visibility !== "hidden";
+              };
+
+              const alertModal = document.querySelector("#alertsModal");
+              if (visible(alertModal)) {
+                const buttons = [...alertModal.querySelectorAll("button")];
+                const continueButton = buttons.find((button) =>
+                  (button.textContent || "").trim().toLowerCase() === "continuar"
+                );
+                if (!continueButton) {
+                  throw new Error("AEAT alert modal has no Continuar button");
+                }
+                continueButton.click();
+                return "alert-continued";
+              }
+
+              const ownName = document.querySelector('input[name="representacion"][id="propio"]');
+              const representative = document.querySelector(
+                'input[name="representacion"][id="representante"]'
+              );
+              if (!ownName || !representative) {
+                return "not-ready";
+              }
+              if (representative.checked || !ownName.checked) {
+                throw new Error("AEAT representation gate is not in own-name state");
+              }
+              const form = ownName.closest("form");
+              const submit = form ? form.querySelector('button[type="submit"]') : null;
+              if (!submit) {
+                throw new Error("AEAT representation gate has no submit button");
+              }
+              submit.click();
+              return "own-name-confirmed";
+            }
+            """
+        )
+        if result in {"alert-continued", "own-name-confirmed"}:
+            log.info("ClaveMovilAuthProvider: representation gate action=%s", result)
 
 
 __all__ = [

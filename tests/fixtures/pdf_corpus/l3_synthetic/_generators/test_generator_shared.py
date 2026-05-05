@@ -35,8 +35,6 @@ def test_format_amount_quantises_to_two_decimals() -> None:
 @pytest.mark.parametrize(
     ("value", "sep", "expected"),
     [
-        # Wave 56 H1: opt-in thousands-sep renders the wave-51 NBSP fix
-        # through the full synthetic-PDF pipeline.
         (Decimal("1234.56"), "\xa0", "1\xa0234,56"),  # U+00A0 NBSP
         (Decimal("1234.56"), " ", "1 234,56"),  # U+202F narrow NBSP
         (Decimal("1000000"), "\xa0", "1\xa0000\xa0000,00"),  # multi-group NBSP

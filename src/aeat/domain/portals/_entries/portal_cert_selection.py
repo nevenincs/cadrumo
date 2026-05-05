@@ -21,7 +21,7 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.VOLATILE_APP_PATH,
     label="entries.portal_cert_selection.label_714926",
-    purpose_es="Punto de selección de certificado digital en la pasarela autenticada de la AEAT.",
-    notes_es=("Ruta volátil: puede rotar entre campañas sin aviso previo.",),
+    purpose="entries.portal_cert_selection.purpose",
+    notes=("entries.portal_cert_selection.notes.0",),
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the certificate-selection gateway."""

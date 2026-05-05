@@ -33,7 +33,7 @@ def _citation() -> CategoryCitation:
         reference="Ley 35/2006",
         locator="art. 30",
         url=parse_http_url("https://example.com/ley"),
-        quote_es="Texto de prueba.",
+        quote="Texto de prueba.",
     )
 
 
@@ -44,7 +44,7 @@ def test_fixed_percentage_requires_percentage() -> None:
         ProportionalityRule(
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=(_citation(),),
-            notes_es="Falta el porcentaje.",
+            notes="Falta el porcentaje.",
         )
 
 
@@ -55,7 +55,7 @@ def test_statutory_cap_requires_cap() -> None:
         ProportionalityRule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=(_citation(),),
-            notes_es="Falta el tope.",
+            notes="Falta el tope.",
         )
 
 
@@ -67,7 +67,7 @@ def test_full_deductible_rejects_default_ratio() -> None:
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             default_ratio=Decimal("0.30"),
             citations=(_citation(),),
-            notes_es="Valor incompatible.",
+            notes="Valor incompatible.",
         )
 
 
@@ -80,7 +80,7 @@ def test_usage_ratio_rejects_statutory_cap_fields() -> None:
             default_ratio=Decimal("0.30"),
             statutory_cap_eur_per_day=Decimal("50"),
             citations=(_citation(),),
-            notes_es="Forma incompatible.",
+            notes="Forma incompatible.",
         )
 
 
@@ -92,7 +92,7 @@ def test_statutory_cap_accepts_generic_annual_caps() -> None:
         statutory_cap_eur=Decimal("500"),
         statutory_cap_period=StatutoryCapPeriod.YEAR_PER_PERSON,
         citations=(_citation(),),
-        notes_es="Tope anual.",
+        notes="Tope anual.",
     )
 
     assert rule.statutory_cap_eur == Decimal("500")
@@ -107,17 +107,17 @@ def test_statutory_cap_accepts_daily_cap_variants() -> None:
         statutory_cap_variants=(
             StatutoryCapVariant(
                 id="sin-pernocta",
-                label_es="Sin pernocta",
+                label="Sin pernocta",
                 statutory_cap_eur_per_day=Decimal("26.67"),
             ),
             StatutoryCapVariant(
                 id="con-pernocta",
-                label_es="Con pernocta",
+                label="Con pernocta",
                 statutory_cap_eur_per_day=Decimal("53.34"),
             ),
         ),
         citations=(_citation(),),
-        notes_es="Límites diarios por condición.",
+        notes="Límites diarios por condición.",
     )
 
     assert {variant.id for variant in rule.statutory_cap_variants} == {"sin-pernocta", "con-pernocta"}
@@ -134,10 +134,10 @@ def test_statutory_cap_rejects_mixed_cap_modes() -> None:
             statutory_cap_variants=(
                 StatutoryCapVariant(
                     id="sin-pernocta",
-                    label_es="Sin pernocta",
+                    label="Sin pernocta",
                     statutory_cap_eur_per_day=Decimal("26.67"),
                 ),
             ),
             citations=(_citation(),),
-            notes_es="Modos incompatibles.",
+            notes="Modos incompatibles.",
         )

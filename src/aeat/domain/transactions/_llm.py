@@ -217,7 +217,7 @@ def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
     Pulls the Spanish display label plus the proportionality kind and
-    (first 80 chars of) ``notes_es`` from
+    (first 80 chars of) ``notes`` from
     :data:`aeat.domain.categories.CATEGORY_PROFILES_2025` -- gives the
     LLM the authoritative AEAT terminology AND the deductibility
     context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
@@ -230,7 +230,7 @@ def _category_hint(value: SpendingCategory) -> str:
         return value.value.replace("_", " ")
     spanish_label = profile.display_label or value.value.replace("_", " ")
     rule = profile.proportionality
-    notes_preview = rule.notes_es.strip().splitlines()[0][:120] if rule.notes_es else ""
+    notes_preview = rule.notes.strip().splitlines()[0][:120] if rule.notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
         segments.append(tr(notes_preview))

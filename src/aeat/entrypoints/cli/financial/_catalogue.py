@@ -85,7 +85,7 @@ def load_catalogue_required() -> TransactionCatalogue:
         raise typer.Exit(code=2) from exc
     if len(catalogue) == 0 and not repo.envelope_path.exists():
         typer.echo(
-            tr("financial.catalogue.t_854600"),
+            tr("cli.financial.catalogue.errors.not_found"),
             err=True,
         )
         raise typer.Exit(code=2)

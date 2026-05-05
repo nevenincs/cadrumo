@@ -24,6 +24,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m200_sociedades_anual.label_979781",
-    purpose_es="Autoliquidación anual del Impuesto sobre Sociedades.",
+    purpose="entries.portal_m200_sociedades_anual.purpose",
 )
 """Portal entry for Modelo 200 (annual corporate-income-tax self-assessment)."""

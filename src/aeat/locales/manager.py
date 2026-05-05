@@ -1,4 +1,3 @@
-import ast
 import re
 from pathlib import Path
 from typing import Any
@@ -8,6 +7,7 @@ import yaml
 
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
+
     def construct_mapping(self, node, deep=False):
         mapping = {}
         for key_node, value_node in node.value:
@@ -38,7 +38,7 @@ class LocaleManager:
                 for match in self.pattern.finditer(content):
                     keys.add(match.group(1))
             except Exception:
-                pass
+                continue
         return keys
 
     def get_yaml_keys(self, d: dict[str, Any], current_path: str = "") -> set[str]:
@@ -55,8 +55,8 @@ class LocaleManager:
 
     def load_locale(self, path: Path) -> dict[str, Any]:
         """Load a locale YAML file strictly, failing on duplicates."""
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.load(f, Loader=StrictUniqueKeyLoader)
+        with open(path, encoding="utf-8") as f:
+            data = yaml.load(f, Loader=StrictUniqueKeyLoader)  # noqa: S506
             return data if data is not None else {}
 
     def _build_nested_dict(self, keys: set[str], existing_data: dict[str, Any]) -> dict[str, Any]:
@@ -72,7 +72,7 @@ class LocaleManager:
                     missing = True
                     break
                 curr = curr[p]
-            
+
             if not missing and not isinstance(curr, dict):
                 existing_flat[key] = curr
             else:
@@ -88,20 +88,20 @@ class LocaleManager:
                     curr[part] = {}
                 curr = curr[part]
             curr[parts[-1]] = existing_flat[key]
-            
+
         return new_data
 
     def scaffold(self) -> None:
         """Parse codebase, generate locale files, auto-sort, and prune extra keys."""
         codebase_keys = self.get_codebase_keys()
-        
+
         for f in self.locales_dir.glob("*.yml"):
             try:
                 data = self.load_locale(f)
             except Exception:
                 data = {}
-            
+
             new_data = self._build_nested_dict(codebase_keys, data)
-            
+
             with open(f, "w", encoding="utf-8") as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)

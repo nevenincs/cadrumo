@@ -7,10 +7,9 @@ already performs:
 * Every regulation must carry at least one
   :class:`aeat.domain.vat.VatCitation`.
 * Every citation must have non-empty
-  :attr:`aeat.domain.vat.VatCitation.quoted_text_es`.
+  :attr:`aeat.domain.vat.VatCitation.quoted_text`.
 * Every ``boe_references`` id must match the kebab-case shape used by
   :mod:`aeat.domain.normatives`.
-* Every ``declares_in_modelos`` entry must be three ASCII digits.
 """
 
 from __future__ import annotations
@@ -28,7 +27,6 @@ from ._schema import (
 _logger = get_logger(__name__)
 
 _NORMATIVE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-_MODELO_PATTERN = re.compile(r"^[0-9]{3}$")
 
 
 def verify_catalogue(catalogue: VATCatalogue) -> VatVerificationReport:
@@ -66,12 +64,12 @@ def verify_catalogue(catalogue: VATCatalogue) -> VatVerificationReport:
                 )
             )
         for citation in regulation.citations:
-            if not citation.quoted_text_es.strip():
+            if not citation.quoted_text.strip():
                 issues.append(
                     VatVerificationIssue(
                         level="error",
                         code="empty_quoted_text",
-                        message=f"citation {citation.article!r} has empty quoted_text_es",
+                        message=f"citation {citation.article!r} has empty quoted_text",
                         category_id=regulation.category.value,
                     )
                 )
@@ -85,17 +83,6 @@ def verify_catalogue(catalogue: VATCatalogue) -> VatVerificationReport:
                         category_id=regulation.category.value,
                     )
                 )
-        for modelo in regulation.declares_in_modelos:
-            if not _MODELO_PATTERN.fullmatch(modelo):
-                issues.append(
-                    VatVerificationIssue(
-                        level="error",
-                        code="invalid_modelo",
-                        message=f"declares_in_modelos {modelo!r} is not a 3-digit modelo number",
-                        category_id=regulation.category.value,
-                    )
-                )
-
     _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return VatVerificationReport(issues=tuple(issues))
 

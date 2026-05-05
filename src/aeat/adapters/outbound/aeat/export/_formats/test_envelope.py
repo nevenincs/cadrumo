@@ -1,11 +1,8 @@
 """Tests for multi-segment envelope serialise / deserialise.
 
-The envelope pattern is required for Modelo 303 (and later IVA
-modelos) which use XML-tagged pages rather than a single flat record.
-These tests exercise synthetic segment specs modelled on the Modelo
-303 envelope shape (DP30300 header + DP30301 page 1) but with
-drastically reduced field counts so the architecture is validated
-without coupling the tests to Modelo 303's BOE offsets.
+These tests exercise a reduced two-segment record layout so the generic
+envelope serialiser and deserialiser are validated without coupling the
+tests to any real registry offsets.
 """
 
 from __future__ import annotations
@@ -27,27 +24,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 
 def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
-    """Build a two-segment envelope mimicking the Modelo 303 DP30300 + DP30301 shape.
-
-    Segment 1 (``DP30300_MINI``, 17 bytes): envelope opener
-    ``"<T30300>"`` + 4-byte ejercicio + 5-byte close tag. Segment 2
-    (``DP30301_MINI``, 43 bytes): page opener ``"<T30301000>"`` +
-    9-byte NIF + 17-byte casilla 01 + page closer ``"</T30301000>"``.
-    """
+    """Build a two-segment envelope with neutral literals."""
     seg_header = SegmentSpec(
-        segment_id="DP30300_MINI",
+        segment_id="SEG0_MINI",
         specs=(
             record_field(
                 offset=1,
                 length=8,
                 field_id="OPEN_ENV",
                 kind=FieldKind.RESERVED,
-                literal_value="<T30300>",
+                literal_value="<ENV000>",
             ),
             record_field(
                 offset=9,
                 length=4,
-                field_id="EJERCICIO",
+                field_id="FIELD_YEAR",
                 kind=FieldKind.NUMERIC,
             ),
             record_field(
@@ -55,32 +46,32 @@ def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
                 length=5,
                 field_id="CLOSE_ENV",
                 kind=FieldKind.RESERVED,
-                literal_value="</T3>",
+                literal_value="</E0>",
             ),
         ),
         total_length=17,
     )
 
     seg_page = SegmentSpec(
-        segment_id="DP30301_MINI",
+        segment_id="SEG1_MINI",
         specs=(
             record_field(
                 offset=1,
                 length=11,
                 field_id="OPEN_PAGE",
                 kind=FieldKind.RESERVED,
-                literal_value="<T30301000>",
+                literal_value="<PAGE00001>",
             ),
             record_field(
                 offset=12,
                 length=9,
-                field_id="NIF_DECLARANTE",
+                field_id="FIELD_IDENTITY",
                 kind=FieldKind.ALPHANUMERIC,
             ),
             record_field(
                 offset=21,
                 length=11,
-                field_id="CASILLA_01_BASE",
+                field_id="FIELD_AMOUNT",
                 casilla_id="01",
                 kind=FieldKind.CURRENCY,
             ),
@@ -89,7 +80,7 @@ def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
                 length=12,
                 field_id="CLOSE_PAGE",
                 kind=FieldKind.RESERVED,
-                literal_value="</T30301000>",
+                literal_value="</PAGE00001>",
             ),
         ),
         total_length=43,
@@ -153,8 +144,8 @@ class TestEnvelopeSerialise:
         payload = serialise_envelope(
             casilla_values={"01": Decimal("12345.67")},
             headers={
-                "EJERCICIO": "2024",
-                "NIF_DECLARANTE": "X1234567L",
+                "FIELD_YEAR": "2024",
+                "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
             encoding="iso-8859-1",
@@ -165,25 +156,25 @@ class TestEnvelopeSerialise:
         assert payload.endswith(b"\r\n")
 
         # Envelope opener at positions 1-8.
-        assert payload[0:8] == b"<T30300>"
-        # EJERCICIO at 9-12.
+        assert payload[0:8] == b"<ENV000>"
+        # Year field at 9-12.
         assert payload[8:12] == b"2024"
-        # Page 2 opener right after envelope close tag "</T3E>".
-        assert payload[17:28] == b"<T30301000>"
-        # NIF in page 2.
+        # Page opener right after the first segment.
+        assert payload[17:28] == b"<PAGE00001>"
+        # Identity field in page 2.
         assert payload[28:37] == b"X1234567L"
         # Casilla 01 = 12345.67 → 1234567 cents zero-padded to 11 digits.
         assert payload[37:48] == b"00001234567"
         # Page closer.
-        assert payload[48:60] == b"</T30301000>"
+        assert payload[48:60] == b"</PAGE00001>"
 
     def test_round_trip_preserves_casilla_via_deserialise(self) -> None:
         segments = _build_envelope_mini()
         payload = serialise_envelope(
             casilla_values={"01": Decimal("500.00")},
             headers={
-                "EJERCICIO": "2024",
-                "NIF_DECLARANTE": "X1234567L",
+                "FIELD_YEAR": "2024",
+                "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
             encoding="iso-8859-1",
@@ -193,21 +184,21 @@ class TestEnvelopeSerialise:
             segments=segments,
             encoding="iso-8859-1",
         )
-        assert "DP30300_MINI" in parsed.segments
-        assert "DP30301_MINI" in parsed.segments
+        assert "SEG0_MINI" in parsed.segments
+        assert "SEG1_MINI" in parsed.segments
         assert parsed.merged_casilla_values["01"] == Decimal("500.00")
-        assert parsed.segments["DP30301_MINI"].field_values["NIF_DECLARANTE"] == "X1234567L"
-        assert parsed.segments["DP30300_MINI"].field_values["EJERCICIO"] == "2024"
+        assert parsed.segments["SEG1_MINI"].field_values["FIELD_IDENTITY"] == "X1234567L"
+        assert parsed.segments["SEG0_MINI"].field_values["FIELD_YEAR"] == "2024"
 
     def test_missing_required_header_raises(self) -> None:
         segments = _build_envelope_mini()
-        with pytest.raises(ValueError, match="NIF_DECLARANTE"):
+        with pytest.raises(ValueError, match="FIELD_IDENTITY"):
             serialise_envelope(
                 casilla_values={"01": Decimal("0.00")},
-                headers={"EJERCICIO": "2024"},  # NIF missing
+                headers={"FIELD_YEAR": "2024"},
                 segments=segments,
                 encoding="iso-8859-1",
-                required_field_ids=frozenset({"NIF_DECLARANTE"}),
+                required_field_ids=frozenset({"FIELD_IDENTITY"}),
             )
 
     def test_envelope_length_mismatch_raises(self) -> None:

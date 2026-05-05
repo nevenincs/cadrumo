@@ -30,20 +30,21 @@ from ._common import (
     _label_for,
     _state,
 )
+from ._i18n import tr
 
 app = typer.Typer(
     name="setup",
-    help="Local prerequisites: profile, auth, readiness status.",
+    help=tr("cli.setup.app_help"),
     no_args_is_help=True,
 )
 auth_app = typer.Typer(
     name="auth",
-    help="AEAT auth provider configuration and login state.",
+    help=tr("cli.setup.auth.app_help"),
     no_args_is_help=True,
 )
 profile_app = typer.Typer(
     name="profile",
-    help="Schema-backed taxpayer-profile editor.",
+    help=tr("cli.setup.profile.app_help"),
     no_args_is_help=True,
 )
 
@@ -51,12 +52,12 @@ app.add_typer(auth_app, name="auth")
 app.add_typer(profile_app, name="profile")
 
 
-@app.command("init", help="Create or activate a setup profile and seed essentials.")
+@app.command("init", help=tr("cli.setup.init.help"))
 def setup_init(
     ctx: typer.Context,
-    name: str = typer.Option(..., "--name", help="Profile name."),
-    activity: str | None = typer.Option(None, "--activity", help="Business activity (free text)."),
-    tax_id: str | None = typer.Option(None, "--tax-id", help="NIF / NIE."),
+    name: str = typer.Option(..., "--name", help=tr("cli.setup.init.name_help")),
+    activity: str | None = typer.Option(None, "--activity", help=tr("cli.setup.init.activity_help")),
+    tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.setup.init.tax_id_help")),
 ) -> None:
     """Create or activate a setup profile."""
     seeded: dict[str, str] = {}
@@ -78,13 +79,13 @@ def setup_init(
         ctx,
         payload,
         [
-            "profile\t" + (updated.active_profile or ""),
-            "next\taeat setup auth configure --provider certificate --file PATH",
+            f"{tr('cli.setup.headers.profile')}\t" + (updated.active_profile or ""),
+            f"{tr('cli.setup.headers.next')}\taeat setup auth configure --provider certificate --file PATH",
         ],
     )
 
 
-@app.command("status", help="Show profile, auth, and validation readiness with the next action.")
+@app.command("status", help=tr("cli.setup.status.help"))
 def setup_status(ctx: typer.Context) -> None:
     """Show profile, auth, and validation readiness."""
     current = _state()
@@ -119,12 +120,12 @@ def setup_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         [
-            f"profile\t{current.active_profile or ''}",
-            f"profile_ready\t{'yes' if profile_ready else 'no'}",
-            f"missing\t{', '.join(missing_required) or '-'}",
-            f"auth_provider\t{auth_provider}",
-            f"login_ready\t{'yes' if login_ready else 'no'}",
-            f"next\t{next_action}",
+            f"{tr('cli.setup.headers.profile')}\t{current.active_profile or ''}",
+            f"{tr('cli.setup.headers.profile_ready')}\t{tr('cli.setup.labels.yes') if profile_ready else tr('cli.setup.labels.no')}",
+            f"{tr('cli.setup.headers.missing')}\t{', '.join(missing_required) or '-'}",
+            f"{tr('cli.setup.headers.auth_provider')}\t{auth_provider}",
+            f"{tr('cli.setup.headers.login_ready')}\t{tr('cli.setup.labels.yes') if login_ready else tr('cli.setup.labels.no')}",
+            f"{tr('cli.setup.headers.next')}\t{next_action}",
         ],
     )
 
@@ -134,7 +135,7 @@ def setup_status(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------
 
 
-@auth_app.command("providers", help="List AEAT auth providers available to this installation.")
+@auth_app.command("providers", help=tr("cli.setup.auth.providers.help"))
 def auth_providers(ctx: typer.Context) -> None:
     """Render the provider catalogue."""
     payload = {
@@ -148,24 +149,26 @@ def auth_providers(ctx: typer.Context) -> None:
             for entry in AUTH_PROVIDER_CATALOGUE
         ]
     }
-    lines: list[str] = ["id\tavailability\tdescription"]
+    lines: list[str] = [
+        f"{tr('cli.setup.headers.id')}\t{tr('cli.setup.headers.availability')}\t{tr('cli.setup.headers.description')}"
+    ]
     lines.extend(
         f"{entry.id}\t{entry.availability.value}\t{_description_for(entry)}" for entry in AUTH_PROVIDER_CATALOGUE
     )
     _emit(ctx, payload, lines)
 
 
-@auth_app.command("configure", help="Configure an AEAT auth provider.")
+@auth_app.command("configure", help=tr("cli.setup.auth.configure.help"))
 def auth_configure(
     ctx: typer.Context,
-    provider: str = typer.Option(..., "--provider", help="Provider id (certificate / clave-movil)."),
-    file: Path | None = typer.Option(None, "--file", help="Provider asset file (e.g. PKCS#12 certificate)."),
+    provider: str = typer.Option(..., "--provider", help=tr("cli.setup.auth.configure.provider_help")),
+    file: Path | None = typer.Option(None, "--file", help=tr("cli.setup.auth.configure.file_help")),
 ) -> None:
     """Configure an AEAT auth provider via the application catalogue."""
     try:
         listing = get_auth_provider(provider.strip().lower())
     except KeyError as exc:
-        raise _bad(f"unknown provider {provider!r}; run `aeat setup auth providers`") from exc
+        raise _bad(tr("cli.setup.errors.unknown_provider", provider=provider)) from exc
     if listing.availability is AuthProviderAvailability.UNAVAILABLE:
         _emit(
             ctx,
@@ -174,9 +177,9 @@ def auth_configure(
         )
         _exit(2)
     if listing.id == "certificate" and file is None:
-        raise _bad("certificate provider requires --file PATH")
+        raise _bad(tr("cli.setup.errors.certificate_file_required"))
     if listing.id == "certificate" and file is not None and not file.exists():
-        raise _bad(f"--file {file} does not exist")
+        raise _bad(tr("cli.setup.errors.file_not_found", file=file))
     updated = state_repository().update(
         lambda state: update_auth(
             state,
@@ -188,16 +191,19 @@ def auth_configure(
     _emit(
         ctx,
         payload,
-        [f"provider\t{updated.auth.provider}", "next\taeat setup auth login"],
+        [
+            f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider}",
+            f"{tr('cli.setup.headers.next')}\taeat setup auth login",
+        ],
     )
 
 
-@auth_app.command("login", help="Record an AEAT login attempt against the configured provider.")
+@auth_app.command("login", help=tr("cli.setup.auth.login.help"))
 def auth_login(ctx: typer.Context) -> None:
     """Mark the configured provider as logged-in (offline marker for now)."""
     current = _state()
     if current.auth.provider is None:
-        raise _bad("configure an auth provider first: aeat setup auth configure --provider …")
+        raise _bad(tr("cli.setup.errors.not_configured"))
     record = current.active_profile_record()
     subject = record.values.get("tax.id") if record is not None else None
     updated = state_repository().update(lambda state: update_auth(state, authenticated=True, subject=subject))
@@ -205,11 +211,14 @@ def auth_login(ctx: typer.Context) -> None:
     _emit(
         ctx,
         payload,
-        [f"provider\t{updated.auth.provider}", f"subject\t{updated.auth.subject or ''}"],
+        [
+            f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider}",
+            f"{tr('cli.setup.headers.subject')}\t{updated.auth.subject or ''}",
+        ],
     )
 
 
-@auth_app.command("status", help="Show configured provider and login readiness.")
+@auth_app.command("status", help=tr("cli.setup.auth.status.help"))
 def auth_status(ctx: typer.Context) -> None:
     current = _state()
     ready = current.auth.provider is not None and current.auth.authenticated_at is not None
@@ -218,14 +227,14 @@ def auth_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         [
-            f"provider\t{current.auth.provider or ''}",
-            f"ready\t{'yes' if ready else 'no'}",
-            f"authenticated_at\t{current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ''}",
+            f"{tr('cli.setup.headers.provider')}\t{current.auth.provider or ''}",
+            f"{tr('cli.setup.headers.ready')}\t{tr('cli.setup.labels.yes') if ready else tr('cli.setup.labels.no')}",
+            f"{tr('cli.setup.headers.authenticated_at')}\t{current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ''}",
         ],
     )
 
 
-@auth_app.command("whoami", help="Show the locally recorded AEAT identity.")
+@auth_app.command("whoami", help=tr("cli.setup.auth.whoami.help"))
 def auth_whoami(ctx: typer.Context) -> None:
     current = _state()
     payload = {"provider": current.auth.provider, "subject": current.auth.subject}
@@ -233,17 +242,21 @@ def auth_whoami(ctx: typer.Context) -> None:
         ctx,
         payload,
         [
-            f"provider\t{current.auth.provider or ''}",
-            f"subject\t{current.auth.subject or ''}",
+            f"{tr('cli.setup.headers.provider')}\t{current.auth.provider or ''}",
+            f"{tr('cli.setup.headers.subject')}\t{current.auth.subject or ''}",
         ],
     )
 
 
-@auth_app.command("logout", help="Clear the local authentication marker.")
+@auth_app.command("logout", help=tr("cli.setup.auth.logout.help"))
 def auth_logout(ctx: typer.Context) -> None:
     updated = state_repository().update(lambda state: update_auth(state, authenticated=False))
     payload = {"auth": updated.auth}
-    _emit(ctx, payload, [f"provider\t{updated.auth.provider or ''}", "logout\tok"])
+    _emit(
+        ctx,
+        payload,
+        [f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider or ''}", f"{tr('cli.setup.headers.logout')}\tok"],
+    )
 
 
 # ---------------------------------------------------------------------
@@ -251,25 +264,27 @@ def auth_logout(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------
 
 
-@profile_app.command("use", help="Activate a setup profile by name.")
-def profile_use(ctx: typer.Context, name: str = typer.Argument(..., help="Profile name.")) -> None:
+@profile_app.command("use", help=tr("cli.setup.profile.use_help"))
+def profile_use(
+    ctx: typer.Context, name: str = typer.Argument(..., help=tr("cli.setup.profile.use_name_help"))
+) -> None:
     updated = state_repository().update(lambda state: set_active_profile(state, name))
     payload = {"active_profile": updated.active_profile}
-    _emit(ctx, payload, [f"profile\t{updated.active_profile or ''}"])
+    _emit(ctx, payload, [f"{tr('cli.setup.headers.profile')}\t{updated.active_profile or ''}"])
 
 
-@profile_app.command("show", help="Show the active profile values.")
+@profile_app.command("show", help=tr("cli.setup.profile.show_help"))
 def profile_show(ctx: typer.Context) -> None:
     state, name = _active_profile_or_exit(ctx)
     record = state.active_profile_record()
     assert record is not None
     payload = {"active_profile": name, "values": record.values}
-    lines: list[str] = [f"profile\t{name}"]
+    lines: list[str] = [f"{tr('cli.setup.headers.profile')}\t{name}"]
     lines.extend(f"{key}\t{value}" for key, value in sorted(record.values.items()))
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("list-keys", help="List every editable profile key with its requirement.")
+@profile_app.command("list-keys", help=tr("cli.setup.profile.list_keys_help"))
 def profile_list_keys(ctx: typer.Context) -> None:
     payload = {
         "keys": [
@@ -281,34 +296,36 @@ def profile_list_keys(ctx: typer.Context) -> None:
             for entry in PROFILE_KEYS
         ]
     }
-    lines: list[str] = ["key\trequirement\tdescription"]
+    lines: list[str] = [
+        f"{tr('cli.setup.headers.key')}\t{tr('cli.setup.headers.requirement')}\t{tr('cli.setup.headers.description')}"
+    ]
     lines.extend(f"{entry.key}\t{entry.requirement.value}\t{_description_for(entry)}" for entry in PROFILE_KEYS)
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("get", help="Read one profile value.")
-def profile_get(ctx: typer.Context, key: str = typer.Argument(..., help="Profile key.")) -> None:
+@profile_app.command("get", help=tr("cli.setup.profile.get_help"))
+def profile_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.setup.profile.get_key_help"))) -> None:
     state, _name = _active_profile_or_exit(ctx)
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
     record = state.active_profile_record()
     assert record is not None
     value = record.values.get(key, "")
     _emit(ctx, {"key": key, "value": value}, [f"{key}\t{value}"])
 
 
-@profile_app.command("set", help="Set one profile value.")
+@profile_app.command("set", help=tr("cli.setup.profile.set_help"))
 def profile_set(
     ctx: typer.Context,
-    key: str = typer.Argument(..., help="Profile key."),
-    value: str = typer.Argument(..., help="Profile value."),
+    key: str = typer.Argument(..., help=tr("cli.setup.profile.set_key_help")),
+    value: str = typer.Argument(..., help=tr("cli.setup.profile.set_value_help")),
 ) -> None:
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
     updated = state_repository().update(lambda current: set_profile_values(current, name, {key: value}))
     record = updated.active_profile_record()
@@ -316,18 +333,20 @@ def profile_set(
     _emit(ctx, {"key": key, "value": record.values.get(key, "")}, [f"{key}\t{record.values.get(key, '')}"])
 
 
-@profile_app.command("unset", help="Clear one profile value.")
-def profile_unset(ctx: typer.Context, key: str = typer.Argument(..., help="Profile key.")) -> None:
+@profile_app.command("unset", help=tr("cli.setup.profile.unset_help"))
+def profile_unset(
+    ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.setup.profile.unset_key_help"))
+) -> None:
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(f"unknown profile key {key!r}; run `aeat setup profile list-keys`") from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
     state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
-    _emit(ctx, {"key": key}, [f"{key}\t(unset)"])
+    _emit(ctx, {"key": key}, [f"{key}\t{tr('cli.setup.labels.unset')}"])
 
 
-@profile_app.command("validate", help="Validate that the active profile has the required keys.")
+@profile_app.command("validate", help=tr("cli.setup.profile.validate_help"))
 def profile_validate(ctx: typer.Context) -> None:
     current = _state()
     record = current.active_profile_record()
@@ -340,7 +359,14 @@ def profile_validate(ctx: typer.Context) -> None:
             "present_optional": [],
             "unknown_keys": [],
         }
-        _emit(ctx, payload, ["valid\tno", "missing\tprofile"])
+        _emit(
+            ctx,
+            payload,
+            [
+                f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.no')}",
+                f"{tr('cli.setup.headers.missing')}\tprofile",
+            ],
+        )
         _exit(2)
     assert record is not None
     result = validate_profile(record.values)
@@ -352,20 +378,22 @@ def profile_validate(ctx: typer.Context) -> None:
         "present_optional": list(result.present_optional),
         "unknown_keys": list(result.unknown_keys),
     }
-    lines: list[str] = [f"valid\t{'yes' if result.valid else 'no'}"]
+    lines: list[str] = [
+        f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.yes') if result.valid else tr('cli.setup.labels.no')}"
+    ]
     if result.missing_required:
-        lines.append(f"missing\t{', '.join(result.missing_required)}")
+        lines.append(f"{tr('cli.setup.headers.missing')}\t{', '.join(result.missing_required)}")
     if result.unknown_keys:
-        lines.append(f"unknown\t{', '.join(result.unknown_keys)}")
+        lines.append(f"{tr('cli.setup.headers.unknown')}\t{', '.join(result.unknown_keys)}")
     _emit(ctx, payload, lines)
     if not result.valid:
         _exit(2)
 
 
-@profile_app.command("list", help="List configured setup profiles.")
+@profile_app.command("list", help=tr("cli.setup.profile.list_help"))
 def profile_list(ctx: typer.Context) -> None:
     current = _state()
     payload = {"profiles": sorted(current.profiles.keys()), "active": current.active_profile}
-    lines: list[str] = [f"active\t{current.active_profile or ''}"]
-    lines.extend(f"profile\t{name}" for name in sorted(current.profiles.keys()))
+    lines: list[str] = [f"{tr('cli.setup.headers.active')}\t{current.active_profile or ''}"]
+    lines.extend(f"{tr('cli.setup.headers.profile')}\t{name}" for name in sorted(current.profiles.keys()))
     _emit(ctx, payload, lines)

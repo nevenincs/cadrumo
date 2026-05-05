@@ -19,6 +19,6 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_calendario_contribuyente.label_808341",
-    purpose_es="Calendario oficial del contribuyente con los plazos de presentación por modelo.",
+    purpose="entries.portal_calendario_contribuyente.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the taxpayer calendar reference page."""

@@ -36,54 +36,56 @@ _DEFAULT_MIME_TYPE = "application/octet-stream"
 app = typer.Typer(
     name="attachments",
     no_args_is_help=True,
-    help="Content-addressed attachment service.",
+    help=tr("cli.attachments.app_help"),
 )
 
 
-@app.command(name="add", help="Ingest a file into the content-addressed attachment store.")
+@app.command(name="add", help=tr("cli.attachments.add_help"))
 def add_cmd(
-    path: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True, help="Path to the source file."),
+    path: Path = typer.Argument(
+        ..., exists=True, dir_okay=False, readable=True, help=tr("cli.attachments.add_path_help")
+    ),
     kind: AttachmentKind = typer.Option(
         AttachmentKind.OTHER,
         "--kind",
         case_sensitive=False,
-        help="Attachment kind enumeration label.",
+        help=tr("cli.attachments.add_kind_help"),
     ),
     source: AttachmentSource = typer.Option(
         AttachmentSource.LOCAL_FILE,
         "--source",
         case_sensitive=False,
-        help="Attachment source channel.",
+        help=tr("cli.attachments.add_source_help"),
     ),
     source_reference: str | None = typer.Option(
         None,
         "--source-reference",
-        help="Provenance pointer (defaults to the absolute source path).",
+        help=tr("cli.attachments.add_source_ref_help"),
     ),
     mime_type: str | None = typer.Option(
         None,
         "--mime-type",
-        help="MIME type override (defaults to a guess from the path extension).",
+        help=tr("cli.attachments.add_mime_type_help"),
     ),
     link_transaction_ids: list[str] | None = typer.Option(
         None,
         "--link-tx",
-        help="Transaction identifier to link (repeatable).",
+        help=tr("cli.attachments.add_link_tx_help"),
     ),
     link_invoice_ids: list[str] | None = typer.Option(
         None,
         "--link-invoice",
-        help="Invoice identifier to link (repeatable).",
+        help=tr("cli.attachments.add_link_invoice_help"),
     ),
     metadata_items: list[str] | None = typer.Option(
         None,
         "--metadata",
-        help="Free-form provider metadata as key=value (repeatable; string values only).",
+        help=tr("cli.attachments.add_metadata_help"),
     ),
     notes: str = typer.Option(
         "",
         "--notes",
-        help="Optional human-readable notes.",
+        help=tr("cli.attachments.add_notes_help"),
     ),
 ) -> None:
     """Ingest ``path`` and print the persisted attachment manifest as JSON.
@@ -114,14 +116,14 @@ def add_cmd(
     resolved_reference = (source_reference or str(resolved_path)).strip()
     if not resolved_reference:
         typer.echo(
-            tr("cli.attachments.t_847658"),
+            tr("cli.attachments.errors.empty_source_reference"),
             err=True,
         )
         raise typer.Exit(code=2)
     resolved_mime = (mime_type or _guess_mime_type(resolved_path)).strip()
     if not resolved_mime:
         typer.echo(
-            tr("cli.attachments.t_813758"),
+            tr("cli.attachments.errors.empty_mime_type"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -146,18 +148,18 @@ def add_cmd(
     typer.echo(attachment.model_dump_json(indent=2))
 
 
-@app.command(name="list", help="List stored attachments, optionally filtered by linkage or kind.")
+@app.command(name="list", help=tr("cli.attachments.list_help"))
 def list_cmd(
     linked_to: str | None = typer.Option(
         None,
         "--linked-to",
-        help="Only show attachments linked to this transaction or invoice identifier.",
+        help=tr("cli.attachments.list_linked_to_help"),
     ),
     kind: AttachmentKind | None = typer.Option(
         None,
         "--kind",
         case_sensitive=False,
-        help="Only show attachments matching this kind.",
+        help=tr("cli.attachments.list_kind_filter_help"),
     ),
 ) -> None:
     """List attachments from the configured store as a tab-separated table.
@@ -183,16 +185,16 @@ def list_cmd(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
     if not attachments:
-        typer.echo(tr("cli.attachments.t_397885"))
+        typer.echo(tr("cli.attachments.list.no_attachments"))
         return
-    typer.echo("attachment_id\tkind\tsource\tmime_type\tbytes_size\tcaptured_at\tlinked_tx\tlinked_invoices")
+    typer.echo(tr("cli.attachments.list_header"))
     for attachment in sorted(attachments, key=lambda item: (item.captured_at, item.attachment_id)):
         typer.echo(_format_attachment_row(attachment))
 
 
-@app.command(name="show", help="Show one stored attachment manifest as JSON.")
+@app.command(name="show", help=tr("cli.attachments.show_help"))
 def show_cmd(
-    attachment_id: str = typer.Argument(..., help="Stable attachment identifier (SHA-256 hex digest)."),
+    attachment_id: str = typer.Argument(..., help=tr("cli.attachments.show_id_help")),
 ) -> None:
     """Show one attachment manifest from the configured store as JSON.
 
@@ -254,7 +256,7 @@ def _parse_metadata(items: list[str]) -> dict[str, str]:
     for raw in items:
         if "=" not in raw:
             typer.echo(
-                tr("cli.attachments.t_693468"),
+                tr("cli.attachments.errors.invalid_metadata_format", raw=raw),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -262,19 +264,19 @@ def _parse_metadata(items: list[str]) -> dict[str, str]:
         key = key.strip()
         if not key:
             typer.echo(
-                tr("cli.attachments.t_146769"),
+                tr("cli.attachments.errors.empty_metadata_key", raw=raw),
                 err=True,
             )
             raise typer.Exit(code=2)
         if not value:
             typer.echo(
-                tr("cli.attachments.t_973889"),
+                tr("cli.attachments.errors.empty_metadata_value", raw=raw),
                 err=True,
             )
             raise typer.Exit(code=2)
         if key in parsed:
             typer.echo(
-                tr("cli.attachments.t_094739"),
+                tr("cli.attachments.errors.duplicate_metadata_key", key=key),
                 err=True,
             )
             raise typer.Exit(code=2)

@@ -90,7 +90,7 @@ This ADR proposes the following concrete architecture.
     fail closed before any AEAT POST, presentation, signing, server-side save,
     payment, direct debit, amendment, cancellation, or document submission can
     occur.
-14. Build XLS/XLSX parity infrastructure before model migration. The
+14. Build XLS/XLSX parity infrastructure before modelo rebuild work. The
     infrastructure must discover formula coverage in official AEAT workbooks,
     classify workbook suitability, and run identical synthetic inputs through
     both the registry engine and the official workbook/simulator parity surface.
@@ -99,6 +99,11 @@ This ADR proposes the following concrete architecture.
     workbook classification, synthetic input fixture loading, workbook runner
     integration, registry-vs-workbook comparison, remote-state guarding, and
     verification commands.
+16. Require every modelo revision to declare a workbook parity coverage decision
+    as part of registry validation. Formula-bearing workbooks require executable
+    parity outputs; static layouts, record designs, unsupported binary XLS files,
+    and unreadable artefacts are explicit source/legal evidence decisions and
+    cannot be treated as passed calculation parity.
 
 ## Proposed Base Schema
 
@@ -139,7 +144,7 @@ ModeloRevision
   export_layouts: dict[ExportLayoutId, ExportLayoutDefinition]
   relations: dict[RelationId, RelationDefinition]
   aeat_cross_reference: LiveCrossReferenceDecision
-  xls_parity_refs: list[WorkbookParityRefId]
+  workbook_parity_refs: list[WorkbookParityRefId]
 ```
 
 The child objects are:
@@ -550,9 +555,11 @@ submissions.
 `_workbook_parity.py` discovers and executes official AEAT workbook parity
 checks. It must inventory XLS/XLSX formula coverage, classify workbook kind,
 map synthetic input cells and output cells, run the registry engine and the
-workbook with identical inputs, and emit mismatch traces. Unsupported binary
-XLS files fail as explicit coverage gaps until a safe reader/conversion path is
-implemented.
+workbook with identical inputs, and emit mismatch traces. Workbook execution is
+platform-neutral by default through LibreOffice headless where available.
+Windows Excel COM may be an optional local runner, but it is never the required
+project path. Unsupported binary XLS files fail as explicit coverage gaps until
+a safe cross-platform reader or conversion path is implemented.
 
 The workbook/live parity backend is a prerequisite, not a model-wave task. It
 must exist, expose verification commands, and pass those commands before Modelo

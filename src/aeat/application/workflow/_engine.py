@@ -15,25 +15,23 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, date, datetime
-from typing import NoReturn, cast
+from typing import NoReturn
 
 from ...adapters.outbound.aeat import sede as _sede
 from ...adapters.outbound.aeat.auth import (
     AeatSession,
     CertificateHealthSeverity,
 )
-from ...adapters.outbound.aeat.export import (
-    DraftStatus,
-    FilingDraftLike,
-    FilingFindingSeverity,
-)
+from ...adapters.outbound.aeat.export import DraftStatus, FilingFindingSeverity
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, next_deadline
+from ...domain.filing import FilingBuilderError
 from ...domain.submission import SubmissionPreflightError
+from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignal, WorkflowComponentError
 from ._models import (
     SiteHealthAlert,
@@ -48,6 +46,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     FilingDraftBuilderProtocol,
     FilingInputsProviderProtocol,
+    RegistryFilingDraftProtocol,
     SubmissionEngineProtocol,
 )
 
@@ -84,6 +83,23 @@ def _period_to_year(period: str) -> int | None:
     if not head.isdigit():
         return None
     return int(head)
+
+
+def _registry_period_token(period: str) -> tuple[int, str]:
+    year = _period_to_year(period)
+    if year is None:
+        raise ValueError(f"cannot derive registry year from workflow period {period!r}")
+    if period == str(year) or period == f"{year}A":
+        return year, "0A"
+    if len(period) == 6 and period.startswith(f"{year}Q") and period[-1] in "1234":
+        return year, f"{period[-1]}T"
+    if period.startswith(f"{year}M") and period[5:].isdigit():
+        month = int(period[5:])
+        if 1 <= month <= 12:
+            return year, f"{month:02d}"
+    if len(period) == 7 and period.startswith(f"{year}-"):
+        return year, period[-2:]
+    raise ValueError(f"cannot map workflow period {period!r} to a registry period")
 
 
 _logger = get_logger(__name__)
@@ -132,7 +148,7 @@ def _classify_cert_expiry(
 
 def _t(en: str) -> str:
     """Build a :class:`str` carrying a single English message."""
-    return cast(str, {"en": en})
+    return en
 
 
 def _enum_value(value: object) -> str:
@@ -293,7 +309,7 @@ class WorkflowEngine:
 
         steps: list[WorkflowStep] = []
         obligation: FilingObligation | None = None
-        draft: FilingDraftLike | None = None
+        draft: RegistryFilingDraftProtocol | None = None
         final_stage: WorkflowStage = WorkflowStage.ABORTED
         aborted_reason: WorkflowAbortReason | None = None
         abort_summary: str | None = None
@@ -529,8 +545,7 @@ class WorkflowEngine:
         A row blocks submission when AEAT marks it as a formal
         ``Notificación`` (``tipo == "notificacion"``) AND the row has
         not been read (``leida`` is ``False`` or ``None``). The
-        ``concepto`` substitutes for the legacy ``RequerimientoLike.subject``
-        field — both carry the free-text subject line of the row.
+        ``concepto`` carries the free-text subject line of the row.
         """
         del profile  # session identity is implicit; tax_id no longer crosses the boundary.
         started = _utcnow()
@@ -600,7 +615,7 @@ class WorkflowEngine:
         obligation: FilingObligation,
         fail_on_warning: bool,
         steps: list[WorkflowStep],
-    ) -> FilingDraftLike:
+    ) -> RegistryFilingDraftProtocol:
         """Stage 5 — consult the status reader, load inputs, build the draft.
 
         Aborts with ``ALREADY_FILED`` if the (optional) status reader
@@ -703,6 +718,13 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
+        self._require_registry_draft_for_obligation(
+            draft=draft,
+            obligation=obligation,
+            profile=profile,
+            started=started,
+            steps=steps,
+        )
         ready_statuses = {
             DraftStatus.READY_TO_SUBMIT.value,
             DraftStatus.APPROVED.value,
@@ -737,10 +759,60 @@ class WorkflowEngine:
         )
         return draft
 
+    def _require_registry_draft_for_obligation(
+        self,
+        *,
+        draft: RegistryFilingDraftProtocol,
+        obligation: FilingObligation,
+        profile: AutonomoProfile,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> None:
+        mismatches: dict[str, str] = {}
+        if draft.modelo != obligation.modelo:
+            mismatches["modelo"] = f"{draft.modelo} != {obligation.modelo}"
+        if draft.period != obligation.period:
+            mismatches["period"] = f"{draft.period} != {obligation.period}"
+        if draft.profile_tax_id != profile.tax_id:
+            mismatches["profile_tax_id"] = f"{draft.profile_tax_id} != {profile.tax_id}"
+        try:
+            expected_schema_version = self._active_registry_schema_version(obligation)
+        except (FilingBuilderError, ValueError) as exc:
+            mismatches["schema_version"] = f"{draft.schema_version}; active registry schema unavailable: {exc}"
+        else:
+            if draft.schema_version != expected_schema_version:
+                mismatches["schema_version"] = f"{draft.schema_version} != {expected_schema_version}"
+        if not mismatches:
+            return
+
+        summary = _t(f"Draft {draft.draft_id} does not match registry-backed workflow obligation")
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary=summary,
+                details={"draft_id": draft.draft_id, **mismatches},
+            )
+        )
+        raise WorkflowAbortSignal(
+            reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
+            summary=summary,
+        )
+
+    def _active_registry_schema_version(self, obligation: FilingObligation) -> str:
+        filing_year, registry_period = _registry_period_token(obligation.period)
+        provider = build_runtime_schema_provider(
+            filing_year=filing_year,
+            period=registry_period,
+        )
+        return provider.get_subview(obligation.modelo).schema_version
+
     def _stage_validating_draft(
         self,
         *,
-        draft: FilingDraftLike,
+        draft: RegistryFilingDraftProtocol,
         steps: list[WorkflowStep],
     ) -> None:
         """Stage 6 — re-scan the built draft for ERROR-severity findings."""
@@ -777,7 +849,7 @@ class WorkflowEngine:
     def _stage_running_preflight(
         self,
         *,
-        draft: FilingDraftLike,
+        draft: RegistryFilingDraftProtocol,
         today: date,
         steps: list[WorkflowStep],
     ) -> None:

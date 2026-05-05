@@ -77,7 +77,7 @@ class TierResolution(BaseModel):
         reduccion_pct: Numeric reducción percentage as a Decimal in
             ``[0, 1]``. Multiplied by ``qualifying_share`` and the
             per-contract rendimiento neto positivo to compute the
-            casilla 0078 contribution.
+            rental reduction amount.
         qualifying_share: Fraction of rendimiento neto eligible for
             the tier reducción. Always ``1`` except for tier 70-b-1
             with mixed-qualification co-tenants.

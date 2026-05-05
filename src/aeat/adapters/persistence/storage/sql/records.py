@@ -49,7 +49,7 @@ class ModeloRecord(_StrictFrozen):
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        identifier: Stable natural key (e.g. ``MODELO_130``).
+        identifier: Stable natural key for the modelo record.
         name: Human-readable modelo name (translatable, see module note).
     """
 

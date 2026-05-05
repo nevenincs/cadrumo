@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_domiciliacion_bancaria.label_231897",
-    purpose_es="Alta, consulta y revocación de domiciliaciones bancarias de autoliquidaciones.",
+    purpose="entries.portal_domiciliacion_bancaria.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the bank direct-debit page."""

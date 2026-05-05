@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import typer
 
+from .._i18n import tr
 from .explain import explain_modelo
 from .list import list_schedule
 from .next import next_obligation
@@ -23,12 +24,12 @@ from .next import next_obligation
 app = typer.Typer(
     name="deadlines",
     no_args_is_help=True,
-    help="Filing-deadline computation engine.",
+    help=tr("cli.deadlines.app_help"),
 )
 
-app.command(name="list", help="List the full filing schedule for a year.")(list_schedule)
-app.command(name="next", help="Show the next non-overdue filing obligation.")(next_obligation)
-app.command(name="explain", help="Explain why a modelo applies to the profile.")(explain_modelo)
+app.command(name="list", help=tr("cli.deadlines.list_help"))(list_schedule)
+app.command(name="next", help=tr("cli.deadlines.next_help"))(next_obligation)
+app.command(name="explain", help=tr("cli.deadlines.explain_help"))(explain_modelo)
 
 
 __all__ = ["app"]

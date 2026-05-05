@@ -55,7 +55,6 @@ from ._repository import (
 )
 from ._schema import (
     APPROVAL_BASIS_VERSION,
-    SCHEMA_VERSION_DEFAULT,
     FilingApprovalBasis,
     FilingDraft,
     FilingDraftStatus,
@@ -74,7 +73,6 @@ from ._validator import (
 
 __all__ = [
     "APPROVAL_BASIS_VERSION",
-    "SCHEMA_VERSION_DEFAULT",
     "AmendmentKind",
     "CasillaChange",
     "CasillaCollection",

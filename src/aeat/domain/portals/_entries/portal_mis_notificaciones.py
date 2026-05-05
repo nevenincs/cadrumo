@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_mis_notificaciones.label_055002",
-    purpose_es="Buzón electrónico de notificaciones y comunicaciones recibidas de la AEAT.",
+    purpose="entries.portal_mis_notificaciones.purpose",
 )
 """Portal entry for the AEAT electronic notifications and communications mailbox."""

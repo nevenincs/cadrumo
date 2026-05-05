@@ -60,6 +60,8 @@ dependencies = [
   "pydantic-settings>=2.9.1",
   # Configuration
   "python-dotenv>=1.2.2",
+  # CLI localization backend.
+  "python-i18n>=0.3.9",
   "rich>=14.2.0",
   # Persistence
   "sqlalchemy>=2.0.36",
@@ -79,6 +81,11 @@ aeat = "aeat.entrypoints.cli:app"
 Homepage = "https://github.com/wgergely/aeat"
 Issues = "https://github.com/wgergely/aeat/issues"
 Repository = "https://github.com/wgergely/aeat"
+
+[project.optional-dependencies]
+workbook-windows = [
+  "pywin32>=311 ; sys_platform == 'win32'",
+]
 
 [build-system]
 requires = ["hatchling"]

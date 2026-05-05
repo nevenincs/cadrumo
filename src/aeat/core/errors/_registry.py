@@ -53,9 +53,7 @@ class ErrorCode(BaseModel):
 
     code: str
     category: ErrorCategory
-    default_message_es: str
-    default_message_en: str
-    default_message_hu: str
+    message_key: str
     default_suggestion: str | None
     retryable: bool
     runbook_id: str | None
@@ -156,8 +154,8 @@ def resolve_output_language() -> str:
         from ..config import load_settings
 
         value = load_settings().aeat_output_language
-        return str(value)
-    except (ValueError, OSError):
+        return str(value).lower().strip()
+    except (ValueError, OSError, AttributeError):
         return "es"
 
 
@@ -255,12 +253,12 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
         return translated_message
     if error.args and isinstance(error.args[0], str) and error.args[0]:
         return error.args[0]
-    language = resolve_output_language()
-    if language == "en":
-        return resolved_code.default_message_en
-    if language == "hu":
-        return resolved_code.default_message_hu
-    return resolved_code.default_message_es
+
+    # Use the i18n backend to resolve the key.
+    # To avoid circular imports, we resolve the language locally.
+    from ...entrypoints.cli._i18n import tr
+
+    return tr(resolved_code.message_key)
 
 
 def get_error_suggestion(error: BaseException, code: ErrorCode | None = None) -> str | None:

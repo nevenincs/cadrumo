@@ -18,10 +18,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.i18n import Translatable as tr  # noqa: N813
 from ..submission._protocols import FilingFindingSeverity
 
-# Default schema version stamped on a freshly built draft when a
-# caller provides an ad hoc collection without an explicit runtime
-# schema version.
-SCHEMA_VERSION_DEFAULT = "filing-schema-0.1.0"
 APPROVAL_BASIS_VERSION = "review-basis-v1"
 
 

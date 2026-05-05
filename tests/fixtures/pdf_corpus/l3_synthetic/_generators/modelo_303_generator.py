@@ -1,4 +1,4 @@
-"""Synthetic Modelo 303 declaración PDF generator (EPIC #305 cluster D phase 2).
+"""Synthetic Modelo 303 declaración PDF generator.
 
 Mirrors AEAT's Modelo 303 layout across three apartados + resultado:
 
@@ -30,7 +30,7 @@ from ._generator_shared import (
 
 # Modelo 303 has 33 casillas in the runtime schema; positions pack them
 # across two "pages" of the synthetic PDF in declaration order. We keep
-# them on page 1 for MVP — the extractor's ``_derive_status`` + line
+# them on page 1 because the extractor's ``_derive_status`` + line
 # regex don't depend on page layout, only on line text.
 _LABELS: Mapping[str, str] = {
     "01": "Base imponible tipo general",

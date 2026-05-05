@@ -19,7 +19,7 @@ related:
 # `calculation-truth-registry` `phase5` `step18`
 
 Replaced declaration verification's removed formula-source placeholder with
-registry snapshot execution and aligned CLI tests with the current hard-cut
+registry snapshot execution and aligned CLI tests with the current authority
 registry behavior.
 
 - Modified: `src/aeat/application/verification/_verify.py`

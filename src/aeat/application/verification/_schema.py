@@ -86,9 +86,10 @@ class VerificationVerdict(BaseModel):
     """Persisted calc-verification verdict for one imported filing.
 
     Attributes:
-        modelo: AEAT modelo identifier (e.g. ``"130"``).
+        modelo: AEAT modelo identifier.
         period: Period identifier (e.g. ``"2025Q1"``).
         registry_snapshot_id: Identifier of the registry snapshot used for the audit,
+        verification_expectation_ids: Registry expectation ids that governed the verdict.
         status: The :class:`VerificationStatus` summarising the verdict.
         discrepancies: Every :class:`ClassifiedDiscrepancy` produced by
             the engine audit.
@@ -103,6 +104,7 @@ class VerificationVerdict(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     period: str = Field(min_length=1, max_length=16)
     registry_snapshot_id: str
+    verification_expectation_ids: tuple[str, ...]
     status: VerificationStatus
     discrepancies: tuple[ClassifiedDiscrepancy, ...]
     coverage: float = Field(ge=0.0, le=1.0)

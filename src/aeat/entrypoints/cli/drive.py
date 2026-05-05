@@ -25,7 +25,7 @@ from ._drive_helpers import (
 )
 from ._i18n import tr
 
-app = typer.Typer(name="drive", no_args_is_help=True, help="Google Drive helpers.")
+app = typer.Typer(name="drive", no_args_is_help=True, help=tr("cli.drive.app_help"))
 
 
 def _drive() -> Any:
@@ -41,10 +41,10 @@ def _drive() -> Any:
     return build_drive_service(creds)
 
 
-@app.command(name="ls", help="List files inside an optional folder.")
+@app.command(name="ls", help=tr("cli.drive.ls_help"))
 def ls(
-    folder: str | None = typer.Option(None, "--folder", "-f", help="Drive folder ID to list inside."),
-    page_size: int = typer.Option(50, "--page-size", "-n", help="Maximum entries to fetch."),
+    folder: str | None = typer.Option(None, "--folder", "-f", help=tr("cli.drive.ls_folder_help")),
+    page_size: int = typer.Option(50, "--page-size", "-n", help=tr("cli.drive.ls_page_size_help")),
 ) -> None:
     """List Drive files (default scope: everything visible to the caller)."""
     service = _drive()
@@ -58,12 +58,12 @@ def ls(
         .execute()
     )
     files = response.get("files", [])
-    table = Table(title=f"drive ls (folder={folder or 'root visible'})", header_style="bold")
-    table.add_column("ID", style="cyan")
-    table.add_column("Name", style="white")
-    table.add_column("MIME", style="dim")
-    table.add_column("Size", style="white", justify="right")
-    table.add_column("Modified", style="dim")
+    table = Table(title=tr("cli.drive.ls_table_title", folder=folder or "root visible"), header_style="bold")
+    table.add_column(tr("cli.drive.table_id"), style="cyan")
+    table.add_column(tr("cli.drive.table_name"), style="white")
+    table.add_column(tr("cli.drive.table_mime"), style="dim")
+    table.add_column(tr("cli.drive.table_size"), style="white", justify="right")
+    table.add_column(tr("cli.drive.table_modified"), style="dim")
     for entry in files:
         table.add_row(
             str(entry.get("id", "")),
@@ -75,29 +75,29 @@ def ls(
     Console().print(table)
 
 
-@app.command(name="find", help="Run a raw Drive query string (Drive `q=` syntax).")
-def find(query: str = typer.Argument(..., help="Drive query string, e.g. \"name contains 'foo'\".")) -> None:
+@app.command(name="find", help=tr("cli.drive.find_help"))
+def find(query: str = typer.Argument(..., help=tr("cli.drive.find_query_help"))) -> None:
     """Pass a query through to ``files.list``."""
     service = _drive()
     response = service.files().list(q=query, fields="files(id, name, mimeType)", pageSize=100).execute()
     files = response.get("files", [])
-    table = Table(title=f"drive find: {query}", header_style="bold")
-    table.add_column("ID", style="cyan")
-    table.add_column("Name", style="white")
-    table.add_column("MIME", style="dim")
+    table = Table(title=tr("cli.drive.find_table_title", query=query), header_style="bold")
+    table.add_column(tr("cli.drive.table_id"), style="cyan")
+    table.add_column(tr("cli.drive.table_name"), style="white")
+    table.add_column(tr("cli.drive.table_mime"), style="dim")
     for entry in files:
         table.add_row(str(entry.get("id", "")), str(entry.get("name", "")), str(entry.get("mimeType", "")))
     Console().print(table)
 
 
-@app.command(name="cat", help="Download a Drive file to stdout (or export Workspace docs).")
+@app.command(name="cat", help=tr("cli.drive.cat_help"))
 def cat(
-    file_id: str = typer.Argument(..., help="Drive file ID."),
+    file_id: str = typer.Argument(..., help=tr("cli.drive.cat_file_id_help")),
     export_mime: str | None = typer.Option(
         None,
         "--export-mime",
         "-m",
-        help="Export MIME for Workspace files (e.g. text/plain, application/pdf).",
+        help=tr("cli.drive.cat_export_mime_help"),
     ),
 ) -> None:
     """Stream a Drive file to stdout, exporting Workspace docs if requested."""
@@ -118,23 +118,20 @@ def cat(
 
 @app.command(
     name="fetch",
-    help="Fetch a single Drive file by exact name and write it to a local path.",
+    help=tr("cli.drive.fetch_help"),
 )
 def fetch(
-    name: str = typer.Argument(..., help="Exact Drive file name to download."),
+    name: str = typer.Argument(..., help=tr("cli.drive.fetch_name_help")),
     out: Path = typer.Option(
         Path("credentials"),
         "--out",
         "-o",
-        help=(
-            "Output path. If a directory, the file is written as <out>/<name>; "
-            "if a file, the file is written there verbatim. Default: credentials/."
-        ),
+        help=tr("cli.drive.fetch_out_help"),
     ),
     overwrite: bool = typer.Option(
         False,
         "--overwrite",
-        help="Overwrite the output file if it already exists.",
+        help=tr("cli.drive.fetch_overwrite_help"),
     ),
 ) -> None:
     """Locate a single file by exact name and download it.
@@ -151,18 +148,17 @@ def fetch(
     response = service.files().list(q=build_name_query(name), fields="files(id, name, mimeType)", pageSize=10).execute()
     files = response.get("files", [])
     if not files:
-        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_054217"))
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.errors.not_found", name=name))
         raise typer.Exit(code=1)
     if len(files) > 1:
-        [f.get("id") for f in files]
-        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_189509"))
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.errors.multiple_matches", name=name))
         raise typer.Exit(code=1)
     file_entry = files[0]
     file_id = str(file_entry["id"])
 
     target = out / name if out.exists() and out.is_dir() else out
     if target.exists() and not overwrite:
-        console.print("[red]drive fetch:[/red] " + tr("cli.drive.t_821830"))
+        console.print("[red]drive fetch:[/red] " + tr("cli.drive.errors.already_exists", path=target))
         raise typer.Exit(code=1)
     target.parent.mkdir(parents=True, exist_ok=True)
 
@@ -173,23 +169,22 @@ def fetch(
     while not done:
         _status, done = downloader.next_chunk()
     target.write_bytes(buffer.getvalue())
-    len(buffer.getvalue())
-    console.print("[green]drive fetch:[/green] " + tr("cli.drive.t_226571"))
+    console.print("[green]drive fetch:[/green] " + tr("cli.drive.success.fetched", name=name, path=target))
 
 
-@app.command(name="put", help="Upload a local file to Drive.")
+@app.command(name="put", help=tr("cli.drive.put_help"))
 def put(
-    local: Path = typer.Argument(..., help="Path to the local file."),
-    folder: str | None = typer.Option(None, "--folder", "-f", help="Destination folder ID."),
-    name: str | None = typer.Option(None, "--name", "-n", help="Override the uploaded file name."),
-    mime: str | None = typer.Option(None, "--mime", "-m", help="MIME type override."),
+    local: Path = typer.Argument(..., help=tr("cli.drive.put_local_help")),
+    folder: str | None = typer.Option(None, "--folder", "-f", help=tr("cli.drive.put_folder_help")),
+    name: str | None = typer.Option(None, "--name", "-n", help=tr("cli.drive.put_name_help")),
+    mime: str | None = typer.Option(None, "--mime", "-m", help=tr("cli.drive.put_mime_help")),
 ) -> None:
     """Resumably upload a local file to Drive."""
     from googleapiclient.http import MediaFileUpload
 
     if not local.exists():
         typer.secho(
-            tr("cli.drive.t_351741"),
+            tr("cli.drive.errors.local_not_found", path=local),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -202,10 +197,10 @@ def put(
     typer.echo(f"{response.get('id', '')}\t{response.get('name', '')}")
 
 
-@app.command(name="mkdir", help="Create a Drive folder.")
+@app.command(name="mkdir", help=tr("cli.drive.mkdir_help"))
 def mkdir(
-    name: str = typer.Argument(..., help="New folder name."),
-    parent: str | None = typer.Option(None, "--parent", "-p", help="Parent folder ID."),
+    name: str = typer.Argument(..., help=tr("cli.drive.mkdir_name_help")),
+    parent: str | None = typer.Option(None, "--parent", "-p", help=tr("cli.drive.mkdir_parent_help")),
 ) -> None:
     """Create a Drive folder under an optional parent."""
     service = _drive()
@@ -219,23 +214,23 @@ def mkdir(
     typer.echo(f"{response.get('id', '')}\t{response.get('name', '')}")
 
 
-@app.command(name="rm", help="Trash a Drive file (or permanently delete with --permanent).")
+@app.command(name="rm", help=tr("cli.drive.rm_help"))
 def rm(
-    file_id: str = typer.Argument(..., help="Drive file ID."),
-    permanent: bool = typer.Option(False, "--permanent", "-P", help="Permanently delete instead of trashing."),
+    file_id: str = typer.Argument(..., help=tr("cli.drive.rm_file_id_help")),
+    permanent: bool = typer.Option(False, "--permanent", "-P", help=tr("cli.drive.rm_permanent_help")),
 ) -> None:
     """Move a Drive file to trash, or delete it permanently."""
     service = _drive()
     if permanent:
         service.files().delete(fileId=file_id).execute()
         typer.secho(
-            tr("cli.drive.t_090079"),
+            tr("cli.drive.success.deleted", id=file_id),
             fg=typer.colors.RED,
         )
     else:
         service.files().update(fileId=file_id, body={"trashed": True}).execute()
         typer.secho(
-            tr("cli.drive.t_737010"),
+            tr("cli.drive.success.trashed", id=file_id),
             fg=typer.colors.YELLOW,
         )
 

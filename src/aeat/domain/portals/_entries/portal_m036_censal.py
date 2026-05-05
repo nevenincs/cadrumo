@@ -27,6 +27,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m036_censal.label_771260",
-    purpose_es="Alta, modificación y baja en el censo de empresarios, profesionales y retenedores.",
+    purpose="entries.portal_m036_censal.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 census procedure page."""

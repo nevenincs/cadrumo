@@ -1,9 +1,8 @@
 """Unit tests for :mod:`aeat.application.filing._import`.
 
 Exercises :func:`aeat.application.filing.import_filing_from_justificante`
-end-to-end against the committed synthetic justificante fixture PDFs
-under ``tests/fixtures/justificantes/`` — no mocks, no patches, no
-fakes. Also covers the :func:`_normalise_period` canonicaliser.
+end-to-end against local justificante fixture PDFs under
+``tests/fixtures/justificantes/``.
 """
 
 from __future__ import annotations
@@ -18,7 +17,6 @@ from . import (
     FilingImportError,
     import_filing_from_justificante,
 )
-from ._import import _normalise_period
 from .runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -38,21 +36,12 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
 
 
 class TestImportFromJustificante:
-    """End-to-end reconstruction on the committed fixture corpus."""
+    """End-to-end reconstruction from local fixture PDFs."""
 
-    def test_modelo_130_imports_empty_registry_draft_and_submission(self, schema_provider) -> None:
+    def test_modelo_130_justificante_only_import_requires_binding_data(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
-
-        values = {value.casilla_id: value for value in result.draft.values}
-        assert result.draft.modelo == "130"
-        assert result.draft.period == "2026Q1"
-        assert result.submission.modelo == "130"
-        assert result.submission.period == "2026Q1"
-        assert len(result.draft.values) == 19
-        assert values["01"].value is None
-        assert values["19"].value == 0
-        assert result.warnings
+        with pytest.raises(FilingImportError, match="previous_year_economic_activity_net_income"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_modelo_303_requires_registry_snapshot(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_303_2026Q1.pdf"
@@ -64,6 +53,16 @@ class TestImportFromJustificante:
         with pytest.raises(FilingImportError, match="modelo '100'"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
+    def test_year_only_period_rejected_for_quarterly_registry_revision(
+        self,
+        tmp_path: Path,
+        schema_provider,
+    ) -> None:
+        pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
+
+        with pytest.raises(FilingImportError, match="period token '0A'"):
+            import_filing_from_justificante(pdf, schema_provider=schema_provider)
+
     def test_missing_pdf_raises_parse_error(
         self,
         tmp_path: Path,
@@ -73,46 +72,21 @@ class TestImportFromJustificante:
         with pytest.raises(JustificanteParseError, match="not found"):
             import_filing_from_justificante(missing, schema_provider=schema_provider)
 
-    def test_import_reports_empty_casilla_warning_projection(self, schema_provider) -> None:
-        pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
-        result = import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
-        assert result.warnings[0].startswith("Line-level casilla values")
+def _justificante_pdf_without_period(tmp_path: Path, *, modelo: str, ejercicio: str) -> Path:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
 
-
-class TestNormalisePeriod:
-    """Unit coverage for the period canonicaliser."""
-
-    @pytest.mark.parametrize(
-        ("modelo", "ejercicio", "raw", "expected"),
-        [
-            ("130", "2026", "1T", "2026Q1"),
-            ("130", "2026", "4T", "2026Q4"),
-            ("303", "2024", "1T", "2024Q1"),
-            ("303", "2024", "12", "2024-12"),
-            ("303", "2024", "01", "2024-01"),
-            ("100", "2025", "0A", "2025A"),
-            ("130", None, "2026Q1", "2026Q1"),
-            ("303", None, "2024-12", "2024-12"),
-        ],
-    )
-    def test_canonical_forms(
-        self,
-        modelo: str,
-        ejercicio: str | None,
-        raw: str,
-        expected: str,
-    ) -> None:
-        assert _normalise_period(modelo=modelo, ejercicio=ejercicio, raw_period=raw) == expected
-
-    def test_malformed_period_raises(self) -> None:
-        with pytest.raises(FilingImportError, match="cannot canonicalise"):
-            _normalise_period(modelo="130", ejercicio="2026", raw_period="XX")
-
-    def test_missing_ejercicio_raises(self) -> None:
-        with pytest.raises(FilingImportError, match="requires an ejercicio"):
-            _normalise_period(modelo="130", ejercicio=None, raw_period="1T")
-
-    def test_bad_ejercicio_raises(self) -> None:
-        with pytest.raises(FilingImportError, match="unexpected ejercicio"):
-            _normalise_period(modelo="130", ejercicio="26", raw_period="1T")
+    target = tmp_path / f"modelo_{modelo}_{ejercicio}_year_only.pdf"
+    c = canvas.Canvas(str(target), pagesize=A4)
+    c.drawString(100, 760, "AGENCIA TRIBUTARIA")
+    c.drawString(100, 735, f"Modelo: {modelo}")
+    c.drawString(100, 710, f"Ejercicio: {ejercicio}")
+    c.drawString(100, 685, "NIF: Y0000001S")
+    c.drawString(100, 660, f"Numero de justificante: {modelo}{ejercicio}ABCD1234")
+    c.drawString(100, 635, "Fecha y hora de presentacion: 2026-04-10 11:23:45")
+    c.drawString(100, 610, "Resultado: A ingresar 10,00")
+    c.drawString(100, 585, "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=ABCD1234EFGH5678")
+    c.showPage()
+    c.save()
+    return target

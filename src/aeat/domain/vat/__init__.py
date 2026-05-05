@@ -1,18 +1,16 @@
-"""Spanish VAT (IVA) taxonomy and rules substrate.
+"""Spanish VAT (IVA) taxonomy and registry-backed lookup surface.
 
-Provides a strictly-typed, hand-reviewed enumeration of Spanish VAT
-situations and a minimal EU rate table, codified against specific articles of
-**Ley 37/1992, del Impuesto sobre el Valor Añadido** (BOE-A-1992-28740).
-Every record is a strict frozen pydantic v2 model; every regulation carries
-at least one :class:`VatCitation` with a non-empty Spanish quote; every rate
-carries a BOE or Council Directive reference and an effective window.
+Provides strict VAT identifiers, classification primitives, and read-only
+loaders for committed registry data. Python code owns validation and lookup
+behaviour; rates, effective windows, and catalogue text are loaded from
+`registry/aeat/vat`.
 
 The substrate exposes:
 
 * The closed enumerations :class:`VATCategory`, :class:`EUMemberState`,
   :class:`VATRateKind` and :class:`VatCitationSource`.
-* The hand-curated :data:`VAT_CATALOGUE_2025` plus the period-keyed view
-  :data:`VAT_CATALOGUES_BY_YEAR` and lookup helper :func:`resolve_catalogue`.
+* The period-keyed catalogue view :data:`VAT_CATALOGUES_BY_YEAR` and lookup
+  helper :func:`resolve_catalogue`.
 * The 27-state :data:`VAT_RATE_TABLE` with a load-time non-overlap invariant
   that raises :class:`VatRateOverlapError` on drift.
 * A full classification axis stack (:class:`IssuerResidency`,
@@ -26,7 +24,7 @@ Callers from outside this subpackage must import exclusively from
 
 from __future__ import annotations
 
-from ._catalogue import VAT_CATALOGUE_2025, VAT_CATALOGUES_BY_YEAR, resolve_catalogue
+from ._catalogue import VAT_CATALOGUES_BY_YEAR, resolve_catalogue
 from ._classification import (
     CustomerResidency,
     CustomerTaxStatus,
@@ -64,7 +62,6 @@ from .errors import (
 
 __all__ = [
     "VAT_CATALOGUES_BY_YEAR",
-    "VAT_CATALOGUE_2025",
     "VAT_RATE_TABLE",
     "CustomerResidency",
     "CustomerTaxStatus",

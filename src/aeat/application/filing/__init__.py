@@ -10,13 +10,13 @@ from decimal import Decimal
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     RegistrySnapshot,
+    RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
-    SCHEMA_VERSION_DEFAULT,
     AmendmentKind,
     CasillaChange,
     CasillaCollection,
@@ -120,11 +120,19 @@ def build_draft(
             f"{snapshot.revision.id!r}"
         )
     decimal_inputs = _decimal_inputs(inputs)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=decimal_inputs,
-        date_context={"filing_period": _filing_period_date(period)},
-    )
+    casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
+    binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    casilla_inputs = {key: value for key, value in decimal_inputs.items() if key in casilla_ids}
+    binding_inputs = {key: value for key, value in decimal_inputs.items() if key in binding_ids}
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=casilla_inputs,
+            date_context={"filing_period": _filing_period_date(period)},
+            binding_values=binding_inputs,
+        )
+    except RegistryValidationError as exc:
+        raise FilingBuilderError(f"registry calculation failed: {exc}") from exc
     entries = {entry.target: entry for entry in result.entries}
     schema_ids = {casilla.id for casilla in collection.all()}
     values: list[FilingValue] = []
@@ -142,11 +150,11 @@ def build_draft(
                 )
             )
             continue
-        if casilla.id in decimal_inputs:
+        if casilla.id in casilla_inputs:
             values.append(
                 FilingValue(
                     casilla_id=casilla.id,
-                    value=decimal_inputs[casilla.id],
+                    value=casilla_inputs[casilla.id],
                     kind=FilingValueKind.LITERAL,
                     source="registry input",
                 )
@@ -239,7 +247,7 @@ def _decimal_inputs(inputs: FilingInputs) -> dict[str, Decimal]:
         if value is None:
             continue
         if isinstance(value, bool):
-            raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value")
+            raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value")
         if isinstance(value, Decimal):
             decimal_inputs[casilla_id] = value
             continue
@@ -247,9 +255,9 @@ def _decimal_inputs(inputs: FilingInputs) -> dict[str, Decimal]:
             try:
                 decimal_inputs[casilla_id] = Decimal(value)
             except Exception as exc:
-                raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value") from exc
+                raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value") from exc
             continue
-        raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal-compatible value")
+        raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value")
     return decimal_inputs
 
 
@@ -333,7 +341,6 @@ def utc_now() -> datetime:
 
 __all__ = [
     "APPROVAL_BASIS_VERSION",
-    "SCHEMA_VERSION_DEFAULT",
     "AmendmentKind",
     "CasillaChange",
     "CasillaCollection",

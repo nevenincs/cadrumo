@@ -40,7 +40,7 @@ def resolve_profile_path(explicit: Path | None) -> Path:
         return explicit
     settings = load_settings()
     if settings.aeat_default_profile_path is None:
-        raise typer.BadParameter(tr("deadlines.helpers.t_751621"))
+        raise typer.BadParameter(tr("cli.financial.profile.labels.no_active"))
     return settings.aeat_default_profile_path
 
 

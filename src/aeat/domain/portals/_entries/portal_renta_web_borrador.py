@@ -28,7 +28,7 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_renta_web_borrador.label_255206",
-    purpose_es="Acceso al borrador y servicio Renta Web para la declaración del IRPF.",
-    notes_es=("Ruta WebLogic: puede rotar entre campañas Renta.",),
+    purpose="entries.portal_renta_web_borrador.purpose",
+    notes=("entries.portal_renta_web_borrador.notes.0",),
 )
 """Portal entry for Renta Web (IRPF pre-filled draft and filing service)."""

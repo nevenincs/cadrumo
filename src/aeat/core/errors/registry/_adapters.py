@@ -8,9 +8,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_PDF_IMPORT_SCRUB",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de limpieza.",
-            default_message_en="Raised when scrubbing cannot produce a safe output.",
-            default_message_hu="Tisztitas hiba.",
+            message_key="errors.error.error_pdf_import_scrub",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -21,9 +19,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
-            default_message_es="La sesion persistida de AEAT no es valida.",
-            default_message_en="Raised when a persisted AEAT browser session cannot be trusted.",
-            default_message_hu="A tarolt AEAT munkamenet nem megbizhato.",
+            message_key="errors.auth.auth_auth_authenticator_persisted_session_invalid",
             default_suggestion=None,
             retryable=True,
             runbook_id=None,
@@ -34,9 +30,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
-            default_message_es="La aprobacion de Clave Movil agoto el tiempo de espera.",
-            default_message_en="Raised when the operator does not approve the Cl@ve push within the time window.",
-            default_message_hu="Clave movil jovahagyas idotullepessel vegzodott.",
+            message_key="errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -47,9 +41,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,
-            default_message_es="Clave movil no esta configurado correctamente.",
-            default_message_en="Raised when required Cl@ve M\xf3vil settings are missing or malformed.",
-            default_message_hu="Clave movil nincs megfeleloen beallitva.",
+            message_key="errors.auth.auth_auth_clave_movil_clave_movil_configuration",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -60,9 +52,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,
-            default_message_es="No se pudo completar la verificacion posterior al inicio de sesion de AEAT.",
-            default_message_en="Raised when a post-auth verification attempt cannot be produced.",
-            default_message_hu="Az AEAT bejelentkezes utani ellenorzes nem keszult el.",
+            message_key="errors.auth.auth_auth_certificate_aeat_login_assertion",
             default_suggestion="aeat setup auth login",
             retryable=False,
             runbook_id=None,
@@ -73,9 +63,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_AEAT_SESSION_EXPIRED",
             category=ErrorCategory.AUTH,
-            default_message_es="La sesi\xf3n autenticada de AEAT ha caducado.",
-            default_message_en="The authenticated AEAT session expired.",
-            default_message_hu="Az AEAT hiteles\xedtett munkamenet lej\xe1rt.",
+            message_key="errors.auth.auth_auth_certificate_aeat_session_expired",
             default_suggestion="aeat setup auth login",
             retryable=True,
             runbook_id=None,
@@ -86,9 +74,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE",
             category=ErrorCategory.AUTH,
-            default_message_es="Error de certificado.",
-            default_message_en="Base class for every certificate-auth domain error.",
-            default_message_hu="Tanusitvany hiba.",
+            message_key="errors.auth.auth_auth_certificate",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -99,9 +85,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_EXPIRED",
             category=ErrorCategory.AUTH,
-            default_message_es="Certificado caducado.",
-            default_message_en="The loaded certificate is already expired.",
-            default_message_hu="Tanusitvany lejart.",
+            message_key="errors.auth.auth_auth_certificate_expired",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -112,9 +96,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_HANDSHAKE",
             category=ErrorCategory.AUTH,
-            default_message_es="Error de certificado handshake.",
-            default_message_en="Raised when handshake input is structurally invalid.",
-            default_message_hu="Tanusitvany kezfogas hiba.",
+            message_key="errors.auth.auth_auth_certificate_handshake",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -125,9 +107,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_LOAD",
             category=ErrorCategory.AUTH,
-            default_message_es="No se pudo cargar certificado.",
-            default_message_en="Raised when PKCS#12 bytes cannot be parsed at all.",
-            default_message_hu="Tanusitvany betoltese sikertelen.",
+            message_key="errors.auth.auth_auth_certificate_load",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -138,9 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_NIF_PARSE",
             category=ErrorCategory.AUTH,
-            default_message_es="No se pudo analizar certificado nif.",
-            default_message_en="Raised when no NIF / NIE can be parsed from a certificate subject.",
-            default_message_hu="Tanusitvany nif feldolgozasa sikertelen.",
+            message_key="errors.auth.auth_auth_certificate_nif_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -151,9 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PASSWORD",
             category=ErrorCategory.AUTH,
-            default_message_es="Error de contrasena del certificado.",
-            default_message_en="Raised when the passphrase env var is missing/empty or wrong.",
-            default_message_hu="Tanusitvany jelszo hiba.",
+            message_key="errors.auth.auth_auth_certificate_password",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -164,9 +140,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_AUTH_CERTIFICATE_PRE_EXPIRY",
             category=ErrorCategory.AUTH,
-            default_message_es="Error de certificado pre expiry.",
-            default_message_en="Raised when a certificate is within the pre-expiry danger window.",
-            default_message_hu="Tanusitvany elo expiry hiba.",
+            message_key="errors.auth.auth_auth_certificate_pre_expiry",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -177,9 +151,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_BORRADOR_ARTEFACT_NOT_RECOGNISED",
             category=ErrorCategory.ERROR,
-            default_message_es="El artefacto del PDF no coincide con un formato conocido.",
-            default_message_en="Raised when the PDF does not match any known Modelo 100 artefact shape.",
-            default_message_hu="A PDF artefaktuma nem egyezik ismert formatummal.",
+            message_key="errors.error.error_borrador_artefact_not_recognised",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -190,9 +162,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_BORRADOR_PARSE",
             category=ErrorCategory.FAIL,
-            default_message_es="No se pudo analizar borrador.",
-            default_message_en="The Modelo 100 PDF could not be parsed into a draft filing.",
-            default_message_hu="Tervezet feldolgozasa sikertelen.",
+            message_key="errors.fail.fail_borrador_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -203,9 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_BROWSER_SESSION_BROWSER",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de navegador.",
-            default_message_en="Base class for browser-related errors.",
-            default_message_hu="Bongeszo hiba.",
+            message_key="errors.fail.fail_browser_session_browser",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -216,9 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_BROWSER_EVASION",
             category=ErrorCategory.FAIL,
-            default_message_es="No se pudo preparar la evasion del navegador.",
-            default_message_en="Browser evasion setup could not be applied.",
-            default_message_hu="A bongeszo elkerules beallitasa sikertelen.",
+            message_key="errors.fail.fail_browser_evasion",
             default_suggestion="aeat setup status",
             retryable=False,
             runbook_id=None,
@@ -229,9 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_DECLARACION_PARSE",
             category=ErrorCategory.FAIL,
-            default_message_es="No se pudo analizar declaracion.",
-            default_message_en="The PDF could not be parsed into a declaration filing.",
-            default_message_hu="Bevallas feldolgozasa sikertelen.",
+            message_key="errors.fail.fail_declaracion_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -242,9 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_DECLARACION_TEMPLATE_NOT_DETECTED",
             category=ErrorCategory.ERROR,
-            default_message_es="No se pudo detectar la plantilla del PDF.",
-            default_message_en="The declaration template could not be identified from the PDF.",
-            default_message_hu="A bevallasi sablon nem volt felismerheto a PDF-bol.",
+            message_key="errors.error.error_declaracion_template_not_detected",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -255,9 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_FINANCIAL_PROVIDER",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de financiero proveedor.",
-            default_message_en="Base error raised by financial-ingest providers.",
-            default_message_hu="Penzugyi szolgaltato hiba.",
+            message_key="errors.error.error_financial_providers_base_financial_provider",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -268,9 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_INVALID_FINANCIAL_SOURCE",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de invalid financiero origen.",
-            default_message_en="Raised when a source document is unreadable or structurally invalid.",
-            default_message_hu="Invalid penzugyi forras hiba.",
+            message_key="errors.error.error_financial_providers_base_invalid_financial_source",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -281,9 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDERS_BASE_UNSUPPORTED_FINANCIAL_SOURCE",
             category=ErrorCategory.ERROR,
-            default_message_es="No hay un proveedor compatible para el origen financiero indicado.",
-            default_message_en="Raised when no provider can interpret a source document.",
-            default_message_hu="A megadott penzugyi forrashoz nincs tamogatott szolgaltato.",
+            message_key="errors.error.error_financial_providers_base_unsupported_financial_source",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -294,9 +250,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_LLM_L_M_CACHE",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de cache del cliente LLM.",
-            default_message_en="Raised when a cache entry cannot be read, written, or parsed.",
-            default_message_hu="Az LLM gyorsitotar hibas.",
+            message_key="errors.fail.fail_llm_l_m_cache",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -307,9 +261,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_LLM_L_M_CONFIG",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de configuracion del cliente LLM.",
-            default_message_en="Raised when the LLM client configuration is invalid or incomplete.",
-            default_message_hu="Az LLM kliens beallitasa hibas vagy hianyos.",
+            message_key="errors.fail.fail_llm_l_m_config",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -320,9 +272,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_LLM_L_M",
             category=ErrorCategory.FAIL,
-            default_message_es="Error del subsistema LLM.",
-            default_message_en="Base exception for LLM package failures.",
-            default_message_hu="LLM alrendszerhiba.",
+            message_key="errors.fail.fail_llm_l_m",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -333,9 +283,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_LLM_L_M_PROVIDER",
             category=ErrorCategory.FAIL,
-            default_message_es="Error del proveedor LLM.",
-            default_message_en="Raised when a provider returns an unrecoverable error.",
-            default_message_hu="Az LLM szolgaltato helyrehozhatatlan hibaval valaszolt.",
+            message_key="errors.fail.fail_llm_l_m_provider",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -346,9 +294,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_LLM_L_M_RATE_LIMIT",
             category=ErrorCategory.FAIL,
-            default_message_es="El proveedor LLM rechazo la solicitud por limite de uso.",
-            default_message_en="Raised when a provider rejects a request because of rate limits.",
-            default_message_hu="Az LLM szolgaltato sebessegkorlat miatt utasitotta el a kerest.",
+            message_key="errors.fail.fail_llm_l_m_rate_limit",
             default_suggestion=None,
             retryable=True,
             runbook_id=None,
@@ -359,9 +305,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_SEDE_EXPEDIENTE_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            default_message_es="No se encontro expediente.",
-            default_message_en="Raised when no expediente matches the requested filter.",
-            default_message_hu="Ugy nem talalhato.",
+            message_key="errors.error.error_sede_expediente_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -372,9 +316,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_SEDE_JUSTIFICANTE_FETCH",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de justificante descarga.",
-            default_message_en="Raised when the CSV-keyed PDF download fails or is malformed.",
-            default_message_hu="Igazolas letoltes hiba.",
+            message_key="errors.fail.fail_sede_justificante_fetch",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -385,9 +327,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_SEDE",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de sede.",
-            default_message_en="Base class for post-auth AEAT sede errors.",
-            default_message_hu="Sede hiba.",
+            message_key="errors.error.error_sede",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -398,9 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_SEDE_NAVIGATION",
             category=ErrorCategory.ERROR,
-            default_message_es="Error de sede navegacion.",
-            default_message_en="Raised when a navigation step fails (goto, click, wait).",
-            default_message_hu="Sede navigacio hiba.",
+            message_key="errors.error.error_sede_navigation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -411,9 +349,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_SEDE_PARSE",
             category=ErrorCategory.FAIL,
-            default_message_es="No se pudo analizar sede.",
-            default_message_en="Raised when the captured HTML cannot be parsed to a record.",
-            default_message_hu="Sede feldolgozasa sikertelen.",
+            message_key="errors.fail.fail_sede_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -424,11 +360,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_SANITIZER_ALREADY_SANITIZED",
             category=ErrorCategory.REFUSED,
-            default_message_es="El PDF ya esta sanitizado.",
-            default_message_en=(
-                "Raised when the source SHA already lives in SANITIZED_SHAS; bypass with --allow-already-sanitized."
-            ),
-            default_message_hu="A PDF mar sanitizalt.",
+            message_key="errors.refused.refused_sanitizer_already_sanitized",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -439,9 +371,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_SANITIZER",
             category=ErrorCategory.ERROR,
-            default_message_es="Error del sanitizador.",
-            default_message_en="Base class for the AEAT PDF sanitiser failures.",
-            default_message_hu="Sanitizalo hiba.",
+            message_key="errors.error.error_sanitizer",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -452,9 +382,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_SANITIZER_SOURCE_PARSE",
             category=ErrorCategory.FAIL,
-            default_message_es="No se pudo abrir el PDF de origen.",
-            default_message_en="Raised when pikepdf cannot open the source PDF (corrupt or password-protected).",
-            default_message_hu="Forras PDF megnyitas sikertelen.",
+            message_key="errors.fail.fail_sanitizer_source_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -465,11 +393,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_SANITIZER_SIGNATURE_PRESENT",
             category=ErrorCategory.REFUSED,
-            default_message_es="El PDF tiene una firma digital y no se puede sanitizar.",
-            default_message_en=(
-                "Raised when the source PDF carries a digital signature; sanitisation would invalidate it."
-            ),
-            default_message_hu="A PDF digitalis alairast tartalmaz.",
+            message_key="errors.refused.refused_sanitizer_signature_present",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -480,11 +404,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_SANITIZER_UNKNOWN_SURFACE",
             category=ErrorCategory.ERROR,
-            default_message_es="Superficie del sanitizador desconocida.",
-            default_message_en=(
-                "Raised when a TokenMap entry references a surface category the pipeline does not handle."
-            ),
-            default_message_hu="Ismeretlen sanitizalo felulet.",
+            message_key="errors.error.error_sanitizer_unknown_surface",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -495,9 +415,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_BLOB",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Integridad del blob comprometida.",
-            default_message_en="A blob's on-disk SHA-256 disagrees with its manifest.",
-            default_message_hu="Blob integritasa serult.",
+            message_key="errors.integrity.integrity_storage_blob",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -508,9 +426,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_BLOB_NOT_FOUND",
             category=ErrorCategory.FAIL,
-            default_message_es="Blob no encontrado.",
-            default_message_en="No blob exists at the requested reference.",
-            default_message_hu="A blob nem talalhato.",
+            message_key="errors.fail.fail_storage_blob_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -521,9 +437,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_CLASSIFICATION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Clase de sensibilidad incompatible con el repositorio.",
-            default_message_en="The declared sensitivity class is incompatible with this repository.",
-            default_message_hu="Erzekenysegi osztaly nem kompatibilis.",
+            message_key="errors.integrity.integrity_storage_classification",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -534,9 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_DECRYPTION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Error al descifrar el registro almacenado.",
-            default_message_en="AEAD decryption failed (tag mismatch or malformed ciphertext).",
-            default_message_hu="A tarolt rekord visszafejtese sikertelen.",
+            message_key="errors.integrity.integrity_storage_decryption",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -547,9 +459,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_ENCRYPTION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Error de cifrado de almacenamiento.",
-            default_message_en="Base class for AEAD encryption / decryption failures.",
-            default_message_hu="Titkositasi hiba a tarolasban.",
+            message_key="errors.integrity.integrity_storage_encryption",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -560,9 +470,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_ENVELOPE_VERSION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Version de envoltura incompatible.",
-            default_message_en="The on-disk envelope schema version is incompatible with this consumer.",
-            default_message_hu="A boriték verzioja nem kompatibilis.",
+            message_key="errors.integrity.integrity_storage_envelope_version",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -573,9 +481,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_KEY_DERIVATION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Error al derivar la clave de cifrado.",
-            default_message_en="Key derivation (HKDF or scrypt) failed.",
-            default_message_hu="A kulcsszarmaztatas sikertelen.",
+            message_key="errors.integrity.integrity_storage_key_derivation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -586,9 +492,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_KEYRING_UNAVAILABLE",
             category=ErrorCategory.AUTH,
-            default_message_es="El llavero del sistema operativo no esta disponible.",
-            default_message_en="The OS keychain backend is unusable; no master key could be retrieved.",
-            default_message_hu="Az operacios rendszer kulcskezeloje nem elerheto.",
+            message_key="errors.auth.auth_storage_keyring_unavailable",
             default_suggestion="aeat setup status",
             retryable=False,
             runbook_id=None,
@@ -599,9 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_UNAVAILABLE",
             category=ErrorCategory.AUTH,
-            default_message_es="No se puede acceder a la clave maestra de almacenamiento.",
-            default_message_en="No master key could be acquired from the configured backend.",
-            default_message_hu="Nem sikerult mester kulcsot beszerezni.",
+            message_key="errors.auth.auth_storage_master_key_unavailable",
             default_suggestion="aeat setup status",
             retryable=False,
             runbook_id=None,
@@ -612,11 +514,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_KDF_VERSION",
             category=ErrorCategory.AUTH,
-            default_message_es=(
-                "El archivo master.kdf usa una version de KDF que esta build no admite; ejecute la migracion."
-            ),
-            default_message_en=("master.kdf declares a KDF version this build cannot consume; run the migration tool."),
-            default_message_hu=("A master.kdf egy nem tamogatott KDF-verziot deklaral; futtassa a migracios eszkozt."),
+            message_key="errors.auth.auth_storage_master_key_kdf_version",
             default_suggestion="aeat setup status",
             retryable=False,
             runbook_id=None,
@@ -627,9 +525,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_KEYCHAIN_LOCKED",
             category=ErrorCategory.AUTH,
-            default_message_es=("El llavero del sistema esta bloqueado; desbloquee el llavero y reintente."),
-            default_message_en=("OS keychain is locked; unlock it (Touch ID / Hello / desktop-wallet) and retry."),
-            default_message_hu=("Az operacios rendszer kulcstartoja zarolva; oldja fel es probalja ujra."),
+            message_key="errors.auth.auth_storage_master_key_keychain_locked",
             # No CLI command can unlock the OS keychain on the operator's
             # behalf; the runbook hint lives in the message itself.
             default_suggestion=None,
@@ -642,9 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_PASSPHRASE_MISMATCH",
             category=ErrorCategory.AUTH,
-            default_message_es=("La frase de paso no desbloqueo la clave maestra; verifique e intente de nuevo."),
-            default_message_en=("Passphrase did not unlock the master key; verify and retry."),
-            default_message_hu=("A jelszo nem oldotta fel a mester kulcsot; ellenorizze es probalja ujra."),
+            message_key="errors.auth.auth_storage_master_key_passphrase_mismatch",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -655,9 +549,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING",
             category=ErrorCategory.AUTH,
-            default_message_es=("No existe material de clave maestra; ejecute la provision."),
-            default_message_en=("No master-key material exists; run the security-provisioning command."),
-            default_message_hu=("Nincs mester kulcs anyag; futtassa a biztonsagi provisioning parancsot."),
+            message_key="errors.auth.auth_storage_master_key_material_missing",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -668,15 +560,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_STORAGE_UNSECURED_MODE",
             category=ErrorCategory.REFUSED,
-            default_message_es=(
-                "Modo no cifrado rechazado: requiere AEAT_ALLOW_UNENCRYPTED=1 y es incompatible con un NIF real."
-            ),
-            default_message_en=(
-                "Unsecured mode refused: requires AEAT_ALLOW_UNENCRYPTED=1 and is incompatible with a real NIF."
-            ),
-            default_message_hu=(
-                "Nem biztonsagos mod elutasitva: AEAT_ALLOW_UNENCRYPTED=1 szukseges es nem hasznalhato valodi NIF-fel."
-            ),
+            message_key="errors.refused.refused_storage_unsecured_mode",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -687,9 +571,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_MIGRATION",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de migracion.",
-            default_message_en="Raised when an Alembic migration operation fails.",
-            default_message_hu="Migracio hiba.",
+            message_key="errors.fail.fail_storage_migration",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -700,9 +582,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_NONCE_COLLISION",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Colision de nonce detectada.",
-            default_message_en="Defensive AEAD nonce-uniqueness invariant violation.",
-            default_message_hu="Nonce utkozes eszlelve.",
+            message_key="errors.integrity.integrity_storage_nonce_collision",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -713,9 +593,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_PATH_CONTAINMENT",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="La ruta computada se sale de su raiz configurada.",
-            default_message_en="A computed path escapes its configured root directory.",
-            default_message_hu="A szamitott utvonal kilep a konfiguralt gyokerbol.",
+            message_key="errors.integrity.integrity_storage_path_containment",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -726,9 +604,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_PERSISTENCE",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de persistencia segura.",
-            default_message_en="Base class for the secure-persistence-foundation error tree.",
-            default_message_hu="Biztonsagos tarolasi hiba.",
+            message_key="errors.fail.fail_storage_persistence",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -739,9 +615,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_REPOSITORY",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de repositorio.",
-            default_message_en="A repository operation failed due to lookup, integrity, or persistence errors.",
-            default_message_hu="Tarolo hiba.",
+            message_key="errors.fail.fail_storage_repository",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -752,9 +626,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="INTEGRITY_STORAGE_RETENTION_POLICY",
             category=ErrorCategory.INTEGRITY,
-            default_message_es="Politica de retencion violada por el registro.",
-            default_message_en="A persisted record's retention metadata violates its classification policy.",
-            default_message_hu="A megorzesi szabalyzat sertese.",
+            message_key="errors.integrity.integrity_storage_retention_policy",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -765,9 +637,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_STORAGE_SECRET_ALREADY_EXISTS",
             category=ErrorCategory.REFUSED,
-            default_message_es="Ya existe un secreto con esa clave.",
-            default_message_en="A secret already exists for the given key; pass overwrite=True to replace it.",
-            default_message_hu="Mar letezik a titkos kulcs.",
+            message_key="errors.refused.refused_storage_secret_already_exists",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -778,9 +648,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_SECRET_NOT_FOUND",
             category=ErrorCategory.FAIL,
-            default_message_es="Secreto no encontrado.",
-            default_message_en="No secret exists at the requested key.",
-            default_message_hu="A titkos kulcs nem talalhato.",
+            message_key="errors.fail.fail_storage_secret_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -791,9 +659,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_SECRET_STORE",
             category=ErrorCategory.FAIL,
-            default_message_es="Error del almacen de secretos.",
-            default_message_en="Base class for secret-store I/O failures.",
-            default_message_hu="Titokkezelo hiba.",
+            message_key="errors.fail.fail_storage_secret_store",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -804,9 +670,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE",
             category=ErrorCategory.FAIL,
-            default_message_es="Error de almacenamiento.",
-            default_message_en="Base class for storage-related errors.",
-            default_message_hu="Tarolas hiba.",
+            message_key="errors.fail.fail_storage",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

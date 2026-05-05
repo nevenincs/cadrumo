@@ -1,4 +1,4 @@
-"""Live CSV verification test for :func:`aeat.adapters.outbound.aeat.verify.verify_csv` (#44).
+"""Live CSV verification test for :func:`aeat.adapters.outbound.aeat.verify.verify_csv`.
 
 This test is **opt-in**: it is skipped unless
 ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the environment. It spins up a
@@ -6,11 +6,8 @@ real Playwright browser session against
 AEAT's Sede electrónica and round-trips one CSV. Per the project rule,
 this file MUST NOT contain mocks, patches, fakes, or stubs.
 
-Known caveat: issue #41 tracks a ``playwright_stealth`` bug in the
-:mod:`aeat.adapters.outbound.aeat.browser` evasion layer. When that bug is live,
-this test will raise :class:`JustificanteVerificationError` from the browser
-constructor, and the unit suite (``test_verify.py``) remains the authoritative
-proof of correctness for the verification logic itself.
+When the live browser surface is unavailable, this test raises
+:class:`JustificanteVerificationError` from the browser constructor.
 """
 
 from __future__ import annotations
@@ -33,5 +30,5 @@ async def test_verify_csv_round_trip() -> None:
     try:
         result = await verify_csv("ABCD1234EFGH5678")
     except JustificanteVerificationError as exc:
-        pytest.skip(f"live verification unavailable (likely #41 stealth bug): {exc}")
+        pytest.skip(f"live verification unavailable: {exc}")
     assert isinstance(result, bool)

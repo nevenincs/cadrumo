@@ -22,10 +22,10 @@ def _base_kwargs(**overrides: object) -> dict[str, object]:
         "auth_methods": frozenset({AuthMethod.CERTIFICATE}),
         "url_stability": UrlStability.STABLE_PROTOCOL_GRADE,
         "label": "entries.portal_m303_iva_autoliquidacion.label",
-        "purpose_es": "x",
+        "purpose": "x",
         "active": True,
         "replaced_by": None,
-        "notes_es": (),
+        "notes": (),
     }
     base.update(overrides)
     return base
@@ -124,10 +124,10 @@ def test_label_rejects_blank_string() -> None:
         PortalMetadata.model_validate(_base_kwargs(label=" "))
 
 
-def test_purpose_es_must_not_be_blank() -> None:
-    """Whitespace-only ``purpose_es`` is rejected."""
+def test_purpose_must_not_be_blank() -> None:
+    """Whitespace-only ``purpose`` is rejected."""
     with pytest.raises(ValidationError):
-        PortalMetadata.model_validate(_base_kwargs(purpose_es="   "))
+        PortalMetadata.model_validate(_base_kwargs(purpose="   "))
 
 
 def test_active_with_replaced_by_is_rejected() -> None:
@@ -146,7 +146,7 @@ def test_retired_without_replacement_requires_notes() -> None:
                 url_stability=UrlStability.RETIRED,
                 active=False,
                 replaced_by=None,
-                notes_es=(),
+                notes=(),
             )
         )
 
@@ -161,7 +161,7 @@ def test_retired_without_replacement_with_notes_is_valid() -> None:
             url_stability=UrlStability.RETIRED,
             active=False,
             replaced_by=None,
-            notes_es=("Discontinued procedure.",),
+            notes=("Discontinued procedure.",),
         )
     )
     assert metadata.active is False

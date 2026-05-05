@@ -12,35 +12,40 @@ import json
 
 import typer
 
-from ...domain.categories import CATEGORY_PROFILES_2025, SpendingCategory, family_for
+from ...domain.categories import SpendingCategory, family_for, resolve_category_profiles
+from ._i18n import tr
 
 app = typer.Typer(
     name="categories",
     no_args_is_help=True,
-    help="AEAT spending-category taxonomy and proportionality helpers.",
+    help=tr("cli.categories.app_help"),
 )
 
 
-@app.command(name="list", help="List all spending categories and proportionality kinds.")
-def list_categories() -> None:
+@app.command(name="list", help=tr("cli.categories.list_help"))
+def list_categories(year: int = typer.Option(..., "--year", help=tr("cli.categories.year_help"))) -> None:
     """Print the available spending categories as JSON."""
 
+    profiles = resolve_category_profiles(year)
     payload = [
         {
             "category": category.value,
             "family": family_for(category).value,
-            "proportionality_kind": CATEGORY_PROFILES_2025[category].proportionality.kind.value,
+            "proportionality_kind": profiles[category].proportionality.kind.value,
         }
         for category in SpendingCategory
     ]
     typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
 
 
-@app.command(name="show", help="Show one category profile with citations.")
-def show_category(category: SpendingCategory = typer.Argument(..., help="Stable category identifier.")) -> None:
+@app.command(name="show", help=tr("cli.categories.show_help"))
+def show_category(
+    category: SpendingCategory = typer.Argument(..., help=tr("cli.categories.id_help")),
+    year: int = typer.Option(..., "--year", help=tr("cli.categories.year_help")),
+) -> None:
     """Print one category profile as JSON."""
 
-    profile = CATEGORY_PROFILES_2025[category]
+    profile = resolve_category_profiles(year)[category]
     payload = {
         "category": category.value,
         "family": family_for(category).value,

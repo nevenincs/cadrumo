@@ -2,7 +2,7 @@
 
 Defines the closed enums and strict pydantic models that encode how
 a spending category is deducted on the autónomo filings, plus the
-citation chain back to BOE / Manual práctico that makes each rule
+citation chain back to the relevant authority that makes each rule
 explainable. Every :class:`ProportionalityRule` carries at least one
 :class:`CategoryCitation`; the consistency rules between
 ``kind``-specific fields (``fixed_pct``, ``default_ratio``,
@@ -15,6 +15,8 @@ from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+
+from ...core.i18n import Translatable as tr
 
 
 class _ProportionalityStrictFrozenModel(BaseModel):
@@ -52,15 +54,14 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         locator: Section, article, or page locator within the
             referenced document.
         url: Canonical URL where the citation can be checked.
-        quote_es: Verbatim Spanish-language quote backing the rule
-            (kept short — under 1024 chars).
+        quote: Authoritative Spanish-language quote backing the rule.
     """
 
     source: CategoryCitationSource
     reference: str = Field(min_length=1, max_length=256)
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
-    quote_es: str = Field(min_length=1, max_length=1024)
+    quote: tr = Field(description="Authoritative Spanish-language quote.")
 
 
 _HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
@@ -124,7 +125,7 @@ class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
     """One legally distinct daily cap inside a statutory-cap rule."""
 
     id: str = Field(min_length=1, max_length=64)
-    label_es: str = Field(min_length=1, max_length=256)
+    label: tr = Field(description="Human-readable label.")
     statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
 
 
@@ -150,7 +151,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             legally relevant condition.
         citations: At least one :class:`CategoryCitation` proving
             the rule.
-        notes_es: Spanish-language notes describing the rule.
+        notes: Authoritative Spanish-language notes describing the rule.
     """
 
     kind: ProportionalityKind
@@ -161,7 +162,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     statutory_cap_period: StatutoryCapPeriod | None = None
     statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
     citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
-    notes_es: str = Field(min_length=1, max_length=2048)
+    notes: tr = Field(description="Authoritative Spanish-language notes.")
 
     @model_validator(mode="after")
     def _validate_shape(self) -> ProportionalityRule:

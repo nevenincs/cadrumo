@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+
+from aeat.domain.calculations.registry import RegistryValidationError, parse_export_payload
 
 from . import (
     DeclarationExportFormat,
     DeclarationExportResult,
     DeclarationVerifyResult,
     DeclarationVerifyVerdict,
+    FilingDraftStatus,
+    FilingOperatorProfile,
+    build_draft,
+    build_runtime_schema_provider,
+    export_draft,
+    verify_export,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -26,6 +35,169 @@ _OTHER_EXPORT_PATH = Path("exports/x.txt")
 def _narrative() -> str:
     narrative: str = "filing.test_export.narrative"
     return narrative
+
+
+def _approved_registry_draft():
+    draft = build_draft(
+        modelo="130",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "01": Decimal("100"),
+            "02": Decimal("25"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _modelo_130_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "developer_nif": "A12345678",
+    }
+
+
+def _approved_modelo_111_registry_draft():
+    draft = build_draft(
+        modelo="111",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "03": Decimal("180.25"),
+            "06": Decimal("12.10"),
+            "09": Decimal("300.00"),
+            "12": Decimal("14.40"),
+            "15": Decimal("25.00"),
+            "18": Decimal("0.50"),
+            "21": Decimal("7.00"),
+            "24": Decimal("8.00"),
+            "27": Decimal("9.00"),
+            "29": Decimal("40.00"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _modelo_111_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "developer_nif": "A12345678",
+    }
+
+
+def _approved_modelo_115_registry_draft():
+    draft = build_draft(
+        modelo="115",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "01": Decimal("1"),
+            "02": Decimal("1250.50"),
+            "04": Decimal("10.00"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _modelo_115_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "legal_name": "EXPORT TEST",
+        "first_name": "ANA",
+        "program_version": "A001",
+        "developer_tax_id": "A12345678",
+    }
+
+
+def _approved_modelo_123_registry_draft():
+    draft = build_draft(
+        modelo="123",
+        period="2026Q1",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "01": Decimal("2"),
+            "02": Decimal("3"),
+            "04": Decimal("1000.25"),
+            "05": Decimal("200.75"),
+            "07": Decimal("190.05"),
+            "08": Decimal("38.14"),
+            "10": Decimal("0"),
+            "11": Decimal("7.50"),
+            "13": Decimal("12.25"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _modelo_123_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "legal_name": "EXPORT TEST",
+        "program_version": "A001",
+        "developer_tax_id": "A12345678",
+    }
+
+
+def _approved_modelo_123_2019_registry_draft():
+    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+    draft = build_draft(
+        modelo="123",
+        period="2023Q4",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={
+            "01": Decimal("5"),
+            "02": Decimal("1201.00"),
+            "03": Decimal("228.19"),
+            "04": Decimal("0"),
+            "05": Decimal("7.50"),
+            "07": Decimal("12.25"),
+        },
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
+
+
+def _modelo_123_2019_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "developer_tax_id": "A12345678",
+    }
 
 
 def test_format_enum_carries_cli_values() -> None:
@@ -164,3 +336,339 @@ def test_verify_result_rejects_short_digest() -> None:
             verified_at=datetime(2026, 5, 3, tzinfo=UTC),
             narrative=_narrative(),
         )
+
+
+def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    output = tmp_path / "modelo-130.txt"
+    provider = build_runtime_schema_provider()
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+    draft_values = {entry.casilla_id: entry.value for entry in draft.values}
+
+    assert receipt.byte_size == len(payload)
+    assert receipt.file_sha256
+    comparable = {
+        casilla_id: Decimal(str(expected))
+        for casilla_id, expected in draft_values.items()
+        if casilla_id in exported_values and expected is not None
+    }
+    assert comparable
+    assert all(exported_values[casilla_id] == expected for casilla_id, expected in comparable.items())
+
+
+def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_111_registry_draft()
+    output = tmp_path / "modelo-111.txt"
+    provider = build_runtime_schema_provider()
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_111_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    record_28 = next(
+        record for record in layout.records if any(field.id == "modelo-111-casilla-28" for field in record.fields)
+    )
+    record_30 = next(
+        record for record in layout.records if any(field.id == "modelo-111-casilla-30" for field in record.fields)
+    )
+
+    assert receipt.modelo == "111"
+    assert receipt.byte_size == len(payload)
+    assert exported_values["28"] == Decimal("556.25")
+    assert exported_values["30"] == Decimal("516.25")
+    assert payload[_field_slice(layout, record_28.id, "modelo-111-casilla-28")] == b"00000000000055625"
+    assert payload[_field_slice(layout, record_30.id, "modelo-111-casilla-30")] == b"00000000000051625"
+
+
+def test_export_writes_modelo_115_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_115_registry_draft()
+    output = tmp_path / "modelo-115.txt"
+    provider = build_runtime_schema_provider()
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_115_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+
+    assert receipt.modelo == "115"
+    assert receipt.byte_size == len(payload)
+    assert exported_values == {
+        "01": Decimal("1"),
+        "02": Decimal("1250.50"),
+        "03": Decimal("237.60"),
+        "04": Decimal("10.00"),
+        "05": Decimal("227.60"),
+    }
+
+
+def test_export_writes_modelo_123_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_123_registry_draft()
+    output = tmp_path / "modelo-123.txt"
+    provider = build_runtime_schema_provider()
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_123_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+
+    assert receipt.modelo == "123"
+    assert receipt.byte_size == len(payload)
+    assert exported_values["03"] == Decimal("5")
+    assert exported_values["06"] == Decimal("1201.00")
+    assert exported_values["09"] == Decimal("228.19")
+    assert exported_values["12"] == Decimal("235.69")
+    assert exported_values["14"] == Decimal("223.44")
+
+
+def test_export_writes_modelo_123_2019_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_123_2019_registry_draft()
+    output = tmp_path / "modelo-123-2023.txt"
+    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_123_2019_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+
+    assert receipt.modelo == "123"
+    assert receipt.byte_size == len(payload)
+    assert exported_values == {
+        "01": Decimal("5"),
+        "02": Decimal("1201.00"),
+        "03": Decimal("228.19"),
+        "04": Decimal("0.00"),
+        "05": Decimal("7.50"),
+        "06": Decimal("235.69"),
+        "07": Decimal("12.25"),
+        "08": Decimal("223.44"),
+    }
+
+
+def test_export_requires_declared_header_values(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    with pytest.raises(ValueError, match="declaration_type"):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-130.txt",
+            headers={"surnames": "EXPORT TEST", "name": "ANA"},
+            schema_provider=build_runtime_schema_provider(),
+        )
+
+
+def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    exported = tmp_path / "modelo-130.txt"
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=build_runtime_schema_provider(),
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=build_runtime_schema_provider())
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_111_registry_draft()
+    exported = tmp_path / "modelo-111.txt"
+    provider = build_runtime_schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_111_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_matches_exported_modelo_115_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_115_registry_draft()
+    exported = tmp_path / "modelo-115.txt"
+    provider = build_runtime_schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_115_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_matches_exported_modelo_123_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_123_registry_draft()
+    exported = tmp_path / "modelo-123.txt"
+    provider = build_runtime_schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_123_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_matches_exported_modelo_123_2019_layout(tmp_path: Path) -> None:
+    draft = _approved_modelo_123_2019_registry_draft()
+    exported = tmp_path / "modelo-123-2023.txt"
+    provider = build_runtime_schema_provider(filing_year=2023, period="4T")
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_123_2019_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MATCH
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_reports_missing_for_malformed_export_payload(tmp_path: Path) -> None:
+    draft = _approved_modelo_111_registry_draft()
+    exported = tmp_path / "modelo-111.txt"
+    provider = build_runtime_schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_111_export_headers(),
+        schema_provider=provider,
+    )
+    exported.write_bytes(exported.read_bytes()[:20])
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.MISSING
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_reports_casilla_drift_for_modelo_130_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = build_runtime_schema_provider()
+    exported = tmp_path / "modelo-130.txt"
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    casilla_values = {entry.casilla_id: Decimal(str(entry.value)) for entry in draft.values}
+    record, field = next(
+        (record, field)
+        for record in sorted(layout.records, key=lambda item: item.order)
+        for field in record.fields
+        if field.kind == "casilla"
+        and field.casilla in casilla_values
+        and casilla_values[field.casilla] != Decimal("0.01")
+        and field.length is not None
+    )
+    payload = bytearray(exported.read_bytes())
+    field_slice = _field_slice(layout, record.id, field.id)
+    field_length = field.length
+    assert field_length is not None
+    payload[field_slice] = ("0" * (field_length - 1) + "1").encode("ascii")
+    exported.write_bytes(payload)
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclarationVerifyVerdict.DRIFT
+    assert verdict.mismatched_casillas == (field.casilla,)
+
+
+def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = build_runtime_schema_provider()
+    exported = tmp_path / "modelo-130.txt"
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    record, field = next(
+        (record, field)
+        for record in sorted(layout.records, key=lambda item: item.order)
+        for field in record.fields
+        if field.kind == "literal"
+    )
+    payload = bytearray(exported.read_bytes())
+    field_slice = _field_slice(layout, record.id, field.id)
+    payload[field_slice.start] = ord("?")
+
+    with pytest.raises(RegistryValidationError, match="literal field"):
+        parse_export_payload(layout, bytes(payload))
+
+
+def _field_slice(layout, record_id: str, field_id: str) -> slice:
+    cursor = 0
+    for record in sorted(layout.records, key=lambda item: item.order):
+        record_length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
+        if record.id == record_id:
+            field = next(item for item in record.fields if item.id == field_id)
+            if field.offset is None or field.length is None:
+                raise AssertionError(f"export field {field.id!r} does not declare a fixed slice")
+            start = cursor + field.offset - 1
+            return slice(start, start + field.length)
+        cursor += record_length
+        if record.line_ending == "crlf":
+            cursor += 2
+        elif record.line_ending == "lf":
+            cursor += 1
+    raise AssertionError(f"export record {record_id!r} not found")

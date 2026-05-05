@@ -29,15 +29,11 @@ class VatRateNotFoundError(VatError):
 
 
 class VatCategoryNotFoundError(VatError):
-    """Raised when a lookup against :data:`aeat.domain.vat.VAT_CATALOGUE_2025` misses."""
+    """Raised when a lookup against a resolved VAT catalogue misses."""
 
 
 class VatCatalogueError(VatError):
-    """Raised when a VAT catalogue cannot be loaded or is malformed.
-
-    Used by :func:`aeat.domain.vat.load_vat_rules_from_manual` when an
-    explicit year has no in-memory or on-disk catalogue.
-    """
+    """Raised when a VAT catalogue cannot be loaded, resolved, or validated."""
 
 
 class VatRateOverlapError(VatError):

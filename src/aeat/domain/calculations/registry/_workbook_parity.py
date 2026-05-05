@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
+import shutil
+import subprocess
 import time
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Literal, cast
 
 from openpyxl import load_workbook
@@ -16,6 +21,8 @@ from openpyxl.formula import Tokenizer
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._errors import RegistryValidationError
+from ._formula_runtime import calculate_registry_snapshot
+from ._schema import RegistrySnapshot
 
 WorkbookKind = Literal[
     "formula_form",
@@ -26,13 +33,22 @@ WorkbookKind = Literal[
     "unreadable",
 ]
 WorkbookScanStatus = Literal["scanned", "unsupported", "timeout", "failed"]
+WorkbookConversionStatus = Literal["converted", "failed"]
 WorkbookRunnerStatus = Literal["available", "unavailable"]
 WorkbookRunnerEngine = Literal["libreoffice-headless", "excel-com"]
 ParityStatus = Literal["match", "mismatch", "not_run"]
+EvidenceTier = Literal[
+    "legal_authority",
+    "official_source_guidance",
+    "executable_parity_evidence",
+    "layout_authority",
+]
 
 _WORKBOOK_SUFFIXES = {".xlsx", ".xls"}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
+_CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
+_LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
 
 
 class WorkbookParityModel(BaseModel):
@@ -62,6 +78,8 @@ class WorkbookArtefactReport(WorkbookParityModel):
     input_candidates: tuple[WorkbookCellRef, ...] = ()
     output_candidates: tuple[WorkbookCellRef, ...] = ()
     workbook_kind: WorkbookKind
+    evidence_tier: EvidenceTier | None
+    not_evidence_for: tuple[EvidenceTier, ...] = ()
     scan_status: WorkbookScanStatus
     error: str | None = None
     elapsed_seconds: Decimal
@@ -72,6 +90,34 @@ class WorkbookArtefactReport(WorkbookParityModel):
             raise ValueError("scanned workbook cannot be unreadable or unsupported")
         if self.scan_status != "scanned" and self.error is None:
             raise ValueError("non-scanned workbook report must include an error")
+        return self
+
+
+class WorkbookConversionReport(WorkbookParityModel):
+    """Safe isolated conversion report for one binary XLS artefact."""
+
+    path: str
+    modelo: str | None
+    bytes: int = Field(ge=0)
+    sha256: str = Field(min_length=64, max_length=64)
+    converted_extension: Literal[".xlsx"] | None = None
+    sheets: tuple[str, ...] = ()
+    formula_cells: int = Field(ge=0)
+    input_candidates: tuple[WorkbookCellRef, ...] = ()
+    output_candidates: tuple[WorkbookCellRef, ...] = ()
+    workbook_kind: WorkbookKind
+    evidence_tier: EvidenceTier | None
+    not_evidence_for: tuple[EvidenceTier, ...]
+    conversion_status: WorkbookConversionStatus
+    error: str | None = None
+    elapsed_seconds: Decimal
+
+    @model_validator(mode="after")
+    def _validate_status(self) -> WorkbookConversionReport:
+        if self.conversion_status == "converted" and self.error is not None:
+            raise ValueError("converted workbook report must not include an error")
+        if self.conversion_status == "failed" and self.error is None:
+            raise ValueError("failed workbook conversion report must include an error")
         return self
 
 
@@ -142,6 +188,12 @@ class WorkbookModeloCoverage(WorkbookParityModel):
     unsupported_xls_count: int = Field(ge=0)
     failed_count: int = Field(ge=0)
 
+    @property
+    def passed(self) -> bool:
+        """Return True if all workbooks are supported and scanned successfully."""
+
+        return self.unsupported_xls_count == 0 and self.failed_count == 0
+
 
 class WorkbookBackendVerificationReport(WorkbookParityModel):
     """Backend-level verification report for workbook calculation coverage."""
@@ -161,6 +213,12 @@ class WorkbookBackendVerificationReport(WorkbookParityModel):
         """Return whether discovery and guardable reports exist."""
 
         return self.workbook_count > 0 and self.scanned_count + self.unsupported_xls_count + self.failed_count > 0
+
+    @property
+    def passed(self) -> bool:
+        """Return True if all workbooks are supported and scanned successfully."""
+
+        return self.unsupported_xls_count == 0 and self.failed_count == 0
 
 
 @dataclass(frozen=True)
@@ -196,6 +254,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     modelo = _infer_modelo(relative)
 
     if suffix == ".xls":
+        evidence_tier, not_evidence_for = _evidence_for_workbook_kind("unsupported_binary_xls")
         return WorkbookArtefactReport(
             path=relative,
             modelo=modelo,
@@ -203,9 +262,11 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             bytes=byte_count,
             sha256=digest,
             workbook_kind="unsupported_binary_xls",
+            evidence_tier=evidence_tier,
+            not_evidence_for=not_evidence_for,
             scan_status="unsupported",
             formula_cells=0,
-            error="binary XLS support requires a reviewed parser or conversion path",
+            error="binary XLS requires isolated conversion before workbook formula inspection",
             elapsed_seconds=_elapsed_decimal(started),
         )
 
@@ -234,6 +295,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
                             )
         workbook.close()
         kind = _classify_xlsx(relative, formulas)
+        evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
         return WorkbookArtefactReport(
             path=relative,
             modelo=modelo,
@@ -245,6 +307,8 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             input_candidates=tuple(_dedupe_cells(references)),
             output_candidates=tuple(formulas),
             workbook_kind=kind,
+            evidence_tier=evidence_tier,
+            not_evidence_for=not_evidence_for,
             scan_status="scanned",
             elapsed_seconds=_elapsed_decimal(started),
         )
@@ -300,16 +364,31 @@ def inventory_workbook_coverage(
 def detect_workbook_runner() -> WorkbookRunnerAvailability:
     """Detect the local sanctioned spreadsheet recalculation runner."""
 
-    from shutil import which
-
+    configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
+    if configured:
+        try:
+            runner = _resolve_libreoffice_runner(configured)
+        except RegistryValidationError as exc:
+            return WorkbookRunnerAvailability(
+                status="unavailable",
+                engine=None,
+                executable=configured,
+                detail=str(exc),
+            )
+        return WorkbookRunnerAvailability(
+            status="available",
+            engine="libreoffice-headless",
+            executable=str(runner),
+            detail=f"LibreOffice executable configured by {_LIBREOFFICE_EXECUTABLE_ENV}",
+        )
     for executable in ("soffice", "libreoffice"):
-        found = which(executable)
+        found = shutil.which(executable)
         if found:
             return WorkbookRunnerAvailability(
                 status="available",
                 engine="libreoffice-headless",
                 executable=found,
-                detail="LibreOffice executable found for future workbook recalculation integration",
+                detail="LibreOffice executable found for local workbook recalculation",
             )
     excel_clsid = _detect_excel_com_clsid()
     if excel_clsid is not None:
@@ -324,6 +403,299 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
         engine=None,
         executable=None,
         detail="No LibreOffice/soffice executable or Excel COM automation found; workbook execution is unavailable",
+    )
+
+
+def run_workbook_with_libreoffice(
+    workbook_path: Path,
+    *,
+    inputs: Mapping[WorkbookCellRef, Decimal | int | str | bool],
+    outputs: Mapping[str, WorkbookCellRef],
+    executable: str | None = None,
+) -> Mapping[str, Decimal | int | str | bool | None]:
+    """Run a local XLSX workbook with LibreOffice headless and return outputs."""
+
+    runner = _resolve_libreoffice_runner(executable)
+    if runner is None:
+        raise RegistryValidationError("LibreOffice or soffice executable is not available")
+    resolved = workbook_path.resolve()
+    if not resolved.is_file():
+        raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
+    if resolved.suffix.lower() != ".xlsx":
+        raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
+
+    with TemporaryDirectory(prefix="aeat-workbook-") as tmp:
+        tmp_path = Path(tmp)
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        user_installation = (tmp_path / "lo-profile").resolve().as_uri()
+        working_copy = tmp_path / resolved.name
+        shutil.copy2(resolved, working_copy)
+        workbook = load_workbook(working_copy)
+        try:
+            for cell, value in inputs.items():
+                workbook[cell.sheet][cell.coordinate] = _excel_value(value)
+            workbook.save(working_copy)
+        finally:
+            workbook.close()
+        try:
+            completed = subprocess.run(  # noqa: S603
+                [
+                    str(runner),
+                    "--headless",
+                    "--nologo",
+                    "--nodefault",
+                    "--nofirststartwizard",
+                    f"-env:UserInstallation={user_installation}",
+                    "--convert-to",
+                    "xlsx",
+                    "--outdir",
+                    str(output_dir),
+                    str(working_copy),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
+        except subprocess.CalledProcessError as exc:
+            detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
+            raise RegistryValidationError(f"LibreOffice workbook recalculation failed: {detail}") from exc
+        recalculated_path = output_dir / working_copy.name
+        if not recalculated_path.is_file():
+            detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+            raise RegistryValidationError(f"LibreOffice did not produce recalculated workbook: {detail}")
+        recalculated = load_workbook(recalculated_path, data_only=True, read_only=True)
+        try:
+            return {
+                output_id: _coerce_excel_result(recalculated[cell.sheet][cell.coordinate].value)
+                for output_id, cell in outputs.items()
+            }
+        finally:
+            recalculated.close()
+
+
+def convert_binary_xls_with_libreoffice(
+    workbook_path: Path,
+    *,
+    root: Path,
+    executable: str | None = None,
+) -> WorkbookConversionReport:
+    """Convert one official binary XLS in isolated storage and classify it."""
+
+    started = time.monotonic()
+    runner = _resolve_libreoffice_runner(executable)
+    if runner is None:
+        raise RegistryValidationError("LibreOffice or soffice executable is not available")
+    resolved_root = root.resolve()
+    resolved_path = workbook_path.resolve()
+    if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
+        raise RegistryValidationError(f"workbook path escapes conversion root: {workbook_path}")
+    if resolved_path.suffix.lower() != ".xls":
+        raise RegistryValidationError("binary workbook conversion accepts only XLS artefacts")
+
+    relative = resolved_path.relative_to(resolved_root).as_posix()
+    digest, byte_count = _hash_file(resolved_path)
+    modelo = _infer_modelo(relative)
+    with TemporaryDirectory(prefix="aeat-xls-conversion-") as tmp:
+        tmp_path = Path(tmp)
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        user_installation = (tmp_path / "lo-profile").resolve().as_uri()
+        try:
+            completed = subprocess.run(  # noqa: S603
+                [
+                    str(runner),
+                    "--headless",
+                    "--nologo",
+                    "--nodefault",
+                    "--nofirststartwizard",
+                    f"-env:UserInstallation={user_installation}",
+                    "--convert-to",
+                    "xlsx",
+                    "--outdir",
+                    str(output_dir),
+                    str(resolved_path),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            return _failed_conversion_report(
+                relative=relative,
+                modelo=modelo,
+                byte_count=byte_count,
+                digest=digest,
+                error="LibreOffice binary XLS conversion timed out",
+                started=started,
+            )
+        except subprocess.CalledProcessError as exc:
+            detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
+            return _failed_conversion_report(
+                relative=relative,
+                modelo=modelo,
+                byte_count=byte_count,
+                digest=digest,
+                error=f"LibreOffice binary XLS conversion failed: {detail}",
+                started=started,
+            )
+        outputs = tuple(output_dir.glob("*.xlsx"))
+        if len(outputs) != 1:
+            detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+            return _failed_conversion_report(
+                relative=relative,
+                modelo=modelo,
+                byte_count=byte_count,
+                digest=digest,
+                error=f"LibreOffice did not produce exactly one XLSX workbook: {detail}",
+                started=started,
+            )
+        sheets, formulas, references = _inspect_converted_xlsx(outputs[0], original_relative=relative, started=started)
+        kind = _classify_xlsx(relative, formulas)
+        evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
+        return WorkbookConversionReport(
+            path=relative,
+            modelo=modelo,
+            bytes=byte_count,
+            sha256=digest,
+            converted_extension=".xlsx",
+            sheets=sheets,
+            formula_cells=len(formulas),
+            input_candidates=tuple(_dedupe_cells(references)),
+            output_candidates=formulas,
+            workbook_kind=kind,
+            evidence_tier=evidence_tier,
+            not_evidence_for=not_evidence_for,
+            conversion_status="converted",
+            elapsed_seconds=_elapsed_decimal(started),
+        )
+
+
+def run_registry_workbook_parity(
+    *,
+    snapshot: RegistrySnapshot,
+    synthetic_input: SyntheticInputSet,
+    workbook_path: Path,
+    workbook: WorkbookArtefactReport,
+    output_cells: Mapping[str, WorkbookCellRef],
+    registry_outputs: Mapping[str, str],
+    date_context: Mapping[str, date],
+    relation_values: Mapping[str, Decimal] | None = None,
+    tolerance: Decimal = Decimal("0"),
+    executable: str | None = None,
+) -> WorkbookParityRunReport:
+    """Execute one registry-vs-workbook parity comparison with shared inputs."""
+
+    if workbook.workbook_kind != "formula_form":
+        raise RegistryValidationError(
+            f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"
+        )
+    workbook_inputs: dict[WorkbookCellRef, Decimal | int | str | bool] = {}
+    registry_inputs: dict[str, Decimal] = {}
+    registry_binding_values: dict[str, Decimal] = {}
+    casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
+    binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    for value in synthetic_input.values:
+        if value.workbook_cell is not None:
+            workbook_inputs[value.workbook_cell] = value.value
+        if value.registry_binding is None:
+            continue
+        registry_value = _registry_decimal_value(value.id, value.value)
+        if value.registry_binding in casilla_ids:
+            registry_inputs[value.registry_binding] = registry_value
+        elif value.registry_binding in binding_ids:
+            registry_binding_values[value.registry_binding] = registry_value
+        else:
+            raise RegistryValidationError(
+                f"synthetic input {value.id!r} references unknown registry target {value.registry_binding!r}"
+            )
+
+    workbook_values = run_workbook_with_libreoffice(
+        workbook_path,
+        inputs=workbook_inputs,
+        outputs=output_cells,
+        executable=executable,
+    )
+    registry_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=registry_inputs,
+        date_context=date_context,
+        binding_values=registry_binding_values,
+        relation_values=relation_values,
+    )
+    missing_outputs = sorted(set(registry_outputs.values()).difference(registry_result.values))
+    if missing_outputs:
+        raise RegistryValidationError(f"registry parity outputs are missing calculated casillas: {missing_outputs!r}")
+    registry_values = {
+        output_id: registry_result.values[casilla_id] for output_id, casilla_id in registry_outputs.items()
+    }
+    formulas_by_target = {formula.target: formula for formula in snapshot.revision.formulas}
+    legal_refs: dict[str, tuple[str, ...]] = {}
+    source_refs: dict[str, tuple[str, ...]] = {}
+    for output_id, casilla_id in registry_outputs.items():
+        formula = formulas_by_target.get(casilla_id)
+        if formula is not None:
+            legal_refs[output_id] = tuple(formula.legal_refs)
+            source_refs[output_id] = tuple(formula.source_refs)
+    runner = _execution_runner_availability(executable)
+    return compare_registry_to_workbook(
+        synthetic_input=synthetic_input,
+        workbook=workbook,
+        runner=runner,
+        expected_workbook_values=workbook_values,
+        actual_registry_values=registry_values,
+        output_cells=output_cells,
+        registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}",
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        tolerance=tolerance,
+    )
+
+
+def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> WorkbookCellRef:
+    """Parse a workbook cell reference from registry configuration."""
+
+    match = _CELL_REF_VALUE_PATTERN.match(value)
+    if not match:
+        raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
+    raw_sheet = match.group("sheet")
+    if raw_sheet is None:
+        if default_sheet is None:
+            raise RegistryValidationError(f"workbook cell reference {value!r} must include a sheet")
+        sheet = default_sheet
+    else:
+        sheet = raw_sheet.strip("'")
+    return WorkbookCellRef(sheet=sheet, coordinate=match.group("coordinate").replace("$", ""))
+
+
+def _resolve_libreoffice_runner(executable: str | None) -> Path | None:
+    if executable is None:
+        configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
+        found = configured or shutil.which("soffice") or shutil.which("libreoffice")
+        return Path(found).resolve() if found else None
+    candidate = Path(executable).resolve()
+    if not candidate.is_file():
+        raise RegistryValidationError(f"LibreOffice executable does not exist: {executable}")
+    if candidate.name.lower() not in {"soffice", "soffice.exe", "libreoffice", "libreoffice.exe"}:
+        raise RegistryValidationError(f"unsupported LibreOffice executable name: {candidate.name}")
+    return candidate
+
+
+def _execution_runner_availability(executable: str | None) -> WorkbookRunnerAvailability:
+    if executable is None:
+        return detect_workbook_runner()
+    runner = _resolve_libreoffice_runner(executable)
+    if runner is None:
+        raise RegistryValidationError("LibreOffice or soffice executable is not available")
+    return WorkbookRunnerAvailability(
+        status="available",
+        engine="libreoffice-headless",
+        executable=str(runner),
+        detail="LibreOffice executable provided for this workbook parity run",
     )
 
 
@@ -423,9 +795,11 @@ def compare_registry_to_workbook(
 def verify_workbook_backend(
     root: Path,
     *,
-    scan_limit: int | None = 25,
+    scan_limit: int | None = None,
     per_file_timeout_seconds: float = 10.0,
     previous_report: WorkbookBackendVerificationReport | None = None,
+    fail_on_scan_error: bool = True,
+    require_formula_runner: bool = False,
 ) -> WorkbookBackendVerificationReport:
     """Verify that the workbook parity backend can discover and classify artefacts."""
 
@@ -436,7 +810,7 @@ def verify_workbook_backend(
         previous_reports=previous_report.reports if previous_report is not None else (),
     )
     runner = detect_workbook_runner()
-    return WorkbookBackendVerificationReport(
+    report = WorkbookBackendVerificationReport(
         root=root.resolve().as_posix(),
         workbook_count=len(discover_workbooks(root)) if root.exists() else 0,
         scanned_count=sum(1 for report in reports if report.scan_status == "scanned"),
@@ -447,6 +821,30 @@ def verify_workbook_backend(
         reports=reports,
         modelo_coverage=_build_modelo_coverage(reports),
     )
+    if fail_on_scan_error:
+        assert_workbook_scan_clean(report)
+    if require_formula_runner:
+        assert_formula_workbook_runner_ready(report)
+    return report
+
+
+def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> None:
+    """Raise when discovery could not inspect every workbook artefact."""
+
+    failed = tuple(item for item in report.reports if item.scan_status in {"failed", "timeout"})
+    if failed:
+        details = "\n".join(f" - {item.path}: {item.error}" for item in failed)
+        raise RegistryValidationError(f"workbook verification failed to scan {len(failed)} artefact(s):\n{details}")
+
+
+def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationReport) -> None:
+    """Raise when formula-bearing workbooks need execution but no runner exists."""
+
+    if report.formula_workbook_count > 0 and report.runner.status != "available":
+        raise RegistryValidationError(
+            "formula-bearing official workbooks require a local recalculation runner; "
+            f"runner status is {report.runner.status!r}: {report.runner.detail}"
+        )
 
 
 def _hash_file(path: Path) -> tuple[str, int]:
@@ -506,13 +904,32 @@ def _elapsed_decimal(started: float) -> Decimal:
 def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
     formula_count = sum(1 for _ in formulas)
     lowered = relative.lower()
-    if formula_count > 0:
-        return "formula_form"
     if "valid" in lowered or "valida" in lowered:
         return "validation_hints"
-    if "dr" in lowered or "dise" in lowered or "registro" in lowered:
+    if _is_record_design_path(lowered):
         return "record_design_layout"
+    if formula_count > 0:
+        return "formula_form"
     return "static_layout"
+
+
+def _is_record_design_path(lowered_relative_path: str) -> bool:
+    return any(marker in lowered_relative_path for marker in ("disenos_registro", "diseños_registro", "registro"))
+
+
+def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
+    if kind == "formula_form":
+        return "executable_parity_evidence", ("legal_authority", "layout_authority")
+    if kind in {"record_design_layout", "unsupported_binary_xls"}:
+        return "layout_authority", ("legal_authority", "executable_parity_evidence")
+    if kind in {"validation_hints", "static_layout"}:
+        return "official_source_guidance", ("legal_authority", "executable_parity_evidence")
+    return None, (
+        "legal_authority",
+        "official_source_guidance",
+        "executable_parity_evidence",
+        "layout_authority",
+    )
 
 
 def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:
@@ -567,11 +984,75 @@ def _failed_report(
         bytes=byte_count,
         sha256=digest,
         workbook_kind="unreadable",
-        scan_status=status,
         formula_cells=0,
+        evidence_tier=None,
+        not_evidence_for=(
+            "legal_authority",
+            "official_source_guidance",
+            "executable_parity_evidence",
+            "layout_authority",
+        ),
+        scan_status=status,
         error=error,
         elapsed_seconds=_elapsed_decimal(started),
     )
+
+
+def _failed_conversion_report(
+    *,
+    relative: str,
+    modelo: str | None,
+    byte_count: int,
+    digest: str,
+    error: str,
+    started: float,
+) -> WorkbookConversionReport:
+    return WorkbookConversionReport(
+        path=relative,
+        modelo=modelo,
+        bytes=byte_count,
+        sha256=digest,
+        workbook_kind="unreadable",
+        formula_cells=0,
+        evidence_tier=None,
+        not_evidence_for=(
+            "legal_authority",
+            "official_source_guidance",
+            "executable_parity_evidence",
+            "layout_authority",
+        ),
+        conversion_status="failed",
+        error=error,
+        elapsed_seconds=_elapsed_decimal(started),
+    )
+
+
+def _inspect_converted_xlsx(
+    path: Path,
+    *,
+    original_relative: str,
+    started: float,
+) -> tuple[tuple[str, ...], tuple[WorkbookCellRef, ...], tuple[WorkbookCellRef, ...]]:
+    workbook = load_workbook(path, data_only=False, read_only=True)
+    try:
+        sheets: list[str] = []
+        formulas: list[WorkbookCellRef] = []
+        references: list[WorkbookCellRef] = []
+        for worksheet in workbook.worksheets:
+            _raise_if_timed_out(started, 120, original_relative)
+            sheets.append(worksheet.title)
+            for row in worksheet.iter_rows(values_only=False):
+                _raise_if_timed_out(started, 120, original_relative)
+                for cell in row:
+                    value = cell.value
+                    if isinstance(value, str) and value.startswith("="):
+                        ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
+                        formulas.append(ref)
+                        if len(references) < 500:
+                            references.extend(_formula_references(worksheet.title, value, 500 - len(references)))
+        return tuple(sheets), tuple(formulas), tuple(references)
+    finally:
+        workbook.close()
 
 
 def _comparison_status(
@@ -600,3 +1081,18 @@ def _coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
     if isinstance(value, float):
         return Decimal(str(value))
     return str(value)
+
+
+def _registry_decimal_value(input_id: str, value: Decimal | int | str | bool) -> Decimal:
+    if isinstance(value, bool):
+        raise RegistryValidationError(f"synthetic input {input_id!r} cannot feed boolean into registry calculation")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    try:
+        return Decimal(value)
+    except Exception as exc:
+        raise RegistryValidationError(
+            f"synthetic input {input_id!r} cannot feed non-decimal value into registry calculation"
+        ) from exc

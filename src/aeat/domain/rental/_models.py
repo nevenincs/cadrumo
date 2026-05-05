@@ -1,7 +1,7 @@
 """Frozen-strict pydantic v2 records for the rental register.
 
-Defines the persistent record types backing the M100 Anexo C
-aggregator: :class:`RentalFinca` (urban inmueble metadata),
+Defines the persistent record types backing rental aggregate
+calculation: :class:`RentalFinca` (urban inmueble metadata),
 :class:`RentalContract` (per-tenant arrendamiento), :class:`RentalIncomeRecord`
 (per-period gross-rent ledger), :class:`RentalExpense` (LIRPF
 art. 23.1 deductible-category surface), and
@@ -59,7 +59,7 @@ class RentalFinca(_RentalRecord):
             consultation date. Set by the operator at finca
             registration; future CCAA-driven enrichment supersedes
             this flag automatically.
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Rental record schema version. ``"1"``.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -146,7 +146,7 @@ class RentalContract(_RentalRecord):
             art. 17.6 (rent cap for new contracts in declared
             zonas tensionadas where the landlord is a gran tenedor).
             ``False`` triggers ``FORFEIT_LAU_17_6``.
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Rental record schema version. ``"1"``.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -194,12 +194,9 @@ class RentalContract(_RentalRecord):
 class RentalIncomeRecord(_RentalRecord):
     """Public record for one row in ``rental_income_records``.
 
-    Per-contract per-period gross-rent ledger. The Anexo C aggregator
+    Per-contract per-period gross-rent ledger. The aggregate layer
     sums ``gross_rent_received`` across active contracts in the
-    period to produce casilla 0061. ``dias_alquilados`` drives both
-    the amortización pro-rate and the imputación pro-rate (the
-    aggregator subtracts let-days from the year to compute imputación
-    for partial-year non-let intervals).
+    period. ``dias_alquilados`` drives the amortización pro-rate.
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
@@ -208,7 +205,7 @@ class RentalIncomeRecord(_RentalRecord):
         gross_rent_received: Gross rent collected during the period.
         dias_alquilados: Days the dwelling was let during the period
             (0-366).
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Rental record schema version. ``"1"``.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -234,7 +231,7 @@ class RentalExpense(_RentalRecord):
         period_year: Ejercicio.
         category: Closed expense-category enum.
         amount: Gasto amount (positive Decimal).
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Rental record schema version. ``"1"``.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -270,7 +267,7 @@ class RentalAmortizationLedgerEntry(_RentalRecord):
         cumulative_amortization_through_year: Sum of
             ``amortization_amount`` for this finca for periods
             ≤ ``period_year``.
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Rental record schema version. ``"1"``.
     """
 
     id: int | None = Field(default=None, ge=1)

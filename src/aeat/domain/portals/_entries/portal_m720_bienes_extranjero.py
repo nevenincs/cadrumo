@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m720_bienes_extranjero.label_396501",
-    purpose_es="Declaración informativa sobre bienes y derechos situados en el extranjero.",
+    purpose="entries.portal_m720_bienes_extranjero.purpose",
 )
 """Portal entry for Modelo 720 (foreign assets and rights informational return)."""

@@ -3,7 +3,7 @@
 The CLI exposes two primitives the application layer must back end-to-end:
 
 - ``aeat app declaration export --output PATH`` writes an
-  AEAT-compatible file from a validated registry snapshot for an approved
+  AEAT declaration file from a validated registry snapshot for an approved
   :class:`aeat.domain.filing.FilingDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
@@ -23,17 +23,25 @@ separate concerns and live submit is permanently forbidden.
 
 from __future__ import annotations
 
-from datetime import datetime
+import hashlib
+import re
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ...domain.filing import FilingDraft
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.logging import get_logger
+from ...domain.calculations.registry import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    RegistryValidationError,
+    parse_export_payload,
+)
+from ...domain.filing import FilingDraft, FilingDraftStatus
+from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
 
@@ -46,7 +54,7 @@ _SHA256_HEX_LENGTH = 64
 
 
 class DeclarationExportFormat(StrEnum):
-    """Closed catalogue of AEAT-compatible export formats.
+    """Closed catalogue of AEAT export formats.
 
     Attributes:
         FICHERO_BOE: Fixed-width "importar datos" payload defined by
@@ -86,7 +94,7 @@ class DeclarationExportResult(BaseModel):
     Attributes:
         draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
             the export was generated from.
-        modelo: AEAT modelo identifier (e.g. ``"130"``, ``"303"``).
+        modelo: AEAT modelo identifier.
         period: Canonical period identifier (e.g. ``"2026Q1"``).
         format: The on-disk wire format (closed
             :class:`DeclarationExportFormat`).
@@ -197,20 +205,267 @@ def export_draft(
     *,
     output_path: Path,
     headers: dict[str, str],
+    schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclarationExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt."""
-    _ = (draft, output_path, headers)
-    raise ValueError("declaration export requires a validated registry snapshot")
+    provider = schema_provider or build_runtime_schema_provider()
+    subview = provider.get_subview(draft.modelo)
+    if draft.schema_version != subview.schema_version:
+        raise ValueError("declaration export requires a draft built from the active registry snapshot")
+    if draft.status is not FilingDraftStatus.APPROVED:
+        raise ValueError("declaration export requires an approved draft")
+    if not subview.export_layout_ids:
+        raise ValueError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
+    payload = _render_layout(subview.export_layouts[0], draft=draft, headers=headers)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_bytes(payload)
+    digest = hashlib.sha256(payload).hexdigest()
+    return DeclarationExportResult(
+        draft_id=draft.draft_id,
+        modelo=draft.modelo,
+        period=draft.period,
+        format=DeclarationExportFormat.FICHERO_BOE,
+        output_path=output_path,
+        byte_size=len(payload),
+        file_sha256=digest,
+        exported_at=datetime.now(tz=UTC),
+        narrative="filing.export.written",
+    )
 
 
 def verify_export(
     draft: FilingDraft,
     *,
     file_path: Path,
+    schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclarationVerifyResult:
     """Verify an exported file against an approved draft and return a verdict."""
-    _ = (draft, file_path)
-    raise ValueError("declaration verify requires a validated registry snapshot")
+    provider = schema_provider or build_runtime_schema_provider()
+    subview = provider.get_subview(draft.modelo)
+    if draft.schema_version != subview.schema_version:
+        raise ValueError("declaration verify requires a draft built from the active registry snapshot")
+    if not subview.export_layout_ids:
+        digest = hashlib.sha256(file_path.read_bytes()).hexdigest() if file_path.exists() else None
+        return DeclarationVerifyResult(
+            draft_id=draft.draft_id,
+            file_path=file_path,
+            verdict=DeclarationVerifyVerdict.MISSING,
+            file_sha256=digest,
+            verified_at=datetime.now(tz=UTC),
+            narrative="filing.export.missing_registry_layout",
+        )
+    if not file_path.exists():
+        return DeclarationVerifyResult(
+            draft_id=draft.draft_id,
+            file_path=file_path,
+            verdict=DeclarationVerifyVerdict.MISSING,
+            verified_at=datetime.now(tz=UTC),
+            narrative="filing.export.missing_file",
+        )
+    payload = file_path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    try:
+        mismatched = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
+    except RegistryValidationError:
+        _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
+        return DeclarationVerifyResult(
+            draft_id=draft.draft_id,
+            file_path=file_path,
+            verdict=DeclarationVerifyVerdict.MISSING,
+            file_sha256=digest,
+            verified_at=datetime.now(tz=UTC),
+            narrative="filing.export.malformed_file",
+        )
+    return DeclarationVerifyResult(
+        draft_id=draft.draft_id,
+        file_path=file_path,
+        verdict=DeclarationVerifyVerdict.MATCH if not mismatched else DeclarationVerifyVerdict.DRIFT,
+        mismatched_casillas=mismatched,
+        file_sha256=digest,
+        verified_at=datetime.now(tz=UTC),
+        narrative="filing.export.verified",
+    )
+
+
+_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
+_MONEY_QUANT = Decimal("0.01")
+
+
+def _render_layout(layout: ExportLayoutDefinition, *, draft: FilingDraft, headers: dict[str, str]) -> bytes:
+    chunks: list[bytes] = []
+    normalized_headers = {key.lower(): value for key, value in headers.items()}
+    values: dict[str, object] = {value.casilla_id: value.value for value in draft.values}
+    for record in sorted(layout.records, key=lambda item: item.order):
+        text = _render_record(record, draft=draft, headers=normalized_headers, values=values)
+        if record.line_ending == "crlf":
+            text += "\r\n"
+        elif record.line_ending == "lf":
+            text += "\n"
+        chunks.append(text.encode(record.encoding))
+    return b"".join(chunks)
+
+
+def _render_record(
+    record: ExportRecordDefinition,
+    *,
+    draft: FilingDraft,
+    headers: dict[str, str],
+    values: dict[str, object],
+) -> str:
+    positioned = all(field.offset is not None for field in record.fields)
+    if not positioned:
+        return "".join(_render_field(field, draft=draft, headers=headers, values=values) for field in record.fields)
+    length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
+    buffer = [" "] * length
+    for field in sorted(record.fields, key=lambda item: item.offset or 0):
+        if field.offset is None:
+            raise ValueError(f"export field {field.id!r} must declare offset")
+        rendered = _render_field(field, draft=draft, headers=headers, values=values)
+        start = field.offset - 1
+        end = start + len(rendered)
+        if any(char != " " for char in buffer[start:end]):
+            raise ValueError(f"export field {field.id!r} overlaps another field")
+        buffer[start:end] = rendered
+    return "".join(buffer)
+
+
+def _render_field(
+    field: ExportFieldDefinition,
+    *,
+    draft: FilingDraft,
+    headers: dict[str, str],
+    values: dict[str, object],
+) -> str:
+    if field.length is None:
+        raise ValueError(f"export field {field.id!r} must declare length")
+    raw = _field_value(field, draft=draft, headers=headers, values=values)
+    return _format_field(field, raw)
+
+
+def _field_value(
+    field: ExportFieldDefinition,
+    *,
+    draft: FilingDraft,
+    headers: dict[str, str],
+    values: dict[str, object],
+) -> object:
+    if field.kind == "literal":
+        return field.literal
+    if field.kind == "filler":
+        return ""
+    if field.kind == "casilla":
+        if field.casilla is None:
+            raise ValueError(f"export field {field.id!r} must declare casilla")
+        return values.get(field.casilla)
+    if field.kind == "header":
+        if field.header_key is None:
+            raise ValueError(f"export field {field.id!r} must declare header_key")
+        value = headers.get(field.header_key.lower())
+        if field.required and (value is None or value == ""):
+            raise ValueError(f"export header {field.header_key!r} is required")
+        return value or ""
+    if field.kind == "draft":
+        return _draft_value(field, draft)
+    if field.kind == "computed":
+        if field.computed_key == "envelope_closing_tag":
+            year, period = _period_parts(draft.period)
+            return f"</T{draft.modelo}0{year}{period}0000>"
+        raise ValueError(f"unsupported export computed field {field.computed_key!r}")
+    raise ValueError(f"unsupported export field kind {field.kind!r}")
+
+
+def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
+    if field.draft_attribute == "modelo":
+        return draft.modelo
+    if field.draft_attribute == "period":
+        return draft.period
+    if field.draft_attribute == "profile_tax_id":
+        return draft.profile_tax_id
+    if field.draft_attribute == "filing_year":
+        return _period_parts(draft.period)[0]
+    if field.draft_attribute == "period_code":
+        return _period_parts(draft.period)[1]
+    raise ValueError(f"unsupported draft export attribute {field.draft_attribute!r}")
+
+
+def _format_field(field: ExportFieldDefinition, value: object) -> str:
+    if field.length is None:
+        raise ValueError(f"export field {field.id!r} must declare length")
+    if field.kind == "filler":
+        return " " * field.length
+    if field.data_type == "money":
+        rendered = _format_money(value, length=field.length, signed=field.signed)
+    elif field.data_type == "integer":
+        rendered = _format_integer(value, length=field.length)
+    elif field.data_type == "boolean":
+        rendered = "X" if value is True else ""
+    else:
+        rendered = "" if value is None else str(value)
+    if len(rendered) > field.length:
+        raise ValueError(f"export field {field.id!r} value exceeds length {field.length}")
+    return _pad(rendered, field)
+
+
+def _format_money(value: object, *, length: int, signed: bool) -> str:
+    if value is None or value == "":
+        amount = Decimal("0")
+    elif isinstance(value, bool):
+        raise ValueError("money export fields cannot render boolean values")
+    else:
+        amount = Decimal(str(value))
+    cents = int((abs(amount).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP) * 100).to_integral_value())
+    if amount < 0:
+        if not signed:
+            raise ValueError("unsigned money export field cannot render a negative value")
+        return "N" + str(cents).zfill(length - 1)
+    return str(cents).zfill(length)
+
+
+def _format_integer(value: object, *, length: int) -> str:
+    if value is None or value == "":
+        return "0".zfill(length)
+    if isinstance(value, bool):
+        raise ValueError("integer export fields cannot render boolean values")
+    return str(int(Decimal(str(value)))).zfill(length)
+
+
+def _pad(value: str, field: ExportFieldDefinition) -> str:
+    if field.length is None:
+        raise ValueError(f"export field {field.id!r} must declare length")
+    if field.padding == "left_zero":
+        return value.rjust(field.length, "0")
+    if field.padding == "left_space":
+        return value.rjust(field.length, " ")
+    if field.padding == "right_space":
+        return value.ljust(field.length, " ")
+    return value
+
+
+def _mismatched_casillas(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: FilingDraft,
+    payload: bytes,
+) -> tuple[str, ...]:
+    values = {value.casilla_id: value.value for value in draft.values}
+    mismatched: list[str] = []
+    for parsed in parse_export_payload(layout, payload).casillas:
+        if parsed.casilla_id is None:
+            continue
+        expected = values.get(parsed.casilla_id) or Decimal("0")
+        if isinstance(parsed.value, Decimal):
+            if Decimal(str(expected)).quantize(_MONEY_QUANT) != parsed.value.quantize(_MONEY_QUANT):
+                mismatched.append(parsed.casilla_id)
+        elif str(expected) != str(parsed.value):
+            mismatched.append(parsed.casilla_id)
+    return tuple(dict.fromkeys(mismatched))
+
+
+def _period_parts(period: str) -> tuple[str, str]:
+    match = _QUARTER_PERIOD_RE.fullmatch(period)
+    if match is None:
+        raise ValueError(f"declaration export does not support period {period!r}")
+    return match.group("year"), f"{match.group('quarter')}T"
 
 
 __all__ = [

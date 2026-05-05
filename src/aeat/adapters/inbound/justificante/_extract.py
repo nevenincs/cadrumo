@@ -40,7 +40,7 @@ _CSV_LABEL_RE = re.compile(
 )
 # Older AEAT layouts (Modelo 100 pre-2022) render labels on the right
 # column and values on the left, so pdfplumber's top-down / left-right
-# traversal emits VALUE then LABEL. Captured live on IRPF 2021.
+# traversal emits VALUE then LABEL.
 _CSV_LABEL_INVERTED_RE = re.compile(
     r"\b([A-Z0-9]{8,24})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
     re.IGNORECASE,
@@ -57,9 +57,8 @@ _CSV_AUTHENTICITY_FOOTER_RE = re.compile(
     re.IGNORECASE,
 )
 # AEAT also serves the receipt in English when the user files via
-# the English-language sede UI. Captured live on Modelo 130 / 390
-# IRPF 2021 — pdfplumber sees "Secure Verification Code: <csv>" in
-# place of the Spanish label.
+# the English-language sede UI. pdfplumber sees
+# "Secure Verification Code: <csv>" in place of the Spanish label.
 _CSV_LABEL_EN_RE = re.compile(
     r"Secure\s+Verification\s+Code\s*[:\-]?\s*([A-Z0-9]{8,24})\b",
     re.IGNORECASE,
@@ -72,39 +71,20 @@ _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECAS
 _MODELO_RE = re.compile(
     # Spanish "Modelo <N>" or English "Form <N>" (English-language
     # AEAT receipts use the latter). Both layouts also accept
-    # uppercase ("MODELO 130" / "FORM 130").
+    # uppercase ("MODELO <code>" / "FORM <code>").
     r"(?:Modelo|Form)\s*[:\-]?\s*([0-9]{3}[A-Z]?)",
     re.IGNORECASE,
 )
 
-# Modelos whose canonical period is "0A" (annual). When the parser
-# can't locate a labelled or positional period and the source is
-# one of these, the period defaults to "0A" instead of the year.
-# This list mirrors the AEAT modelo catalogue's annual codes.
-_ANNUAL_MODELOS: frozenset[str] = frozenset(
-    {
-        "100",  # IRPF anual
-        "180",  # resumen retenciones inmuebles
-        "190",  # resumen retenciones trabajo
-        "193",  # resumen retenciones capital mobiliario
-        "200",  # IS anual
-        "232",  # vinculadas
-        "347",  # operaciones terceros
-        "349",  # intracomunitarias
-        "390",  # IVA anual
-        "720",  # bienes en el extranjero
-        "840",  # IAE
-    },
-)
 # Spanish period tokens always contain at least one digit (``1T``,
 # ``0A``, ``4T``, ``2023``). Requiring a digit in the captured group
 # stops the regex from picking up nearby words like "impositivo" out
 # of "Período impositivo".
 _PERIOD_RE = re.compile(r"Per[íi]odo\s*[:\-]?\s*([0-9A-Z]*\d[0-9A-Z]*)", re.IGNORECASE)
-# Quarterly modelos (130, 303, 111, 115, 123) often print the period
+# Quarterly modelos often print the period
 # in a positional layout that pdfplumber merges as
 # ``[<NIF>] <YYYY> <period>`` on a single line, with no "Período"
-# label. Captured live across Modelos 130/303/111 (2026-04-25).
+# label.
 #
 # The period token must be either ``0A`` (annual) or ``[1-4]T``
 # (quarterly). The earlier ``0[1-9]|1[0-2]`` monthly alternation
@@ -135,9 +115,9 @@ _EJERCICIO_LOOSE_RE = re.compile(
     r"Ejercicio\b[^\n]{0,80}?\b(20\d{2})\b",
     re.IGNORECASE,
 )
-# Annual informativas (190, 390, 347) print only "Anual" / "0A" or
-# omit the period label entirely; the schema falls back to the
-# ejercicio in that case (see :func:`extract_justificante`).
+# Some annual receipts print only the ejercicio and omit a separate period
+# label. The parser preserves the observed year in that case; application
+# import/reconciliation code performs canonical period conversion.
 _NIF_RE = re.compile(
     # NIF / NIE shape: leading letter (NIE) or digit (NIF), 7-8 mid
     # digits, trailing checksum letter. Total length 9 in practice.
@@ -151,7 +131,7 @@ _NIF_RE = re.compile(
 # Legacy 2021 modelos (iText 2.1.4 producer) print value-then-label
 # in column-split layout, so the NIF value precedes the
 # ``NIF Presentador:`` label after pdfplumber's left-right
-# traversal. Captured live on Modelo 100 / 130 / 303 IRPF 2021.
+# traversal.
 # English-language receipts use "Tax identification number(NIF)of
 # filer:" as the label; the inverted form catches both.
 _NIF_INVERTED_RE = re.compile(
@@ -173,7 +153,7 @@ _PRESENTED_AT_RE = re.compile(
 # "Presentación realizada el: DD-MM-YYYY a las HH:MM:SS"
 # on 2022+ layouts. 2021-era Modelo 100 PDFs are column-split so
 # pdfplumber reads the value FIRST and the label AFTER; we accept
-# both orderings. Captured live on Modelo 100 IRPF 2021-2023.
+# both orderings.
 _PRESENTED_AT_ANNUAL_RE = re.compile(
     r"Presentaci[óo]n\s+realizada\s+el\s*[:\-]?\s*"
     r"(\d{2}-\d{2}-\d{4})\s+a\s+las\s+(\d{2}:\d{2}(?::\d{2})?)",
@@ -185,7 +165,6 @@ _PRESENTED_AT_ANNUAL_INVERTED_RE = re.compile(
     re.IGNORECASE,
 )
 # English-language receipts: "Filed on DD-MM-YYYY at HH:MM:SS".
-# Captured live on Modelo 130 / 390 IRPF 2021.
 _PRESENTED_AT_EN_RE = re.compile(
     r"Filed\s+on\s*[:\-]?\s*"
     r"(\d{2}-\d{2}-\d{4})\s+at\s+(\d{2}:\d{2}(?::\d{2})?)",
@@ -201,7 +180,7 @@ _TOTAL_DEVOLVER_RE = re.compile(
 )
 # Modelo 100 annual receipts label the paid amount as
 # "NRC: <code> IMPORTE: <decimal>" under an "INGRESAR" header (no
-# "Total a ingresar" wording). Captured live 2026-04-24.
+# "Total a ingresar" wording).
 _NRC_IMPORTE_RE = re.compile(
     r"NRC\s*[:\-]?\s*[A-Z0-9]+\s+IMPORTE\s*[:\-]?\s*([0-9][0-9\.,]*)",
     re.IGNORECASE,
@@ -347,11 +326,9 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     # Period extraction has four tiers:
     #   1. Labelled "Período <token>" (Modelo 100 modern body, M303).
     #   2. Positional "[<NIF>] <YYYY> <token>" lines that pdfplumber
-    #      reads in form-laid-out quarterly receipts (M130, M111, ...).
-    #   3. Annual modelo (100/190/200/390/720/etc): synthesise "0A"
-    #      (the canonical AEAT annual period token). The modelo
-    #      catalogue identifies these as ``-0`` suffix codes.
-    #   4. Anything else with an ejercicio: fall back to the year.
+    #      reads in form-laid-out quarterly receipts.
+    #   3. Anything else with an ejercicio: preserve the observed year.
+    #   4. Anything without period or ejercicio fails hard.
     period_match = _PERIOD_RE.search(normalised)
     if period_match is not None:
         period = period_match.group(1).strip()
@@ -367,9 +344,6 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             # the deep-extractor binding) sees a populated year.
             if ejercicio is None:
                 ejercicio = positional_match.group("year").strip()
-        elif ejercicio is not None and modelo in _ANNUAL_MODELOS:
-            # Canonical annual token is "0A" for AEAT annual modelos.
-            period = "0A"
         elif ejercicio is not None:
             period = ejercicio
         else:

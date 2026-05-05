@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from ...adapters.inbound.declaracion import DeclaracionFiling
+from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.logging import get_logger
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
@@ -28,9 +28,6 @@ from ._schema import (
 )
 
 _logger = get_logger(__name__)
-
-_DEFAULT_TOLERANCE = Decimal("0.01")
-"""Default per-casilla absolute tolerance (one cent) for verdicts."""
 
 _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
     {
@@ -59,21 +56,20 @@ class _Discrepancy:
 
 
 def verify_declaracion(
-    declaracion: DeclaracionFiling,
+    declaracion: DeclaracionObservation,
     *,
+    binding_values: dict[str, Decimal] | None = None,
     registry_root: Path | None = None,
-    tolerance: Decimal = _DEFAULT_TOLERANCE,
 ) -> VerificationVerdict:
     """Compare the printed casilla values against a registry snapshot.
 
     Args:
         declaracion: The parsed filing returned by
             :func:`aeat.adapters.inbound.declaracion.parse_declaracion`.
+        binding_values: External registry binding facts required for
+            calculations that depend on facts not printed in the declaration.
         registry_root: Optional registry root override. Defaults to
             ``registry/aeat`` under the repository root.
-        tolerance: Maximum absolute delta between printed and computed
-            values to still count as a match. Defaults to ``0.01`` (one
-            cent).
 
     Returns:
         A frozen :class:`aeat.application.verification.VerificationVerdict`
@@ -83,16 +79,25 @@ def verify_declaracion(
         timestamp the verdict was produced.
     """
     snapshot = _load_snapshot(declaracion, registry_root=registry_root)
+    policy = _verification_policy(snapshot)
     extracted = _decimal_extracted_values(declaracion)
     inputs = {
         casilla.id: extracted[casilla.id]
         for casilla in snapshot.revision.casillas
         if casilla.input_kind != "computed" and casilla.id in extracted
     }
+    supplied_bindings = binding_values or {}
+    missing_bindings = sorted(
+        binding.id for binding in snapshot.revision.bindings if binding.id not in supplied_bindings
+    )
+    if missing_bindings:
+        missing = ", ".join(missing_bindings)
+        raise VerificationError(f"registry verification requires external binding values: {missing}")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={"filing_period": _filing_period_date(declaracion.period, declaracion.ejercicio)},
+        binding_values=supplied_bindings,
     )
     unreliable_ids = {
         warning.casilla_id
@@ -102,9 +107,11 @@ def verify_declaracion(
     registry_casillas = {casilla.id for casilla in snapshot.revision.casillas}
     discrepancies: list[ClassifiedDiscrepancy] = []
     for casilla_id, actual in sorted(extracted.items()):
+        if casilla_id in registry_casillas and casilla_id not in policy.computed_casillas:
+            continue
         expected = result.values.get(casilla_id, actual)
         delta = actual - expected
-        if abs(delta) <= tolerance and casilla_id not in unreliable_ids and casilla_id in registry_casillas:
+        if abs(delta) <= policy.tolerance and casilla_id not in unreliable_ids and casilla_id in registry_casillas:
             continue
         discrepancies.append(
             _classify_discrepancy(
@@ -116,16 +123,17 @@ def verify_declaracion(
                 ),
                 unreliable_ids=unreliable_ids,
                 registry_casillas=registry_casillas,
-                tolerance=tolerance,
+                tolerance=policy.tolerance,
             )
         )
     classified = tuple(discrepancies)
-    coverage = _compute_coverage(declaracion, registry_casillas)
-    status = _derive_status(classified, coverage)
+    coverage = _compute_coverage(declaracion, policy.computed_casillas)
+    status = _derive_status(classified, coverage, min_coverage=policy.min_coverage)
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=declaracion.period,
         registry_snapshot_id=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
+        verification_expectation_ids=policy.expectation_ids,
         status=status,
         discrepancies=classified,
         coverage=coverage,
@@ -134,7 +142,30 @@ def verify_declaracion(
     )
 
 
-def _load_snapshot(declaracion: DeclaracionFiling, *, registry_root: Path | None) -> RegistrySnapshot:
+@dataclass(frozen=True, slots=True)
+class _VerificationPolicy:
+    expectation_ids: tuple[str, ...]
+    computed_casillas: set[str]
+    tolerance: Decimal
+    min_coverage: Decimal
+
+
+def _verification_policy(snapshot: RegistrySnapshot) -> _VerificationPolicy:
+    expectations = tuple(snapshot.verification_expectations.values())
+    if not expectations:
+        raise VerificationError("registry verification requires verification expectations")
+    computed_casillas = {casilla_id for expectation in expectations for casilla_id in expectation.computed_casillas}
+    tolerance = min(Decimal(str(expectation.tolerance)) for expectation in expectations)
+    min_coverage = max(Decimal(str(expectation.min_coverage)) for expectation in expectations)
+    return _VerificationPolicy(
+        expectation_ids=tuple(expectation.id for expectation in expectations),
+        computed_casillas=computed_casillas,
+        tolerance=tolerance,
+        min_coverage=min_coverage,
+    )
+
+
+def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:
     try:
         filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
         modelos, catalogues = load_registry_tree(registry_root or PROJECT_ROOT / "registry" / "aeat")
@@ -152,7 +183,7 @@ def _load_snapshot(declaracion: DeclaracionFiling, *, registry_root: Path | None
         raise VerificationError(f"declaracion verification failed registry snapshot validation: {exc}") from exc
 
 
-def _decimal_extracted_values(declaracion: DeclaracionFiling) -> dict[str, Decimal]:
+def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, Decimal]:
     extracted: dict[str, Decimal] = {}
     for value in declaracion.values:
         printed = value.printed_value
@@ -239,8 +270,8 @@ def _classify_discrepancy(
 
 
 def _compute_coverage(
-    declaracion: DeclaracionFiling,
-    registry_casillas: set[str],
+    declaracion: DeclaracionObservation,
+    expected_casillas: set[str],
 ) -> float:
     """Return the fraction of registry casillas the extraction supplied.
 
@@ -248,23 +279,26 @@ def _compute_coverage(
     keeps the downstream coverage threshold in :func:`_derive_status`
     well-defined.
     """
-    if not registry_casillas:
+    if not expected_casillas:
         return 0.0
     provided_ids = {v.casilla_id for v in declaracion.values}
-    covered = registry_casillas & provided_ids
-    return len(covered) / len(registry_casillas)
+    covered = expected_casillas & provided_ids
+    return len(covered) / len(expected_casillas)
 
 
 def _derive_status(
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,
+    *,
+    min_coverage: Decimal,
 ) -> VerificationStatus:
     """Map discrepancies and coverage onto a :class:`VerificationStatus`.
 
     Returns :attr:`VerificationStatus.NEEDS_REVIEW` when any discrepancy
     has a blocking cause (extraction-unreliable or
-    correctness-divergence) or when registry coverage drops below 30%;
-    otherwise :attr:`VerificationStatus.VERIFIED`.
+    correctness-divergence) or when registry coverage drops below the
+    active verification expectation threshold; otherwise
+    :attr:`VerificationStatus.VERIFIED`.
     """
     blocking = {
         DiscrepancyCause.CORRECTNESS_DIVERGENCE,
@@ -272,13 +306,13 @@ def _derive_status(
     }
     if any(c.cause in blocking for c in classified):
         return VerificationStatus.NEEDS_REVIEW
-    if coverage < 0.3:
+    if Decimal(str(coverage)) < min_coverage:
         return VerificationStatus.NEEDS_REVIEW
     return VerificationStatus.VERIFIED
 
 
 def _compose_narrative(
-    declaracion: DeclaracionFiling,
+    declaracion: DeclaracionObservation,
     status: VerificationStatus,
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,

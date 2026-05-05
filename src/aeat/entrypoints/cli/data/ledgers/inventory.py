@@ -34,9 +34,9 @@ from ..._context import json_output_requested
 from ..._i18n import tr
 from ..._schemas import OutputRootSchema, emit_json_success, register_schema
 
-app = typer.Typer(name="inventory", no_args_is_help=True, help="Per-actividad inventory ledger.")
-movement_app = typer.Typer(name="movement", no_args_is_help=True, help="Record stock movements.")
-valuation_app = typer.Typer(name="valuation", no_args_is_help=True, help="Preview inventory valuation.")
+app = typer.Typer(name="inventory", no_args_is_help=True, help=tr("cli.inventory.app_help"))
+movement_app = typer.Typer(name="movement", no_args_is_help=True, help=tr("cli.inventory.movement_help"))
+valuation_app = typer.Typer(name="valuation", no_args_is_help=True, help=tr("cli.inventory.valuation_help"))
 app.add_typer(movement_app, name="movement")
 app.add_typer(valuation_app, name="valuation")
 
@@ -114,9 +114,14 @@ for _command, _schema in {
     register_schema(_command)(_schema)
 
 
-@app.command(name="list", help="List inventory ledgers.")
+@app.command(name="list", help=tr("cli.inventory.list.help"))
 def list_inventory(
-    storage_dir: Path | None = typer.Option(None, "--storage-dir", help="Override the ledger directory.", hidden=True),
+    storage_dir: Path | None = typer.Option(
+        None,
+        "--storage-dir",
+        help=tr("cli.inventory.list.storage_dir_help"),
+        hidden=True,
+    ),
 ) -> None:
     """List persisted inventory ledgers."""
 
@@ -126,9 +131,9 @@ def list_inventory(
         emit_json_success("data ledgers inventory list", payload)
         return
     if not payload:
-        typer.echo(tr("ledgers.inventory.t_352942"))
+        typer.echo(tr("cli.inventory.labels.ledger_empty"))
         return
-    opening_label = tr("ledgers.inventory.t_979405")
+    opening_label = tr("cli.inventory.list.opening_label")
     for item in payload:
         typer.echo(
             f"{item['actividad_id']} | {item['year']} | {item['valuation_method']} | "
@@ -136,23 +141,48 @@ def list_inventory(
         )
 
 
-@app.command(name="create", help="Create one actividad/year inventory ledger.")
+@app.command(name="create", help=tr("cli.inventory.create.help"))
 def create_inventory(
-    actividad: str = typer.Argument(..., help="Economic activity id."),
-    year: int = typer.Option(..., "--year", help="Tax year."),
-    valuation_method: str = typer.Option(..., "--valuation-method", help="fifo, pmp, or coste_medio. LIFO is refused."),
-    opening_stock: str = typer.Option("0.00", "--opening-stock", help="Opening stock value."),
-    opening_quantity: str | None = typer.Option(None, "--opening-quantity", help="Optional opening quantity."),
-    opening_unit_cost: str | None = typer.Option(None, "--opening-unit-cost", help="Optional opening unit cost."),
-    sku: str = typer.Option("default", "--sku", help="Opening stock SKU when quantity is supplied."),
-    storage_dir: Path | None = typer.Option(None, "--storage-dir", help="Override the ledger directory.", hidden=True),
+    actividad: str = typer.Argument(..., help=tr("cli.inventory.create.actividad_help")),
+    year: int = typer.Option(..., "--year", help=tr("cli.inventory.create.year_help")),
+    valuation_method: str = typer.Option(
+        ...,
+        "--valuation-method",
+        help=tr("cli.inventory.create.valuation_method_help"),
+    ),
+    opening_stock: str = typer.Option(
+        "0.00",
+        "--opening-stock",
+        help=tr("cli.inventory.create.opening_stock_help"),
+    ),
+    opening_quantity: str | None = typer.Option(
+        None,
+        "--opening-quantity",
+        help=tr("cli.inventory.create.opening_quantity_help"),
+    ),
+    opening_unit_cost: str | None = typer.Option(
+        None,
+        "--opening-unit-cost",
+        help=tr("cli.inventory.create.opening_unit_cost_help"),
+    ),
+    sku: str = typer.Option(
+        "default",
+        "--sku",
+        help=tr("cli.inventory.create.sku_help"),
+    ),
+    storage_dir: Path | None = typer.Option(
+        None,
+        "--storage-dir",
+        help=tr("cli.inventory.create.storage_dir_help"),
+        hidden=True,
+    ),
 ) -> None:
     """Create an inventory ledger without overwriting an existing one."""
 
     layers: tuple[StockLayer, ...] = ()
     if opening_quantity is not None or opening_unit_cost is not None:
         if opening_quantity is None or opening_unit_cost is None:
-            raise InventoryLedgerError("opening quantity and opening unit cost must be supplied together")
+            raise InventoryLedgerError(tr("cli.inventory.errors.missing_opening_fields"))
         layers = (
             StockLayer(
                 sku=sku,
@@ -173,26 +203,31 @@ def create_inventory(
     if json_output_requested():
         emit_json_success("data ledgers inventory create", payload)
         return
-    typer.echo(tr("ledgers.inventory.t_090463"))
+    typer.echo(tr("cli.inventory.labels.ledger_created", actividad=actividad, year=year))
 
 
-@movement_app.command(name="add", help="Add a purchase, COGS, opening, or count movement.")
+@movement_app.command(name="add", help=tr("cli.inventory.movement.add_help"))
 def add_movement(
-    actividad: str = typer.Option(..., "--actividad", help="Economic activity id."),
-    year: int = typer.Option(..., "--year", help="Tax year."),
-    movement_id: str = typer.Option(..., "--movement-id", help="Stable movement id."),
-    movement_date: str = typer.Option(..., "--date", help="Movement date as YYYY-MM-DD."),
-    kind: MovementKind = typer.Option(MovementKind.PURCHASE, "--kind", help="Movement kind."),
-    sku: str = typer.Option("default", "--sku", help="Stock SKU."),
-    quantity: str = typer.Option(..., "--quantity", help="Movement quantity."),
-    unit_cost: str | None = typer.Option(None, "--unit-cost", help="VAT-exclusive unit cost for opening/purchase."),
+    actividad: str = typer.Option(..., "--actividad", help=tr("cli.inventory.movement.actividad_help")),
+    year: int = typer.Option(..., "--year", help=tr("cli.inventory.movement.year_help")),
+    movement_id: str = typer.Option(..., "--movement-id", help=tr("cli.inventory.movement.movement_id_help")),
+    movement_date: str = typer.Option(..., "--date", help=tr("cli.inventory.movement.date_help")),
+    kind: MovementKind = typer.Option(MovementKind.PURCHASE, "--kind", help=tr("cli.inventory.movement.kind_help")),
+    sku: str = typer.Option("default", "--sku", help=tr("cli.inventory.movement.sku_help")),
+    quantity: str = typer.Option(..., "--quantity", help=tr("cli.inventory.movement.quantity_help")),
+    unit_cost: str | None = typer.Option(None, "--unit-cost", help=tr("cli.inventory.movement.unit_cost_help")),
     taxable_base: str | None = typer.Option(
         None,
         "--taxable-base",
-        help="VAT-exclusive line base for opening/purchase.",
+        help=tr("cli.inventory.movement.taxable_base_help"),
     ),
-    vat_rate: str = typer.Option("21.00", "--vat-rate", help="VAT rate percentage."),
-    storage_dir: Path | None = typer.Option(None, "--storage-dir", help="Override the ledger directory.", hidden=True),
+    vat_rate: str = typer.Option("21.00", "--vat-rate", help=tr("cli.inventory.movement.vat_rate_help")),
+    storage_dir: Path | None = typer.Option(
+        None,
+        "--storage-dir",
+        help=tr("cli.inventory.movement.storage_dir_help"),
+        hidden=True,
+    ),
 ) -> None:
     """Append a movement after validating the full valuation path."""
 
@@ -214,14 +249,19 @@ def add_movement(
     if json_output_requested():
         emit_json_success("data ledgers inventory movement add", payload)
         return
-    typer.echo(tr("ledgers.inventory.t_531632"))
+    typer.echo(tr("cli.inventory.labels.movement_added", movement_id=movement_id))
 
 
-@valuation_app.command(name="preview", help="Preview closing stock and COGS without writing.")
+@valuation_app.command(name="preview", help=tr("cli.inventory.valuation.preview_help"))
 def preview_valuation(
-    actividad: str = typer.Option(..., "--actividad", help="Economic activity id."),
-    year: int = typer.Option(..., "--year", help="Tax year."),
-    storage_dir: Path | None = typer.Option(None, "--storage-dir", help="Override the ledger directory.", hidden=True),
+    actividad: str = typer.Option(..., "--actividad", help=tr("cli.inventory.valuation.actividad_help")),
+    year: int = typer.Option(..., "--year", help=tr("cli.inventory.valuation.year_help")),
+    storage_dir: Path | None = typer.Option(
+        None,
+        "--storage-dir",
+        help=tr("cli.inventory.valuation.storage_dir_help"),
+        hidden=True,
+    ),
 ) -> None:
     """Preview inventory valuation."""
 
@@ -241,8 +281,19 @@ def preview_valuation(
     if json_output_requested():
         emit_json_success("data ledgers inventory valuation preview", payload)
         return
-    closing_label = tr("ledgers.inventory.t_067126")
-    typer.echo(f"{actividad} {year}: {closing_label} {result.closing_value} EUR, COGS {result.cogs_value} EUR.")
+    closing_label = tr("cli.inventory.valuation.closing_label")
+    cogs_label = tr("cli.inventory.valuation.cogs_label")
+    typer.echo(
+        tr(
+            "cli.inventory.valuation.preview_line",
+            actividad=actividad,
+            year=year,
+            closing_label=closing_label,
+            closing_value=result.closing_value,
+            cogs_label=cogs_label,
+            cogs_value=result.cogs_value,
+        )
+    )
 
 
 def _find_ledger(actividad: str, year: int, *, storage_dir: Path | None) -> InventoryLedger:
@@ -251,7 +302,7 @@ def _find_ledger(actividad: str, year: int, *, storage_dir: Path | None) -> Inve
         if ledger.actividad_id == actividad and ledger.year == year:
             return ledger
     raise InventoryLedgerError(
-        f"inventory ledger not found for {actividad!r} in {year}",
+        tr("cli.inventory.errors.ledger_not_found", actividad=actividad, year=year),
         context={"actividad_id": actividad, "year": year},
         suggestion="aeat data ledgers inventory list",
     )
@@ -284,7 +335,7 @@ def _decimal(raw: str) -> Decimal:
     try:
         return Decimal(raw)
     except InvalidOperation as exc:
-        raise typer.BadParameter(tr("ledgers.inventory.t_047048")) from exc
+        raise typer.BadParameter(tr("cli.inventory.errors.invalid_valuation")) from exc
 
 
 def _date(raw: str) -> date:
@@ -292,7 +343,7 @@ def _date(raw: str) -> date:
     try:
         return date.fromisoformat(raw)
     except ValueError as exc:
-        raise typer.BadParameter(tr("ledgers.inventory.t_740982")) from exc
+        raise typer.BadParameter(tr("cli.inventory.errors.valuation_failed")) from exc
 
 
 def _money(value: Decimal) -> Decimal:

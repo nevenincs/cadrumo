@@ -88,7 +88,7 @@ class FilingHistoryRepository:
         """Return the persisted filing history for ``modelo`` or ``None``.
 
         Args:
-            modelo: Modelo identifier (e.g. ``"130"``).
+            modelo: Modelo identifier.
 
         Returns:
             The decrypted :class:`aeat.application.filing.FilingHistory`
@@ -122,7 +122,7 @@ class FilingHistoryRepository:
         — no plaintext filing-state row lands on disk.
 
         Args:
-            modelo: Modelo identifier (e.g. ``"130"``).
+            modelo: Modelo identifier.
             history: The :class:`aeat.application.filing.FilingHistory`
                 payload to persist.
         """
@@ -151,7 +151,7 @@ class FilingHistoryRepository:
         """Remove the filing-history envelope for ``modelo``.
 
         Args:
-            modelo: Modelo identifier (e.g. ``"130"``).
+            modelo: Modelo identifier.
 
         Returns:
             ``True`` when the envelope was deleted, ``False`` when no

@@ -24,6 +24,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m232_vinculadas.label_589847",
-    purpose_es="Declaración informativa de operaciones vinculadas y con paraísos fiscales.",
+    purpose="entries.portal_m232_vinculadas.purpose",
 )
 """Portal entry for Modelo 232 (related-party and tax-haven transactions)."""

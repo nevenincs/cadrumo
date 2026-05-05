@@ -2,13 +2,62 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
-__all__ = ["DataBindingDefinition", "resolve_bound_casilla_inputs"]
+__all__ = [
+    "DataBindingDefinition",
+    "RegistryFilingObservation",
+    "RegistryFilingObservationRequirement",
+    "previous_filing_observation_requirements",
+    "resolve_bound_casilla_inputs",
+    "resolve_previous_filing_binding_values",
+]
+
+
+class RegistryFilingObservation(BaseModel):
+    """Observed casilla values from a filed declaration."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    casilla_values: Mapping[str, Decimal]
+
+    @field_validator("casilla_values")
+    @classmethod
+    def _values_are_decimal(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+        for casilla_id, casilla_value in value.items():
+            if not casilla_id:
+                raise ValueError("observed casilla id must be non-empty")
+            if isinstance(casilla_value, bool) or not isinstance(casilla_value, Decimal):
+                raise ValueError(f"observed casilla {casilla_id!r} must be a Decimal")
+        return value
+
+
+class RegistryFilingObservationRequirement(BaseModel):
+    """Filed declaration required by one or more registry bindings."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    source_casillas: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("binding_ids", "source_casillas")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("observation requirement tuple entries must be unique")
+        return value
 
 
 def resolve_bound_casilla_inputs(
@@ -38,3 +87,101 @@ def resolve_bound_casilla_inputs(
             raise RegistryValidationError(f"missing binding fact for casilla {casilla.id!r}: {casilla.binding!r}")
         resolved[casilla.id] = facts[casilla.binding]
     return resolved
+
+
+def previous_filing_observation_requirements(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> tuple[RegistryFilingObservationRequirement, ...]:
+    """Return filed declarations needed by previous-filing bindings."""
+
+    grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
+    for binding in revision.bindings:
+        if binding.source != "previous_filing":
+            continue
+        selector = _previous_filing_selector(binding)
+        expected_year = filing_year + selector.filing_year_delta
+        key = (selector.source_modelo, expected_year, selector.period)
+        bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
+        bucket["binding_ids"].add(binding.id)
+        bucket["source_casillas"].update(selector.source_casillas)
+    return tuple(
+        RegistryFilingObservationRequirement(
+            modelo=modelo,
+            filing_year=expected_year,
+            period=required_period,
+            binding_ids=tuple(sorted(values["binding_ids"])),
+            source_casillas=tuple(sorted(values["source_casillas"])),
+        )
+        for (modelo, expected_year, required_period), values in sorted(grouped.items())
+    )
+
+
+def resolve_previous_filing_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[RegistryFilingObservation],
+    *,
+    filing_year: int,
+    period: str,
+) -> dict[str, Decimal]:
+    """Resolve previous-filing bindings from observed filed declarations."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "previous_filing":
+            continue
+        selector = _previous_filing_selector(binding)
+        expected_year = filing_year + selector.filing_year_delta
+        matches = tuple(
+            observation
+            for observation in available
+            if observation.modelo == selector.source_modelo
+            and observation.filing_year == expected_year
+            and observation.period == selector.period
+        )
+        if len(matches) != 1:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} expected one observed filing "
+                f"{selector.source_modelo!r}/{expected_year}/{selector.period!r}, found {len(matches)}"
+            )
+        values = []
+        for casilla_id in selector.source_casillas:
+            casilla_value = matches[0].casilla_values.get(casilla_id)
+            if casilla_value is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                    f"from {selector.source_modelo!r}/{expected_year}/{selector.period!r}"
+                )
+            values.append(casilla_value)
+        resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
+    return resolved
+
+
+class _PreviousFilingSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_modelo: str = Field(min_length=1, max_length=8)
+    filing_year_delta: int
+    period: str = Field(min_length=1, max_length=8)
+    source_casillas: tuple[str, ...] = Field(min_length=1)
+
+
+def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFilingSelector:
+    try:
+        return _PreviousFilingSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if op == "sum":
+        return sum(values, Decimal("0"))
+    if op == "copy":
+        if len(values) != 1:
+            raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
+        return values[0]
+    raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op!r}")

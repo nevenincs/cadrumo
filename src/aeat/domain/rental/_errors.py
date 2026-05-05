@@ -40,8 +40,8 @@ class AmortizationLedgerCapExceededError(RentalRegisterError):
     """
 
 
-class AnexoCAggregationError(RentalRegisterError):
-    """Raised when the rental register cannot produce coherent Anexo C aggregates.
+class RentalAggregationError(RentalRegisterError):
+    """Raised when the rental register cannot produce coherent aggregates.
 
     Surface causes: contract referencing a non-existent finca; income
     record without a contract; ledger entry whose
@@ -53,9 +53,9 @@ class AnexoCAggregationError(RentalRegisterError):
 
 __all__ = [
     "AmortizationLedgerCapExceededError",
-    "AnexoCAggregationError",
     "ContractNotFoundError",
     "FincaNotFoundError",
+    "RentalAggregationError",
     "RentalRegisterError",
     "TierResolutionError",
 ]

@@ -38,11 +38,8 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...core.logging import get_logger
 from ._models import SubmittedFiling
 
-# HKDF context bytes are a STABLE cryptographic identifier — they
-# participate in key derivation for every persisted envelope. Changing
-# this string would render previously-encrypted submission envelopes
-# unreadable. The legacy ``aeat.adapters.outbound.aeat.export``
-# qualifier is preserved verbatim for backwards compatibility.
+# HKDF context bytes are a stable cryptographic identifier; changing the
+# string would make existing encrypted submission envelopes unreadable.
 _HKDF_CONTEXT_SUBMISSION = b"aeat.adapters.outbound.aeat.export.filing.v1"
 
 _log = get_logger(__name__)

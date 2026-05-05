@@ -1,0 +1,391 @@
+[[regulations]]
+category = "domestic_general_21"
+label = "vat.catalogue.label_365838"
+description = "vat.catalogue.description_217010"
+triggers_when = "vat.catalogue.triggers_when_142813"
+iva_treatment = "vat.catalogue.iva_treatment_888336"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 90.Uno"
+quoted_text = "vat.catalogue.domestic_general_21.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 4.Uno"
+quoted_text = "vat.catalogue.domestic_general_21.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_reduced_10"
+label = "vat.catalogue.label_027962"
+description = "vat.catalogue.description_983244"
+triggers_when = "vat.catalogue.triggers_when_029777"
+iva_treatment = "vat.catalogue.iva_treatment_786939"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 91.Uno"
+quoted_text = "vat.catalogue.domestic_reduced_10.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 91.Uno.2.1"
+quoted_text = "vat.catalogue.domestic_reduced_10.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_super_reduced_4"
+label = "vat.catalogue.label_915730"
+description = "vat.catalogue.description_069076"
+triggers_when = "vat.catalogue.triggers_when_352485"
+iva_treatment = "vat.catalogue.iva_treatment_774580"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 91.Dos.1"
+quoted_text = "vat.catalogue.domestic_super_reduced_4.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 91.Dos.1.2"
+quoted_text = "vat.catalogue.domestic_super_reduced_4.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_zero"
+label = "vat.catalogue.label_996028"
+description = "vat.catalogue.description_640356"
+triggers_when = "vat.catalogue.triggers_when_739440"
+iva_treatment = "vat.catalogue.iva_treatment_872035"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 91.Dos.1.1"
+quoted_text = "vat.catalogue.domestic_zero.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 24.Uno"
+quoted_text = "vat.catalogue.domestic_zero.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_exempt"
+label = "vat.catalogue.label_342635"
+description = "vat.catalogue.description_311472"
+triggers_when = "vat.catalogue.triggers_when_049241"
+iva_treatment = "vat.catalogue.iva_treatment_795653"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 20.Uno"
+quoted_text = "vat.catalogue.domestic_exempt.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 20.Uno.22"
+quoted_text = "vat.catalogue.domestic_exempt.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_not_subject"
+label = "vat.catalogue.label_385669"
+description = "vat.catalogue.description_196978"
+triggers_when = "vat.catalogue.triggers_when_425274"
+iva_treatment = "vat.catalogue.iva_treatment_078140"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 7.1"
+quoted_text = "vat.catalogue.domestic_not_subject.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 7.5"
+quoted_text = "vat.catalogue.domestic_not_subject.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "domestic_reverse_charge"
+label = "vat.catalogue.label_198815"
+description = "vat.catalogue.description_425875"
+triggers_when = "vat.catalogue.triggers_when_234924"
+iva_treatment = "vat.catalogue.iva_treatment_847858"
+requires_reverse_charge = true
+requires_supplier_vat_id = true
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 84.Uno.2.f"
+quoted_text = "vat.catalogue.domestic_reverse_charge.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 84.Uno.2.c"
+quoted_text = "vat.catalogue.domestic_reverse_charge.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "intra_community_supply"
+label = "vat.catalogue.label_375372"
+description = "vat.catalogue.description_170404"
+triggers_when = "vat.catalogue.triggers_when_605383"
+iva_treatment = "vat.catalogue.iva_treatment_816799"
+requires_reverse_charge = false
+requires_supplier_vat_id = true
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 25.Uno"
+quoted_text = "vat.catalogue.intra_community_supply.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 164.Uno.3"
+quoted_text = "vat.catalogue.intra_community_supply.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "intra_community_acquisition_reverse_charge"
+label = "vat.catalogue.label_576993"
+description = "vat.catalogue.description_027697"
+triggers_when = "vat.catalogue.triggers_when_477522"
+iva_treatment = "vat.catalogue.iva_treatment_373587"
+requires_reverse_charge = true
+requires_supplier_vat_id = true
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 13.1"
+quoted_text = "vat.catalogue.intra_community_acquisition_reverse_charge.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 84.Uno.2"
+quoted_text = "vat.catalogue.intra_community_acquisition_reverse_charge.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "intra_community_triangulation"
+label = "vat.catalogue.label_357358"
+description = "vat.catalogue.description_747833"
+triggers_when = "vat.catalogue.triggers_when_253417"
+iva_treatment = "vat.catalogue.iva_treatment_660394"
+requires_reverse_charge = true
+requires_supplier_vat_id = true
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 26.Tres"
+quoted_text = "vat.catalogue.intra_community_triangulation.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 15.Uno"
+quoted_text = "vat.catalogue.intra_community_triangulation.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "export_third_country_zero_rated"
+label = "vat.catalogue.label_620271"
+description = "vat.catalogue.description_889069"
+triggers_when = "vat.catalogue.triggers_when_824512"
+iva_treatment = "vat.catalogue.iva_treatment_338490"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 21.1"
+quoted_text = "vat.catalogue.export_third_country_zero_rated.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 21.2"
+quoted_text = "vat.catalogue.export_third_country_zero_rated.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "import_third_country"
+label = "vat.catalogue.label_889802"
+description = "vat.catalogue.description_247574"
+triggers_when = "vat.catalogue.triggers_when_775302"
+iva_treatment = "vat.catalogue.iva_treatment_869170"
+requires_reverse_charge = true
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 17"
+quoted_text = "vat.catalogue.import_third_country.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 18.Uno"
+quoted_text = "vat.catalogue.import_third_country.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "recargo_equivalencia"
+label = "vat.catalogue.label_243153"
+description = "vat.catalogue.description_951487"
+triggers_when = "vat.catalogue.triggers_when_060209"
+iva_treatment = "vat.catalogue.iva_treatment_837679"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 148.Uno"
+quoted_text = "vat.catalogue.recargo_equivalencia.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 154.Dos"
+quoted_text = "vat.catalogue.recargo_equivalencia.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "regimen_simplificado"
+label = "vat.catalogue.label_574464"
+description = "vat.catalogue.description_837760"
+triggers_when = "vat.catalogue.triggers_when_809073"
+iva_treatment = "vat.catalogue.iva_treatment_720111"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 122.Uno"
+quoted_text = "vat.catalogue.regimen_simplificado.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 123.Uno"
+quoted_text = "vat.catalogue.regimen_simplificado.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "operacion_no_sujeta"
+label = "vat.catalogue.label_765009"
+description = "vat.catalogue.description_113281"
+triggers_when = "vat.catalogue.triggers_when_020809"
+iva_treatment = "vat.catalogue.iva_treatment_703895"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 68.Uno"
+quoted_text = "vat.catalogue.operacion_no_sujeta.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 69.Uno.1"
+quoted_text = "vat.catalogue.operacion_no_sujeta.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "erroneous_invoice"
+label = "vat.catalogue.label_947785"
+description = "vat.catalogue.description_243075"
+triggers_when = "vat.catalogue.triggers_when_035779"
+iva_treatment = "vat.catalogue.iva_treatment_592112"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 89.Uno"
+quoted_text = "vat.catalogue.erroneous_invoice.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 89.Cinco"
+quoted_text = "vat.catalogue.erroneous_invoice.citations.1.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "unknown"
+label = "vat.catalogue.label_775396"
+description = "vat.catalogue.description_306964"
+triggers_when = "vat.catalogue.triggers_when_512869"
+iva_treatment = "vat.catalogue.iva_treatment_732254"
+requires_reverse_charge = false
+requires_supplier_vat_id = false
+boe_references = ["ley-37-1992"]
+manual_references = []
+notes = "Classifier sentinel; cannot be emitted as a filing-grade result."
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 164.Uno"
+quoted_text = "vat.catalogue.unknown.citations.0.quoted_text"
+retrieval_date = 2026-04-13
+
+[[regulations.citations]]
+source = "ley-37-1992"
+article = "Art. 164.Uno.6"
+quoted_text = "vat.catalogue.unknown.citations.1.quoted_text"
+retrieval_date = 2026-04-13

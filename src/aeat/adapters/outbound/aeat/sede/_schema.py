@@ -1,15 +1,16 @@
 """Strict pydantic records for the authenticated AEAT sede surface.
 
-Every record is derived from HTML / URL shapes captured live against
-a production sede. No field is speculative; each has at least one
-real observation backing its shape and bounds.
+Every record represents a read-only AEAT filing, document, or
+notification observation. The schema is intentionally narrow so
+malformed or unsupported AEAT response shapes fail during parsing.
 
 Every boundary-crossing record carries ``mode: Literal["read"]`` as
 part of the structural write-guard — the sede module is incapable
 of mutating AEAT state.
 
 Public surface: :class:`Expediente`, :class:`JustificanteRef`,
-:class:`SedeCapture`.
+:class:`SedeCapture`, :class:`FiledDeclarationArtefact`,
+:class:`ObservedCasillaValue`, :class:`FiledDeclarationObservation`.
 """
 
 from __future__ import annotations
@@ -157,8 +158,78 @@ class SedeCapture(BaseModel):
     mode: Literal["read"] = "read"
 
 
+class FiledDeclarationArtefact(BaseModel):
+    """One immutable artefact captured from AEAT's filed-declaration surface.
+
+    The artefact is evidence of what AEAT served during a read-only
+    session. It is not calculation authority; legal/formula authority
+    remains in BOE, AEAT instructions, manuals, and registry definitions.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
+    source_url: AnyHttpUrl
+    content_type: str = Field(min_length=1, max_length=255)
+    byte_count: int = Field(ge=0)
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    captured_at: datetime
+    storage_ref: str | None = Field(default=None, min_length=1, max_length=4096)
+    mode: Literal["read"] = "read"
+
+
+class ObservedCasillaValue(BaseModel):
+    """One casilla value observed from an AEAT filed-data artefact."""
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: str = Field(min_length=1, max_length=16, pattern=r"^[0-9A-Za-z_.-]+$")
+    value: str = Field(min_length=1, max_length=4096)
+    source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"]
+    source_locator: str = Field(min_length=1, max_length=512)
+    confidence: float = Field(ge=0, le=1)
+    mode: Literal["read"] = "read"
+
+
+class FiledDeclarationObservation(BaseModel):
+    """Normalized read-only observation of one filed AEAT declaration.
+
+    A complete observation starts from the register row and may include
+    submitted machine-readable data, declaration PDFs, and justificante
+    PDFs. Parsed casillas are observations only; downstream calculation
+    logic must validate them through registry extraction profiles.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    expediente_id: str = Field(min_length=12, max_length=32)
+    status: str = Field(min_length=1, max_length=32)
+    presented_at: datetime
+    authenticated_identity: str = Field(min_length=1, max_length=32)
+    artefacts: tuple[FiledDeclarationArtefact, ...] = Field(min_length=1)
+    casillas: tuple[ObservedCasillaValue, ...] = ()
+    metadata: dict[str, str] = Field(default_factory=dict)
+    extraction_coverage: dict[str, float] = Field(default_factory=dict)
+    registry_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    mode: Literal["read"] = "read"
+
+    @field_validator("expediente_id")
+    @classmethod
+    def _observation_expediente_id_shape(cls, value: str) -> str:
+        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
+        if not _EXPEDIENTE_ID_PATTERN.match(value):
+            raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
+        return value
+
+
 __all__ = [
     "Expediente",
+    "FiledDeclarationArtefact",
+    "FiledDeclarationObservation",
     "JustificanteRef",
+    "ObservedCasillaValue",
     "SedeCapture",
 ]

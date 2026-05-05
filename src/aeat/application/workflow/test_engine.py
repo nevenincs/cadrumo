@@ -49,6 +49,7 @@ from ...domain.deadlines import (
     Schedule,
 )
 from ...domain.submission import SubmissionPreflightError
+from ..filing.runtime import build_runtime_schema_provider
 from . import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
@@ -65,14 +66,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # ── Test doubles ────────────────────────────────────────────────────────
 
 
+def _registry_schema_version(*, modelo: str = "130", period: str = "2026Q1") -> str:
+    registry_period = f"{period[-1]}T" if "Q" in period else "0A"
+    provider = build_runtime_schema_provider(
+        filing_year=int(period[:4]),
+        period=registry_period,
+    )
+    return provider.get_subview(modelo).schema_version
+
+
 @dataclass
 class _ConcreteDraft:
-    """Structural :class:`aeat.adapters.outbound.aeat.export.FilingDraftLike` test double."""
+    """Registry-backed draft record used by workflow engine tests."""
 
     draft_id: str = "draft-xyz"
     modelo: str = "130"
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
+    schema_version: str = field(default_factory=_registry_schema_version)
     status: DraftStatus = DraftStatus.APPROVED
     values: Mapping[str, str] = field(default_factory=lambda: {"01": "1000"})
     findings: tuple[FilingFinding, ...] = ()
@@ -415,6 +426,39 @@ class TestAbortReasons:
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+
+    def test_draft_schema_must_match_registry_obligation(self) -> None:
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(schema_version="registry:303:unregistered")
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.BUILDING_DRAFT
+        assert last.details is not None
+        assert last.details["schema_version"] == (f"registry:303:unregistered != {_registry_schema_version()}")
+
+    def test_draft_revision_must_match_active_registry_snapshot(self) -> None:
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(schema_version="registry:130:unregistered")
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.BUILDING_DRAFT
+        assert last.details is not None
+        assert last.details["schema_version"] == (f"registry:130:unregistered != {_registry_schema_version()}")
+
+    def test_draft_period_must_match_resolved_obligation(self) -> None:
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(period="2026Q2")
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.BUILDING_DRAFT
+        assert last.details is not None
+        assert last.details["period"] == "2026Q2 != 2026Q1"
 
     def test_unapproved_ready_draft_fails_preflight(self) -> None:
         fx = _fixtures()

@@ -47,11 +47,14 @@ def calculate_registry_snapshot(
     *,
     inputs: Mapping[str, Decimal],
     date_context: Mapping[str, date],
+    binding_values: Mapping[str, Decimal] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas in a validated registry snapshot."""
 
     _reject_non_decimal(inputs, "input")
+    resolved_bindings = binding_values or {}
+    _reject_non_decimal(resolved_bindings, "binding")
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
 
@@ -70,6 +73,7 @@ def calculate_registry_snapshot(
             value = _evaluate_expression(
                 formula.expression,
                 values=values,
+                binding_values=resolved_bindings,
                 parameters=parameters,
                 date_context=date_context,
                 relation_values=resolved_relations,
@@ -116,6 +120,7 @@ def _evaluate_expression(
     expression: FormulaExpression,
     *,
     values: Mapping[str, Decimal],
+    binding_values: Mapping[str, Decimal],
     parameters: Mapping[str, ParameterDefinition],
     date_context: Mapping[str, date],
     relation_values: Mapping[str, Decimal],
@@ -126,6 +131,7 @@ def _evaluate_expression(
         return _evaluate_leaf(
             expression,
             values=values,
+            binding_values=binding_values,
             parameters=parameters,
             date_context=date_context,
             relation_values=relation_values,
@@ -136,6 +142,7 @@ def _evaluate_expression(
         _evaluate_expression(
             arg,
             values=values,
+            binding_values=binding_values,
             parameters=parameters,
             date_context=date_context,
             relation_values=relation_values,
@@ -163,6 +170,9 @@ def _evaluate_expression(
     if op == "percent":
         _require_arg_count(op, args, 2)
         return args[0] * args[1] / Decimal("100")
+    if op in {"less_than", "less_equal", "greater_than", "greater_equal", "equal"}:
+        _require_arg_count(op, args, 2)
+        return _ONE if _compare(op, args[0], args[1]) else _ZERO
     if op == "min":
         _require_non_empty(op, args)
         return min(args)
@@ -191,6 +201,7 @@ def _evaluate_leaf(
     expression: FormulaExpression,
     *,
     values: Mapping[str, Decimal],
+    binding_values: Mapping[str, Decimal],
     parameters: Mapping[str, ParameterDefinition],
     date_context: Mapping[str, date],
     relation_values: Mapping[str, Decimal],
@@ -204,6 +215,13 @@ def _evaluate_leaf(
             raise RegistryValidationError(f"casilla {expression.casilla!r} referenced before evaluation")
         value = values[expression.casilla]
         operand_refs.append(expression.casilla)
+        operand_values.append(value)
+        return value
+    if expression.binding is not None:
+        if expression.binding not in binding_values:
+            raise RegistryValidationError(f"binding {expression.binding!r} has no supplied value")
+        value = binding_values[expression.binding]
+        operand_refs.append(expression.binding)
         operand_values.append(value)
         return value
     if expression.parameter is not None:
@@ -220,6 +238,20 @@ def _evaluate_leaf(
         operand_values.append(value)
         return value
     raise RegistryValidationError("empty formula expression")
+
+
+def _compare(op: str, left: Decimal, right: Decimal) -> bool:
+    if op == "less_than":
+        return left < right
+    if op == "less_equal":
+        return left <= right
+    if op == "greater_than":
+        return left > right
+    if op == "greater_equal":
+        return left >= right
+    if op == "equal":
+        return left == right
+    raise RegistryValidationError(f"formula expression uses unsupported comparison op {op!r}")
 
 
 def _resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
