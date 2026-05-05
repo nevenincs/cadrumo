@@ -256,6 +256,38 @@ def test_registry_formula_runtime_rejects_non_decimal_input() -> None:
         )
 
 
+def test_registry_formula_runtime_rejects_unknown_binding_values() -> None:
+    snapshot = _committed_modelo_130_snapshot()
+
+    with pytest.raises(RegistryValidationError, match="unknown registry binding ids"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            date_context={"filing_period": date(2026, 3, 31)},
+            binding_values={
+                _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+                "unknown-binding": Decimal("1"),
+            },
+        )
+
+
+def test_registry_formula_runtime_rejects_unknown_relation_values() -> None:
+    snapshot = _committed_modelo_180_snapshot()
+
+    with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            date_context={"filing_period": date(2026, 12, 31)},
+            relation_values={
+                "modelo-180-rel-115-perceptores-anual": Decimal("4"),
+                "modelo-180-rel-115-base-anual": Decimal("550.00"),
+                "modelo-180-rel-115-retenciones-anual": Decimal("114.00"),
+                "unknown-relation": Decimal("1"),
+            },
+        )
+
+
 def test_registry_formula_runtime_rejects_missing_parameter_axis() -> None:
     snapshot = _committed_modelo_130_snapshot()
 
