@@ -375,14 +375,14 @@ cli:
       verdict: Veredicto
       warnings: Advertencias
     opts:
-      by: Por
-      draft_id: ID del borrador
-      file: Archivo
+      by: Persona que revisó la declaración
+      draft_id: ID del borrador local
+      file: Archivo local exportado a verificar
       filter: Filtro
       modelo: Modelo
-      output: Salida
+      output: Ruta del informe o archivo local de salida
       period: Periodo
-      reason: Motivo
+      reason: Motivo auditado del cambio o aprobación
       set: Asignar (SET)
     preview_help: Previsualizar el contenido de una declaración
     review_help: Revisar las validaciones y errores de una declaración

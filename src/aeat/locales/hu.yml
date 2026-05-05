@@ -381,14 +381,14 @@ cli:
       verdict: Ítélet
       warnings: Figyelmeztetések
     opts:
-      by: Által
-      draft_id: Tervezet azonosítója
-      file: Fájl
+      by: A bevallást ellenőrző személy
+      draft_id: Helyi tervezet azonosítója
+      file: Ellenőrizendő helyi exportfájl
       filter: Szűrő
       modelo: Adóbevallási űrlap
-      output: Kimenet
+      output: Ellenőrzési jelentés vagy helyi kimeneti útvonal
       period: Időszak
-      reason: Indok
+      reason: A módosítás vagy jóváhagyás auditált indoka
       set: Hozzárendelés (SET)
     preview_help: Bevallás tartalmának előnézete
     review_help: Bevallás ellenőrzéseinek és hibáinak áttekintése
