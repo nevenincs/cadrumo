@@ -1,0 +1,103 @@
+"""Filed-state comparison for registry calculation outputs."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from decimal import Decimal
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from ._bindings import RegistryFilingObservation
+from ._errors import RegistryValidationError
+from ._formula_runtime import RegistryCalculationResult
+
+__all__ = [
+    "RegistryFiledStateComparison",
+    "RegistryFiledStateDrift",
+    "compare_calculation_to_filed_observation",
+]
+
+
+class RegistryFiledStateDrift(BaseModel):
+    """One casilla whose local calculation does not match filed AEAT state."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    casilla_id: str = Field(min_length=1)
+    local_value: Decimal
+    filed_value: Decimal
+    delta: Decimal
+
+
+class RegistryFiledStateComparison(BaseModel):
+    """Verdict for one local calculation versus one normalized filed observation."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    modelo: str = Field(min_length=1, max_length=8)
+    revision: str = Field(min_length=1)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    status: Literal["satisfied", "failed"]
+    compared_casillas: tuple[str, ...]
+    missing_local_casillas: tuple[str, ...] = ()
+    missing_filed_casillas: tuple[str, ...] = ()
+    drifts: tuple[RegistryFiledStateDrift, ...] = ()
+
+    @field_validator("compared_casillas", "missing_local_casillas", "missing_filed_casillas")
+    @classmethod
+    def _casilla_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("casilla ids must be unique")
+        return value
+
+
+def compare_calculation_to_filed_observation(
+    calculation: RegistryCalculationResult,
+    observation: RegistryFilingObservation,
+    *,
+    required_casillas: Iterable[str],
+) -> RegistryFiledStateComparison:
+    """Compare local registry calculation values against filed AEAT casillas."""
+
+    if calculation.modelo != observation.modelo:
+        raise RegistryValidationError(
+            f"cannot compare calculation modelo {calculation.modelo!r} "
+            f"with filed observation modelo {observation.modelo!r}"
+        )
+    target_casillas = tuple(sorted(set(required_casillas)))
+    if not target_casillas:
+        raise RegistryValidationError("filed-state comparison requires at least one casilla")
+
+    local_values = calculation.values
+    filed_values = observation.casilla_values
+    missing_local = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in local_values)
+    missing_filed = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in filed_values)
+    comparable = tuple(
+        casilla_id for casilla_id in target_casillas if casilla_id in local_values and casilla_id in filed_values
+    )
+    drifts = tuple(
+        RegistryFiledStateDrift(
+            casilla_id=casilla_id,
+            local_value=local_values[casilla_id],
+            filed_value=filed_values[casilla_id],
+            delta=local_values[casilla_id] - filed_values[casilla_id],
+        )
+        for casilla_id in comparable
+        if local_values[casilla_id] != filed_values[casilla_id]
+    )
+    status: Literal["satisfied", "failed"] = (
+        "satisfied" if not missing_local and not missing_filed and not drifts else "failed"
+    )
+    return RegistryFiledStateComparison(
+        modelo=calculation.modelo,
+        revision=calculation.revision,
+        filing_year=observation.filing_year,
+        period=observation.period,
+        status=status,
+        compared_casillas=comparable,
+        missing_local_casillas=missing_local,
+        missing_filed_casillas=missing_filed,
+        drifts=drifts,
+    )
