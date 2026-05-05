@@ -1,0 +1,118 @@
+[legal."orden-eha-769-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#articulo-1"
+document_id = "BOE-A-2010-5098"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprobacion del modelo 349 de declaracion recapitulativa de operaciones intracomunitarias y de sus disenos fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
+required_text = [
+    "se aprueba el modelo 349",
+    "declaración recapitulativa de operaciones intracomunitarias",
+    "diseños físicos y lógicos",
+    "condiciones generales y el procedimiento",
+]
+
+[legal."orden-eha-769-2010:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#articulo-2"
+document_id = "BOE-A-2010-5098"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098#a2"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Obligados a presentar la declaracion recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
+required_text = [
+    "Obligados a presentar la declaración recapitulativa",
+    "50.000 euros",
+]
+
+[legal."orden-eha-769-2010:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#articulo-10"
+document_id = "BOE-A-2010-5098"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098#a10"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Plazo de presentacion del modelo 349: veinte primeros dias naturales del mes inmediato siguiente al periodo, salvo julio (hasta el 20 de septiembre) y diciembre/cuarto trimestre (treinta primeros dias naturales de enero)."
+required_text = [
+    "Plazo de presentación del modelo 349",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[legal."orden-hac-174-2020:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-174-2020.html#articulo-1"
+document_id = "BOE-A-2020-2898"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898"
+published_at = 2020-02-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Modificacion de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentacion anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
+required_text = [
+    "se modifica la Orden EHA/769/2010",
+    "modelo 349",
+    "operaciones intracomunitarias",
+    "acuerdos de ventas de bienes en consigna",
+]
+
+[sources."aeat-dr-349-2020-current"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf"
+sha256 = "874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335"
+bytes = 915219
+retrieved_at = 2026-05-03
+published_at = 2020-02-29
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_20/DR_Anexo_349.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-349-form-2010"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-769-2010.html"
+sha256 = "8d41452a7a8e56d698316888679e642ab54155e4c9eb24cf01298bcf02932090"
+bytes = 217369
+retrieved_at = 2026-05-05
+published_at = 2010-03-31
+applies_from = 2010-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
+review_status = "reviewed"
+
+[sources."aeat-modelo-349-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/modelo-349-procedure.html"
+sha256 = "2ad54714cf31fefe3a0d5c900faab7d5362b900dd7caeac1ff5a66b5372ae43e"
+bytes = 46429
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
+review_status = "reviewed"
