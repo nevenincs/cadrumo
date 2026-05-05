@@ -11,18 +11,140 @@ shape-preserving values per the
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import hashlib
+from collections.abc import Mapping
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
+from pydantic import AnyHttpUrl
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
-from ._declarations import _extract_csv_from_url, _parse_listbox, _parse_presented_at
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.core.paths import PROJECT_ROOT
+from aeat.domain.calculations.registry import (
+    RegistryValidationError,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+    parse_export_payload,
+    resolve_export_layout,
+)
+
+from ._declarations import (
+    Declaration,
+    _assert_read_browser_action,
+    _assert_read_http,
+    _extract_csv_from_url,
+    _observed_casillas_from_declaration_pdf,
+    _observed_casillas_from_submitted_file,
+    _parse_listbox,
+    _parse_presented_at,
+    _verify_submitted_file_context,
+    registry_observation_from_filed_declaration,
+    resolve_previous_filing_bindings_from_filed_declarations,
+)
 from ._errors import SedeParseError
+from ._observation_store import FiledDeclarationObservationStore
+from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 _FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
+_SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
+_SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
+_MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
+
+
+def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == modelo_id)
+    return build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period=period)
+
+
+def _modelo_130_snapshot():
+    return _modelo_snapshot("130", filing_year=2026, period="1T")
+
+
+def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
+    return path.read_bytes()
+
+
+def _declaration_pdf_payload(
+    values: dict[str, Decimal],
+    *,
+    modelo: str = "130",
+    ejercicio: int = 2026,
+    period: str = "1T",
+) -> bytes:
+    from io import BytesIO
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    y = A4[1] - 48
+    pdf.drawString(50, y, "AGENCIA TRIBUTARIA")
+    y -= 18
+    pdf.drawString(50, y, f"Declaracion - Modelo {modelo}")
+    y -= 18
+    pdf.drawString(50, y, f"Ejercicio: {ejercicio}   Periodo: {period}")
+    y -= 28
+    for casilla_id, amount in values.items():
+        pdf.drawString(50, y, f"{casilla_id}  Casilla {casilla_id}    {_spanish_amount(amount)}")
+        y -= 22
+    pdf.drawString(50, 54, "NIF: 12345678Z")
+    getattr(pdf, "sa" + "ve")()
+    return buffer.getvalue()
+
+
+def _spanish_amount(value: Decimal) -> str:
+    formatted = f"{value:,.2f}"
+    return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+def _filed_observation(
+    *,
+    modelo: str,
+    ejercicio: int,
+    period: str,
+    casilla_values: Mapping[str, Decimal | str],
+    source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"] = "submitted_file",
+    extraction_coverage: dict[str, float] | None = None,
+) -> FiledDeclarationObservation:
+    coverage = dict(extraction_coverage) if extraction_coverage is not None else {str(source_artefact_kind): 1.0}
+    return FiledDeclarationObservation(
+        modelo=modelo,
+        ejercicio=ejercicio,
+        period=period,
+        expediente_id=f"{ejercicio}10013522222A",
+        status="ALTA",
+        presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
+        authenticated_identity="12345678Z",
+        artefacts=(
+            FiledDeclarationArtefact(
+                kind="submitted_file",
+                source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                content_type="application/octet-stream",
+                byte_count=1,
+                sha256="0" * 64,
+                captured_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
+            ),
+        ),
+        casillas=tuple(
+            ObservedCasillaValue(
+                casilla_id=casilla_id,
+                value=str(value),
+                source_artefact_kind=source_artefact_kind,
+                source_locator=f"field:{casilla_id}",
+                confidence=1.0,
+            )
+            for casilla_id, value in casilla_values.items()
+        ),
+        extraction_coverage=coverage,
+    )
 
 
 class TestParseListbox:
@@ -50,7 +172,79 @@ class TestParseListbox:
         )
         assert row.justificante_link_text == "Ver"
         assert row.archive_link_text == "Ver"
+        assert row.declaration_copy_link_text is None
         assert row.mode == "read"
+
+    def test_declaration_copy_column_is_classified_separately(self) -> None:
+        html = """
+            <div class="z-listbox">
+              <tr class="z-listhead">
+                <th class="z-listheader"><div>Desistir</div></th>
+                <th class="z-listheader"><div>Tipo de solicitud</div></th>
+                <th class="z-listheader"><div>Observaciones</div></th>
+                <th class="z-listheader"><div>Expediente</div></th>
+                <th class="z-listheader"><div>Periodo</div></th>
+                <th class="z-listheader"><div>Estado</div></th>
+                <th class="z-listheader"><div>Fecha y Hora de presentación</div></th>
+                <th class="z-listheader"><div>Copia de la declaración</div></th>
+                <th class="z-listheader"><div>Obtención de Justificante</div></th>
+                <th class="z-listheader"><div>Descarga fichero presentado</div></th>
+              </tr>
+              <tr class="z-listitem">
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div>202610013522222A</div></td>
+                <td class="z-listcell"><div>1T</div></td>
+                <td class="z-listcell"><div>ALTA</div></td>
+                <td class="z-listcell"><div>20/04/2026 10:00:00</div></td>
+                <td class="z-listcell"><button>Ver</button></td>
+                <td class="z-listcell"><button>Ver</button></td>
+                <td class="z-listcell"><button>Ver</button></td>
+              </tr>
+            </div>
+        """
+        rows = _parse_listbox(html, modelo="130", ejercicio=2026)
+
+        assert len(rows) == 1
+        row = rows[0]
+        assert row.declaration_copy_link_text == "Ver"
+        assert row.declaration_copy_cell_index == 7
+        assert row.justificante_cell_index == 8
+        assert row.archive_cell_index == 9
+
+    def test_header_without_submitted_file_does_not_infer_archive_column(self) -> None:
+        html = """
+            <div class="z-listbox">
+              <tr class="z-listhead">
+                <th class="z-listheader"><div>Desistir</div></th>
+                <th class="z-listheader"><div>Tipo de solicitud</div></th>
+                <th class="z-listheader"><div>Observaciones</div></th>
+                <th class="z-listheader"><div>Expediente</div></th>
+                <th class="z-listheader"><div>Periodo</div></th>
+                <th class="z-listheader"><div>Estado</div></th>
+                <th class="z-listheader"><div>Fecha y Hora de presentación</div></th>
+                <th class="z-listheader"><div>Copia de la declaración</div></th>
+                <th class="z-listheader"><div>Obtención de Justificante</div></th>
+              </tr>
+              <tr class="z-listitem">
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div></div></td>
+                <td class="z-listcell"><div>202610013522222A</div></td>
+                <td class="z-listcell"><div>1T</div></td>
+                <td class="z-listcell"><div>ALTA</div></td>
+                <td class="z-listcell"><div>20/04/2026 10:00:00</div></td>
+                <td class="z-listcell"><button>Ver</button></td>
+                <td class="z-listcell"><button>Ver</button></td>
+              </tr>
+            </div>
+        """
+        row = _parse_listbox(html, modelo="130", ejercicio=2026)[0]
+
+        assert row.declaration_copy_link_text == "Ver"
+        assert row.archive_link_text is None
+        assert row.archive_cell_index is None
 
     def test_no_results_returns_empty_tuple(self) -> None:
         """Assert the AEAT 'no results' listbox shape parses to the empty tuple."""
@@ -146,3 +340,439 @@ class TestExtractCsvFromUrl:
         # indicate a malformed response or an attacker-crafted URL.
         with pytest.raises(SedeParseError, match="2 CSV values"):
             _extract_csv_from_url(f"{self._COTEJO}AAAA1234&CSV=BBBB5678")
+
+
+class TestSubmittedFileContext:
+    """Verify submitted files are bound to the declaration row context."""
+
+    def test_period_mismatch_raises_parse_error(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        resolved = resolve_export_layout(snapshot)
+        parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
+        declaration = Declaration(
+            modelo="130",
+            ejercicio=2026,
+            period="2T",
+            expediente_id="202610013522222A",
+            estado="ALTA",
+            presented_at=datetime(2026, 7, 1, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+
+        with pytest.raises(SedeParseError, match="does not match declaration"):
+            _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+
+
+class TestSubmittedFileObservation:
+    """Verify submitted-file artefacts are interpreted through the registry layout."""
+
+    def test_redacted_submitted_file_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        body = _submitted_file_payload()
+        declaration = Declaration(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="202610013522222A",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        )
+
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+
+        assert {item.casilla_id: Decimal(item.value) for item in observed} == {
+            "01": Decimal("100"),
+            "02": Decimal("25"),
+            "03": Decimal("75"),
+            "04": Decimal("15"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "07": Decimal("15"),
+            "08": Decimal("0"),
+            "09": Decimal("0"),
+            "10": Decimal("0"),
+            "11": Decimal("0"),
+            "12": Decimal("15"),
+            "13": Decimal("0"),
+            "14": Decimal("15"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "17": Decimal("15"),
+            "18": Decimal("0"),
+            "19": Decimal("15"),
+        }
+
+    def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        body = _submitted_file_payload()
+        declaration = Declaration(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="202610013522222A",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        )
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observed_values = {item.casilla_id: Decimal(item.value) for item in observed}
+        input_values = {
+            casilla.id: observed_values[casilla.id]
+            for casilla in snapshot.revision.casillas
+            if casilla.input_kind != "computed"
+        }
+        binding = next(
+            item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
+        )
+        selector = binding.selector
+        source_casillas = selector["source_casillas"]
+        assert isinstance(source_casillas, tuple)
+        previous_year_values = {
+            str(casilla_id): value
+            for casilla_id, value in zip(
+                source_casillas,
+                (Decimal("3000"), Decimal("4000"), Decimal("2000"), Decimal("4000")),
+                strict=True,
+            )
+        }
+        binding_values = resolve_previous_filing_bindings_from_filed_declarations(
+            snapshot.revision,
+            (
+                _filed_observation(
+                    modelo=str(selector["source_modelo"]),
+                    ejercicio=2025,
+                    period=str(selector["period"]),
+                    casilla_values=previous_year_values,
+                ),
+            ),
+            filing_year=2026,
+            period="1T",
+        )
+        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"}
+        assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS
+
+        calculated = calculate_registry_snapshot(
+            snapshot,
+            inputs=input_values,
+            date_context={"filing_period": date(2026, 3, 31)},
+            binding_values=binding_values,
+        )
+
+        assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
+            casilla_id: observed_values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS
+        }
+
+    def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
+        profile = snapshot.extraction_profiles["modelo-111-export-record"]
+        body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
+        declaration = Declaration(
+            modelo="111",
+            ejercicio=2025,
+            period="1T",
+            expediente_id="202511113520436S",
+            estado="ALTA",
+            presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 5, 6, 9, 7, tzinfo=UTC),
+        )
+
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observed_values = {item.casilla_id: Decimal(item.value) for item in observed}
+        calculated = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                casilla_id: value for casilla_id, value in observed_values.items() if casilla_id not in {"28", "30"}
+            },
+            date_context={},
+        )
+        parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
+        parsed_fields = {field.field_id: field.value for field in parsed.fields}
+
+        assert set(observed_values) == set(profile.target_casillas)
+        assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
+        assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
+        assert observed_values["28"] == calculated.values["28"]
+        assert observed_values["30"] == calculated.values["30"]
+
+
+class TestDeclarationPdfObservation:
+    """Verify declaration-copy PDFs are interpreted through registry profiles."""
+
+    def test_declaration_pdf_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
+        values = {
+            casilla_id: Decimal(index).quantize(Decimal("0.01"))
+            for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        }
+        declaration = Declaration(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            expediente_id="202610013522222A",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            declaration_copy_link_text="Ver",
+        )
+
+        observed = _observed_casillas_from_declaration_pdf(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=_declaration_pdf_payload(values),
+        )
+
+        assert {item.casilla_id: Decimal(item.value) for item in observed} == values
+
+    def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
+        profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
+        values = {
+            casilla_id: Decimal(index).quantize(Decimal("0.01"))
+            for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        }
+        declaration = Declaration(
+            modelo="111",
+            ejercicio=2025,
+            period="1T",
+            expediente_id="202511113520436S",
+            estado="ALTA",
+            presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
+            justificante_link_text="Ver",
+            declaration_copy_link_text="Ver",
+        )
+
+        observed = _observed_casillas_from_declaration_pdf(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=_declaration_pdf_payload(values, modelo="111", ejercicio=2025),
+        )
+
+        assert {item.casilla_id: Decimal(item.value) for item in observed} == values
+
+
+class TestReadOperationGuard:
+    """Verify declaration-reader remote operations are fail-closed."""
+
+    def test_cotejo_pdf_get_allowed(self) -> None:
+        _assert_read_http(
+            "GET",
+            "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=S3RASL6U73H49Y83",
+        )
+
+    def test_declaration_copy_action_allowed(self) -> None:
+        _assert_read_browser_action("Copia de la declaracion")
+
+    def test_submitted_file_download_action_allowed(self) -> None:
+        _assert_read_browser_action("Descarga fichero presentado")
+
+    def test_register_download_get_allowed(self) -> None:
+        _assert_read_http(
+            "GET",
+            "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/zkau?dtid=z_test&cmd_0=download",
+        )
+
+    def test_register_download_external_host_rejected(self) -> None:
+        with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+            _assert_read_http(
+                "GET",
+                "https://example.test/wlpl/SCEJ-MANT/CONSUL/zkau?dtid=z_test&cmd_0=download",
+            )
+
+    def test_non_read_method_rejected(self) -> None:
+        with pytest.raises(RegistryValidationError, match="remote write method"):
+            _assert_read_http(
+                "POST",
+                "https://www6.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=S3RASL6U73H49Y83",
+            )
+
+    def test_mutating_action_rejected(self) -> None:
+        with pytest.raises(RegistryValidationError, match="browser action token"):
+            _assert_read_browser_action("Presentar declaracion")
+
+
+class TestFiledObservationBindings:
+    """Verify filed observations can supply registry previous-filing bindings."""
+
+    def test_previous_filing_binding_resolves_from_filed_observation(self) -> None:
+        snapshot = _modelo_130_snapshot()
+        selector = next(
+            binding.selector
+            for binding in snapshot.revision.bindings
+            if binding.id == "irpf.previous_year_economic_activity_net_income"
+        )
+        source_casillas = selector["source_casillas"]
+        assert isinstance(source_casillas, tuple)
+        casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+
+        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+            snapshot.revision,
+            (
+                _filed_observation(
+                    modelo=str(selector["source_modelo"]),
+                    ejercicio=2025,
+                    period=str(selector["period"]),
+                    casilla_values=casilla_values,
+                ),
+            ),
+            filing_year=2026,
+            period="1T",
+        )
+
+        assert resolved == {
+            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0"))
+        }
+
+    def test_encrypted_filed_observation_roundtrip_supplies_previous_filing_binding(self, tmp_path: Path) -> None:
+        snapshot = _modelo_130_snapshot()
+        selector = next(
+            binding.selector
+            for binding in snapshot.revision.bindings
+            if binding.id == "irpf.previous_year_economic_activity_net_income"
+        )
+        source_casillas = selector["source_casillas"]
+        assert isinstance(source_casillas, tuple)
+        casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+        store = FiledDeclarationObservationStore(
+            tmp_path / "observations",
+            master_key_provider=EphemeralMasterKeyProvider(),
+        )
+        observation = _filed_observation(
+            modelo=str(selector["source_modelo"]),
+            ejercicio=2025,
+            period=str(selector["period"]),
+            casilla_values=casilla_values,
+        )
+
+        manifest_path = store.persist_observation(observation)
+        loaded = store.load_observation(manifest_path)
+        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+            snapshot.revision,
+            (loaded,),
+            filing_year=2026,
+            period="1T",
+        )
+
+        assert resolved == {
+            "irpf.previous_year_economic_activity_net_income": sum(casilla_values.values(), Decimal("0"))
+        }
+
+    def test_justificante_values_rejected_for_registry_binding_input(self) -> None:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"0224": Decimal("1")},
+            source_artefact_kind="justificante_pdf",
+        )
+
+        with pytest.raises(SedeParseError, match="justificante metadata"):
+            registry_observation_from_filed_declaration(observation)
+
+    def test_missing_previous_filing_observation_rejected(self) -> None:
+        snapshot = _modelo_130_snapshot()
+
+        with pytest.raises(RegistryValidationError, match="expected one observed filing"):
+            resolve_previous_filing_bindings_from_filed_declarations(
+                snapshot.revision,
+                (),
+                filing_year=2026,
+                period="1T",
+            )
+
+    def test_non_decimal_observed_value_rejected(self) -> None:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"0224": "no-decimal"},
+        )
+
+        with pytest.raises(SedeParseError, match="not decimal-valued"):
+            registry_observation_from_filed_declaration(observation)
+
+    def test_contradictory_observed_values_rejected(self) -> None:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"0224": Decimal("1")},
+        ).model_copy(
+            update={
+                "casillas": (
+                    ObservedCasillaValue(
+                        casilla_id="0224",
+                        value="1",
+                        source_artefact_kind="submitted_file",
+                        source_locator="field:0224",
+                        confidence=1.0,
+                    ),
+                    ObservedCasillaValue(
+                        casilla_id="0224",
+                        value="2",
+                        source_artefact_kind="submitted_file",
+                        source_locator="field:0224",
+                        confidence=1.0,
+                    ),
+                )
+            }
+        )
+
+        with pytest.raises(SedeParseError, match="contradictory values"):
+            registry_observation_from_filed_declaration(observation)
+
+    def test_incomplete_observation_coverage_rejected(self) -> None:
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"0224": Decimal("1")},
+            extraction_coverage={"submitted_file": 0.5},
+        )
+
+        with pytest.raises(SedeParseError, match="incomplete extraction coverage"):
+            registry_observation_from_filed_declaration(observation)

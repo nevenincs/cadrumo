@@ -22,7 +22,7 @@ from ._docs_helpers import (
 )
 from ._i18n import tr
 
-app = typer.Typer(name="docs", no_args_is_help=True, help="Google Docs helpers.")
+app = typer.Typer(name="docs", no_args_is_help=True, help=tr("cli.docs.app_help"))
 
 
 def _docs() -> Any:
@@ -33,10 +33,10 @@ def _docs() -> Any:
     return build_docs_service(creds)
 
 
-@app.command(name="get", help="Fetch a document. Pass --plaintext for the rendered text only.")
+@app.command(name="get", help=tr("cli.docs.get_help"))
 def get(
-    doc_id: str = typer.Argument(..., help="Document ID."),
-    plaintext: bool = typer.Option(False, "--plaintext", "-p", help="Print rendered plain text only."),
+    doc_id: str = typer.Argument(..., help=tr("cli.docs.get_doc_id_help")),
+    plaintext: bool = typer.Option(False, "--plaintext", "-p", help=tr("cli.docs.get_plaintext_help")),
 ) -> None:
     """Fetch a document by ID."""
     service = _docs()
@@ -47,23 +47,23 @@ def get(
         typer.echo(json.dumps(document, indent=2))
 
 
-@app.command(name="new", help="Create a new document and print its ID.")
-def new(title: str = typer.Argument(..., help="Document title.")) -> None:
+@app.command(name="new", help=tr("cli.docs.new_help"))
+def new(title: str = typer.Argument(..., help=tr("cli.docs.new_title_help"))) -> None:
     """Create an empty document."""
     service = _docs()
     response = service.documents().create(body={"title": title}).execute()
     typer.echo(response["documentId"])
 
 
-@app.command(name="append", help="Append text to a document.")
+@app.command(name="append", help=tr("cli.docs.append_help"))
 def append(
-    doc_id: str = typer.Argument(..., help="Document ID."),
-    text: str = typer.Argument(..., help="Text to append."),
+    doc_id: str = typer.Argument(..., help=tr("cli.docs.append_doc_id_help")),
+    text: str = typer.Argument(..., help=tr("cli.docs.append_text_help")),
 ) -> None:
     """Append text to the end of a document."""
     if not text:
         typer.secho(
-            tr("cli.docs.t_771049"),
+            tr("cli.docs.errors.empty_text"),
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -74,14 +74,14 @@ def append(
         documentId=doc_id,
         body={"requests": build_append_request(text, end_index)},
     ).execute()
-    typer.echo(tr("cli.docs.t_372230"))
+    typer.echo(tr("cli.docs.success.appended"))
 
 
-@app.command(name="replace", help="Find and replace text inside a document.")
+@app.command(name="replace", help=tr("cli.docs.replace_help"))
 def replace(
-    doc_id: str = typer.Argument(..., help="Document ID."),
-    old: str = typer.Argument(..., help="Substring to replace."),
-    new_text: str = typer.Argument(..., help="Replacement text."),
+    doc_id: str = typer.Argument(..., help=tr("cli.docs.replace_doc_id_help")),
+    old: str = typer.Argument(..., help=tr("cli.docs.replace_old_help")),
+    new_text: str = typer.Argument(..., help=tr("cli.docs.replace_new_text_help")),
 ) -> None:
     """Replace every occurrence of ``old`` with ``new_text``."""
     service = _docs()
@@ -95,7 +95,7 @@ def replace(
     )
     replies = response.get("replies", [])
     sum(reply.get("replaceAllText", {}).get("occurrencesChanged", 0) for reply in replies)
-    typer.echo(tr("cli.docs.t_327883"))
+    typer.echo(tr("cli.docs.success.replaced"))
 
 
 __all__ = [

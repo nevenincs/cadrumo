@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 from zoneinfo import ZoneInfo
 
 from ...adapters.inbound.justificante import parse_justificante
@@ -37,11 +37,20 @@ _MADRID_TZ = ZoneInfo("Europe/Madrid")
 _QUARTER_RE = re.compile(r"^([1-4])T$")
 _MONTH_RE = re.compile(r"^(0[1-9]|1[0-2])$")
 _ANNUAL_RE = re.compile(r"^0A$")
+_YEAR_RE = re.compile(r"^\d{4}$")
 _CANONICAL_QUARTER_RE = re.compile(r"^\d{4}Q[1-4]$")
 _CANONICAL_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 _CANONICAL_ANNUAL_RE = re.compile(r"^\d{4}A$")
 
 _EMPTY_CASILLA_WARNING: str = "filing.import.empty_casilla_warning"
+
+
+class _RegistryPeriodSubview(Protocol):
+    period_selector_periods: tuple[str, ...]
+
+
+class RegistryImportSchemaProvider(CasillaSchemaProvider, Protocol):
+    def get_subview(self, modelo: str) -> _RegistryPeriodSubview: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +80,7 @@ class JustificanteImportResult:
 def import_filing_from_justificante(
     pdf_path: Path,
     *,
-    schema_provider: CasillaSchemaProvider,
+    schema_provider: RegistryImportSchemaProvider,
 ) -> JustificanteImportResult:
     """Reconstruct a draft + submission record from a justificante PDF.
 
@@ -96,11 +105,11 @@ def import_filing_from_justificante(
         modelo=justificante.modelo,
         ejercicio=justificante.ejercicio,
         raw_period=justificante.period,
+        schema_provider=schema_provider,
     )
     profile = FilingOperatorProfile(
         tax_id=justificante.tax_id,
         display_name=f"Imported filing {justificante.csv}",
-        applicable_modelos=(justificante.modelo,),
     )
 
     # Deferred import: `aeat.application.filing` imports this module, so top-level
@@ -136,13 +145,15 @@ def _normalise_period(
     modelo: str,
     ejercicio: str | None,
     raw_period: str,
+    schema_provider: RegistryImportSchemaProvider,
 ) -> str:
     """Canonicalise a printed AEAT period to the project's internal form.
 
-    Quarterly modelos (130, 303-quarterly, 390): ``"1T"..."4T"`` →
-    ``"YYYYQ1"..."YYYYQ4"``. Monthly 303: ``"01"..."12"`` →
-    ``"YYYY-MM"``. Annual 100/390: ``"0A"`` → ``"YYYYA"``. Already
-    canonical inputs pass through unchanged.
+    Quarterly period tokens (``"1T"..."4T"``) become
+    ``"YYYYQ1"..."YYYYQ4"``. Monthly tokens (``"01"..."12"``) become
+    ``"YYYY-MM"``. Annual tokens (``"0A"`` or the printed
+    ejercicio itself) become ``"YYYYA"``. Already canonical inputs pass
+    through unchanged.
 
     Args:
         modelo: The modelo string, used only for error messages.
@@ -157,12 +168,33 @@ def _normalise_period(
     Raises:
         FilingImportError: If the pair cannot be canonicalised.
     """
-    if _CANONICAL_QUARTER_RE.match(raw_period):
-        return raw_period
-    if _CANONICAL_MONTH_RE.match(raw_period):
-        return raw_period
+    try:
+        subview = schema_provider.get_subview(modelo)
+    except FilingBuilderError as exc:
+        raise FilingImportError(f"modelo {modelo!r} is not present in the calculation registry") from exc
+    supported_periods = set(subview.period_selector_periods)
+
+    if match := _CANONICAL_QUARTER_RE.match(raw_period):
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=raw_period,
+            period_code=f"{match.group(0)[-1]}T",
+            supported_periods=supported_periods,
+        )
+    if match := _CANONICAL_MONTH_RE.match(raw_period):
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=raw_period,
+            period_code=match.group(1),
+            supported_periods=supported_periods,
+        )
     if _CANONICAL_ANNUAL_RE.match(raw_period):
-        return raw_period
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=raw_period,
+            period_code="0A",
+            supported_periods=supported_periods,
+        )
 
     if ejercicio is None:
         raise FilingImportError(
@@ -173,14 +205,52 @@ def _normalise_period(
 
     quarter_match = _QUARTER_RE.match(raw_period)
     if quarter_match is not None:
-        return f"{ejercicio}Q{quarter_match.group(1)}"
+        quarter = quarter_match.group(1)
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=f"{ejercicio}Q{quarter}",
+            period_code=f"{quarter}T",
+            supported_periods=supported_periods,
+        )
     month_match = _MONTH_RE.match(raw_period)
     if month_match is not None:
-        return f"{ejercicio}-{month_match.group(1)}"
+        month = month_match.group(1)
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=f"{ejercicio}-{month}",
+            period_code=month,
+            supported_periods=supported_periods,
+        )
     if _ANNUAL_RE.match(raw_period):
-        return f"{ejercicio}A"
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=f"{ejercicio}A",
+            period_code="0A",
+            supported_periods=supported_periods,
+        )
+    if _YEAR_RE.match(raw_period) and raw_period == ejercicio:
+        return _require_supported_period_token(
+            modelo=modelo,
+            canonical=f"{ejercicio}A",
+            period_code="0A",
+            supported_periods=supported_periods,
+        )
 
     raise FilingImportError(f"modelo {modelo}: cannot canonicalise period {raw_period!r} for ejercicio {ejercicio!r}")
+
+
+def _require_supported_period_token(
+    *,
+    modelo: str,
+    canonical: str,
+    period_code: str,
+    supported_periods: set[str],
+) -> str:
+    if period_code not in supported_periods:
+        raise FilingImportError(
+            f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision"
+        )
+    return canonical
 
 
 def _build_submission_record(

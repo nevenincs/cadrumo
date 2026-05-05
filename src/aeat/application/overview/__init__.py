@@ -4,7 +4,7 @@ The CLI exposes::
 
     aeat app overview status                                # bare readiness
     aeat app overview status --calendar --from DATE --to DATE
-    aeat app overview status --period PERIOD --verbose
+    aeat app overview status --period {period} --verbose
 
 The calendar view uses a closed 4-state user-facing taxonomy that maps
 from the existing :class:`aeat.domain.deadlines.ObligationStatus`
@@ -120,7 +120,7 @@ class OverviewCalendarEntry(BaseModel):
     do not re-derive the mapping at every call site.
 
     Attributes:
-        modelo: Modelo identifier (e.g. ``"130"``, ``"303"``).
+        modelo: Modelo identifier.
         period: Canonical period string (e.g. ``"2026Q1"``).
         opens_on: First day the filing window accepts submissions.
         closes_on: Last day the filing window accepts submissions.

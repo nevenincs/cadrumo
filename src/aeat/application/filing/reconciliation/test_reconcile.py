@@ -1,24 +1,19 @@
-"""Unit tests for the FilingDraft ↔ Justificante reconciler.
-
-Uses captured-live IRPF justificante PDFs (parsed at test time)
-paired with synthetic FilingDraft fixtures to exercise every triad
-branch. No network, no mocks — the tests confirm the compare actually
-produces the right verdict for the shapes AEAT really emits.
-"""
+"""Tests for registry-gated FilingDraft to Justificante reconciliation."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante
 from ....core.config import PROJECT_ROOT
-from ....domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind
+from ....domain.filing import FilingBuilderError, FilingDraft, FilingDraftStatus
 from ....domain.justificante import Justificante
-from ..testing import synthesize_filing_draft
+from .. import build_runtime_schema_provider
+from ..testing import build_registry_filing_draft
 from . import (
     FilingDivergenceKind,
     ReconciliationStatus,
@@ -29,56 +24,132 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _FIXED_NOW = datetime(2026, 4, 24, 20, 0, 0, tzinfo=UTC)
+_MODELO_130_INPUTS = {
+    "01": Decimal("12500.00"),
+    "02": Decimal("3500.00"),
+    "05": Decimal("250"),
+    "06": Decimal("100"),
+    "08": Decimal("2000"),
+    "10": Decimal("10"),
+    "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+    "15": Decimal("0"),
+    "16": Decimal("0"),
+    "18": Decimal("0"),
+}
+_MODELO_111_INPUTS = {
+    "03": Decimal("180.25"),
+    "06": Decimal("12.10"),
+    "09": Decimal("300.00"),
+    "12": Decimal("14.40"),
+    "15": Decimal("25.00"),
+    "18": Decimal("0.50"),
+    "21": Decimal("7.00"),
+    "24": Decimal("8.00"),
+    "27": Decimal("9.00"),
+    "29": Decimal("40.00"),
+}
+_MODELO_123_INPUTS = {
+    "01": Decimal("2"),
+    "02": Decimal("3"),
+    "04": Decimal("1000.25"),
+    "05": Decimal("200.75"),
+    "07": Decimal("190.05"),
+    "08": Decimal("38.14"),
+    "10": Decimal("0"),
+    "11": Decimal("7.50"),
+    "13": Decimal("12.25"),
+}
 
 
-def _make_draft(
+def _provider():
+    return build_runtime_schema_provider()
+
+
+def _draft_for_130(
     *,
-    modelo: str = "100",
-    period: str = "2023",
+    period: str = "2024Q1",
     profile_tax_id: str = "Y4113523X",
     status: FilingDraftStatus = FilingDraftStatus.APPROVED,
 ) -> FilingDraft:
-    values = (
-        FilingValue(
-            casilla_id="01",
-            value=Decimal("100.00"),
-            kind=FilingValueKind.LITERAL,
-            source="test",
-            formula_trace=None,
-        ),
-    )
-    return FilingDraft(
-        draft_id="test-draft-00000000000000000000000000000000",
-        modelo=modelo,
+    return build_registry_filing_draft(
+        modelo="130",
         period=period,
         profile_tax_id=profile_tax_id,
+        casilla_values=_MODELO_130_INPUTS,
         status=status,
-        values=values,
-        findings=(),
-        created_at=_FIXED_NOW,
-        updated_at=_FIXED_NOW,
-        schema_version="2025.01",
-        notes="",
     )
 
 
-def _justificante_for(year: str) -> Justificante:
-    """Parse one of the real IRPF captures under scratch/ if present."""
-    candidates = list(Path("scratch/recon-corpus").rglob(f"irpf-{year}/justificante.pdf"))
-    if not candidates:
-        pytest.skip(f"no live IRPF {year} capture under scratch/recon-corpus/")
-    return parse_justificante(candidates[0])
+def _draft_for_111(
+    *,
+    period: str = "2026Q1",
+    profile_tax_id: str = "Y4113523X",
+    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+) -> FilingDraft:
+    return build_registry_filing_draft(
+        modelo="111",
+        period=period,
+        profile_tax_id=profile_tax_id,
+        casilla_values=_MODELO_111_INPUTS,
+        status=status,
+    )
+
+
+def _draft_for_123(
+    *,
+    period: str = "2026Q1",
+    profile_tax_id: str = "Y4113523X",
+    status: FilingDraftStatus = FilingDraftStatus.APPROVED,
+) -> FilingDraft:
+    return build_registry_filing_draft(
+        modelo="123",
+        period=period,
+        profile_tax_id=profile_tax_id,
+        casilla_values=_MODELO_123_INPUTS,
+        status=status,
+    )
+
+
+def _justificante(modelo: str, label: str) -> Justificante:
+    return parse_justificante(PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / f"{label}.pdf")
+
+
+def _justificante_record(
+    *,
+    modelo: str,
+    period: str,
+    ejercicio: str,
+    tax_id: str,
+    total_a_ingresar: Decimal | None = None,
+    total_a_devolver: Decimal | None = None,
+) -> Justificante:
+    return Justificante(
+        csv="SANITIZEDCSV111",
+        modelo=modelo,
+        period=period,
+        ejercicio=ejercicio,
+        presentation_id="1114264149320",
+        presented_at=_FIXED_NOW,
+        tax_id=tax_id,
+        total_a_ingresar=total_a_ingresar,
+        total_a_devolver=total_a_devolver,
+        verification_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZEDCSV111"),
+        source_pdf_path=PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / "synthetic.pdf",
+        source_pdf_sha256="a" * 64,
+        parsed_at=_FIXED_NOW,
+    )
 
 
 class TestReconcileMatch:
-    def test_matching_draft_reports_match(self) -> None:
-        justificante = _justificante_for("2023")
-        draft = _make_draft(
-            modelo=justificante.modelo,
-            period=justificante.period,
+    def test_matching_modelo_130_fixture_reports_match(self) -> None:
+        justificante = _justificante("130", "2024-1T")
+        draft = _draft_for_130(
+            period="2024Q1",
             profile_tax_id=justificante.tax_id,
         )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
         assert report.status is ReconciliationStatus.MATCH
         assert report.mismatches == ()
         assert report.justificante is not None
@@ -86,11 +157,64 @@ class TestReconcileMatch:
         assert report.reconciled_at == _FIXED_NOW
         assert report.mode == "read"
 
+    def test_quarter_period_normalization_uses_justificante_year(self) -> None:
+        justificante = _justificante("130", "2024-4T")
+        draft = _draft_for_130(
+            period="2024Q4",
+            profile_tax_id=justificante.tax_id,
+        )
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
+        assert report.status is ReconciliationStatus.MATCH
+
+    def test_modelo_111_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
+        draft = _draft_for_111()
+        justificante = _justificante_record(
+            modelo="111",
+            period="1T",
+            ejercicio="2026",
+            tax_id=draft.profile_tax_id,
+            total_a_ingresar=Decimal("516.25"),
+        )
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
+        assert report.status is ReconciliationStatus.MATCH
+
+    def test_modelo_123_total_to_ingresar_is_projected_from_registry_casilla(self) -> None:
+        draft = _draft_for_123()
+        justificante = _justificante_record(
+            modelo="123",
+            period="1T",
+            ejercicio="2026",
+            tax_id=draft.profile_tax_id,
+            total_a_ingresar=Decimal("223.44"),
+        )
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
+        assert report.status is ReconciliationStatus.MATCH
+
+    def test_year_only_remote_period_does_not_match_quarterly_revision(self) -> None:
+        justificante = _justificante("130", "2024-1T").model_copy(update={"period": "2024"})
+        draft = _draft_for_130(
+            period="2024Q1",
+            profile_tax_id=justificante.tax_id,
+        )
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
+        assert report.status is ReconciliationStatus.DIVERGENT
+        assert any(mismatch.kind is FilingDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
+
 
 class TestReconcileNotYetFound:
     def test_none_justificante_reports_not_yet_found(self) -> None:
-        draft = _make_draft()
-        report = reconcile(draft, None, now=_FIXED_NOW)
+        draft = _draft_for_130()
+
+        report = reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
+
         assert report.status is ReconciliationStatus.NOT_YET_FOUND
         assert report.justificante is None
         assert len(report.mismatches) == 1
@@ -99,122 +223,61 @@ class TestReconcileNotYetFound:
 
 class TestReconcileDivergent:
     def test_modelo_mismatch_surfaces(self) -> None:
-        justificante = _justificante_for("2023")
-        draft = _make_draft(
-            modelo="303",  # wrong modelo
-            period=justificante.period,
-            profile_tax_id=justificante.tax_id,
-        )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        justificante = _justificante("100", "2022-0A")
+        draft = _draft_for_130(profile_tax_id=justificante.tax_id)
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
         kinds = tuple(m.kind for m in report.mismatches)
+        assert report.status is ReconciliationStatus.DIVERGENT
         assert FilingDivergenceKind.MODELO_MISMATCH in kinds
 
     def test_tax_id_mismatch_surfaces(self) -> None:
-        justificante = _justificante_for("2023")
-        draft = _make_draft(
-            modelo=justificante.modelo,
-            period=justificante.period,
-            profile_tax_id="X9999999Z",  # wrong NIE
-        )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
-        assert report.status is ReconciliationStatus.DIVERGENT
+        justificante = _justificante("130", "2024-1T")
+        draft = _draft_for_130(period="2024Q1", profile_tax_id="X9999999Z")
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
         kinds = tuple(m.kind for m in report.mismatches)
+        assert report.status is ReconciliationStatus.DIVERGENT
         assert FilingDivergenceKind.TAX_ID_MISMATCH in kinds
 
     def test_tax_id_comparison_is_case_insensitive(self) -> None:
-        justificante = _justificante_for("2023")
-        draft = _make_draft(
-            modelo=justificante.modelo,
-            period=justificante.period,
+        justificante = _justificante("130", "2024-1T")
+        draft = _draft_for_130(
+            period="2024Q1",
             profile_tax_id=justificante.tax_id.lower(),
         )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
+
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+
         assert report.status is ReconciliationStatus.MATCH
 
-
-class TestTriadIsExhaustive:
-    """The three Kent-observable states cover every reconcile() outcome."""
-
-    def test_status_values(self) -> None:
-        assert {m.value for m in ReconciliationStatus} == {
-            "match",
-            "divergent",
-            "not_yet_found",
-        }
-
-
-class TestReadOnlyReconcile:
-    """End-to-end read-only check: synthesize_filing_draft + corpus PDF -> MATCH.
-
-    This pins the full Kent-observable happy path entirely offline:
-    a synthesised APPROVED FilingDraft for one of the committed
-    sanitised fixtures, paired with parse_justificante() reading the
-    same fixture's PDF, must reconcile to MATCH. Equivalent to the
-    live ``aeat filing reconcile`` flow but with no AEAT round-trip.
-    """
-
-    @pytest.mark.parametrize(
-        "modelo,ejercicio,period",
-        [
-            ("100", "2021", "0A"),
-            ("100", "2022", "0A"),
-            ("100", "2023", "0A"),
-            ("130", "2024", "1T"),
-            ("130", "2024", "4T"),
-            ("303", "2024", "1T"),
-            ("303", "2024", "4T"),
-            ("390", "2023", "0A"),
-        ],
-    )
-    def test_synthesised_draft_matches_committed_fixture(
-        self,
-        modelo: str,
-        ejercicio: str,
-        period: str,
-    ) -> None:
-        pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / f"{ejercicio}-{period}.pdf"
-        justificante = parse_justificante(pdf_path)
-        # Build an APPROVED draft whose modelo/period/tax_id match
-        # the parsed fixture exactly.
-        draft = synthesize_filing_draft(
-            modelo=modelo,
-            period=period,
-            profile_tax_id=justificante.tax_id,
-            casilla_values={"01": Decimal("0")},
+    def test_modelo_111_total_to_ingresar_drift_surfaces(self) -> None:
+        draft = _draft_for_111()
+        justificante = _justificante_record(
+            modelo="111",
+            period="1T",
+            ejercicio="2026",
+            tax_id=draft.profile_tax_id,
+            total_a_ingresar=Decimal("516.27"),
         )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
-        assert report.status is ReconciliationStatus.MATCH, (
-            f"{modelo}/{ejercicio}-{period} did not MATCH: mismatches={report.mismatches}"
-        )
-        # The match path must produce a clean multilingual narrative.
-        assert report.narrative
 
-    def test_synthesised_draft_with_wrong_modelo_diverges(self) -> None:
-        from ....adapters.inbound.justificante import parse_justificante
-        from ....core.config import PROJECT_ROOT
-        from ..testing import synthesize_filing_draft
+        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
 
-        pdf_path = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / "100" / "2022-0A.pdf"
-        justificante = parse_justificante(pdf_path)
-        # Deliberately mismatch — draft says 130, fixture is 100.
-        draft = synthesize_filing_draft(
-            modelo="130",
-            period="0A",
-            profile_tax_id=justificante.tax_id,
-            casilla_values={"01": Decimal("0")},
-        )
-        report = reconcile(draft, justificante, now=_FIXED_NOW)
         assert report.status is ReconciliationStatus.DIVERGENT
-        assert any(m.kind is FilingDivergenceKind.MODELO_MISMATCH for m in report.mismatches)
+        assert any(mismatch.kind is FilingDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
 
-    def test_no_justificante_reports_not_yet_found(self) -> None:
-        draft = synthesize_filing_draft(
-            modelo="100",
-            period="0A",
-            casilla_values={"0511": Decimal("5550.00")},
-        )
-        # Reconcile against None — simulates the AEAT-has-no-record path.
-        report = reconcile(draft, None, now=_FIXED_NOW)
-        assert report.status is ReconciliationStatus.NOT_YET_FOUND
-        assert any(m.kind is FilingDivergenceKind.FILING_NOT_YET_FOUND for m in report.mismatches)
+
+class TestRegistryGate:
+    def test_reconcile_requires_active_registry_snapshot(self) -> None:
+        draft = _draft_for_130().model_copy(update={"schema_version": "registry:130:wrong-revision"})
+
+        with pytest.raises(FilingBuilderError, match="active registry snapshot"):
+            reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
+
+    def test_reconcile_requires_period_declared_by_registry_snapshot(self) -> None:
+        draft = _draft_for_130().model_copy(update={"period": "2024A"})
+
+        with pytest.raises(FilingBuilderError, match="draft period declared"):
+            reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)

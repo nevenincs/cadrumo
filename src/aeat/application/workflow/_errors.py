@@ -43,8 +43,8 @@ class WorkflowAbortSignal(WorkflowError):  # noqa: N818 - internal control-flow 
     """Internal control-flow signal raised by stage methods to bail out.
 
     Named ``WorkflowAbortSignal`` deliberately (rather than
-    ``WorkflowAbortSignalError``) because the engine treats it as a
-    transient control-flow vehicle, not as a public error type — it
+    ``WorkflowAbortSignalError``) because the engine treats it as an
+    internal control-flow vehicle, not as a public error type — it
     never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
     :meth:`WorkflowEngine._drive` always catches it and materialises the
     :class:`aeat.application.workflow.WorkflowResult`. Subclasses

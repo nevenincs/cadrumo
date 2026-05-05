@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import typer
 
+from .._i18n import tr
 from .ingest import ingest_cmd
 from .invoices import app as invoices_app
 from .profile import app as profile_app
@@ -24,27 +25,27 @@ from .txs import app as txs_app
 app = typer.Typer(
     name="financial",
     no_args_is_help=True,
-    help="Financial ingest providers, transaction catalogue, and invoice catalogue.",
+    help=tr("cli.financial.app_help"),
 )
 
 app.command(
     name="ingest",
-    help="Validate and ingest a CSV/XLSX/OFX/PDF source into RawTransaction records.",
+    help=tr("cli.financial.ingest.help"),
 )(ingest_cmd)
 app.add_typer(
     txs_app,
     name="txs",
-    help="Transaction catalogue helpers.",
+    help=tr("cli.financial.txs.app_help"),
 )
 app.add_typer(
     invoices_app,
     name="invoices",
-    help="Invoice catalogue helpers.",
+    help=tr("cli.financial.invoices.app_help"),
 )
 app.add_typer(
     profile_app,
     name="profile",
-    help="Operator financial profile: per-category usage ratios.",
+    help=tr("cli.financial.profile.app_help"),
 )
 
 

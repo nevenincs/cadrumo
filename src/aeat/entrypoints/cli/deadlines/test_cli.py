@@ -61,8 +61,8 @@ def profile_path(tmp_path: Path) -> Path:
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_rent_with_retencion=True,
+        has_employees=True,
+        pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
@@ -90,21 +90,22 @@ def runner() -> CliRunner:
 def test_list_renders_obligations(runner: CliRunner, profile_path: Path) -> None:
     result = runner.invoke(app, ["list", "--year", "2026", "--profile", str(profile_path)])
     assert result.exit_code == 0, result.output
-    assert "303" in result.output
+    assert "111" in result.output
+    assert "130" in result.output
     assert "2026Q1" in result.output
 
 
 def test_next_renders_an_obligation(runner: CliRunner, profile_path: Path) -> None:
     result = runner.invoke(app, ["next", "--year", "2026", "--profile", str(profile_path)])
     assert result.exit_code == 0, result.output
-    assert any(token in result.output for token in ("303", "130", "115", "100"))
+    assert "111" in result.output
 
 
 def test_explain_known_modelo(runner: CliRunner, profile_path: Path) -> None:
-    result = runner.invoke(app, ["explain", "303", "--profile", str(profile_path)])
+    result = runner.invoke(app, ["explain", "111", "--profile", str(profile_path)])
     assert result.exit_code == 0, result.output
-    assert "303" in result.output
-    assert "aplica" in result.output
+    assert "111" in result.output
+    assert "retencion" in result.output
 
 
 def test_list_requires_profile_when_setting_unset(

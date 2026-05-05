@@ -52,28 +52,25 @@ _CONFIDENCE_MAX = Decimal("1")
 app = typer.Typer(
     name="txs",
     no_args_is_help=True,
-    help="Transaction catalogue helpers.",
+    help=tr("cli.txs.app_help"),
 )
 
 
 @app.command(
     name="list",
-    help="List stored transactions, optionally filtering by classification state or decision confidence.",
+    help=tr("cli.txs.list.help"),
 )
 def list_cmd(
     state: BusinessClassification | None = typer.Option(
         None,
         "--state",
         case_sensitive=False,
-        help=(
-            "Filter to one BusinessClassification value: BUSINESS, PERSONAL, MIXED, "
-            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION."
-        ),
+        help=tr("cli.txs.list.state_help"),
     ),
     confidence_below: str | None = typer.Option(
         None,
         "--confidence-below",
-        help="Show only transactions whose classification confidence is strictly below this threshold (0..1).",
+        help=tr("cli.txs.list.confidence_below_help"),
     ),
 ) -> None:
     """List transactions from the configured catalogue, optionally filtered.
@@ -105,11 +102,11 @@ def list_cmd(
     )
     if not transactions:
         if threshold is not None and len(catalogue) > 0:
-            typer.echo(tr("financial.txs.t_245971"))
+            typer.echo(tr("cli.txs.list.no_matches_confidence"))
         else:
-            typer.echo(tr("financial.txs.t_121365"))
+            typer.echo(tr("cli.txs.list.no_transactions"))
         return
-    typer.echo("transaction_id\tdirection\tamount\tcurrency\tclassification\tcategory\tconfidence\tnarrative")
+    typer.echo(tr("cli.txs.list.header"))
     for transaction in sorted(
         transactions,
         key=lambda item: ((item.raw.value_date or item.raw.booked_date), item.transaction_id),
@@ -132,19 +129,19 @@ def list_cmd(
 
 @app.command(
     name="build",
-    help="Build the configured transaction catalogue from NDJSON or a source CSV/XLSX/OFX statement.",
+    help=tr("cli.txs.build.help"),
 )
 def build_cmd(
     source: Path = typer.Argument(
         ...,
         exists=True,
         dir_okay=False,
-        help="Path to ingest NDJSON or a source CSV/XLSX/OFX statement export.",
+        help=tr("cli.txs.build.source_help"),
     ),
     replace: bool = typer.Option(
         False,
         "--replace",
-        help="Overwrite an existing transaction catalogue instead of refusing.",
+        help=tr("cli.txs.build.replace_help"),
     ),
 ) -> None:
     """Persist a transaction catalogue from ingest output.
@@ -168,7 +165,7 @@ def build_cmd(
     target = repo.envelope_path
     if target.exists() and not replace:
         typer.echo(
-            tr("financial.txs.t_199417"),
+            tr("cli.txs.build.exists_err", target=target),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -178,12 +175,12 @@ def build_cmd(
     except TransactionError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
-    typer.echo(tr("financial.txs.t_700793"))
+    typer.echo(tr("cli.txs.build.success"))
 
 
-@app.command(name="show", help="Show one stored transaction as JSON.")
+@app.command(name="show", help=tr("cli.txs.show.help"))
 def show_cmd(
-    transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
+    transaction_id: str = typer.Argument(..., help=tr("cli.txs.show.id_help")),
 ) -> None:
     """Show one transaction from the configured catalogue file.
 
@@ -199,7 +196,7 @@ def show_cmd(
     transaction = find_transaction(catalogue, transaction_id)
     if transaction is None:
         typer.echo(
-            tr("financial.txs.t_217036"),
+            tr("cli.txs.show.not_found_err"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -208,44 +205,36 @@ def show_cmd(
 
 @app.command(
     name="classify",
-    help="Persist a manual transaction classification in the configured catalogue.",
+    help=tr("cli.txs.classify.help"),
 )
 def classify_cmd(
-    transaction_id: str = typer.Argument(..., help="Stable transaction identifier."),
+    transaction_id: str = typer.Argument(..., help=tr("cli.txs.classify.id_help")),
     classification: BusinessClassification | None = typer.Option(
         None,
         "--as",
         case_sensitive=False,
-        help=(
-            "Optional classification target: BUSINESS, PERSONAL, MIXED, "
-            "NOT_YET_PROCESSED, PROCESSED_UNCLASSIFIED, SKIPPED_BY_RULE, or FAILED_VALIDATION. "
-            "Omit --as to update only category/reason metadata on an existing classification."
-        ),
+        help=tr("cli.txs.classify.as_help"),
     ),
     pct: str | None = typer.Option(
         None,
         "--pct",
-        help="Business-use percentage in the inclusive 0..1 range for MIXED.",
+        help=tr("cli.txs.classify.pct_help"),
     ),
     category: SpendingCategory | None = typer.Option(
         None,
         "--category",
         case_sensitive=False,
-        help="Specific spending category from the AEAT 39-category catalogue.",
+        help=tr("cli.txs.classify.category_help"),
     ),
     reason: str = typer.Option(
         "",
         "--reason",
-        help="Optional free-text override justification; recorded in the history chain.",
+        help=tr("cli.txs.classify.reason_help"),
     ),
     confidence: str | None = typer.Option(
         None,
         "--confidence",
-        help=(
-            "Advanced: record a non-default decision confidence (0..1). "
-            "Manual classifications default to 1.0; override only when recording the score "
-            "of a rule engine or LLM output rather than your own judgement."
-        ),
+        help=tr("cli.txs.classify.confidence_help"),
     ),
 ) -> None:
     """Classify one transaction and write the updated catalogue to disk.
@@ -287,13 +276,13 @@ def classify_cmd(
     current = find_transaction(catalogue, transaction_id)
     if current is None:
         typer.echo(
-            tr("financial.txs.t_217036"),
+            tr("cli.txs.show.not_found_err"),
             err=True,
         )
         raise typer.Exit(code=2)
     if classification is None and category is None and not reason and pct is None and confidence is None:
         typer.echo(
-            tr("financial.txs.t_384718"),
+            tr("cli.txs.classify.no_changes_err"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -301,15 +290,15 @@ def classify_cmd(
         business_pct = Decimal(pct) if pct is not None else None
     except InvalidOperation as exc:
         typer.echo(
-            tr("financial.txs.t_475858"),
+            tr("cli.txs.classify.invalid_pct_err"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     resolved_confidence = _parse_confidence_option(confidence)
     effective_classification = classification if classification is not None else current.business_classification
-    if classification is not None and classification is not BusinessClassification.MIXED and business_pct is not None:
+    if classification is not BusinessClassification.MIXED and business_pct is not None:
         typer.echo(
-            tr("financial.txs.t_492743"),
+            tr("cli.txs.classify.mixed_pct_err"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -317,7 +306,7 @@ def classify_cmd(
     if effective_category is not None:
         if current.direction is not TransactionDirection.OUTGOING:
             typer.echo(
-                tr("financial.txs.t_757092"),
+                tr("cli.txs.classify.outgoing_category_err"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -327,7 +316,7 @@ def classify_cmd(
             BusinessClassification.MIXED,
         }:
             typer.echo(
-                tr("financial.txs.t_091408"),
+                tr("cli.txs.classify.business_category_err"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -359,87 +348,63 @@ def classify_cmd(
 
 @app.command(
     name="classify-llm",
-    help=(
-        "Classify transactions via an LLM (claude / gemini / codex). "
-        "Pass a transaction ID for one record, or --all to process every "
-        "NOT_YET_PROCESSED transaction. Results feed the same history "
-        "chain as manual or rule-based decisions."
-    ),
+    help=tr("cli.txs.classify_llm.help"),
 )
 def classify_llm_cmd(
-    transaction_id: str | None = typer.Argument(None, help="Stable transaction identifier (omit with --all)."),
+    transaction_id: str | None = typer.Argument(None, help=tr("cli.txs.classify_llm.id_help")),
     provider: str = typer.Option(
         ...,
         "--provider",
         case_sensitive=False,
-        help="LLM provider: claude, gemini, or codex (must be on PATH).",
+        help=tr("cli.txs.classify_llm.provider_help"),
     ),
     tier: str | None = typer.Option(
         None,
         "--tier",
         case_sensitive=False,
-        help=(
-            "Minimum model-capability tier: low, medium, or high. "
-            "Defaults to medium (enforced floor for classification)."
-        ),
+        help=tr("cli.txs.classify_llm.tier_help"),
     ),
     model_alias: str | None = typer.Option(
         None,
         "--model-alias",
         case_sensitive=False,
-        help=(
-            "Stable tier-catalogue alias (e.g. claude-sonnet, gemini-pro, codex-o3). "
-            "Decouples the operator from shifting provider model IDs."
-        ),
+        help=tr("cli.txs.classify_llm.model_alias_help"),
     ),
     model: str | None = typer.Option(
         None,
         "--model",
-        help="Advanced: pin a raw provider-specific model ID (skips tier enforcement).",
+        help=tr("cli.txs.classify_llm.model_help"),
     ),
     all_pending: bool = typer.Option(
         False,
         "--all",
-        help="Classify every NOT_YET_PROCESSED transaction in the catalogue.",
+        help=tr("cli.txs.classify_llm.all_help"),
     ),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
-        help="Run the classifier and print the results without saving.",
+        help=tr("cli.txs.classify_llm.dry_run_help"),
     ),
     max_total_seconds: float | None = typer.Option(
         None,
         "--max-total-seconds",
-        help=(
-            "Stop the --all loop after this many wall-clock seconds elapsed. "
-            "Classifications already persisted before the budget is exhausted are kept. "
-            "Omit for no ceiling."
-        ),
+        help=tr("cli.txs.classify_llm.max_seconds_help"),
     ),
     category_hint: SpendingCategory | None = typer.Option(
         None,
         "--category-hint",
         case_sensitive=False,
-        help=(
-            "Optional category the operator expects. The LLM is told the category is pre-set "
-            "and must not pick a different one — mirrors the manual `--category` flag."
-        ),
+        help=tr("cli.txs.classify_llm.category_hint_help"),
     ),
     pct_override: str | None = typer.Option(
         None,
         "--pct-override",
-        help=(
-            "When classification is MIXED, override the business-use percentage regardless "
-            "of the LLM's answer. Takes the same 0..1 range as manual `--pct`."
-        ),
+        help=tr("cli.txs.classify_llm.pct_override_help"),
     ),
     reason: str | None = typer.Option(
         None,
         "--reason",
-        help=(
-            "Optional operator-authored justification prepended to the LLM's reason. "
-            "Matches the shape of the manual `--reason` flag."
-        ),
+        help=tr("cli.txs.classify_llm.reason_help"),
     ),
 ) -> None:
     """Classify one or many transactions through an LLM CLI.
@@ -488,19 +453,19 @@ def classify_llm_cmd(
 
     if all_pending and transaction_id is not None:
         typer.echo(
-            tr("financial.txs.t_532646"),
+            tr("cli.txs.classify_llm.errors.exclusive_all_id"),
             err=True,
         )
         raise typer.Exit(code=2)
     if not all_pending and transaction_id is None:
         typer.echo(
-            tr("financial.txs.t_074603"),
+            tr("cli.txs.classify_llm.errors.missing_target"),
             err=True,
         )
         raise typer.Exit(code=2)
     if max_total_seconds is not None and max_total_seconds <= 0:
         typer.echo(
-            tr("financial.txs.t_338582"),
+            tr("cli.txs.classify_llm.errors.invalid_max_seconds"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -530,7 +495,7 @@ def classify_llm_cmd(
     catalogue = load_catalogue_required()
     targets = _select_llm_targets(catalogue, transaction_id=transaction_id, all_pending=all_pending)
     if not targets:
-        typer.echo(tr("financial.txs.t_184654"))
+        typer.echo(tr("cli.txs.classify_llm.labels.no_targets"))
         return
 
     total = len(targets)
@@ -544,7 +509,7 @@ def classify_llm_cmd(
         if max_total_seconds is not None and time.monotonic() - started >= max_total_seconds:
             stopped_early = True
             typer.echo(
-                tr("financial.txs.t_917316"),
+                tr("cli.txs.classify_llm.timeout"),
                 err=True,
             )
             break
@@ -554,7 +519,7 @@ def classify_llm_cmd(
         except LLMClassifierError:
             failures += 1
             typer.echo(
-                tr("financial.txs.t_725301"),
+                tr("cli.txs.classify_llm.errors.classification_failed", prefix=prefix, provider=provider),
                 err=True,
             )
             continue
@@ -567,9 +532,8 @@ def classify_llm_cmd(
             pct_override=resolved_pct_override,
         )
         combined_reason = _combine_reason(kent_reason=reason, llm_reason=response.reason)
-        line = (
-            f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)} — {combined_reason}"
-        )
+        llm_suffix = tr("cli.txs.classify_llm.llm_suffix")
+        line = f"{prefix} {response.classification.value} @ {canonical_decimal(response.confidence)}{llm_suffix}{combined_reason}"
         typer.echo(line)
         if not dry_run:
             try:
@@ -588,7 +552,7 @@ def classify_llm_cmd(
             except TransactionError:
                 failures += 1
                 typer.echo(
-                    tr("financial.txs.t_735916"),
+                    tr("cli.txs.classify_llm.errors.persistence_failed", prefix=prefix),
                     err=True,
                 )
                 continue
@@ -601,16 +565,21 @@ def classify_llm_cmd(
             failures += successes
             successes = 0
             typer.echo(
-                tr("financial.txs.t_044885"),
+                tr("cli.txs.classify_llm.errors.save_failed"),
                 err=True,
             )
 
-    tail = tr("financial.txs.t_510476") if dry_run else tr("financial.txs.t_594729")
+    tail = tr("cli.txs.classify_llm.dry_run_label") if dry_run else tr("cli.txs.classify_llm.persisted_label")
     if stopped_early:
-        tail += tr("financial.txs.t_222239")
-    classified_label = tr("financial.txs.t_341377")
-    failed_label = tr("financial.txs.t_577243")
-    typer.echo(f"{successes} {classified_label} / {failures} {failed_label} / {tail}")
+        tail += tr("cli.txs.classify_llm.stopped_early_suffix")
+    typer.echo(
+        tr(
+            "cli.txs.classify_llm.summary",
+            successes=successes,
+            failures=failures,
+            tail=tail,
+        )
+    )
     if failures and successes == 0:
         raise typer.Exit(code=2)
 
@@ -784,7 +753,7 @@ def _select_llm_targets(
         transaction = find_transaction(catalogue, transaction_id)
         if transaction is None:
             typer.echo(
-                tr("financial.txs.t_268130"),
+                tr("cli.txs.show.not_found_err"),
                 err=True,
             )
             raise typer.Exit(code=2)
@@ -806,13 +775,13 @@ def _parse_confidence_threshold(value: str | None) -> Decimal | None:
         threshold = Decimal(value)
     except InvalidOperation as exc:
         typer.echo(
-            tr("financial.txs.t_993328"),
+            tr("cli.txs.classify.invalid_confidence_err"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
         typer.echo(
-            tr("financial.txs.t_725396"),
+            tr("cli.txs.classify.confidence_range_err"),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -833,13 +802,13 @@ def _parse_confidence_option(value: str | None) -> Decimal | None:
         resolved = Decimal(value)
     except InvalidOperation as exc:
         typer.echo(
-            tr("financial.txs.t_410287"),
+            tr("cli.txs.classify.invalid_confidence_err"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not _CONFIDENCE_MIN <= resolved <= _CONFIDENCE_MAX:
         typer.echo(
-            tr("financial.txs.t_065677"),
+            tr("cli.txs.classify.confidence_range_err"),
             err=True,
         )
         raise typer.Exit(code=2)

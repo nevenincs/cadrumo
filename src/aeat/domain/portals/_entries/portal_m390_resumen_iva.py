@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m390_resumen_iva.label_101607",
-    purpose_es="Declaración-resumen anual del IVA (complementa a las autoliquidaciones periódicas del Modelo 303).",
+    purpose="entries.portal_m390_resumen_iva.purpose",
 )
 """Portal entry for Modelo 390 (annual VAT summary)."""

@@ -8,7 +8,7 @@ flags. Representative invocations:
 - ``aeat app ledger review --filter issue=duplicate --filter period=2026-Q1``
 - ``aeat app ledger review --filter import=import_003 --filter period=2026-Q1``
 - ``aeat app invoice review --filter status=pending --filter kind=received``
-- ``aeat app declaration status --filter status=pending --period PERIOD --modelo MODELO``
+- ``aeat app declaration status --filter status=pending --period {period} --modelo {modelo}``
 
 The CLI parses the raw argv strings; this module provides the typed
 substrate that turns them into :class:`FilterClause` records and binds

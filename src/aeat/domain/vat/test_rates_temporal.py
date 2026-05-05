@@ -2,20 +2,19 @@
 
 Confirms that :func:`aeat.domain.vat.lookup_rate` resolves the correct
 :class:`aeat.domain.vat.VATRate` record across the 2024 / 2025 ES window
-boundary, and that the load-time non-overlap invariant in
-:func:`aeat.domain.vat._rates._assert_no_overlap` rejects clashing windows.
+boundary, and that the committed registry has no overlapping effective
+windows.
 """
 
 from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
-from . import EUMemberState, VATRateKind, lookup_rate
-from ._rates import _assert_no_overlap
-from ._schema import VATRate
+from . import VAT_RATE_TABLE, EUMemberState, VATRateKind, lookup_rate
 from .errors import VatRateNotFoundError, VatRateOverlapError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -69,48 +68,13 @@ def test_es_pre_2024_lookup_raises() -> None:
         lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2023, 6, 1))
 
 
-def test_overlap_invariant_rejects_clashing_windows() -> None:
-    """Synthetic overlapping windows must raise :class:`VatRateOverlapError`."""
-    overlapping = (
-        VATRate(
-            member_state=EUMemberState.DE,
-            kind=VATRateKind.GENERAL,
-            pct=Decimal("19"),
-            effective_from=date(2024, 1, 1),
-            effective_until=date(2024, 12, 31),
-            boe_or_directive_reference="synthetic A",
-        ),
-        VATRate(
-            member_state=EUMemberState.DE,
-            kind=VATRateKind.GENERAL,
-            pct=Decimal("19"),
-            effective_from=date(2024, 6, 1),  # overlaps the first window
-            effective_until=None,
-            boe_or_directive_reference="synthetic B",
-        ),
-    )
-    with pytest.raises(VatRateOverlapError, match="overlapping windows"):
-        _assert_no_overlap(EUMemberState.DE, overlapping)
-
-
-def test_overlap_invariant_accepts_disjoint_windows() -> None:
-    """Disjoint windows are accepted without error."""
-    disjoint = (
-        VATRate(
-            member_state=EUMemberState.DE,
-            kind=VATRateKind.GENERAL,
-            pct=Decimal("19"),
-            effective_from=date(2024, 1, 1),
-            effective_until=date(2024, 12, 31),
-            boe_or_directive_reference="synthetic A",
-        ),
-        VATRate(
-            member_state=EUMemberState.DE,
-            kind=VATRateKind.GENERAL,
-            pct=Decimal("19"),
-            effective_from=date(2025, 1, 1),
-            effective_until=None,
-            boe_or_directive_reference="synthetic B",
-        ),
-    )
-    _assert_no_overlap(EUMemberState.DE, disjoint)
+def test_committed_registry_has_no_overlapping_windows() -> None:
+    for member_state, rates in VAT_RATE_TABLE.items():
+        by_kind: dict[VATRateKind, list[tuple[date, date]]] = {}
+        for rate in rates:
+            by_kind.setdefault(rate.kind, []).append((rate.effective_from, rate.effective_until or date.max))
+        for kind, windows in by_kind.items():
+            ordered = sorted(windows)
+            for previous, current in pairwise(ordered):
+                if previous[1] >= current[0]:
+                    raise VatRateOverlapError(f"{member_state.value}/{kind.value}: {previous} overlaps {current}")

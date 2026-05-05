@@ -1,4 +1,4 @@
-"""Per-año Modelo 100 summary-block extractor registry.
+"""Per-año Modelo 100 observed-value extractor registry.
 
 Registers the concrete extractor classes (one per tax year) and exposes
 :func:`get_extractor` for the public
@@ -9,15 +9,15 @@ from __future__ import annotations
 
 from .._errors import BorradorParseError
 from .._schema import ArtefactKind
-from .modelo_100_summary_v2025 import Modelo100SummaryV2025Extractor
+from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor
 
 _REGISTRY_BY_AÑO: dict[int, type] = {
-    2025: Modelo100SummaryV2025Extractor,
+    2025: Modelo100ObservedV2025Extractor,
 }
 
 
-def get_extractor(año: int) -> Modelo100SummaryV2025Extractor:
-    """Return a fresh Modelo 100 summary extractor for the given tax year.
+def get_extractor(año: int) -> Modelo100ObservedV2025Extractor:
+    """Return a fresh Modelo 100 observed-value extractor for the given tax year.
 
     Args:
         año: The four-digit tax year for which an extractor is required.
@@ -32,7 +32,7 @@ def get_extractor(año: int) -> Modelo100SummaryV2025Extractor:
     cls = _REGISTRY_BY_AÑO.get(año)
     if cls is None:
         known = sorted(_REGISTRY_BY_AÑO.keys())
-        raise BorradorParseError(f"no Modelo 100 summary extractor for año={año}; supported: {known}")
+        raise BorradorParseError(f"no Modelo 100 observed-value extractor for año={año}; supported: {known}")
     return cls()
 
 

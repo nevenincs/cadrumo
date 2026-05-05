@@ -20,6 +20,6 @@ ENTRY: PortalMetadata = build_entry(
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_clave_sede_entry.label_975912",
-    purpose_es="Punto de entrada a Cl@ve desde la Sede Electrónica (redirige a clave.gob.es).",
+    purpose="entries.portal_clave_sede_entry.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Sede Cl@ve gateway page."""

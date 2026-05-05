@@ -25,31 +25,39 @@ from ._common import (
     _load_transactions,
     _state,
 )
+from ._i18n import tr
 
 app = typer.Typer(
     name="invoice",
-    help="Invoice records: import, review, edit, match.",
+    help=tr("cli.invoice.app_help"),
     no_args_is_help=True,
 )
 
 
-@app.command("import", help="Import an invoice JSON / CSV file into the catalogue.")
+@app.command("import", help=tr("cli.invoice.import.help"))
 def invoice_import(
     ctx: typer.Context,
-    path: Path = typer.Argument(..., help="Source invoice file."),
-    kind: str = typer.Option(..., "--kind", help="issued | received."),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Parse only; do not persist."),
+    path: Path = typer.Argument(..., help=tr("cli.invoice.import.path_help")),
+    kind: str = typer.Option(..., "--kind", help=tr("cli.invoice.import.kind_help")),
+    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.invoice.import.dry_run_help")),
 ) -> None:
     """Parse one or more invoice records and merge into the local catalogue."""
     if not path.exists():
-        raise _bad(f"invoice file {path} does not exist")
+        raise _bad(tr("cli.invoice.errors.file_not_found", path=str(path)))
     kind_normalised = kind.strip().upper()
     if kind_normalised not in {"ISSUED", "RECEIVED"}:
-        raise _bad("--kind must be issued or received")
+        raise _bad(tr("cli.invoice.errors.invalid_kind"))
     raw = path.read_text(encoding="utf-8")
     rows = _parse_invoice_payload(raw, kind_normalised)
     if dry_run:
-        _emit(ctx, {"rows": len(rows), "dry_run": True}, [f"rows\t{len(rows)}", "dry_run\tyes"])
+        _emit(
+            ctx,
+            {tr("cli.invoice.labels.rows"): len(rows), tr("cli.invoice.labels.dry_run"): True},
+            [
+                f"{tr('cli.invoice.labels.rows')}\t{len(rows)}",
+                f"{tr('cli.invoice.labels.dry_run')}\t{tr('cli.invoice.labels.yes')}",
+            ],
+        )
         return
     repo = _invoice_repo()
     catalogue = repo.load() if repo.envelope_path.exists() else InvoiceCatalogue()
@@ -63,8 +71,20 @@ def invoice_import(
         existing[entry.invoice_id] = entry
         imported += 1
     repo.save(InvoiceCatalogue.model_validate({"invoices": existing}))
-    payload = {"rows": len(rows), "imported": imported, "skipped": skipped}
-    _emit(ctx, payload, [f"rows\t{len(rows)}", f"imported\t{imported}", f"skipped\t{skipped}"])
+    payload = {
+        tr("cli.invoice.labels.rows"): len(rows),
+        tr("cli.invoice.labels.imported"): imported,
+        tr("cli.invoice.labels.skipped"): skipped,
+    }
+    _emit(
+        ctx,
+        payload,
+        [
+            f"{tr('cli.invoice.labels.rows')}\t{len(rows)}",
+            f"{tr('cli.invoice.labels.imported')}\t{imported}",
+            f"{tr('cli.invoice.labels.skipped')}\t{skipped}",
+        ],
+    )
 
 
 def _parse_invoice_payload(raw: str, kind: str) -> tuple[Any, ...]:
@@ -111,17 +131,17 @@ def _parse_invoice_payload(raw: str, kind: str) -> tuple[Any, ...]:
     return tuple(invoices)
 
 
-@app.command("review", help="List invoice records, optionally filtered.")
+@app.command("review", help=tr("cli.invoice.review.help"))
 def invoice_review(
     ctx: typer.Context,
-    filters: list[str] = typer.Option([], "--filter", help="--filter KEY=VALUE (status, kind)."),
-    invoice_id: str | None = typer.Option(None, "--id", help="Show one invoice."),
-    verbose: bool = typer.Option(False, "--verbose", help="Show invoice lines and review history."),
+    filters: list[str] = typer.Option([], "--filter", help=tr("cli.invoice.review.filter_help")),
+    invoice_id: str | None = typer.Option(None, "--id", help=tr("cli.invoice.review.id_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.invoice.review.verbose_help")),
 ) -> None:
     try:
         spec = InvoiceReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(f"--filter parse error ({exc.reason}): {exc.raw_token}") from exc
+        raise _bad(tr("cli.invoice.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     catalogue = _load_invoices()
     state = _state()
     invoices = list(catalogue.values())
@@ -153,12 +173,12 @@ def invoice_review(
                         iva = (base * rate_decimal).quantize(Decimal("0.01"))
 
                 payload = {
-                    "id": inv.invoice_id,
-                    "kind": inv.kind.value,
+                    tr("cli.invoice.labels.id"): inv.invoice_id,
+                    tr("cli.invoice.labels.kind"): inv.kind.value,
                     "issued_at": inv.issued_at.isoformat() if inv.issued_at else None,
-                    "base_total": _fmt_decimal(base),
-                    "iva_total": _fmt_decimal(iva),
-                    "payment.id": review.fields.get("payment.id") if review else None,
+                    tr("cli.invoice.labels.base"): _fmt_decimal(base),
+                    tr("cli.invoice.labels.iva"): _fmt_decimal(iva),
+                    tr("cli.invoice.labels.payment"): review.fields.get("payment.id") if review else None,
                     "review": review,
                     "verbose": verbose,
                 }
@@ -166,15 +186,15 @@ def invoice_review(
                     ctx,
                     payload,
                     [
-                        f"id\t{inv.invoice_id}",
-                        f"kind\t{inv.kind.value}",
-                        f"base\t{_fmt_decimal(base)}",
-                        f"iva\t{_fmt_decimal(iva)}",
-                        f"payment\t{review.fields.get('payment.id', '-') if review else '-'}",
+                        f"{tr('cli.invoice.labels.id')}\t{inv.invoice_id}",
+                        f"{tr('cli.invoice.labels.kind')}\t{inv.kind.value}",
+                        f"{tr('cli.invoice.labels.base')}\t{_fmt_decimal(base)}",
+                        f"{tr('cli.invoice.labels.iva')}\t{_fmt_decimal(iva)}",
+                        f"{tr('cli.invoice.labels.payment')}\t{review.fields.get('payment.id', '-') if review else '-'}",
                     ],
                 )
                 return
-        raise _bad(f"invoice {invoice_id!r} not found")
+        raise _bad(tr("cli.invoice.errors.invoice_not_found", id=invoice_id))
     payload = {"rows": []}
     for inv in invoices:
         review = state.invoice_reviews.get(inv.invoice_id)
@@ -199,21 +219,27 @@ def invoice_review(
         status = _invoice_row_status(inv, state)
         payload["rows"].append(
             {
-                "id": inv.invoice_id,
-                "kind": inv.kind.value,
-                "base": _fmt_decimal(base),
-                "iva": _fmt_decimal(iva),
-                "status": status,
-                "payment.id": review.fields.get("payment.id") if review else None,
+                tr("cli.invoice.labels.id"): inv.invoice_id,
+                tr("cli.invoice.labels.kind"): inv.kind.value,
+                tr("cli.invoice.labels.base"): _fmt_decimal(base),
+                tr("cli.invoice.labels.iva"): _fmt_decimal(iva),
+                tr("cli.invoice.labels.status"): status,
+                tr("cli.invoice.labels.payment"): review.fields.get("payment.id") if review else None,
             }
         )
 
-    lines: list[str] = ["id\tkind\tbase\tiva\tstatus"]
+    lines: list[str] = [tr("cli.invoice.review.header")]
     for row in payload["rows"]:
-        lines.append(f"{row['id'][:12]}\t{row['kind']}\t{row['base']}\t{row['iva']}\t{row['status']}")
+        lines.append(
+            f"{row[tr('cli.invoice.labels.id')][:12]}\t"
+            f"{row[tr('cli.invoice.labels.kind')]}\t"
+            f"{row[tr('cli.invoice.labels.base')]}\t"
+            f"{row[tr('cli.invoice.labels.iva')]}\t"
+            f"{row[tr('cli.invoice.labels.status')]}"
+        )
 
     if not invoices:
-        lines.append("(no invoices)")
+        lines.append(tr("cli.invoice.review.no_invoices"))
     _emit(ctx, payload, lines)
 
 
@@ -226,20 +252,20 @@ def _invoice_row_status(inv: Invoice, state: UserCliState) -> str:
     return "pending"
 
 
-@app.command("edit", help="Edit an invoice record via --set (base, iva.rate, iva.amount, payment.id, document.path).")
+@app.command("edit", help=tr("cli.invoice.edit.help"))
 def invoice_edit(
     ctx: typer.Context,
-    invoice_id: str = typer.Option(..., "--id", help="Invoice id."),
-    sets: list[str] = typer.Option([], "--set", help="--set KEY=VALUE invoice metadata override."),
-    reason: str = typer.Option(..., "--reason", help="Audit-trail reason for the edit."),
+    invoice_id: str = typer.Option(..., "--id", help=tr("cli.invoice.edit.id_help")),
+    sets: list[str] = typer.Option([], "--set", help=tr("cli.invoice.edit.set_help")),
+    reason: str = typer.Option(..., "--reason", help=tr("cli.invoice.edit.reason_help")),
 ) -> None:
     catalogue = _load_invoices()
     if invoice_id not in catalogue.invoices:
-        raise _bad(f"invoice {invoice_id!r} not found")
+        raise _bad(tr("cli.invoice.errors.invoice_not_found", id=invoice_id))
     try:
         spec = InvoiceEditSpec.from_strings(sets)
     except EditParseError as exc:
-        raise _bad(f"--set parse error ({exc.reason}): {exc.raw_token}") from exc
+        raise _bad(tr("cli.invoice.errors.set_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     fields: dict[str, str] = {}
     for key, value in (
         ("base", spec.base),
@@ -261,24 +287,27 @@ def invoice_edit(
     if spec.document_path is not None:
         fields["document.path"] = str(spec.document_path)
     if not fields:
-        raise _bad("invoice edit requires at least one --set KEY=VALUE")
+        raise _bad(tr("cli.invoice.errors.at_least_one_edit"))
     updated = state_repository().update(
         lambda current: update_invoice_review(current, invoice_id, fields=fields, action="edit", reason=reason)
     )
     review = updated.invoice_reviews.get(invoice_id)
     _emit(
         ctx,
-        {"id": invoice_id, "review": review},
-        [f"id\t{invoice_id}", f"fields\t{', '.join(sorted(review.fields)) if review else '-'}"],
+        {tr("cli.invoice.labels.id"): invoice_id, "review": review},
+        [
+            f"{tr('cli.invoice.labels.id')}\t{invoice_id}",
+            f"{tr('cli.invoice.labels.fields')}\t{', '.join(sorted(review.fields)) if review else '-'}",
+        ],
     )
 
 
-@app.command("match", help="Match invoices to ledger rows by stored payment.id for a period.")
+@app.command("match", help=tr("cli.invoice.match.help"))
 def invoice_match(
     ctx: typer.Context,
-    period: str = typer.Option(..., "--period", help="Period to scope the match."),
-    invoice_id: str | None = typer.Option(None, "--invoice", help="Manual match: invoice id."),
-    ledger_id: str | None = typer.Option(None, "--ledger", help="Manual match: ledger id."),
+    period: str = typer.Option(..., "--period", help=tr("cli.invoice.match.period_help")),
+    invoice_id: str | None = typer.Option(None, "--invoice", help=tr("cli.invoice.match.invoice_help")),
+    ledger_id: str | None = typer.Option(None, "--ledger", help=tr("cli.invoice.match.ledger_help")),
 ) -> None:
     """List invoices whose payment.id has a matching ledger row for ``period``.
 
@@ -286,7 +315,7 @@ def invoice_match(
     and persists it to the user state.
     """
     if (invoice_id is not None) != (ledger_id is not None):
-        raise _bad("--invoice and --ledger must be provided together for manual matching")
+        raise _bad(tr("cli.invoice.errors.match_both_required"))
 
     if invoice_id and ledger_id:
         state_repository().update(
@@ -298,7 +327,11 @@ def invoice_match(
                 reason="manual match",
             )
         )
-        _emit(ctx, {"invoice": invoice_id, "payment": ledger_id, "status": "matched"}, ["matched\tyes"])
+        _emit(
+            ctx,
+            {"invoice": invoice_id, "payment": ledger_id, tr("cli.invoice.labels.status"): "matched"},
+            [f"{tr('cli.invoice.labels.matched')}\t{tr('cli.invoice.labels.yes')}"],
+        )
         return
 
     canonical = _canonical_period(period)
@@ -314,10 +347,14 @@ def invoice_match(
             matched.append({"invoice": inv.invoice_id, "payment": pid})
         else:
             unmatched.append({"invoice": inv.invoice_id})
-    payload = {"period": canonical, "matched": matched, "unmatched": unmatched}
+    payload = {
+        tr("cli.invoice.labels.period"): canonical,
+        tr("cli.invoice.labels.matched"): matched,
+        tr("cli.invoice.labels.unmatched"): unmatched,
+    }
     lines: list[str] = [
-        f"period\t{canonical}",
-        f"matched\t{len(matched)}",
-        f"unmatched\t{len(unmatched)}",
+        f"{tr('cli.invoice.labels.period')}\t{canonical}",
+        f"{tr('cli.invoice.labels.matched')}\t{len(matched)}",
+        f"{tr('cli.invoice.labels.unmatched')}\t{len(unmatched)}",
     ]
     _emit(ctx, payload, lines)

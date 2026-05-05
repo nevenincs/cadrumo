@@ -38,7 +38,6 @@ from ._fetch import (
     verify_fetched_pdf,
     write_manifest,
 )
-from ._ids import generate_rule_id
 from ._loader import (
     find_rules,
     iter_sections,
@@ -47,6 +46,7 @@ from ._loader import (
     load_section,
     resolve_part_root,
 )
+from ._rule_id import generate_rule_id
 from ._schema import (
     Chapter,
     FetchedManualPart,

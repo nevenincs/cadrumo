@@ -1,17 +1,17 @@
 """Fichero-BOE serialiser for registry-backed fixed-width specs.
 
 The serialiser is format-generic: one :func:`serialise` drives every
-modelo via a validated tuple of :class:`RecordFieldSpec` entries. A
+registry export layout via a validated tuple of :class:`RecordFieldSpec` entries. A
 registry-backed filing layout supplies:
 
 - field layout, validated before use.
 - content byte length excluding the CRLF terminator.
-- per-modelo wire encoding.
+- wire encoding declared by the registry layout.
 - required header ``field_id`` values the draft MUST
   provide.
 
 The caller passes a :class:`aeat.application.filing.FilingDraft` plus
-a ``headers`` mapping for metadata fields (NIF, ejercicio, período,
+a ``headers`` mapping for metadata fields (identity, year, period,
 and so on). CRLF terminator ownership stays with this function; the
 per-field encoders in
 :mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` do
@@ -58,8 +58,7 @@ def serialise(
         casilla_values: Per-casilla numeric values. Missing casillas
             default to :class:`decimal.Decimal` zero — AEAT expects
             every CURRENCY field filled, zero-padded when not declared.
-        headers: Metadata fields (NIF, ejercicio, período, apellidos,
-            nombre, tipo_declaracion, ...) keyed by ``field_id``.
+        headers: Metadata fields keyed by ``field_id``.
             Dates must be :class:`datetime.date` instances; other
             scalar text and numeric fields are strings.
         specs: Ordered tuple of
@@ -101,7 +100,7 @@ def serialise(
             case FieldKind.CURRENCY:
                 # CURRENCY fields with a casilla_id draw from the
                 # calculated draft; headerless casilla_id == None draws
-                # from the headers mapping (e.g., IMPORTE_INGRESO).
+                # from the headers mapping.
                 if spec.casilla_id is not None:
                     value = casilla_values.get(spec.casilla_id, _ZERO)
                 else:
@@ -165,11 +164,10 @@ def serialise_envelope(
 ) -> bytes:
     """Emit a multi-segment fichero-BOE envelope.
 
-    Modelo 303 (and later IVA modelos) use an XML-tagged envelope of
-    ordered segments rather than a flat record. This helper serialises
-    each segment via :func:`serialise` and concatenates the results.
-    The CRLF terminator is appended ONCE at the end — AEAT expects a
-    single terminator per file, not per segment.
+    Some AEAT record layouts use an XML-tagged envelope of ordered
+    segments rather than a flat record. This helper serialises each
+    segment via :func:`serialise` and concatenates the results. The
+    CRLF terminator is appended ONCE at the end.
 
     Args:
         casilla_values: Per-casilla values shared across every segment.
@@ -179,8 +177,7 @@ def serialise_envelope(
         segments: Ordered tuple of
             :class:`aeat.adapters.outbound.aeat.export._formats._record_spec.SegmentSpec`
             to emit. Callers supplying the envelope decide which
-            optional segments are present (Modelo 303 page 4, for
-            example, appears only in exonerado-390 annual filings).
+            optional segments are present.
         encoding: Wire encoding shared across segments.
         required_field_ids: Fail-fast check applied ONCE at envelope
             start; individual segments do not re-check.

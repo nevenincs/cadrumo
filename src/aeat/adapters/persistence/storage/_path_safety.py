@@ -10,9 +10,8 @@ the typed wrappers in this module instead so:
   CLI error envelope;
 - callers can write narrow ``except PathContainmentError`` clauses
   rather than broad ``except ValueError``;
-- back-compat is preserved because :class:`PathContainmentError`
-  inherits from :class:`ValueError` (any existing ``except ValueError``
-  catches the new typed shape too).
+- :class:`PathContainmentError` still inherits from :class:`ValueError`
+  so callers that handle Python path-shape errors remain correct.
 """
 
 from __future__ import annotations

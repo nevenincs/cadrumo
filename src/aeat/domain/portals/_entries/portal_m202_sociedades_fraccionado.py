@@ -24,6 +24,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m202_sociedades_fraccionado.label_203074",
-    purpose_es="Pago fraccionado a cuenta del Impuesto sobre Sociedades.",
+    purpose="entries.portal_m202_sociedades_fraccionado.purpose",
 )
 """Portal entry for Modelo 202 (corporate-tax instalment payment)."""

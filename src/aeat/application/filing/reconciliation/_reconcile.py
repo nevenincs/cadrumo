@@ -17,11 +17,14 @@ reasons and :class:`ReconciliationReport` for the returned record shape.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from ....core.logging import get_logger
+from ....domain.filing import FilingBuilderError
 from ._kind import FilingDivergenceKind
 from ._schema import (
     FieldMismatch,
@@ -38,15 +41,33 @@ if TYPE_CHECKING:
     from ....domain.justificante import Justificante
 
 
+class _RegistryReconciliationSubview(Protocol):
+    schema_version: str
+    period_selector_periods: tuple[str, ...]
+    verification_expectation_ids: tuple[str, ...]
+    reconciliation_total_casillas: Mapping[str, str]
+
+
+class _RegistryReconciliationProvider(Protocol):
+    def get_subview(self, modelo: str) -> _RegistryReconciliationSubview: ...
+
+
 # Shared with aeat.application.verification: "one cent" is the Kent-visible
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
+_QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.IGNORECASE)
+_CANONICAL_MONTH_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$", re.IGNORECASE)
+_ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})A$", re.IGNORECASE)
+_REMOTE_QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<quarter>[1-4])T$", re.IGNORECASE)
+_REMOTE_ANNUAL_RE: Final[re.Pattern[str]] = re.compile(r"^0A$", re.IGNORECASE)
+_REMOTE_YEAR_RE: Final[re.Pattern[str]] = re.compile(r"^\d{4}$")
 
 
 def reconcile(
     draft: FilingDraft,
     justificante: Justificante | None,
     *,
+    schema_provider: _RegistryReconciliationProvider,
     now: datetime | None = None,
 ) -> ReconciliationReport:
     """Compare a local draft against AEAT's authoritative justificante.
@@ -62,6 +83,8 @@ def reconcile(
         justificante: Parsed AEAT-side
             :class:`aeat.domain.justificante.Justificante`, or ``None``
             when the sede has no record of a matching submission yet.
+        schema_provider: Registry-backed filing provider for the draft
+            modelo and period.
         now: Override for the report's ``reconciled_at`` timestamp.
             Supports deterministic testing. Defaults to
             ``datetime.now(UTC)``.
@@ -72,8 +95,9 @@ def reconcile(
         :attr:`ReconciliationStatus.MATCH`,
         :attr:`ReconciliationStatus.DIVERGENT`, or
         :attr:`ReconciliationStatus.NOT_YET_FOUND`, accompanied by
-        per-field mismatches and a multilingual narrative summary.
+            per-field mismatches and a multilingual narrative summary.
     """
+    subview = _require_registry_reconciliation_surface(draft, schema_provider=schema_provider)
     reconciled_at = now or datetime.now(tz=UTC)
     draft_ref = FilingDraftRef(
         draft_id=draft.draft_id,
@@ -118,7 +142,12 @@ def reconcile(
             )
         )
 
-    if _normalise_period(draft.period) != _normalise_period(remote.period):
+    supported_periods = set(subview.period_selector_periods)
+    if _normalise_period(draft.period, supported_periods=supported_periods) != _normalise_period(
+        remote.period,
+        ejercicio=remote.ejercicio,
+        supported_periods=supported_periods,
+    ):
         mismatches.append(
             FieldMismatch(
                 kind=FilingDivergenceKind.PERIOD_MISMATCH,
@@ -141,7 +170,7 @@ def reconcile(
     # Total mismatches are only surfaced when the draft itself records
     # a derived figure; per-modelo total-derivation is a follow-up,
     # so we stay strict-silent when the draft has no equivalent field.
-    draft_totals = _derive_draft_totals(draft)
+    draft_totals = _derive_draft_totals(draft, total_casillas=subview.reconciliation_total_casillas)
     if (
         draft_totals.ingresar is not None
         and remote.total_a_ingresar is not None
@@ -223,14 +252,12 @@ class _DraftTotals:
         self.devolver = devolver
 
 
-def _derive_draft_totals(draft: FilingDraft) -> _DraftTotals:
+def _derive_draft_totals(draft: FilingDraft, *, total_casillas: Mapping[str, str]) -> _DraftTotals:
     """Compute the draft's operator-visible ingresar / devolver figures.
 
-    The draft itself does not carry a pre-computed total — totals are
-    surface-level projections of specific casilla values. Until a
-    per-modelo projection map is introduced this returns ``None`` on
-    both sides, which causes :func:`reconcile` to skip total comparison
-    and surface any modelo / period / tax_id mismatch on its own.
+    The registry declares which computed casillas carry the payable and
+    refundable totals. Reconciliation only projects totals that are explicitly
+    declared by that active registry snapshot.
 
     Args:
         draft: The local draft whose totals would be derived.
@@ -238,8 +265,42 @@ def _derive_draft_totals(draft: FilingDraft) -> _DraftTotals:
     Returns:
         A :class:`_DraftTotals` with both fields set to ``None``.
     """
-    del draft  # Reserved for a modelo-specific total-derivation follow-up.
-    return _DraftTotals(ingresar=None, devolver=None)
+    values = {value.casilla_id: value.value for value in draft.values}
+    return _DraftTotals(
+        ingresar=_decimal_total(values, total_casillas.get("ingresar")),
+        devolver=_decimal_total(values, total_casillas.get("devolver")),
+    )
+
+
+def _decimal_total(values: Mapping[str, object], casilla_id: str | None) -> Decimal | None:
+    if casilla_id is None:
+        return None
+    value = values.get(casilla_id)
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise FilingBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    raise FilingBuilderError(f"registry reconciliation total casilla {casilla_id!r} is not numeric")
+
+
+def _require_registry_reconciliation_surface(
+    draft: FilingDraft,
+    *,
+    schema_provider: _RegistryReconciliationProvider,
+) -> _RegistryReconciliationSubview:
+    subview = schema_provider.get_subview(draft.modelo)
+    if draft.schema_version != subview.schema_version:
+        raise FilingBuilderError("reconciliation requires a draft built from the active registry snapshot")
+    if not subview.verification_expectation_ids:
+        raise FilingBuilderError("reconciliation requires registry verification expectations")
+    registry_token = _canonical_draft_period_token(draft.period)
+    if registry_token not in subview.period_selector_periods:
+        raise FilingBuilderError("reconciliation requires a draft period declared by the active registry snapshot")
+    return subview
 
 
 def _summarise_justificante(justificante: Justificante) -> JustificanteRefSummary:
@@ -257,22 +318,61 @@ def _summarise_justificante(justificante: Justificante) -> JustificanteRefSummar
     )
 
 
-def _normalise_period(period: str) -> str:
+def _normalise_period(
+    period: str,
+    *,
+    ejercicio: str | None = None,
+    supported_periods: set[str],
+) -> str:
     """Lower-case and strip a period label for tolerant comparison.
 
-    The operator might record "2023" in the draft while AEAT prints
-    "0A" for the same annual period. This helper normalises whitespace and
-    case only; the remaining year-vs-period-code gap is out of scope
-    for the MVP and surfaces as a
-    :attr:`FilingDivergenceKind.PERIOD_MISMATCH` divergence.
+    AEAT can print quarterly tokens, annual tokens, or only the fiscal
+    year on annual receipts. This helper maps those receipt tokens to
+    the same canonical labels used by filing drafts when the ejercicio
+    is available.
 
     Args:
         period: Raw period label from either side of the compare.
+        ejercicio: Optional fiscal year from the AEAT-side justificante.
 
     Returns:
         The stripped, lower-cased period label.
     """
-    return period.strip().lower()
+    stripped = period.strip()
+    if match := _QUARTER_RE.fullmatch(stripped):
+        token = f"{match.group('quarter')}T"
+        if token not in supported_periods:
+            return stripped.lower()
+        return f"{match.group('year')}q{match.group('quarter')}"
+    if match := _ANNUAL_RE.fullmatch(stripped):
+        if "0A" not in supported_periods:
+            return stripped.lower()
+        return f"{match.group('year')}a"
+    if ejercicio is not None and (match := _REMOTE_QUARTER_RE.fullmatch(stripped)):
+        token = f"{match.group('quarter')}T"
+        if token not in supported_periods:
+            return stripped.lower()
+        return f"{ejercicio}q{match.group('quarter')}"
+    if ejercicio is not None and _REMOTE_ANNUAL_RE.fullmatch(stripped) and "0A" in supported_periods:
+        return f"{ejercicio}a"
+    if (
+        ejercicio is not None
+        and _REMOTE_YEAR_RE.fullmatch(stripped)
+        and stripped == ejercicio
+        and "0A" in supported_periods
+    ):
+        return f"{ejercicio}a"
+    return stripped.lower()
+
+
+def _canonical_draft_period_token(period: str) -> str:
+    if match := _QUARTER_RE.fullmatch(period):
+        return f"{match.group('quarter')}T"
+    if match := _ANNUAL_RE.fullmatch(period):
+        return "0A"
+    if match := _CANONICAL_MONTH_RE.fullmatch(period):
+        return match.group("month")
+    raise FilingBuilderError(f"cannot map draft period {period!r} to a registry period")
 
 
 def _canonical_tax_id(value: str) -> str:

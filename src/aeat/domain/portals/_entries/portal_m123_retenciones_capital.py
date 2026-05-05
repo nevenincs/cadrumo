@@ -26,8 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m123_retenciones_capital.label_392660",
-    purpose_es=(
-        "Autoliquidación periódica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario."
-    ),
+    purpose="entries.portal_m123_retenciones_capital.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 123 procedure page."""

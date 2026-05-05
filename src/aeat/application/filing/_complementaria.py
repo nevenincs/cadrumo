@@ -38,7 +38,7 @@ class _SubmittedOriginal(Protocol):
     modelo: str
     period: str
     profile_tax_id: str
-    justificante_csv: str | None
+    justificante_csv: str
 
 
 def build_complementaria(
@@ -53,6 +53,7 @@ def build_complementaria(
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:
         raise FilingBuilderError("original submission and persisted draft disagree on modelo or period")
+    _require_original_registry_snapshot(original_draft, schema_provider=schema_provider)
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
     from . import build_draft
 
@@ -62,7 +63,6 @@ def build_complementaria(
         profile=_DraftProfile(
             tax_id=original_submission.profile_tax_id,
             display_name=f"Complementaria {original_submission.submission_id}",
-            applicable_modelos=(original_submission.modelo,),
         ),
         inputs=merged_inputs,
         schema_provider=schema_provider,
@@ -77,7 +77,7 @@ def build_complementaria(
             delta=delta,
         ),
         submission_id=original_submission.submission_id,
-        original_csv=original_submission.justificante_csv or original_submission.submission_id,
+        original_csv=original_submission.justificante_csv,
         original_model=original_submission.modelo,
         original_period=original_submission.period,
         amendment_kind=AmendmentKind.COMPLEMENTARIA,
@@ -97,10 +97,9 @@ def build_complementaria(
 
 
 class _DraftProfile:
-    def __init__(self, *, tax_id: str, display_name: str, applicable_modelos: tuple[str, ...]) -> None:
+    def __init__(self, *, tax_id: str, display_name: str) -> None:
         self.tax_id = tax_id
         self.display_name = display_name
-        self.applicable_modelos = applicable_modelos
 
 
 def _submitted_original(original: object) -> _SubmittedOriginal:
@@ -108,7 +107,11 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
     missing = [name for name in required if not hasattr(original, name)]
     if missing:
         raise FilingBuilderError(f"original submission is missing required fields: {missing!r}")
-    return cast("_SubmittedOriginal", original)
+    submitted = cast("_SubmittedOriginal", original)
+    csv = submitted.justificante_csv
+    if not isinstance(csv, str) or not csv.strip():
+        raise FilingBuilderError("original submission must include an official justificante CSV")
+    return submitted
 
 
 def _load_original_draft(draft_id: str) -> FilingDraft:
@@ -117,6 +120,16 @@ def _load_original_draft(draft_id: str) -> FilingDraft:
     if draft is None:
         raise FilingBuilderError(f"original draft {draft_id!r} is not persisted")
     return draft
+
+
+def _require_original_registry_snapshot(
+    original_draft: FilingDraft,
+    *,
+    schema_provider: CasillaSchemaProvider,
+) -> None:
+    collection = schema_provider.get_collection(original_draft.modelo)
+    if original_draft.schema_version != collection.schema_version:
+        raise FilingBuilderError("original draft was not built from the active registry snapshot")
 
 
 def _merge_inputs(original_draft: FilingDraft, updated_inputs: CasillaInputs) -> dict[str, object]:

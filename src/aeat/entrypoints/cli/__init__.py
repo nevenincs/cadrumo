@@ -1,8 +1,9 @@
 """User-facing ``aeat`` CLI.
 
-The command tree exposes two top-level namespaces:
+The command tree exposes three top-level namespaces:
 
 - ``aeat setup`` — local prerequisites: profile, auth, status.
+- ``aeat auth`` — live AEAT authentication and session inspection.
 - ``aeat app`` — operational tax work: overview, ledger, invoice,
   declaration.
 
@@ -19,8 +20,10 @@ from __future__ import annotations
 import typer
 
 from . import _declaration, _invoice, _ledger, _overview, _setup
+from . import auth as auth_module
 from . import registry as registry_module
 from ._common import _FORMAT_TEXT
+from ._i18n import tr
 
 # ---------------------------------------------------------------------
 # Root app + callback
@@ -29,7 +32,7 @@ from ._common import _FORMAT_TEXT
 
 app = typer.Typer(
     name="aeat",
-    help="Prepare Spanish tax returns end-to-end with verified local exports.",
+    help=tr("cli.root.app_help"),
     no_args_is_help=True,
     add_completion=False,
 )
@@ -41,7 +44,7 @@ def _root(
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
-        help="Output format: text (default), json, or table where supported.",
+        help=tr("cli.root.format_help"),
     ),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
@@ -56,7 +59,7 @@ def _root(
 
 app_app = typer.Typer(
     name="app",
-    help="Tax workflow: overview, ledger, invoice, declaration.",
+    help=tr("cli.root.app_app_help"),
     no_args_is_help=True,
 )
 
@@ -73,6 +76,7 @@ app_app.add_typer(registry_module.app, name="registry")
 
 
 app.add_typer(_setup.app, name="setup")
+app.add_typer(auth_module.app, name="auth")
 app.add_typer(app_app, name="app")
 
 

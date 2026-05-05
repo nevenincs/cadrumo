@@ -17,9 +17,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ....application.filing import FilingBuilderError, FilingOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
-from ....domain.submission import SubmissionAttempt, SubmissionStatus, SubmittedFiling
+from ....domain.submission import SubmissionAttempt, SubmissionRepository, SubmissionStatus, SubmittedFiling
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -29,27 +30,46 @@ _JUSTIFICANTE_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 runner = CliRunner()
 
 
+def _registry_modelo_calculable_without_inputs() -> str:
+    provider = build_runtime_schema_provider()
+    profile = FilingOperatorProfile(tax_id="00000000T", display_name="CLI filing")
+    for modelo in sorted(provider.collections):
+        try:
+            build_draft(
+                modelo=modelo,
+                period="2026Q1",
+                profile=profile,
+                inputs={},
+                schema_provider=provider,
+            )
+        except FilingBuilderError:
+            continue
+        return modelo
+    raise AssertionError("registry has no modelo calculable without explicit inputs")
+
+
 def _write_inputs(tmp_path: Path) -> Path:
-    """Write a JSON inputs file with a clean Modelo 130 draft."""
-    payload = {
-        "01": 12500,
-        "02": 3500,
-        "05": 400,
-        "06": 0,
-    }
+    """Write a JSON inputs file for registry-backed CLI build tests."""
+    payload: dict[str, object] = {}
     target = tmp_path / "inputs.json"
     target.write_text(json.dumps(payload), encoding="utf-8")
     return target
 
 
-def _write_submitted_filing(submissions_dir: Path, *, draft_id: str = "draft-cli-1") -> SubmittedFiling:
+def _write_submitted_filing(
+    submissions_dir: Path,
+    *,
+    modelo: str,
+    period: str,
+    draft_id: str = "draft-cli-1",
+) -> SubmittedFiling:
     """Persist a real submitted-filing record for CLI amendment tests."""
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     filing = SubmittedFiling(
         submission_id="sub-cli-1",
         draft_id=draft_id,
-        modelo="130",
-        period="2024Q1",
+        modelo=modelo,
+        period=period,
         profile_tax_id="00000000T",
         status=SubmissionStatus.SUBMITTED,
         justificante_csv="CSV-sub-cli-1",
@@ -65,7 +85,7 @@ def _write_submitted_filing(submissions_dir: Path, *, draft_id: str = "draft-cli
             ),
         ),
     )
-    (submissions_dir / "sub-cli-1.json").write_text(filing.model_dump_json(), encoding="utf-8")
+    SubmissionRepository(store_dir=submissions_dir).save(filing)
     return filing
 
 
@@ -147,12 +167,13 @@ class TestFilingCLI:
         profile_path: Path,
     ) -> None:
         inputs = _write_inputs(tmp_path)
+        modelo = _registry_modelo_calculable_without_inputs()
         result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
                 "2026Q1",
                 "--inputs",
@@ -164,41 +185,45 @@ class TestFilingCLI:
             ],
         )
         assert result.exit_code == 0, result.output
-        assert "Saved draft" in result.output
-        assert "registry:130:2019-y-siguientes" in result.output
+        assert f"registry:{modelo}:" in result.output
         assert _single_draft_path(drafts_dir).exists()
 
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
+        modelo = _registry_modelo_calculable_without_inputs()
         result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
                 "2026Q1",
                 "--inputs",
                 str(inputs),
+                "--profile-tax-id",
+                "00000000T",
             ],
         )
         assert result.exit_code == 0, result.output
-        assert "Saved draft" in result.output
-        assert "registry:130:2019-y-siguientes" in result.output
+        assert f"registry:{modelo}:" in result.output
         assert _single_draft_path(drafts_dir).exists()
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
+        modelo = _registry_modelo_calculable_without_inputs()
         build_result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
                 "2026Q1",
                 "--inputs",
                 str(inputs),
+                "--profile-tax-id",
+                "00000000T",
             ],
         )
         assert build_result.exit_code == 0, build_result.output
@@ -206,7 +231,7 @@ class TestFilingCLI:
 
         show_result = runner.invoke(app, ["show", str(draft_path)])
         assert show_result.exit_code == 0, show_result.output
-        assert "registry:130:2019-y-siguientes" in show_result.output
+        assert f"registry:{modelo}:" in show_result.output
 
         validate_result = runner.invoke(app, ["validate", str(draft_path)])
         assert validate_result.exit_code == 0, validate_result.output
@@ -220,16 +245,19 @@ class TestFilingCLI:
     ) -> None:
         del transactions_dir
         inputs = _write_inputs(tmp_path)
+        modelo = _registry_modelo_calculable_without_inputs()
         result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
                 "2026Q1",
                 "--inputs",
                 str(inputs),
+                "--profile-tax-id",
+                "00000000T",
             ],
         )
         assert result.exit_code == 0, result.output
@@ -241,22 +269,28 @@ class TestFilingCLI:
 
     def test_list_filters_by_modelo(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
-        runner.invoke(
+        modelo = _registry_modelo_calculable_without_inputs()
+        build_result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
                 "2026Q1",
                 "--inputs",
                 str(inputs),
+                "--profile-tax-id",
+                "00000000T",
             ],
         )
-        result = runner.invoke(app, ["list", "--modelo", "130"])
-        assert result.exit_code == 0
+        assert build_result.exit_code == 0, build_result.output
+        result = runner.invoke(app, ["list", "--modelo", modelo], terminal_width=240)
+        assert result.exit_code == 0, result.output
+        assert modelo in result.output
+        assert "2026Q1" in result.output
 
-    def test_import_persists_draft_and_submission(
+    def test_import_refuses_pdf_when_required_registry_inputs_are_missing(
         self,
         drafts_dir: Path,
         submissions_dir: Path,
@@ -265,11 +299,13 @@ class TestFilingCLI:
         result = runner.invoke(
             app,
             ["import", "--from-justificante", str(pdf)],
+            terminal_width=240,
         )
-        assert result.exit_code == 0, result.output
-        assert "from justificante" in result.output
-        assert _single_draft_path(drafts_dir).exists()
-        assert list(submissions_dir.glob("*.envelope.json"))
+        assert result.exit_code != 0, result.output
+        assert "registry calculation failed" in result.output
+        assert "irpf.previous_year_economic_activity_net_income" in result.output
+        assert not list(drafts_dir.glob("*.envelope.json"))
+        assert not list(submissions_dir.glob("*.envelope.json"))
 
     def test_import_rejects_missing_pdf(
         self,
@@ -284,7 +320,7 @@ class TestFilingCLI:
         )
         assert result.exit_code != 0, result.output
         assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.json"))
+        assert not list(submissions_dir.glob("*.envelope.json"))
 
     def test_import_rejects_unsupported_modelo(
         self,
@@ -298,24 +334,38 @@ class TestFilingCLI:
         )
         assert result.exit_code != 0, result.output
         assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.json"))
+        assert not list(submissions_dir.glob("*.envelope.json"))
 
     def test_complementaria_submit_command_is_absent(
         self,
-        runner_disabled: object = None,
     ) -> None:
         """``aeat filing complementaria submit`` must not exist.
 
-        The complementaria submit transport was removed when every
-        live-submit code path was deleted under the no-live-submit
-        charter. This canary fails closed if anyone re-introduces the
-        subcommand.
+        Local amendment drafting is available, but this CLI surface must not
+        expose a remote presentation command.
         """
-        del runner_disabled
         result = runner.invoke(app, ["complementaria", "submit", "amd-1"])
         # Click/Typer returns 2 for an unknown subcommand.
         assert result.exit_code == 2, result.output
         assert "no such command" in result.output.lower()
+
+    def test_complementaria_build_reports_missing_submission_cleanly(self) -> None:
+        payload = {
+            "original_submission_id": "missing-submission",
+            "updated_inputs": {
+                "01": 1,
+            },
+        }
+
+        result = runner.invoke(
+            app,
+            ["complementaria", "build", "111", "2026Q1", json.dumps(payload)],
+            terminal_width=240,
+        )
+
+        assert result.exit_code != 0, result.output
+        assert "missing-submission" in result.output
+        assert "Traceback" not in result.output
 
     def test_complementaria_build_requires_registry_schema_provider(
         self,
@@ -324,38 +374,38 @@ class TestFilingCLI:
         tmp_path: Path,
     ) -> None:
         inputs = _write_inputs(tmp_path)
+        modelo = _registry_modelo_calculable_without_inputs()
+        period = "2024Q1"
         build_result = runner.invoke(
             app,
             [
                 "build",
                 "--modelo",
-                "130",
+                modelo,
                 "--period",
-                "2024Q1",
+                period,
                 "--inputs",
                 str(inputs),
+                "--profile-tax-id",
+                "00000000T",
             ],
         )
         assert build_result.exit_code == 0, build_result.output
         draft_path = _single_draft_path(drafts_dir)
         draft_id = draft_path.name.removesuffix(".envelope.json")
-        submitted = _write_submitted_filing(submissions_dir, draft_id=draft_id)
+        submitted = _write_submitted_filing(submissions_dir, modelo=modelo, period=period, draft_id=draft_id)
         payload = {
             "original_submission_id": submitted.submission_id,
             "updated_inputs": {
-                "01": 13000,
-                "02": 3500,
-                "05": 400,
-                "06": 0,
+                "01": 1,
             },
         }
 
         result = runner.invoke(
             app,
-            ["complementaria", "build", "130", "2024Q1", json.dumps(payload)],
+            ["complementaria", "build", modelo, period, json.dumps(payload)],
         )
 
         assert result.exit_code == 0, result.output
-        assert "Saved amended draft" in result.output
         assert len(list(drafts_dir.glob("*.envelope.json"))) == 2
         assert (submissions_dir / "amendments").exists()

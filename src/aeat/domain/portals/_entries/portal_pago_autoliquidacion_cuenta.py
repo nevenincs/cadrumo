@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_pago_autoliquidacion_cuenta.label_405817",
-    purpose_es="Pago de autoliquidaciones con cargo en cuenta bancaria generando NRC.",
+    purpose="entries.portal_pago_autoliquidacion_cuenta.purpose",
 )
 """Portal entry for self-assessment payment via bank account (NRC issuance)."""

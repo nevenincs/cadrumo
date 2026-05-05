@@ -1,19 +1,13 @@
-"""Lookup helpers for the :mod:`aeat.domain.vat` substrate.
-
-Exposes :func:`lookup_rate` for resolving a member-state / tier / date triple
-against :data:`aeat.domain.vat.VAT_RATE_TABLE`, and :func:`cite` for rendering
-the canonical citation string for a :class:`aeat.domain.vat.VATCategory`.
-Both helpers are pure and side-effect free.
-"""
+"""Lookup helpers for VAT registry data."""
 
 from __future__ import annotations
 
 from datetime import date
 
-from ._catalogue import VAT_CATALOGUE_2025
+from ._catalogue import resolve_catalogue
 from ._rates import VAT_RATE_TABLE
 from ._schema import EUMemberState, VATCatalogue, VATCategory, VATRate, VATRateKind
-from .errors import VatCategoryNotFoundError, VatRateNotFoundError
+from .errors import VatCatalogueError, VatCategoryNotFoundError, VatRateNotFoundError
 
 
 def lookup_rate(
@@ -59,6 +53,7 @@ def lookup_rate(
 def cite(
     category: VATCategory,
     *,
+    on: date | None = None,
     catalogue: VATCatalogue | None = None,
 ) -> str:
     """Return the canonical citation string for ``category``.
@@ -70,24 +65,32 @@ def cite(
 
     Args:
         category: The VAT category whose canonical citation is requested.
-        catalogue: Optional catalogue override; defaults to
-            :data:`aeat.domain.vat.VAT_CATALOGUE_2025`.
+        on: Effective date used to resolve the committed catalogue.
+        catalogue: Optional catalogue override.
 
     Returns:
         A canonical citation string such as
-        ``"Ley 37/1992, Art. 90.Uno — <quoted_text_es>"``.
+        ``"Ley 37/1992, Art. 90.Uno — <quoted_text>"``.
 
     Raises:
         :exc:`aeat.domain.vat.VatCategoryNotFoundError`: If ``category`` is
             absent from the catalogue.
     """
-    cat = catalogue if catalogue is not None else VAT_CATALOGUE_2025
-    regulation = cat.get(category)
+    if catalogue is None and on is None:
+        raise VatCatalogueError("cite requires either an explicit catalogue or an effective date")
+    if on is None:
+        assert catalogue is not None
+        return _render_citation(category, catalogue)
+    return _render_citation(category, catalogue if catalogue is not None else resolve_catalogue(on=on))
+
+
+def _render_citation(category: VATCategory, catalogue: VATCatalogue) -> str:
+    regulation = catalogue.get(category)
     if regulation is None:
         raise VatCategoryNotFoundError(f"VAT category {category.value!r} not found in catalogue")
     citation = regulation.citations[0]
     source_label = _SOURCE_LABELS.get(citation.source.value, citation.source.value)
-    return f"{source_label}, {citation.article} — {citation.quoted_text_es}"
+    return f"{source_label}, {citation.article}: {citation.quoted_text}"
 
 
 _SOURCE_LABELS: dict[str, str] = {

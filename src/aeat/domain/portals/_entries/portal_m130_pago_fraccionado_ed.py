@@ -27,6 +27,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m130_pago_fraccionado_ed.label_523782",
-    purpose_es="Pago fraccionado a cuenta del IRPF para empresarios y profesionales en estimación directa.",
+    purpose="entries.portal_m130_pago_fraccionado_ed.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 130 procedure page."""

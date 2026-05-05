@@ -19,16 +19,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class IVARegime(StrEnum):
     """The IVA regime an autónomo files under.
 
-    Drives the applicability of Modelo 303 and Modelo 390. The closed
+    Registry deadline applicability can reference this value. The closed
     set tracks the four regimes the project supports for autónomos.
 
     Attributes:
-        GENERAL: Régimen general — quarterly Modelo 303 plus annual 390.
-        SIMPLIFICADO: Régimen simplificado — quarterly Modelo 303 plus
-            annual 390 with módulos.
-        RECARGO_EQUIVALENCIA: Recargo de equivalencia — IVA settled by
-            the supplier; no 303/390 obligation.
-        EXENTO: IVA-exempt activity — no 303/390 obligation.
+        GENERAL: Régimen general.
+        SIMPLIFICADO: Régimen simplificado.
+        RECARGO_EQUIVALENCIA: Recargo de equivalencia.
+        EXENTO: IVA-exempt activity.
     """
 
     GENERAL = "GENERAL"
@@ -75,24 +73,25 @@ class AutonomoProfile(BaseModel):
         tax_id: NIF / NIE. Stored verbatim, no normalisation.
         iva_regime: The IVA regime the autónomo files under.
         has_employees: Whether the autónomo pays salaries with
-            retención. Drives Modelo 111 and 190.
+            retención.
         pays_professionals_with_retencion: Whether the autónomo pays
-            professional fees subject to retención. Also drives Modelo
-            111 and 190.
+            professional fees subject to retención.
         professional_income_withholding_ge_70pct: Whether at least 70%
             of the autónomo's prior-year professional income was
-            already subject to withholding. This waives Modelo 130 for
-            the professional-activity case.
+            already subject to withholding.
         pays_rent_with_retencion: Whether the autónomo pays alquiler de
-            local with retención. Drives Modelo 115 and 180.
+            local with retención.
+        pays_capital_income_with_retencion: Whether the autónomo pays
+            capital-income rents subject to withholding.
+        uses_objective_estimation_irpf: Whether the autónomo computes IRPF
+            economic-activity income under estimación objetiva.
         does_intracomunitario: Whether the autónomo conducts
-            operaciones intracomunitarias. Drives Modelo 349.
+            operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
-            profile exceeded the Modelo 347 threshold with any third
-            party during the prior year.
+            profile exceeded the applicable third-party transaction
+            threshold during the prior year.
         bienes_extranjero_above_threshold: Whether the autónomo holds
-            bienes en el extranjero above the legal threshold. Drives
-            Modelo 720.
+            bienes en el extranjero above the legal threshold.
         notes: Free-form notes for the user. Never consumed by the
             engine.
     """
@@ -105,6 +104,8 @@ class AutonomoProfile(BaseModel):
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
+    pays_capital_income_with_retencion: bool = False
+    uses_objective_estimation_irpf: bool = False
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
@@ -129,8 +130,8 @@ class FilingObligation(BaseModel):
         status: The :class:`ObligationStatus` against the reference
             ``today`` used by :meth:`DeadlineEngine.compute`.
         applies_because: Human-readable explanation of why the profile
-            is obliged to file this modelo. References the rule from
-            :mod:`aeat.domain.deadlines._applies`.
+            is obliged to file this modelo, resolved from the registry
+            deadline applicability rule.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
     """

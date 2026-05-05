@@ -1,7 +1,7 @@
 """Regression tests for per-modelo period / ejercicio extraction.
 
 Real-world AEAT text shapes for Modelos 130, 303, 111, 190, 390 differ from
-the synthetic fixtures in two ways:
+the generated fixture PDFs in two ways:
 
 * Quarterly modelos (130, 111, ...) print the period in a positional layout
   that pdfplumber merges as ``[<NIF>] <YYYY> <token>`` on a single line,
@@ -9,7 +9,7 @@ the synthetic fixtures in two ways:
 * The Modelo 190 *Resumen anual* layout prints the ejercicio with a
   parenthetical leader: ``Ejercicio (con 4 cifras) ....... 2024``.
 
-These tests feed synthesised text shapes (with redacted PII) through
+These tests feed representative text shapes with redacted PII through
 :func:`aeat.adapters.inbound.justificante._extract.extract_justificante`
 so the fallbacks are exercised without committing real PDF fixtures.
 """
@@ -192,9 +192,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             "https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZED1902024\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "190"))
-        # The positional regex must not bind period="01" here. The
-        # M190 annual fallback resolves to canonical "0A".
-        assert record.period == "0A"
+        assert record.period == "2024"
         assert record.ejercicio == "2024"
 
     def test_quarterly_modelos_still_match(self, tmp_path: Path) -> None:
@@ -220,18 +218,14 @@ class TestEjercicioLooseShape:
         record = extract_justificante(_SHAPE_M190_RESUMEN_ANUAL, _pdf_path(tmp_path, "190"))
         assert record.modelo == "190"
         assert record.ejercicio == "2024"
-        # M190 is in the _ANNUAL_MODELOS set; the parser
-        # synthesises canonical "0A" when no labelled or
-        # positional period is in the text.
-        assert record.period == "0A"
+        assert record.period == "2024"
 
-    def test_modelo_390_period_falls_back_to_canonical_annual(self, tmp_path: Path) -> None:
-        """Annual modelos with no period token resolve to canonical ``0A``."""
+    def test_modelo_390_period_preserves_observed_year(self, tmp_path: Path) -> None:
+        """Receipts with no period token preserve the printed ejercicio."""
         record = extract_justificante(_SHAPE_M390_ANUAL, _pdf_path(tmp_path, "390"))
         assert record.modelo == "390"
         assert record.ejercicio == "2023"
-        # M390 is annual — synthesised canonical "0A".
-        assert record.period == "0A"
+        assert record.period == "2023"
 
 
 class TestEnglishLayout:
@@ -252,7 +246,7 @@ class TestEnglishLayout:
         assert record.presented_at.day == 31
 
     def test_modelo_390_english_layout(self, tmp_path: Path) -> None:
-        """Modelo 390 English receipts capture ``Financial year`` plus canonical ``0A``."""
+        """Modelo 390 English receipts capture ``Financial year``."""
         record = extract_justificante(
             _SHAPE_M390_2021_ENGLISH,
             _pdf_path(tmp_path, "390"),
@@ -262,5 +256,4 @@ class TestEnglishLayout:
         assert record.csv == "SANITIZED3902021"
         # ejercicio captured from "Financial year 2021"
         assert record.ejercicio == "2021"
-        # M390 is in _ANNUAL_MODELOS — period resolves to canonical "0A".
-        assert record.period == "0A"
+        assert record.period == "2021"

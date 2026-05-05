@@ -1,14 +1,9 @@
-"""Modelo 100 (IRPF / Renta) summary-block extractor for año 2025.
+"""Modelo 100 (IRPF / Renta) observed-value extractor for año 2025.
 
-Targets the ~30 casillas every Renta artefact prints in its summary
-block (ingresos totales, deducciones, base imponible, cuota líquida,
-cuota diferencial). Full anexo coverage (A, B, C, D, H, Ñ) is out of
-scope.
-
-Casilla IDs are the AEAT-published Modelo 100 identifiers; the
-extractor uses a narrow slice that every life shape encounters. The
-concrete extractor is :class:`Modelo100SummaryV2025Extractor` and is
-registered by :mod:`aeat.adapters.inbound.borrador._extractors`.
+The extractor reads printed casilla/value rows from a Renta artefact.
+It does not define Modelo 100 completeness or filing-grade authority.
+When callers pass a registry extraction profile, the parser filters to
+that profile and fails hard if the observed coverage is insufficient.
 """
 
 from __future__ import annotations
@@ -20,63 +15,16 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, apply_label_regex
+from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
 from .._errors import BorradorParseError
 from .._parsers import extract_pages_text
-from .._schema import ArtefactKind, BorradorFiling
+from .._schema import ArtefactKind, BorradorExtractionProfile, BorradorObservation
 
-# Summary-block casilla IDs from the parsed Renta artefact surface.
-# Filing-grade Modelo 100 schema and calculation authority belongs in
-# registry/aeat; this parser only extracts printed values for later
-# reconciliation.
-_SUMMARY_CASILLAS: tuple[str, ...] = (
-    # Rendimientos netos.
-    "0022",  # Rendimiento neto rendimientos del trabajo
-    "0049",  # Rendimiento neto capital mobiliario
-    "0107",  # Rendimiento neto capital inmobiliario
-    "0175",  # Rendimiento neto actividades económicas (estimación directa)
-    # Ganancias y pérdidas patrimoniales.
-    "0400",  # Ganancia o pérdida patrimonial total
-    # Base imponible general + del ahorro.
-    "0435",  # Base imponible general
-    "0460",  # Base imponible del ahorro
-    # Mínimo personal + familiar.
-    "0500",  # Mínimo personal y familiar
-    "0505",  # Mínimo del contribuyente
-    "0510",  # Mínimo por descendientes
-    "0515",  # Mínimo por ascendientes
-    "0520",  # Mínimo por discapacidad
-    # Base liquidable.
-    "0545",  # Base liquidable general
-    "0555",  # Base liquidable del ahorro
-    # Cuota íntegra.
-    "0550",  # Cuota íntegra general estatal
-    "0551",  # Cuota íntegra general autonómica
-    "0560",  # Cuota íntegra del ahorro estatal
-    "0561",  # Cuota íntegra del ahorro autonómica
-    "0595",  # Cuota íntegra total (estatal + autonómica)
-    # Deducciones.
-    "0620",  # Deducciones estatales
-    "0622",  # Deducciones autonómicas
-    "0630",  # Total deducciones
-    # Cuota líquida.
-    "0698",  # Cuota líquida total
-    # Retenciones / pagos a cuenta.
-    "0699",  # Retenciones e ingresos a cuenta
-    "0700",  # Pagos fraccionados (incluido Modelo 130)
-    # Resultado.
-    "0720",  # Cuota resultante de la autoliquidación
-    "0721",  # Resultado a ingresar / a devolver
+_CASILLA_VALUE_RE = re.compile(
+    rf"(?m)^\s*(?P<casilla_id>[0-9]{{4}})\s[^\n]{{0,160}}?{SPANISH_AMOUNT_GROUP}",
+    re.IGNORECASE,
 )
-
-_LABEL_REGEX_MAP: dict[str, re.Pattern[str]] = {
-    casilla_id: re.compile(
-        rf"(?m)^\s*{casilla_id}\s[^\n]{{0,120}}?{SPANISH_AMOUNT_GROUP}",
-        re.IGNORECASE,
-    )
-    for casilla_id in _SUMMARY_CASILLAS
-}
 
 _NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
@@ -86,12 +34,12 @@ _CSV_RE = re.compile(
 )
 
 
-class Modelo100SummaryV2025Extractor:
-    """Concrete Modelo 100 summary-block extractor for año 2025.
+class Modelo100ObservedV2025Extractor:
+    """Concrete Modelo 100 observed-value extractor for año 2025.
 
-    Reads the printed text via :func:`extract_pages_text`, locates the
-    summary-block casillas with :func:`apply_label_regex`, and returns a
-    strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`.
+    Reads the printed text via :func:`extract_pages_text`, locates
+    printed casilla rows, and returns a
+    strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
 
     Attributes:
         año: The tax year this extractor targets.
@@ -99,18 +47,25 @@ class Modelo100SummaryV2025Extractor:
 
     año: ClassVar[int] = 2025
 
-    def extract(self, pdf_path: Path, artefact_kind: ArtefactKind) -> BorradorFiling:
-        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`.
+    def extract(
+        self,
+        pdf_path: Path,
+        artefact_kind: ArtefactKind,
+        extraction_profile: BorradorExtractionProfile | None = None,
+    ) -> BorradorObservation:
+        """Parse ``pdf_path`` into a :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
 
         Args:
             pdf_path: Path to the Modelo 100 PDF.
             artefact_kind: The artefact kind discovered by
                 :func:`aeat.adapters.inbound.borrador._detect.detect_artefact_kind`
                 (or supplied by the caller as an override).
+            extraction_profile: Optional registry profile that declares
+                target casillas and minimum coverage for this parse.
 
         Returns:
-            The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`
-            with summary-block casillas extracted.
+            The strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
+            with observed casillas extracted.
 
         Raises:
             :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
@@ -128,41 +83,66 @@ class Modelo100SummaryV2025Extractor:
         if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
             raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
 
-        hits = apply_label_regex(text, _LABEL_REGEX_MAP)
-
+        observed, warnings = _observed_values(text)
+        target_casillas = set(extraction_profile.target_casillas) if extraction_profile else None
         values: list[ExtractedCasilla] = []
-        warnings: list[str] = []
-        for casilla_id in _SUMMARY_CASILLAS:
-            hit = hits.get(casilla_id)
-            if hit is None:
+        matched_targets: set[str] = set()
+        for casilla_id, value in sorted(observed.items()):
+            if target_casillas is not None and casilla_id not in target_casillas:
                 continue
-            if not isinstance(hit.decimal_value, Decimal):
-                # Audit M2: surface unparseable values as warnings instead
-                # of silently dropping them, matching the Modelo 303 path.
-                warnings.append(f"casilla {casilla_id}: value {hit.raw_value!r} is not a number")
-                continue
+            matched_targets.add(casilla_id)
             values.append(
                 ExtractedCasilla(
                     casilla_id=casilla_id,
-                    printed_value=hit.decimal_value,
+                    printed_value=value,
                     source_page=1,
                     source_bbox=None,
                     extraction_confidence=1.0,
                 )
             )
 
-        return BorradorFiling(
+        coverage: Decimal | None = None
+        if extraction_profile is not None:
+            coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
+            if coverage < extraction_profile.min_coverage:
+                missing = sorted(set(extraction_profile.target_casillas) - matched_targets)
+                raise BorradorParseError(
+                    "registry extraction profile coverage below minimum: "
+                    f"profile={extraction_profile.id!r} coverage={coverage} "
+                    f"minimum={extraction_profile.min_coverage} missing={missing!r}"
+                )
+
+        return BorradorObservation(
             modelo="100",
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
             artefact_kind=artefact_kind,
             values=tuple(values),
+            registry_extraction_profile_id=extraction_profile.id if extraction_profile else None,
+            extraction_coverage=coverage,
             source_pdf_path=pdf_path.resolve(),
             source_pdf_sha256=_sha256_file(pdf_path),
             parsed_at=datetime.now(tz=UTC),
             csv=csv_value,
             warnings=tuple(warnings),
         )
+
+
+def _observed_values(text: str) -> tuple[dict[str, Decimal], list[str]]:
+    observed: dict[str, Decimal] = {}
+    warnings: list[str] = []
+    for match in _CASILLA_VALUE_RE.finditer(text):
+        casilla_id = match.group("casilla_id")
+        if casilla_id in observed:
+            warnings.append(f"casilla {casilla_id}: duplicate printed value ignored")
+            continue
+        raw_value = match.group(2)
+        value = parse_spanish_decimal(raw_value)
+        if value is None:
+            warnings.append(f"casilla {casilla_id}: value {raw_value!r} is not a number")
+            continue
+        observed[casilla_id] = value
+    return observed, warnings
 
 
 def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
@@ -182,4 +162,4 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-__all__ = ["_SUMMARY_CASILLAS", "Modelo100SummaryV2025Extractor"]
+__all__ = ["Modelo100ObservedV2025Extractor"]

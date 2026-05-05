@@ -26,9 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m180_resumen_arrendamientos.label_962375",
-    purpose_es=(
-        "Resumen anual de retenciones e ingresos a cuenta sobre "
-        "arrendamientos de inmuebles urbanos (complementa al Modelo 115)."
-    ),
+    purpose="entries.portal_m180_resumen_arrendamientos.purpose",
 )
 """Portal entry for Modelo 180 (annual summary of rental withholdings)."""

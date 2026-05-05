@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import typer
 
+from .._i18n import tr
 from . import ledgers as ledgers_module
 
 app = typer.Typer(
     name="data",
     no_args_is_help=True,
-    help="Local encrypted data ledgers.",
+    help=tr("cli.data.app_help"),
 )
-app.add_typer(ledgers_module.app, name="ledgers", help="Inventory and amortization ledgers.")
+app.add_typer(ledgers_module.app, name="ledgers", help=tr("cli.data.ledgers_help"))
 
 __all__ = ["app"]

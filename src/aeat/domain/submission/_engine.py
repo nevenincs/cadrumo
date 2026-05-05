@@ -13,15 +13,14 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import ValidationError
-
+from ...adapters.persistence.storage.errors import StorageError
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ...core.paths import resolve_record_json_path
 from ._errors import SubmissionError
 from ._models import SubmissionStatus, SubmittedFiling
 from ._preflight import Preflight
 from ._protocols import AuthProviderProbe, DeadlineWindowChecker, FilingDraftLike
+from ._repository import SubmissionRepository
 
 _logger = get_logger(__name__)
 
@@ -85,27 +84,22 @@ class SubmissionEngine:
             SubmissionError: If ``submission_id`` is malformed or no
                 file exists at the resolved path.
         """
+        repository = SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
         try:
-            target = resolve_record_json_path(
-                self.settings.aeat_submissions_dir,
-                submission_id,
-                context="submission id",
-            )
+            filing = repository.load(submission_id)
         except ValueError as exc:
             raise SubmissionError(str(exc)) from exc
-        if not target.exists():
-            _logger.debug("submission not found for id %s", submission_id)
-            raise SubmissionError(f"no persisted submission with id {submission_id!r}")
-        try:
-            filing = SubmittedFiling.model_validate_json(target.read_text(encoding="utf-8"))
-        except (OSError, ValueError, ValidationError) as exc:
+        except StorageError as exc:
             _logger.error(
                 "submission record validation failed: id=%s path=%s",
                 submission_id,
-                target,
+                repository.store_dir,
                 exc_info=True,
             )
-            raise SubmissionError(f"submission record at {target} failed validation") from exc
+            raise SubmissionError(f"submission record {submission_id!r} failed validation") from exc
+        if filing is None:
+            _logger.debug("submission not found for id %s", submission_id)
+            raise SubmissionError(f"no persisted submission with id {submission_id!r}")
         _logger.debug("loaded submission id=%s modelo=%s status=%s", submission_id, filing.modelo, filing.status)
         return filing
 
@@ -127,16 +121,9 @@ class SubmissionEngine:
             :class:`SubmittedFiling` records. Returns an empty tuple
             when the submissions directory does not yet exist.
         """
-        target_dir = self.settings.aeat_submissions_dir
-        if not target_dir.exists():
-            return ()
+        repository = SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
         results: list[SubmittedFiling] = []
-        for path in sorted(target_dir.glob("*.json")):
-            try:
-                filing = SubmittedFiling.model_validate_json(path.read_text(encoding="utf-8"))
-            except (OSError, ValueError, ValidationError):  # pragma: no cover - defensive
-                _logger.warning("engine skipping unreadable record %s", path, exc_info=True)
-                continue
+        for filing in repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:
                 continue
             if status is not None and filing.status != status:

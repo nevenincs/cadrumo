@@ -2,170 +2,119 @@
 
 There is no public Google API or ``gcloud`` command that creates an
 OAuth 2.0 client ID for a project; the developer has to click through
-the Cloud Console UI. This sub-app does the next-best thing: prints a
-deep link to the credentials page, lists the exact fields and scopes
-the project needs, accepts the path to the JSON the developer
-downloads, copies it to ``env/oauth-client.json`` (gitignored) so
-``gcloud`` has a stable file path to consume via ``--client-id-file``,
-and writes ``GOOGLE_OAUTH_CLIENT_ID`` and ``GOOGLE_OAUTH_CLIENT_SECRET``
-into ``env/.env`` from the parsed JSON via
-:func:`aeat.core.env_io.write_env_vars`.
-
-This sub-app is on the critical path for vanilla-workstation
-bootstrap. ``gcloud auth application-default login --scopes=...``
-against gcloud's built-in OAuth client is rejected by Google's "This
-app is blocked" screen for any scope outside gcloud's whitelist
-(cloud-platform, userinfo.email, openid, sqlservice.login). Drive,
-Sheets, and Docs are not in that whitelist. The only way to acquire
-ADC with the Workspace scopes the bootstrap needs is to pass
-``--client-id-file=<your-own-client.json>`` to
-``application-default login``, which is exactly what ``just
-gcloud-auth`` does after this helper has been run.
+the Cloud Console. This command prints the exact link, parses the
+resulting JSON download, and populates the workstation's ``env/.env``
+so bootstrap/operation can proceed.
 """
 
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import typer
 from rich.console import Console
 
 from ._i18n import tr
 
-app = typer.Typer(name="oauth-client", no_args_is_help=True, help="OAuth 2.0 Desktop client provisioning.")
+app = typer.Typer(name="oauth-client", no_args_is_help=True, help=tr("cli.oauth.app_help"))
+
+CREDENTIALS_PAGE_TEMPLATE = "https://console.cloud.google.com/apis/credentials/oauthclient?project={project}"
+REQUIRED_BLOCK = "\n".join(
+    (
+        "Application type: Desktop app",
+        "Authorized redirect URI: http://localhost",
+        "Download the OAuth client JSON after creation.",
+    )
+)
 
 
-CREDENTIALS_PAGE_TEMPLATE = "https://console.cloud.google.com/apis/credentials?project={project}"
-"""Cloud Console deep-link template; ``project`` is interpolated at runtime."""
+def parse_oauth_client_json(raw: str | Mapping[str, Any]) -> tuple[str, str]:
+    """Extract client_id and client_secret from a Google OAuth JSON string.
 
-REQUIRED_BLOCK = """\
-Required fields when creating the OAuth client in Cloud Console:
-
-  Application type:    Desktop app
-  Name:                aeat-cli (or any name you prefer)
-  Authorized URIs:     not applicable for desktop clients
-  Redirect URI:        http://localhost:8080
-  Scopes (granted on first consent):
-    - https://www.googleapis.com/auth/drive
-    - https://www.googleapis.com/auth/spreadsheets
-    - https://www.googleapis.com/auth/documents
-    - https://www.googleapis.com/auth/cloud-platform
-    - openid
-    - https://www.googleapis.com/auth/userinfo.email
-"""
-
-
-def parse_oauth_client_json(payload: dict[str, Any]) -> tuple[str, str]:
-    """Extract the ``client_id`` and ``client_secret`` from a downloaded OAuth JSON.
-
-    Cloud Console writes desktop OAuth credentials under either an
-    ``installed`` or ``web`` top-level key depending on the client
-    type. Only ``installed`` is the documented Desktop shape, but
-    both are accepted for resilience.
-
-    Args:
-        payload: Parsed JSON dict from the downloaded credentials file.
-
-    Returns:
-        Tuple of ``(client_id, client_secret)``.
+    Supports both 'installed' (Desktop) and 'web' (Web Application)
+    client types.
 
     Raises:
-        ValueError: When the payload does not match either expected
-            shape.
+        ValueError: When the JSON is malformed or missing the required
+            keys.
     """
-    for key in ("installed", "web"):
-        block = payload.get(key)
-        if isinstance(block, dict):
-            client_id = block.get("client_id")
-            client_secret = block.get("client_secret")
-            if isinstance(client_id, str) and isinstance(client_secret, str):
-                return (client_id, client_secret)
-    msg = "OAuth client JSON does not contain installed/web client_id and client_secret"
-    raise ValueError(msg)
+    if isinstance(raw, str):
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(tr("cli.oauth.errors.invalid_json", exc=str(exc))) from exc
+    else:
+        payload = dict(raw)
+
+    for kind in ("installed", "web"):
+        if kind in payload:
+            secret_payload = payload[kind]
+            if (
+                isinstance(secret_payload, Mapping)
+                and "client_id" in secret_payload
+                and "client_secret" in secret_payload
+            ):
+                return cast(str, secret_payload["client_id"]), cast(str, secret_payload["client_secret"])
+
+    raise ValueError("OAuth client JSON must contain an installed/web client_id and client_secret")
 
 
-@app.command(name="init", help="Print the Console deep link, parse the downloaded JSON, write env/.env.")
-def init(
+@app.command(name="init", help=tr("cli.oauth.init.help"))
+def init_cmd(
     json_path: Path | None = typer.Option(
         None,
         "--json",
-        "-j",
-        help="Path to the downloaded OAuth client JSON. If omitted, only the instructions are printed.",
+        exists=True,
+        dir_okay=False,
+        help=tr("cli.oauth.init.json_help"),
     ),
 ) -> None:
-    """Walk the developer through OAuth Desktop client setup.
+    """Guided Google Cloud Console Desktop OAuth client provisioning."""
+    from ...core.config import load_settings
 
-    Without ``--json`` the command prints the Cloud Console deep link
-    and the required-field checklist; with ``--json`` it parses the
-    downloaded credentials file via :func:`parse_oauth_client_json`,
-    copies it to ``env/oauth-client.json``, and writes the resulting
-    client id, secret, and stable JSON path to ``env/.env`` through
-    :func:`aeat.core.env_io.write_env_vars`.
-
-    Args:
-        json_path: Optional path to the OAuth client JSON downloaded
-            from Cloud Console. Omit to print only the instructions.
-
-    Raises:
-        :exc:`typer.Exit`: With exit code ``1`` when the JSON path is
-            missing on disk, when the file cannot be parsed, or when
-            the payload does not contain a recognised desktop client
-            shape.
-    """
-    from ...core.config import PROJECT_ROOT, Settings
-    from ...core.env_io import write_env_vars
-
-    settings = Settings()
-    project = settings.google_cloud_project or "<your-project-id>"
+    settings = load_settings()
     console = Console()
-    open_url_label = tr("cli.oauth.t_516471")
-    console.print(f"[bold]{open_url_label}[/]\n  {CREDENTIALS_PAGE_TEMPLATE.format(project=project)}")
-    console.print()
-    console.print(REQUIRED_BLOCK)
+
+    console.print(f"[bold]{tr('cli.oauth.labels.open_url')}[/]")
+    url = f"https://console.cloud.google.com/apis/credentials/oauthclient?project={settings.google_cloud_project}"
+    console.print(f"  {url}\n")
 
     if json_path is None:
-        console.print("[yellow]" + tr("cli.oauth.t_068820") + "[/]")
+        console.print(tr("cli.oauth.init.success"))
         return
 
-    if not json_path.exists():
-        console.print("[red]" + tr("cli.oauth.t_603335") + "[/]")
-        raise typer.Exit(code=1)
-
+    # 1. Parse and extract
     raw = json_path.read_text(encoding="utf-8")
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        console.print("[red]" + tr("cli.oauth.t_977712") + "[/]")
-        raise typer.Exit(code=1) from exc
+    client_id, client_secret = parse_oauth_client_json(raw)
 
-    try:
-        client_id, client_secret = parse_oauth_client_json(payload)
-    except ValueError as exc:
-        console.print(f"[red]{exc}[/]")
-        raise typer.Exit(code=1) from exc
+    # 2. Persist to env/.env
+    env_file = settings.model_config.get("env_file")
+    if isinstance(env_file, Path):
+        content = env_file.read_text(encoding="utf-8")
+        if "GOOGLE_OAUTH_CLIENT_ID" not in content:
+            content += f"\nGOOGLE_OAUTH_CLIENT_ID={client_id}\n"
+        else:
+            content = re.sub(r"GOOGLE_OAUTH_CLIENT_ID=.*", f"GOOGLE_OAUTH_CLIENT_ID={client_id}", content)
 
-    # Persist a stable copy of the OAuth client JSON inside env/ so
-    # gcloud can consume it via --client-id-file. The env/ directory
-    # is gitignored except for .env.example, so this file never lands
-    # in version control.
-    stable_client_path = PROJECT_ROOT / "env" / "oauth-client.json"
-    stable_client_path.parent.mkdir(parents=True, exist_ok=True)
+        if "GOOGLE_OAUTH_CLIENT_SECRET" not in content:
+            content += f"GOOGLE_OAUTH_CLIENT_SECRET={client_secret}\n"
+        else:
+            content = re.sub(r"GOOGLE_OAUTH_CLIENT_SECRET=.*", f"GOOGLE_OAUTH_CLIENT_SECRET={client_secret}", content)
+
+        env_file.write_text(content, encoding="utf-8")
+        console.print(f"[green]{tr('cli.oauth.success.written')}[/]")
+
+    # 3. Copy to stable path
+    stable_client_path = Path("env/oauth-client.json")
     stable_client_path.write_text(raw, encoding="utf-8")
+    console.print(f"[green]{tr('cli.oauth.success.copied', path=str(stable_client_path))}[/]")
 
-    write_env_vars(
-        PROJECT_ROOT / "env" / ".env",
-        {
-            "GOOGLE_OAUTH_CLIENT_ID": client_id,
-            "GOOGLE_OAUTH_CLIENT_SECRET": client_secret,
-            "GOOGLE_OAUTH_CLIENT_JSON": str(stable_client_path),
-        },
-    )
-    console.print("[green]" + tr("cli.oauth.t_011367") + "[/]")
-    console.print("[green]" + tr("cli.oauth.t_119877") + "[/]")
-    next_step = tr("cli.oauth.t_379147")
-    console.print(f"[bold]{next_step}[/] " + tr("cli.oauth.t_822917"))
+    next_step = tr("cli.oauth.labels.next_step")
+    console.print(f"[bold]{next_step}[/] {tr('cli.oauth.labels.run_gcloud_auth')}")
 
 
-__all__ = ["app", "parse_oauth_client_json"]
+__all__ = ["CREDENTIALS_PAGE_TEMPLATE", "REQUIRED_BLOCK", "app", "parse_oauth_client_json"]

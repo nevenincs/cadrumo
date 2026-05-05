@@ -1,23 +1,17 @@
-"""M100 Anexo C aggregator — derives 0061/0066/0072/0078/0085 from the rental register.
+"""Rental-register aggregate calculations.
 
-The aggregator pulls per-finca + per-contract data from the rental
-register repositories for a given ejercicio and produces the five
-Anexo C casilla values consumed by the registry-backed Modelo 100
-implementation:
+The aggregate layer pulls per-finca and per-contract data from the
+rental register repositories for a given ejercicio and returns
+factual LIRPF rental amounts:
 
-  - 0061: Σ per-contract gross_rent_received for the period.
-  - 0066: Σ per-finca total_deductible (LIRPF art. 23.1) including
-    capped + uncapped + consumed carry-forward.
-  - 0072: Σ per-finca capped_amortization (LIRPF art. 23.1.f).
-  - 0078: Σ per-contract reducción amount = tier_pct *
-    qualifying_share * clamp_pos(per-contract rendimiento neto
-    positivo) per LIRPF art. 23.2.
-  - 0085: Σ per-finca imputación 1,1 % / 2 % (LIRPF art. 85) for
-    fincas whose ``use_type`` is ``OTRO_INMUEBLE_NO_AFECTO`` or
-    ``VIVIENDA_DESOCUPADA``.
+* gross rent collected from active contracts.
+* deductible expenses after the art. 23.1 cap.
+* amortization under art. 23.1.f.
+* residential rental reduction under art. 23.2.
+* real-estate imputation under art. 85.
 
-Per-finca attribution and per-contract tier resolutions are exposed
-on the result for audit traceability.
+Filing targets are registry-owned; this module does not encode
+filing-line identifiers.
 """
 
 from __future__ import annotations
@@ -30,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.logging import get_logger
 from ._amortization_ledger import compute_amortization_for_year
 from ._enums import UseType
-from ._errors import AnexoCAggregationError
+from ._errors import RentalAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ._models import RentalContract, RentalFinca
 from ._repository import (
@@ -61,7 +55,7 @@ def _round_to_cents(value: Decimal) -> Decimal:
 
 
 class FincaAttribution(BaseModel):
-    """Per-finca contribution to the Anexo C aggregates."""
+    """Per-finca contribution to rental aggregate totals."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -86,17 +80,17 @@ class ContractTierAttribution(BaseModel):
     reduccion_amount: Decimal = Field(ge=Decimal("0"))
 
 
-class AnexoCAggregates(BaseModel):
-    """Derived M100 Anexo C aggregates plus audit attribution.
+class RentalAggregates(BaseModel):
+    """Derived rental aggregates plus audit attribution.
 
     Attributes:
         period_year: Ejercicio.
-        casilla_0061: Σ ingresos íntegros del arrendamiento.
-        casilla_0066: Σ gastos deducibles per LIRPF art. 23.1
+        ingresos_integros: Sum of rental income.
+        gastos_deducibles: Sum of deductible expenses per LIRPF art. 23.1
             (capped + uncapped + consumed carry-forward).
-        casilla_0072: Σ amortización 3 % per LIRPF art. 23.1.f.
-        casilla_0078: Σ reducción art. 23.2 import.
-        casilla_0085: Σ imputación rentas inmobiliarias art. 85.
+        amortizacion: Sum of amortization per LIRPF art. 23.1.f.
+        reduccion_arrendamiento_vivienda: Sum of art. 23.2 reduction.
+        imputacion_rentas_inmobiliarias: Sum of art. 85 imputation.
         per_finca_attribution: Per-finca breakdown of the above.
         per_contract_tier: Per-contract tier resolution + reducción
             amount.
@@ -105,16 +99,16 @@ class AnexoCAggregates(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     period_year: int
-    casilla_0061: Decimal = Field(ge=Decimal("0"))
-    casilla_0066: Decimal = Field(ge=Decimal("0"))
-    casilla_0072: Decimal = Field(ge=Decimal("0"))
-    casilla_0078: Decimal = Field(ge=Decimal("0"))
-    casilla_0085: Decimal = Field(ge=Decimal("0"))
+    ingresos_integros: Decimal = Field(ge=Decimal("0"))
+    gastos_deducibles: Decimal = Field(ge=Decimal("0"))
+    amortizacion: Decimal = Field(ge=Decimal("0"))
+    reduccion_arrendamiento_vivienda: Decimal = Field(ge=Decimal("0"))
+    imputacion_rentas_inmobiliarias: Decimal = Field(ge=Decimal("0"))
     per_finca_attribution: Mapping[int, FincaAttribution]
     per_contract_tier: Mapping[int, ContractTierAttribution]
 
 
-def compute_anexo_c_aggregates(
+def compute_rental_aggregates(
     *,
     period_year: int,
     finca_repo: RentalFincaRepository,
@@ -122,11 +116,11 @@ def compute_anexo_c_aggregates(
     income_repo: RentalIncomeRepository,
     expense_repo: RentalExpenseRepository,
     ledger_repo: RentalAmortizationLedgerRepository,
-) -> AnexoCAggregates:
-    """Aggregate the M100 Anexo C casillas from the rental register.
+) -> RentalAggregates:
+    """Aggregate factual rental amounts from the rental register.
 
     Args:
-        period_year: Ejercicio whose casillas to compute.
+        period_year: Ejercicio whose rental amounts to compute.
         finca_repo: Live :class:`RentalFincaRepository`.
         contract_repo: Live :class:`RentalContractRepository`.
         income_repo: Live :class:`RentalIncomeRepository`.
@@ -134,36 +128,35 @@ def compute_anexo_c_aggregates(
         ledger_repo: Live :class:`RentalAmortizationLedgerRepository`.
 
     Returns:
-        :class:`AnexoCAggregates` carrying the five derived casillas
-        plus per-finca and per-contract attribution maps for audit
-        traceability.
+        :class:`RentalAggregates` carrying the derived rental totals
+        and attribution maps for audit traceability.
 
     Raises:
-        AnexoCAggregationError: When a contract references a missing
+        RentalAggregationError: When a contract references a missing
             finca, or when the ledger surfaces an inconsistent
             cumulative entry.
     """
     fincas = finca_repo.list_all()
     if not fincas:
-        _log.debug("anexo c: no fincas registered for period %d; returning zero aggregates", period_year)
-        return AnexoCAggregates(
+        _log.debug("rental aggregates: no fincas registered for period %d; returning zero totals", period_year)
+        return RentalAggregates(
             period_year=period_year,
-            casilla_0061=Decimal("0.00"),
-            casilla_0066=Decimal("0.00"),
-            casilla_0072=Decimal("0.00"),
-            casilla_0078=Decimal("0.00"),
-            casilla_0085=Decimal("0.00"),
+            ingresos_integros=Decimal("0.00"),
+            gastos_deducibles=Decimal("0.00"),
+            amortizacion=Decimal("0.00"),
+            reduccion_arrendamiento_vivienda=Decimal("0.00"),
+            imputacion_rentas_inmobiliarias=Decimal("0.00"),
             per_finca_attribution={},
             per_contract_tier={},
         )
 
     fincas_by_id: dict[int, RentalFinca] = {finca.id: finca for finca in fincas if finca.id is not None}
 
-    casilla_0061 = Decimal("0.00")
-    casilla_0066 = Decimal("0.00")
-    casilla_0072 = Decimal("0.00")
-    casilla_0078 = Decimal("0.00")
-    casilla_0085 = Decimal("0.00")
+    ingresos_integros = Decimal("0.00")
+    gastos_deducibles = Decimal("0.00")
+    amortizacion_total = Decimal("0.00")
+    reduccion_arrendamiento_vivienda = Decimal("0.00")
+    imputacion_rentas_inmobiliarias = Decimal("0.00")
     finca_attribution: dict[int, FincaAttribution] = {}
     contract_tier: dict[int, ContractTierAttribution] = {}
 
@@ -183,7 +176,8 @@ def compute_anexo_c_aggregates(
                 contract_tier[attrib.contract_id] = attrib
         else:
             _log.debug(
-                "anexo c: finca id=%s identifier=%s skipped (not active or non-arrendable use_type=%s) for period %d",
+                "rental aggregates: finca id=%s identifier=%s skipped "
+                "(not active or non-arrendable use_type=%s) for period %d",
                 finca.id,
                 finca.identifier,
                 finca.use_type.value,
@@ -207,39 +201,40 @@ def compute_anexo_c_aggregates(
             reduccion_total=reduccion_total,
             imputacion=imputacion,
         )
-        casilla_0061 += ingresos
-        casilla_0066 += gastos
-        casilla_0072 += amortization
-        casilla_0078 += reduccion_total
-        casilla_0085 += imputacion
+        ingresos_integros += ingresos
+        gastos_deducibles += gastos
+        amortizacion_total += amortization
+        reduccion_arrendamiento_vivienda += reduccion_total
+        imputacion_rentas_inmobiliarias += imputacion
 
     # Validate that every contract attribution references a known finca.
     for attrib in contract_tier.values():
         if attrib.finca_id not in fincas_by_id:
-            raise AnexoCAggregationError(
+            raise RentalAggregationError(
                 f"contract id={attrib.contract_id} references unknown finca id={attrib.finca_id}",
             )
 
-    aggregates = AnexoCAggregates(
+    aggregates = RentalAggregates(
         period_year=period_year,
-        casilla_0061=_round_to_cents(casilla_0061),
-        casilla_0066=_round_to_cents(casilla_0066),
-        casilla_0072=_round_to_cents(casilla_0072),
-        casilla_0078=_round_to_cents(casilla_0078),
-        casilla_0085=_round_to_cents(casilla_0085),
+        ingresos_integros=_round_to_cents(ingresos_integros),
+        gastos_deducibles=_round_to_cents(gastos_deducibles),
+        amortizacion=_round_to_cents(amortizacion_total),
+        reduccion_arrendamiento_vivienda=_round_to_cents(reduccion_arrendamiento_vivienda),
+        imputacion_rentas_inmobiliarias=_round_to_cents(imputacion_rentas_inmobiliarias),
         per_finca_attribution=finca_attribution,
         per_contract_tier=contract_tier,
     )
     _log.debug(
-        "anexo c aggregates computed: period=%d fincas=%d contracts=%d 0061=%s 0066=%s 0072=%s 0078=%s 0085=%s",
+        "rental aggregates computed: period=%d fincas=%d contracts=%d "
+        "income=%s expenses=%s amortization=%s reduction=%s imputation=%s",
         period_year,
         len(fincas),
         len(contract_tier),
-        aggregates.casilla_0061,
-        aggregates.casilla_0066,
-        aggregates.casilla_0072,
-        aggregates.casilla_0078,
-        aggregates.casilla_0085,
+        aggregates.ingresos_integros,
+        aggregates.gastos_deducibles,
+        aggregates.amortizacion,
+        aggregates.reduccion_arrendamiento_vivienda,
+        aggregates.imputacion_rentas_inmobiliarias,
     )
     return aggregates
 
@@ -267,7 +262,7 @@ def _aggregate_finca(
     """Compute (ingresos, gastos, amortization, reduccion_total,
     [per-contract attribution]) for one finca."""
     if finca.id is None:
-        raise AnexoCAggregationError("finca lacks persistent id")
+        raise RentalAggregationError("finca lacks persistent id")
     contracts = contract_repo.list_for_finca(finca.id)
     active_contracts = [c for c in contracts if _contract_is_active_for_period(c, period_year)]
     ingresos = Decimal("0.00")
@@ -279,7 +274,7 @@ def _aggregate_finca(
         income = income_repo.get_for_contract_period(contract.id, period_year)
         if income is None:
             _log.debug(
-                "anexo c: no income record for contract_id=%s finca_id=%s period=%d; treating as zero",
+                "rental aggregates: no income record for contract_id=%s finca_id=%s period=%d; treating as zero",
                 contract.id,
                 finca.id,
                 period_year,
@@ -348,15 +343,14 @@ def _contract_is_active_for_period(contract: RentalContract, period_year: int) -
 
 
 def _existing_carry_forward() -> tuple[CarryForwardEntry, ...]:
-    """Future hook for persistent carry-forward queue.
+    """Return the registered carry-forward queue for the finca.
 
-    The ledger schema currently tracks per-finca per-period
-    amortización but not the art. 23.1.a) cap excess. A subsequent
-    PR can add a ``rental_carry_forward`` table; this aggregator
-    will then consult it. For now, returns an empty queue.
+    Persistent carry-forward storage is not part of the current
+    rental register surface, so the aggregate layer fails closed by
+    consuming no prior-year excess.
     """
     _log.debug(
-        "anexo c: carry-forward persistence not yet implemented; "
+        "rental aggregates: no carry-forward persistence registered; "
         "art. 23.1.a) cap excess from prior years is not consumed"
     )
     return ()
@@ -379,15 +373,15 @@ def _compute_finca_amortization(
     cumulative_prior = _cumulative_through_prior_year(ledger_repo, finca.id, period_year)
     from ._models import RentalIncomeRecord
 
-    synthetic_income = RentalIncomeRecord(
-        contract_id=finca.id,  # synthetic — contract_id not used by the computation
+    amortization_input = RentalIncomeRecord(
+        contract_id=finca.id,
         period_year=period_year,
         gross_rent_received=Decimal("0.00"),
         dias_alquilados=total_dias_alquilados,
     )
     computation = compute_amortization_for_year(
         finca,
-        synthetic_income,
+        amortization_input,
         cumulative_through_prior_year=cumulative_prior,
     )
     return computation.capped_amortization
@@ -420,8 +414,8 @@ def _compute_imputacion(
     period_year and disposal_date is None or in / after period_year.
 
     The current scope assumes full-year non-let occupancy. Partial-
-    year imputación pro-rate (e.g. dwelling let part of the year and
-    non-let the rest) is a follow-up issue per ADR §Consequences.
+    year imputación pro-rate belongs in the registry-backed filing
+    binding for the affected modelo.
     """
     if finca.use_type not in {UseType.OTRO_INMUEBLE_NO_AFECTO, UseType.VIVIENDA_DESOCUPADA}:
         return Decimal("0.00")
@@ -445,8 +439,8 @@ def _compute_imputacion(
 
 
 __all__ = [
-    "AnexoCAggregates",
     "ContractTierAttribution",
     "FincaAttribution",
-    "compute_anexo_c_aggregates",
+    "RentalAggregates",
+    "compute_rental_aggregates",
 ]

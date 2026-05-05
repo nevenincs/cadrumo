@@ -44,8 +44,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
         {
             "section_id": "sec1",
             "chapter_id": "cap1",
-            "title": {"es": "Régimen general", "en": "General regime", "hu": "Általános"},
-            "summary": {"es": "Resumen", "en": "Summary", "hu": "Összefoglaló"},
+            "title": "Régimen general",
+            "summary": "Resumen",
             "prose": [],
             "rules": [],
             "references_sections": [],
@@ -63,8 +63,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
         [
             {
                 "chapter_id": "cap1",
-                "title": {"es": "Capítulo 1"},
-                "summary": {"es": "Introducción"},
+                "title": "Capítulo 1",
+                "summary": "Introducción",
                 "sections": [
                     {
                         "section_id": "sec1",
@@ -80,8 +80,8 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
             "manual_id": "iva",
             "year": 2025,
             "part": "single",
-            "title": {"es": "Manual práctico IVA 2025"},
-            "summary": {"es": "Resumen"},
+            "title": "Manual práctico IVA 2025",
+            "summary": "Resumen",
             "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/iva.pdf",
             "source_html_url": None,
             "fetched_at": "2026-04-12T00:00:00Z",

@@ -14,6 +14,7 @@ import pytest
 
 import aeat.adapters.outbound.aeat.verify as verify_module
 from aeat.adapters.outbound.aeat.verify import verify_csv
+from aeat.domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -133,3 +134,13 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     assert session.context.close_calls == 1
     assert session.close_calls == 1
     assert playwright_owner.stop_calls == 1
+
+
+def test_verify_csv_guard_rejects_non_read_method() -> None:
+    with pytest.raises(RegistryValidationError, match="remote write method"):
+        verify_module._assert_verify_http("POST", verify_module._VERIFY_URL)
+
+
+def test_verify_csv_guard_rejects_mutating_action() -> None:
+    with pytest.raises(RegistryValidationError, match="browser action token"):
+        verify_module._assert_verify_action("Presentar declaracion")

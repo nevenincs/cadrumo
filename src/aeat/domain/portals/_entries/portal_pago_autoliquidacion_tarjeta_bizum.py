@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_pago_autoliquidacion_tarjeta_bizum.label_409842",
-    purpose_es="Pago de autoliquidaciones mediante tarjeta bancaria o Bizum.",
+    purpose="entries.portal_pago_autoliquidacion_tarjeta_bizum.purpose",
 )
 """Portal entry for self-assessment payment via bank card or Bizum."""

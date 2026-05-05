@@ -1,121 +1,86 @@
-"""Strict pydantic v2 schema for the AEAT *Manual práctico* corpus.
+"""Strict pydantic v2 records for the *Manual práctico* corpus.
 
-Every boundary-crossing record the :mod:`aeat.domain.manuals`
-subpackage reads from disk, writes to disk, or exposes over its
-public API is defined here. The schema is frozen and strict wherever
-the loader idiom permits it, per the project-wide pydantic v2
-mandate.
+The corpus consists of three primary records:
 
-Closed handbooks are :class:`enum.StrEnum`. Multilingual fields use
-:class:`aeat.core.i18n.str`. Modelo field cross-references
-are stored as validated strings (``MODELO_130:01`` shape) so the
-manuals corpus stays loadable even when a citation references a
-field that has not yet been promoted into a validated registry
-snapshot.
+* :class:`Manual`: The root volume (id, year, part).
+* :class:`Chapter`: Metadata and ordered section references.
+* :class:`Section`: Prose paragraphs and extracted :class:`Rule` objects.
 
-Spanish is the authoritative language for AEAT-domain terminology.
-Spanish-authoritative translatable fields on persisted records are
-validated at load time to guarantee the ``es`` key is present;
-missing ``en`` and ``hu`` translations are surfaced as warnings by
-the verification pipeline, not hard errors.
+Every record is strict, frozen, and prohibits unknown keys. Spanish is
+the authoritative language for the corpus text (prose, titles, summaries);
+the internationalization engine is used for the application's user
+interface and error messages.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import StrEnum
-from pathlib import PurePosixPath
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ._ids import ManualId, ManualPart
 
-# Modelo field cross-reference syntax used inside extracted rules.
-# The MODELO_NNN prefix validates identifier shape only. Filing-grade support
-# and casilla existence are resolved by registry snapshots, not by this corpus
-# schema.
-_MODELO_CASILLA_PATTERN = r"^MODELO_[0-9]{3}(?::[0-9A-Z_]+)?$"
-
-
-class ManualId(StrEnum):
-    """Identifier for a *Manual práctico* volume.
-
-    The enum is intentionally small (only the handbooks relevant to an
-    autónomo) and extensible by follow-on work.
-
-    Attributes:
-        RENTA: *Manual práctico de Renta* (IRPF).
-        IVA: *Manual práctico de IVA*.
-    """
-
-    RENTA = "renta"
-    IVA = "iva"
-
-
-class ManualPart(StrEnum):
-    """Volume split for a handbook within a single tax year.
-
-    Attributes:
-        SINGLE: One-volume handbook (covers IVA).
-        PARTE_1: Main volume of the Renta handbook (2024 onward).
-        PARTE_2_DEDUCCIONES_AUTONOMICAS: Companion volume of the Renta
-            handbook covering autonomous-community deductions.
-    """
-
-    SINGLE = "single"
-    PARTE_1 = "parte1"
-    PARTE_2_DEDUCCIONES_AUTONOMICAS = "parte2-deducciones-autonomicas"
-
-
-class RuleKind(StrEnum):
-    """Closed catalogue of rule categories extracted from the handbook.
-
-    Attributes:
-        OBLIGATION: A statutory or regulatory obligation.
-        COMPUTATION: A computation step (formula or aggregation).
-        EXEMPTION: An exemption from an otherwise-applicable rule.
-        DEDUCTION: A deduction from the tax base or quota.
-        DEADLINE: A submission or payment deadline.
-        DEFINITION: A definitional clarification of terminology.
-        EXAMPLE: A worked example drawn from the handbook.
-    """
-
-    OBLIGATION = "obligation"
-    COMPUTATION = "computation"
-    EXEMPTION = "exemption"
-    DEDUCTION = "deduction"
-    DEADLINE = "deadline"
-    DEFINITION = "definition"
-    EXAMPLE = "example"
-
-
-# Stable ID shape: lowercase kebab-case slug, no whitespace, no slashes.
 _StableId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[a-z0-9][a-z0-9-]*$"),
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=128,
+        pattern=r"^[a-z0-9][a-z0-9-]*$",
+    ),
 ]
+"""Kebab-case identifier used for chapters, sections, and rules."""
 
-# Reviewer tag: any non-empty trimmed string (e.g. GitHub handle, email, or name).
-_Reviewer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
+_Reviewer = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+"""Reviewer handle or ID (e.g. 'kent')."""
 
-# Modelo field cross-reference, e.g. ``MODELO_130:01``. Validated as a
-# constrained string so manuals can cite fields that may not yet exist in a
-# registry snapshot at manual-corpus load time.
-_CasillaRef = Annotated[str, StringConstraints(strip_whitespace=True, pattern=_MODELO_CASILLA_PATTERN)]
+_CasillaRef = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=3,
+        max_length=32,
+        pattern=r"^[A-Z0-9_]+:[0-9]{1,4}$",
+    ),
+]
+"""Dotted reference to a modelo field, e.g. 'MODELO:CASILLA'."""
 
-# Legal-act reference: free-form but trimmed + non-empty, e.g. "Ley 35/2006, art. 32".
-_LegalActRef = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+_LegalActRef = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=256,
+        pattern=r"^[A-Z0-9-][^|]*\|[^|]+$",
+    ),
+]
+"""External legal act reference string (ActId|Ref)."""
+
+# RuleKind catalogue: captures the primary categories of help text found
+# in the manuals.
+RuleKind = Literal[
+    "computation",
+    "applicability",
+    "valuation",
+    "deductibility",
+    "formal_obligation",
+    "procedural",
+    "other",
+]
 
 # Review year bounds: AEAT publishes a new manual every year; guard against
 # absurd values while staying lenient for historical backfills.
 _YearField = Annotated[int, Field(ge=2000, le=2100)]
 
 
-def _require_spanish(translatable: tr, field_name: str) -> None:
-    """Assert a :class:`~aeat.core.i18n.str` carries the authoritative ``es`` key."""
-    if not translatable:
-        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
+def _require_spanish(text: str, field_name: str) -> None:
+    """Assert a string carries non-empty authoritative Spanish text."""
+    if not text or not text.strip():
+        raise ValueError(f"{field_name}: missing authoritative Spanish text")
 
 
 class _ManualStrictFrozen(BaseModel):
@@ -129,22 +94,15 @@ class _ManualStrictFrozen(BaseModel):
     )
 
 
-class _StrictLoose(BaseModel):
-    """Strict validation but mutable; used for aggregate catalogues."""
+class SectionRef(_ManualStrictFrozen):
+    """Link to a Section from a Chapter."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=False,
-        extra="forbid",
-    )
+    section_id: _StableId
+    relative_path: str = Field(min_length=1)
 
 
 class LLMProvenance(_ManualStrictFrozen):
-    """Record of which LLM call produced a draft extraction.
-
-    Attached to every LLM-drafted :class:`Rule` so reviewers can trace
-    the origin and so follow-on work can invalidate drafts keyed on a
-    deprecated prompt template.
+    """Metadata about the LLM extraction of a rule draft.
 
     Attributes:
         provider: Provider key, e.g. ``'anthropic'``.
@@ -177,10 +135,10 @@ class RuleSource(_ManualStrictFrozen):
 
 
 class Paragraph(_ManualStrictFrozen):
-    """A single Spanish source paragraph within a section."""
+    """A single source paragraph within a section."""
 
     paragraph_id: _StableId = Field(description="Stable identifier, unique within its section.")
-    text: str = Field(min_length=1, description="Spanish source prose (authoritative).")
+    text: str = Field(min_length=1, description="Source prose (authoritative Spanish).")
     page: int = Field(ge=1, description="1-indexed page number in the PDF.")
 
 
@@ -200,9 +158,9 @@ class Rule(_ManualStrictFrozen):
         chapter_id: Stable identifier of the owning chapter.
         section_id: Stable identifier of the owning section.
         kind: Closed-catalogue rule category.
-        statement: Rule statement in all supplied languages.
+        statement: Authoritative Spanish rule statement.
         applies_when: Optional natural-language predicate describing
-            the rule's applicability.
+            the rule's applicability (Spanish).
         references_casillas: Cross-references to modelo fields.
         references_sections: Cross-references to sibling sections by
             stable id.
@@ -222,14 +180,14 @@ class Rule(_ManualStrictFrozen):
     chapter_id: _StableId
     section_id: _StableId
     kind: RuleKind
-    statement: tr = Field(description="Rule statement in all supplied languages.")
+    statement: str = Field(description="Authoritative Spanish rule statement.")
     applies_when: str | None = Field(
         default=None,
-        description="Optional natural-language predicate describing the rule's applicability.",
+        description="Optional natural-language predicate describing the rule's applicability (Spanish).",
     )
     references_casillas: tuple[_CasillaRef, ...] = Field(
         default_factory=tuple,
-        description="Cross-references to modelo fields (e.g. 'MODELO_130:01').",
+        description="Cross-references to modelo fields (e.g. 'MODELO:CASILLA').",
     )
     references_sections: tuple[_StableId, ...] = Field(
         default_factory=tuple,
@@ -245,35 +203,9 @@ class Rule(_ManualStrictFrozen):
     definition_reviewed_at: date
 
     @model_validator(mode="after")
-    def _check_spanish_statement(self) -> Rule:
+    def _check_authoritative_statement(self) -> Rule:
         _require_spanish(self.statement, "Rule.statement")
         return self
-
-
-class SectionRef(_ManualStrictFrozen):
-    """Compact pointer from a ``Chapter`` to a ``Section`` on disk.
-
-    Keeping the chapter tree small and file-based keeps the
-    ``chapters.json`` document readable and diff-friendly even for a
-    handbook with hundreds of sections.
-    """
-
-    section_id: _StableId
-    relative_path: str = Field(
-        min_length=1,
-        description=(
-            "POSIX-style relative path from the part root to the section JSON file, "
-            "e.g. 'structure/sections/cap5/sec2.json'."
-        ),
-    )
-
-    @field_validator("relative_path")
-    @classmethod
-    def _validate_relative_path(cls, value: str) -> str:
-        pure = PurePosixPath(value)
-        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
-            raise ValueError("SectionRef.relative_path must be a contained POSIX relative path")
-        return pure.as_posix()
 
 
 class Section(_ManualStrictFrozen):
@@ -281,8 +213,8 @@ class Section(_ManualStrictFrozen):
 
     section_id: _StableId
     chapter_id: _StableId
-    title: tr
-    summary: tr
+    title: str
+    summary: str
     prose: tuple[Paragraph, ...] = Field(default_factory=tuple)
     rules: tuple[Rule, ...] = Field(default_factory=tuple)
     references_sections: tuple[_StableId, ...] = Field(default_factory=tuple)
@@ -292,7 +224,7 @@ class Section(_ManualStrictFrozen):
     definition_reviewed_at: date
 
     @model_validator(mode="after")
-    def _check_spanish_translations(self) -> Section:
+    def _check_authoritative_content(self) -> Section:
         _require_spanish(self.title, "Section.title")
         _require_spanish(self.summary, "Section.summary")
         return self
@@ -302,12 +234,12 @@ class Chapter(_ManualStrictFrozen):
     """A handbook chapter: metadata plus ordered section references."""
 
     chapter_id: _StableId
-    title: tr
-    summary: tr
+    title: str
+    summary: str
     sections: tuple[SectionRef, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
-    def _check_spanish_translations(self) -> Chapter:
+    def _check_authoritative_content(self) -> Chapter:
         _require_spanish(self.title, "Chapter.title")
         _require_spanish(self.summary, "Chapter.summary")
         return self
@@ -319,8 +251,8 @@ class Manual(_ManualStrictFrozen):
     manual_id: ManualId
     year: _YearField
     part: ManualPart
-    title: tr
-    summary: tr
+    title: str
+    summary: str
     source_pdf_url: AnyHttpUrl
     source_html_url: AnyHttpUrl | None = None
     fetched_at: datetime
@@ -329,70 +261,55 @@ class Manual(_ManualStrictFrozen):
     chapters: tuple[Chapter, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
-    def _check_spanish_translations(self) -> Manual:
+    def _check_authoritative_content(self) -> Manual:
         _require_spanish(self.title, "Manual.title")
         _require_spanish(self.summary, "Manual.summary")
         return self
 
 
-class FetchedManualPart(_ManualStrictFrozen):
-    """Manifest record for a fetched raw manual part.
-
-    Committed to disk as ``manifest.json`` next to the raw ``source.pdf``
-    blob. The raw PDF itself is git-ignored; this record is the
-    authoritative contract that ``aeat manual fetch`` uses to verify
-    subsequent re-downloads via sha256.
-    """
-
-    manual_id: ManualId
-    year: _YearField
-    part: ManualPart
-    source_pdf_url: AnyHttpUrl
-    relative_pdf_path: str = Field(
-        min_length=1,
-        description="POSIX-style path from the part root to the raw PDF (typically 'source.pdf').",
-    )
-    sha256: str = Field(
-        min_length=64,
-        max_length=64,
-        pattern=r"^[0-9a-f]{64}$",
-        description="Lower-case hex sha256 of the fetched bytes.",
-    )
-    content_length: int = Field(ge=1, description="Size of the fetched PDF in bytes.")
-    fetched_at: datetime = Field(description="UTC timestamp the PDF was fetched.")
-    synthetic: bool = Field(
-        default=False,
-        description="Always False for fetched records; kept for diff-friendliness with synthetic fixtures.",
-    )
-
-    @field_validator("relative_pdf_path")
-    @classmethod
-    def _validate_relative_pdf_path(cls, value: str) -> str:
-        pure = PurePosixPath(value)
-        if "\\" in value or pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
-            raise ValueError("FetchedManualPart.relative_pdf_path must be a contained POSIX relative path")
-        return pure.as_posix()
-
-
-class ManualCatalogue(_StrictLoose):
-    """Aggregate view over every :class:`Manual` loaded from ``corpus/manuals/``.
-
-    The catalogue is keyed by ``(manual_id, year, part)`` and exposes
-    a flat rule iterator the rest of the project consumes. It is
-    mutable because loading is incremental; individual :class:`Manual`
-    instances are frozen, so callers cannot corrupt loaded records in
-    place.
-
-    Attributes:
-        manuals: The loaded :class:`Manual` records, in load order.
-    """
+class ManualCatalogue(_ManualStrictFrozen):
+    """Aggregate view of all chapters and sections in a manual."""
 
     manuals: tuple[Manual, ...] = Field(default_factory=tuple)
 
-    def __iter__(self):  # type: ignore[override]
-        """Iterate over every loaded :class:`Manual`."""
-        return iter(self.manuals)
-
     def __len__(self) -> int:
-        """Return the number of loaded :class:`Manual` records."""
         return len(self.manuals)
+
+
+_Sha256 = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=64,
+        max_length=64,
+        pattern=r"^[a-f0-9]{64}$",
+    ),
+]
+"""Lowercase hex-encoded SHA-256 digest."""
+
+
+class FetchedManualPart(_ManualStrictFrozen):
+    """Result of a successful manual fetch and validation."""
+
+    manual_id: ManualId
+    year: int
+    part: ManualPart
+    source_pdf_url: AnyHttpUrl
+    relative_pdf_path: str
+    sha256: _Sha256
+    content_length: int
+    fetched_at: datetime
+    synthetic: bool = False
+
+
+__all__ = [
+    "Chapter",
+    "FetchedManualPart",
+    "LLMProvenance",
+    "Manual",
+    "ManualCatalogue",
+    "Paragraph",
+    "Rule",
+    "Section",
+    "SectionRef",
+]

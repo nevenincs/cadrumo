@@ -31,24 +31,23 @@ from ._profile_aliases import FAMILY_ALIASES
 
 _MISSING = "(none)"
 _ALIAS_LIST = ", ".join(sorted(FAMILY_ALIASES))
-_SET_RATIO_KEY_HELP = f"Category id (e.g. suministros_home_office_luz) or family alias ({_ALIAS_LIST})."
-_UNSET_RATIO_KEY_HELP = f"Category id or family alias ({_ALIAS_LIST})."
+
 
 app = typer.Typer(
     name="profile",
     no_args_is_help=True,
-    help="Financial profile: per-category usage ratios.",
+    help=tr("cli.financial.profile.app_help"),
 )
 
 ratios_app = typer.Typer(
     name="ratios",
     no_args_is_help=True,
-    help="List the persisted usage ratios.",
+    help=tr("cli.financial.profile.ratios_help"),
 )
 app.add_typer(ratios_app, name="ratios")
 
 
-@ratios_app.command(name="list", help="List configured ratios alongside statutory defaults.")
+@ratios_app.command(name="list", help=tr("cli.financial.profile.ratios_list_help"))
 def list_cmd() -> None:
     """Print every persisted ratio next to its statutory default.
 
@@ -59,9 +58,9 @@ def list_cmd() -> None:
     """
     profile = _load_profile()
     if not profile.ratios:
-        typer.echo(tr("financial.profile.t_695847"))
+        typer.echo(tr("cli.financial.profile.labels.no_active"))
         return
-    typer.echo("category\tkind\tuser_ratio\tstatutory_default")
+    typer.echo(tr("cli.financial.profile.headers.ratios"))
     for category in sorted(profile.ratios, key=lambda c: c.value):
         rule = CATEGORY_PROFILES_2025[category].proportionality
         default_raw = rule.default_ratio
@@ -78,10 +77,10 @@ def list_cmd() -> None:
         )
 
 
-@app.command(name="set-ratio", help="Set the usage ratio for one category or family alias.")
+@app.command(name="set-ratio", help=tr("cli.financial.profile.set_ratio_help"))
 def set_ratio_cmd(
-    key: str = typer.Argument(..., help=_SET_RATIO_KEY_HELP),
-    value: str = typer.Argument(..., help="Ratio in [0, 1] as a decimal, e.g. 0.21."),
+    key: str = typer.Argument(..., help=tr("cli.financial.profile.set_ratio_key_help", aliases=_ALIAS_LIST)),
+    value: str = typer.Argument(..., help=tr("cli.financial.profile.set_ratio_value_help")),
 ) -> None:
     """Persist one or more usage ratios for the resolved key.
 
@@ -111,12 +110,12 @@ def set_ratio_cmd(
             raise typer.Exit(code=2) from exc
     _save_profile(updated)
     for _category in categories:
-        typer.echo(tr("financial.profile.t_407379"))
+        typer.echo(tr("cli.financial.profile.labels.switched", name=key))
 
 
-@app.command(name="unset-ratio", help="Remove the usage ratio for one category or family alias.")
+@app.command(name="unset-ratio", help=tr("cli.financial.profile.unset_ratio_help"))
 def unset_ratio_cmd(
-    key: str = typer.Argument(..., help=_UNSET_RATIO_KEY_HELP),
+    key: str = typer.Argument(..., help=tr("cli.financial.profile.unset_ratio_key_help", aliases=_ALIAS_LIST)),
 ) -> None:
     """Remove persisted ratios for the resolved key.
 
@@ -138,11 +137,11 @@ def unset_ratio_cmd(
             updated = updated.without_ratio(category)
             removed.append(category)
     if not removed:
-        typer.echo(tr("financial.profile.t_344840"))
+        typer.echo(tr("cli.financial.profile.labels.profile_not_found"))
         return
     _save_profile(updated)
     for _category in removed:
-        typer.echo(tr("financial.profile.t_620920"))
+        typer.echo(tr("cli.financial.profile.labels.switched", name=key))
 
 
 def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
@@ -176,7 +175,7 @@ def _resolve_key(raw: str) -> tuple[SpendingCategory, ...]:
         raise typer.Exit(code=2) from exc
     if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
         typer.echo(
-            tr("financial.profile.t_538938"),
+            tr("cli.financial.profile.errors.at_least_one", category=category.value),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -201,18 +200,18 @@ def _format_unknown_key_hint(raw: str) -> str:
     eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
     candidates = aliases + eligible
     near_matches = difflib.get_close_matches(raw.strip(), candidates, n=3, cutoff=0.6)
-    lines = [f"unknown key: {raw!r}"]
+    lines = [tr("cli.financial.profile.errors.unknown_key", raw=raw)]
     if near_matches:
-        lines.append(f"  did you mean: {', '.join(near_matches)}?")
-    lines.append(_indented_wrap("family aliases:", aliases))
-    lines.append(_indented_wrap("eligible categories:", eligible))
+        lines.append("  " + tr("cli.financial.profile.errors.did_you_mean", suggestions=", ".join(near_matches)))
+    lines.append(_indented_wrap(tr("cli.financial.profile.errors.family_aliases"), aliases))
+    lines.append(_indented_wrap(tr("cli.financial.profile.errors.eligible_categories"), eligible))
     return "\n".join(lines)
 
 
 def _format_eligible_list() -> str:
     """Render the eligible categories indented and wrapped to 78 columns."""
     eligible = sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES)
-    return _indented_wrap("eligible categories:", eligible)
+    return _indented_wrap(tr("cli.financial.profile.errors.eligible_categories"), eligible)
 
 
 def _indented_wrap(header: str, items: list[str]) -> str:
@@ -265,19 +264,19 @@ def _parse_ratio(raw: str) -> Decimal:
         ratio = Decimal(raw)
     except InvalidOperation as exc:
         typer.echo(
-            tr("financial.profile.t_338721"),
+            tr("cli.financial.profile.errors.invalid_ratio"),
             err=True,
         )
         raise typer.Exit(code=2) from exc
     if not ratio.is_finite():
         typer.echo(
-            tr("financial.profile.t_323949"),
+            tr("cli.financial.profile.errors.invalid_ratio"),
             err=True,
         )
         raise typer.Exit(code=2)
     if not (Decimal("0") <= ratio <= Decimal("1")):
         typer.echo(
-            tr("financial.profile.t_496708"),
+            tr("cli.financial.profile.errors.invalid_ratio"),
             err=True,
         )
         raise typer.Exit(code=2)

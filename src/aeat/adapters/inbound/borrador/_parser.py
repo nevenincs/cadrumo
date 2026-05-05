@@ -13,8 +13,14 @@ from pathlib import Path
 
 from ....core.logging import get_logger
 from ._detect import detect_artefact_kind
+from ._errors import BorradorParseError
 from ._extractors import get_extractor
-from ._schema import ArtefactKind, BorradorFiling
+from ._schema import (
+    ArtefactKind,
+    BorradorExtractionProfile,
+    BorradorObservation,
+    BorradorParseMode,
+)
 
 _logger = get_logger(__name__)
 
@@ -24,17 +30,24 @@ def parse_borrador(
     *,
     artefact_kind_override: ArtefactKind | None = None,
     año_override: int | None = None,
-) -> BorradorFiling:
+    extraction_profile: BorradorExtractionProfile | None = None,
+    parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
+) -> BorradorObservation:
     """Parse an AEAT Modelo 100 artefact PDF.
 
     Args:
         pdf_path: Path to the borrador / predeclaración / declaración PDF.
         artefact_kind_override: Skip auto-detection and force the kind.
         año_override: Skip auto-detection of the tax year and force it.
+        extraction_profile: Optional registry extraction profile. When
+            provided, parsing filters to the profile's target casillas and
+            fails when coverage is below the registry minimum.
+        parse_mode: ``OBSERVED`` returns observed PDF rows. ``REGISTRY_PROFILE``
+            requires ``extraction_profile`` and validates coverage.
 
     Returns:
-        A strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorFiling`
-        with the summary-block casillas extracted.
+        A strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`
+        with observed casilla rows extracted.
 
     Raises:
         :exc:`aeat.adapters.inbound.borrador._errors.ArtefactNotRecognisedError`:
@@ -45,13 +58,15 @@ def parse_borrador(
             missing header fields).
     """
     path = Path(pdf_path)
+    if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
+        raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
 
     artefact_kind = artefact_kind_override or detect_artefact_kind(path)
     año = año_override or 2025
     _logger.debug("parse_borrador: path=%s kind=%s año=%d", path.name, artefact_kind, año)
 
-    extractor = get_extractor(año)  # MVP supports 2025 only
-    result = extractor.extract(path, artefact_kind)
+    extractor = get_extractor(año)
+    result = extractor.extract(path, artefact_kind, extraction_profile=extraction_profile)
     _logger.info(
         "parse_borrador: parsed %s kind=%s año=%d",
         path.name,

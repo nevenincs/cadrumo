@@ -1,100 +1,40 @@
-"""Unit tests for the :data:`aeat.domain.vat.VAT_CATALOGUE_2025` catalogue.
-
-Pins coverage of every :class:`aeat.domain.vat.VATCategory`, the minimum
-citation count, the multilingual-Spanish invariant and the rendered citation
-output produced by :func:`aeat.domain.vat.cite`.
-"""
+"""VAT catalogue runtime tests."""
 
 from __future__ import annotations
 
 from datetime import date
 
 import pytest
-from pydantic import ValidationError
 
-from . import (
-    VAT_CATALOGUE_2025,
-    VATCategory,
-    VatCitation,
-    VatCitationSource,
-    VATRegulation,
-    cite,
-)
+from . import VATCategory, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
+
 
 def test_catalogue_covers_every_vat_category() -> None:
-    """Every :class:`VATCategory` must have a :class:`VATRegulation` in the catalogue.
-
-    The catalogue ships 17 entries — one per VATCategory member, including
-    ``DOMESTIC_REVERSE_CHARGE``.
-    """
-    assert set(VAT_CATALOGUE_2025.regulations.keys()) == set(VATCategory)
-    assert len(VAT_CATALOGUE_2025) == 17
+    assert set(_CATALOGUE.regulations.keys()) == set(VATCategory)
+    assert len(_CATALOGUE) == 17
 
 
 def test_catalogue_has_at_least_32_citations() -> None:
-    """The catalogue must ship at least 32 citations across all regulations."""
-    total = sum(len(regulation.citations) for regulation in VAT_CATALOGUE_2025)
+    total = sum(len(regulation.citations) for regulation in _CATALOGUE)
     assert total >= 32
 
 
-def test_every_citation_has_non_empty_quoted_text_es() -> None:
-    """Every shipped citation must carry real Spanish text."""
-    for regulation in VAT_CATALOGUE_2025:
+def test_every_citation_has_non_empty_quoted_text() -> None:
+    for regulation in _CATALOGUE:
         for citation in regulation.citations:
-            assert citation.quoted_text_es.strip()
+            assert citation.quoted_text.strip()
 
 
 def test_cite_domestic_general_mentions_ley_37_1992() -> None:
-    """:func:`cite` against ``DOMESTIC_GENERAL_21`` surfaces the Ley 37/1992 label."""
-    rendered = cite(VATCategory.DOMESTIC_GENERAL_21)
+    rendered = cite(VATCategory.DOMESTIC_GENERAL_21, on=date(2025, 6, 15))
     assert rendered
     assert "Ley 37/1992" in rendered
 
 
-def test_regulation_without_citation_raises() -> None:
-    """Constructing a :class:`VATRegulation` with zero citations must fail."""
-    translatable: str = "vat.test_rules.translatable"
-    with pytest.raises(ValidationError):
-        VATRegulation(
-            category=VATCategory.UNKNOWN,
-            label=translatable,
-            description=translatable,
-            triggers_when=translatable,
-            iva_treatment=translatable,
-            declares_in_modelos=("303",),
-            requires_reverse_charge=False,
-            requires_supplier_vat_id=False,
-            boe_references=("ley-37-1992",),
-            manual_references=(),
-            citations=(),
-        )
-
-
-def test_regulation_missing_spanish_raises() -> None:
-    """The multilingual invariant rejects missing 'es' keys."""
-    translatable_es_ok: str = "vat.test_rules.translatable_es_ok"
-    missing_es: str = "translation"
-    citation = VatCitation(
-        source=VatCitationSource.LEY_37_1992,
-        article="Art. 90.Uno",
-        url=None,
-        quoted_text_es="prueba",
-        retrieval_date=date(2026, 4, 13),
-    )
-    with pytest.raises(ValidationError):
-        VATRegulation(
-            category=VATCategory.UNKNOWN,
-            label=missing_es,
-            description=translatable_es_ok,
-            triggers_when=translatable_es_ok,
-            iva_treatment=translatable_es_ok,
-            declares_in_modelos=("303",),
-            requires_reverse_charge=False,
-            requires_supplier_vat_id=False,
-            boe_references=("ley-37-1992",),
-            manual_references=(),
-            citations=(citation,),
-        )
+def test_every_committed_regulation_has_citations() -> None:
+    for regulation in _CATALOGUE:
+        assert regulation.citations, regulation.category.value

@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_pago_liquidaciones_deudas.label_907488",
-    purpose_es="Pago de liquidaciones tributarias y deudas notificadas por la AEAT.",
+    purpose="entries.portal_pago_liquidaciones_deudas.purpose",
 )
 """Portal entry for paying AEAT-notified tax liquidations and debts."""

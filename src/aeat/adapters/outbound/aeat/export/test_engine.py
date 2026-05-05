@@ -19,6 +19,7 @@ from .....domain.submission import (
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
+    SubmissionRepository,
     SubmissionStatus,
     SubmittedFiling,
     make_submission_id,
@@ -129,18 +130,16 @@ class TestHistoricalRecords:
     """Historical-records loader behaviour for previously-persisted filings."""
 
     def test_load_submission_roundtrip_for_existing_local_record(self, tmp_path: Path) -> None:
-        """Assert ``load_submission`` round-trips a previously persisted JSON record."""
+        """Assert ``load_submission`` round-trips a previously persisted encrypted record."""
         engine = _build_engine(tmp_path)
         filing = _historical_filing(submission_id=make_submission_id("draft-1", 1))
-        target = tmp_path / "submissions" / f"{filing.submission_id}.json"
-        target.parent.mkdir(parents=True)
-        target.write_text(filing.model_dump_json(indent=2), encoding="utf-8")
+        SubmissionRepository(store_dir=tmp_path / "submissions").save(filing)
         assert engine.load_submission(filing.submission_id) == filing
 
     def test_load_submission_rejects_traversal_id(self, tmp_path: Path) -> None:
         """Assert ``load_submission`` rejects a path-traversal submission id."""
         engine = _build_engine(tmp_path)
-        with pytest.raises(SubmissionError, match="simple filename token"):
+        with pytest.raises(SubmissionError, match="path separators"):
             engine.load_submission("../escape")
 
     def test_list_filters_by_modelo(self, tmp_path: Path) -> None:
@@ -148,12 +147,8 @@ class TestHistoricalRecords:
         engine = _build_engine(tmp_path)
         first = _historical_filing(submission_id="sub-1", modelo="130")
         second = _historical_filing(submission_id="sub-2", modelo="303")
-        target_dir = tmp_path / "submissions"
-        target_dir.mkdir()
+        repository = SubmissionRepository(store_dir=tmp_path / "submissions")
         for filing in (first, second):
-            (target_dir / f"{filing.submission_id}.json").write_text(
-                filing.model_dump_json(indent=2),
-                encoding="utf-8",
-            )
+            repository.save(filing)
         assert engine.list_submissions(modelo="130") == (first,)
         assert engine.list_submissions(modelo="999") == ()

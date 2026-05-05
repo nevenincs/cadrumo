@@ -1,9 +1,7 @@
 """Read-only driver for the authenticated AEAT sede electrónica.
 
-This subpackage models the real post-auth AEAT surface as observed
-live against the operator's production sede. Every record shape,
-URL template, and selector is derived from captured ground truth —
-there is no speculative scaffolding.
+This subpackage models the authenticated AEAT surface through typed
+read-only records, URL templates, selectors, and parser outputs.
 
 Public API:
 
@@ -11,8 +9,11 @@ Public API:
         # Records
         Declaration,
         Expediente,
+        FiledDeclarationArtefact,
+        FiledDeclarationObservation,
         JustificanteRef,
         NotificationsSnapshot,
+        ObservedCasillaValue,
         RemoteNotification,
         SedeCapture,
         # Errors
@@ -23,6 +24,7 @@ Public API:
         SedeParseError,
         # Declaraciones-presentadas register surface
         capture_declaration,
+        capture_filed_declaration_observation,
         walk_declarations_register,
         # Mis Expedientes (procedure-tree) surface
         capture_justificante,
@@ -39,12 +41,11 @@ Public API:
         parse_resumen_tree,
     )
 
-The surface is structurally read-only (Layer 1 of the five-layer
-write-guard): every boundary-crossing record carries ``mode:
-Literal["read"]`` and no public method name mentions submission,
-amendment, or any mutating verb in English or Spanish.
+The surface is structurally read-only: every boundary-crossing record
+carries ``mode: Literal["read"]`` and public operations are limited to
+navigation, download, parsing, and observation.
 
-Navigation flow, captured live:
+Navigation flow:
 
 1. ``page.goto("/wlpl/TEWV-CORE/ResumenVlt")`` — Mis Expedientes
    renders a category tree (AEAT procedure categories, not modelo
@@ -68,6 +69,10 @@ from __future__ import annotations
 from ._declarations import (
     Declaration,
     capture_declaration,
+    capture_filed_declaration_observation,
+    capture_previous_filing_observations,
+    registry_observation_from_filed_declaration,
+    resolve_previous_filing_bindings_from_filed_declarations,
     shared_playwright,
     walk_declarations_register,
 )
@@ -86,8 +91,16 @@ from ._notifications import (
     parse_notifications_query,
     parse_notifications_summary,
 )
+from ._observation_store import FiledDeclarationObservationStore
 from ._parse import parse_expediente_detail, parse_resumen_tree
-from ._schema import Expediente, JustificanteRef, SedeCapture
+from ._schema import (
+    Expediente,
+    FiledDeclarationArtefact,
+    FiledDeclarationObservation,
+    JustificanteRef,
+    ObservedCasillaValue,
+    SedeCapture,
+)
 from ._walker import (
     capture_justificante,
     find_expediente,
@@ -99,16 +112,22 @@ __all__ = [
     "Declaration",
     "Expediente",
     "ExpedienteNotFoundError",
+    "FiledDeclarationArtefact",
+    "FiledDeclarationObservation",
+    "FiledDeclarationObservationStore",
     "JustificanteFetchError",
     "JustificanteRef",
     "NotificationsSnapshot",
+    "ObservedCasillaValue",
     "RemoteNotification",
     "SedeCapture",
     "SedeError",
     "SedeNavigationError",
     "SedeParseError",
     "capture_declaration",
+    "capture_filed_declaration_observation",
     "capture_justificante",
+    "capture_previous_filing_observations",
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "find_expediente",
@@ -116,7 +135,9 @@ __all__ = [
     "parse_notifications_query",
     "parse_notifications_summary",
     "parse_resumen_tree",
+    "registry_observation_from_filed_declaration",
     "resolve_justificante_ref",
+    "resolve_previous_filing_bindings_from_filed_declarations",
     "shared_playwright",
     "walk_declarations_register",
     "walk_expedientes_tree",

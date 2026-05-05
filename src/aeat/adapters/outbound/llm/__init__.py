@@ -16,7 +16,7 @@ Examples:
         async def main() -> None:
             client = LLMClient()
             response = await client.complete(
-                LLMRequest(prompt="Summarize Modelo 130 in one sentence.")
+                LLMRequest(prompt="Summarize the requested modelo in one sentence.")
             )
             print(response.text)
 

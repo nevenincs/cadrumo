@@ -95,7 +95,9 @@ def _label_for(listing: AuthProviderListing) -> str:
 
 def _translate(translatable: str) -> str:
     """Render a str in the operator's preferred locale (Spanish first)."""
-    return translatable
+    from ._i18n import tr
+
+    return tr(translatable)
 
 
 def _fmt_decimal(value: Decimal | None) -> str:
@@ -113,12 +115,12 @@ _PERIOD_RE = _re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month
 
 
 def _canonical_period(raw: str) -> str:
-    """Normalise ``2026-Q1`` / ``2026Q1`` / ``2026-01`` / ``2026`` to canonical form."""
-    if not raw:
-        raise _bad("--period must not be empty")
+    """Return the upper-case, un-hyphenated period ID or raise _bad."""
+    if not raw.strip():
+        raise _bad(tr("cli.common.errors.period_empty"))
     match = _PERIOD_RE.fullmatch(raw.strip())
     if match is None:
-        raise _bad(f"unrecognised period {raw!r}; expected YYYY, YYYY-MM, YYYYQn, or YYYY-Qn")
+        raise _bad(tr("cli.common.errors.period_unrecognised", raw=raw))
     year = match.group("year")
     quarter = match.group("quarter")
     month = match.group("month")
@@ -133,7 +135,7 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
     try:
         return _date.fromisoformat(raw.strip())
     except ValueError as exc:
-        raise _bad(f"{label} must be ISO YYYY-MM-DD; got {raw!r}") from exc
+        raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
 
 
 def _profile_to_autonomo(state: UserCliState) -> AutonomoProfile:

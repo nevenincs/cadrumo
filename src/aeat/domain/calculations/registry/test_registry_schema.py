@@ -8,9 +8,16 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, build_snapshot, load_modelo_file
+from . import (
+    RegistryCatalogues,
+    RegistryLoadError,
+    RegistryValidationError,
+    build_model_law_coverage_ledger,
+    build_snapshot,
+    load_modelo_file,
+)
 from ._loader import load_registry_tree
-from ._schema import ModeloDefinition, ModeloRevision
+from ._schema import ModeloDefinition, ModeloRevision, SupportRemovalDecisionDefinition
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -46,17 +53,84 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
     assert snapshot.revision.id == "2019-y-siguientes"
     assert "rd-439-2007:art-110" in snapshot.legal
     assert "aeat-dr-130-2019-v12" in snapshot.sources
+    assert snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
+    assert snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
     assert tuple(snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
     assert tuple(snapshot.live_cross_references) == ("modelo-130-static-official",)
+    assert snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
     assert tuple(snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
     assert tuple(snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
+    assert snapshot.support_removal_decisions == {}
+    assert tuple(snapshot.deadline_windows) == (
+        "modelo-130-2026-1t",
+        "modelo-130-2026-2t",
+        "modelo-130-2026-3t",
+        "modelo-130-2026-4t",
+    )
     assert set(snapshot.application_links) == {
         "modelo-130-calculation",
+        "modelo-130-deadline",
+        "modelo-130-export",
         "modelo-130-extractor",
         "modelo-130-filing",
         "modelo-130-portal-cross-reference",
         "modelo-130-verification",
     }
+
+
+def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
+    modelo, catalogues = _committed_registry()
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2024, period="3T")
+    layout_only_snapshot = snapshot.model_copy(
+        update={
+            "sources": {
+                source_id: source.model_copy(update={"evidence_tier": "layout_authority"})
+                for source_id, source in snapshot.sources.items()
+            }
+        }
+    )
+
+    layout_only_ledger = build_model_law_coverage_ledger(layout_only_snapshot)
+
+    assert {gate.tier for gate in layout_only_ledger.gates} == {
+        "legal_authority",
+        "official_source_guidance",
+        "executable_parity_evidence",
+        "layout_authority",
+    }
+    by_tier = {gate.tier: gate for gate in layout_only_ledger.gates}
+
+    assert by_tier["official_source_guidance"].status == "gap"
+    assert by_tier["layout_authority"].status == "satisfied"
+
+
+def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> None:
+    modelo, catalogues = _committed_registry()
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2024, period="3T")
+    source_id, source = next(iter(snapshot.sources.items()))
+    workbook_id, workbook = next(iter(snapshot.workbook_parity_refs.items()))
+    cross_reference_id, cross_reference = next(iter(snapshot.live_cross_references.items()))
+    parity_source = source.model_copy(update={"evidence_tier": "executable_parity_evidence"})
+    parity_workbook = workbook.model_copy(
+        update={
+            "formula_coverage": "formula_form",
+            "runner_required": True,
+            "output_cells": {"result": "Modelo!A1"},
+        }
+    )
+    guidance_cross_reference = cross_reference.model_copy(update={"evidence_tier": "official_source_guidance"})
+    parity_snapshot = snapshot.model_copy(
+        update={
+            "sources": {source_id: parity_source},
+            "workbook_parity_refs": {workbook_id: parity_workbook},
+            "live_cross_references": {cross_reference_id: guidance_cross_reference},
+        }
+    )
+
+    by_tier = {gate.tier: gate for gate in build_model_law_coverage_ledger(parity_snapshot).gates}
+
+    assert by_tier["executable_parity_evidence"].status == "satisfied"
+    assert by_tier["layout_authority"].status == "gap"
 
 
 def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
@@ -126,6 +200,187 @@ def test_validator_rejects_formula_target_mismatch() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_requires_workbook_parity_coverage() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo).model_copy(update={"workbook_parity_refs": ()})
+
+    with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, revision))
+
+
+def test_modelo_file_rejects_disabled_support_decision(tmp_path: Path) -> None:
+    path = tmp_path / "130.toml"
+    _copy_committed_modelo(path)
+    path.write_text(
+        path.read_text(encoding="utf-8")
+        + """
+
+[[revisions."2019-y-siguientes".support_removal_decisions]]
+id = "modelo-130-disabled-placeholder"
+subject_type = "filing_path"
+subject_id = "aeat.entrypoints.cli.filing"
+decision = "disabled"
+reason = "out_of_scope"
+evidence_note = "Invalid placeholder state."
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-dr-130-2019-v12"]
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="remove_from_filing_grade"):
+        load_modelo_file(path)
+
+
+def test_validator_rejects_removal_decision_for_active_registry_surface() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    decision = SupportRemovalDecisionDefinition(
+        id="modelo-130-remove-active-export",
+        subject_type="export_layout",
+        subject_id=revision.export_layouts[0].id,
+        decision="remove_from_filing_grade",
+        reason="out_of_scope",
+        evidence_note="The active export layout cannot also be recorded as removed.",
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-dr-130-2019-v12",),
+    )
+    mutated = revision.model_copy(update={"support_removal_decisions": (decision,)})
+
+    with pytest.raises(RegistryValidationError, match="but it is still present"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> None:
+    path = tmp_path / "130.toml"
+    _copy_committed_modelo(path)
+    text = path.read_text(encoding="utf-8").replace(
+        'formula_coverage = "unsupported_binary_xls"',
+        'formula_coverage = "formula_form"',
+        1,
+    )
+    path.write_text(text, encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match="formula coverage requires a runner"):
+        load_modelo_file(path)
+
+
+def test_validator_rejects_formula_workbook_without_executable_parity_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    workbook = revision.workbook_parity_refs[0].model_copy(
+        update={
+            "formula_coverage": "formula_form",
+            "runner_required": True,
+            "output_cells": {"result": "Modelo!A1"},
+        }
+    )
+    mutated = revision.model_copy(update={"workbook_parity_refs": (workbook,)})
+
+    with pytest.raises(RegistryValidationError, match="requires executable parity evidence source"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_formula_without_official_source_guidance() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    formulas = tuple(
+        formula.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
+        if formula.id == "modelo-130-pago-fraccionado-directa"
+        else formula
+        for formula in revision.formulas
+    )
+    mutated = revision.model_copy(update={"formulas": formulas})
+
+    with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_formula_citation_missing_from_official_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    formula = next(item for item in revision.formulas if item.id == "modelo-130-pago-fraccionado-directa")
+    bad_citations = tuple(
+        citation.model_copy(update={"required_text": ("official source does not contain this calculation anchor",)})
+        for citation in formula.source_citations
+    )
+    formulas = tuple(
+        item.model_copy(update={"source_citations": bad_citations}) if item.id == formula.id else item
+        for item in revision.formulas
+    )
+    mutated = revision.model_copy(update={"formulas": formulas})
+
+    with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_binding_citation_missing_from_official_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0]
+    bad_citations = tuple(
+        citation.model_copy(update={"required_text": ("official source does not contain this binding anchor",)})
+        for citation in binding.source_citations
+    )
+    bindings = tuple(
+        item.model_copy(update={"source_citations": bad_citations}) if item.id == binding.id else item
+        for item in revision.bindings
+    )
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_parameter_without_official_source_guidance() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    parameters = tuple(
+        parameter.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
+        if parameter.id == "irpf.direct_estimation_fractional_payment_rate"
+        else parameter
+        for parameter in revision.parameters
+    )
+    mutated = revision.model_copy(update={"parameters": parameters})
+
+    with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_modelo_file_rejects_static_cross_reference_as_executable_parity(tmp_path: Path) -> None:
+    path = tmp_path / "130.toml"
+    _copy_committed_modelo(path)
+    text = path.read_text(encoding="utf-8").replace(
+        'evidence_tier = "layout_authority"\nsurface = "static_official_documentation"',
+        'evidence_tier = "executable_parity_evidence"\nsurface = "static_official_documentation"',
+        1,
+    )
+    path.write_text(text, encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match="static documentation is not executable parity evidence"):
+        load_modelo_file(path)
+
+
+def test_validator_rejects_cross_reference_source_tier_mismatch() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    cross_reference = revision.live_cross_references[0].model_copy(update={"evidence_tier": "official_source_guidance"})
+    mutated = revision.model_copy(update={"live_cross_references": (cross_reference,)})
+
+    with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_modelo_file_rejects_runner_without_formula_workbook(tmp_path: Path) -> None:
+    path = tmp_path / "130.toml"
+    _copy_committed_modelo(path)
+    text = path.read_text(encoding="utf-8").replace("runner_required = false", "runner_required = true", 1)
+    path.write_text(text, encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match="runner requires formula coverage"):
+        load_modelo_file(path)
+
+
 def test_validator_rejects_missing_legal_reference() -> None:
     modelo, catalogues = _committed_registry()
     missing_legal = catalogues.model_copy(update={"legal": {}})
@@ -141,6 +396,16 @@ def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match=r"extraction profile .* unknown casilla"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    profile = revision.extraction_profiles[0].model_copy(update={"accepted_artefact_kinds": ("justificante_pdf",)})
+    mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
+
+    with pytest.raises(RegistryValidationError, match="surface 'declaracion_pdf' requires"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
@@ -162,3 +427,44 @@ def test_validator_requires_application_link_for_formulas() -> None:
 
     with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    expectation = revision.verification_expectations[0].model_copy(
+        update={"reconciliation_totals": {"ingresar": "missing"}}
+    )
+    mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
+
+    with pytest.raises(RegistryValidationError, match="reconciliation total 'ingresar' references unknown casilla"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_requires_reconciliation_total_to_be_computed() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    expectation = revision.verification_expectations[0].model_copy(update={"reconciliation_totals": {"ingresar": "01"}})
+    mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="reconciliation total 'ingresar' must be one of computed_casillas",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_deadline_window_any_mode_requires_conditions() -> None:
+    modelo, _catalogues = _committed_registry()
+    revision = _revision(modelo)
+    window = revision.deadline_windows[0]
+    payload = window.model_dump()
+    payload.update(
+        {
+            "applicability_condition_mode": "any",
+            "applicability_conditions": (),
+        }
+    )
+
+    with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
+        type(window).model_validate(payload)

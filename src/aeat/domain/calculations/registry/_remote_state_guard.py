@@ -8,15 +8,19 @@ from urllib.parse import urlparse
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import RegistryValidationError
+from ._schema import LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[
     "open_simulator",
     "integration_test_service",
+    "public_read_surface",
+    "authenticated_read_surface",
     "static_official_only",
     "forbidden_stateful_surface",
 ]
 RemoteOperationKind = Literal["http", "browser_action", "local_workbook"]
 RemoteGuardDecision = Literal["allowed", "blocked"]
+RemoteEvidenceTier = Literal["official_source_guidance", "executable_parity_evidence", "layout_authority"]
 
 _READ_ONLY_HTTP_METHODS = {"GET", "HEAD", "OPTIONS"}
 _AEAT_HOST_SUFFIXES = (
@@ -61,6 +65,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     """Policy attached to a live/static AEAT cross-reference decision."""
 
     id: str
+    evidence_tier: RemoteEvidenceTier
     classification: CrossReferenceClassification
     allowed_hosts: tuple[str, ...] = Field(default_factory=tuple)
     synthetic_data_allowed: bool
@@ -69,10 +74,32 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @model_validator(mode="after")
     def _validate_policy(self) -> RemoteStateGuardPolicy:
-        if self.classification in {"open_simulator", "integration_test_service"} and not self.allowed_hosts:
-            raise ValueError("live cross-reference policy must declare allowed hosts")
+        if self.classification in {"open_simulator", "integration_test_service"} and (
+            self.evidence_tier != "executable_parity_evidence"
+        ):
+            raise ValueError("live cross-reference policy requires executable parity evidence")
+        if self.classification == "public_read_surface" and self.evidence_tier == "executable_parity_evidence":
+            raise ValueError("public read surfaces are observations, not executable parity evidence")
+        if self.classification == "authenticated_read_surface" and self.evidence_tier == "executable_parity_evidence":
+            raise ValueError("authenticated filed-data reads are observations, not executable parity evidence")
+        if self.classification == "static_official_only" and self.evidence_tier == "executable_parity_evidence":
+            raise ValueError("static official documentation is not executable parity evidence")
+        if (
+            self.classification
+            in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
+            and not self.allowed_hosts
+        ):
+            raise ValueError("AEAT remote policy must declare allowed hosts")
         if self.classification == "open_simulator" and self.requires_authentication:
             raise ValueError("open simulator policy must not require authentication")
+        if self.classification == "public_read_surface" and self.requires_authentication:
+            raise ValueError("public read policy must not require authentication")
+        if self.classification == "public_read_surface" and self.synthetic_data_allowed:
+            raise ValueError("public reads must not use synthetic remote data")
+        if self.classification == "authenticated_read_surface" and not self.requires_authentication:
+            raise ValueError("authenticated filed-data read policy must require authentication")
+        if self.classification == "authenticated_read_surface" and self.synthetic_data_allowed:
+            raise ValueError("authenticated filed-data reads must not use synthetic remote data")
         if self.classification == "static_official_only" and self.synthetic_data_allowed:
             raise ValueError("static official documentation cannot accept synthetic remote data")
         if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
@@ -116,6 +143,30 @@ class RemoteStateGuardResult(RemoteStateGuardModel):
     decision: RemoteGuardDecision
     reason: str
     policy_id: str
+
+
+def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecision) -> RemoteStateGuardPolicy:
+    """Build the executable remote-state guard policy for a registry cross-reference."""
+
+    if decision.evidence_tier == "legal_authority":
+        raise ValueError("remote-state policy cannot be built from legal-authority evidence")
+    evidence_tier: RemoteEvidenceTier = decision.evidence_tier
+    classification: CrossReferenceClassification
+    if decision.surface == "static_official_documentation":
+        classification = "static_official_only"
+    elif decision.surface == "open_simulator":
+        classification = "open_simulator"
+    else:
+        classification = "integration_test_service"
+    return RemoteStateGuardPolicy(
+        id=decision.guard_policy_id,
+        evidence_tier=evidence_tier,
+        classification=classification,
+        allowed_hosts=decision.allowed_hosts,
+        synthetic_data_allowed=decision.synthetic_data_allowed,
+        requires_authentication=decision.requires_authentication,
+        requires_aeat_authorization=decision.requires_aeat_authorization,
+    )
 
 
 def assert_remote_operation_allowed(

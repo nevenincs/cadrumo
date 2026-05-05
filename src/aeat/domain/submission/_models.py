@@ -82,7 +82,7 @@ class SubmittedFiling(BaseModel):
             ``f"{draft_id}:{attempt_ordinal}"``. See
             :func:`make_submission_id`.
         draft_id: The upstream draft identifier.
-        modelo: The AEAT modelo identifier (e.g. ``"130"``).
+        modelo: The AEAT modelo identifier.
         period: The period covered (e.g. ``"2026Q1"``).
         profile_tax_id: The autónomo NIF / NIE verbatim.
         status: The overall :class:`SubmissionStatus` for the filing.

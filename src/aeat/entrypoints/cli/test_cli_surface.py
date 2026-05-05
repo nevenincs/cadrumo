@@ -20,6 +20,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.application.filing import FilingOperatorProfile, build_draft, build_runtime_schema_provider
+from aeat.domain.filing import FilingBuilderError
+
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -40,15 +43,51 @@ def _invoke(args: list[str]):
     return _RUNNER.invoke(app, args)
 
 
+def _registry_modelo_calculable_without_cli_sources() -> str:
+    provider = build_runtime_schema_provider()
+    profile = FilingOperatorProfile(tax_id="12345678Z", display_name="CLI surface")
+    for modelo in sorted(provider.subviews):
+        try:
+            build_draft(
+                modelo=modelo,
+                period="2026Q1",
+                profile=profile,
+                inputs={},
+                schema_provider=provider,
+            )
+        except FilingBuilderError:
+            continue
+        return modelo
+    raise AssertionError("registry has no modelo calculable from current CLI sources")
+
+
+def _registry_modelo_requiring_cli_sources() -> str:
+    provider = build_runtime_schema_provider()
+    profile = FilingOperatorProfile(tax_id="12345678Z", display_name="CLI surface")
+    for modelo in sorted(provider.subviews):
+        try:
+            build_draft(
+                modelo=modelo,
+                period="2026Q1",
+                profile=profile,
+                inputs={},
+                schema_provider=provider,
+            )
+        except FilingBuilderError:
+            return modelo
+    raise AssertionError("registry has no modelo requiring additional CLI sources")
+
+
 # ---------------------------------------------------------------------
 # Namespace surface
 # ---------------------------------------------------------------------
 
 
-def test_root_help_lists_setup_and_app_only() -> None:
+def test_root_help_lists_setup_auth_and_app() -> None:
     result = _invoke(["--help"])
     assert result.exit_code == 0
     assert "setup" in result.output
+    assert "auth" in result.output
     assert "app" in result.output
 
 
@@ -64,8 +103,8 @@ def test_app_help_lists_singular_domains() -> None:
     assert result.exit_code == 0
     for token in ("overview", "ledger", "invoice", "declaration"):
         assert token in result.output
-    for legacy in ("workspaces", "audits", "declarations"):
-        assert legacy not in result.output
+    for plural_namespace in ("workspaces", "audits", "declarations"):
+        assert plural_namespace not in result.output
 
 
 def test_setup_profile_help_carries_subcommands() -> None:
@@ -79,6 +118,13 @@ def test_setup_auth_help_carries_subcommands() -> None:
     result = _invoke(["setup", "auth", "--help"])
     assert result.exit_code == 0
     for token in ("providers", "configure", "login", "status", "whoami", "logout"):
+        assert token in result.output
+
+
+def test_auth_help_carries_provider_backed_subcommands() -> None:
+    result = _invoke(["auth", "--help"])
+    assert result.exit_code == 0
+    for token in ("list-providers", "configure", "login", "status", "whoami", "logout"):
         assert token in result.output
 
 
@@ -382,10 +428,11 @@ def test_app_declaration_calculate_persists_draft(
 ) -> None:
     _isolate(monkeypatch, tmp_path)
     assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
-    result = _invoke(["--format", "json", "app", "declaration", "calculate", "--period", "2026Q1", "--modelo", "130"])
+    modelo = _registry_modelo_calculable_without_cli_sources()
+    result = _invoke(["--format", "json", "app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
     assert result.exit_code == 0
     payload = json.loads(result.output)
-    assert payload["draft"]["modelo"] == "130"
+    assert payload["draft"]["modelo"] == modelo
     assert payload["draft"]["period"] == "2026Q1"
     assert payload["summary"]["next_action"] in {
         "review",
@@ -395,6 +442,30 @@ def test_app_declaration_calculate_persists_draft(
         "amend",
         "resolve-blockers",
     }
+
+
+def test_app_declaration_calculate_requires_profile_tax_id(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent", "--activity", "design"]).exit_code == 0
+    modelo = _registry_modelo_calculable_without_cli_sources()
+    result = _invoke(["app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
+    assert result.exit_code == 2
+    assert "tax.id" in result.output
+
+
+def test_app_declaration_calculate_refuses_missing_registry_inputs(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    modelo = _registry_modelo_requiring_cli_sources()
+    result = _invoke(["app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
+    assert result.exit_code == 2
+    assert "registry calculation failed" in result.output
 
 
 def test_app_declaration_verify_rejects_missing_file(

@@ -65,39 +65,32 @@ class ProviderChoice(StrEnum):
 
 
 def ingest_cmd(
-    path: Path = typer.Argument(..., exists=True, dir_okay=False, help="Path to the source file."),
+    path: Path = typer.Argument(..., exists=True, dir_okay=False, help=tr("cli.financial.ingest.path_help")),
     provider: ProviderChoice = typer.Option(
         ProviderChoice.AUTO,
         "--provider",
         case_sensitive=False,
-        help="Provider selection: csv, xlsx, ofx, n26-pdf, or auto.",
+        help=tr("cli.financial.ingest.provider_help"),
     ),
     output_json: bool = typer.Option(
         False,
         "--output-json",
-        help="Emit RawTransaction records as newline-delimited JSON on stdout.",
+        help=tr("cli.financial.ingest.output_json_help"),
     ),
     verbose: bool = typer.Option(
         False,
         "--verbose",
-        help="Pretty-print each emitted RawTransaction after ingest.",
+        help=tr("cli.financial.ingest.verbose_help"),
     ),
     persist: bool | None = typer.Option(
         None,
         "--persist/--no-persist",
-        help=(
-            "When ON, parsed rows are merged through the governed "
-            "TransactionCatalogueRepository (encrypted-at-rest at "
-            "FINANCIAL classification, idempotent re-imports, "
-            "file-locked for concurrency). Default: ON when stdout is "
-            "a TTY, OFF when piped (preserves the existing "
-            "RawTransaction-jsonl-to-stdout behaviour)."
-        ),
+        help=tr("cli.financial.ingest.persist_help"),
     ),
     catalogue_dir: Path | None = typer.Option(
         None,
         "--catalogue-dir",
-        help=("Optional override for the catalogue directory. Defaults to AEAT_FINANCIAL_TXS_DIR / <provider-name>."),
+        help=tr("cli.financial.ingest.catalogue_dir_help"),
     ),
 ) -> None:
     """Validate a source file and emit strict raw transaction records.
@@ -139,7 +132,7 @@ def ingest_cmd(
     if provider_impl is None:
         _logger.warning("financial ingest: no provider can handle %s", path)
         typer.echo(
-            tr("financial.ingest.t_865065"),
+            tr("cli.ingest.errors.auto_detect_failed", path=path),
             err=True,
         )
         raise typer.Exit(code=2)
@@ -152,15 +145,15 @@ def ingest_cmd(
             provider_impl.name,
             len(validation.warnings),
         )
-        for _warning in validation.warnings:
+        for warning in validation.warnings:
             typer.echo(
-                tr("financial.ingest.t_845188"),
+                str(warning),
                 err=True,
             )
         raise typer.Exit(code=2)
-    for _warning in validation.warnings:
+    for warning in validation.warnings:
         typer.echo(
-            tr("financial.ingest.t_985130"),
+            str(warning),
             err=True,
         )
     try:
@@ -173,7 +166,7 @@ def ingest_cmd(
             exc_info=True,
         )
         typer.echo(
-            tr("financial.ingest.t_965742"),
+            tr("cli.ingest.errors.ingest_failed", path=path),
             err=True,
         )
         raise typer.Exit(code=2) from exc
@@ -205,21 +198,21 @@ def ingest_cmd(
             typer.echo(summary.model_dump_json(), err=True)
         else:
             typer.echo(
-                tr("financial.ingest.t_480489"),
+                tr("cli.ingest.errors.at_least_one_row"),
                 err=True,
             )
         return
 
     _CONSOLE.print(
         "[green]"
-        + tr("financial.ingest.t_434310")
+        + tr("cli.ingest.labels.ingesting", path=path)
         + f"[/green] {len(transactions)} "
-        + tr("financial.ingest.t_591400")
+        + tr("cli.ingest.labels.rows_found", n=len(transactions))
         + f" [bold]{provider_impl.name}[/bold]",
     )
     if summary is not None:
         _CONSOLE.print(
-            "[green]" + tr("financial.ingest.t_860156") + f"[/green] imported={summary.imported} "
+            "[green]" + tr("cli.ingest.labels.complete") + f"[/green] imported={summary.imported} "
             f"skipped={summary.skipped} catalogue={summary.catalogue_path}",
         )
     if verbose:

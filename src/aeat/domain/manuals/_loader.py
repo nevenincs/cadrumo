@@ -265,7 +265,7 @@ def find_rules(
     Args:
         catalogue: A loaded :class:`ManualCatalogue`.
         casilla_id: Optional modelo casilla cross-reference filter,
-            e.g. ``"MODELO_130:01"``. Rules whose
+            e.g. ``"MODELO:CASILLA"``. Rules whose
             ``references_casillas`` does not contain this value are
             skipped.
         kind: Optional :class:`RuleKind` filter.

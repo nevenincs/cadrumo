@@ -12,13 +12,12 @@ without any I/O against the user.
 
 from __future__ import annotations
 
-import contextlib
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
 from ...adapters.outbound.aeat.auth import CertificateBackend
-from ...core.config import load_settings
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
@@ -43,18 +42,6 @@ _DEFAULT_ENV_FILE = Path("env") / ".env"
 def _utcnow() -> datetime:
     """Return the current timezone-aware UTC instant."""
     return datetime.now(UTC)
-
-
-def t(message: str) -> str:
-    """Build a multilingual :class:`str` from the three language strings."""
-    return "translation"
-
-
-def _setup_text(message: str) -> str:
-    """Render ``message`` in the configured output language, defaulting to ES."""
-    with contextlib.suppress(KeyError, ValueError):
-        str(load_settings().aeat_output_language)
-    return message
 
 
 class SetupWizard:
@@ -213,131 +200,131 @@ class SetupWizard:
         """
         prompter.announce(
             key="welcome",
-            message="aeat setup — configure this workstation for the first run.",
+            message=tr("setup.wizard.welcome"),
         )
 
         tax_id = prompter.prompt_text(
             key="tax_id",
-            prompt="NIF / NIE",
+            prompt=tr("setup.wizard.tax_id_prompt"),
             default=defaults.tax_id if defaults else None,
         )
         iva_regime_raw = prompter.prompt_choice(
             key="iva_regime",
-            prompt="IVA regime",
+            prompt=tr("setup.wizard.iva_regime_prompt"),
             choices=tuple(r.value for r in IVARegime),
             default=(defaults.iva_regime.value if defaults else IVARegime.GENERAL.value),
         )
         has_employees = prompter.prompt_bool(
             key="has_employees",
-            prompt="Do you pay salaries with retención?",
+            prompt=tr("setup.wizard.has_employees_prompt"),
             default=defaults.has_employees if defaults else False,
         )
         pays_professionals_with_retencion = prompter.prompt_bool(
             key="pays_professionals_with_retencion",
-            prompt="Do you pay professional fees with retención?",
+            prompt=tr("setup.wizard.pays_professionals_with_retencion_prompt"),
             default=defaults.pays_professionals_with_retencion if defaults else False,
         )
         professional_income_withholding_ge_70pct = prompter.prompt_bool(
             key="professional_income_withholding_ge_70pct",
-            prompt="Was at least 70% of your prior-year professional income already subject to withholding?",
+            prompt=tr("setup.wizard.professional_income_withholding_ge_70pct_prompt"),
             default=defaults.professional_income_withholding_ge_70pct if defaults else False,
         )
         pays_rent_with_retencion = prompter.prompt_bool(
             key="pays_rent_with_retencion",
-            prompt="Do you pay alquiler de local with retención?",
+            prompt=tr("setup.wizard.pays_rent_with_retencion_prompt"),
             default=defaults.pays_rent_with_retencion if defaults else False,
         )
         does_intracomunitario = prompter.prompt_bool(
             key="does_intracomunitario",
-            prompt="Do you conduct operaciones intracomunitarias?",
+            prompt=tr("setup.wizard.does_intracomunitario_prompt"),
             default=defaults.does_intracomunitario if defaults else False,
         )
         third_party_transactions_above_347_threshold = prompter.prompt_bool(
             key="third_party_transactions_above_347_threshold",
-            prompt="Did you exceed the Modelo 347 threshold with any third party last year?",
+            prompt=tr("setup.wizard.third_party_transactions_above_347_threshold_prompt"),
             default=defaults.third_party_transactions_above_347_threshold if defaults else False,
         )
         bienes_extranjero = prompter.prompt_bool(
             key="bienes_extranjero_above_threshold",
-            prompt="Do you hold bienes en el extranjero above the 720 threshold?",
+            prompt=tr("setup.wizard.bienes_extranjero_above_threshold_prompt"),
             default=defaults.bienes_extranjero_above_threshold if defaults else False,
         )
         tax_residence_raw = prompter.prompt_choice(
             key="tax_residence_ccaa",
-            prompt=_setup_text("setup.wizard.t_365267"),
+            prompt=tr("setup.wizard.tax_residence_ccaa_prompt"),
             choices=tuple(ccaa.value for ccaa in CCAA),
             default=(defaults.tax_residence_ccaa.value if defaults else CCAA.MADRID.value),
         )
 
         cert_path = prompter.prompt_path(
             key="certificate_path",
-            prompt="Path to your PKCS#12 (.p12/.pfx) bundle",
+            prompt=tr("setup.wizard.certificate_path_prompt"),
             default=defaults.certificate_path if defaults else None,
         )
         cert_password_var = prompter.prompt_text(
             key="certificate_password_secret_var_name",
-            prompt="Name of the env var that holds your PKCS#12 passphrase",
+            prompt=tr("setup.wizard.certificate_password_secret_var_name_prompt"),
             default=(defaults.certificate_password_secret_var_name if defaults else "AEAT_CERTIFICATE_PASSWORD_SECRET"),
         )
         cert_friendly_name = prompter.prompt_text(
             key="certificate_friendly_name",
-            prompt="Optional friendly label for this certificate",
+            prompt=tr("setup.wizard.certificate_friendly_name_prompt"),
             default=(defaults.certificate_friendly_name or "") if defaults else "",
         )
         cert_backend_raw = prompter.prompt_choice(
             key="certificate_backend",
-            prompt="Certificate backend",
+            prompt=tr("setup.wizard.certificate_backend_prompt"),
             choices=tuple(b.value for b in CertificateBackend),
             default=(defaults.certificate_backend.value if defaults else CertificateBackend.PLAYWRIGHT_CONTEXT.value),
         )
 
         default_lang_raw = prompter.prompt_choice(
             key="default_language",
-            prompt="Default language",
+            prompt=tr("setup.wizard.default_language_prompt"),
             choices=("es", "en", "ca", "hu"),
             default=(defaults.default_language if defaults else "en"),
         )
         output_lang_raw = prompter.prompt_choice(
             key="output_language",
-            prompt="User-facing output language",
+            prompt=tr("setup.wizard.output_language_prompt"),
             choices=("es", "en", "ca", "hu"),
             default=(defaults.output_language if defaults else "es"),
         )
 
         drafts_dir = prompter.prompt_path(
             key="aeat_drafts_dir",
-            prompt="Directory for filing drafts",
+            prompt=tr("setup.wizard.aeat_drafts_dir_prompt"),
             default=defaults.aeat_drafts_dir if defaults else Path("var/drafts"),
         )
         submissions_dir = prompter.prompt_path(
             key="aeat_submissions_dir",
-            prompt="Directory for submission audit records",
+            prompt=tr("setup.wizard.aeat_submissions_dir_prompt"),
             default=defaults.aeat_submissions_dir if defaults else Path("var/submissions"),
         )
         manuals_root = prompter.prompt_path(
             key="aeat_manuals_root",
-            prompt="Root of the Manual práctico corpus",
+            prompt=tr("setup.wizard.aeat_manuals_root_prompt"),
             default=defaults.aeat_manuals_root if defaults else Path("corpus/manuals"),
         )
         profile_path = prompter.prompt_path(
             key="default_profile_path",
-            prompt="Where should the AutonomoProfile JSON live?",
+            prompt=tr("setup.wizard.default_profile_path_prompt"),
             default=defaults.default_profile_path if defaults else Path("env/profile.json"),
         )
 
         live_tests = prompter.prompt_bool(
             key="aeat_live_tests_enabled",
-            prompt="Opt in to @pytest.mark.live_read tests?",
+            prompt=tr("setup.wizard.aeat_live_tests_enabled_prompt"),
             default=defaults.aeat_live_tests_enabled if defaults else False,
         )
         live_tests_google = prompter.prompt_bool(
             key="aeat_live_tests_google",
-            prompt="Opt in to Google Workspace live fixture tests?",
+            prompt=tr("setup.wizard.aeat_live_tests_google_prompt"),
             default=defaults.aeat_live_tests_google if defaults else False,
         )
         provision_fixtures = prompter.prompt_bool(
             key="provision_google_fixtures",
-            prompt="Run the Google Workspace fixture provisioner after setup?",
+            prompt=tr("setup.wizard.provision_google_fixtures_prompt"),
             default=defaults.provision_google_fixtures if defaults else False,
         )
 

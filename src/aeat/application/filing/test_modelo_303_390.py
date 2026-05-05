@@ -7,16 +7,15 @@ from decimal import Decimal
 import pytest
 
 from . import FilingBuilderError, build_draft, build_runtime_schema_provider
-from .testing import SyntheticProfile
+from .testing import FilingTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> SyntheticProfile:
-    return SyntheticProfile(
+def _profile() -> FilingTestProfile:
+    return FilingTestProfile(
         tax_id="12345678Z",
         display_name="Registry boundary IVA test",
-        applicable_modelos=("303", "390"),
     )
 
 

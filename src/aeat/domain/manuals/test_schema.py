@@ -7,7 +7,6 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     Chapter,
     FetchedManualPart,
@@ -59,7 +58,7 @@ def _section_source() -> SectionSource:
     )
 
 
-def _rule(rule_id: str = "renta-2025-parte1-cap5-sec2-rule0001", kind: RuleKind = RuleKind.OBLIGATION) -> Rule:
+def _rule(rule_id: str = "renta-2025-part1-cap5-sec2-rule0001", kind: RuleKind = "computation") -> Rule:
     return Rule(
         rule_id=rule_id,
         manual_id=ManualId.RENTA,
@@ -68,11 +67,11 @@ def _rule(rule_id: str = "renta-2025-parte1-cap5-sec2-rule0001", kind: RuleKind 
         chapter_id="cap5",
         section_id="sec2",
         kind=kind,
-        statement=tr("manuals.test_schema.statement_121189"),
+        statement="Statement in Spanish.",
         applies_when=None,
         references_casillas=("MODELO_130:01",),
         references_sections=(),
-        references_legal_acts=("Ley 35/2006, art. 32",),
+        references_legal_acts=("LEY_35_2006|art. 32",),
         source=_rule_source(),
         extracted_by=_llm_provenance(),
         definition_reviewed_by="gw",
@@ -84,8 +83,8 @@ def _section(section_id: str = "sec2") -> Section:
     return Section(
         section_id=section_id,
         chapter_id="cap5",
-        title=tr("manuals.test_schema.title_208795"),
-        summary=tr("manuals.test_schema.summary_179171"),
+        title="Section Title",
+        summary="Section Summary",
         prose=(Paragraph(paragraph_id="p1", text="Texto", page=140),),
         rules=(),
         references_sections=(),
@@ -99,8 +98,8 @@ def _section(section_id: str = "sec2") -> Section:
 def _chapter() -> Chapter:
     return Chapter(
         chapter_id="cap5",
-        title=tr("manuals.test_schema.title_472764"),
-        summary=tr("manuals.test_schema.summary_685481"),
+        title="Chapter Title",
+        summary="Chapter Summary",
         sections=(SectionRef(section_id="sec2", relative_path="structure/sections/cap5/sec2.json"),),
     )
 
@@ -110,8 +109,8 @@ def _manual() -> Manual:
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_1,
-        title=tr("manuals.test_schema.title_935553"),
-        summary=tr("manuals.test_schema.summary_685481"),
+        title="Manual Title",
+        summary="Manual Summary",
         source_pdf_url=AnyHttpUrl(
             "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/"
             "IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
@@ -135,17 +134,17 @@ class TestStrictSchema:
         assert reloaded == rule
 
     def test_rule_rejects_missing_spanish_statement(self) -> None:
-        """A rule with a statement lacking 'es' must fail validation."""
+        """A rule with an empty statement must fail validation."""
         with pytest.raises(ValidationError):
             Rule(
-                rule_id="renta-2025-parte1-cap5-sec2-rule0002",
+                rule_id="renta-2025-part1-cap5-sec2-rule0002",
                 manual_id=ManualId.RENTA,
                 year=2025,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
-                kind=RuleKind.OBLIGATION,
-                statement=tr("translation"),
+                kind="computation",
+                statement="   ",
                 applies_when=None,
                 references_casillas=(),
                 references_sections=(),
@@ -160,14 +159,14 @@ class TestStrictSchema:
         """Casilla references must match the MODELO_NNN[:CODE] pattern."""
         with pytest.raises(ValidationError):
             Rule(
-                rule_id="renta-2025-parte1-cap5-sec2-rule0003",
+                rule_id="renta-2025-part1-cap5-sec2-rule0003",
                 manual_id=ManualId.RENTA,
                 year=2025,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
-                kind=RuleKind.OBLIGATION,
-                statement=tr("manuals.test_schema.statement_994536"),
+                kind="computation",
+                statement="Statement.",
                 applies_when=None,
                 references_casillas=("not-a-modelo-id",),
                 references_sections=(),
@@ -182,14 +181,14 @@ class TestStrictSchema:
         """Reviewer metadata must be a non-empty trimmed string."""
         with pytest.raises(ValidationError):
             Rule(
-                rule_id="renta-2025-parte1-cap5-sec2-rule0004",
+                rule_id="renta-2025-part1-cap5-sec2-rule0004",
                 manual_id=ManualId.RENTA,
                 year=2025,
                 part=ManualPart.PARTE_1,
                 chapter_id="cap5",
                 section_id="sec2",
-                kind=RuleKind.OBLIGATION,
-                statement=tr("manuals.test_schema.statement_994536"),
+                kind="computation",
+                statement="Statement.",
                 applies_when=None,
                 references_casillas=(),
                 references_sections=(),
@@ -207,8 +206,8 @@ class TestStrictSchema:
                 manual_id=ManualId.RENTA,
                 year=1999,
                 part=ManualPart.PARTE_1,
-                title=tr("manuals.test_schema.title_421077"),
-                summary=tr("manuals.test_schema.summary_685481"),
+                title="Title",
+                summary="Summary",
                 source_pdf_url=AnyHttpUrl("https://example.com/x.pdf"),
                 source_html_url=None,
                 fetched_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
@@ -264,7 +263,7 @@ class TestRuleIds:
             section_id="sec2",
             ordinal=7,
         )
-        assert first == second == "renta-2025-parte1-cap5-sec2-rule0007"
+        assert first == second == "renta-2025-part1-cap5-sec2-rule0007"
 
     def test_single_part_is_collapsed(self) -> None:
         """IVA (SINGLE) rule IDs omit the part segment."""

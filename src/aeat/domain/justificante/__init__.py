@@ -8,12 +8,6 @@ Live CSV verification lives in :mod:`aeat.adapters.outbound.aeat.verify`
 (Playwright/browser automation belongs in the outbound adapter layer, not
 the domain).
 
-Example:
-    >>> from pathlib import Path
-    >>> from aeat.adapters.inbound.justificante import parse_justificante
-    >>> record = parse_justificante(Path("tests/fixtures/justificantes/modelo_130_2026Q1.pdf"))
-    >>> record.modelo
-    '130'
 """
 
 from __future__ import annotations

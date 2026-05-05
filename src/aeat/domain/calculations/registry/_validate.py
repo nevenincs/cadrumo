@@ -11,15 +11,18 @@ from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
     DatedValue,
+    ExtractionProfileDefinition,
     FormulaExpression,
     LegalReference,
     ModeloDefinition,
     ModeloRevision,
     PeriodSelector,
     RegistryCatalogues,
+    SourceCitation,
     SourceReference,
 )
 from ._sources import verify_source_catalogue
+from ._text import normalise_corpus_text
 
 
 def _duplicates(values: Iterable[str]) -> set[str]:
@@ -39,11 +42,12 @@ class RegistryValidator:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._source_root = source_root
+        self._source_text_cache: dict[str, str] = {}
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
         failures: list[str] = []
         try:
-            verify_legal_catalogue(self._legal)
+            verify_legal_catalogue(self._legal, source_root=self._source_root)
         except RegistryValidationError as exc:
             failures.append(str(exc))
         if self._source_root is not None:
@@ -72,11 +76,16 @@ class RegistryValidator:
         parameter_ids = [parameter.id for parameter in revision.parameters]
         provider_ids = [provider.id for provider in revision.algorithm_providers]
         algorithm_binding_ids = [binding.id for binding in revision.algorithm_bindings]
+        export_layout_ids = [layout.id for layout in revision.export_layouts]
         extraction_profile_ids = [profile.id for profile in revision.extraction_profiles]
         cross_reference_ids = [cross_reference.id for cross_reference in revision.live_cross_references]
         workbook_parity_ids = [workbook.id for workbook in revision.workbook_parity_refs]
         verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
         application_link_ids = [link.id for link in revision.application_links]
+        deadline_window_ids = [window.id for window in revision.deadline_windows]
+        support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
+        if not workbook_parity_ids:
+            failures.append(f"{prefix}: revision must declare official workbook parity coverage")
         for kind, ids in (
             ("casilla", casilla_ids),
             ("formula", formula_ids),
@@ -85,11 +94,14 @@ class RegistryValidator:
             ("parameter", parameter_ids),
             ("algorithm provider", provider_ids),
             ("algorithm binding", algorithm_binding_ids),
+            ("export layout", export_layout_ids),
             ("extraction profile", extraction_profile_ids),
             ("cross-reference", cross_reference_ids),
             ("workbook parity reference", workbook_parity_ids),
             ("verification expectation", verification_expectation_ids),
             ("application link", application_link_ids),
+            ("deadline window", deadline_window_ids),
+            ("support removal decision", support_removal_decision_ids),
         ):
             for duplicate in sorted(_duplicates(ids)):
                 failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
@@ -101,11 +113,14 @@ class RegistryValidator:
             + relation_ids
             + parameter_ids
             + algorithm_binding_ids
+            + export_layout_ids
             + extraction_profile_ids
             + cross_reference_ids
             + workbook_parity_ids
             + verification_expectation_ids
             + application_link_ids
+            + deadline_window_ids
+            + support_removal_decision_ids
         )
         for duplicate in sorted(_duplicates(primary_ids)):
             failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
@@ -146,6 +161,24 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"formula {formula.id}", formula.source_refs, self._sources, "source")
             )
+            failures.extend(self._require_legal_authority_refs(prefix, f"formula {formula.id}", formula.legal_refs))
+            failures.extend(
+                self._require_source_tier(
+                    prefix,
+                    f"formula {formula.id}",
+                    formula.source_refs,
+                    "official_source_guidance",
+                )
+            )
+            failures.extend(
+                self._validate_source_citations(
+                    prefix,
+                    f"formula {formula.id}",
+                    formula.source_refs,
+                    formula.source_citations,
+                    "official_source_guidance",
+                )
+            )
             if formula.target not in casillas:
                 failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target!r}")
             failures.extend(
@@ -154,6 +187,7 @@ class RegistryValidator:
                     formula.id,
                     formula.expression,
                     casillas=casillas,
+                    bindings=bindings,
                     parameters=parameters,
                     relations=relations,
                 )
@@ -169,6 +203,26 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"parameter {parameter.id}", parameter.source_refs, self._sources, "source")
             )
+            failures.extend(
+                self._require_legal_authority_refs(prefix, f"parameter {parameter.id}", parameter.legal_refs)
+            )
+            failures.extend(
+                self._require_source_tier(
+                    prefix,
+                    f"parameter {parameter.id}",
+                    parameter.source_refs,
+                    "official_source_guidance",
+                )
+            )
+            failures.extend(
+                self._validate_source_citations(
+                    prefix,
+                    f"parameter {parameter.id}",
+                    parameter.source_refs,
+                    parameter.source_citations,
+                    "official_source_guidance",
+                )
+            )
             failures.extend(self._validate_dated_values(prefix, parameter.id, parameter.values))
 
         for binding in revision.bindings:
@@ -177,6 +231,24 @@ class RegistryValidator:
             )
             failures.extend(
                 self._missing_refs(prefix, f"binding {binding.id}", binding.source_refs, self._sources, "source")
+            )
+            failures.extend(self._require_legal_authority_refs(prefix, f"binding {binding.id}", binding.legal_refs))
+            failures.extend(
+                self._require_source_tier(
+                    prefix,
+                    f"binding {binding.id}",
+                    binding.source_refs,
+                    "official_source_guidance",
+                )
+            )
+            failures.extend(
+                self._validate_source_citations(
+                    prefix,
+                    f"binding {binding.id}",
+                    binding.source_refs,
+                    binding.source_citations,
+                    "official_source_guidance",
+                )
             )
 
         for relation in revision.relations:
@@ -263,6 +335,9 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"export {layout.id}", layout.source_refs, self._sources, "source")
             )
+            failures.extend(
+                self._require_source_tier(prefix, f"export {layout.id}", layout.source_refs, "layout_authority")
+            )
             for record in layout.records:
                 for field in record.fields:
                     failures.extend(
@@ -292,6 +367,7 @@ class RegistryValidator:
                     failures.append(
                         f"{prefix}: extraction profile {profile.id!r} references unknown casilla {casilla_id!r}"
                     )
+            failures.extend(self._validate_extraction_profile_artefacts(prefix, profile))
 
         for cross_reference in revision.live_cross_references:
             failures.extend(
@@ -308,6 +384,14 @@ class RegistryValidator:
                     "source",
                 )
             )
+            failures.extend(
+                self._require_source_tier(
+                    prefix,
+                    f"cross-reference {cross_reference.id}",
+                    cross_reference.source_refs,
+                    cross_reference.evidence_tier,
+                )
+            )
 
         for workbook in revision.workbook_parity_refs:
             failures.extend(
@@ -322,6 +406,18 @@ class RegistryValidator:
                 failures.append(
                     f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
                 )
+            else:
+                source = self._sources[workbook.workbook_source]
+                if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
+                    failures.append(
+                        f"{prefix}: workbook parity {workbook.id!r} formula workbook requires "
+                        "executable parity evidence source"
+                    )
+                if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
+                    failures.append(
+                        f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
+                        "executable parity evidence source"
+                    )
 
         for expectation in revision.verification_expectations:
             failures.extend(
@@ -348,6 +444,17 @@ class RegistryValidator:
                         f"{prefix}: verification expectation {expectation.id!r} references unknown casilla "
                         f"{casilla_id!r}"
                     )
+            for total_kind, casilla_id in expectation.reconciliation_totals.items():
+                if casilla_id not in casillas:
+                    failures.append(
+                        f"{prefix}: verification expectation {expectation.id!r} reconciliation total "
+                        f"{total_kind!r} references unknown casilla {casilla_id!r}"
+                    )
+                if casilla_id not in expectation.computed_casillas:
+                    failures.append(
+                        f"{prefix}: verification expectation {expectation.id!r} reconciliation total "
+                        f"{total_kind!r} must be one of computed_casillas"
+                    )
 
         for link in revision.application_links:
             failures.extend(
@@ -357,7 +464,48 @@ class RegistryValidator:
                 self._missing_refs(prefix, f"application link {link.id}", link.source_refs, self._sources, "source")
             )
 
+        for window in revision.deadline_windows:
+            failures.extend(
+                self._missing_refs(prefix, f"deadline window {window.id}", window.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(prefix, f"deadline window {window.id}", window.source_refs, self._sources, "source")
+            )
+            for condition in window.applicability_conditions:
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"deadline condition for {window.id}",
+                        condition.legal_refs,
+                        self._legal,
+                        "legal",
+                    )
+                )
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"deadline condition for {window.id}",
+                        condition.source_refs,
+                        self._sources,
+                        "source",
+                    )
+                )
+
+        failures.extend(
+            self._validate_support_removal_decisions(
+                prefix,
+                revision,
+                export_layout_ids=export_layout_ids,
+                extraction_profile_ids=extraction_profile_ids,
+                cross_reference_ids=cross_reference_ids,
+                workbook_parity_ids=workbook_parity_ids,
+                verification_expectation_ids=verification_expectation_ids,
+                application_link_ids=application_link_ids,
+                deadline_window_ids=deadline_window_ids,
+            )
+        )
         failures.extend(self._validate_application_link_closure(prefix, revision))
+        failures.extend(self._validate_reconciliation_total_closure(prefix, revision))
         failures.extend(self._validate_formula_dag(prefix, revision))
         return failures
 
@@ -457,7 +605,171 @@ class RegistryValidator:
             failures.append(f"{scope}: filing-grade casillas require a filing application link")
         if revision.live_cross_references and "portal" not in surfaces:
             failures.append(f"{scope}: live/static cross-references require a portal application link")
+        if revision.deadline_windows and "deadline" not in surfaces:
+            failures.append(f"{scope}: deadline windows require a deadline application link")
         return failures
+
+    @staticmethod
+    def _validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) -> list[str]:
+        failures: list[str] = []
+        declared: dict[str, str] = {}
+        for expectation in revision.verification_expectations:
+            for total_kind, casilla_id in expectation.reconciliation_totals.items():
+                previous = declared.get(total_kind)
+                if previous is not None and previous != casilla_id:
+                    failures.append(
+                        f"{scope}: reconciliation total {total_kind!r} is declared by multiple casillas "
+                        f"{previous!r} and {casilla_id!r}"
+                    )
+                declared[total_kind] = casilla_id
+        return failures
+
+    def _validate_support_removal_decisions(
+        self,
+        scope: str,
+        revision: ModeloRevision,
+        *,
+        export_layout_ids: Iterable[str],
+        extraction_profile_ids: Iterable[str],
+        cross_reference_ids: Iterable[str],
+        workbook_parity_ids: Iterable[str],
+        verification_expectation_ids: Iterable[str],
+        application_link_ids: Iterable[str],
+        deadline_window_ids: Iterable[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        active_subjects = {
+            "export_layout": set(export_layout_ids),
+            "extraction_profile": set(extraction_profile_ids),
+            "live_cross_reference": set(cross_reference_ids),
+            "workbook_parity_ref": set(workbook_parity_ids),
+            "verification_expectation": set(verification_expectation_ids),
+            "application_link": set(application_link_ids),
+            "deadline_window": set(deadline_window_ids),
+        }
+        for decision in revision.support_removal_decisions:
+            failures.extend(
+                self._missing_refs(
+                    scope,
+                    f"support removal decision {decision.id}",
+                    decision.legal_refs,
+                    self._legal,
+                    "legal",
+                )
+            )
+            failures.extend(
+                self._missing_refs(
+                    scope,
+                    f"support removal decision {decision.id}",
+                    decision.source_refs,
+                    self._sources,
+                    "source",
+                )
+            )
+            active_ids = active_subjects.get(decision.subject_type)
+            if active_ids is not None and decision.subject_id in active_ids:
+                failures.append(
+                    f"{scope}: support removal decision {decision.id!r} removes "
+                    f"{decision.subject_type} {decision.subject_id!r} but it is still present"
+                )
+        return failures
+
+    def _require_legal_authority_refs(self, scope: str, owner: str, refs: Iterable[str]) -> list[str]:
+        failures: list[str] = []
+        for ref in refs:
+            legal = self._legal.get(ref)
+            if legal is not None and legal.evidence_tier != "legal_authority":
+                failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
+        return failures
+
+    def _require_source_tier(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        required_tier: str,
+    ) -> list[str]:
+        if any(
+            (source := self._sources.get(ref)) is not None and source.evidence_tier == required_tier for ref in refs
+        ):
+            return []
+        return [f"{scope}: {owner} requires {required_tier} source evidence"]
+
+    def _validate_source_citations(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        citations: Iterable[SourceCitation],
+        required_tier: str,
+    ) -> list[str]:
+        failures: list[str] = []
+        refs_set = set(refs)
+        citations_tuple = tuple(citations)
+        if not citations_tuple:
+            return [f"{scope}: {owner} requires source citations"]
+        for citation in citations_tuple:
+            if citation.source_ref not in refs_set:
+                failures.append(
+                    f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs"
+                )
+                continue
+            source = self._sources.get(citation.source_ref)
+            if source is None:
+                continue
+            if source.evidence_tier != required_tier:
+                failures.append(
+                    f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence"
+                )
+                continue
+            if self._source_root is None:
+                continue
+            try:
+                source_text = self._source_text(source)
+            except OSError as exc:
+                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
+                continue
+            for required in citation.required_text:
+                if normalise_corpus_text(required) not in source_text:
+                    failures.append(
+                        f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
+                    )
+        return failures
+
+    @staticmethod
+    def _validate_extraction_profile_artefacts(
+        scope: str,
+        profile: ExtractionProfileDefinition,
+    ) -> list[str]:
+        expected_by_surface = {
+            "borrador_pdf": {"declaration_pdf"},
+            "declaracion_pdf": {"declaration_pdf"},
+            "justificante_pdf": {"justificante_pdf"},
+            "export_record": {"submitted_file"},
+            "official_workbook": {"official_workbook"},
+        }
+        expected = expected_by_surface[profile.surface]
+        accepted = set(profile.accepted_artefact_kinds)
+        failures: list[str] = []
+        if accepted != expected:
+            failures.append(
+                f"{scope}: extraction profile {profile.id!r} accepts {sorted(accepted)!r}, "
+                f"but surface {profile.surface!r} requires {sorted(expected)!r}"
+            )
+        if profile.surface == "justificante_pdf" and profile.target_casillas:
+            failures.append(f"{scope}: extraction profile {profile.id!r} cannot use justificante PDFs as casilla data")
+        return failures
+
+    def _source_text(self, source: SourceReference) -> str:
+        cached = self._source_text_cache.get(source.id)
+        if cached is not None:
+            return cached
+        if self._source_root is None:
+            return ""
+        text = (self._source_root / source.corpus_path).read_text(encoding="utf-8", errors="replace")
+        normalised = normalise_corpus_text(text)
+        self._source_text_cache[source.id] = normalised
+        return normalised
 
     @classmethod
     def _validate_formula_expression(
@@ -467,12 +779,15 @@ class RegistryValidator:
         expression: FormulaExpression,
         *,
         casillas: set[str],
+        bindings: set[str],
         parameters: set[str],
         relations: set[str],
     ) -> list[str]:
         failures: list[str] = []
         if expression.casilla is not None and expression.casilla not in casillas:
             failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla!r}")
+        if expression.binding is not None and expression.binding not in bindings:
+            failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
         if expression.parameter is not None and expression.parameter not in parameters:
             failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
         if expression.relation is not None and expression.relation not in relations:
@@ -484,6 +799,7 @@ class RegistryValidator:
                     formula_id,
                     arg,
                     casillas=casillas,
+                    bindings=bindings,
                     parameters=parameters,
                     relations=relations,
                 )

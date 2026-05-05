@@ -1,10 +1,4 @@
-"""Round-trip and artefact-kind tests for the Modelo 100 summary extractor.
-
-Exercises :func:`aeat.adapters.inbound.borrador.parse_borrador` end to
-end against synthesised PDFs from the L3 generator, asserting:
-artefact-kind detection, casilla extraction, marker disambiguation
-precedence, sparse-PDF behaviour, and explicit override paths.
-"""
+"""Behaviour tests for observed Modelo 100 PDF parsing."""
 
 from __future__ import annotations
 
@@ -13,43 +7,21 @@ from pathlib import Path
 
 import pytest
 
-from . import ArtefactKind, BorradorFiling, BorradorParseError, parse_borrador
+from ....domain.calculations.registry import ExtractionProfileDefinition
+from . import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.domain_inbound,
-    pytest.mark.fixture_tier_l3,
 ]
 
 
-_SUMMARY_VALUES: dict[str, str] = {
-    "0022": "20000.00",
-    "0049": "500.00",
-    "0107": "0.00",
-    "0175": "15000.00",
-    "0400": "0.00",
-    "0435": "35500.00",
-    "0460": "500.00",
-    "0500": "5550.00",
-    "0505": "5550.00",
-    "0510": "0.00",
-    "0515": "0.00",
-    "0520": "0.00",
-    "0545": "29950.00",
-    "0555": "500.00",
+_OBSERVED_VALUES: dict[str, str] = {
     "0550": "3500.00",
-    "0551": "2800.00",
-    "0560": "90.00",
-    "0561": "50.00",
     "0595": "6440.00",
-    "0620": "200.00",
-    "0622": "100.00",
-    "0630": "300.00",
-    "0698": "6140.00",
     "0699": "1200.00",
     "0700": "1800.00",
     "0720": "3140.00",
-    "0721": "3140.00",
 }
 
 
@@ -60,24 +32,64 @@ def _generate_pdf(
     csv: str | None = None,
     casilla_values: dict[str, str] | None = None,
 ) -> Path:
-    from tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_100_generator import (
-        Modelo100GenParams,
-        generate,
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    values = casilla_values if casilla_values is not None else _OBSERVED_VALUES
+    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
+    page = canvas.Canvas(str(path), pagesize=A4)
+    width, height = A4
+    y = height - 60
+    page.drawString(50, y, "AGENCIA TRIBUTARIA")
+    y -= 18
+    page.drawString(50, y, "Declaracion IRPF - Modelo 100")
+    page.drawRightString(width - 50, y, "Ejercicio: 2025")
+    y -= 18
+    page.drawString(50, y, "NIF: 00000000T")
+    y -= 18
+    if artefact_kind == "BORRADOR":
+        page.drawString(50, y, "BORRADOR")
+        y -= 18
+    elif artefact_kind == "PREDECLARACION":
+        page.drawString(50, y, "VISTA PREVIA - Documento no valido para presentar")
+        y -= 18
+    for casilla_id, raw in values.items():
+        amount = _spanish_amount(Decimal(raw))
+        page.drawString(50, y, f"{casilla_id} Valor observado {amount}")
+        y -= 16
+    if artefact_kind == "DECLARACION" and csv is not None:
+        page.drawString(50, 40, f"Codigo Seguro de Verificacion: {csv}")
+    page.save()
+    return path
+
+
+def _profile(
+    *,
+    target_casillas: tuple[str, ...] = ("0550", "0700"),
+    min_coverage: Decimal = Decimal("1"),
+) -> ExtractionProfileDefinition:
+    return ExtractionProfileDefinition(
+        id="modelo-100-observed-values",
+        surface="borrador_pdf",
+        artefact_kind="modelo_100_renta",
+        accepted_artefact_kinds=("declaration_pdf",),
+        parser="aeat.adapters.inbound.borrador.parse_borrador",
+        target_casillas=target_casillas,
+        confidence="strict",
+        min_coverage=min_coverage,
+        failure_semantics="fail_hard",
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
     )
 
-    values = casilla_values if casilla_values is not None else _SUMMARY_VALUES
-    params = Modelo100GenParams(
-        año=2025,
-        ejercicio="2025",
-        tax_id="00000000T",
-        casilla_values={k: Decimal(v) for k, v in values.items()},
-        artefact_kind=artefact_kind,
-        csv=csv,
-    )
-    pdf_bytes, _ = generate(params)
-    path = tmp_path / f"modelo_100_2025_{artefact_kind.lower()}.pdf"
-    path.write_bytes(pdf_bytes)
-    return path
+
+def _spanish_amount(value: Decimal) -> str:
+    whole, decimals = f"{value:.2f}".split(".")
+    groups: list[str] = []
+    while whole:
+        groups.append(whole[-3:])
+        whole = whole[:-3]
+    return f"{'.'.join(reversed(groups))},{decimals}"
 
 
 class TestArtefactKindDetection:
@@ -106,42 +118,56 @@ class TestArtefactKindDetection:
         assert filing.csv == "MNOP4321QRST8765"
 
 
-class TestSummaryBlockExtraction:
-    """Round-trip the summary-block casillas through the extractor."""
+class TestObservedValues:
+    """Extract printed casilla rows without claiming Modelo 100 completeness."""
 
-    def test_roundtrip_extracts_every_summary_casilla(self, tmp_path: Path) -> None:
+    def test_extracts_observed_casilla_rows(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path)
-        filing: BorradorFiling = parse_borrador(pdf)
+        filing: BorradorObservation = parse_borrador(pdf)
         assert filing.modelo == "100"
         assert filing.ejercicio == "2025"
         assert filing.tax_id == "00000000T"
-        extracted = {v.casilla_id: v.printed_value for v in filing.values}
-        for casilla_id, raw in _SUMMARY_VALUES.items():
-            if casilla_id not in extracted:
-                continue
-            assert extracted[casilla_id] == Decimal(raw), casilla_id
-        # The rendered summary-block casillas must all be present.
-        assert {
-            "0550",
-            "0551",
-            "0560",
-            "0561",
-            "0595",
-            "0620",
-            "0622",
-            "0630",
-            "0698",
-            "0699",
-            "0700",
-            "0720",
-        }.issubset(extracted.keys())
+        extracted = {value.casilla_id: value.printed_value for value in filing.values}
+        assert extracted == {casilla_id: Decimal(raw) for casilla_id, raw in _OBSERVED_VALUES.items()}
+        assert filing.registry_extraction_profile_id is None
+        assert filing.extraction_coverage is None
+
+    def test_registry_profile_filters_targets_and_records_coverage(self, tmp_path: Path) -> None:
+        pdf = _generate_pdf(tmp_path)
+        profile = _profile()
+
+        filing = parse_borrador(
+            pdf,
+            extraction_profile=profile,
+            parse_mode=BorradorParseMode.REGISTRY_PROFILE,
+        )
+
+        assert {value.casilla_id for value in filing.values} == {"0550", "0700"}
+        assert filing.registry_extraction_profile_id == "modelo-100-observed-values"
+        assert filing.extraction_coverage == Decimal("1")
+
+    def test_registry_profile_fails_below_required_coverage(self, tmp_path: Path) -> None:
+        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "3500.00"})
+        profile = _profile()
+
+        with pytest.raises(BorradorParseError, match="coverage below minimum"):
+            parse_borrador(
+                pdf,
+                extraction_profile=profile,
+                parse_mode=BorradorParseMode.REGISTRY_PROFILE,
+            )
+
+    def test_registry_profile_mode_requires_profile(self, tmp_path: Path) -> None:
+        pdf = _generate_pdf(tmp_path)
+
+        with pytest.raises(BorradorParseError, match="requires a registry extraction profile"):
+            parse_borrador(pdf, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
 
 
 class TestDetectionDisambiguation:
     """Make the precedence of artefact markers observable."""
 
     def test_csv_plus_borrador_body_classifies_as_declaracion(self, tmp_path: Path) -> None:
-        """A DECLARACION carrying a CSV must stay a DECLARACION regardless of body text."""
         pdf = _generate_pdf(
             tmp_path,
             artefact_kind="DECLARACION",
@@ -151,21 +177,17 @@ class TestDetectionDisambiguation:
         assert filing.artefact_kind is ArtefactKind.DECLARACION
 
     def test_vista_previa_banner_trumps_borrador_header(self, tmp_path: Path) -> None:
-        """PREDECLARACION precedence — VISTA PREVIA wins over a later BORRADOR line."""
         pdf = _generate_pdf(tmp_path, artefact_kind="PREDECLARACION")
         filing = parse_borrador(pdf)
         assert filing.artefact_kind is ArtefactKind.PREDECLARACION
 
 
 class TestSparseExtraction:
-    """A sparse PREDECLARACION yields a strictly smaller value tuple."""
+    """Only printed rows are returned for sparse PDFs."""
 
-    def test_sparse_predeclaracion_yields_fewer_values(self, tmp_path: Path) -> None:
+    def test_sparse_predeclaracion_yields_observed_values_only(self, tmp_path: Path) -> None:
         sparse = {
             "0550": "100.00",
-            "0551": "100.00",
-            "0560": "10.00",
-            "0561": "10.00",
             "0595": "220.00",
         }
         pdf = _generate_pdf(
@@ -175,13 +197,7 @@ class TestSparseExtraction:
         )
         filing = parse_borrador(pdf)
         assert filing.artefact_kind is ArtefactKind.PREDECLARACION
-        extracted_ids = {v.casilla_id for v in filing.values}
-        # Only the 5 provided casillas (all summary-scope) should extract.
-        assert extracted_ids == set(sparse.keys())
-        # Summary-block casillas 0620 / 0622 / 0630 / 0698 / 0720 must
-        # be absent from a sparse PDF that never rendered them.
-        for missing in ("0620", "0622", "0630", "0698", "0720"):
-            assert missing not in extracted_ids
+        assert {value.casilla_id for value in filing.values} == set(sparse)
 
 
 class TestOverrides:
@@ -189,7 +205,5 @@ class TestOverrides:
 
     def test_artefact_kind_override_skips_detection(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
-        # Force DECLARACION even though the PDF has no CSV — the extractor
-        # then raises because DECLARACION without CSV is invalid.
         with pytest.raises(BorradorParseError):
             parse_borrador(pdf, artefact_kind_override=ArtefactKind.DECLARACION)

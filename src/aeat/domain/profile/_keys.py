@@ -90,6 +90,14 @@ PROFILE_KEYS: tuple[ProfileKey, ...] = (
         hu="A helyi áttekintés kimeneten megjelenő név.",
     ),
     _key(
+        key="surnames",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Apellidos o razón social usados en las cabeceras de exportación.",
+        en="Surnames or company name used in export headers.",
+        ca="Cognoms o raó social utilitzats a les capçaleres d'exportació.",
+        hu="Az exportfejlécekben használt vezetéknév vagy cégnév.",
+    ),
+    _key(
         key="activity",
         requirement=ProfileKeyRequirement.REQUIRED,
         es="Etiqueta de actividad económica o clave de actividad controlada.",
@@ -108,10 +116,10 @@ PROFILE_KEYS: tuple[ProfileKey, ...] = (
     _key(
         key="declaration.type",
         requirement=ProfileKeyRequirement.OPTIONAL,
-        es="Tipo de declaración para las cabeceras de exportación; por defecto I.",
-        en="Declaration type for export headers; defaults to I.",
-        ca="Tipus de declaració per a les capçaleres d'exportació; per defecte I.",
-        hu="Bevallás-típus az exportfejlécekhez; alapértelmezett: I.",
+        es="Tipo de declaración para las cabeceras de exportación.",
+        en="Declaration type for export headers.",
+        ca="Tipus de declaració per a les capçaleres d'exportació.",
+        hu="Bevallás-típus az exportfejlécekhez.",
     ),
 )
 """Closed registry of editable taxpayer-profile keys."""

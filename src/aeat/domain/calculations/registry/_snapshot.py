@@ -69,6 +69,15 @@ def build_snapshot(
     for link in revision.application_links:
         legal_ids.update(link.legal_refs)
         source_ids.update(link.source_refs)
+    for window in revision.deadline_windows:
+        legal_ids.update(window.legal_refs)
+        source_ids.update(window.source_refs)
+        for condition in window.applicability_conditions:
+            legal_ids.update(condition.legal_refs)
+            source_ids.update(condition.source_refs)
+    for decision in revision.support_removal_decisions:
+        legal_ids.update(decision.legal_refs)
+        source_ids.update(decision.source_refs)
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -81,4 +90,6 @@ def build_snapshot(
         workbook_parity_refs={workbook.id: workbook for workbook in revision.workbook_parity_refs},
         verification_expectations={expectation.id: expectation for expectation in revision.verification_expectations},
         application_links={link.id: link for link in revision.application_links},
+        deadline_windows={window.id: window for window in revision.deadline_windows},
+        support_removal_decisions={decision.id: decision for decision in revision.support_removal_decisions},
     )

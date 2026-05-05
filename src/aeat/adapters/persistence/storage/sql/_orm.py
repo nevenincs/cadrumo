@@ -45,7 +45,7 @@ class ModeloRow(Base):
 
     Attributes:
         id: Surrogate integer primary key.
-        identifier: Stable natural key (e.g. ``MODELO_130``).
+        identifier: Stable natural key for the modelo record.
         name: Human-readable modelo name.
     """
 

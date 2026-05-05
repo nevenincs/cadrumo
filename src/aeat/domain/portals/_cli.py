@@ -139,7 +139,7 @@ def show_command(
         return
     _emit_entries((metadata,), json_out=False, command="portals show")
     _CONSOLE.print(f"[dim]url:[/dim] {metadata.url}")
-    _CONSOLE.print(f"[dim]purpose:[/dim] {metadata.purpose_es}")
+    _CONSOLE.print(f"[dim]purpose:[/dim] {metadata.purpose}")
 
 
 @app.command(

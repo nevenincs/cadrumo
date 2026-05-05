@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
     label="entries.portal_m347_operaciones_terceros.label_293185",
-    purpose_es="Declaración informativa anual de operaciones con terceras personas por encima del umbral legal.",
+    purpose="entries.portal_m347_operaciones_terceros.purpose",
 )
 """Portal entry for Modelo 347 (annual third-party transactions return)."""

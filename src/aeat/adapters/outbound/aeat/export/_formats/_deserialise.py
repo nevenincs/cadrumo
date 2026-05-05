@@ -133,7 +133,7 @@ def deserialise(
     if len(body) != total_length:
         raise ValueError(
             f"payload content is {len(body)} bytes but total_length={total_length} "
-            f"was declared; likely wrong modelo spec or corrupted stream."
+            f"was declared; likely wrong record spec or corrupted stream."
         )
 
     field_values: dict[str, str | Decimal | date] = {}
@@ -196,8 +196,7 @@ class ParsedEnvelope(BaseModel):
 
     The envelope-level analogue of :class:`ParsedRecord`. Each
     segment's :class:`ParsedRecord` is addressable by ``segment_id`` so
-    callers can diff a specific page (e.g., Modelo 303 page 3
-    rectificativa block) without walking every segment.
+    callers can diff a specific page without walking every segment.
 
     Attributes:
         segments: Per-segment parsed records keyed by ``segment_id``.
@@ -206,11 +205,10 @@ class ParsedEnvelope(BaseModel):
             filing against AEAT's record per ``casilla_id`` without
             caring which envelope segment the value lived in.
         merged_field_values: Flat view of every ``field_id`` across
-            every segment. Envelope-level headers like
-            ``DP30301_F007_IDENTIFICACI_N_NIF`` surface here so CLI
-            consumers (verify, diff) can present them without walking
+            every segment. Envelope-level headers surface here so CLI
+            consumers can present them without walking
             :attr:`segments`. Field IDs that collide across segments
-            (for example the ``DP30300_F005_PER_ODO`` envelope marker
+            (for example a repeated envelope marker
             repeated in header and trailer) must carry the same value;
             divergent collisions raise at deserialisation time,
             mirroring the casilla-level contract.
@@ -286,7 +284,7 @@ def deserialise_envelope(
             if cid in merged and merged[cid] != value:
                 raise ValueError(
                     f"casilla {cid!r} appears with divergent values across "
-                    f"segments (got {merged[cid]} then {value}); modelo spec "
+                    f"segments (got {merged[cid]} then {value}); record spec "
                     f"must not duplicate casilla_id across pages."
                 )
             merged[cid] = value
@@ -295,7 +293,7 @@ def deserialise_envelope(
                 raise ValueError(
                     f"field {fid!r} appears with divergent values across "
                     f"segments (got {merged_fields[fid]!r} then {fvalue!r}); "
-                    f"modelo spec must not duplicate field_id across pages "
+                    f"record spec must not duplicate field_id across pages "
                     f"unless the fields carry identical values."
                 )
             merged_fields[fid] = fvalue

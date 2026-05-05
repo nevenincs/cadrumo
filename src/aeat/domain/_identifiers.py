@@ -12,7 +12,7 @@ _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 
 
 class ModeloIdentifier(str):
-    """Typed string identifier for an AEAT modelo, e.g. ``"100"`` or ``"303"``."""
+    """Typed string identifier for an AEAT modelo official code."""
 
     __slots__ = ()
 

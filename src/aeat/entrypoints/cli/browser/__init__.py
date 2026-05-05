@@ -12,16 +12,17 @@ from __future__ import annotations
 
 import typer
 
+from .._i18n import tr
 from . import health as _health_module
 
 app = typer.Typer(
     name="browser",
-    help="Playwright browser session health probes and diagnostics.",
+    help=tr("cli.browser.app_help"),
     no_args_is_help=True,
     add_completion=False,
 )
 
-app.command("health", help="Probe the AEAT site-health endpoint.")(_health_module.health_cmd)
+app.command("health", help=tr("cli.browser.health_help"))(_health_module.health_cmd)
 
 
 __all__ = ["app"]

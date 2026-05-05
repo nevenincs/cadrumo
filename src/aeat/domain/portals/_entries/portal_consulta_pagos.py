@@ -26,6 +26,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_consulta_pagos.label_872613",
-    purpose_es="Consulta del estado de pagos realizados y recuperación de NRC generados.",
+    purpose="entries.portal_consulta_pagos.purpose",
 )
 """Frozen :class:`aeat.domain.portals.PortalMetadata` for the payment / NRC enquiry page."""

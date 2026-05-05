@@ -25,6 +25,6 @@ ENTRY: PortalMetadata = build_entry(
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
     label="entries.portal_mis_documentos_pendientes_firma.label_128262",
-    purpose_es="Portafirmas: documentos en espera de firma electrónica del contribuyente.",
+    purpose="entries.portal_mis_documentos_pendientes_firma.purpose",
 )
 """Portal entry for the portafirmas (documents awaiting electronic signature)."""

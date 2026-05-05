@@ -515,7 +515,7 @@ class _VatClassificationRule(NamedTuple):
     category: VATCategory | None  # None ⇒ rule resolves to a derived category
 
 
-_RULES: tuple[_VatClassificationRule, ...] = (
+_CLASSIFICATION_RULES: tuple[_VatClassificationRule, ...] = (
     _VatClassificationRule(
         "R01_construction_reverse_charge",
         "ES-to-ES construction RC",
@@ -634,7 +634,7 @@ def classify_vat(criteria: VATClassificationCriteria) -> VATClassification:
         reverse-charge flag, matched rule identifier, and any explanatory
         note.
     """
-    for rule in _RULES:
+    for rule in _CLASSIFICATION_RULES:
         if not rule.predicate(criteria):
             continue
         category = rule.category
@@ -643,8 +643,7 @@ def classify_vat(criteria: VATClassificationCriteria) -> VATClassification:
             tier = criteria.rate_tier if criteria.rate_tier is not None else VATRateKind.GENERAL
             if criteria.rate_tier is None:
                 _logger.debug(
-                    "classify_vat: R05 rate_tier is None; defaulting to GENERAL "
-                    "(issuer=%s customer=%s kind=%s)",
+                    "classify_vat: R05 rate_tier is None; defaulting to GENERAL (issuer=%s customer=%s kind=%s)",
                     criteria.issuer_residency.value,
                     criteria.customer_residency.value,
                     criteria.kind.value,

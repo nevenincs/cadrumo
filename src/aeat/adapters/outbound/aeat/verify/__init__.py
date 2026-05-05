@@ -27,9 +27,11 @@ from collections.abc import Awaitable, Callable
 from typing import Protocol, cast
 
 from playwright.async_api import Error as PlaywrightError
+from pydantic import AnyUrl
 
 from .....core.errors import AeatError
 from .....core.logging import get_logger
+from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .....domain.justificante._errors import JustificanteVerificationError
 
 _logger = get_logger(__name__)
@@ -37,6 +39,15 @@ _logger = get_logger(__name__)
 _VERIFY_URL = (
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-practicas-manuales/"
     "verificacion-integridad-documentos.html"
+)
+_VERIFY_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-csv-verifier-read",
+    evidence_tier="official_source_guidance",
+    classification="public_read_surface",
+    allowed_hosts=("sede.agenciatributaria.gob.es",),
+    synthetic_data_allowed=False,
+    requires_authentication=False,
+    requires_aeat_authorization=False,
 )
 
 
@@ -150,14 +161,17 @@ async def verify_csv(
         context = await session.create_context()
         try:
             page = await context.new_page()
+            _assert_verify_http("GET", _VERIFY_URL)
             await page.goto(_VERIFY_URL)
             # The actual Sede electrónica form ID varies by year; we probe
             # for a text field labelled CSV and fall back to the first
             # input on the page.
             try:
+                _assert_verify_action("CSV verifier query")
                 await page.fill("input[name*='csv' i]", csv)
                 await page.press("input[name*='csv' i]", "Enter")
             except PlaywrightError:
+                _assert_verify_action("CSV verifier query")
                 await page.keyboard.type(csv)
                 await page.keyboard.press("Enter")
             body = (await page.content()).lower()
@@ -180,6 +194,20 @@ async def verify_csv(
                     await playwright_owner.stop()
                 except Exception as exc:  # pragma: no cover - defensive
                     _logger.debug("playwright stop failed: %s", exc)
+
+
+def _assert_verify_http(method: str, url: str) -> None:
+    assert_remote_operation_allowed(
+        _VERIFY_GUARD_POLICY,
+        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+    )
+
+
+def _assert_verify_action(action: str) -> None:
+    assert_remote_operation_allowed(
+        _VERIFY_GUARD_POLICY,
+        RemoteOperation(kind="browser_action", action=action),
+    )
 
 
 __all__ = [

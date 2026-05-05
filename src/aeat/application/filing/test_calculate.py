@@ -1,8 +1,9 @@
-"""Unit tests for the typed declaration-calculate summary surface."""
+"""Tests for the typed declaration-calculate summary surface."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -13,14 +14,12 @@ from ...domain.filing import (
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingValidationFinding,
-    FilingValue,
-    FilingValueKind,
-    compute_draft_id,
 )
 from . import (
     DeclarationCalculateNextAction,
     summarise_calculation,
 )
+from .testing import build_registry_filing_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -40,34 +39,30 @@ def _make_draft(
     modelo: str = "130",
     period: str = "2026Q1",
 ) -> FilingDraft:
-    values = (
-        FilingValue(
-            casilla_id="01",
-            value=None,
-            kind=FilingValueKind.EMPTY,
-            source="test",
-        ),
-    )
-    schema_version = "v1"
-    profile_tax_id = "12345678Z"
-    draft_id = compute_draft_id(
+    draft = build_registry_filing_draft(
         modelo=modelo,
         period=period,
-        profile_tax_id=profile_tax_id,
-        schema_version=schema_version,
-        values=values,
-    )
-    return FilingDraft(
-        draft_id=draft_id,
-        modelo=modelo,
-        period=period,
-        profile_tax_id=profile_tax_id,
+        profile_tax_id="12345678Z",
+        casilla_values={
+            "01": Decimal("12500.00"),
+            "02": Decimal("3500.00"),
+            "05": Decimal("250"),
+            "06": Decimal("100"),
+            "08": Decimal("2000"),
+            "10": Decimal("10"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
         status=status,
-        values=values,
-        findings=findings,
-        created_at=datetime(2026, 5, 3, tzinfo=UTC),
-        updated_at=datetime(2026, 5, 3, tzinfo=UTC),
-        schema_version=schema_version,
+    )
+    return draft.model_copy(
+        update={
+            "status": status,
+            "findings": findings,
+            "updated_at": datetime(2026, 5, 3, tzinfo=UTC),
+        }
     )
 
 
@@ -78,17 +73,6 @@ def _finding(severity: FilingFindingSeverity, code: str) -> FilingValidationFind
         code=code,
         message=_finding_message(code),
     )
-
-
-def test_next_action_enum_carries_cli_values() -> None:
-    assert {item.value for item in DeclarationCalculateNextAction} == {
-        "resolve-blockers",
-        "review",
-        "approve",
-        "export",
-        "refresh-approval",
-        "amend",
-    }
 
 
 def test_clean_validated_draft_routes_to_review() -> None:

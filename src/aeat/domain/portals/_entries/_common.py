@@ -35,10 +35,10 @@ def build_entry(
     auth_methods: Iterable[AuthMethod],
     url_stability: UrlStability,
     label: str,
-    purpose_es: str,
+    purpose: str,
     active: bool = True,
     replaced_by: Portal | None = None,
-    notes_es: Iterable[str] = (),
+    notes: Iterable[str] = (),
 ) -> PortalMetadata:
     """Assemble a :class:`PortalMetadata` entry for a single portal.
 
@@ -49,12 +49,12 @@ def build_entry(
         category: The :class:`PortalCategory` classification.
         auth_methods: Iterable of accepted :class:`AuthMethod` values.
         url_stability: The :class:`UrlStability` tier.
-        label: Multilingual display label.
-        purpose_es: One-sentence Spanish purpose.
+        label: Multilingual display label key.
+        purpose: Multilingual purpose description key.
         active: Whether the portal is currently in service.
         replaced_by: When retired, optionally the :class:`Portal`
             member that supersedes this one.
-        notes_es: Iterable of Spanish short-form notes.
+        notes: Iterable of multilingual note keys.
 
     Returns:
         A validated, frozen :class:`PortalMetadata`.
@@ -67,10 +67,10 @@ def build_entry(
         auth_methods=frozenset(auth_methods),
         url_stability=url_stability,
         label=tr(label),
-        purpose_es=purpose_es,
+        purpose=tr(purpose),
         active=active,
         replaced_by=replaced_by,
-        notes_es=tuple(notes_es),
+        notes=tuple(tr(n) for n in notes),
     )
 
 

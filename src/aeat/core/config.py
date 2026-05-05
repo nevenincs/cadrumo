@@ -207,35 +207,22 @@ class Settings(BaseSettings):
         description="Directory for encrypted inventory and amortization ledgers",
     )
 
-    # ── Multilingual i18n (es, en, ca, hu) ──────────────────────────────────
+    # ── Multilingual i18n ───────────────────────────────────────────────────
     aeat_output_language: str = Field(
         default="es",
-        description=(
-            "Target output language for user-facing content. "
-            "Accepts ISO 639-1 codes from the multilingual contract: "
-            "es (default, AEAT canonical), en, ca, hu."
-        ),
+        description="Target ISO 639-1 language code for user-facing content.",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
-        description=(
-            "Authoritative language for AEAT domain terminology "
-            "(modelos, registry definitions, BOE references). Must be 'es' — "
-            "the project's contract pins Spanish as the legal canonical."
-        ),
+        description=("Authoritative language for domain terminology (modelos, registry definitions, references)."),
     )
     aeat_authoritative_language_project_docs: str = Field(
         default="en",
         description="Authoritative language for internal code and documentation",
     )
     aeat_fallback_languages: str = Field(
-        default="es,en,ca,hu",
-        description=(
-            "Comma-separated fallback chain consulted when the target "
-            "language is missing on a str. Default puts Spanish "
-            "first so AEAT legal text stays canonical, then English, then "
-            "the remaining co-official locales."
-        ),
+        default="es,en",
+        description=("Comma-separated fallback chain consulted when the target language is missing."),
     )
 
     # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────

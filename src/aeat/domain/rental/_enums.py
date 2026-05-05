@@ -15,19 +15,18 @@ class UseType(StrEnum):
     """Closed catalogue of finca use types tracked by the rental register.
 
     Members:
-        VIVIENDA_ARRENDADA: Dwelling let to a tenant — feeds Anexo C
-            casillas 0061 / 0066 / 0072 / 0078 via the per-contract
-            register.
+        VIVIENDA_ARRENDADA: Dwelling let to a tenant; feeds rental
+            income, expense, amortization, and reduction aggregates
+            via the per-contract register.
         VIVIENDA_HABITUAL: Contribuyente's own habitual residence —
             no income line; excluded from imputación.
         OTRO_INMUEBLE_NO_AFECTO: Non-let, non-habitual urban
-            inmueble — feeds Anexo C casilla 0085 imputación rentas
-            inmobiliarias per LIRPF art. 85.
-        LOCAL_COMERCIAL: Commercial premises — feeds Anexo C through
-            the per-contract register on the same calc surface as a
-            vivienda arrendada, but is NOT eligible for the LIRPF
-            art. 23.2 reducción (the reducción applies only to
-            arrendamientos de bienes inmuebles destinados a vivienda).
+            inmueble; feeds real-estate imputation per LIRPF art. 85.
+        LOCAL_COMERCIAL: Commercial premises; feeds the per-contract
+            register on the same calculation surface as a vivienda
+            arrendada, but is NOT eligible for the LIRPF art. 23.2
+            reducción (the reducción applies only to arrendamientos
+            de bienes inmuebles destinados a vivienda).
         VIVIENDA_DESOCUPADA: Empty dwelling not let — same imputación
             treatment as OTRO_INMUEBLE_NO_AFECTO; flagged distinctly
             for downstream IBI recargo modelling per Ley 12/2023

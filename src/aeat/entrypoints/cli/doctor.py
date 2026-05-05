@@ -171,26 +171,26 @@ def check_env_file(settings: Settings) -> Row:
     path = PROJECT_ROOT / "env" / ".env"
     if not path.exists():
         return Row(
-            section="env/.env file",
+            section=tr("cli.doctor.sections.env_file"),
             required=True,
             state=State.MISSING,
-            detail="run `just env-setup` to copy env/.env.example to env/.env",
+            detail=tr("cli.doctor.details.run_env_setup"),
         )
     _ = settings  # silence unused-arg lint; Settings load is the existence check
-    return Row(section="env/.env file", required=True, state=State.OK, detail=str(path))
+    return Row(section=tr("cli.doctor.sections.env_file"), required=True, state=State.OK, detail=str(path))
 
 
 def check_google_cloud_project(settings: Settings) -> Row:
     """Verify ``GOOGLE_CLOUD_PROJECT`` is non-empty in Settings."""
     if not settings.google_cloud_project:
         return Row(
-            section="GOOGLE_CLOUD_PROJECT",
+            section=tr("cli.doctor.sections.google_cloud_project"),
             required=True,
             state=State.MISSING,
-            detail="set GOOGLE_CLOUD_PROJECT in env/.env",
+            detail=tr("cli.doctor.details.set_gcp_project"),
         )
     return Row(
-        section="GOOGLE_CLOUD_PROJECT",
+        section=tr("cli.doctor.sections.google_cloud_project"),
         required=True,
         state=State.OK,
         detail=settings.google_cloud_project,
@@ -203,17 +203,17 @@ def check_active_google_auth_path(settings: Settings) -> Row:
     inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     if inspection.active_path is None:
         return Row(
-            section="active Google auth path",
+            section=tr("cli.doctor.sections.active_google_auth_path"),
             required=True,
             state=State.MISSING,
-            detail=inspection.blocking_reason or "no active Google auth path",
+            detail=inspection.blocking_reason or tr("cli.doctor.details.no_active_auth_path"),
         )
     source = "explicit" if inspection.configured_path is not None else "inferred"
     return Row(
-        section="active Google auth path",
+        section=tr("cli.doctor.sections.active_google_auth_path"),
         required=True,
         state=State.OK,
-        detail=f"{inspection.active_path.value} ({source})",
+        detail=tr("cli.doctor.details.auth_path_active", path=inspection.active_path.value, source=source),
     )
 
 
@@ -223,37 +223,37 @@ def check_google_auth_readiness(settings: Settings) -> Row:
     inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     if inspection.active_path is None:
         return Row(
-            section="Google auth readiness",
+            section=tr("cli.doctor.sections.google_auth_readiness"),
             required=True,
             state=State.MISSING,
-            detail=inspection.blocking_reason or "select and prepare one Google auth path",
+            detail=inspection.blocking_reason or tr("cli.doctor.details.select_prepare_auth_path"),
         )
     if inspection.cli_ready and inspection.mcp_ready:
         return Row(
-            section="Google auth readiness",
+            section=tr("cli.doctor.sections.google_auth_readiness"),
             required=True,
             state=State.OK,
-            detail="CLI auth material and MCP launch readiness are both prepared",
+            detail=tr("cli.doctor.details.auth_ready_both"),
         )
     if inspection.cli_ready and not inspection.mcp_ready:
         return Row(
-            section="Google auth readiness",
+            section=tr("cli.doctor.sections.google_auth_readiness"),
             required=True,
             state=State.PARTIAL,
-            detail="CLI auth material ready; MCP credentials cache still needs preparation",
+            detail=tr("cli.doctor.details.auth_ready_cli_only"),
         )
     if inspection.mcp_ready and not inspection.cli_ready:
         return Row(
-            section="Google auth readiness",
+            section=tr("cli.doctor.sections.google_auth_readiness"),
             required=True,
             state=State.PARTIAL,
-            detail="MCP cache prepared; CLI auth material is still incomplete",
+            detail=tr("cli.doctor.details.auth_ready_mcp_only"),
         )
     return Row(
-        section="Google auth readiness",
+        section=tr("cli.doctor.sections.google_auth_readiness"),
         required=True,
         state=State.MISSING,
-        detail="active path selected but neither CLI/bootstrap nor MCP readiness is complete",
+        detail=tr("cli.doctor.details.auth_ready_none"),
     )
 
 
@@ -263,33 +263,31 @@ def check_desktop_oauth_client_material(settings: Settings) -> Row:
     inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     required = inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
     if inspection.desktop_oauth_complete:
-        json_detail = (
-            f"; oauth JSON at {inspection.desktop_oauth_json_path}"
+        detail = (
+            tr("cli.doctor.details.oauth_json_present", path=inspection.desktop_oauth_json_path)
             if inspection.desktop_oauth_json_path is not None
-            else "; ADC sub-step JSON not configured"
+            else tr("cli.doctor.details.adc_substep_json_not_configured")
         )
         return Row(
-            section="Desktop OAuth client material",
+            section=tr("cli.doctor.sections.desktop_oauth_client_material"),
             required=required,
             state=State.OK if required else State.SKIP,
-            detail=(
-                f"GOOGLE_OAUTH_CLIENT_ID/SECRET present{json_detail}"
-                if required
-                else "not required for active path; see inactive-path drift"
-            ),
+            detail=(detail if required else tr("cli.doctor.details.not_required_see_drift")),
         )
     if inspection.desktop_oauth_partial:
         return Row(
-            section="Desktop OAuth client material",
+            section=tr("cli.doctor.sections.desktop_oauth_client_material"),
             required=required,
             state=State.MISSING if required else State.WARN,
-            detail="partial Desktop OAuth config; complete GOOGLE_OAUTH_CLIENT_ID/SECRET",
+            detail=tr("cli.doctor.details.oauth_config_partial"),
         )
     return Row(
-        section="Desktop OAuth client material",
+        section=tr("cli.doctor.sections.desktop_oauth_client_material"),
         required=required,
         state=State.MISSING if required else State.SKIP,
-        detail="not required for active path" if not required else "Desktop OAuth client config missing",
+        detail=tr("cli.doctor.details.not_required_active_path")
+        if not required
+        else tr("cli.doctor.details.oauth_config_missing"),
     )
 
 
@@ -300,25 +298,23 @@ def check_cli_oauth_cache(settings: Settings) -> Row:
     required = inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
     if inspection.active_path != GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
         return Row(
-            section="CLI OAuth cache",
+            section=tr("cli.doctor.sections.cli_oauth_cache"),
             required=False,
             state=State.SKIP,
-            detail="not required for active path",
+            detail=tr("cli.doctor.details.not_required_active_path"),
         )
     if inspection.oauth_token_issue is None:
         return Row(
-            section="CLI OAuth cache",
+            section=tr("cli.doctor.sections.cli_oauth_cache"),
             required=required,
             state=State.OK,
             detail=str(inspection.oauth_token_path),
         )
     return Row(
-        section="CLI OAuth cache",
+        section=tr("cli.doctor.sections.cli_oauth_cache"),
         required=required,
         state=State.MISSING,
-        detail=(
-            f"{inspection.oauth_token_issue}; rerun `aeat auth init --path desktop-oauth-local-dev --reset-cli-token`"
-        ),
+        detail=tr("cli.doctor.details.oauth_token_issue", issue=inspection.oauth_token_issue),
     )
 
 
@@ -328,33 +324,30 @@ def check_mcp_credentials_cache(settings: Settings) -> Row:
     inspection = inspect_google_auth(settings, project_root=PROJECT_ROOT)
     if inspection.active_path is None:
         return Row(
-            section="MCP credentials cache",
+            section=tr("cli.doctor.sections.mcp_credentials_cache"),
             required=True,
             state=State.MISSING,
-            detail=inspection.blocking_reason or "select a Google auth path first",
+            detail=inspection.blocking_reason or tr("cli.doctor.details.select_auth_path_first"),
         )
     if inspection.mcp_credentials_exist:
         return Row(
-            section="MCP credentials cache",
+            section=tr("cli.doctor.sections.mcp_credentials_cache"),
             required=True,
             state=State.OK,
-            detail=f"credentials present under {inspection.mcp_credentials_dir}",
+            detail=tr("cli.doctor.details.mcp_credentials_present", dir=inspection.mcp_credentials_dir),
         )
     if inspection.mcp_credentials_dir_exists:
         return Row(
-            section="MCP credentials cache",
+            section=tr("cli.doctor.sections.mcp_credentials_cache"),
             required=True,
             state=State.PARTIAL,
-            detail=(
-                "directory prepared for first MCP launch but no cached MCP "
-                f"credentials exist yet: {inspection.mcp_credentials_dir}"
-            ),
+            detail=tr("cli.doctor.details.mcp_credentials_dir_prepared", dir=inspection.mcp_credentials_dir),
         )
     return Row(
-        section="MCP credentials cache",
+        section=tr("cli.doctor.sections.mcp_credentials_cache"),
         required=True,
         state=State.MISSING,
-        detail="run `aeat auth init` to prepare the repo-local MCP credentials directory",
+        detail=tr("cli.doctor.details.run_auth_init_mcp"),
     )
 
 
@@ -365,13 +358,13 @@ def check_inactive_google_auth_drift(settings: Settings) -> Row:
     drift = inspection.inactive_path_drift
     if drift is None:
         return Row(
-            section="inactive-path drift",
+            section=tr("cli.doctor.sections.inactive_path_drift"),
             required=False,
             state=State.SKIP,
-            detail="no ignored stale auth artifacts detected",
+            detail=tr("cli.doctor.details.no_stale_artifacts"),
         )
     return Row(
-        section="inactive-path drift",
+        section=tr("cli.doctor.sections.inactive_path_drift"),
         required=False,
         state=State.WARN,
         detail=drift,
@@ -382,21 +375,21 @@ def check_gcloud_binary() -> Row:
     """Verify the ``gcloud`` CLI is on PATH."""
     if not gcloud_binary_path():
         return Row(
-            section="gcloud binary",
+            section=tr("cli.doctor.sections.gcloud_binary"),
             required=False,
             state=State.MISSING,
-            detail="install gcloud only if you still need the ADC-backed wrapper path",
+            detail=tr("cli.doctor.details.install_gcloud_advisory"),
         )
     code, out, _err = _run_gcloud(["version"])
     if code != 0:
         return Row(
-            section="gcloud binary",
+            section=tr("cli.doctor.sections.gcloud_binary"),
             required=False,
             state=State.WARN,
-            detail="gcloud on PATH but `gcloud version` failed",
+            detail=tr("cli.doctor.details.gcloud_version_failed"),
         )
-    first_line = out.splitlines()[0] if out else "gcloud installed"
-    return Row(section="gcloud binary", required=False, state=State.OK, detail=first_line)
+    first_line = out.splitlines()[0] if out else tr("cli.doctor.details.gcloud_installed")
+    return Row(section=tr("cli.doctor.sections.gcloud_binary"), required=False, state=State.OK, detail=first_line)
 
 
 def check_gcloud_account() -> Row:
@@ -404,12 +397,14 @@ def check_gcloud_account() -> Row:
     code, out, _err = _run_gcloud(["auth", "list", "--filter=status:ACTIVE", "--format=value(account)"])
     if code != 0 or not out:
         return Row(
-            section="gcloud auth",
+            section=tr("cli.doctor.sections.gcloud_auth"),
             required=False,
             state=State.MISSING,
-            detail="run `just gcloud-auth` to log in",
+            detail=tr("cli.doctor.details.run_gcloud_auth"),
         )
-    return Row(section="gcloud auth", required=False, state=State.OK, detail=out.splitlines()[0])
+    return Row(
+        section=tr("cli.doctor.sections.gcloud_auth"), required=False, state=State.OK, detail=out.splitlines()[0]
+    )
 
 
 def check_gcloud_project_matches(settings: Settings) -> Row:
@@ -417,49 +412,53 @@ def check_gcloud_project_matches(settings: Settings) -> Row:
     code, out, _err = _run_gcloud(["config", "get-value", "project"])
     if code != 0 or not out or out.lower() == "unset":
         return Row(
-            section="gcloud project",
+            section=tr("cli.doctor.sections.gcloud_project"),
             required=False,
             state=State.MISSING,
-            detail="run `gcloud config set project ${GOOGLE_CLOUD_PROJECT}`",
+            detail=tr("cli.doctor.details.run_gcloud_config_set_project"),
         )
     if settings.google_cloud_project and out != settings.google_cloud_project:
         return Row(
-            section="gcloud project",
+            section=tr("cli.doctor.sections.gcloud_project"),
             required=False,
             state=State.WARN,
-            detail=f"gcloud='{out}' but env='{settings.google_cloud_project}'",
+            detail=tr(
+                "cli.doctor.details.gcloud_env_project_mismatch",
+                out=out,
+                settings_project=settings.google_cloud_project,
+            ),
         )
-    return Row(section="gcloud project", required=False, state=State.OK, detail=out)
+    return Row(section=tr("cli.doctor.sections.gcloud_project"), required=False, state=State.OK, detail=out)
 
 
 def check_credentials_path(settings: Settings) -> Row:
     """Report which auth path the unified resolver will use."""
     if settings.google_application_credentials and Path(settings.google_application_credentials).exists():
         return Row(
-            section="auth path",
+            section=tr("cli.doctor.sections.auth_path"),
             required=True,
             state=State.OK,
-            detail=f"service account ({settings.google_application_credentials})",
+            detail=tr("cli.doctor.details.auth_path_service_account", path=settings.google_application_credentials),
         )
     if settings.google_oauth_client_id and settings.google_oauth_client_secret:
         return Row(
-            section="auth path",
+            section=tr("cli.doctor.sections.auth_path"),
             required=True,
             state=State.OK,
-            detail="OAuth 2.0 Desktop client",
+            detail=tr("cli.doctor.details.auth_path_oauth_desktop"),
         )
     if adc_well_known_path().exists():
         return Row(
-            section="auth path",
+            section=tr("cli.doctor.sections.auth_path"),
             required=True,
             state=State.OK,
-            detail=f"ADC ({adc_well_known_path()})",
+            detail=tr("cli.doctor.details.auth_path_adc", path=adc_well_known_path()),
         )
     return Row(
-        section="auth path",
+        section=tr("cli.doctor.sections.auth_path"),
         required=True,
         state=State.MISSING,
-        detail="no credentials configured (set GOOGLE_APPLICATION_CREDENTIALS or run `just gcloud-auth`)",
+        detail=tr("cli.doctor.details.no_credentials_configured"),
     )
 
 
@@ -469,16 +468,16 @@ def check_adc_file(settings: Settings) -> Row:
     path = adc_well_known_path()
     if not path.exists():
         return Row(
-            section="ADC file",
+            section=tr("cli.doctor.sections.adc_file"),
             required=False,
             state=State.SKIP,
             detail=(
-                "not configured; run `just gcloud-auth` only if you still need the ADC-backed wrapper path"
+                tr("cli.doctor.details.adc_not_configured_advisory")
                 if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
-                else "not required for active path"
+                else tr("cli.doctor.details.not_required_active_path")
             ),
         )
-    return Row(section="ADC file", required=False, state=State.OK, detail=str(path))
+    return Row(section=tr("cli.doctor.sections.adc_file"), required=False, state=State.OK, detail=str(path))
 
 
 def check_adc_scopes(settings: Settings) -> Row:
@@ -487,36 +486,36 @@ def check_adc_scopes(settings: Settings) -> Row:
     path = adc_well_known_path()
     if not path.exists():
         return Row(
-            section="ADC scopes",
+            section=tr("cli.doctor.sections.adc_scopes"),
             required=False,
             state=State.SKIP,
             detail=(
-                "ADC not configured; Desktop OAuth local-dev can still work without it"
+                tr("cli.doctor.details.adc_not_configured_advisory")
                 if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV
-                else "not required for active path"
+                else tr("cli.doctor.details.not_required_active_path")
             ),
         )
     granted = adc_scopes_from_file(path)
     if not granted:
         return Row(
-            section="ADC scopes",
+            section=tr("cli.doctor.sections.adc_scopes"),
             required=False,
             state=State.WARN,
-            detail="ADC JSON has no scopes (re-run `just gcloud-auth` with --client-id-file)",
+            detail=tr("cli.doctor.details.adc_no_scopes"),
         )
     missing = sorted(set(REQUIRED_ADC_SCOPES) - set(granted))
     if missing:
         return Row(
-            section="ADC scopes",
+            section=tr("cli.doctor.sections.adc_scopes"),
             required=False,
             state=State.WARN,
-            detail=f"missing: {', '.join(short_scope(s) for s in missing)}",
+            detail=tr("cli.doctor.details.adc_missing_scopes", missing=", ".join(short_scope(s) for s in missing)),
         )
     return Row(
-        section="ADC scopes",
+        section=tr("cli.doctor.sections.adc_scopes"),
         required=False,
         state=State.OK,
-        detail=f"{len(granted)} granted, includes drive/sheets/docs/cloud-platform",
+        detail=tr("cli.doctor.details.adc_granted_scopes", count=len(granted)),
     )
 
 
@@ -534,10 +533,10 @@ def check_api_enablement(settings: Settings) -> list[Row]:
     if not settings.google_cloud_project:
         return [
             Row(
-                section="API enablement",
+                section=tr("cli.doctor.sections.api_enablement"),
                 required=True,
                 state=State.SKIP,
-                detail="GOOGLE_CLOUD_PROJECT not set",
+                detail=tr("cli.doctor.details.gcp_project_not_set"),
             )
         ]
     try:
@@ -557,36 +556,50 @@ def check_api_enablement(settings: Settings) -> list[Row]:
         _log.warning("check_api_enablement: service usage call failed", exc_info=True)
         return [
             Row(
-                section="API enablement",
+                section=tr("cli.doctor.sections.api_enablement"),
                 required=True,
                 state=State.MISSING,
-                detail=f"Service Usage call failed: {exc.__class__.__name__}",
+                detail=tr("cli.doctor.details.service_usage_failed", exc_name=exc.__class__.__name__),
             )
         ]
 
     rows: list[Row] = []
     for service_name in REQUIRED_API_SERVICES:
         if service_name in enabled:
-            rows.append(Row(section=f"API: {service_name}", required=True, state=State.OK, detail="enabled"))
+            rows.append(
+                Row(
+                    section=tr("cli.doctor.sections.api_service", service_name=service_name),
+                    required=True,
+                    state=State.OK,
+                    detail=tr("cli.doctor.details.api_enabled"),
+                )
+            )
         else:
             rows.append(
                 Row(
-                    section=f"API: {service_name}",
+                    section=tr("cli.doctor.sections.api_service", service_name=service_name),
                     required=True,
                     state=State.MISSING,
-                    detail=f"run `gcloud services enable {service_name}`",
+                    detail=tr("cli.doctor.details.run_gcloud_services_enable", service_name=service_name),
                 )
             )
     for service_name in OPTIONAL_API_SERVICES:
         if service_name in enabled:
-            rows.append(Row(section=f"API: {service_name}", required=False, state=State.OK, detail="enabled"))
+            rows.append(
+                Row(
+                    section=tr("cli.doctor.sections.api_service", service_name=service_name),
+                    required=False,
+                    state=State.OK,
+                    detail=tr("cli.doctor.details.api_enabled"),
+                )
+            )
         else:
             rows.append(
                 Row(
-                    section=f"API: {service_name}",
+                    section=tr("cli.doctor.sections.api_service", service_name=service_name),
                     required=False,
                     state=State.SKIP,
-                    detail="needs project billing enabled (`gcloud services enable` fails otherwise)",
+                    detail=tr("cli.doctor.details.api_needs_billing"),
                 )
             )
     return rows
@@ -610,28 +623,26 @@ def check_drive_round_trip() -> Row:
     except Exception as exc:
         _log.warning("check_drive_round_trip: drive api call failed", exc_info=True)
         return Row(
-            section="Drive round-trip",
+            section=tr("cli.doctor.sections.drive_round_trip"),
             required=required,
             state=State.MISSING if required else State.WARN,
             detail=(
-                "Drive scope check failed; rerun `aeat auth init --path "
-                "desktop-oauth-local-dev --reset-cli-token` if the Desktop "
-                "OAuth token is stale"
+                tr("cli.doctor.details.drive_scope_check_failed")
                 if required
-                else f"{exc.__class__.__name__}: {exc!s}"[:120]
+                else tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120])
             ),
         )
-    return Row(section="Drive round-trip", required=required, state=State.OK, detail=email)
+    return Row(section=tr("cli.doctor.sections.drive_round_trip"), required=required, state=State.OK, detail=email)
 
 
 def check_sheets_round_trip(settings: Settings) -> Row:
     """Call ``spreadsheets.get`` against the scratch sheet, if any."""
     if not settings.aeat_scratch_sheet_id:
         return Row(
-            section="Sheets round-trip",
+            section=tr("cli.doctor.sections.sheets_round_trip"),
             required=False,
             state=State.SKIP,
-            detail="no scratch sheet ID; run `aeat bootstrap`",
+            detail=tr("cli.doctor.details.no_scratch_sheet"),
         )
     try:
         creds = get_credentials_for_scopes([SHEETS_SCOPE])
@@ -641,22 +652,22 @@ def check_sheets_round_trip(settings: Settings) -> Row:
     except Exception as exc:
         _log.warning("check_sheets_round_trip: sheets api call failed", exc_info=True)
         return Row(
-            section="Sheets round-trip",
+            section=tr("cli.doctor.sections.sheets_round_trip"),
             required=False,
             state=State.WARN,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            detail=tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120]),
         )
-    return Row(section="Sheets round-trip", required=False, state=State.OK, detail=title)
+    return Row(section=tr("cli.doctor.sections.sheets_round_trip"), required=False, state=State.OK, detail=title)
 
 
 def check_docs_round_trip(settings: Settings) -> Row:
     """Call ``documents.get`` against the scratch doc, if any."""
     if not settings.aeat_scratch_doc_id:
         return Row(
-            section="Docs round-trip",
+            section=tr("cli.doctor.sections.docs_round_trip"),
             required=False,
             state=State.SKIP,
-            detail="no scratch doc ID; run `aeat bootstrap`",
+            detail=tr("cli.doctor.details.no_scratch_doc"),
         )
     try:
         creds = get_credentials_for_scopes([DOCS_SCOPE])
@@ -666,22 +677,22 @@ def check_docs_round_trip(settings: Settings) -> Row:
     except Exception as exc:
         _log.warning("check_docs_round_trip: docs api call failed", exc_info=True)
         return Row(
-            section="Docs round-trip",
+            section=tr("cli.doctor.sections.docs_round_trip"),
             required=False,
             state=State.WARN,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            detail=tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120]),
         )
-    return Row(section="Docs round-trip", required=False, state=State.OK, detail=title)
+    return Row(section=tr("cli.doctor.sections.docs_round_trip"), required=False, state=State.OK, detail=title)
 
 
 def check_cloud_storage(settings: Settings) -> Row:
     """List Cloud Storage buckets in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
-            section="Storage list",
+            section=tr("cli.doctor.sections.storage_list"),
             required=False,
             state=State.SKIP,
-            detail="GOOGLE_CLOUD_PROJECT not set",
+            detail=tr("cli.doctor.details.gcp_project_not_set"),
         )
     try:
         creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
@@ -690,22 +701,27 @@ def check_cloud_storage(settings: Settings) -> Row:
     except Exception as exc:
         _log.warning("check_cloud_storage: storage api call failed", exc_info=True)
         return Row(
-            section="Storage list",
+            section=tr("cli.doctor.sections.storage_list"),
             required=False,
             state=State.SKIP,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            detail=tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120]),
         )
-    return Row(section="Storage list", required=False, state=State.OK, detail=f"{count} buckets visible")
+    return Row(
+        section=tr("cli.doctor.sections.storage_list"),
+        required=False,
+        state=State.OK,
+        detail=tr("cli.doctor.details.buckets_visible", count=count),
+    )
 
 
 def check_cloud_functions(settings: Settings) -> Row:
     """List Cloud Functions in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
-            section="Functions list",
+            section=tr("cli.doctor.sections.functions_list"),
             required=False,
             state=State.SKIP,
-            detail="GOOGLE_CLOUD_PROJECT not set",
+            detail=tr("cli.doctor.details.gcp_project_not_set"),
         )
     try:
         creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
@@ -715,16 +731,16 @@ def check_cloud_functions(settings: Settings) -> Row:
     except Exception as exc:
         _log.warning("check_cloud_functions: functions api call failed", exc_info=True)
         return Row(
-            section="Functions list",
+            section=tr("cli.doctor.sections.functions_list"),
             required=False,
             state=State.SKIP,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            detail=tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120]),
         )
     return Row(
-        section="Functions list",
+        section=tr("cli.doctor.sections.functions_list"),
         required=False,
         state=State.OK,
-        detail=f"{len(results)} functions visible",
+        detail=tr("cli.doctor.details.functions_visible", count=len(results)),
     )
 
 
@@ -732,10 +748,10 @@ def check_cloud_run(settings: Settings) -> Row:
     """List Cloud Run services in the project (advisory; needs billing)."""
     if not settings.google_cloud_project:
         return Row(
-            section="Run list",
+            section=tr("cli.doctor.sections.run_list"),
             required=False,
             state=State.SKIP,
-            detail="GOOGLE_CLOUD_PROJECT not set",
+            detail=tr("cli.doctor.details.gcp_project_not_set"),
         )
     try:
         creds = get_credentials_for_scopes([CLOUD_PLATFORM_SCOPE])
@@ -745,12 +761,17 @@ def check_cloud_run(settings: Settings) -> Row:
     except Exception as exc:
         _log.warning("check_cloud_run: cloud run api call failed", exc_info=True)
         return Row(
-            section="Run list",
+            section=tr("cli.doctor.sections.run_list"),
             required=False,
             state=State.SKIP,
-            detail=f"{exc.__class__.__name__}: {exc!s}"[:120],
+            detail=tr("cli.doctor.details.api_call_failed", exc_name=exc.__class__.__name__, exc_msg=str(exc)[:120]),
         )
-    return Row(section="Run list", required=False, state=State.OK, detail=f"{len(results)} services visible")
+    return Row(
+        section=tr("cli.doctor.sections.run_list"),
+        required=False,
+        state=State.OK,
+        detail=tr("cli.doctor.details.services_visible", count=len(results)),
+    )
 
 
 def check_service_account(settings: Settings) -> Row:
@@ -760,40 +781,42 @@ def check_service_account(settings: Settings) -> Row:
     sa_path = settings.google_application_credentials
     if not sa_path:
         return Row(
-            section="service-account key state",
+            section=tr("cli.doctor.sections.service_account_key_state"),
             required=required,
             state=State.MISSING if required else State.SKIP,
-            detail="GOOGLE_APPLICATION_CREDENTIALS not set" if required else "not required for active path",
+            detail=tr("cli.doctor.details.sa_key_unset")
+            if required
+            else tr("cli.doctor.details.not_required_active_path"),
         )
     if not Path(sa_path).exists():
         return Row(
-            section="service-account key state",
+            section=tr("cli.doctor.sections.service_account_key_state"),
             required=required,
             state=State.MISSING if required else State.SKIP,
             detail=(
-                f"path {sa_path} does not exist"
+                tr("cli.doctor.details.sa_key_not_found", path=sa_path)
                 if required
-                else "not required for active path; see inactive-path drift"
+                else tr("cli.doctor.details.not_required_see_drift")
             ),
         )
     try:
         json.loads(Path(sa_path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         return Row(
-            section="service-account key state",
+            section=tr("cli.doctor.sections.service_account_key_state"),
             required=required,
             state=State.MISSING if required else State.SKIP,
             detail=(
-                f"unparseable: {exc.__class__.__name__}"
+                tr("cli.doctor.details.sa_key_unparseable", exc_name=exc.__class__.__name__)
                 if required
-                else "not required for active path; see inactive-path drift"
+                else tr("cli.doctor.details.not_required_see_drift")
             ),
         )
     return Row(
-        section="service-account key state",
+        section=tr("cli.doctor.sections.service_account_key_state"),
         required=required,
         state=State.OK if required else State.SKIP,
-        detail=sa_path if required else "not required for active path; see inactive-path drift",
+        detail=sa_path if required else tr("cli.doctor.details.not_required_see_drift"),
     )
 
 
@@ -820,26 +843,26 @@ def check_certificate_health(settings: Settings) -> Row:
     description = AeatAuthenticator(settings).describe()
     if not description.configured:
         return Row(
-            section="aeat certificate",
+            section=tr("cli.doctor.sections.aeat_certificate"),
             required=False,
             state=State.SKIP,
-            detail=description.health_summary or "provider not configured",
+            detail=description.health_summary or tr("cli.doctor.details.provider_not_configured"),
         )
     if not description.available:
         return Row(
-            section="aeat certificate",
+            section=tr("cli.doctor.sections.aeat_certificate"),
             required=False,
             state=State.WARN,
-            detail=description.health_summary or "provider unavailable",
+            detail=description.health_summary or tr("cli.doctor.details.provider_unavailable"),
         )
     days = description.days_until_expiry
-    detail = f"severity={description.health_severity} days_until_expiry={days}"
+    detail = tr("cli.doctor.details.cert_health_detail", severity=description.health_severity, days=days)
     if description.health_severity == "OK":
-        return Row(section="aeat certificate", required=False, state=State.OK, detail=detail)
+        return Row(section=tr("cli.doctor.sections.aeat_certificate"), required=False, state=State.OK, detail=detail)
     if description.health_severity == "WARN":
-        return Row(section="aeat certificate", required=False, state=State.WARN, detail=detail)
+        return Row(section=tr("cli.doctor.sections.aeat_certificate"), required=False, state=State.WARN, detail=detail)
     # CRITICAL or EXPIRED: block the doctor with a required failure.
-    return Row(section="aeat certificate", required=True, state=State.MISSING, detail=detail)
+    return Row(section=tr("cli.doctor.sections.aeat_certificate"), required=True, state=State.MISSING, detail=detail)
 
 
 def check_auth_provider_path(settings: Settings) -> Row:
@@ -853,7 +876,7 @@ def check_auth_provider_path(settings: Settings) -> Row:
     else:
         state = State.OK
     return Row(
-        section="aeat auth path",
+        section=tr("cli.doctor.sections.aeat_auth_path"),
         required=False,
         state=state,
         detail=describe_provider_operator_impact(description),
@@ -863,10 +886,12 @@ def check_auth_provider_path(settings: Settings) -> Row:
 def check_live_tests_flag(settings: Settings) -> Row:
     """Report whether live tests are opted in."""
     return Row(
-        section="live tests",
+        section=tr("cli.doctor.sections.live_tests"),
         required=False,
         state=State.OK if settings.aeat_live_tests_enabled else State.SKIP,
-        detail="enabled" if settings.aeat_live_tests_enabled else "AEAT_LIVE_TESTS_ENABLED=false",
+        detail=tr("cli.doctor.details.api_enabled")
+        if settings.aeat_live_tests_enabled
+        else tr("cli.doctor.details.live_tests_disabled"),
     )
 
 
@@ -881,18 +906,18 @@ def check_live_access_gate(settings: Settings) -> Row:
 
     snapshot = AeatAccessGate(settings).snapshot_env()
     if snapshot.aeat_live_tests_enabled == "1":
-        live_reads = "reads: ENABLED"
+        live_reads = tr("cli.doctor.details.live_reads_enabled")
         state = State.OK
     else:
-        live_reads = "reads: skipped (AEAT_LIVE_TESTS_ENABLED!=1)"
+        live_reads = tr("cli.doctor.details.live_reads_skipped")
         state = State.SKIP
-    live_writes = "writes: permanently forbidden"
+    live_writes = tr("cli.doctor.details.live_writes_forbidden")
     if snapshot.pytest_current_test:
         state = State.WARN
-        live_writes += " [PYTEST_CURRENT_TEST present]"
+        live_writes += tr("cli.doctor.details.pytest_current_test_present")
     detail = f"{live_reads}; {live_writes}"
     return Row(
-        section="live access gate",
+        section=tr("cli.doctor.sections.live_access_gate"),
         required=False,
         state=state,
         detail=detail,
@@ -907,20 +932,20 @@ def check_secret_store_directory(settings: Settings) -> Row:
     secret_dir = settings.aeat_secret_store_dir
     if not secret_dir.exists():
         return Row(
-            section="secret-store dir",
+            section=tr("cli.doctor.sections.secret_store_dir"),
             required=False,
             state=State.MISSING,
-            detail=(f"{secret_dir} does not exist; run `aeat security provision` to bootstrap the security layer."),
+            detail=tr("cli.doctor.details.secret_store_dir_missing", dir=secret_dir),
         )
     if not os.access(secret_dir, os.W_OK):
         return Row(
-            section="secret-store dir",
+            section=tr("cli.doctor.sections.secret_store_dir"),
             required=True,
             state=State.PARTIAL,
-            detail=f"{secret_dir} is not writable by the current user.",
+            detail=tr("cli.doctor.details.secret_store_dir_not_writable", dir=secret_dir),
         )
     return Row(
-        section="secret-store dir",
+        section=tr("cli.doctor.sections.secret_store_dir"),
         required=True,
         state=State.OK,
         detail=f"{secret_dir}",
@@ -933,28 +958,22 @@ def check_secret_store_backend(settings: Settings) -> Row:
     if backend.value == "unsecured":
         if not settings.aeat_allow_unencrypted:
             return Row(
-                section="secret-store backend",
+                section=tr("cli.doctor.sections.secret_store_backend"),
                 required=True,
                 state=State.MISSING,
-                detail=(
-                    "backend=unsecured requires AEAT_ALLOW_UNENCRYPTED=1; "
-                    "the substrate will refuse every persistence call."
-                ),
+                detail=tr("cli.doctor.details.unsecured_requires_allow"),
             )
         return Row(
-            section="secret-store backend",
+            section=tr("cli.doctor.sections.secret_store_backend"),
             required=False,
             state=State.WARN,
-            detail=(
-                "backend=unsecured: published deterministic master key, "
-                "ZERO confidentiality. Real NIFs are refused at profile-write."
-            ),
+            detail=tr("cli.doctor.details.unsecured_warning"),
         )
     return Row(
-        section="secret-store backend",
+        section=tr("cli.doctor.sections.secret_store_backend"),
         required=True,
         state=State.OK,
-        detail=f"backend={backend.value}",
+        detail=tr("cli.doctor.details.backend_active", backend=backend.value),
     )
 
 
@@ -966,10 +985,10 @@ def check_master_key_readiness(settings: Settings) -> Row:
         # The unsecured backend's published key is always available; the
         # warning row above covers the security implication.
         return Row(
-            section="master-key readiness",
+            section=tr("cli.doctor.sections.master_key_readiness"),
             required=False,
             state=State.SKIP,
-            detail="published deterministic key (unsecured backend).",
+            detail=tr("cli.doctor.details.master_key_unsecured"),
         )
     if backend in ("file", "auto"):
         master_key = secret_dir / "master.key"
@@ -983,40 +1002,40 @@ def check_master_key_readiness(settings: Settings) -> Row:
             # not been provisioned.
             if backend == "file":
                 return Row(
-                    section="master-key readiness",
+                    section=tr("cli.doctor.sections.master_key_readiness"),
                     required=True,
                     state=State.MISSING,
-                    detail=(f"no master.key / master.kdf / salt under {secret_dir}; run `aeat security provision`."),
+                    detail=tr("cli.doctor.details.master_key_missing", dir=secret_dir),
                 )
             return Row(
-                section="master-key readiness",
+                section=tr("cli.doctor.sections.master_key_readiness"),
                 required=False,
                 state=State.SKIP,
-                detail="file-fallback artefacts absent; auto-mode prefers OS keychain.",
+                detail=tr("cli.doctor.details.master_key_keychain_preferred"),
             )
         if missing:
             return Row(
-                section="master-key readiness",
+                section=tr("cli.doctor.sections.master_key_readiness"),
                 required=True,
                 state=State.PARTIAL,
-                detail=(
-                    "partial file-fallback state: "
-                    f"present={[p.name for p in present]} missing={[p.name for p in missing]}; "
-                    "run `aeat security provision --force` to rebuild."
+                detail=tr(
+                    "cli.doctor.details.master_key_partial",
+                    present=[p.name for p in present],
+                    missing=[p.name for p in missing],
                 ),
             )
         return Row(
-            section="master-key readiness",
+            section=tr("cli.doctor.sections.master_key_readiness"),
             required=True,
             state=State.OK,
-            detail=f"file-fallback artefacts present in {secret_dir}.",
+            detail=tr("cli.doctor.details.master_key_file_present", dir=secret_dir),
         )
     # Backend is 'keyring'.
     return Row(
-        section="master-key readiness",
+        section=tr("cli.doctor.sections.master_key_readiness"),
         required=True,
         state=State.OK,
-        detail="keyring backend selected; OS keychain is the source of truth.",
+        detail=tr("cli.doctor.details.master_key_keyring"),
     )
 
 
@@ -1025,47 +1044,47 @@ def check_kdf_version(settings: Settings) -> Row:
     kdf_path = settings.aeat_secret_store_dir / "master.kdf"
     if not kdf_path.exists():
         return Row(
-            section="master.kdf version",
+            section=tr("cli.doctor.sections.kdf_version"),
             required=False,
             state=State.SKIP,
-            detail="master.kdf not present (keyring or unprovisioned).",
+            detail=tr("cli.doctor.details.master_kdf_absent"),
         )
     try:
         raw = json.loads(kdf_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
         return Row(
-            section="master.kdf version",
+            section=tr("cli.doctor.sections.kdf_version"),
             required=True,
             state=State.PARTIAL,
-            detail=f"failed to parse {kdf_path.name}: {exc}",
+            detail=tr("cli.doctor.details.master_kdf_parse_failed", name=kdf_path.name, exc=exc),
         )
     if not isinstance(raw, dict):
         return Row(
-            section="master.kdf version",
+            section=tr("cli.doctor.sections.kdf_version"),
             required=True,
             state=State.PARTIAL,
-            detail=f"{kdf_path.name} is not a JSON object.",
+            detail=tr("cli.doctor.details.master_kdf_not_object", name=kdf_path.name),
         )
     version = raw.get("version")
     if version == 2:
         return Row(
-            section="master.kdf version",
+            section=tr("cli.doctor.sections.kdf_version"),
             required=True,
             state=State.OK,
-            detail=f"v{version} (Argon2id).",
+            detail=tr("cli.doctor.details.master_kdf_argon2id", version=version),
         )
     if version == 1:
         return Row(
-            section="master.kdf version",
+            section=tr("cli.doctor.sections.kdf_version"),
             required=True,
             state=State.PARTIAL,
-            detail=f"unsupported KDF version: {version!r}.",
+            detail=tr("cli.doctor.details.master_kdf_unsupported", version=version),
         )
     return Row(
-        section="master.kdf version",
+        section=tr("cli.doctor.sections.kdf_version"),
         required=True,
         state=State.PARTIAL,
-        detail=f"unrecognised KDF version: {version!r}",
+        detail=tr("cli.doctor.details.master_kdf_unrecognised", version=version),
     )
 
 
@@ -1118,11 +1137,11 @@ def collect_rows(settings: Settings) -> list[Row]:
 
 def render_table(rows: list[Row]) -> Table:
     """Render rows into a rich Table for console output."""
-    table = Table(title="aeat doctor", show_lines=False, header_style="bold")
-    table.add_column("Section", style="cyan", no_wrap=True)
-    table.add_column("Required", style="white")
-    table.add_column("State", style="bold")
-    table.add_column("Detail", style="white", overflow="fold")
+    table = Table(title=tr("cli.doctor.table.title"), show_lines=False, header_style="bold")
+    table.add_column(tr("cli.doctor.table.section"), style="cyan", no_wrap=True)
+    table.add_column(tr("cli.doctor.table.required"), style="white")
+    table.add_column(tr("cli.doctor.table.state"), style="bold")
+    table.add_column(tr("cli.doctor.table.detail"), style="white", overflow="fold")
     state_styles = {
         State.OK: "green",
         State.MISSING: "red",
@@ -1133,7 +1152,7 @@ def render_table(rows: list[Row]) -> Table:
     for row in rows:
         table.add_row(
             row.section,
-            "yes" if row.required else "no",
+            tr("cli.doctor.table.yes") if row.required else tr("cli.doctor.table.no"),
             f"[{state_styles[row.state]}]{row.state.value}[/]",
             row.detail,
         )
@@ -1148,7 +1167,7 @@ def doctor() -> None:
     console.print(render_table(rows))
     failing_required = [r for r in rows if r.required and r.state in (State.MISSING, State.PARTIAL, State.WARN)]
     if failing_required:
-        len(failing_required)
-        console.print("[red]doctor: " + tr("cli.doctor.t_480369") + "[/]")
+        n = len(failing_required)
+        console.print("[red]doctor: " + tr("cli.doctor.errors.findings", n=n) + "[/]")
         raise typer.Exit(code=1)
-    console.print("[green]doctor: " + tr("cli.doctor.t_599915") + "[/]")
+    console.print("[green]doctor: " + tr("cli.doctor.success.all_clean") + "[/]")

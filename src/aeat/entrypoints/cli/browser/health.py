@@ -36,6 +36,7 @@ from ....core.config import Settings
 from ....core.errors import SiteHealthError
 from ....core.logging import get_logger
 from .._errors import json_output_requested
+from .._i18n import tr
 from .._schemas import OutputRootSchema, emit_json_success, register_schema
 
 logger = get_logger(__name__)
@@ -174,9 +175,13 @@ def _render_human(status: SiteHealthStatus) -> str:
     """Render a one-paragraph human summary for console output."""
     retry = ""
     if status.retry_after_seconds is not None:
-        retry = f" retry_after_seconds={status.retry_after_seconds}"
-    markers = ", ".join(status.evidence.detected_markers) or "(none)"
-    return f"state={status.state.value} http_status={status.evidence.http_status}{retry} markers=[{markers}]"
+        retry = f" {tr('cli.browser.labels.retry_after_seconds')}={status.retry_after_seconds}"
+    markers = ", ".join(status.evidence.detected_markers) or tr("cli.browser.labels.none")
+    return (
+        f"{tr('cli.browser.labels.state')}={status.state.value} "
+        f"{tr('cli.browser.labels.http_status')}={status.evidence.http_status}"
+        f"{retry} {tr('cli.browser.labels.markers')}=[{markers}]"
+    )
 
 
 def _build_ok_status(url: str) -> SiteHealthStatus:
@@ -197,7 +202,7 @@ def health_cmd(
     json_output: bool = typer.Option(
         False,
         "--json",
-        help="Emit SiteHealthStatus as JSON instead of a human summary.",
+        help=tr("cli.browser.health.json_help"),
     ),
 ) -> None:
     """Probe the configured AEAT site-health URL once and exit.

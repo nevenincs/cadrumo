@@ -2,20 +2,32 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from openpyxl import Workbook
 
+from aeat.core.paths import PROJECT_ROOT
+
+from ._loader import load_registry_tree
+from ._schema import RegistrySnapshot
+from ._snapshot import build_snapshot
 from ._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
+    WorkbookRunnerAvailability,
     WorkbookScanOptions,
+    assert_formula_workbook_runner_ready,
+    assert_workbook_scan_clean,
     compare_registry_to_workbook,
+    convert_binary_xls_with_libreoffice,
     discover_workbooks,
     inventory_workbook_coverage,
+    run_registry_workbook_parity,
+    run_workbook_with_libreoffice,
     scan_workbook,
     verify_workbook_backend,
 )
@@ -35,6 +47,38 @@ def _write_formula_workbook(path: Path) -> None:
     workbook.save(path)
 
 
+def _write_modelo_130_parity_workbook(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Modelo"
+    worksheet["A1"] = Decimal("10000")
+    worksheet["A2"] = Decimal("4000")
+    worksheet["A3"] = Decimal("250")
+    worksheet["A4"] = Decimal("100")
+    worksheet["A5"] = Decimal("2000")
+    worksheet["A6"] = Decimal("10")
+    worksheet["A7"] = Decimal("0")
+    worksheet["A8"] = Decimal("0")
+    worksheet["A9"] = Decimal("0")
+    worksheet["A10"] = Decimal("0")
+    worksheet["B1"] = "=MAX(0,MAX(0,(A1-A2)*20/100)-A3-A4)+MAX(0,A5*2/100-A6)-A7-A8-A9-A10"
+    workbook.save(path)
+    workbook.close()
+
+
+def _committed_modelo_130_snapshot() -> RegistrySnapshot:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "130")
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="1T",
+    )
+
+
 def test_scan_workbook_discovers_xlsx_formula_cells(tmp_path: Path) -> None:
     workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
     _write_formula_workbook(workbook_path)
@@ -46,9 +90,222 @@ def test_scan_workbook_discovers_xlsx_formula_cells(tmp_path: Path) -> None:
     assert report.extension == ".xlsx"
     assert report.scan_status == "scanned"
     assert report.workbook_kind == "formula_form"
+    assert report.evidence_tier == "executable_parity_evidence"
+    assert "layout_authority" in report.not_evidence_for
     assert report.formula_cells == 2
     assert {cell.coordinate for cell in report.output_candidates} == {"B1", "B2"}
     assert {cell.coordinate for cell in report.input_candidates} >= {"A1", "A2"}
+
+
+def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None:
+    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    workbook_path = (
+        root
+        / "disenos_registro"
+        / "modelo_303"
+        / "files"
+        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+    )
+
+    report = scan_workbook(workbook_path, root=root, options=WorkbookScanOptions(per_file_timeout_seconds=5))
+
+    assert report.formula_cells > 0
+    assert report.workbook_kind == "record_design_layout"
+    assert report.evidence_tier == "layout_authority"
+    assert "executable_parity_evidence" in report.not_evidence_for
+
+
+def test_committed_modelo_131_record_designs_cover_current_and_historical_layouts() -> None:
+    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    workbook_paths = (
+        root / "disenos_registro" / "modelo_131" / "files" / "05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx",
+        root
+        / "disenos_registro"
+        / "modelo_131"
+        / "files"
+        / "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+        root
+        / "disenos_registro"
+        / "modelo_131"
+        / "files"
+        / "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
+        root
+        / "disenos_registro"
+        / "modelo_131"
+        / "files"
+        / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx",
+    )
+
+    reports = tuple(
+        scan_workbook(path, root=root, options=WorkbookScanOptions(per_file_timeout_seconds=5))
+        for path in workbook_paths
+    )
+
+    assert {report.modelo for report in reports} == {"131"}
+    assert all(report.workbook_kind == "record_design_layout" for report in reports)
+    assert all(report.evidence_tier == "layout_authority" for report in reports)
+    assert all("executable_parity_evidence" in report.not_evidence_for for report in reports)
+    assert all(report.formula_cells > 0 for report in reports)
+
+
+def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
+    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    workbook_path = (
+        root
+        / "disenos_registro"
+        / "modelo_130"
+        / "files"
+        / "01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
+    )
+
+    report = convert_binary_xls_with_libreoffice(workbook_path, root=root)
+
+    assert report.conversion_status == "converted"
+    assert report.converted_extension == ".xlsx"
+    assert report.formula_cells > 0
+    assert report.workbook_kind == "record_design_layout"
+    assert report.evidence_tier == "layout_authority"
+    assert "executable_parity_evidence" in report.not_evidence_for
+
+
+def test_libreoffice_runner_recalculates_xlsx_formula_workbook(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-live.xlsx"
+    _write_formula_workbook(workbook_path)
+
+    result = run_workbook_with_libreoffice(
+        workbook_path,
+        inputs={
+            WorkbookCellRef(sheet="Modelo", coordinate="A1"): Decimal("12"),
+            WorkbookCellRef(sheet="Modelo", coordinate="A2"): Decimal("30"),
+        },
+        outputs={"total": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+    )
+
+    assert result == {"total": 42}
+
+
+def test_registry_workbook_parity_matches_committed_modelo_calculation(tmp_path: Path) -> None:
+    snapshot = _committed_modelo_130_snapshot()
+    workbook_path = tmp_path / "modelo_130" / "files" / "130-parity.xlsx"
+    _write_modelo_130_parity_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="modelo-130-registry-parity-basic",
+        modelo="130",
+        revision="2019-y-siguientes",
+        values=(
+            SyntheticInputValue(
+                id="casilla-01",
+                value=Decimal("10000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="01",
+            ),
+            SyntheticInputValue(
+                id="casilla-02",
+                value=Decimal("4000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A2"),
+                registry_binding="02",
+            ),
+            SyntheticInputValue(
+                id="casilla-05",
+                value=Decimal("250"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A3"),
+                registry_binding="05",
+            ),
+            SyntheticInputValue(
+                id="casilla-06",
+                value=Decimal("100"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A4"),
+                registry_binding="06",
+            ),
+            SyntheticInputValue(
+                id="casilla-08",
+                value=Decimal("2000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A5"),
+                registry_binding="08",
+            ),
+            SyntheticInputValue(
+                id="casilla-10",
+                value=Decimal("10"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A6"),
+                registry_binding="10",
+            ),
+            SyntheticInputValue(
+                id="casilla-13",
+                value=Decimal("0"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A7"),
+            ),
+            SyntheticInputValue(
+                id="previous-year-net-income",
+                value=Decimal("13000"),
+                registry_binding="irpf.previous_year_economic_activity_net_income",
+            ),
+            SyntheticInputValue(
+                id="casilla-15",
+                value=Decimal("0"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A8"),
+                registry_binding="15",
+            ),
+            SyntheticInputValue(
+                id="casilla-16",
+                value=Decimal("0"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A9"),
+                registry_binding="16",
+            ),
+            SyntheticInputValue(
+                id="casilla-18",
+                value=Decimal("0"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A10"),
+                registry_binding="18",
+            ),
+        ),
+    )
+
+    report = run_registry_workbook_parity(
+        snapshot=snapshot,
+        synthetic_input=synthetic,
+        workbook_path=workbook_path,
+        workbook=workbook,
+        output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+        registry_outputs={"casilla-19": "19"},
+        date_context={"filing_period": date(2026, 3, 31)},
+    )
+
+    assert report.status == "match"
+    assert report.comparisons[0].expected_workbook_value == 880
+    assert report.comparisons[0].actual_registry_value == Decimal("880.00")
+    assert report.comparisons[0].legal_refs == ("rd-439-2007:art-110",)
+
+
+def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tmp_path: Path) -> None:
+    snapshot = _committed_modelo_130_snapshot()
+    workbook_path = tmp_path / "disenos_registro" / "modelo_130" / "files" / "130-layout.xlsx"
+    _write_modelo_130_parity_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="modelo-130-record-design-rejected",
+        modelo="130",
+        revision="2019-y-siguientes",
+        values=(
+            SyntheticInputValue(
+                id="casilla-01",
+                value=Decimal("10000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="01",
+            ),
+        ),
+    )
+
+    with pytest.raises(Exception, match="not an executable calculation oracle"):
+        run_registry_workbook_parity(
+            snapshot=snapshot,
+            synthetic_input=synthetic,
+            workbook_path=workbook_path,
+            workbook=workbook,
+            output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+            registry_outputs={"casilla-19": "19"},
+            date_context={"filing_period": date(2026, 3, 31)},
+        )
 
 
 def test_scan_workbook_records_binary_xls_as_unsupported(tmp_path: Path) -> None:
@@ -62,8 +319,9 @@ def test_scan_workbook_records_binary_xls_as_unsupported(tmp_path: Path) -> None
     assert report.extension == ".xls"
     assert report.scan_status == "unsupported"
     assert report.workbook_kind == "unsupported_binary_xls"
+    assert report.evidence_tier == "layout_authority"
     assert report.formula_cells == 0
-    assert "parser or conversion path" in (report.error or "")
+    assert "isolated conversion" in (report.error or "")
 
 
 def test_inventory_workbook_coverage_is_deterministic(tmp_path: Path) -> None:
@@ -149,3 +407,57 @@ def test_verify_workbook_backend_reports_existing_backend(tmp_path: Path) -> Non
     assert report.failed_count == 0
     assert report.modelo_coverage[0].modelo == "390"
     assert report.modelo_coverage[0].formula_workbook_count == 1
+
+
+def test_verify_workbook_backend_scans_all_workbooks_by_default(tmp_path: Path) -> None:
+    _write_formula_workbook(tmp_path / "modelo_202" / "files" / "202-test.xlsx")
+    _write_formula_workbook(tmp_path / "modelo_390" / "files" / "390-test.xlsx")
+
+    report = verify_workbook_backend(tmp_path)
+
+    assert report.workbook_count == 2
+    assert report.scanned_count == 2
+    assert {coverage.modelo for coverage in report.modelo_coverage} == {"202", "390"}
+
+
+def test_verify_workbook_backend_fails_on_scan_errors_by_default(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "broken.xlsx"
+    workbook_path.parent.mkdir(parents=True, exist_ok=True)
+    workbook_path.write_text("not a workbook", encoding="utf-8")
+
+    with pytest.raises(Exception, match="failed to scan"):
+        verify_workbook_backend(tmp_path)
+
+
+def test_inventory_workbook_coverage_can_report_scan_errors_for_audit(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "broken.xlsx"
+    workbook_path.parent.mkdir(parents=True, exist_ok=True)
+    workbook_path.write_text("not a workbook", encoding="utf-8")
+
+    reports = inventory_workbook_coverage(tmp_path)
+
+    assert reports[0].scan_status == "failed"
+    with pytest.raises(Exception, match="failed to scan"):
+        assert_workbook_scan_clean(
+            verify_workbook_backend(
+                tmp_path,
+                fail_on_scan_error=False,
+            )
+        )
+
+
+def test_formula_runner_gate_fails_for_formula_workbooks_without_runner(tmp_path: Path) -> None:
+    _write_formula_workbook(tmp_path / "modelo_390" / "files" / "390-test.xlsx")
+    report = verify_workbook_backend(tmp_path, fail_on_scan_error=True, require_formula_runner=False).model_copy(
+        update={
+            "runner": WorkbookRunnerAvailability(
+                status="unavailable",
+                engine=None,
+                executable=None,
+                detail="test runner unavailable",
+            )
+        }
+    )
+
+    with pytest.raises(Exception, match="require a local recalculation runner"):
+        assert_formula_workbook_runner_ready(report)

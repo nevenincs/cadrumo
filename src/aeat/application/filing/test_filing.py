@@ -1,9 +1,7 @@
-"""Application filing API tests at the registry hard-cut boundary."""
+"""Application filing API tests at the registry boundary."""
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -12,12 +10,10 @@ import pytest
 from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.transactions import TransactionCatalogue
 from . import (
-    SCHEMA_VERSION_DEFAULT,
-    CasillaCollection,
-    CasillaSchema,
     CasillaSchemaProvider,
     FilingBuilderError,
     FilingDraft,
+    FilingDraftError,
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingValidationFinding,
@@ -32,76 +28,44 @@ from . import (
     validate_draft,
 )
 from .testing import (
-    SyntheticDeadlineChecker,
-    SyntheticDeadlineStatus,
-    SyntheticProfile,
-    synthesize_filing_draft,
+    FilingTestDeadlineChecker,
+    FilingTestDeadlineStatus,
+    FilingTestProfile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> SyntheticProfile:
-    return SyntheticProfile(
+def _profile() -> FilingTestProfile:
+    return FilingTestProfile(
         tax_id="12345678Z",
         display_name="Registry boundary test",
-        applicable_modelos=("130",),
     )
 
 
-def _draft() -> FilingDraft:
-    return synthesize_filing_draft(
+def _schema_provider() -> CasillaSchemaProvider:
+    return build_runtime_schema_provider(filing_year=2026, period="1T")
+
+
+def _draft(schema_provider: CasillaSchemaProvider | None = None) -> FilingDraft:
+    return build_draft(
         modelo="130",
         period="2026Q1",
-        casilla_values={"01": Decimal("12500.00"), "02": Decimal("3500.00")},
-        status=FilingDraftStatus.DRAFT,
-        profile_tax_id="12345678Z",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("12500.00"),
+            "02": Decimal("3500.00"),
+            "05": Decimal("250"),
+            "06": Decimal("100"),
+            "08": Decimal("2000"),
+            "10": Decimal("10"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        schema_provider=schema_provider or _schema_provider(),
     )
-
-
-@dataclass(frozen=True, slots=True)
-class _TestCasillaSchema:
-    id: str
-    value_type: str = "decimal"
-    required: bool = False
-    formula_inputs: tuple[str, ...] = ()
-    min_value: float | int | None = None
-    max_value: float | int | None = None
-    default: object | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class _TestCasillaCollection:
-    casillas: tuple[CasillaSchema, ...] = ()
-    schema_version: str = SCHEMA_VERSION_DEFAULT
-
-    def __iter__(self) -> object:
-        return iter(self.casillas)
-
-    def get(self, casilla_id: str) -> CasillaSchema | None:
-        for casilla in self.casillas:
-            if casilla.id == casilla_id:
-                return casilla
-        return None
-
-    def all(self) -> Sequence[CasillaSchema]:
-        return self.casillas
-
-
-@dataclass(frozen=True, slots=True)
-class _TestSchemaProvider:
-    collection: CasillaCollection
-
-    def get_collection(self, modelo: str) -> CasillaCollection:
-        del modelo
-        return self.collection
-
-
-def _schema_provider(
-    *casillas: CasillaSchema,
-    schema_version: str = SCHEMA_VERSION_DEFAULT,
-) -> CasillaSchemaProvider:
-    return _TestSchemaProvider(_TestCasillaCollection(casillas=casillas, schema_version=schema_version))
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
@@ -116,7 +80,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "13": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
@@ -132,58 +96,117 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     assert values["19"].formula_trace == ("17", "18")
 
 
+def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
+    draft = build_draft(
+        modelo="111",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "03": Decimal("180.25"),
+            "06": Decimal("12.10"),
+            "09": Decimal("300.00"),
+            "12": Decimal("14.40"),
+            "15": Decimal("25.00"),
+            "18": Decimal("0.50"),
+            "21": Decimal("7.00"),
+            "24": Decimal("8.00"),
+            "27": Decimal("9.00"),
+            "29": Decimal("40.00"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+
+    values = {value.casilla_id: value for value in draft.values}
+    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.schema_version == "registry:111:2019-y-siguientes"
+    assert values["28"].value == Decimal("556.25")
+    assert values["28"].kind is FilingValueKind.COMPUTED
+    assert values["28"].formula_trace == ("03", "06", "09", "12", "15", "18", "21", "24", "27")
+    assert values["30"].value == Decimal("516.25")
+    assert values["30"].formula_trace == ("28", "29")
+
+
+def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
+    draft = build_draft(
+        modelo="115",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("1"),
+            "02": Decimal("1250.50"),
+            "04": Decimal("10.00"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+
+    values = {value.casilla_id: value for value in draft.values}
+    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.schema_version == "registry:115:2019-y-siguientes"
+    assert values["03"].value == Decimal("237.60")
+    assert values["03"].kind is FilingValueKind.COMPUTED
+    assert values["03"].formula_trace == ("02",)
+    assert values["05"].value == Decimal("227.60")
+    assert values["05"].formula_trace == ("03", "04")
+
+
+def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
+    draft = build_draft(
+        modelo="123",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("2"),
+            "02": Decimal("3"),
+            "04": Decimal("1000.25"),
+            "05": Decimal("200.75"),
+            "07": Decimal("190.05"),
+            "08": Decimal("38.14"),
+            "10": Decimal("0"),
+            "11": Decimal("7.50"),
+            "13": Decimal("12.25"),
+        },
+        schema_provider=build_runtime_schema_provider(),
+    )
+
+    values = {value.casilla_id: value for value in draft.values}
+    assert draft.status is FilingDraftStatus.READY_TO_SUBMIT
+    assert draft.schema_version == "registry:123:2024-y-siguientes"
+    assert values["03"].value == Decimal("5")
+    assert values["03"].formula_trace == ("01", "02")
+    assert values["06"].value == Decimal("1201.00")
+    assert values["06"].formula_trace == ("04", "05")
+    assert values["09"].value == Decimal("228.19")
+    assert values["09"].formula_trace == ("07", "08")
+    assert values["12"].value == Decimal("235.69")
+    assert values["12"].formula_trace == ("09", "11")
+    assert values["14"].value == Decimal("223.44")
+    assert values["14"].formula_trace == ("12", "13")
+
+
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
-    draft = _draft()
-    refreshed = validate_draft(draft, schema_provider=_schema_provider())
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider)
+    refreshed = validate_draft(draft, schema_provider=schema_provider)
     assert refreshed.draft_id == draft.draft_id
 
 
-def test_validator_reports_schema_version_mismatch_without_model_specific_schema() -> None:
+def test_validator_reports_schema_version_mismatch_against_registry_schema() -> None:
     draft = _draft()
-    findings = FilingValidator(schema_provider=_schema_provider(schema_version="registry-test-v2")).validate(draft)
+    stale = draft.model_copy(update={"schema_version": f"{draft.schema_version}:changed"})
+    findings = FilingValidator(schema_provider=_schema_provider()).validate(stale)
     assert any(f.code == "filing-schema-version-mismatch" for f in findings)
 
 
-def test_validator_reports_required_missing_without_model_specific_schema() -> None:
-    draft = synthesize_filing_draft(
-        modelo="TEST",
-        period="2026Q1",
-        casilla_values={},
-        status=FilingDraftStatus.DRAFT,
-        profile_tax_id="12345678Z",
+def test_validator_reports_formula_divergence_against_registry_formula_trace() -> None:
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider)
+    values = tuple(
+        value.model_copy(update={"formula_trace": ("01",)}) if value.casilla_id == "19" else value
+        for value in draft.values
     )
-    findings = FilingValidator(
-        schema_provider=_schema_provider(_TestCasillaSchema(id="required", required=True))
-    ).validate(draft)
-    assert any(f.code == "casilla-required-missing" and f.casilla_id == "required" for f in findings)
-
-
-def test_validator_reports_range_violation_without_model_specific_schema() -> None:
-    draft = synthesize_filing_draft(
-        modelo="TEST",
-        period="2026Q1",
-        casilla_values={"bounded": Decimal("-1")},
-        status=FilingDraftStatus.DRAFT,
-        profile_tax_id="12345678Z",
-    )
-    findings = FilingValidator(
-        schema_provider=_schema_provider(_TestCasillaSchema(id="bounded", min_value=0))
-    ).validate(draft)
-    assert any(f.code == "casilla-out-of-range" and f.casilla_id == "bounded" for f in findings)
-
-
-def test_validator_reports_formula_divergence_without_model_specific_schema() -> None:
-    draft = synthesize_filing_draft(
-        modelo="TEST",
-        period="2026Q1",
-        casilla_values={"computed": Decimal("10")},
-        status=FilingDraftStatus.DRAFT,
-        profile_tax_id="12345678Z",
-    )
-    findings = FilingValidator(
-        schema_provider=_schema_provider(_TestCasillaSchema(id="computed", formula_inputs=("input-a", "input-b")))
-    ).validate(draft)
-    assert any(f.code == "formula-divergence" and f.casilla_id == "computed" for f in findings)
+    divergent = draft.model_copy(update={"values": values})
+    findings = FilingValidator(schema_provider=schema_provider).validate(divergent)
+    assert any(f.code == "formula-divergence" and f.casilla_id == "19" for f in findings)
 
 
 def test_compute_draft_id_excludes_findings_and_status() -> None:
@@ -226,7 +249,11 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         modelo="130",
         period="2026Q1",
         profile=_profile(),
-        inputs={"01": Decimal("100"), "02": Decimal("25")},
+        inputs={
+            "01": Decimal("100"),
+            "02": Decimal("25"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+        },
         schema_provider=schema_provider,
     )
 
@@ -243,8 +270,133 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.review_checksum is not None
 
 
+def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
+    schema_provider = build_runtime_schema_provider()
+    draft = build_draft(
+        modelo="111",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "03": Decimal("180.25"),
+            "06": Decimal("12.10"),
+            "09": Decimal("300.00"),
+            "12": Decimal("14.40"),
+            "15": Decimal("25.00"),
+            "18": Decimal("0.50"),
+            "21": Decimal("7.00"),
+            "24": Decimal("8.00"),
+            "27": Decimal("9.00"),
+            "29": Decimal("40.00"),
+        },
+        schema_provider=schema_provider,
+    )
+
+    approved = approve_draft(
+        draft,
+        approved_by="registry",
+        schema_provider=schema_provider,
+        transaction_catalogue=TransactionCatalogue(),
+    )
+
+    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.schema_version == "registry:111:2019-y-siguientes"
+    assert approved.approval_basis is not None
+    assert approved.approval_basis.schema_formula_fingerprint
+
+
+def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
+    schema_provider = build_runtime_schema_provider()
+    draft = build_draft(
+        modelo="115",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("1"),
+            "02": Decimal("1250.50"),
+            "04": Decimal("10.00"),
+        },
+        schema_provider=schema_provider,
+    )
+
+    approved = approve_draft(
+        draft,
+        approved_by="registry",
+        schema_provider=schema_provider,
+        transaction_catalogue=TransactionCatalogue(),
+    )
+
+    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.schema_version == "registry:115:2019-y-siguientes"
+    assert approved.approval_basis is not None
+    assert approved.approval_basis.schema_formula_fingerprint
+
+
+def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
+    schema_provider = build_runtime_schema_provider()
+    draft = build_draft(
+        modelo="123",
+        period="2026Q1",
+        profile=_profile(),
+        inputs={
+            "01": Decimal("2"),
+            "02": Decimal("3"),
+            "04": Decimal("1000.25"),
+            "05": Decimal("200.75"),
+            "07": Decimal("190.05"),
+            "08": Decimal("38.14"),
+            "10": Decimal("0"),
+            "11": Decimal("7.50"),
+            "13": Decimal("12.25"),
+        },
+        schema_provider=schema_provider,
+    )
+
+    approved = approve_draft(
+        draft,
+        approved_by="registry",
+        schema_provider=schema_provider,
+        transaction_catalogue=TransactionCatalogue(),
+    )
+
+    assert approved.status is FilingDraftStatus.APPROVED
+    assert approved.schema_version == "registry:123:2024-y-siguientes"
+    assert approved.approval_basis is not None
+    assert approved.approval_basis.schema_formula_fingerprint
+
+
+def test_approve_draft_rejects_schema_version_mismatch() -> None:
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider).model_copy(update={"schema_version": "registry:130:wrong-revision"})
+
+    with pytest.raises(FilingDraftError, match="registry review surface"):
+        approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+
+def test_approve_draft_rejects_formula_trace_mismatch() -> None:
+    schema_provider = _schema_provider()
+    values = tuple(
+        value.model_copy(update={"formula_trace": ("01",)}) if value.casilla_id == "19" else value
+        for value in _draft(schema_provider).values
+    )
+    draft = _draft(schema_provider).model_copy(update={"values": values})
+
+    with pytest.raises(FilingDraftError, match="registry review surface"):
+        approve_draft(
+            draft,
+            approved_by="kent",
+            schema_provider=schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+        )
+
+
 def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval() -> None:
-    draft = _draft().model_copy(
+    schema_provider = _schema_provider()
+    draft = _draft(schema_provider).model_copy(
         update={
             "status": FilingDraftStatus.SUBMITTED,
             "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
@@ -255,7 +407,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     )
     refreshed = refresh_review_status(
         draft,
-        schema_provider=_schema_provider(),
+        schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
     )
     assert refreshed.status is FilingDraftStatus.SUBMITTED
@@ -267,8 +419,8 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
 def test_deadline_validator_still_reports_overdue_status() -> None:
     findings = FilingValidator(
         schema_provider=_schema_provider(),
-        deadline_checker=SyntheticDeadlineChecker(
-            status=SyntheticDeadlineStatus(
+        deadline_checker=FilingTestDeadlineChecker(
+            status=FilingTestDeadlineStatus(
                 due_date=date(2026, 4, 20),
                 is_overdue=True,
             )

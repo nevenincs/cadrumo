@@ -27,6 +27,7 @@ from ...domain.filing import (
     FilingDraft,
     FilingDraftError,
     FilingDraftStatus,
+    FilingValidator,
     derive_validation_status,
 )
 from ...domain.transactions import Transaction, TransactionCatalogue
@@ -223,6 +224,7 @@ def approve_draft(
 
     if derive_validation_status(draft.findings) is not FilingDraftStatus.READY_TO_SUBMIT:
         raise FilingDraftError("only READY_TO_SUBMIT drafts may be approved")
+    _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
     timestamp = approved_at or datetime.now(tz=UTC)
     approval_basis = compute_current_approval_basis(
@@ -428,6 +430,18 @@ def _has_review_metadata(draft: FilingDraft) -> bool:
             draft.review_checksum,
         )
     )
+
+
+def _require_registry_review_alignment(
+    draft: FilingDraft,
+    *,
+    schema_provider: CasillaSchemaProvider,
+) -> None:
+    findings = FilingValidator(schema_provider=schema_provider).validate(draft)
+    if derive_validation_status(findings) is FilingDraftStatus.READY_TO_SUBMIT:
+        return
+    codes = tuple(finding.code for finding in findings)
+    raise FilingDraftError(f"draft does not match the registry review surface: {codes!r}")
 
 
 def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:
