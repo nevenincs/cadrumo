@@ -863,6 +863,8 @@ cli:
       auto_detect_failed: Auto-detection of ledger format failed
       edit_requires_one: At least one field modification is required for editing
       filter_parse_error: Failed to parse ledger filter
+      invalid_source: 'The ledger file cannot be imported: {reason}'
+      invalid_source_unknown: invalid source
       invalid_skip: Invalid skip field
       invalid_split_format: Invalid split format
       invalid_split_value: Invalid split value
@@ -870,6 +872,7 @@ cli:
       n26_auto_detect_failed: Auto-detection of N26 format failed
       row_not_found: Ledger row not found
       set_parse_error: Failed to parse field assignment (field=value)
+      source_not_found: 'Source file not found: {source}'
       unknown_provider: Unknown ledger provider
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
@@ -877,7 +880,7 @@ cli:
       path_help: Path to the bank statement file or directory
       period_help: Fiscal period for the import
       provider_help: Statement format provider (e.g., N26, Revolut)
-      source_help: Data source (e.g., file, api)
+      source_help: Original file used to verify imported rows
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
     labels:
@@ -891,6 +894,10 @@ cli:
       'no': 'No'
       rows: Rows
       skipped: Skipped
+      source: Source
+      dialect: Detected format
+      valid: Valid
+      warnings: Warnings
       'yes': 'Yes'
     review:
       filter_help: Filter rows by status, period, issue, or import

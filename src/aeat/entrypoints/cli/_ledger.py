@@ -1,11 +1,22 @@
 from __future__ import annotations
 
+import hashlib
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import typer
 
+from ...adapters.inbound.financial.providers import (
+    CsvProvider,
+    FinancialProvider,
+    FinancialProviderError,
+    OfxProvider,
+    PdfN26Provider,
+    ProviderValidation,
+    XlsxProvider,
+    detect_provider,
+)
 from ...application.review import EditParseError, FilterParseError, LedgerEditSpec, LedgerReviewFilterSpec
 from ...application.user_cli import (
     LedgerSplit,
@@ -52,14 +63,6 @@ def ledger_import(
     period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
 ) -> None:
     """Import a financial-statement file via the existing provider registry."""
-    from ...adapters.inbound.financial.providers import (
-        CsvProvider,
-        OfxProvider,
-        PdfN26Provider,
-        XlsxProvider,
-        detect_provider,
-    )
-
     pid = provider.strip().lower()
     if pid == "auto":
         chosen = detect_provider(path)
@@ -79,7 +82,12 @@ def ledger_import(
         chosen = PdfN26Provider()
     else:
         raise _bad(tr("cli.ledger.errors.unknown_provider", provider=provider))
-    raws = list(chosen.ingest(path))
+    validation = _validate_import_source(chosen, path)
+    source_verification = _build_source_verification(source=source, verify=verify)
+    try:
+        raws = list(chosen.ingest(path))
+    except FinancialProviderError as exc:
+        raise _bad(tr("cli.ledger.errors.invalid_source").format(reason=str(exc))) from exc
     if dry_run:
         payload = {
             "rows": len(raws),
@@ -87,15 +95,16 @@ def ledger_import(
             "skipped": 0,
             "dry_run": True,
             "verify": verify,
+            "validation": _validation_payload(validation),
+            "source": source_verification,
         }
-        _emit(
-            ctx,
-            payload,
-            [
-                f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
-                f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}",
-            ],
-        )
+        lines = [
+            f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
+            f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}",
+        ]
+        if verbose or verify:
+            lines.extend(_validation_lines(validation, source_verification))
+        _emit(ctx, payload, lines)
         return
     summary = _tx_repo().merge_raw_transactions(raws, direction_resolver=_direction_resolver)
     payload = {
@@ -105,16 +114,63 @@ def ledger_import(
         "dry_run": False,
         "verify": verify,
         "period": _canonical_period(period) if period else None,
+        "validation": _validation_payload(validation),
+        "source": source_verification,
     }
+    lines = [
+        f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
+        f"{tr('cli.ledger.labels.imported')}\t{summary.imported}",
+        f"{tr('cli.ledger.labels.skipped')}\t{summary.skipped}",
+    ]
+    if verbose or verify:
+        lines.extend(_validation_lines(validation, source_verification))
     _emit(
         ctx,
         payload,
-        [
-            f"{tr('cli.ledger.labels.rows')}\t{len(raws)}",
-            f"{tr('cli.ledger.labels.imported')}\t{summary.imported}",
-            f"{tr('cli.ledger.labels.skipped')}\t{summary.skipped}",
-        ],
+        lines,
     )
+
+
+def _validate_import_source(provider: FinancialProvider, path: Path) -> ProviderValidation:
+    validation = provider.validate_source(path)
+    if not validation.is_valid:
+        reason = "; ".join(validation.warnings) or tr("cli.ledger.errors.invalid_source_unknown")
+        raise _bad(tr("cli.ledger.errors.invalid_source").format(reason=reason))
+    return validation
+
+
+def _build_source_verification(*, source: Path | None, verify: bool) -> dict[str, Any]:
+    if not verify:
+        return {"requested": False, "path": None, "sha256": None}
+    if source is None:
+        return {"requested": True, "path": None, "sha256": None}
+    resolved = source.resolve()
+    if not resolved.exists() or not resolved.is_file():
+        raise _bad(tr("cli.ledger.errors.source_not_found").format(source=source))
+    digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
+    return {"requested": True, "path": str(resolved), "sha256": digest}
+
+
+def _validation_payload(validation: ProviderValidation) -> dict[str, Any]:
+    return {
+        "valid": validation.is_valid,
+        "warnings": list(validation.warnings),
+        "encoding": validation.detected_encoding,
+        "dialect": validation.detected_dialect,
+    }
+
+
+def _validation_lines(validation: ProviderValidation, source_verification: dict[str, Any]) -> list[str]:
+    valid_label = tr("cli.ledger.labels.yes") if validation.is_valid else tr("cli.ledger.labels.no")
+    lines = [
+        f"{tr('cli.ledger.labels.valid')}\t{valid_label}",
+        f"{tr('cli.ledger.labels.dialect')}\t{validation.detected_dialect or '-'}",
+    ]
+    if validation.warnings:
+        lines.append(f"{tr('cli.ledger.labels.warnings')}\t{'; '.join(validation.warnings)}")
+    if source_verification["requested"]:
+        lines.append(f"{tr('cli.ledger.labels.source')}\t{source_verification['path'] or '-'}")
+    return lines
 
 
 @app.command("review", help=tr("cli.ledger.review.help"))

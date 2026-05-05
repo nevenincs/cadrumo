@@ -882,6 +882,8 @@ cli:
       auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
       edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges
       filter_parse_error: A naplószűrő elemzése sikertelen
+      invalid_source: 'A naplófájl nem importálható: {reason}'
+      invalid_source_unknown: érvénytelen forrás
       invalid_skip: Érvénytelen kihagyási mező
       invalid_split_format: Érvénytelen felosztási formátum
       invalid_split_value: Érvénytelen felosztási érték
@@ -890,6 +892,7 @@ cli:
       n26_auto_detect_failed: Az N26 formátum automatikus felismerése sikertelen
       row_not_found: A naplósor nem található
       set_parse_error: A mezőhozzárendelés (mező=érték) elemzése sikertelen
+      source_not_found: 'A forrásfájl nem található: {source}'
       unknown_provider: Ismeretlen naplószolgáltató
     import:
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
@@ -897,7 +900,7 @@ cli:
       path_help: A bankkivonat fájl vagy könyvtár útvonala
       period_help: Az importálás adózási időszaka
       provider_help: Kivonatformátum-szolgáltató (pl. N26, Revolut)
-      source_help: Adatforrás (pl. fájl, api)
+      source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl
       verbose_help: Részletes információk megjelenítése az importálás során
       verify_help: Bejegyzések ellenőrzése az importálás után
     labels:
@@ -911,6 +914,10 @@ cli:
       'no': Nem
       rows: Sorok
       skipped: Kihagyva
+      source: Forrás
+      dialect: Felismert formátum
+      valid: Érvényes
+      warnings: Figyelmeztetések
       'yes': Igen
     review:
       filter_help: Sorok szűrése status, period, issue vagy import szerint

@@ -212,6 +212,89 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
     assert json.loads(_json_output(overview))["transactions"] == 0
 
 
+def test_ledger_import_verify_source_records_original_file_digest(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import hashlib
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    statement = tmp_path / "n26-q1.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    source = tmp_path / "n26-q1.pdf"
+    source_bytes = b"original downloaded bank statement"
+    source.write_bytes(source_bytes)
+
+    imported = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "n26",
+            "--dry-run",
+            "--verify",
+            "--source",
+            str(source),
+            "--verbose",
+        ]
+    )
+
+    assert imported.exit_code == 0, imported.output
+    payload = json.loads(_json_output(imported))
+    assert payload["dry_run"] is True
+    assert payload["validation"]["valid"] is True
+    assert payload["source"]["requested"] is True
+    assert payload["source"]["path"] == str(source.resolve())
+    assert payload["source"]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
+
+
+def test_ledger_import_verify_source_rejects_missing_original_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    statement = tmp_path / "n26-q1.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    missing_source = Path("missing.pdf")
+
+    imported = _invoke(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "n26",
+            "--dry-run",
+            "--verify",
+            "--source",
+            str(missing_source),
+        ]
+    )
+
+    assert imported.exit_code != 0
+    assert "missing.pdf" in imported.output
+
+
 def test_declaration_verify_accepts_file_not_export_option() -> None:
     result = _invoke(["app", "declaration", "verify", "--help"])
 
