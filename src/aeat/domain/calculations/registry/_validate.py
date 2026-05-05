@@ -1223,6 +1223,7 @@ class RegistryValidator:
             "deadline window": "deadline_windows",
             "filing schedule": "filing_schedules",
             "support removal decision": "support_removal_decisions",
+            "dependency classification": "dependency_classifications",
         }
 
         for construct in revision.constructs:
