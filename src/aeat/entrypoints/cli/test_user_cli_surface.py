@@ -173,10 +173,10 @@ def test_auth_configure_supports_user_provider_aliases(monkeypatch: pytest.Monke
     unavailable = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
 
     assert providers.exit_code == 0, providers.output
-    assert "clave-permanente" in providers.output
+    assert "clave_permanente" in providers.output
     assert "unavailable" in providers.output
     assert configure.exit_code == 0, configure.output
-    assert "clave-movil" in configure.output
+    assert "clave_movil" in configure.output
     assert unavailable.exit_code != 0
     assert "unavailable-provider" in unavailable.output
 

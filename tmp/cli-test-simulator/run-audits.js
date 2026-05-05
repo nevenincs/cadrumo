@@ -24,10 +24,12 @@ console.log(`Completion Rate: ${metric(audit, "Completion Rate")}`);
 console.log(`Commands To Success: ${metric(audit, "Commands To Success")}`);
 console.log(`Tax-Safety Risk: ${metric(audit, "Tax-Safety Risk")}`);
 console.log("Top findings:");
-audit.findings.slice(0, 4).forEach((section) => {
+const materialSections = audit.findings.filter((section) => section.items.length > 0);
+materialSections.slice(0, 4).forEach((section) => {
   const first = section.items[0];
   if (first) console.log(`- ${section.title}: ${first.label} (${first.count})`);
 });
+if (materialSections.length === 0) console.log("- No material findings in this run set.");
 if (args.out) console.log(`Wrote: ${args.out}`);
 
 function parseArgs(values) {

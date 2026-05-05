@@ -110,8 +110,8 @@
       const validationPending = rng() < 0.25;
       const guessOldCommand = rng() < 0.34;
 
-      function event(command, outcome, finding, recommendation) {
-        events.push({ command, outcome, finding, recommendation });
+      function event(command, outcome, finding, recommendation, material = outcome !== "ok") {
+        events.push({ command, outcome, finding, recommendation, material });
         if (outcome === "error") state.risks.push(command);
       }
 
@@ -126,7 +126,7 @@
         }
         event(
           "aeat setup auth status",
-          "warn",
+          "ok",
           "Setup And Profile Friction",
           "Auth state must be inspectable without changing it.",
         );
@@ -257,7 +257,7 @@
 
       event(
         `aeat app ledger review --filter status=pending --filter period=${period}`,
-        "warn",
+        "ok",
         "Ledger Record Gaps",
         "Manual ledger review is visible through status filters.",
       );
@@ -494,7 +494,7 @@
       aggregate.totalWarnings += run.warnings;
       aggregate.totalErrors += run.errors;
       aggregate.risks += run.risks.length;
-      run.events.forEach((event) => {
+      run.events.filter((event) => event.material).forEach((event) => {
         const section =
           aggregate.findings[event.finding] ||
           aggregate.findings["Suggested CLI Additions"];
