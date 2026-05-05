@@ -3919,6 +3919,9 @@ application surface, and the old authority has been deleted.
        treatment from the source classification, so callers can distinguish
        annual-settlement inputs from factual evidence while resolving the same
        observation backend.
+     - [x] Relation observation resolution now respects target filing periods,
+       so a quarterly filing cannot be forced to provide annual-summary
+       relation observations that are only active for `0A`.
   - [ ] Implement the dependency classification gate for every supported
      modelo. A supported modelo must be declared as direct dependency, factual
      evidence dependency, or non-dependency before Modelo 100 can emit a
