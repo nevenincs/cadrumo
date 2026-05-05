@@ -64,8 +64,16 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
     assert snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
     assert snapshot.sources["aeat-dr-130-2019-v12"].evidence_tier == "layout_authority"
     assert tuple(snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
-    assert tuple(snapshot.live_cross_references) == ("modelo-130-static-official",)
+    assert set(snapshot.live_cross_references) == {
+        "modelo-130-static-official",
+        "modelo-130-filed-declarations-read",
+    }
     assert snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
+    filed_read = snapshot.live_cross_references["modelo-130-filed-declarations-read"]
+    assert filed_read.surface == "authenticated_read_surface"
+    assert set(filed_read.allowed_methods).issubset({"GET", "HEAD", "OPTIONS"})
+    assert filed_read.requires_authentication is True
+    assert filed_read.requires_aeat_authorization is True
     assert tuple(snapshot.workbook_parity_refs) == ("modelo-130-dr-xls",)
     assert tuple(snapshot.verification_expectations) == ("modelo-130-calculation-verification",)
     assert snapshot.support_removal_decisions == {}
@@ -80,6 +88,7 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
         "modelo-130-deadline",
         "modelo-130-export",
         "modelo-130-extractor",
+        "modelo-130-filed-declarations-observation",
         "modelo-130-filing",
         "modelo-130-portal-cross-reference",
         "modelo-130-verification",
@@ -94,7 +103,11 @@ def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() ->
             "sources": {
                 source_id: source.model_copy(update={"evidence_tier": "layout_authority"})
                 for source_id, source in snapshot.sources.items()
-            }
+            },
+            "live_cross_references": {
+                cross_reference_id: cross_reference.model_copy(update={"evidence_tier": "layout_authority"})
+                for cross_reference_id, cross_reference in snapshot.live_cross_references.items()
+            },
         }
     )
 
