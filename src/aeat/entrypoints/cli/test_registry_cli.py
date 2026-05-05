@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import typer
 from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
@@ -24,7 +26,12 @@ from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 from . import app
-from .registry import _filed_data_listing_row, select_declarations_for_capture, verify_filed_state
+from .registry import (
+    _filed_data_listing_row,
+    capture_source_filed_data,
+    select_declarations_for_capture,
+    verify_filed_state,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -434,6 +441,31 @@ def test_capture_filed_data_cli_refuses_expired_session_before_local_writes(tmp_
 
     assert result.exit_code != 0
     assert "AEAT session is expired" in result.output
+    assert not output_root.exists()
+
+
+def test_capture_source_filed_data_refuses_expired_session_before_local_writes(tmp_path: Path) -> None:
+    now = datetime.now(UTC)
+    _seed_session(
+        tmp_path,
+        AuthProviderKind.CLAVE_MOVIL,
+        authenticated_at=now - timedelta(hours=2),
+        idle_deadline=now - timedelta(minutes=1),
+    )
+    output_root = tmp_path / "captured-sources"
+
+    with pytest.raises(typer.BadParameter, match="AEAT session is expired"):
+        asyncio.run(
+            capture_source_filed_data(
+                modelo="180",
+                year=2026,
+                period="0A",
+                output_root=output_root,
+                registry_root=_REGISTRY_ROOT,
+                source_root=PROJECT_ROOT,
+            )
+        )
+
     assert not output_root.exists()
 
 

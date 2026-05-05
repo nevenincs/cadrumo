@@ -17,6 +17,8 @@ from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.sede import (
     Declaration,
     FiledDeclarationObservationStore,
+    capture_previous_filing_observations,
+    capture_relation_source_observations,
     open_declarations_register,
     registry_observation_from_filed_declaration,
     shared_playwright,
@@ -127,6 +129,21 @@ class FiledDataCaptureReport(BaseModel):
     output_root: str
     modelo: str
     year: int
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+
+
+class SourceFiledDataCaptureReport(BaseModel):
+    """Read-only source-observation capture report for one target filing."""
+
+    model_config = ConfigDict(frozen=True)
+
+    output_root: str
+    target_modelo: str
+    target_year: int
+    target_period: str
     captured_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
@@ -473,6 +490,84 @@ async def capture_filed_data(
     )
 
 
+async def capture_source_filed_data(
+    *,
+    modelo: str,
+    year: int,
+    period: str,
+    output_root: Path,
+    registry_root: Path = Path("registry/aeat"),
+    source_root: Path = Path("."),
+) -> SourceFiledDataCaptureReport:
+    """Capture filed observations required by a target filing's registry dependencies."""
+
+    session, settings = await _active_verified_session()
+    modelos, catalogues = load_registry_tree(registry_root)
+    modelo_definition = next((item for item in modelos if item.id == modelo), None)
+    if modelo_definition is None:
+        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=modelo))
+    snapshot = build_snapshot(
+        modelo_definition,
+        catalogues,
+        source_root=source_root,
+        filing_year=year,
+        period=period,
+    )
+    store = FiledDeclarationObservationStore(output_root)
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    casilla_count = 0
+    seen: set[tuple[str, int, str, str]] = set()
+
+    async with shared_playwright(session) as playwright:
+        observations = (
+            await capture_previous_filing_observations(
+                session,
+                snapshot.revision,
+                filing_year=year,
+                period=period,
+                settings=settings,
+                playwright=playwright,
+                artefact_sink=store.persist_artefact,
+            )
+        ) + (
+            await capture_relation_source_observations(
+                session,
+                snapshot.revision,
+                filing_year=year,
+                period=period,
+                settings=settings,
+                playwright=playwright,
+                artefact_sink=store.persist_artefact,
+            )
+        )
+    for observation in observations:
+        key = (observation.modelo, observation.ejercicio, observation.period, observation.expediente_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        manifest_path = store.persist_observation(observation)
+        observation_paths.append(manifest_path.relative_to(output_root).as_posix())
+        artefact_refs.extend(
+            storage_ref
+            for artefact in observation.artefacts
+            for storage_ref in (artefact.storage_ref,)
+            if storage_ref is not None
+        )
+        casilla_count += len(observation.casillas)
+
+    return SourceFiledDataCaptureReport(
+        output_root=str(output_root),
+        target_modelo=modelo,
+        target_year=year,
+        target_period=period,
+        captured_count=len(observation_paths),
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+    )
+
+
 def verify_filed_state(
     *,
     observation_path: Path,
@@ -742,6 +837,78 @@ def capture_filed_data_cmd(
     _emit_metric("artefact_refs", ",".join(report.artefact_refs))
 
 
+@app.command("capture-source-filed-data", help=tr("cli.registry.capture_source_filed_data_help"))
+def capture_source_filed_data_cmd(
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.registry.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", min=2000, max=2099, help=tr("cli.registry.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.registry.period_help")),
+    ],
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.registry.output_root_help"),
+        ),
+    ] = Path("var/aeat/filed-declarations"),
+    registry_root: Annotated[
+        Path,
+        typer.Option(
+            "--registry-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = Path("registry/aeat"),
+    source_root: Annotated[
+        Path,
+        typer.Option(
+            "--source-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.verify_source_root_help"),
+        ),
+    ] = Path("."),
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help=tr("cli.registry.capture_source_filed_data_json_help")),
+    ] = False,
+) -> None:
+    """Capture filed observations required by a target filing's dependencies."""
+
+    report = asyncio.run(
+        capture_source_filed_data(
+            modelo=modelo,
+            year=year,
+            period=period,
+            output_root=output_root,
+            registry_root=registry_root,
+            source_root=source_root,
+        )
+    )
+    if json_output:
+        typer.echo(report.model_dump_json(indent=2))
+        return
+    _emit_metric("captured_count", report.captured_count)
+    _emit_metric("casilla_count", report.casilla_count)
+    _emit_metric("observation_paths", ",".join(report.observation_paths))
+    _emit_metric("artefact_refs", ",".join(report.artefact_refs))
+
+
 @app.command("verify-filed-state", help=tr("cli.registry.verify_filed_state_help"))
 def verify_filed_state_cmd(
     observation_path: Annotated[
@@ -916,9 +1083,12 @@ __all__ = [
     "FiledDataCaptureReport",
     "FiledStateVerificationReport",
     "RegistryTreeReport",
+    "SourceFiledDataCaptureReport",
     "app",
     "capture_filed_data",
     "capture_filed_data_cmd",
+    "capture_source_filed_data",
+    "capture_source_filed_data_cmd",
     "inspect_registry_cmd",
     "inspect_registry_tree",
     "render_report_json",
