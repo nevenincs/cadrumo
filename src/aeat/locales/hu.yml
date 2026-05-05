@@ -734,25 +734,25 @@ cli:
     profile:
       app_help: Pénzügyi profilok kezelése
       errors:
-        at_least_one: Legalább egy mező vagy profil szükséges
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: Úgy értette, hogy...?
         eligible_categories: Választható kategóriák
         family_aliases: Családi álnevek
         invalid_ratio: Érvénytelen arány vagy százalék
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Ismeretlen kulcs vagy tulajdonság a profilban
       headers:
         ratios: Arányok / Felosztások
       labels:
         no_active: Nincs kiválasztott aktív profil
-        profile_not_found: Pénzügyi profil nem található
-        switched: Pénzügyi profil sikeresen átváltva
       ratios_help: Felosztási arányok meghatározása a pénzügyi profilhoz
       ratios_list_help: A profilban meghatározott felosztási arányok listázása
       set_ratio_help: Egy adott felosztási arány beállítása
-      set_ratio_key_help: Arány kulcsa vagy kategóriája
+      set_ratio_key_help: 'Arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
       set_ratio_value_help: Arány értéke (pl. 0.5 az 50%-hoz)
       unset_ratio_help: Egy adott felosztási arány törlése
-      unset_ratio_key_help: A törlendő arány kulcsa vagy kategóriája
+      unset_ratio_key_help: 'A törlendő arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
     txs:
       app_help: Banki tranzakciók kezelése
   financial_invoices:
@@ -911,7 +911,6 @@ cli:
       'no': Nem
       rows: Sorok
       skipped: Kihagyva
-      status: Állapot
       'yes': Igen
     review:
       filter_help: A felülvizsgálandó naplóbejegyzések szűrése (pl. dátum vagy összeg
@@ -1033,6 +1032,15 @@ cli:
     observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
       manifeszt
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Paritási forgatókönyvek és szalagok futtatása manuális ellenőrzésekhez
+    parity_output_help: A generált paritási szalag cél JSON fájlja
+    parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry
+      runtime ellen
+    parity_run_help: Egy mentett paritási forgatókönyv futtatása és az eredmény szalag
+      archiválása
+    parity_scenario_help: Paritási forgatókönyv JSON fájl elérési útja
+    parity_store_root_help: A generált paritási szalagok tárolására használt gyökérkönyvtár
+    parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
     period_help: cli.registry.period_help
     source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
       titkosított forrásmegfigyelési manifeszt
