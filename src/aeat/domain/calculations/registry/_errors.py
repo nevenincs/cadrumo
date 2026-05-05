@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from ....core.errors import AeatError
 
-class RegistryError(ValueError):
+
+class RegistryError(AeatError):
     """Base error for registry loading, resolution, and validation."""
 
 

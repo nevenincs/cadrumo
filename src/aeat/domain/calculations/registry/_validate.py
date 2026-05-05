@@ -20,6 +20,7 @@ from ._schema import (
     ModeloRevision,
     PeriodSelector,
     RegistryCatalogues,
+    RelationDefinition,
     SourceCitation,
     SourceReference,
 )
@@ -786,8 +787,6 @@ class RegistryValidator:
                     if source_modelo is None:
                         failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
                         continue
-                    if not relation.source_periods:
-                        failures.append(f"{relation_scope} must declare source periods")
                     if not relation.target_periods:
                         failures.append(f"{relation_scope} must declare target periods")
                     aggregation = relation.aggregation or {"op": "copy"}
@@ -805,32 +804,36 @@ class RegistryValidator:
                             f"matches no source revisions in modelo {source_modelo.id}"
                         )
                         continue
+                    relation_period_sets = RegistryValidator._relation_source_period_sets(relation)
                     for source_revision in source_revisions:
                         source_scope = f"{relation_scope} source revision {source_revision.id!r}"
                         source_values = RegistryValidator._revision_output_ids(source_revision)
                         if relation.source_output not in source_values:
                             failures.append(f"{source_scope} has no source output {relation.source_output!r}")
-                        unknown_source_periods = sorted(
-                            set(relation.source_periods).difference(source_revision.period_selector.periods)
-                        )
-                        if unknown_source_periods:
-                            failures.append(
-                                f"{source_scope} does not support source periods {unknown_source_periods!r}"
+                        for period_set_id, source_periods in relation_period_sets:
+                            unknown_source_periods = sorted(
+                                set(source_periods).difference(source_revision.period_selector.periods)
                             )
-                    failures.extend(
-                        RegistryValidator._validate_source_year_coverage(
-                            relation_scope,
-                            target_selector=revision.period_selector,
-                            source_revisions=source_revisions,
-                            source_periods=relation.source_periods,
-                            filing_year_delta=RegistryValidator._relation_filing_year_delta(
-                                relation.source_revision_selector
-                            ),
-                            fixed_source_year=RegistryValidator._relation_fixed_source_year(
-                                relation.source_revision_selector
-                            ),
+                            if unknown_source_periods:
+                                failures.append(
+                                    f"{source_scope} period set {period_set_id!r} "
+                                    f"does not support source periods {unknown_source_periods!r}"
+                                )
+                    for period_set_id, source_periods in relation_period_sets:
+                        failures.extend(
+                            RegistryValidator._validate_source_year_coverage(
+                                f"{relation_scope} period set {period_set_id!r}",
+                                target_selector=revision.period_selector,
+                                source_revisions=source_revisions,
+                                source_periods=source_periods,
+                                filing_year_delta=RegistryValidator._relation_filing_year_delta(
+                                    relation.source_revision_selector
+                                ),
+                                fixed_source_year=RegistryValidator._relation_fixed_source_year(
+                                    relation.source_revision_selector
+                                ),
+                            )
                         )
-                    )
         return failures
 
     @staticmethod
@@ -892,10 +895,27 @@ class RegistryValidator:
         source_periods = binding.selector.get("source_periods")
         if isinstance(source_periods, tuple) and all(isinstance(period, str) for period in source_periods):
             return source_periods
+        source_period_sets = binding.selector.get("source_period_sets")
+        if isinstance(source_period_sets, tuple):
+            periods: list[str] = []
+            for period_set in source_period_sets:
+                if isinstance(period_set, Mapping):
+                    period_set_periods = period_set.get("source_periods")
+                    if isinstance(period_set_periods, tuple) and all(
+                        isinstance(period, str) for period in period_set_periods
+                    ):
+                        periods.extend(period_set_periods)
+            return tuple(dict.fromkeys(periods))
         period = binding.selector.get("period")
         if isinstance(period, str):
             return (period,)
         return ()
+
+    @staticmethod
+    def _relation_source_period_sets(relation: RelationDefinition) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        if relation.source_period_sets:
+            return tuple((period_set.id, period_set.source_periods) for period_set in relation.source_period_sets)
+        return (("default", relation.source_periods),)
 
     @staticmethod
     def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:
@@ -1322,6 +1342,7 @@ class RegistryValidator:
             "justificante_pdf": {"justificante_pdf"},
             "export_record": {"submitted_file"},
             "official_workbook": {"official_workbook"},
+            "filed_declaration_register": {"submitted_file"},
         }
         expected = expected_by_surface[profile.surface]
         accepted = set(profile.accepted_artefact_kinds)

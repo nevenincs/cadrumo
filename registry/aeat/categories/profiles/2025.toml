@@ -91,8 +91,8 @@ display_label = "categories.registry.arrendamiento_vivienda_afecta"
 vat_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
-kind = "fixed_percentage"
-fixed_pct = "0.30"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.arrendamiento_vivienda_afecto.notes"
 
 [[profiles.proportionality.citations]]
@@ -138,8 +138,8 @@ display_label = "categories.registry.home_office_luz"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "fixed_percentage"
-fixed_pct = "0.30"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.suministros_home_office_luz.notes"
 
 [[profiles.proportionality.citations]]
@@ -162,8 +162,8 @@ display_label = "categories.registry.home_office_agua"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "fixed_percentage"
-fixed_pct = "0.30"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.suministros_home_office_agua.notes"
 
 [[profiles.proportionality.citations]]
@@ -186,8 +186,8 @@ display_label = "categories.registry.home_office_gas"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "fixed_percentage"
-fixed_pct = "0.30"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.suministros_home_office_gas.notes"
 
 [[profiles.proportionality.citations]]
@@ -210,8 +210,8 @@ display_label = "categories.registry.home_office_internet"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "fixed_percentage"
-fixed_pct = "0.30"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.suministros_home_office_internet.notes"
 
 [[profiles.proportionality.citations]]
@@ -234,7 +234,7 @@ display_label = "categories.registry.telefonia_movil"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.telefonia_movil.notes"
 
 [[profiles.proportionality.citations]]
@@ -257,7 +257,8 @@ display_label = "categories.registry.telefonia_fija"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "full_deductible"
+kind = "usage_ratio_home_area"
+default_ratio = "0.30"
 notes = "categories.registry.telefonia_fija.notes"
 
 [[profiles.proportionality.citations]]
@@ -395,7 +396,7 @@ display_label = "categories.registry.vehiculo_combustible"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.vehiculo_combustible.notes"
 
 [[profiles.proportionality.citations]]
@@ -418,7 +419,7 @@ display_label = "categories.registry.vehiculo_mantenimiento"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.vehiculo_mantenimiento.notes"
 
 [[profiles.proportionality.citations]]
@@ -441,7 +442,7 @@ display_label = "categories.registry.vehiculo_seguro"
 vat_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.vehiculo_seguro.notes"
 
 [[profiles.proportionality.citations]]
@@ -464,7 +465,7 @@ display_label = "categories.registry.vehiculo_peaje"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.vehiculo_peaje.notes"
 
 [[profiles.proportionality.citations]]
@@ -487,7 +488,7 @@ display_label = "categories.registry.vehiculo_parking"
 vat_hint = "general"
 
 [profiles.proportionality]
-kind = "requires_exclusive_use"
+kind = "usage_ratio_personal"
 notes = "categories.registry.vehiculo_parking.notes"
 
 [[profiles.proportionality.citations]]

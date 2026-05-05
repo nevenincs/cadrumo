@@ -40,6 +40,7 @@ def relation_source_requirements(
     *,
     filing_year: int,
     period: str,
+    source_schedule_ids: Mapping[str, str] | None = None,
 ) -> tuple[RegistryRelationSourceRequirement, ...]:
     """Return source declarations needed to resolve relations for a filing."""
 
@@ -48,18 +49,18 @@ def relation_source_requirements(
         if relation.target_periods and period not in relation.target_periods:
             continue
         source_year = _relation_source_year(relation, filing_year=filing_year)
-        source_periods = relation.source_periods or (period,)
-        key = (
-            str(relation.source_modelo),
-            source_year,
-            tuple(source_periods),
-            str(relation.source_output),
-            str(relation.dependency_role),
-            str((relation.aggregation or {}).get("op", "copy")),
-        )
-        bucket = grouped.setdefault(key, {"relation_ids": set(), "target_bindings": set()})
-        bucket["relation_ids"].add(str(relation.id))
-        bucket["target_bindings"].add(str(relation.target_binding))
+        for source_periods in _relation_requirement_periods(relation, period, source_schedule_ids):
+            key = (
+                str(relation.source_modelo),
+                source_year,
+                tuple(source_periods),
+                str(relation.source_output),
+                str(relation.dependency_role),
+                str((relation.aggregation or {}).get("op", "copy")),
+            )
+            bucket = grouped.setdefault(key, {"relation_ids": set(), "target_bindings": set()})
+            bucket["relation_ids"].add(str(relation.id))
+            bucket["target_bindings"].add(str(relation.target_binding))
     return tuple(
         RegistryRelationSourceRequirement(
             source_modelo=source_modelo,
@@ -121,25 +122,72 @@ def resolve_relation_values_from_observations(
     *,
     filing_year: int,
     period: str,
+    source_schedule_ids: Mapping[str, str] | None = None,
 ) -> dict[str, Decimal]:
     """Resolve relation values from normalized filed-declaration observations."""
 
     available = tuple(observations)
     external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
-    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
-        values = tuple(_observed_requirement_values(requirement, available))
-        raw_value: Decimal | tuple[Decimal, ...]
-        if requirement.aggregation_op == "copy":
-            if len(values) != 1:
-                raise RegistryValidationError(
-                    f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
-                )
-            raw_value = values[0]
-        else:
-            raw_value = values
-        for relation_id in requirement.relation_ids:
-            external_outputs[relation_id] = raw_value
+    for relation in revision.relations:
+        if relation.target_periods and period not in relation.target_periods:
+            continue
+        source_year = _relation_source_year(relation, filing_year=filing_year)
+        candidates = _relation_period_candidates(relation, period, source_schedule_ids)
+        resolved_candidates: list[Decimal | tuple[Decimal, ...]] = []
+        for candidate in candidates:
+            requirement = RegistryRelationSourceRequirement(
+                source_modelo=str(relation.source_modelo),
+                filing_year=source_year,
+                periods=candidate,
+                source_output=str(relation.source_output),
+                relation_ids=(str(relation.id),),
+                target_bindings=(str(relation.target_binding),),
+                dependency_role=str(relation.dependency_role),
+                aggregation_op=str((relation.aggregation or {}).get("op", "copy")),
+            )
+            values = tuple(_observed_requirement_values(requirement, available, strict=not relation.source_period_sets))
+            if len(values) != len(candidate):
+                continue
+            if requirement.aggregation_op == "copy":
+                if len(values) != 1:
+                    raise RegistryValidationError(
+                        f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
+                    )
+                resolved_candidates.append(values[0])
+            else:
+                resolved_candidates.append(values)
+        if len(resolved_candidates) != 1:
+            if not resolved_candidates:
+                raise RegistryValidationError(f"relation {relation.id!r} does not match a complete observed period set")
+            raise RegistryValidationError(f"relation {relation.id!r} matches multiple complete observed period sets")
+        external_outputs[relation.id] = resolved_candidates[0]
     return resolve_relation_values(revision, external_outputs)
+
+
+def _relation_requirement_periods(
+    relation: RelationDefinition,
+    period: str,
+    source_schedule_ids: Mapping[str, str] | None,
+) -> tuple[tuple[str, ...], ...]:
+    if not relation.source_period_sets:
+        return (relation.source_periods or (period,),)
+    selected_schedule = (source_schedule_ids or {}).get(str(relation.source_modelo))
+    if selected_schedule is None:
+        return tuple(period_set.source_periods for period_set in relation.source_period_sets)
+    for period_set in relation.source_period_sets:
+        if period_set.source_schedule_id == selected_schedule:
+            return (period_set.source_periods,)
+    raise RegistryValidationError(
+        f"relation {relation.id!r} has no source period set for schedule {selected_schedule!r}"
+    )
+
+
+def _relation_period_candidates(
+    relation: RelationDefinition,
+    period: str,
+    source_schedule_ids: Mapping[str, str] | None,
+) -> tuple[tuple[str, ...], ...]:
+    return _relation_requirement_periods(relation, period, source_schedule_ids)
 
 
 def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
@@ -158,6 +206,8 @@ def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> 
 def _observed_requirement_values(
     requirement: RegistryRelationSourceRequirement,
     observations: tuple[RegistryFilingObservation, ...],
+    *,
+    strict: bool = True,
 ) -> tuple[Decimal, ...]:
     values: list[Decimal] = []
     for source_period in requirement.periods:
@@ -169,12 +219,16 @@ def _observed_requirement_values(
             and observation.period == source_period
         )
         if len(matches) != 1:
+            if not strict:
+                return ()
             raise RegistryValidationError(
                 f"relation requirement {requirement.relation_ids!r} expected one observed filing "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}"
             )
         value = matches[0].casilla_values.get(requirement.source_output)
         if value is None:
+            if not strict:
+                return ()
             raise RegistryValidationError(
                 f"relation requirement {requirement.relation_ids!r} requires observed output "
                 f"{requirement.source_output!r} from "

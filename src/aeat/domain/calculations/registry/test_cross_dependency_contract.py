@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 import pytest
 
@@ -11,7 +12,7 @@ from aeat.core.paths import PROJECT_ROOT
 from ._loader import load_registry_tree
 from ._relations import relation_source_requirements
 from ._runtime_graph import expression_relation_refs
-from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RelationDefinition
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -39,6 +40,29 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
         for value in binding.inputs.values()
         if str(value) in relation_ids
     }
+
+
+def _relation_source_period_sets(relation: RelationDefinition) -> tuple[tuple[str | None, tuple[str, ...]], ...]:
+    if relation.source_period_sets:
+        return tuple(
+            (period_set.source_schedule_id, period_set.source_periods) for period_set in relation.source_period_sets
+        )
+    return ((None, relation.source_periods),)
+
+
+def _selector_source_period_sets(value: object) -> tuple[tuple[str | None, tuple[str, ...]], ...]:
+    assert isinstance(value, tuple)
+    period_sets: list[tuple[str | None, tuple[str, ...]]] = []
+    for item in value:
+        assert isinstance(item, dict)
+        typed_item = cast(dict[str, object], item)
+        source_schedule_id = typed_item.get("source_schedule_id")
+        assert source_schedule_id is None or isinstance(source_schedule_id, str)
+        source_periods = typed_item.get("source_periods")
+        assert isinstance(source_periods, tuple)
+        assert all(isinstance(period, str) for period in source_periods)
+        period_sets.append((source_schedule_id, cast(tuple[str, ...], source_periods)))
+    return tuple(period_sets)
 
 
 def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, str | int]) -> bool:
@@ -72,7 +96,9 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 if relation.dependency_role == "periodic_to_annual_summary":
                     assert relation.kind == "annual_summary", relation.id
                     assert relation.target_periods == ("0A",), relation.id
-                    assert len(relation.source_periods) > 1, relation.id
+                    assert all(len(source_periods) > 1 for source_periods in _relation_source_period_sets(relation)), (
+                        relation.id
+                    )
                     assert (relation.aggregation or {}).get("op") == "sum", relation.id
                 elif relation.dependency_role == "instalment_to_final_settlement":
                     assert relation.kind == "cross_model_output", relation.id
@@ -161,6 +187,7 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
                 selector_output = selector.get("source_output")
                 selector_casillas = selector.get("source_casillas")
                 selector_periods = selector.get("source_periods")
+                selector_period_sets = selector.get("source_period_sets")
 
                 assert binding.source == "previous_filing", f"{modelo.id}/{revision.id}/{relation.id}"
                 assert selector_modelo == relation.source_modelo, f"{modelo.id}/{revision.id}/{relation.id}"
@@ -170,6 +197,10 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
                     assert selector_casillas == (relation.source_output,), f"{modelo.id}/{revision.id}/{relation.id}"
                 if selector_periods is not None:
                     assert selector_periods == relation.source_periods, f"{modelo.id}/{revision.id}/{relation.id}"
+                if selector_period_sets is not None:
+                    assert _selector_source_period_sets(selector_period_sets) == _relation_source_period_sets(
+                        relation
+                    ), f"{modelo.id}/{revision.id}/{relation.id}"
                 assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
 
 
