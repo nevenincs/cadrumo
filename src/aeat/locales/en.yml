@@ -1,6 +1,13 @@
 aggregation:
   models:
     t_944805: YYYYQn
+application:
+  auth:
+    provider_impact:
+      certificate_ready: 'Certificate auth is ready. The operator keeps the same CLI filing flow for AEAT-backed reads; every provider uses the same command workflow.'
+      generic_ready: '%{label} is ready. The operator keeps the same CLI filing flow while this provider plugs into the shared auth protocol.'
+      unavailable: '%{label} is configured but not ready yet. The operator can still produce, verify, and export filings locally, but AEAT-backed reads stay unavailable until auth is fixed.'
+      unconfigured: 'The operator can still produce, verify, and export filings locally, but AEAT-backed reads stay unavailable until an auth provider is configured.'
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or

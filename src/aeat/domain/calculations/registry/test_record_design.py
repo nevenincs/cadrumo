@@ -58,6 +58,39 @@ def test_modelo_131_record_design_revision_shapes_are_read_from_official_workboo
     assert tuple(sheet.name for sheet in sheets) == expected_sheets
 
 
+@pytest.mark.parametrize(
+    "workbook_name",
+    (
+        "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
+        "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
+    ),
+)
+def test_modelo_131_recent_record_designs_share_coordinates_but_not_source_text(workbook_name: str) -> None:
+    current = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT)}
+    candidate = {
+        sheet.name: sheet for sheet in extract_record_design_workbook(Path(_MODELO_131_WORKBOOK_ROOT / workbook_name))
+    }
+
+    for sheet_name in ("Pág. 1", "DPA", "DID"):
+        current_fields = current[sheet_name].fields
+        candidate_fields = candidate[sheet_name].fields
+
+        assert candidate[sheet_name].total_positions == current[sheet_name].total_positions
+        assert [(field.offset, field.length) for field in candidate_fields] == [
+            (field.offset, field.length) for field in current_fields
+        ]
+
+    assert any(
+        candidate_field.description != current_field.description
+        for sheet_name in ("Pág. 1", "DPA")
+        for candidate_field, current_field in zip(
+            candidate[sheet_name].fields,
+            current[sheet_name].fields,
+            strict=True,
+        )
+    )
+
+
 def test_modelo_131_current_registry_bindings_cover_official_structured_records() -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "131")

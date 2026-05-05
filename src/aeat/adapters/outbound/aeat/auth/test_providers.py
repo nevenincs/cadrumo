@@ -9,6 +9,7 @@ from .....application.auth import (
     AuthProviderKind,
     describe_provider_operator_impact,
 )
+from .....core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -24,8 +25,7 @@ def test_operator_impact_explains_local_fallback_when_unconfigured() -> None:
 
     message = describe_provider_operator_impact(description)
 
-    assert "produce, verify, and export" in message
-    assert "unavailable until an auth provider is configured" in message
+    assert message == tr("application.auth.provider_impact.unconfigured")
 
 
 def test_operator_impact_explains_protocol_value_for_ready_certificate() -> None:
@@ -42,5 +42,4 @@ def test_operator_impact_explains_protocol_value_for_ready_certificate() -> None
 
     message = describe_provider_operator_impact(description)
 
-    assert "same CLI filing flow" in message
-    assert "every provider uses the same command workflow" in message
+    assert message == tr("application.auth.provider_impact.certificate_ready")
