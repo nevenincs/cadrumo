@@ -24,6 +24,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.application.filing import (
+    FilingDraftStatus,
+    FilingOperatorProfile,
+    build_draft,
+    build_runtime_schema_provider,
+    export_draft,
+)
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
@@ -75,6 +82,64 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
+    provider = build_runtime_schema_provider(filing_year=filing_year, period=period)
+    if filing_year >= 2024:
+        inputs = {
+            "01": Decimal("2"),
+            "02": Decimal("3"),
+            "04": Decimal("1000.25"),
+            "05": Decimal("200.75"),
+            "07": Decimal("190.05"),
+            "08": Decimal("38.14"),
+            "10": Decimal("0"),
+            "11": Decimal("7.50"),
+            "13": Decimal("12.25"),
+        }
+        headers = {
+            "declaration_type": "I",
+            "legal_name": "EXPORT TEST",
+            "program_version": "A001",
+            "developer_tax_id": "A12345678",
+        }
+    else:
+        inputs = {
+            "01": Decimal("5"),
+            "02": Decimal("1201.00"),
+            "03": Decimal("228.19"),
+            "04": Decimal("0"),
+            "05": Decimal("7.50"),
+            "07": Decimal("12.25"),
+        }
+        headers = {
+            "declaration_type": "I",
+            "surnames": "EXPORT TEST",
+            "name": "ANA",
+            "program_version": "A001",
+            "developer_tax_id": "A12345678",
+        }
+    draft = build_draft(
+        modelo="123",
+        period=f"{filing_year}Q{period[0]}",
+        profile=FilingOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Submitted file registry test",
+        ),
+        inputs=inputs,
+        schema_provider=provider,
+    ).model_copy(update={"status": FilingDraftStatus.APPROVED})
+    output = tmp_path / f"modelo-123-{filing_year}-{period}.txt"
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers=headers,
+        schema_provider=provider,
+    )
+
+    return output.read_bytes()
 
 
 def _declaration_pdf_payload(
@@ -540,6 +605,101 @@ class TestSubmittedFileObservation:
         assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
         assert observed_values["28"] == calculated.values["28"]
         assert observed_values["30"] == calculated.values["30"]
+
+    @pytest.mark.parametrize(
+        ("filing_year", "period", "profile_id", "expected"),
+        (
+            (
+                2026,
+                "1T",
+                "modelo-123-export-record",
+                {
+                    "01": Decimal("2"),
+                    "02": Decimal("3"),
+                    "03": Decimal("5"),
+                    "04": Decimal("1000.25"),
+                    "05": Decimal("200.75"),
+                    "06": Decimal("1201.00"),
+                    "07": Decimal("190.05"),
+                    "08": Decimal("38.14"),
+                    "09": Decimal("228.19"),
+                    "10": Decimal("0.00"),
+                    "11": Decimal("7.50"),
+                    "12": Decimal("235.69"),
+                    "13": Decimal("12.25"),
+                    "14": Decimal("223.44"),
+                },
+            ),
+            (
+                2023,
+                "4T",
+                "modelo-123-2019-export-record",
+                {
+                    "01": Decimal("5"),
+                    "02": Decimal("1201.00"),
+                    "03": Decimal("228.19"),
+                    "04": Decimal("0.00"),
+                    "05": Decimal("7.50"),
+                    "06": Decimal("235.69"),
+                    "07": Decimal("12.25"),
+                    "08": Decimal("223.44"),
+                },
+            ),
+        ),
+    )
+    def test_modelo_123_submitted_file_observation_resolves_registry_casillas(
+        self,
+        tmp_path: Path,
+        filing_year: int,
+        period: str,
+        profile_id: str,
+        expected: dict[str, Decimal],
+    ) -> None:
+        snapshot = _modelo_snapshot("123", filing_year=filing_year, period=period)
+        profile = snapshot.extraction_profiles[profile_id]
+        body = _exported_modelo_123_payload(tmp_path, filing_year=filing_year, period=period)
+        declaration = Declaration(
+            modelo="123",
+            ejercicio=filing_year,
+            period=period,
+            expediente_id=f"{filing_year}12313520436S",
+            estado="ALTA",
+            presented_at=datetime(filing_year, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
+        )
+
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observation = FiledDeclarationObservation(
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            period=declaration.period,
+            expediente_id=declaration.expediente_id,
+            status=declaration.estado,
+            presented_at=declaration.presented_at,
+            authenticated_identity="12345678Z",
+            artefacts=(artefact,),
+            casillas=observed,
+            extraction_coverage={"submitted_file": 1.0},
+        )
+        registry_observation = registry_observation_from_filed_declaration(observation)
+
+        assert {item.casilla_id: Decimal(item.value) for item in observed} == expected
+        assert set(registry_observation.casilla_values) == set(profile.target_casillas)
+        assert registry_observation.casilla_values == expected
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")
