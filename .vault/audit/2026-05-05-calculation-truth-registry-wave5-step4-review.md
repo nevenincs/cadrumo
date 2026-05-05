@@ -19,6 +19,11 @@
 - The registry verifier exposed source-integrity drift in local HTML corpus
   files, and the source catalogue now matches the files actually committed in
   the worktree.
+- The plan ledger now separates live discovery from live parser coverage:
+  Modelo 131 has a verified zero-row live scan, but no sanitized live fixture.
+- The plan ledger now separates flat liquidacion calculations from export
+  design work: DPA activity detail, DID direct-debit layout, and the flatter
+  2019-2023 record design remain explicit unchecked rows.
 
 ## Residual Risk
 

@@ -27,6 +27,8 @@ type VerificationExpectationId = Annotated[str, Field(min_length=1, max_length=1
 type ApplicationLinkId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type DeadlineWindowId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type SupportRemovalDecisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
+type ConstructId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
+type DependencyClassificationId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ExportLayoutId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type RecordId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]

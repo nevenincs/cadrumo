@@ -59,6 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
 _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
 _SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
+_SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
 _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
 
 
@@ -540,6 +541,102 @@ class TestSubmittedFileObservation:
         assert observed_values["28"] == calculated.values["28"]
         assert observed_values["30"] == calculated.values["30"]
 
+    def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")
+        body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+        declaration = Declaration(
+            modelo="100",
+            ejercicio=2023,
+            period="0A",
+            expediente_id="202310013522222A",
+            estado="ALTA",
+            presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/xml",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
+        )
+
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observed_values = {item.casilla_id: item.value for item in observed}
+        body_text = body.decode("utf-8")
+
+        assert len(observed) == 77
+        assert observed_values["0180"] == "26.26"
+        assert observed_values["0224"] == "37.37"
+        assert observed_values["0695"] == "87.87"
+        assert observed_values["0067"] == "True"
+        assert 'nif="Y' not in body_text
+        assert 'nif="00000000T"' in body_text
+        assert "CL SANITIZADA 0000 LOCALIDAD" in body_text
+
+    def test_modelo_100_redacted_xml_observation_roundtrips_through_encrypted_store(self, tmp_path: Path) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")
+        body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+        declaration = Declaration(
+            modelo="100",
+            ejercicio=2023,
+            period="0A",
+            expediente_id="202310013522222A",
+            estado="ALTA",
+            presented_at=datetime(2024, 2, 1, 19, 15, 34, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclarationArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+            content_type="application/xml",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
+        )
+        store = FiledDeclarationObservationStore(
+            tmp_path / "observations",
+            master_key_provider=EphemeralMasterKeyProvider(),
+        )
+        encrypted_artefact = store.persist_artefact(
+            (declaration.modelo, declaration.ejercicio, declaration.period, declaration.expediente_id),
+            artefact,
+            body,
+        )
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=encrypted_artefact,
+        )
+        observation = FiledDeclarationObservation(
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+            period=declaration.period,
+            expediente_id=declaration.expediente_id,
+            status=declaration.estado,
+            presented_at=declaration.presented_at,
+            authenticated_identity="00000000T",
+            artefacts=(encrypted_artefact,),
+            casillas=observed,
+            extraction_coverage={"submitted_file": 1.0},
+        )
+
+        manifest_path = store.persist_observation(observation)
+        loaded = store.load_observation(manifest_path)
+
+        assert loaded == observation
+        assert encrypted_artefact.storage_ref is not None
+        assert store.load_artefact(encrypted_artefact.storage_ref) == body
+
 
 class TestDeclarationPdfObservation:
     """Verify declaration-copy PDFs are interpreted through registry profiles."""
@@ -802,6 +899,59 @@ class TestFiledObservationBindings:
 class TestFiledObservationRelations:
     """Verify filed observations can supply registry cross-model relations."""
 
+    def test_modelo_100_relations_resolve_from_standardized_filed_observations(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        observations = _renta_2025_relation_observations()
+
+        resolved = resolve_relation_values_from_filed_declarations(
+            snapshot.revision,
+            observations,
+            filing_year=2025,
+            period="0A",
+        )
+
+        assert resolved["renta-2025-rel-111-retenciones-trimestrales"] == Decimal("100")
+        assert resolved["renta-2025-rel-111-retenciones-mensuales"] == Decimal("78")
+        assert resolved["renta-2025-rel-115-retenciones-trimestrales"] == Decimal("20")
+        assert resolved["renta-2025-rel-123-retenciones-trimestrales"] == Decimal("60")
+        assert resolved["renta-2025-rel-130-pagos-fraccionados"] == Decimal("140")
+        assert resolved["renta-2025-rel-131-pagos-fraccionados"] == Decimal("220")
+        assert resolved["renta-2025-rel-180-retenciones-anuales"] == Decimal("90")
+
+    def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        observations = tuple(
+            observation
+            for observation in _renta_2025_relation_observations()
+            if not (observation.modelo == "131" and observation.period == "4T")
+        )
+
+        with pytest.raises(RegistryValidationError, match="expected one observed filing"):
+            resolve_relation_values_from_filed_declarations(
+                snapshot.revision,
+                observations,
+                filing_year=2025,
+                period="0A",
+            )
+
+    def test_modelo_100_relation_resolution_rejects_duplicate_source_periods(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        observations = _renta_2025_relation_observations()
+        duplicate = _filed_observation(
+            modelo="130",
+            ejercicio=2025,
+            period="1T",
+            casilla_values={"19": Decimal("1")},
+        )
+
+        with pytest.raises(RegistryValidationError, match="found 2"):
+            resolve_relation_values_from_filed_declarations(
+                snapshot.revision,
+                (*observations, duplicate),
+                filing_year=2025,
+                period="0A",
+            )
+
     def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self) -> None:
         snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
         quarterly_values = {
@@ -872,3 +1022,108 @@ class TestFiledObservationRelations:
                 filing_year=2026,
                 period="0A",
             )
+
+
+def _renta_2025_relation_observations() -> tuple[FiledDeclarationObservation, ...]:
+    observations: list[FiledDeclarationObservation] = []
+    observations.extend(
+        _filed_observation(
+            modelo="111",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"28": value},
+        )
+        for period, value in {
+            "1T": Decimal("10"),
+            "2T": Decimal("20"),
+            "3T": Decimal("30"),
+            "4T": Decimal("40"),
+        }.items()
+    )
+    observations.extend(
+        _filed_observation(
+            modelo="111",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"28": value},
+        )
+        for period, value in {
+            "01": Decimal("1"),
+            "02": Decimal("2"),
+            "03": Decimal("3"),
+            "04": Decimal("4"),
+            "05": Decimal("5"),
+            "06": Decimal("6"),
+            "07": Decimal("7"),
+            "08": Decimal("8"),
+            "09": Decimal("9"),
+            "10": Decimal("10"),
+            "11": Decimal("11"),
+            "12": Decimal("12"),
+        }.items()
+    )
+    observations.extend(
+        _filed_observation(
+            modelo="115",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"03": value},
+        )
+        for period, value in {
+            "1T": Decimal("2"),
+            "2T": Decimal("4"),
+            "3T": Decimal("6"),
+            "4T": Decimal("8"),
+        }.items()
+    )
+    observations.extend(
+        _filed_observation(
+            modelo="123",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"09": value},
+        )
+        for period, value in {
+            "1T": Decimal("6"),
+            "2T": Decimal("12"),
+            "3T": Decimal("18"),
+            "4T": Decimal("24"),
+        }.items()
+    )
+    observations.extend(
+        _filed_observation(
+            modelo="130",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"19": value},
+        )
+        for period, value in {
+            "1T": Decimal("14"),
+            "2T": Decimal("28"),
+            "3T": Decimal("42"),
+            "4T": Decimal("56"),
+        }.items()
+    )
+    observations.extend(
+        _filed_observation(
+            modelo="131",
+            ejercicio=2025,
+            period=period,
+            casilla_values={"15": value},
+        )
+        for period, value in {
+            "1T": Decimal("22"),
+            "2T": Decimal("44"),
+            "3T": Decimal("66"),
+            "4T": Decimal("88"),
+        }.items()
+    )
+    observations.append(
+        _filed_observation(
+            modelo="180",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("90")},
+        )
+    )
+    return tuple(observations)

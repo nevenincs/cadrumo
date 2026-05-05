@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import re
+import unicodedata
 
 
 def normalise_corpus_text(text: str) -> str:
@@ -11,4 +12,7 @@ def normalise_corpus_text(text: str) -> str:
 
     decoded = html.unescape(text).replace("\xa0", " ")
     without_tags = re.sub(r"<[^>]+>", " ", decoded)
-    return re.sub(r"\s+", " ", without_tags).strip().lower()
+    without_marks = "".join(
+        char for char in unicodedata.normalize("NFKD", without_tags) if not unicodedata.combining(char)
+    )
+    return re.sub(r"\s+", " ", without_marks).strip().lower()

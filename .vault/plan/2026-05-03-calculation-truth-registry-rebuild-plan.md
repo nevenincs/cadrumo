@@ -7,10 +7,14 @@ related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
+  - '[[2026-04-21-modelo-100-renta-research]]'
+  - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
+  - '[[2026-04-29-m100-per-ano-test-parity-research]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
   - '[[2026-05-04-live-filing-data-capture-research]]'
   - '[[2026-05-04-live-filing-data-capture-adr]]'
+  - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -64,6 +68,12 @@ Modelo 100 is handled as the Renta universe: it is still one modelo, but it is
 large enough to require internal epochs for source control, summary sections,
 anexos, CCAA rules, rental/amortization behaviour, deductions, final settlement,
 and export linkage.
+
+Modelo 100 also has a dedicated aggregation phase before its completion wave.
+The aggregation phase is not a compatibility bridge. It is the hard boundary
+where every Renta source, extractor, live-read observation path, rental helper,
+category profile, and old ruleset-era document is classified as either reviewed
+registry evidence, lean non-authoritative plumbing, or deletion target.
 
 ## Production Readiness Definition
 
@@ -534,6 +544,20 @@ own ledger is checked.
 - [ ] Modelo 131 audit: enumerate every current code, corpus, TOML, parser,
   fixture, workflow, and test surface that codifies Modelo 131 identity,
   casillas, rules, calculations, deadlines, exports, or live filed data.
+  - [ ] Modelo 131 audit: enumerate registry TOML entries, shared legal/source
+    catalogue entries, workbook parity refs, extraction profiles, application
+    links, and deadline windows that currently define Modelo 131.
+  - [ ] Modelo 131 audit: enumerate runtime modules that can calculate, export,
+    parse, verify, reconcile, schedule, review, or route Modelo 131 values.
+  - [ ] Modelo 131 audit: enumerate CLI commands and workflows that expose
+    Modelo 131 calculation, filing, verification, live-read, preview, export,
+    or deadline behaviour.
+  - [ ] Modelo 131 audit: enumerate tests and fixtures that mention Modelo 131
+    and classify each as behaviour coverage, parser fixture, official corpus
+    evidence, or obsolete authority.
+  - [ ] Modelo 131 audit: enumerate generated, hydrated, cached, corpus-derived,
+    or projection files that may still define Modelo 131 casillas, formulas,
+    deadlines, export records, or live filed-data shapes.
 - [ ] Modelo 131 legal basis: identify and catalogue BOE legal references for
   every filing-grade calculation, parameter, filing condition, and temporal
   applicability rule.
@@ -543,6 +567,9 @@ own ledger is checked.
   - [x] Modelo 131 annual module-order basis: catalogue BOE module orders for
     2024, 2025, and 2026 so year-scoped objective-estimation revisions can cite
     their applicable signs, indices, modules, and instructions.
+  - [x] Modelo 131 historical module-order basis: catalogue BOE module orders
+    for 2019, 2020, 2021, 2022, and 2023 so the historical record-design
+    revision cites year-scoped objective-estimation authority.
 - [x] Modelo 131 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
@@ -552,15 +579,51 @@ own ledger is checked.
 - [x] Modelo 131 live filed-data discovery: list available AEAT filed rows
   through the read-only surface and record the periods, submitted-file
   availability, declaration-copy availability, and justificante availability.
+  - [x] Modelo 131 authenticated read-only scan: query filed rows for 2020
+    through 2026 and record that the authenticated account returned zero rows,
+    so no live declaration, submitted-file, or justificante artefact was
+    available to sanitize.
+  - [x] Modelo 131 official PDF surface discovery: source AEAT guidance proving
+    that Modelo 131 exposes a form-generated preview PDF before presentation
+    and a final receipt plus complete declaration PDF after presentation; no
+    static reusable AEAT example declaration PDF was found in the official
+    public surface.
+  - [x] Modelo 131 prior-declaration recovery discovery: source AEAT guidance
+    proving that previous Modelo 131 data can be recovered only from earlier
+    electronic form submissions and that declarations before 2015 cannot be
+    used by that recovery workflow.
 - [ ] Modelo 131 live sanitized fixture: capture at least one read-only live
   submitted-file or declaration-copy artefact, sanitize identity data, commit
   the redacted fixture, and prove it parses through the registry layout.
+  - [ ] Modelo 131 no-fixture guard: keep the live fixture row open until a real
+    read-only AEAT artefact exists; do not replace it with synthetic or local
+    fixture evidence.
+  - [ ] Modelo 131 authenticated filed-data capture: retry the read-only filed
+    declaration surface for current and historical years after authentication
+    is available, and record submitted-file, declaration-copy, and justificante
+    availability separately.
+  - [ ] Modelo 131 guarded form-preview preflight: identify the exact preview
+    form URL, browser actions, HTTP methods, download endpoints, and forbidden
+    controls before any authenticated preview attempt.
+  - [ ] Modelo 131 guarded form-preview policy: encode the preview flow as a
+    remote-state guard policy that blocks save, present, sign, pay, domicile,
+    amend, cancel, and any unclassified browser or HTTP action.
+  - [ ] Modelo 131 guarded form-preview capture: attempt a read-only preview
+    PDF capture only after the guard policy proves the flow cannot write AEAT
+    remote state.
+  - [ ] Modelo 131 fixture sanitization: sanitize any captured submitted-file,
+    declaration-copy, justificante, or preview artefact through the committed
+    sanitizer, persist only the redacted artefact, and record source hash,
+    output hash, byte counts, and redaction ledger.
 - [ ] Modelo 131 legal/source catalogue closure: add every legal ref and source
   ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
   applicability dates.
   - [x] Modelo 131 current 2026 catalogue closure: add current instructions,
     procedure, BOE form authority, and 2026 record-design source references
     with corpus paths and integrity data.
+  - [x] Modelo 131 PDF surface catalogue closure: add the official AEAT
+    form-preview/final-PDF guidance and prior-declaration recovery guidance as
+    reviewed source references with corpus paths and integrity data.
   - [x] Modelo 131 source integrity repair: align local AEAT/BOE HTML source
     hashes and byte counts with the committed corpus files before registry
     verification.
@@ -571,28 +634,77 @@ own ledger is checked.
     casilla-level liquidacion schema, calculation formulas, extraction
     profiles, source-backed verification expectation, static portal guard,
     workbook parity reference, and application links.
+  - [x] Modelo 131 2024 and 2025 revisions: add explicit year-scoped registry
+    revisions with annual module-order legal refs, source refs, period
+    selectors, workbook-layout references, and calculation/date-axis tests.
+  - [x] Modelo 131 2019-2023 revision: add the flatter historical registry
+    revision after cataloguing the annual 2019, 2020, 2021, 2022, and 2023
+    module-order legal trail.
 - [ ] Modelo 131 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
   - [x] Modelo 131 current 2026 liquidacion casillas: define casillas 01
     through 15 with manual/computed classification, sections, legal refs, and
     source refs.
+  - [ ] Modelo 131 activity-detail schema: model official DPA activity detail
+    records separately from the flat liquidacion casillas before filing-grade
+    export support can be enabled.
+  - [ ] Modelo 131 DPA 2024 schema: inspect the official 2024 record-design
+    workbook and define every DPA activity-detail field as structured export
+    schema, not synthetic liquidacion casillas.
+  - [ ] Modelo 131 DPA 2025 schema: inspect the official 2025 record-design
+    workbook and prove whether the DPA field layout matches 2024 or requires a
+    year-scoped schema variant.
+  - [x] Modelo 131 DPA 2026 schema: inspect the official 2026 record-design
+    workbook and prove whether the DPA field layout matches 2025 or requires a
+    year-scoped schema variant.
+  - [x] Modelo 131 DPA/DID workbook extraction: add a reusable read-only
+    record-design inspector that extracts official workbook fields, positions,
+    lengths, sheet names, and total record lengths for the 2019-2023, 2024,
+    2025, and 2026 record-design workbooks.
+  - [x] Modelo 131 current 2026 DPA/DID registry binding coverage: define the
+    official non-reserved DPA activity-detail fields and DID IBAN field as
+    layout-authority-backed registry bindings with sheet, offset, length, and
+    data-type selectors.
+  - [x] Modelo 131 DPA validation: add behaviour tests that parse the official
+    2026 record-design workbook and compare its structured DPA/DID field
+    coverage against the committed registry bindings without redefining the
+    schema in test fixtures.
 - [ ] Modelo 131 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
   - [x] Modelo 131 current 2026 liquidacion formulas: define 2 percent payment
     rates and computed casillas 04, 06, 07, 10, 13, and 15 through the registry
     runtime.
+  - [x] Modelo 131 2024 and 2025 liquidacion formulas: define the same
+    casilla-level calculation chain with year-scoped formula IDs and dated
+    parameter values.
+  - [x] Modelo 131 2019-2023 liquidacion formulas: define the same
+    casilla-level calculation chain with historical formula IDs and dated
+    parameter values.
 - [ ] Modelo 131 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
   - [x] Modelo 131 current 2026 declaration-copy profile: define strict
     declaration-PDF extraction coverage for casillas 01 through 15.
+  - [ ] Modelo 131 submitted-file extraction profile: add registry-backed
+    submitted-file extraction only after the export layout has complete
+    official field coverage.
+  - [ ] Modelo 131 preview-PDF extraction profile: add registry-backed preview
+    PDF extraction only after a guarded read-only preview artefact exists and
+    its watermark/non-presentation semantics are represented.
+  - [ ] Modelo 131 justificante extraction profile: add registry-backed
+    justificante extraction only after a real sanitized AEAT justificante
+    artefact exists and proves the available metadata shape.
 - [ ] Modelo 131 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
   - [x] Modelo 131 current 2026 static surface decision: register the official
     static documentation cross-reference and forbidden AEAT write actions.
+  - [x] Modelo 131 PDF/recovery surface decision: tie the form-generated PDF
+    and prior-declaration recovery guidance to the static cross-reference
+    decision without treating either surface as executable calculation parity
+    evidence or a substitute for a sanitized live artefact.
 - [ ] Modelo 131 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
@@ -601,27 +713,109 @@ own ledger is checked.
     against validated snapshots.
   - [ ] Modelo 131 export layout support: extend or model the official
     activity-detail record structures before adding export roundtrips.
+  - [x] Modelo 131 export binding schema: extend the Python-side registry
+    schema so export fields can reference structured data bindings, allowing
+    DPA and DID fields to remain separate from flat liquidacion casillas.
+  - [x] Modelo 131 structured draft binding backend: extend filing drafts so
+    registry binding values can be persisted as scalar values or repeated
+    row-indexed table values without converting them into synthetic casillas.
+  - [x] Modelo 131 binding-backed export renderer foundation: teach the generic
+    exporter to read binding values from approved drafts and to render
+    binding-row repeated records when an official export layout declares that
+    structure.
+  - [ ] Modelo 131 2024 export layout: implement the official 2024 workbook
+    record layout, including envelope records, liquidacion fields, DPA records,
+    and any DID/direct-debit structures that are present in the source.
+  - [ ] Modelo 131 2025 export layout: implement or explicitly reuse the 2025
+    official record layout after comparing workbook field positions, lengths,
+    record names, and requiredness against 2024.
+  - [ ] Modelo 131 2026 export layout: implement or explicitly reuse the 2026
+    official record layout after comparing workbook field positions, lengths,
+    record names, and requiredness against 2025.
+  - [ ] Modelo 131 DPA layout support: represent the official activity detail
+    page for 2024, 2025, and 2026 without flattening it into synthetic
+    casillas.
+  - [ ] Modelo 131 DID layout support: represent the official direct-debit page
+    only through guarded payment/export semantics and never through live AEAT
+    write actions.
+  - [ ] Modelo 131 DID guard linkage: ensure direct-debit fields can be exported
+    or reviewed locally but cannot trigger live payment, domiciliation, or AEAT
+    remote-state mutation.
+  - [ ] Modelo 131 2019-2023 export support: model the flatter historical
+    record-design structure separately from the 2024-and-later DPA/DID shape.
+  - [ ] Modelo 131 export roundtrip tests: prove registry export serialization
+    and parsing for each implemented revision using official field positions
+    and real registry data, not schema definitions embedded in tests.
 - [ ] Modelo 131 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, and any filed-data
   bindings are correct against official authority.
   - [x] Modelo 131 current 2026 behaviour tests: calculate objective-estimation
     totals through the committed registry and verify deadline applicability
     through the registry-backed deadline engine.
+  - [x] Modelo 131 2024 and 2025 behaviour tests: prove the runtime selects the
+    year-scoped revisions and calculates the committed objective-estimation
+    liquidacion chain.
+  - [x] Modelo 131 2019 and 2023 boundary tests: prove the runtime selects the
+    historical revision at both ends of the covered date range and calculates
+    the committed objective-estimation liquidacion chain.
 - [ ] Modelo 131 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
   silent degradation.
+  - [ ] Modelo 131 live parser tests: add only when a real sanitized AEAT
+    read-only artefact is captured; zero live rows is recorded as discovery
+    evidence, not parser coverage.
+  - [ ] Modelo 131 observation-store tests: prove any captured read-only AEAT
+    artefact is persisted only through the encrypted storage layer and can be
+    reloaded into the standardized observation schema.
+  - [ ] Modelo 131 filed-data binding tests: prove captured read-only data can
+    populate registry bindings and calculation verification without defaults,
+    silent degradation, or hardcoded assumptions.
 - [ ] Modelo 131 teardown: delete or neutralize all old Modelo 131 authorities
   in rulesets, filing builders, category mappings, casilla projections,
   deadlines, generated exports, hydrate paths, and legacy fixtures.
+  - [ ] Modelo 131 teardown: remove non-registry Modelo 131 calculation rules
+    from rulesets and helper modules after each equivalent registry-backed
+    behaviour is implemented.
+  - [ ] Modelo 131 teardown: remove non-registry Modelo 131 deadline,
+    applicability, and filing-window definitions after deadline behaviour is
+    registry-backed.
+  - [ ] Modelo 131 teardown: remove non-registry Modelo 131 export builders,
+    generated export fragments, hydrated records, and projection files after
+    export roundtrips are registry-backed.
+  - [ ] Modelo 131 teardown: remove tests and fixtures that define Modelo 131
+    schemas, casillas, formulas, or filing metadata instead of exercising the
+    registry-backed implementation.
+  - [ ] Modelo 131 teardown: run repository-wide scans proving no obsolete
+    Modelo 131 authority remains outside reviewed registry, corpus, parser, or
+    explicit behaviour-test surfaces.
 - [ ] Modelo 131 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
   - [x] Modelo 131 current 2026 focused gate: run registry verification,
     calculation/deadline/setup tests, `ruff`, `ty`, `git diff --check`, and
     development-metadata sanitization scans for the touched surfaces.
+  - [x] Modelo 131 full registry gate: run whole-tree registry verification
+    after concurrent Modelo 180 duplicate IDs were resolved.
+  - [ ] Modelo 131 export/schema quality gate: run registry verification,
+    export roundtrip tests, source-integrity checks, `ruff`, `ty`, and
+    development-metadata sanitization scans after DPA/DID/export work lands.
+  - [ ] Modelo 131 live-read quality gate: run remote-state guard tests,
+    sanitizer tests, encrypted observation-store tests, parser tests, registry
+    verification, `ruff`, `ty`, and `git diff --check` after any read-only AEAT
+    artefact is captured.
 - [ ] Modelo 131 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 131 filing-grade values.
+  - [ ] Modelo 131 completion gate: confirm every supported revision has legal
+    basis, official source evidence, calculation coverage, export coverage,
+    parser coverage when artefacts exist, and a verified live/static
+    cross-reference decision.
+  - [ ] Modelo 131 completion gate: confirm every remaining unsupported live
+    artefact path is recorded as unavailable from official or authenticated
+    evidence, not ignored.
+  - [ ] Modelo 131 completion gate: confirm the implementation contains no
+    compatibility aliases, migration guards, dev-state metadata, or duplicate
+    authority surfaces for Modelo 131.
 
 ### Wave 6 Modelo 180 Parity Ledger
 
@@ -652,21 +846,43 @@ own ledger is checked.
 - [ ] Modelo 180 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
+  - [x] Modelo 180 annual-summary core fields: define declarante summary totals
+    and perceptor monetary record fields for both covered revisions, with legal
+    refs, source refs, and export refs bound to official record-design
+    positions.
 - [ ] Modelo 180 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
+  - [x] Modelo 180 relation-backed annual formulas: define Modelo 115 annual
+    summary relations, target bindings, rounding, and legal/source citations
+    for total perceptores, total base, and total retentions.
 - [ ] Modelo 180 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
+  - [x] Modelo 180 submitted-file profile: route fixed-width submitted records
+    through the registry parser for the committed core declarante/perceptor
+    fields.
 - [x] Modelo 180 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
 - [ ] Modelo 180 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
+  - [x] Modelo 180 fixed-width layout linkage: add official type 1/type 2
+    registry export layouts for current and historical revisions, and harden
+    runtime provider period selection so annual-only modelos do not break
+    unrelated quarterly filing providers.
+  - [x] Registry export signed-money rendering: render signed positive money
+    fields with the official blank sign slot and preserve `N` for negatives.
 - [ ] Modelo 180 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, relation to Modelo
   115, and any filed-data bindings are correct against official authority.
+  - [x] Modelo 180 relation calculation tests: calculate current annual summary
+    totals from supplied Modelo 115 relation values and verify emitted trace
+    operands.
+  - [x] Modelo 180 record parser tests: parse synthetic fixed-width type 1/type
+    2 records through the committed registry layout, including signed perceptor
+    base amounts.
 - [ ] Modelo 180 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -680,6 +896,9 @@ own ledger is checked.
   - [x] Modelo 180 source-grounding focused gate: registry verification,
     catalogue integrity tests, committed registry tests, `ruff`, and `ty` pass
     for the source catalogue and registry surfaces.
+  - [x] Modelo 180 registry/runtime focused gate: run whole-tree registry
+    verification, committed registry tests, filing export tests, `ruff`, and
+    `ty` for the touched registry, runtime, export, and test surfaces.
 - [ ] Modelo 180 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 180 filing-grade values.
 
@@ -1698,6 +1917,9 @@ own ledger is checked.
   - [x] Extend formula and parameter source grounding so official-source
      guidance citations must resolve to reviewed source text in the local AEAT
      corpus before a registry snapshot validates.
+     - [x] Manual PDF source references are text-extracted by the registry
+       validator and normalized accent-insensitively, so formula citations can
+       be grounded in AEAT manuals rather than record-design layout text.
   - [x] Extend legal grounding so legal catalogue references can require BOE
      corpus text and registry validation fails when the cited local legal text
      does not contain the required legal anchors.
@@ -3243,62 +3465,580 @@ application surface, and the old authority has been deleted.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
+- `Phase 4R` Modelo 100 Renta aggregation prerequisite
+  - [x] Create the Modelo 100 aggregation audit covering `registry/aeat`,
+     `corpus/aeat_official/disenos_registro/modelo_100`,
+     `corpus/manuals/renta`, `src/aeat/adapters/inbound/borrador`,
+     `src/aeat/adapters/inbound/declaracion`,
+     `src/aeat/adapters/outbound/aeat/sede`, `src/aeat/domain/rental`,
+     `src/aeat/domain/portals`, category profiles, tests, older Renta vault
+     documents, and any remaining source that encodes Modelo 100 casilla,
+     schema, source, legal, calculation, parser, live-read, or filing meaning.
+  - [x] Register Modelo 100/Renta source and legal corpus references in the
+     same shared registry catalogue consistency framework used by implemented
+     modelos, including official record-design dictionaries/XSDs, Renta 2025
+     manuals, LIRPF activity-economics legal anchors, source hashes, local
+     corpus paths, and manifest-backed verification tests.
+  - [x] Produce the Modelo 100 source-dependency reference tying official AEAT
+     procedure, record-design, manual, presentation, Renta WEB Open, BOE order,
+     LIRPF, RIRPF, and local corpus resources to direct-dependency,
+     evidence-only, and explicit non-dependency classifications.
+  - [ ] Produce the Modelo 100 source ledger for ejercicio 2020, ejercicio
+     2021, ejercicio 2022, ejercicio 2023, ejercicio 2024, and ejercicio 2025,
+     with every official AEAT dictionary, toma-de-datos dictionary, XSD,
+     historical PDF/XLS/XLSX artefact, manual part, handbook page, BOE act,
+     CCAA legal source, Renta WEB Open surface, authenticated read-only
+     observation path, and local corpus hash accounted for.
+     - [x] Record-design ledger: official AEAT declaration dictionaries,
+       toma-de-datos dictionaries, and XSDs for ejercicio 2020 through
+       ejercicio 2025 are identified by registry source ref and local manifest
+       evidence in the Modelo 100 source-dependency reference.
+     - [x] Renta 2025 manual ledger: practical manual part 1 and autonomous
+       deductions manual part are identified by registry source ref, local
+       manifest evidence, and source hashes in the Modelo 100
+       source-dependency reference.
+     - [x] BOE annual order ledger: Modelo 100 ejercicio 2025 order
+       `orden-hac-277-2026:art-3` and source `boe-modelo-100-2025-form` are
+       registered with local BOE HTML corpus evidence.
+     - [ ] BOE legal ledger: add the complete LIRPF/RIRPF article set by
+       construct, annual objective-estimation orders, and law-effective date
+       ranges.
+     - [ ] CCAA legal ledger: add autonomous-community legal sources for
+       deductions, tariff/minimum variations, territorial applicability, and
+       yearly change tracking.
+     - [ ] Observation ledger: add Renta WEB Open parity surface and
+       authenticated read-only observation surfaces with encrypted-store and
+       remote-state guard requirements.
+       - [x] Register Renta WEB Open as explicit executable parity evidence
+         for Modelo 100 ejercicio 2025 with local AEAT corpus evidence,
+         non-authenticated simulator classification, and forbidden remote-state
+         actions.
+       - [ ] Register authenticated fiscal-data, borrador, declaration,
+         submitted-file, declaration PDF, and justificante observation surfaces
+         with encrypted-store and remote-state guard requirements.
+       - [x] Register Modelo 100 `Consulta de declaraciones presentadas` as
+         an authenticated read-only observation surface in the central registry,
+         backed by local AEAT procedure corpus and remote-state guard mapping.
+  - [ ] Produce the Modelo 100 deletion ledger naming every old authority that
+     must disappear or become lean plumbing: old formula/ruleset-era modules,
+     Renta helper modules, rental legal-calculation ownership, amortization
+     legal constants, inventory legal constants, category/profile Renta
+     authority, borrador extractor casilla ownership, declaracion extractor
+     casilla ownership, Sede filed-data parser assumptions, portal metadata
+     duplicates, generated/projection files, and tests that encode old state.
+  - [ ] Write the Modelo 100 support boundary: supported ejercicios,
+     unsupported ejercicios, filing-period date axes, legal-effective date axes,
+     source artefact date axes, CCAA applicability axes, live observation axes,
+     and exact failure conditions for gaps or contradictions.
+  - [ ] Classify Renta WEB Open as read-only parity evidence and prove the
+     remote-state guard rejects authenticated Renta WEB, fiscal-data, borrador,
+     declaration, justificante, signing, presentation, payment, server-side
+     save, amendment, cancellation, and document-submission actions before
+     execution.
+     - [x] Modelo 100 ejercicio 2025 registry now declares Renta WEB Open as an
+       open simulator cross-reference with no authentication, synthetic data
+       allowed, and presentation/payment/signing/server-side-write actions
+       forbidden.
+  - [ ] Classify authenticated fiscal-data, borrador, declaration, submitted
+     file, declaration PDF, and justificante capture as read-only observations
+     that must persist only through the encrypted observation store and must
+     never define legal formulas or mutate registry files.
+     - [x] Modelo 100 ejercicio 2025 registry now declares
+       `modelo-100-filed-declarations-read` as authenticated read surface:
+       no synthetic data, authentication and AEAT authorization required,
+       read-only HTTP methods only, and presentation/payment/signing/save
+       actions forbidden.
+     - [x] Wire the Sede filed-declaration reader to select its guard policy
+       from the validated Modelo 100 registry snapshot instead of the module
+       default policy.
+       The reusable Sede declaration capture path now resolves the read guard
+       from the selected registry snapshot once the declaration row identifies
+       modelo, ejercicio, and period. Register discovery remains guarded by the
+       generic authenticated declarations policy until a concrete snapshot can
+       be selected.
+     - [x] Add live/sanitized Modelo 100 observation fixtures proving
+       submitted-file or declaration-copy capture maps into standardized
+       observations with encrypted storage.
+     - [x] Run authenticated Modelo 100 live filed-row discovery through
+       `Consultar declaraciones presentadas`, record which ejercicios expose
+       submitted-file downloads, declaration-copy PDFs, justificante PDFs, and
+       register-row metadata, and persist only sanitized or encrypted artefacts.
+       Live read on 2026-05-05 found Modelo 100 filed rows for ejercicios
+       2021, 2022, and 2023. Each available row exposed submitted-file and
+       justificante artefacts; no declaration-copy PDF was exposed. Ejercicios
+       2020, 2024, and 2025 returned no rows for the authenticated account.
+       No AEAT write, signing, payment, amendment, or presentation action was
+       executed.
+     - [x] Add a Modelo 100 live-read capture command/test path that refuses
+       remote writes, requires the snapshot-derived authenticated read policy,
+       and persists raw captured artefacts only through
+       `FiledDeclarationObservationStore`.
+       - [x] Historical guard coverage: add the authenticated
+         filed-declarations read surface and application link to Modelo 100
+         ejercicio 2020 through ejercicio 2024 revisions so historical live
+         rows can select a registry-derived guard before capture.
+       - [x] Export-layout blocker: implement Modelo 100 XML/XSD-backed
+         submitted-file parsing for ejercicio 2021, ejercicio 2022, and
+         ejercicio 2023 before live capture can produce standardized casilla
+         observations. The current fixed-width export parser correctly refuses
+         Modelo 100 revision 2023 because no registry export layout exists.
+         Modelo 100 revisions 2020 through 2025 now declare
+         XML-dictionary export layouts backed by the official AEAT dictionary
+         and XSD source refs, with export application links required by the
+         registry validator.
+       - [x] Live capture verification: rerun a one-row encrypted Modelo 100
+         capture after the XML/XSD export layout exists and require
+         `capture-filed-data` to return a persisted encrypted observation
+         manifest with non-zero normalized casilla observations.
+         The authenticated 2026-05-05 read-only capture for ejercicio 2023
+         persisted one encrypted observation and three encrypted financial
+         artefacts under `var/aeat/filed-declarations`, and produced 77
+         normalized casilla observations.
+     - [x] Add a committed sanitized Modelo 100 declaration-copy or
+       submitted-file fixture with every PII and financial value replaced by
+       shape-preserving data, then prove the fixture maps into
+       `FiledDeclarationObservation` without defaults or silent degradation.
+       `tests/fixtures/aeat-sede/submitted-files/modelo-100-2023-0A-redacted.xml`
+       preserves the official XML element shape and dictionary paths while
+       replacing identity and amount values with typed synthetic values.
+       The Sede parser test resolves the 2023 registry snapshot, parses the
+       fixture through the official AEAT dictionary source, and requires 77
+       observed casilla values.
+     - [x] Add an encrypted observation-store roundtrip for the sanitized
+       Modelo 100 observation proving artefact bytes, manifest metadata, and
+       normalized casilla observations are reloadable through the secure
+       storage backend.
+       The roundtrip persists the XML fixture as a financial encrypted blob,
+       writes a `FiledDeclarationObservation`, reloads the manifest, and
+       decrypts the artefact bytes through `FiledDeclarationObservationStore`.
+     - [x] Add Renta dependency-resolution tests that consume standardized
+       Modelo 100/130/131 observations from the registry observation layer and
+       fail hard when a required upstream observation is absent,
+       contradictory, or below extraction coverage.
+       The Sede relation tests now resolve all declared Modelo 100 ejercicio
+       2025 dependency observations, including Modelo 130 and Modelo 131
+       quarterly instalment observations, through
+       `resolve_relation_values_from_filed_declarations`; missing and
+       duplicated source periods fail before any annual value is emitted.
+  - [ ] Define the `registry/aeat/modelos/100.toml` scaffold shape for parent
+     identity, revision selection, common legal basis, source references,
+     source ledgers, legal ledgers, Renta subdomains, final settlement, typed
+     relations to Modelos 130 and 131, export layout references, live/static
+     cross-reference decisions, and hard failure gates.
+     - [x] Create `registry/aeat/modelos/100.toml` with the Modelo 100 parent,
+       ejercicio 2020 through ejercicio 2025 revisions, record-design layout
+       parity decisions, reviewed source refs, and the ejercicio 2025 annual
+       order source/legal references.
+     - [x] Add initial ejercicio 2025 dependency relations from registered
+       Modelos 111, 115, 123, 130, 131, and 180 to Modelo 100 Renta bindings.
+       Relations to modelos that do not yet exist in `registry/aeat/modelos`
+       remain blocked until those modelo authorities exist.
+     - [x] Add the generic revision construct schema, snapshot exposure, and
+       validator closure checks so Modelo 100 can declare auditable Renta
+       children without separate modelo ids or Python-owned authority.
+     - [ ] Add Renta subdomain casilla/formula coverage, final settlement
+       casillas, extraction profiles, export/import layout references,
+       live/static cross-reference decisions, and hard failure gates.
+  - [ ] Define the Renta construct ledger under the Modelo 100 parent. Each
+     construct must have a stable id, ejercicios covered, legal refs, source
+     refs, casilla scope, formulas or algorithm bindings, parser bindings,
+     observation bindings, teardown targets, tests, and completion gate.
+     - [x] `renta-source-foundation`: parent identity, ejercicios, official
+       Modelo 100 order, AEAT dictionaries, toma-de-datos dictionaries, XSDs,
+       manuals, Renta WEB Open classification, filed-data observation
+       classification, and corpus/source hash closure.
+       Initial ejercicio 2025 construct ownership now covers record-design
+       layout parity, Renta WEB Open, the Modelo 100 procedure source, the
+       authenticated filed-declarations read surface, and the portal
+       cross-reference.
+     - [ ] `renta-dependent-modelos`: typed dependency ledger for periodic,
+       monthly, quarterly, and annual filings that can feed Modelo 100,
+       including Modelos 111/190, 115/180, 123/193, 130, 131, and any other
+       supported declaration that contributes retentions, payments on account,
+       income, expense, or summary evidence.
+       The Modelo 100 source-dependency reference is the controlling resource
+       for this classification until `registry/aeat/modelos/100.toml` encodes
+       the same relations with source/legal refs and validator checks.
+       - [x] Initial construct ownership now covers registered Modelo 100
+         dependency bindings and relations for Modelos 111, 115, 123, 130,
+         131, and 180.
+       - [x] Dependency classification gate: Modelo 100 ejercicio 2025 now
+         classifies every registered dependency source relation for Modelos
+         111, 115, 123, 130, 131, and 180, and the registry validator rejects
+         source/relation drift.
+       - [ ] Direct annual-settlement dependencies:
+         - [x] Modelo 111 -> Modelo 100 work/professional/agricultural
+           retentions and payments on account.
+         - [ ] Modelo 190 -> Modelo 100 annual work/professional recipient
+           summary and withholding reconciliation.
+         - [x] Modelo 115 -> Modelo 100 urban-rental retentions borne by the
+           taxpayer or payer-side evidence where the taxpayer role requires it.
+         - [x] Modelo 180 -> Modelo 100 annual urban-rental withholding summary
+           and property/payer reconciliation.
+         - [x] Modelo 123 -> Modelo 100 movable-capital retentions and income
+           account payments.
+         - [ ] Modelo 193 -> Modelo 100 annual movable-capital income and
+           withholding reconciliation.
+         - [x] Modelo 130 -> Modelo 100 direct-estimation instalment payments,
+           current-year economic-activity evidence, and previous-year
+           dependency values.
+         - [x] Modelo 131 -> Modelo 100 objective-estimation instalment
+           payments, module/activity evidence, and current-year objective
+           estimation reconciliation.
+       - [ ] Factual evidence dependencies, not legal-calculation authorities:
+         - [ ] Modelo 303 -> Modelo 100 economic-activity factual VAT context,
+           invoice/expense reconciliation, and VAT-deductibility evidence; it
+           cannot decide IRPF income, expense, or casilla treatment.
+         - [ ] Modelo 390 -> Modelo 100 annual VAT-summary reconciliation for
+           economic-activity evidence only; it cannot decide IRPF formulas.
+         - [ ] Modelo 347 -> Modelo 100 third-party operation evidence for
+           business income/expense reconciliation only.
+         - [ ] Modelo 349 -> Modelo 100 intra-community operation evidence for
+           business/fiscal-data reconciliation only.
+         - [ ] Modelo 369 -> Modelo 100 OSS/IOSS VAT evidence for activity
+           context only.
+         - [ ] Modelo 840 -> Modelo 100 IAE activity/municipality evidence for
+           economic-activity applicability and classification only.
+         - [ ] Modelos 036 and 037 -> Modelo 100 censal identity, activity,
+           regime, and obligation evidence only; they cannot own annual
+           calculation values.
+       - [ ] Non-Renta calculation dependencies unless a future official source
+         proves a concrete link:
+         - [ ] Modelo 202 is corporate-tax instalment evidence for a different
+           taxpayer/tax and is not a Modelo 100 calculation dependency.
+         - [ ] Modelo 200 is corporate annual tax evidence for a different
+           taxpayer/tax and is not a Modelo 100 calculation dependency.
+         - [ ] Modelo 232 is related-party reporting evidence and is not a
+           Modelo 100 calculation dependency.
+         - [ ] Modelo 720 is foreign-asset reporting evidence and is not a
+           Modelo 100 calculation dependency; foreign income, gains, or
+           imputations must be represented through Modelo 100 legal/source
+           definitions, not inferred from Modelo 720 filing status.
+     - [ ] `renta-personal-family`: taxpayer identity, family unit, joint or
+       individual taxation, descendants, ascendants, disability, minimums, and
+       personal circumstances.
+     - [ ] `renta-work-income`: salaries, pensions, benefits, deductible work
+       expenses, reductions, retentions, employer summaries, and relation to
+       Modelos 111 and 190.
+       - [x] Initial ejercicio 2025 construct membership now classifies
+         registered Modelo 111 dependency relations for work/professional or
+         related retentions and payments-on-account evidence.
+       - [ ] Add Modelo 190 relation once Modelo 190 exists as a central
+         registry authority.
+       - [ ] Add filing-grade work-income casillas, formulas, parameters,
+         source citations, and observation profiles.
+     - [ ] `renta-real-estate-capital`: rental income, deductible expenses,
+       real-estate imputation, residential rental reductions, withheld rental
+       amounts, and relation to Modelos 115 and 180.
+       - [x] Initial ejercicio 2025 construct membership now classifies
+         registered Modelo 115 and Modelo 180 dependency relations for urban
+         rental withholding evidence.
+       - [ ] Add filing-grade real-estate income, deduction, imputation,
+         reduction, rental-ledger, and amortization casillas/formulas.
+     - [ ] `renta-movable-capital`: dividends, interest, insurance, other
+       movable-capital income, retentions, and relation to Modelos 123 and 193.
+       - [x] Initial ejercicio 2025 construct membership now classifies
+         registered Modelo 123 dependency relations for movable-capital
+         withholding evidence.
+       - [ ] Add Modelo 193 relation once Modelo 193 exists as a central
+         registry authority.
+       - [ ] Add filing-grade movable-capital casillas, formulas, parameters,
+         source citations, and observation profiles.
+     - [ ] `renta-economic-activities`: estimacion directa normal, estimacion
+       directa simplificada, estimacion objetiva, invoices, expenses, VAT-aware
+       category evidence, payments on account, and relation to Modelos 130 and
+       131.
+       - [x] Initial ejercicio 2025 construct membership now classifies
+         registered Modelo 130 and Modelo 131 dependency relations for
+         direct-estimation and objective-estimation instalment evidence.
+       - [x] Payments-on-account calculation slice: Modelo 100 ejercicio 2025
+         now owns casilla 0604 as the registry sum of Modelo 130 and Modelo
+         131 relation values, and casilla 0609 as the official total pagos a
+         cuenta sum across AEAT casillas 0592, 0593, 0594, 0596 through 0606.
+       - [ ] Add filing-grade economic-activity income, expense, activity,
+         module, category, invoice, VAT-context, previous-filing, and
+         amortization/inventory casillas/formulas.
+     - [ ] `renta-amortization-inventory`: amortization ledgers, asset classes,
+       acquisition/improvement cost, inventory valuation, carry-forward
+       treatment, and algorithm bindings used by real-estate and economic
+       activity constructs.
+     - [ ] `renta-special-regimes-imputations`: income attribution,
+       international fiscal transparency, image-rights assignment, collective
+       investment imputations, and other special regimes represented by the
+       official form and manual.
+     - [ ] `renta-capital-gains-losses`: transmissions, exemptions,
+       reinvestment, FIFO or other statutory ordering, integration, and
+       compensation.
+     - [ ] `renta-bases-reductions`: general base, saving base, integrations,
+       compensations, pension-plan reductions, joint taxation reductions, and
+       carry-forward rules.
+     - [ ] `renta-tax-free-minimums-and-brackets`: personal and family
+       minimums, state tariff, autonomous tariff, saving tariff, tax-free
+       bracket effects, state quota, autonomous quota, and liquid quota.
+     - [ ] `renta-deductions-state`: state deductions, maternity/family
+       deductions, donations, housing transition rules, Ceuta/Melilla, and
+       other annual special provisions.
+     - [ ] `renta-deductions-autonomous`: CCAA-specific deductions, foral
+       exclusions, territorial applicability, annual legal-source variation,
+       contradiction checks, and autonomous-community trace output.
+     - [ ] `renta-payments-retentions`: all retentions, payments on account,
+       previous instalments, annual summaries, fiscal-data observations, and
+       dependency reconciliation before final settlement.
+       - [x] Initial ejercicio 2025 construct membership now covers registered
+         Modelo 111, 115, 123, 130, 131, and 180 dependency bindings and
+         relations under LIRPF/RIRPF payments-on-account legal refs.
+     - [ ] `renta-final-settlement`: cuota diferencial, result to pay/refund,
+       payment/refund structure, Modelo 102 linkage where relevant, and final
+       declaration review trace.
+     - [ ] `renta-observation-parsing`: borrador, declaracion, submitted-file,
+       declaration PDF, justificante PDF, and Sede filed-data observations with
+       registry extraction profiles and encrypted storage.
+       - [x] Initial ejercicio 2025 construct membership now declares
+         `Consulta de declaraciones presentadas` as an authenticated read-only
+         observation surface with registry remote-state guard coverage.
+       - [ ] Add extraction profiles for submitted-file and declaration-copy
+         artefacts before any observed Modelo 100 casilla is accepted for
+         filing-grade calculation.
+     - [ ] `renta-export-filing-linkage`: import/export layout, preview,
+       review, approval, filing draft, remote-state guard, and any programmatic
+       filing linkage allowed by the registry.
+  - [ ] Define the Modelo 100 programmatic reader path under
+     `src/aeat/domain/calculations/registry/` for loading the 100 registry
+     graph, validating source/legal closure, selecting ejercicio revisions,
+     binding Renta subdomains, executing typed formulas and algorithm
+     providers, reconciling observations, and producing traceable calculation
+     output.
+     - [x] Add generic construct resolution in
+       `src/aeat/domain/calculations/registry/_constructs.py` so callers can
+       resolve revision constructs to concrete member objects after registry
+       validation.
+     - [ ] Add Modelo 100-specific calculation orchestration over resolved
+       constructs once casilla/formula and algorithm bindings exist.
+  - [ ] Add generalized registry tests for Modelo 100 catalogue, legal, source,
+     parser, observation, relation, and corpus consistency. These tests must
+     exercise real registry loading and real corpus files, not old/new state
+     comparisons.
+     - [x] Catalogue/source/legal consistency tests: verify Modelo 100
+       dictionary, toma-de-datos, XSD, Renta manual, and LIRPF legal references
+       through real registry catalogue loading and corpus-file checks.
+     - [x] Modelo 100 source/dependency tests: verify the 2020-2025 registry
+       revisions against the official record-design manifest and verify the
+       2025 dependency relations against registered source-modelo outputs and
+       periods.
+     - [x] Modelo 100 construct tests: verify snapshot exposure of construct
+       ownership and fail validation when a construct references a member not
+       declared by the selected revision.
+  - [ ] Mark Phase 4R complete only after the audit document, source ledger,
+     deletion ledger, schema boundary, live-read classification, observation
+     security path, and validation test plan are explicit and reviewable.
+
 - `Wave 21` Modelo 100 Renta universe complete implementation
-  - [ ] Audit every Modelo 100 authority in rulesets, Renta helper modules,
-     anexo modules, CCAA modules, rental modules, amortization modules,
-     inventory modules, minimos/tarifa logic, borrador extractors, declaration
-     extractors, modelo metadata, casilla corpus, manuals, BOE references,
-     XSD/properties dictionaries, export or filing specs, tests, and official
-     AEAT source material.
-  - [ ] Produce a Modelo 100 model-law coverage ledger covering every supported
-     revision, handbook part, BOE legal act, autonomous-community legal source,
-     anexo, summary casilla, formula, parameter, algorithm binding, data
-     binding, relation to Modelos 130 and 131, source artefact, filing path,
-     parser path, test area, and old authority to delete.
-  - [ ] Research and verify Renta source governance: official AEAT handbook
-     parts, BOE legal basis, XSD/properties dictionaries, declaration
-     extraction references, summary casillas, and negative citation controls.
-  - [ ] Classify Renta WEB Open for Modelo 100 live cross-reference and add
-     remote-state guard tests; authenticated Renta WEB, borrador, fiscal-data,
-     signing, presentation, server-side save, and any AEAT write action are
-     forbidden for synthetic calculation tests.
-  - [ ] Write the Modelo 100 registry scaffold in `registry/aeat/modelos/100.toml`
-     with identity, revisions, filing cadence, common legal basis, summary
-     casillas, final settlement structure, source references, and legal
-     references.
-  - [ ] Migrate Modelo 100 income-type formulas and anexo structures into
-     reviewed registry definitions with legal references, source references,
-     typed formulas, and trace requirements.
-  - [ ] Migrate Modelo 100 reductions, minimos, bases, cuotas, tarifa behaviour,
-     parameter tables, temporal applicability, and calculation trace coverage.
-  - [ ] Migrate Modelo 100 CCAA rules with autonomous-community legal evidence,
-     temporal applicability, foral exclusions, Ceuta/Melilla handling, and
-     contradiction checks.
-  - [ ] Migrate Modelo 100 rental, amortization, inventory, and related ledgers
-     into registry-backed algorithm bindings with explicit legal constants,
-     input bindings, output casillas, deterministic execution, and trace
-     contracts.
-  - [ ] Migrate Modelo 100 deductions, anexo-specific behaviours, borrador
-     parsing linkage, declaration extraction linkage, and export or filing
-     linkage into registry-backed paths.
-  - [ ] Link Modelo 100 to registry-backed calculation, trace, review, approval,
-     filing draft, borrador parsing where relevant, declaration parsing where
-     relevant, and export or submission workflows.
-  - [ ] Verify Modelo 100 with real Renta examples across income types, summary
-     calculations, CCAA variation, rental/amortization cases, invalid inputs,
-     date-axis boundaries, relation tests to Modelos 130 and 131,
-     legal-reference checks, source-integrity checks, parser linkage checks,
-     filing/export checks, and registry failure cases.
-  - [ ] Delete Modelo 100 old authorities in Renta rulesets, Renta helper
-     modules, CCAA hardcoding, rental legal-calculation authority, borrador
-     extractor casilla truth, declaration extractor casilla truth, modelo
-     metadata duplicates, casilla projections, and generated/export layout
-     paths.
+  - [ ] Build `registry/aeat/modelos/100.toml` as the sole Modelo 100
+     authority, with no Python-owned legal constants, casilla dependencies,
+     formula dependencies, source metadata, or revision selection.
+  - [ ] Implement the Renta construct gate in the registry validator so a
+     construct can only reference revision members that exist, and each
+     referenced member remains covered by the construct legal/source
+     references. Filing-grade
+     completion still requires all construct rows below to close with casilla,
+     formula, extraction, observation, export, and verification coverage.
+     - [x] Add generic `ConstructDefinition` schema, `ModeloRevision.constructs`,
+       `RegistrySnapshot.constructs`, and validator closure checks.
+  - [ ] Implement the cross-model dependency resolver for Modelo 100 so
+     dependent periodic, monthly, quarterly, and annual filings are selected by
+     filing period, ejercicio, taxpayer, relation type, source evidence, and
+     observation quality before their values can feed the annual declaration.
+  - [ ] Implement the dependency classification gate for every supported
+     modelo. A supported modelo must be declared as direct dependency, factual
+     evidence dependency, or non-dependency before Modelo 100 can emit a
+     filing-grade snapshot.
+  - [ ] Implement dependency inputs from Modelo 111 and Modelo 190: work-income
+     retentions, recipient/employer summaries, annual withholding totals,
+     source/legal references, and contradiction checks against fiscal-data or
+     filed-data observations.
+  - [ ] Implement dependency inputs from Modelo 115 and Modelo 180:
+     urban-rental retentions, annual rental-withholding summaries, property or
+     payer records where available, source/legal references, and contradiction
+     checks against rental ledgers and observations.
+  - [ ] Implement dependency inputs from Modelo 123 and Modelo 193:
+     movable-capital retentions, annual capital-income summaries, source/legal
+     references, and contradiction checks against financial-income observations.
+  - [ ] Implement dependency inputs from Modelo 130: direct-estimation
+     instalment payments, previous-year and current-year economic activity
+     evidence, source/legal references, and date-axis checks across quarterly
+     declarations.
+  - [ ] Implement dependency inputs from Modelo 131: objective-estimation
+     instalment payments, module/activity evidence, source/legal references,
+     and date-axis checks across quarterly declarations.
+  - [ ] Implement evidence-only classification for Modelos 303, 390, 347, 349,
+     369, 840, 036, and 037. These surfaces may support activity, VAT,
+     invoice, census, operation, or obligation reconciliation, but cannot own
+     Modelo 100 legal treatment, formulas, casilla targets, or final annual
+     amounts.
+  - [ ] Implement explicit non-dependency classification for Modelos 202, 200,
+     232, and 720 unless a reviewed official source creates a concrete Modelo
+     100 relation. Their filed status must not alter Renta calculations by
+     inference.
+  - [ ] Implement dependency inputs from invoice, expense, VAT, category,
+     transaction, bank, attachment, and review domains only as factual data
+     bindings. Modelo 100 registry definitions must own the legal treatment and
+     casilla targets.
+  - [ ] Implement ejercicio 2020 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
+     parser requirements, legal references, formula coverage ledger, export
+     layout references, and failure gates.
+  - [ ] Implement ejercicio 2021 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
+     parser requirements, legal references, formula coverage ledger, export
+     layout references, and failure gates.
+  - [ ] Implement ejercicio 2022 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
+     parser requirements, legal references, formula coverage ledger, export
+     layout references, and failure gates.
+  - [ ] Implement ejercicio 2023 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
+     parser requirements, legal references, formula coverage ledger, export
+     layout references, and failure gates.
+  - [ ] Implement ejercicio 2024 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
+     parser requirements, legal references, formula coverage ledger, export
+     layout references, and failure gates.
+  - [ ] Implement ejercicio 2025 revision from reviewed AEAT dictionaries,
+     toma-de-datos dictionary, XSD, official Renta 2025 handbook, BOE Modelo
+     100 order, source hashes, parser requirements, legal references, formula
+     coverage ledger, export layout references, and failure gates.
+  - [ ] Implement `renta-source-foundation`: load the Modelo 100 parent,
+     revision source ledgers, legal ledgers, official source hashes, source
+     tiers, live/static cross-reference decisions, workbook/layout decisions,
+     and fatal source-gap rules.
+  - [x] Implement `renta-dependent-modelos`: declare every supported dependency
+     relation, relation selector, accepted observation artefact, value
+     precedence rule, contradiction rule, required source/legal refs, and trace
+     output.
+     Current closure covers the supported registered Modelo 100 dependency
+     sources 111, 115, 123, 130, 131, and 180. Future sources 190, 193, 303,
+     390, 347, 349, 369, 840, 036, and 037 remain separate plan rows because
+     they are not yet central registry modelos in this worktree.
+  - [ ] Implement Renta personal/family circumstances as registry-backed
+     casillas, parameters, date-axis rules, legal references, source
+     references, parser bindings, and trace output.
+     - [ ] Personal identity and taxpayer role fields.
+     - [ ] Family unit and individual/joint taxation selection.
+     - [ ] Descendants, ascendants, disability, age, and dependency conditions.
+     - [ ] Minimums and personal/family circumstance transfer into the base and
+       quota constructs.
+  - [ ] Implement Renta work income as registry-backed casillas, formulas,
+     parameters, legal references, source references, parser bindings, and
+     trace output.
+     - [ ] Gross monetary and in-kind work income.
+     - [ ] Social security, deductible work expenses, irregular-income
+       reductions, and net work income.
+     - [ ] Retentions and payments on account from Modelo 111/190, fiscal data,
+       and filed observations.
+  - [ ] Implement Renta real-estate capital and imputacion de rentas
+     inmobiliarias as registry-backed casillas, formulas, rental-register input
+     bindings, legal references, source references, parser bindings, and trace
+     output.
+     - [ ] Rental income and deductible expense rollups.
+     - [ ] Amortization and improvement-cost bindings.
+     - [ ] Residential rental reduction tiers and temporal applicability.
+     - [ ] Real-estate imputation and cadastral-value date-axis rules.
+     - [ ] Rental withholding relations to Modelos 115 and 180.
+  - [ ] Implement Renta movable-capital income as registry-backed casillas,
+     formulas, parameters, withholding relations, legal references, source
+     references, parser bindings, and trace output.
+     - [ ] Dividends, interest, insurance, and other movable-capital categories.
+     - [ ] Deductible expenses, reductions, integration into saving/general
+       bases, and retentions from Modelos 123/193.
+  - [ ] Implement Renta economic activities in estimacion directa normal,
+     estimacion directa simplificada, and estimacion objetiva as
+     registry-backed casillas, formulas, algorithm bindings, module/order
+     source references, legal references, parser bindings, and trace output.
+     - [ ] Direct normal estimation: income, deductible expenses, inventory,
+       amortization, provisions, and accounting-derived adjustments.
+       - [x] Ejercicio 2025 direct-estimation income and expense subtotal
+         arithmetic is registry-backed for casillas 0171-0180, 0181-0218,
+         0219-0221, and 0225 with legal/source closure and behaviour tests.
+       - [ ] Inventory, amortization-provider linkage, provisions beyond direct
+         manual input, accounting-derived adjustments, final net-return
+         selection, and reduction application remain open.
+     - [ ] Direct simplified estimation: simplified expenses, statutory caps,
+       reductions, and source/legal references.
+       - [x] Ejercicio 2025 simplified total deductible expenses are computed
+         as casilla 0223 from 0218 and 0222 under AEAT manual/source
+         citation validation.
+       - [ ] Statutory cap calculation for difficult-justification expenses,
+         reduction application, and final net-return selection remain open.
+     - [ ] Objective estimation: activity modules, signs, indices, reductions,
+       annual module orders, and relation to Modelo 131.
+     - [x] Payments on account, retentions, and relation to Modelos 130 and 131.
+       Casilla 0604 is computed from the registered Modelo 130 and Modelo 131
+       relation values; casilla 0609 totals the official AEAT payments-on-
+       account casilla set for ejercicio 2025.
+     - [ ] VAT/category/transaction inputs as factual bindings only, with legal
+       treatment owned by Modelo 100 registry definitions.
+  - [ ] Implement Renta capital gains/losses, integrations, compensations,
+     bases, reductions, minimos, state quota, saving quota, liquid quota,
+     deductions, and final result as registry-backed formulas with legal/source
+     closure and date-axis tests.
+     - [ ] Capital gains/losses: transmissions, exemptions, reinvestments,
+       statutory ordering, and integration.
+     - [ ] Bases and compensations: general base, saving base, carry-forward
+       balances, and cross-year limits.
+     - [ ] Reductions: pension systems, joint taxation, disability-related
+       systems, and other official Modelo 100 reductions.
+     - [ ] Minimums and brackets: personal/family minimums, state tariff,
+       saving tariff, autonomous tariff, state/autonomous quota split, and
+       tax-free bracket effects.
+     - [ ] Final settlement: cuota integra, cuota liquida, cuota diferencial,
+       deductions, retentions, instalments, result to pay/refund, and Modelo
+       102 linkage where applicable.
+  - [ ] Implement CCAA and Ceuta/Melilla Renta rules with autonomous-community
+     legal sources, temporal applicability, foral exclusions, contradiction
+     checks, source coverage, parser/export bindings, and trace output.
+     - [ ] Autonomous deduction catalogue by community and ejercicio.
+     - [ ] Autonomous tariff and minimum variations where applicable.
+     - [ ] Territorial residence/date-axis selection and foral exclusion.
+     - [ ] Ceuta/Melilla state provisions and source/legal trace separation.
+  - [ ] Implement rental, amortization, and inventory as deterministic
+     algorithm providers whose legal constants, caps, casilla targets, and
+     input bindings are declared by Modelo 100 registry data.
+     - [ ] Rental factual ledger provider returns factual totals only.
+     - [ ] Amortization provider consumes registry-declared legal constants and
+       emits traceable per-asset results.
+     - [ ] Inventory provider consumes registry-declared valuation rules and
+       emits traceable opening/closing/variation results.
+     - [ ] No provider may own Modelo 100 target casillas, thresholds, rates,
+       reductions, or legal treatment.
+  - [x] Implement typed relations from Modelo 100 to Modelos 130 and 131 for
+     previous-year/current-year dependency information, including read-only
+     filed-data observations and fatal handling for missing required observed
+     casillas.
+     Current closure covers current-year quarterly payment observations for
+     Modelo 130 and Modelo 131 and fail-hard missing/duplicate source-period
+     handling. Additional previous-year economic-activity details remain under
+     the economic-activity subdomain rows.
+  - [ ] Link Modelo 100 to registry-backed calculation, trace, review,
+     approval, filing draft, export/import layout, borrador observation,
+     declaracion observation, Sede filed-data observation, and justificante
+     observation workflows.
+  - [ ] Verify Modelo 100 against official legal/manual examples, Renta WEB Open
+     parity where safe, source-integrity checks, legal-reference checks, parser
+     linkage checks, encrypted observation-store checks, export/import checks,
+     cross-model relation checks, invalid-input checks, date-axis boundaries,
+     CCAA variation, rental/amortization cases, and registry failure cases.
+  - [ ] Delete or reduce every Modelo 100 old authority after registry-backed
+     replacement: formula/ruleset-era surfaces, Renta helper authority, CCAA
+     hardcoding, rental legal-calculation ownership, borrador extractor casilla
+     ownership, declaracion extractor casilla ownership, modelo metadata
+     duplicates, category/profile Renta authority, casilla projections, and
+     generated/export layout paths.
   - [ ] Add behaviour tests proving Modelo 100 calculation, parsing, review,
-     approval, export, and filing workflows require validated registry snapshots
-     and fail fast on coverage gaps.
-  - [ ] Mark the wave complete only after every Renta epoch, full registry
-     validation, project tests, and vault checks pass.
+     approval, export, live-read observation, and filing workflows require
+     validated registry snapshots and fail fast on coverage gaps.
+  - [ ] Mark the wave complete only after every ejercicio, Renta subdomain,
+     official source ledger, legal ledger, live-read observation path, export
+     path, full registry validation, project tests, and vault checks pass.
 
 - `Phase 5` Global teardown completion
   - [ ] Delete remaining old formula ruleset registration surfaces once every

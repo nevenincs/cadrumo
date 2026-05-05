@@ -84,6 +84,12 @@ def build_snapshot(
     for decision in revision.support_removal_decisions:
         legal_ids.update(decision.legal_refs)
         source_ids.update(decision.source_refs)
+    for construct in revision.constructs:
+        legal_ids.update(construct.legal_refs)
+        source_ids.update(construct.source_refs)
+    for classification in revision.dependency_classifications:
+        legal_ids.update(classification.legal_refs)
+        source_ids.update(classification.source_refs)
     return RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -99,4 +105,8 @@ def build_snapshot(
         deadline_windows={window.id: window for window in revision.deadline_windows},
         filing_schedules={schedule.id: schedule for schedule in revision.filing_schedules},
         support_removal_decisions={decision.id: decision for decision in revision.support_removal_decisions},
+        constructs={construct.id: construct for construct in revision.constructs},
+        dependency_classifications={
+            classification.id: classification for classification in revision.dependency_classifications
+        },
     )

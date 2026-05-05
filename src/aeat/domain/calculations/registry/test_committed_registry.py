@@ -222,7 +222,23 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape() -> None:
     assert result.values["08"] == Decimal("223.44")
 
 
-def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_totals() -> None:
+@pytest.mark.parametrize(
+    ("filing_year", "revision_id", "filing_period", "source_ref", "legal_ref"),
+    [
+        (2019, "2019-2023", date(2019, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hac-1264-2018:art-4"),
+        (2023, "2019-2023", date(2023, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hfp-1172-2022:art-4"),
+        (2024, "2024", date(2024, 3, 31), "aeat-dr-131-2024", "orden-hfp-1359-2023:art-4"),
+        (2025, "2025", date(2025, 3, 31), "aeat-dr-131-2025", "orden-hac-1347-2024:art-4"),
+        (2026, "2026", date(2026, 3, 31), "aeat-dr-131-2026", "orden-hac-1425-2025:art-4"),
+    ],
+)
+def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_totals(
+    filing_year: int,
+    revision_id: str,
+    filing_period: date,
+    source_ref: str,
+    legal_ref: str,
+) -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(modelo for modelo in modelos if modelo.id == "131")
 
@@ -231,7 +247,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         modelo,
         catalogues,
         source_root=PROJECT_ROOT,
-        filing_year=2026,
+        filing_year=filing_year,
         period="1T",
     )
     result = calculate_registry_snapshot(
@@ -247,9 +263,10 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
             "12": Decimal("15"),
             "14": Decimal("20"),
         },
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": filing_period},
     )
 
+    assert snapshot.revision.id == revision_id
     assert result.values["04"] == Decimal("40.00")
     assert result.values["06"] == Decimal("80.00")
     assert result.values["07"] == Decimal("420.00")
@@ -264,6 +281,8 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert entries["10"].operand_refs == ("07", "08", "09")
     assert entries["13"].operand_refs == ("10", "11", "12")
     assert entries["15"].operand_refs == ("13", "14")
+    assert source_ref in snapshot.sources
+    assert legal_ref in snapshot.legal
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations() -> None:

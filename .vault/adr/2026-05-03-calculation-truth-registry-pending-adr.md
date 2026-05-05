@@ -6,6 +6,10 @@ date: '2026-05-03'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
+  - '[[2026-04-21-modelo-100-renta-research]]'
+  - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
+  - '[[2026-04-29-m100-per-ano-test-parity-research]]'
+  - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -104,6 +108,13 @@ This ADR proposes the following concrete architecture.
     parity outputs; static layouts, record designs, unsupported binary XLS files,
     and unreadable artefacts are explicit source/legal evidence decisions and
     cannot be treated as passed calculation parity.
+17. Treat Modelo 100 as a dedicated Renta aggregation architecture inside the
+    same registry, not as a normal small-modelo wave. It must aggregate
+    year-scoped official AEAT record designs, AEAT Renta handbook parts, BOE
+    law/regulation references, CCAA legal sources, Renta WEB Open parity
+    evidence where safe, authenticated filed-data observations where read-only,
+    and every Renta subdomain that currently carries casilla or calculation
+    meaning.
 
 ## Proposed Base Schema
 
@@ -920,7 +931,7 @@ The following decisions are proposed for review:
 | D13 | Modelo 130 is the first calculation migration slice after the source catalogue. | Smallest useful legal calculation slice with rates, thresholds, cumulative logic, and previous-period behavior. |
 | D14 | Modelo 303 follows 130. | Proves VAT/category bindings, period variation, and casilla mapping. |
 | D15 | Modelo 390 follows 303. | Proves cross-model annual summary behaviour. |
-| D16 | Renta is out of first implementation scope. | It requires a separate architecture due to complexity. |
+| D16 | Modelo 100/Renta requires a dedicated aggregation phase under the same central registry. | It is one modelo, but its Renta universe has yearly schemas, source families, CCAA law, anexos, rental/amortization logic, and live filed-data observations that must be reconciled before normal per-modelo completion. |
 | D17 | There are no relaxed runtime modes for registry validity. | The system is legally binding; incomplete or provisional definitions must fail before execution. |
 | D18 | `_schema.py` is the Python-side schema authority. | The authored file format is serialization; strict Pydantic models define the programmatic contract. |
 | D19 | The implementation lives under `src/aeat/domain/calculations/registry/`. | Reuses the existing calculation-domain authority and prevents a second central registry. |
@@ -933,6 +944,72 @@ The following decisions are proposed for review:
 | D26 | XLS/XLSX formula coverage is discovered before model migration. | Official workbooks may be the strongest available parity surface and must be treated as first-class evidence. |
 | D27 | Workbook parity uses identical synthetic inputs for the registry engine and workbook runner. | Prevents comparing hand-adjusted examples and gives reproducible calculation mismatches. |
 | D28 | The workbook/live parity backend must exist and pass verification before modelo refactor. | Prevents starting model migration without the evidence and parity infrastructure needed to prove correctness. |
+| D29 | Modelo 100 registry work starts from official AEAT record designs, AEAT Renta handbook parts, BOE law/regulation, and CCAA legal sources for each supported ejercicio. | The existing Python extractors, rental modules, ruleset-era documents, and tests are audit inputs only; they are not authorities. |
+| D30 | Modelo 100 live AEAT access is read-only evidence capture only. | Renta WEB Open can be parity evidence; authenticated Renta WEB, fiscal-data, borrador, filed-declaration and justificante surfaces may provide observations only through the remote-state guard and encrypted storage. |
+| D31 | Modelo 100 is selected by ejercicio-specific `ModeloRevision` records, not by Python module names or variant slots. | Renta record designs and manual content change by year; the registry must select the exact revision before calculation, parsing, export, or observation reconciliation. |
+| D32 | Modelo 100 is decomposed into gated Renta constructs under the one official modelo parent. | The implementation can progress section by section without inventing unofficial AEAT modelo ids or leaving unverified partial Renta snapshots executable. |
+
+## Modelo 100 Renta Aggregation Decision
+
+Modelo 100 is not a separate registry and not an exception to the hard teardown.
+It is a large registry subgraph rooted at `registry/aeat/modelos/100.toml`.
+That file owns the Modelo 100 identity, supported ejercicios, revision
+selection, common IRPF legal basis, source references, final settlement
+structure, cross-model relations, live/static cross-reference decisions, and
+the checklist of Renta subdomains that must be complete before any filing-grade
+snapshot can be emitted.
+
+The Renta subdomains are registry children, not independent authorities:
+personal/family circumstances, work income, real-estate capital, movable
+capital, economic activities, imputations and attribution of income, capital
+gains/losses, bases, reductions, minimos, quotas, state deductions, autonomous
+community deductions, rental ledgers, amortization, inventory, final result,
+payment/refund structure, export layout, filed-data observations, borrador
+observations, and justificante observations.
+
+Those children should be implemented as gated Renta constructs. A construct is
+not a new AEAT modelo and cannot emit a filing-grade snapshot by itself. It is a
+reviewable unit with its own legal refs, source refs, casillas, formulas,
+algorithm bindings, parser bindings, observation bindings, tests, and teardown
+targets. Modelo 100 can only emit a snapshot when every required construct for
+the selected ejercicio has passed validation and relation checks.
+
+Each supported ejercicio must have a reviewed revision record. For current
+coverage the official corpus already contains AEAT Modelo 100 record-design
+artefacts for ejercicio 2020 through 2025, with 2025 files updated on
+2026-04-14 and 2023/2024 historical files updated in January 2026. The plan
+must close the source ledger for every retained ejercicio rather than assuming
+that a previous Renta ruleset or PDF parser proves coverage.
+
+Authority tiers for Modelo 100 are explicit:
+
+- BOE law and regulation are the legal authority for calculations, rates,
+  deductions, obligations, and temporal applicability.
+- AEAT Renta manuals, instructions, presentation help, dictionaries,
+  properties, XSD, PDFs, and XLS/XLSX record designs are official guidance,
+  layout authority, or parity evidence according to what the specific artefact
+  proves.
+- Renta WEB Open can be used only as read-only parity evidence because AEAT
+  describes it as a simulator that does not require taxpayer identification and
+  does not permit presentation.
+- Authenticated fiscal-data, borrador, declaration, and justificante surfaces
+  are observation sources only. They can populate encrypted local evidence for
+  already-filed or user-owned data, but they cannot become calculation law and
+  cannot write AEAT remote state.
+
+Existing Renta-era Python modules are not retained as compatibility layers.
+Rental, amortization, inbound borrador/declaracion extraction, outbound Sede
+filed-data capture, portal entries, category profiles, old formula/ruleset
+documentation, and tests must either become lean consumers of validated Modelo
+100 registry snapshots or be deleted when their authority has been represented
+and verified in the registry.
+
+The Renta source and dependency boundary is controlled by the dedicated Modelo
+100 source-dependency reference. That reference classifies each supported
+modelo as a direct annual-settlement dependency, factual evidence, or explicit
+non-dependency before Modelo 100 can produce filing-grade output. This prevents
+periodic, informative, VAT, censal, corporate, or foreign-asset declarations
+from silently shadowing the annual IRPF legal calculation.
 
 ## Considerations
 
@@ -1151,7 +1228,11 @@ content for any real modelo.
 
 This ADR does not approve automatic ingestion as an authoritative source.
 
-This ADR does not decide the full Renta internal model.
+This ADR now decides the Renta internal authority boundary: Modelo 100 is a
+dedicated aggregation phase under the central registry, with ejercicio-scoped
+revisions and Renta subdomains as registry children. The exact populated
+casilla/formula content remains subject to source-ledger review and registry
+validation.
 
 This ADR does not decide final migration ticket boundaries.
 

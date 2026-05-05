@@ -156,6 +156,10 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
         classification = "static_official_only"
     elif decision.surface == "open_simulator":
         classification = "open_simulator"
+    elif decision.surface == "public_read_surface":
+        classification = "public_read_surface"
+    elif decision.surface == "authenticated_read_surface":
+        classification = "authenticated_read_surface"
     else:
         classification = "integration_test_service"
     return RemoteStateGuardPolicy(

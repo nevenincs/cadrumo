@@ -5,13 +5,1071 @@ official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimacion Obj
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+    "orden-hfp-1359-2023:art-4",
+    "orden-hac-1347-2024:art-4",
+    "orden-hac-1425-2025:art-4",
+]
 source_refs = [
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-dr-131-2024",
+    "aeat-dr-131-2025",
     "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+
+[revisions."2019-2023"]
+id = "2019-2023"
+label = "Ejercicios 2019 a 2023"
+valid_from = 2019-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+]
+source_refs = [
+    "aeat-dr-131-2019-2023-v101",
     "aeat-modelo-131-procedure",
     "aeat-modelo-131-instructions",
     "boe-modelo-131-2007-form",
 ]
+
+[[revisions."2019-2023".parameters]]
+id = "irpf.objective_no_base_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+valid_to = 2023-12-31
+
+[[revisions."2019-2023".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2019-2023".parameters]]
+id = "irpf.objective_agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+valid_to = 2023-12-31
+
+[[revisions."2019-2023".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2019-2023".casillas]]
+id = "01"
+number = "01"
+label = "Suma de rendimientos netos"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "02"
+number = "02"
+label = "Pago fraccionado previo por datos-base"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "03"
+number = "03"
+label = "Volumen de ventas o ingresos sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "04"
+number = "04"
+label = "Pago fraccionado previo sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "05"
+number = "05"
+label = "Volumen de ingresos agrarios del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "06"
+number = "06"
+label = "Pago fraccionado previo agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "07"
+number = "07"
+label = "Suma de pagos fraccionados previos"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones e ingresos a cuenta"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "09"
+number = "09"
+label = "Minoracion por rendimientos netos de actividades economicas"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "10"
+number = "10"
+label = "Diferencia"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-diferencia"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "11"
+number = "11"
+label = "Resultados negativos de trimestres anteriores"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "12"
+number = "12"
+label = "Pago de prestamos para vivienda habitual"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "13"
+number = "13"
+label = "Total"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-total"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".casillas]]
+id = "15"
+number = "15"
+label = "Resultado de la declaracion"
+section = ["resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-resultado"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
+target = "04"
+expression = { op = "percent", args = [{ casilla = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-pago-fraccionado-agrario"
+target = "06"
+expression = { op = "percent", args = [{ casilla = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-suma-pagos-previos"
+target = "07"
+expression = { op = "add", args = [{ casilla = "02" }, { casilla = "04" }, { casilla = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-diferencia"
+target = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "07" }, { casilla = "08" }] },
+    { casilla = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-total"
+target = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "10" }, { casilla = "11" }] },
+    { casilla = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-resultado"
+target = "15"
+expression = { op = "subtract", args = [{ casilla = "13" }, { casilla = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]
+
+[[revisions."2019-2023".workbook_parity_refs]]
+id = "modelo-131-dr-xlsx-2019-2023"
+workbook_source = "aeat-dr-131-2019-2023-v101"
+fixture_id = "modelo-131-2019-2023-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".verification_expectations]]
+id = "modelo-131-2019-2023-calculation-verification"
+computed_casillas = ["04", "06", "07", "10", "13", "15"]
+reconciliation_totals = { ingresar = "15" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-procedure"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[revisions."2024"]
+id = "2024"
+label = "Ejercicio 2024"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { years = [2024], periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4"]
+source_refs = [
+    "aeat-dr-131-2024",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "boe-modelo-131-2007-form",
+]
+
+[[revisions."2024".parameters]]
+id = "irpf.objective_no_base_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2024".parameters]]
+id = "irpf.objective_agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2024".casillas]]
+id = "01"
+number = "01"
+label = "Suma de rendimientos netos"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "02"
+number = "02"
+label = "Pago fraccionado previo por datos-base"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "03"
+number = "03"
+label = "Volumen de ventas o ingresos sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "04"
+number = "04"
+label = "Pago fraccionado previo sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "05"
+number = "05"
+label = "Volumen de ingresos agrarios del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "06"
+number = "06"
+label = "Pago fraccionado previo agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "07"
+number = "07"
+label = "Suma de pagos fraccionados previos"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones e ingresos a cuenta"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "09"
+number = "09"
+label = "Minoracion por rendimientos netos de actividades economicas"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "10"
+number = "10"
+label = "Diferencia"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-diferencia"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "11"
+number = "11"
+label = "Resultados negativos de trimestres anteriores"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "12"
+number = "12"
+label = "Pago de prestamos para vivienda habitual"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "13"
+number = "13"
+label = "Total"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-total"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".casillas]]
+id = "15"
+number = "15"
+label = "Resultado de la declaracion"
+section = ["resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-resultado"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-pago-fraccionado-sin-datos-base"
+target = "04"
+expression = { op = "percent", args = [{ casilla = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-pago-fraccionado-agrario"
+target = "06"
+expression = { op = "percent", args = [{ casilla = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-suma-pagos-previos"
+target = "07"
+expression = { op = "add", args = [{ casilla = "02" }, { casilla = "04" }, { casilla = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-diferencia"
+target = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "07" }, { casilla = "08" }] },
+    { casilla = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-total"
+target = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "10" }, { casilla = "11" }] },
+    { casilla = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-resultado"
+target = "15"
+expression = { op = "subtract", args = [{ casilla = "13" }, { casilla = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]
+
+[[revisions."2024".workbook_parity_refs]]
+id = "modelo-131-dr-xlsx-2024"
+workbook_source = "aeat-dr-131-2024"
+fixture_id = "modelo-131-2024-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-dr-131-2024"]
+
+[[revisions."2024".verification_expectations]]
+id = "modelo-131-2024-calculation-verification"
+computed_casillas = ["04", "06", "07", "10", "13", "15"]
+reconciliation_totals = { ingresar = "15" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[revisions."2025"]
+id = "2025"
+label = "Ejercicio 2025"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+period_selector = { years = [2025], periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
+source_refs = [
+    "aeat-dr-131-2025",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "boe-modelo-131-2007-form",
+]
+
+[[revisions."2025".parameters]]
+id = "irpf.objective_no_base_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2025".parameters]]
+id = "irpf.objective_agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2025".casillas]]
+id = "01"
+number = "01"
+label = "Suma de rendimientos netos"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "02"
+number = "02"
+label = "Pago fraccionado previo por datos-base"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "03"
+number = "03"
+label = "Volumen de ventas o ingresos sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "04"
+number = "04"
+label = "Pago fraccionado previo sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "05"
+number = "05"
+label = "Volumen de ingresos agrarios del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "06"
+number = "06"
+label = "Pago fraccionado previo agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "07"
+number = "07"
+label = "Suma de pagos fraccionados previos"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones e ingresos a cuenta"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "09"
+number = "09"
+label = "Minoracion por rendimientos netos de actividades economicas"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "10"
+number = "10"
+label = "Diferencia"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-diferencia"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "11"
+number = "11"
+label = "Resultados negativos de trimestres anteriores"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "12"
+number = "12"
+label = "Pago de prestamos para vivienda habitual"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "13"
+number = "13"
+label = "Total"
+section = ["total_liquidacion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-total"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".casillas]]
+id = "15"
+number = "15"
+label = "Resultado de la declaracion"
+section = ["resultado"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-resultado"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-pago-fraccionado-sin-datos-base"
+target = "04"
+expression = { op = "percent", args = [{ casilla = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-pago-fraccionado-agrario"
+target = "06"
+expression = { op = "percent", args = [{ casilla = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-suma-pagos-previos"
+target = "07"
+expression = { op = "add", args = [{ casilla = "02" }, { casilla = "04" }, { casilla = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-diferencia"
+target = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "07" }, { casilla = "08" }] },
+    { casilla = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-total"
+target = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "10" }, { casilla = "11" }] },
+    { casilla = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-resultado"
+target = "15"
+expression = { op = "subtract", args = [{ casilla = "13" }, { casilla = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]
+
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-131-dr-xlsx-2025"
+workbook_source = "aeat-dr-131-2025"
+fixture_id = "modelo-131-2025-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-131-2025"]
+
+[[revisions."2025".verification_expectations]]
+id = "modelo-131-2025-calculation-verification"
+computed_casillas = ["04", "06", "07", "10", "13", "15"]
+reconciliation_totals = { ingresar = "15" }
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
 
 [revisions."2026"]
 id = "2026"
@@ -23,6 +1081,8 @@ source_refs = [
     "aeat-dr-131-2026",
     "aeat-modelo-131-procedure",
     "aeat-modelo-131-instructions",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
 
@@ -229,6 +1289,391 @@ formula = "modelo-131-2026-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.013-016.epigrafe-iae"
+source = "manual_input"
+selector = { record = "DPA", field = "epigrafe-iae", offset = 13, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.017-017.indicador-auxiliar-actividad-iae"
+source = "manual_input"
+selector = { record = "DPA", field = "indicador-auxiliar-actividad-iae", offset = 17, length = 1, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.018-021.participacion-comunidad"
+source = "manual_input"
+selector = { record = "DPA", field = "participacion-comunidad", offset = 18, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.022-024.dias-actividad-temporada"
+source = "manual_input"
+selector = { record = "DPA", field = "dias-actividad-temporada", offset = 22, length = 3, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.025-028.ano-inicio-actividad"
+source = "manual_input"
+selector = { record = "DPA", field = "ano-inicio-actividad", offset = 25, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.029-029.deduccion-ceuta-melilla"
+source = "manual_input"
+selector = { record = "DPA", field = "deduccion-ceuta-melilla", offset = 29, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.030-030.local-unico"
+source = "manual_input"
+selector = { record = "DPA", field = "local-unico", offset = 30, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.031-032.vehiculos-afectos"
+source = "manual_input"
+selector = { record = "DPA", field = "vehiculos-afectos", offset = 31, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.033-033.tractocamion-sin-semirremolque"
+source = "manual_input"
+selector = { record = "DPA", field = "tractocamion-sin-semirremolque", offset = 33, length = 1, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.034-034.tractocamion-unico-sin-semirremolque"
+source = "manual_input"
+selector = { record = "DPA", field = "tractocamion-unico-sin-semirremolque", offset = 34, length = 1, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.035-035.carga-superior-1000kg"
+source = "manual_input"
+selector = { record = "DPA", field = "carga-superior-1000kg", offset = 35, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.036-036.municipio-actividad"
+source = "manual_input"
+selector = { record = "DPA", field = "municipio-actividad", offset = 36, length = 1, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.043-046.porcentaje-superior"
+source = "manual_input"
+selector = { record = "DPA", field = "porcentaje-superior", offset = 43, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.047-053.personal-asalariado-mayor-19"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-asalariado-mayor-19", offset = 47, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.054-060.personal-asalariado-menor-19"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-asalariado-menor-19", offset = 54, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.061-067.personal-asalariado-discapacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-asalariado-discapacidad", offset = 61, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.068-071.personal-asalariado-horas-convenio"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-asalariado-horas-convenio", offset = 68, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.072-078.resto-personal-asalariado-mayor-19"
+source = "manual_input"
+selector = { record = "DPA", field = "resto-personal-asalariado-mayor-19", offset = 72, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.079-085.resto-personal-asalariado-menor-19"
+source = "manual_input"
+selector = { record = "DPA", field = "resto-personal-asalariado-menor-19", offset = 79, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.086-092.resto-personal-asalariado-discapacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "resto-personal-asalariado-discapacidad", offset = 86, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.093-096.resto-personal-asalariado-horas-convenio"
+source = "manual_input"
+selector = { record = "DPA", field = "resto-personal-asalariado-horas-convenio", offset = 93, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.097-100.personal-no-asalariado-titular"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-no-asalariado-titular", offset = 97, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.101-104.personal-no-asalariado-conyuge"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-no-asalariado-conyuge", offset = 101, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.105-111.personal-no-asalariado-hijos"
+source = "manual_input"
+selector = { record = "DPA", field = "personal-no-asalariado-hijos", offset = 105, length = 7, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.112-113.mesas-1-capacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-1-capacidad", offset = 112, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.114-117.mesas-1-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-1-unidades", offset = 114, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.118-119.mesas-2-capacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-2-capacidad", offset = 118, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.120-123.mesas-2-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-2-unidades", offset = 120, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.124-125.mesas-3-capacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-3-capacidad", offset = 124, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.126-129.mesas-3-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-3-unidades", offset = 126, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.130-131.mesas-4-capacidad"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-4-capacidad", offset = 130, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.132-135.mesas-4-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "mesas-4-unidades", offset = 132, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.136-145.modulo-1-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-1-unidades", offset = 136, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.146-162.modulo-1-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-1-rendimiento-neto", offset = 146, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.163-172.modulo-2-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-2-unidades", offset = 163, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.173-189.modulo-2-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-2-rendimiento-neto", offset = 173, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.190-199.modulo-3-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-3-unidades", offset = 190, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.200-216.modulo-3-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-3-rendimiento-neto", offset = 200, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.217-226.modulo-4-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-4-unidades", offset = 217, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.227-243.modulo-4-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-4-rendimiento-neto", offset = 227, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.244-253.modulo-5-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-5-unidades", offset = 244, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.254-270.modulo-5-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-5-rendimiento-neto", offset = 254, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.271-280.modulo-6-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-6-unidades", offset = 271, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.281-297.modulo-6-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-6-rendimiento-neto", offset = 281, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.298-307.modulo-7-unidades"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-7-unidades", offset = 298, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.308-324.modulo-7-rendimiento-neto"
+source = "manual_input"
+selector = { record = "DPA", field = "modulo-7-rendimiento-neto", offset = 308, length = 17, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.325-334.incentivos-empleo"
+source = "manual_input"
+selector = { record = "DPA", field = "incentivos-empleo", offset = 325, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.335-344.incentivos-inversion"
+source = "manual_input"
+selector = { record = "DPA", field = "incentivos-inversion", offset = 335, length = 10, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.345-348.indice-corrector-especial"
+source = "manual_input"
+selector = { record = "DPA", field = "indice-corrector-especial", offset = 345, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.349-352.indice-corrector-pequena-dimension"
+source = "manual_input"
+selector = { record = "DPA", field = "indice-corrector-pequena-dimension", offset = 349, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.353-356.indice-corrector-temporada"
+source = "manual_input"
+selector = { record = "DPA", field = "indice-corrector-temporada", offset = 353, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.357-360.indice-corrector-exceso"
+source = "manual_input"
+selector = { record = "DPA", field = "indice-corrector-exceso", offset = 357, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.361-364.indice-corrector-nueva-actividad"
+source = "manual_input"
+selector = { record = "DPA", field = "indice-corrector-nueva-actividad", offset = 361, length = 4, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.385-386.dias-ejercicio-trimestre"
+source = "manual_input"
+selector = { record = "DPA", field = "dias-ejercicio-trimestre", offset = 385, length = 2, data_type = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131.did.012-045.iban"
+source = "manual_input"
+selector = { record = "DID", field = "iban", offset = 12, length = 34, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026"]
+
 [[revisions."2026".formulas]]
 id = "modelo-131-2026-pago-fraccionado-sin-datos-base"
 target = "04"
@@ -318,7 +1763,7 @@ confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]
 
 [[revisions."2026".live_cross_references]]
 id = "modelo-131-static-official"
@@ -330,7 +1775,12 @@ synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure"]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+]
 
 [[revisions."2026".workbook_parity_refs]]
 id = "modelo-131-dr-xlsx-2026"
@@ -391,7 +1841,7 @@ surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]
 
 [[revisions."2026".application_links]]
 id = "modelo-131-portal-cross-reference"
@@ -399,7 +1849,11 @@ surface = "portal"
 consumer = "portal_m131_pago_fraccionado_eo"
 requires_snapshot = true
 legal_refs = ["orden-eha-672-2007:art-1"]
-source_refs = ["aeat-modelo-131-procedure"]
+source_refs = [
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+]
 
 [[revisions."2026".application_links]]
 id = "modelo-131-deadline"

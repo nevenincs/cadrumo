@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -30,6 +30,7 @@ from ...domain.filing import (
     FilingAmendmentError,
     FilingAmendmentValidationError,
     FilingApprovalBasis,
+    FilingBindingValue,
     FilingBuilderError,
     FilingComputationError,
     FilingDraft,
@@ -119,11 +120,12 @@ def build_draft(
             f"schema provider version {collection.schema_version!r} does not match registry snapshot "
             f"{snapshot.revision.id!r}"
         )
-    decimal_inputs = _decimal_inputs(inputs)
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
-    binding_ids = {binding.id for binding in snapshot.revision.bindings}
-    casilla_inputs = {key: value for key, value in decimal_inputs.items() if key in casilla_ids}
-    binding_inputs = {key: value for key, value in decimal_inputs.items() if key in binding_ids}
+    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
+    calculation_binding_ids = _formula_binding_ids(snapshot)
+    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
+    binding_inputs = _decimal_inputs_for_ids(inputs, calculation_binding_ids)
+    filing_binding_values = _filing_binding_values(inputs, bindings)
     try:
         result = calculate_registry_snapshot(
             snapshot,
@@ -170,6 +172,7 @@ def build_draft(
         )
     created_at = utc_now()
     value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
+    binding_value_tuple = tuple(sorted(filing_binding_values, key=lambda value: value.binding_id))
     draft = FilingDraft(
         draft_id=compute_draft_id(
             modelo=modelo,
@@ -177,12 +180,14 @@ def build_draft(
             profile_tax_id=profile.tax_id,
             schema_version=collection.schema_version,
             values=value_tuple,
+            binding_values=binding_value_tuple,
         ),
         modelo=modelo,
         period=period,
         profile_tax_id=profile.tax_id,
         status=FilingDraftStatus.DRAFT,
         values=value_tuple,
+        binding_values=binding_value_tuple,
         created_at=created_at,
         updated_at=created_at,
         schema_version=collection.schema_version,
@@ -241,24 +246,130 @@ def _filing_period_date(period: str) -> date:
     return date(filing_year, int(registry_period), 1)
 
 
-def _decimal_inputs(inputs: FilingInputs) -> dict[str, Decimal]:
+def _formula_binding_ids(snapshot: RegistrySnapshot) -> set[str]:
+    binding_ids: set[str] = set()
+    for formula in snapshot.revision.formulas:
+        _collect_formula_binding_ids(formula.expression, binding_ids)
+    return binding_ids
+
+
+def _collect_formula_binding_ids(expression: object, binding_ids: set[str]) -> None:
+    binding = getattr(expression, "binding", None)
+    if binding is not None:
+        binding_ids.add(str(binding))
+    for arg in getattr(expression, "args", ()):
+        _collect_formula_binding_ids(arg, binding_ids)
+
+
+def _decimal_inputs_for_ids(inputs: FilingInputs, input_ids: set[str]) -> dict[str, Decimal]:
     decimal_inputs: dict[str, Decimal] = {}
     for casilla_id, value in inputs.items():
+        if casilla_id not in input_ids:
+            continue
         if value is None:
             continue
-        if isinstance(value, bool):
-            raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value")
-        if isinstance(value, Decimal):
-            decimal_inputs[casilla_id] = value
-            continue
-        if isinstance(value, int | str):
-            try:
-                decimal_inputs[casilla_id] = Decimal(value)
-            except Exception as exc:
-                raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value") from exc
-            continue
-        raise FilingBuilderError(f"input {casilla_id!r} must be a Decimal value")
+        decimal_inputs[casilla_id] = _decimal_input(casilla_id, value)
     return decimal_inputs
+
+
+def _filing_binding_values(inputs: FilingInputs, bindings: Mapping[str, object]) -> list[FilingBindingValue]:
+    values: list[FilingBindingValue] = []
+    for binding_id, binding in bindings.items():
+        if binding_id not in inputs or inputs[binding_id] is None:
+            continue
+        raw_value = inputs[binding_id]
+        if isinstance(raw_value, list | tuple):
+            values.extend(
+                FilingBindingValue(
+                    binding_id=binding_id,
+                    value=_binding_input(binding_id, row_value, binding),
+                    kind=FilingValueKind.LITERAL,
+                    source="registry binding input",
+                    row_index=index,
+                )
+                for index, row_value in enumerate(raw_value, start=1)
+            )
+            continue
+        if isinstance(raw_value, Mapping):
+            values.extend(
+                FilingBindingValue(
+                    binding_id=binding_id,
+                    value=_binding_input(binding_id, row_value, binding),
+                    kind=FilingValueKind.LITERAL,
+                    source="registry binding input",
+                    row_index=_binding_row_index(binding_id, row_key),
+                )
+                for row_key, row_value in raw_value.items()
+            )
+            continue
+        values.append(
+            FilingBindingValue(
+                binding_id=binding_id,
+                value=_binding_input(binding_id, raw_value, binding),
+                kind=FilingValueKind.LITERAL,
+                source="registry binding input",
+            )
+        )
+    return values
+
+
+def _binding_row_index(binding_id: str, row_key: object) -> int:
+    if isinstance(row_key, bool):
+        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+    if isinstance(row_key, int):
+        index = row_key
+    elif isinstance(row_key, str):
+        try:
+            index = int(row_key)
+        except ValueError as exc:
+            raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer") from exc
+    else:
+        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+    if index < 1:
+        raise FilingBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
+    return index
+
+
+def _binding_input(binding_id: str, value: object, binding: object) -> FilingScalar:
+    selector = getattr(binding, "selector", {})
+    data_type = str(selector.get("data_type", "decimal")) if isinstance(selector, dict) else "decimal"
+    if data_type == "text":
+        return str(value)
+    if data_type == "integer":
+        decimal_value = _decimal_input(binding_id, value)
+        if decimal_value != decimal_value.to_integral_value():
+            raise FilingBuilderError(f"binding input {binding_id!r} must be an integer value")
+        return int(decimal_value)
+    if data_type == "boolean":
+        return _boolean_input(binding_id, value)
+    if data_type in {"decimal", "money"}:
+        return _decimal_input(binding_id, value)
+    raise FilingBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}")
+
+
+def _decimal_input(input_id: str, value: object) -> Decimal:
+    if isinstance(value, bool):
+        raise FilingBuilderError(f"input {input_id!r} must be a Decimal value")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int | str):
+        try:
+            return Decimal(value)
+        except Exception as exc:
+            raise FilingBuilderError(f"input {input_id!r} must be a Decimal value") from exc
+    raise FilingBuilderError(f"input {input_id!r} must be a Decimal value")
+
+
+def _boolean_input(input_id: str, value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "s", "si", "yes"}:
+            return True
+        if normalized in {"0", "false", "n", "no"}:
+            return False
+    raise FilingBuilderError(f"binding input {input_id!r} must be a boolean value")
 
 
 def validate_draft(
@@ -361,6 +472,7 @@ __all__ = [
     "FilingAmendmentValidationError",
     "FilingApprovalBasis",
     "FilingApprovalStaleReason",
+    "FilingBindingValue",
     "FilingBuilderError",
     "FilingComputationError",
     "FilingDraft",
