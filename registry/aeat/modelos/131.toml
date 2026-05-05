@@ -637,6 +637,13 @@ formula = "modelo-131-2024-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 
+[[revisions."2024".bindings]]
+id = "modelo-131-2024.did.012-045.iban"
+source = "manual_input"
+selector = { record = "DID", field = "iban", offset = 12, length = 34, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-dr-131-2024"]
+
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-pago-fraccionado-sin-datos-base"
 target = "04"
@@ -1009,6 +1016,13 @@ input_kind = "computed"
 formula = "modelo-131-2025-resultado"
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+
+[[revisions."2025".bindings]]
+id = "modelo-131-2025.did.012-045.iban"
+source = "manual_input"
+selector = { record = "DID", field = "iban", offset = 12, length = 34, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-131-2025"]
 
 [[revisions."2025".formulas]]
 id = "modelo-131-2025-pago-fraccionado-sin-datos-base"
