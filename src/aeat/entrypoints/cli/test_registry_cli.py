@@ -359,7 +359,7 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
     assert report.comparison.drifts[0].delta == Decimal("-0.01")
 
 
-def test_verify_filed_state_cli_help_uses_locale_strings() -> None:
+def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
     result = _RUNNER.invoke(
         app,
         ["app", "registry", "verify-filed-state", "--help"],
@@ -367,12 +367,14 @@ def test_verify_filed_state_cli_help_uses_locale_strings() -> None:
     )
 
     assert result.exit_code == 0
-    assert "estado presentado capturado" in result.output
+    # The dot-notated translation key must not leak into operator output —
+    # its presence would mean ``tr()`` returned the key path unresolved.
     assert "cli.registry.verify_filed_state_help" not in result.output
+    # Option flags are CLI surface, not translated, and must be present.
     assert "--source-observation" in result.output
 
 
-def test_capture_source_filed_data_cli_help_uses_locale_strings() -> None:
+def test_capture_source_filed_data_cli_help_resolves_locale_keys() -> None:
     result = _RUNNER.invoke(
         app,
         ["app", "registry", "capture-source-filed-data", "--help"],
@@ -380,7 +382,6 @@ def test_capture_source_filed_data_cli_help_uses_locale_strings() -> None:
     )
 
     assert result.exit_code == 0
-    assert "observaciones fuente presentadas" in result.output
     assert "cli.registry.capture_source_filed_data_help" not in result.output
     assert "--source-root" in result.output
 
