@@ -112,6 +112,53 @@ def test_modelo_180_cross_dependency_calculation_resolves_historical_current_and
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 
 
+def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "193")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+    requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
+    observations = _observations_from_requirements(
+        requirements,
+        lambda requirement, period_index: {
+            "03": (Decimal("5"), Decimal("4"), Decimal("7"), Decimal("6")),
+            "06": (Decimal("1201.00"), Decimal("800.25"), Decimal("999.75"), Decimal("500.00")),
+            "09": (Decimal("228.19"), Decimal("152.05"), Decimal("189.95"), Decimal("95.00")),
+        }[requirement.source_output][period_index],
+    )
+
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=2026,
+        period="0A",
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(2026, 12, 31)},
+        relation_values=relation_values,
+    )
+
+    assert relation_values == {
+        "modelo-193-rel-123-perceptores-anual": Decimal("22"),
+        "modelo-193-rel-123-base-anual": Decimal("3501.00"),
+        "modelo-193-rel-123-retenciones-anual": Decimal("665.19"),
+    }
+    assert result.values["decl.total-perceptores"] == Decimal("22")
+    assert result.values["decl.base-total"] == Decimal("3501.00")
+    assert result.values["decl.retenciones-total"] == Decimal("665.19")
+    entries = {entry.target: entry for entry in result.entries}
+    assert entries["decl.total-perceptores"].operand_refs == ("modelo-193-rel-123-perceptores-anual",)
+    assert entries["decl.base-total"].operand_refs == ("modelo-193-rel-123-base-anual",)
+    assert entries["decl.retenciones-total"].operand_refs == ("modelo-193-rel-123-retenciones-anual",)
+
+
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations() -> None:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == "100")
