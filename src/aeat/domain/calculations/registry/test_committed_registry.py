@@ -371,6 +371,7 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
             (76, 77): "28",
             (78, 78): "1",
             (79, 92): "N" + "2500".zfill(13),
+            (93, 96): "0000",
             (97, 109): "475".zfill(13),
             (110, 113): "2025",
             (114, 114): "1",
@@ -386,8 +387,18 @@ def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_reco
     assert casillas["decl.total-perceptores"] == Decimal("2")
     assert casillas["decl.base-total"] == Decimal("1000.50")
     assert casillas["decl.retenciones-total"] == Decimal("190.10")
+    assert casillas["perc.nif"] == "12345678Z"
+    assert casillas["perc.nombre"] == "ARRENDADOR EJEMPLO"
+    assert casillas["perc.provincia"] == "28"
+    assert casillas["perc.modalidad"] == "1"
     assert casillas["perc.base"] == Decimal("-25.00")
+    assert casillas["perc.porcentaje-retencion"] == "0000"
     assert casillas["perc.retenciones"] == Decimal("4.75")
+    assert casillas["perc.ejercicio-devengo"] == Decimal("2025")
+    assert casillas["perc.situacion-inmueble"] == "1"
+    assert casillas["perc.referencia-catastral"] == "1234567VK4713C0001XY"
+    assert casillas["perc.inmueble-provincia"] == "28"
+    assert casillas["perc.inmueble-codigo-postal"] == "28013"
 
 
 def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:

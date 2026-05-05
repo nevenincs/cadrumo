@@ -827,9 +827,17 @@ own ledger is checked.
 
 ### Wave 6 Modelo 180 Parity Ledger
 
-- [ ] Modelo 180 audit: enumerate every current code, corpus, TOML, parser,
+- [x] Modelo 180 audit: enumerate every current code, corpus, TOML, parser,
   fixture, workflow, and test surface that codifies Modelo 180 identity,
   casillas, rules, calculations, deadlines, exports, or live filed data.
+  - [x] Modelo 180 audit: repository scan found no surviving
+    `src/aeat/domain/rulesets`, `src/aeat/domain/casillas`,
+    generated-export, hydrate, or standalone filing-builder authority for
+    Modelo 180.
+  - [x] Modelo 180 audit: retained hits are registry/corpus definitions,
+    registry-backed calculation/export/relation tests, Sede filed-data
+    behaviour tests, CLI registry reporting, and endpoint-only portal
+    metadata linked from registry application links.
 - [x] Modelo 180 legal basis: identify and catalogue BOE legal references for
   every filing-grade calculation, parameter, filing condition, and temporal
   applicability rule.
@@ -858,18 +866,29 @@ own ledger is checked.
     and perceptor monetary record fields for both covered revisions, with legal
     refs, source refs, and export refs bound to official record-design
     positions.
+  - [x] Modelo 180 perceptor identity and inmueble fields: define NIF, name,
+    province, modality, retention percentage, accrual year, property situation,
+    cadastral reference, property province, and property postal code for both
+    covered revisions, with export refs bound to official fixed-width
+    positions.
 - [ ] Modelo 180 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
   - [x] Modelo 180 relation-backed annual formulas: define Modelo 115 annual
     summary relations, target bindings, rounding, and legal/source citations
     for total perceptores, total base, and total retentions.
+  - [x] Modelo 180 dependency classification closure: classify Modelo 115 as
+    the direct annual-settlement source for the Modelo 180 annual-summary
+    construct and cover every registered Modelo 115 relation.
 - [ ] Modelo 180 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
   - [x] Modelo 180 submitted-file profile: route fixed-width submitted records
     through the registry parser for the committed core declarante/perceptor
     fields.
+  - [x] Modelo 180 submitted-file profile expansion: include the newly declared
+    perceptor identity, rent, accrual, cadastral, and property-location fields
+    in the committed extraction target set.
 - [x] Modelo 180 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
@@ -891,6 +910,10 @@ own ledger is checked.
   - [x] Modelo 180 record parser tests: parse synthetic fixed-width type 1/type
     2 records through the committed registry layout, including signed perceptor
     base amounts.
+  - [x] Modelo 180 perceptor parser tests: prove fixed-width parsing of
+    identity, province, modality, retention percentage, accrual year, cadastral
+    reference, property province, and property postal code through the committed
+    registry layout.
 - [ ] Modelo 180 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -907,6 +930,9 @@ own ledger is checked.
   - [x] Modelo 180 registry/runtime focused gate: run whole-tree registry
     verification, committed registry tests, filing export tests, `ruff`, and
     `ty` for the touched registry, runtime, export, and test surfaces.
+  - [x] Modelo 180 dependency-closure gate: whole-tree registry verification
+    passes with Modelo 180, Modelo 190, and Modelo 193 annual-summary source
+    relations covered by dependency classifications.
 - [ ] Modelo 180 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 180 filing-grade values.
 
