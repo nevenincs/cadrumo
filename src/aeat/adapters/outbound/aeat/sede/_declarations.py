@@ -1025,6 +1025,7 @@ async def capture_previous_filing_observations(
     period: str,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
+    artefact_sink: FiledDeclarationArtefactSink | None = None,
 ) -> tuple[FiledDeclarationObservation, ...]:
     """Capture filed declarations required by registry previous-filing bindings."""
 
@@ -1048,6 +1049,7 @@ async def capture_previous_filing_observations(
             matches[0],
             settings=settings,
             playwright=playwright,
+            artefact_sink=artefact_sink,
         )
         observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
         missing = sorted(set(requirement.source_casillas).difference(observed_casillas))
@@ -1068,6 +1070,7 @@ async def capture_relation_source_observations(
     period: str,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
+    artefact_sink: FiledDeclarationArtefactSink | None = None,
 ) -> tuple[FiledDeclarationObservation, ...]:
     """Capture filed declarations required by registry cross-model relations."""
 
@@ -1087,7 +1090,7 @@ async def capture_relation_source_observations(
                     f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
                     f"expected one filed declaration, found {len(matches)}"
                 )
-            observation = await register.capture_observation(matches[0])
+            observation = await register.capture_observation(matches[0], artefact_sink=artefact_sink)
             observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(source_outputs.difference(observed_casillas))
             if missing:
