@@ -1818,6 +1818,33 @@ own ledger is checked.
         observations.
      - [x] Resolve previous-filing bindings directly through
         `FiledDeclarationObservation`.
+  - [x] Extend cross-model relation resolution so annual summaries and other
+     registry relations can consume normalized filed observations captured from
+     the read-only AEAT declarations register.
+     - [x] Reuse one authenticated declarations-register browser context while
+        discovering and capturing relation source filings.
+     - [x] Resolve registry relation values directly from
+        `FiledDeclarationObservation` without compatibility aliases or
+        model-specific Python maps.
+     - [x] Test Modelo 180 annual relation values against four Modelo 115
+        filed observations, with hard failures for missing periods and
+        incomplete extraction coverage.
+  - [ ] Add filed-state drift verification that compares local registry
+     calculation outputs against captured AEAT filed observations.
+     - [x] Add a domain comparison verdict with compared casillas, missing
+        local casillas, missing filed casillas, numeric drifts, and satisfied or
+        failed status.
+     - [x] Add a registry CLI command that loads encrypted filed observations,
+        derives local calculation inputs from filed casillas, resolves
+        previous-filing bindings and relation values from source observations,
+        calculates through the validated snapshot, and emits a drift verdict.
+     - [x] Add locale-backed CLI help, option text, error text, and report
+        metric labels for the filed-state verification command.
+     - [x] Add real-behaviour tests proving encrypted filed observations can
+        satisfy the local calculation comparison and report numeric drift.
+     - [ ] Add live-captured source-observation coverage for every modelo wave
+        whose calculation depends on previous filed state or cross-model
+        relations.
   - [x] Add no-write guard coverage for declaration-register search,
      submitted-file download, declaration-copy PDF download, justificante PDF
      download, CSV verifier access, and any archive fetch. Allowed operations
