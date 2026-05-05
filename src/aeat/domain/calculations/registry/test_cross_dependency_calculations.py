@@ -251,6 +251,8 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
     assert relation_values["renta-2025-rel-130-pagos-fraccionados"] == Decimal("1000")
     assert relation_values["renta-2025-rel-131-pagos-fraccionados"] == Decimal("20")
     assert relation_values["renta-2025-rel-180-retenciones-anuales"] == Decimal("30")
+    assert relation_values["renta-2025-rel-190-retenciones-anuales"] == Decimal("40")
+    assert relation_values["renta-2025-rel-193-retenciones-anuales"] == Decimal("50")
     assert result.values["0604"] == Decimal("1020.00")
     assert result.values["0609"] == Decimal("1020.00")
     entries = {entry.target: entry for entry in result.entries}
@@ -388,6 +390,10 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
         return Decimal("5")
     if relation_id == "renta-2025-rel-180-retenciones-anuales":
         return Decimal("30")
+    if relation_id == "renta-2025-rel-190-retenciones-anuales":
+        return Decimal("40")
+    if relation_id == "renta-2025-rel-193-retenciones-anuales":
+        return Decimal("50")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
