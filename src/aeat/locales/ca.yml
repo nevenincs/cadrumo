@@ -1,6 +1,13 @@
 aggregation:
   models:
     t_944805: YYYY-MM o YYYY.
+application:
+  auth:
+    provider_impact:
+      certificate_ready: application.auth.provider_impact.certificate_ready
+      generic_ready: application.auth.provider_impact.generic_ready
+      unavailable: application.auth.provider_impact.unavailable
+      unconfigured: application.auth.provider_impact.unconfigured
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
