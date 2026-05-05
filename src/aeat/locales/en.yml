@@ -91,7 +91,8 @@ cli:
         signed_out: Signed out of {label}
         signed_out_many: Signed out of {joined}
         stale_or_revoked: The session is stale or has been revoked
-        unknown_provider: 'Unknown authentication provider: {raw}. Supported providers: {valid}'
+        unknown_provider: 'Unknown authentication provider: {raw}. Supported providers:
+          {valid}'
         unsupported_env_file: Unsupported environment file (.env) format
         unsupported_provider: 'Unsupported provider: {raw}. Supported providers: {valid}'
       help: Initialize the project's authentication state (Google, AEAT)
@@ -978,12 +979,14 @@ cli:
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
-    capture_source_filed_data_help: Capture filed source observations required by a target modelo calculation
-    capture_source_filed_data_json_help: Emit source filed-data capture report as JSON
+    capture_source_filed_data_help: Capture filed source observations required by
+      a target modelo calculation
+    capture_source_filed_data_json_help: Emit source filed-data capture report as
+      JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range
-      unknown_modelo: "Registry has no modelo definition for {modelo}"
+      unknown_modelo: Registry has no modelo definition for {modelo}
     expediente_help: cli.registry.expediente_help
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
@@ -991,22 +994,15 @@ cli:
     json_help: cli.registry.json_help
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
-    metrics:
-      compared_casillas: compared_casillas
-      drift: drift
-      drift_count: drift_count
-      missing_filed_casillas: missing_filed_casillas
-      missing_local_casillas: missing_local_casillas
-      modelo: modelo
-      revision: revision
-      status: status
     modelo_help: cli.registry.modelo_help
     observation_help: Encrypted filed-declaration observation manifest to verify
     output_root_help: cli.registry.output_root_help
     period_help: cli.registry.period_help
-    source_observation_help: Encrypted source observation manifest required by previous-filing bindings or relations
+    source_observation_help: Encrypted source observation manifest required by previous-filing
+      bindings or relations
     to_year_help: cli.registry.to_year_help
-    verify_filed_state_help: Compare local registry calculation output against captured filed AEAT state
+    verify_filed_state_help: Compare local registry calculation output against captured
+      filed AEAT state
     verify_help: cli.registry.verify_help
     verify_source_root_help: cli.registry.verify_source_root_help
     workbooks_app_help: cli.registry.workbooks_app_help
