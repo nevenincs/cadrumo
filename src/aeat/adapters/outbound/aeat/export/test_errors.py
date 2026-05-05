@@ -38,12 +38,11 @@ def test_export_errors_are_canonical_access_gate_errors() -> None:
     assert SubmissionPreflightError is DomainSubmissionPreflightError
 
 
-def test_translatable_message_preserved() -> None:
-
-    translatable: str = "export.test_errors.translatable"
-    exc = SubmissionPreflightError("draft not ready", translated_message=translatable)
-    assert exc.translated_message == translatable
+def test_translated_message_does_not_leak_into_str() -> None:
+    """str(exc) must surface the raw message arg, not the translated_message override."""
+    exc = SubmissionPreflightError("draft not ready", translated_message="export.test_errors.translatable")
     assert str(exc) == "draft not ready"
+    assert exc.translated_message != str(exc)
 
 
 def test_preflight_catchable_as_submission_error() -> None:
