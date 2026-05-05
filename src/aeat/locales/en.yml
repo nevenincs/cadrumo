@@ -978,6 +978,8 @@ cli:
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
+    capture_source_filed_data_help: Capture filed source observations required by a target modelo calculation
+    capture_source_filed_data_json_help: Emit source filed-data capture report as JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range

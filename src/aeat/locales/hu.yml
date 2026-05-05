@@ -1006,6 +1006,8 @@ cli:
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
+    capture_source_filed_data_help: A célmodell számításához szükséges benyújtott forrásmegfigyelések rögzítése
+    capture_source_filed_data_json_help: A benyújtott forrásadat-rögzítési jelentés kiírása JSON-ként
     casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett számított casillák felülírásához
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range
