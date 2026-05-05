@@ -89,12 +89,12 @@ def _registry_modelo_requiring_cli_sources() -> str:
 # ---------------------------------------------------------------------
 
 
-def test_root_help_lists_setup_auth_and_app() -> None:
+def test_root_help_lists_only_setup_and_app() -> None:
     result = _invoke(["--help"])
     assert result.exit_code == 0
     assert "setup" in result.output
-    assert "auth" in result.output
     assert "app" in result.output
+    assert "auth" not in result.output
 
 
 def test_setup_help_lists_init_status_auth_profile() -> None:
@@ -127,11 +127,9 @@ def test_setup_auth_help_carries_subcommands() -> None:
         assert token in result.output
 
 
-def test_auth_help_carries_provider_backed_subcommands() -> None:
+def test_top_level_auth_is_not_user_facing() -> None:
     result = _invoke(["auth", "--help"])
-    assert result.exit_code == 0
-    for token in ("list-providers", "configure", "login", "status", "whoami", "logout"):
-        assert token in result.output
+    assert result.exit_code != 0
 
 
 def test_app_declaration_help_carries_subcommands() -> None:
