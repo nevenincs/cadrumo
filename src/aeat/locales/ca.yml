@@ -352,7 +352,7 @@ cli:
       not_approved_for_export: La declaració ha de ser aprovada abans de ser exportada
       profile_tax_id_required: El perfil actiu requereix un NIF/CIF configurat
       set_parse_error: Error en processar l'assignació del camp
-    export_help: Exportar una declaració aprovada al format oficial de l'AEAT
+    export_help: Exportar una declaració aprovada a un fitxer local en format AEAT
     format_help: Format de sortida (ex. json, text, table)
     labels:
       blockers: Bloquejos
@@ -823,8 +823,8 @@ cli:
       help: Editar manualment les dades d'una factura
       id_help: Identificador de la factura a editar
       reason_help: Motiu de l'edició o correcció
-      set_help: Establir camps de factura (base, iva.rate, iva.amount, payment.id,
-        document.path)
+      set_help: Establir camps de factura (base, iva.rate, iva.amount, iva.category,
+        retention.rate, retention.amount, payment.id, document.path)
     errors:
       at_least_one_edit: Es requereix almenys una modificació de camp
       file_not_found: Arxiu de factura no trobat
@@ -873,8 +873,8 @@ cli:
       id_help: Identificador de l'entrada del llibre a editar
       reason_help: Motiu de l'edició o correcció de l'entrada
       set_help: Establir valors de camps del llibre (camp=valor)
-      skip_help: Ometre l'edició de camps específics
-      split_help: Dividir l'entrada en múltiples línies
+      skip_help: Marcar la fila com a exclosa o tornar-la a la revisió
+      split_help: Dividir la fila en percentatges d'ús professional i personal
     errors:
       auto_detect_failed: Fallada en la detecció automàtica del format del llibre
       edit_requires_one: Es requereix almenys una modificació de camp per editar

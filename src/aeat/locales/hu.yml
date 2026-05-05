@@ -361,7 +361,7 @@ cli:
       profile_tax_id_required: Az aktív profilhoz beállított adóazonosító (NIF/CIF)
         szükséges
       set_parse_error: Hiba a mezőhozzárendelés elemzésekor
-    export_help: Jóváhagyott bevallás exportálása a hivatalos AEAT formátumba
+    export_help: Jóváhagyott bevallás exportálása helyi AEAT-formátumú fájlba
     format_help: Kimeneti formátum (pl. json, text, table)
     labels:
       blockers: Akadályozó tényezők
@@ -827,7 +827,8 @@ cli:
       help: Számla adatainak manuális szerkesztése
       id_help: A szerkesztendő számla azonosítója
       reason_help: A szerkesztés vagy javítás indoka
-      set_help: Számlamezők beállítása (base, iva.rate, iva.amount, payment.id, document.path)
+      set_help: Számlamezők beállítása (base, iva.rate, iva.amount, iva.category,
+        retention.rate, retention.amount, payment.id, document.path)
     errors:
       at_least_one_edit: Legalább egy mezőmódosítás szükséges
       file_not_found: Számlafájl nem található
@@ -875,8 +876,8 @@ cli:
       id_help: A szerkesztendő naplóbejegyzés azonosítója
       reason_help: A bejegyzés szerkesztésének vagy javításának indoka
       set_help: Naplómező értékek beállítása (mező=érték)
-      skip_help: Adott mezők szerkesztésének kihagyása
-      split_help: A bejegyzés felosztása több sorra
+      skip_help: A sor kizárása vagy visszaküldése felülvizsgálatra
+      split_help: A sor felosztása üzleti és személyes használati arányokra
     errors:
       auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
       edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges

@@ -121,6 +121,7 @@ def test_ledger_split_is_nested_inside_edit() -> None:
     assert ledger.exit_code == 0, ledger.output
     assert edit.exit_code == 0, edit.output
     assert "--split" in edit.output
+    assert "--skip" in edit.output
     assert "--reason" in edit.output
 
 
@@ -141,7 +142,7 @@ def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
 
     assert edit.exit_code == 0, edit.output
     assert match.exit_code == 0, match.output
-    for field in ("base", "iva.rate", "iva.amount", "payment.id", "document.path"):
+    for field in ("base", "iva.rate", "iva.amount", "iva.category", "retention.rate", "payment.id", "document.path"):
         assert field in edit.output
     assert "--period" in match.output
     assert "--invoice" in match.output
@@ -212,6 +213,7 @@ def test_declaration_help_uses_local_export_not_live_submission_wording() -> Non
     assert declaration.exit_code == 0, declaration.output
     assert approve.exit_code == 0, approve.output
     assert "exportación local" in combined
+    assert "archivo local" in combined
     assert "presentación" not in combined
     assert "submission" not in combined
 
