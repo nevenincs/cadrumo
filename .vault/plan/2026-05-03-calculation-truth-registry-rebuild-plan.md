@@ -473,6 +473,9 @@ own ledger is checked.
   - [x] Modelo 131 current 2026 legal basis: catalogue RD 439/2007 article 110
     and Orden EHA/672/2007 article 1 for the current objective-estimation
     payment foundation.
+  - [x] Modelo 131 annual module-order basis: catalogue BOE module orders for
+    2024, 2025, and 2026 so year-scoped objective-estimation revisions can cite
+    their applicable signs, indices, modules, and instructions.
 - [x] Modelo 131 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
@@ -491,6 +494,9 @@ own ledger is checked.
   - [x] Modelo 131 current 2026 catalogue closure: add current instructions,
     procedure, BOE form authority, and 2026 record-design source references
     with corpus paths and integrity data.
+  - [x] Modelo 131 source integrity repair: align local AEAT/BOE HTML source
+    hashes and byte counts with the committed corpus files before registry
+    verification.
 - [ ] Modelo 131 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/131.toml`.
@@ -555,13 +561,13 @@ own ledger is checked.
 - [ ] Modelo 180 audit: enumerate every current code, corpus, TOML, parser,
   fixture, workflow, and test surface that codifies Modelo 180 identity,
   casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 180 legal basis: identify and catalogue BOE legal references for
+- [x] Modelo 180 legal basis: identify and catalogue BOE legal references for
   every filing-grade calculation, parameter, filing condition, and temporal
   applicability rule.
-- [ ] Modelo 180 AEAT official guidance: capture and hash AEAT instructions,
+- [x] Modelo 180 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
-- [ ] Modelo 180 workbook/layout coverage: discover official XLS/XLSX coverage,
+- [x] Modelo 180 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
 - [ ] Modelo 180 live filed-data discovery: list available AEAT filed rows
@@ -570,10 +576,10 @@ own ledger is checked.
 - [ ] Modelo 180 live sanitized fixture: capture at least one read-only live
   submitted-file or declaration-copy artefact, sanitize identity data, commit
   the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 180 legal/source catalogue closure: add every legal ref and source
+- [x] Modelo 180 legal/source catalogue closure: add every legal ref and source
   ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
   applicability dates.
-- [ ] Modelo 180 TOML identity and revisions: define modelo identity, title,
+- [x] Modelo 180 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/180.toml`.
 - [ ] Modelo 180 casilla schema: define every filing-grade casilla with data
@@ -585,7 +591,7 @@ own ledger is checked.
 - [ ] Modelo 180 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
-- [ ] Modelo 180 live cross-reference guard: record the official live/static
+- [x] Modelo 180 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
 - [ ] Modelo 180 export/filing linkage: route export, verify, calculation,
@@ -604,6 +610,9 @@ own ledger is checked.
 - [ ] Modelo 180 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
+  - [x] Modelo 180 source-grounding focused gate: registry verification,
+    catalogue integrity tests, committed registry tests, `ruff`, and `ty` pass
+    for the source catalogue and registry surfaces.
 - [ ] Modelo 180 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 180 filing-grade values.
 
