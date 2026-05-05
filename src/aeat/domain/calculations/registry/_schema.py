@@ -368,6 +368,8 @@ class ApplicationLinkDefinition(RegistryModel):
         "filing",
         "review",
         "verification",
+        "approval",
+        "reconciliation",
         "export",
         "deadline",
         "portal",

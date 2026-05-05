@@ -1936,7 +1936,7 @@ own ledger is checked.
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, cancellation, and
   authenticated Renta WEB synthetic-test actions.
-- [ ] Modelo 100 export/filing linkage: route export, verify, calculation,
+- [x] Modelo 100 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
 - [ ] Modelo 100 legal correctness tests: run behaviour tests that prove formula
@@ -4210,8 +4210,12 @@ application surface, and the old authority has been deleted.
        - [x] The direct-estimation reduction chain now includes registry-backed
          mode selection, reduction application, and reduced-total propagation
          for the 2025 slice.
-       - [ ] Statutory cap calculation for difficult-justification expenses and
-         simplified-estimation final selection remain open.
+       - [x] Statutory cap calculation for difficult-justification expenses is
+         registry-backed for ejercicio 2025. Casilla 0222 is computed from the
+         5 percent Reglamento IRPF article 30 parameter, clamps negative bases
+         to zero, applies the EUR 2,000 annual cap, feeds casilla 0223, and is
+         covered by trace/legal-ref behaviour tests. Simplified-estimation final
+         selection remains open.
      - [ ] Objective estimation: activity modules, signs, indices, reductions,
        annual module orders, and relation to Modelo 131.
        - [x] Objective-estimation record-design outputs 1479, 1553, and 1577

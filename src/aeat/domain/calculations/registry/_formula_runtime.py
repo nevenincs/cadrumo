@@ -53,6 +53,8 @@ def calculate_registry_snapshot(
     """Evaluate all computed formulas in a validated registry snapshot."""
 
     _reject_non_decimal(inputs, "input")
+    resolved_date_context = dict(date_context)
+    resolved_date_context.setdefault("filing_period", date(snapshot.filing_year, 12, 31))
     resolved_bindings = binding_values or {}
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_relations = relation_values or {}
@@ -85,7 +87,7 @@ def calculate_registry_snapshot(
                 values=values,
                 binding_values=resolved_bindings,
                 parameters=parameters,
-                date_context=date_context,
+                date_context=resolved_date_context,
                 relation_values=resolved_relations,
                 operand_refs=operand_refs,
                 operand_values=operand_values,

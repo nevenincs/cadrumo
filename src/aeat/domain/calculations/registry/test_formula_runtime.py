@@ -316,12 +316,43 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
         )
 
 
-def test_registry_formula_runtime_rejects_missing_parameter_axis() -> None:
+def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot() -> None:
     snapshot = _committed_modelo_130_snapshot()
 
-    with pytest.raises(Exception, match="requires date axis"):
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "01": Decimal("100"),
+            "02": Decimal("0"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={},
+        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+    )
+
+    assert result.values["04"] == Decimal("20.00")
+
+
+def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis() -> None:
+    snapshot = _committed_modelo_130_snapshot()
+    target = snapshot.revision.parameters[0]
+    values = tuple(value.model_copy(update={"date_axis": "devengo_date"}) for value in target.values)
+    parameters = (
+        target.model_copy(update={"values": values}),
+        *snapshot.revision.parameters[1:],
+    )
+    mutated_revision = snapshot.revision.model_copy(update={"parameters": parameters})
+    mutated_snapshot = snapshot.model_copy(update={"revision": mutated_revision})
+
+    with pytest.raises(Exception, match="requires date axis 'devengo_date'"):
         calculate_registry_snapshot(
-            snapshot,
+            mutated_snapshot,
             inputs={
                 "01": Decimal("100"),
                 "02": Decimal("0"),

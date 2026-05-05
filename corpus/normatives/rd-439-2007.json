@@ -33,6 +33,24 @@
       }
     },
     {
+      "notes": "Base reglamentaria de la modalidad simplificada de estimacion directa en Modelo 100.",
+      "numero": "30",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a30",
+      "summary": {
+        "ca": "Defineix les especialitats de la modalitat simplificada d'estimacio directa, incloent el percentatge i limit anual de provisions i despeses de dificil justificacio.",
+        "en": "Defines simplified direct-estimation special rules, including the rate and annual cap for provisions and difficult-to-justify expenses.",
+        "es": "Define las especialidades de la modalidad simplificada de estimacion directa, incluido el porcentaje y limite anual de provisiones y gastos de dificil justificacion.",
+        "hu": "Meghatarozza az egyszerusitett kozvetlen becsles kulon szabalyait, beleertve a nehezen igazolhato koltsegek merteket es eves korlatjat."
+      },
+      "titulo": {
+        "ca": "Determinacio del rendiment net en la modalitat simplificada",
+        "en": "Determination of net income under simplified direct estimation",
+        "es": "Determinacion del rendimiento neto en la modalidad simplificada",
+        "hu": "A netto jovedelem meghatarozasa egyszerusitett kozvetlen becslesnel"
+      },
+      "text_es": "Articulo 30. Determinacion del rendimiento neto en la modalidad simplificada del metodo de estimacion directa. El rendimiento neto de las actividades economicas, a las que sea de aplicacion la modalidad simplificada del metodo de estimacion directa, se determinara segun las normas contenidas en los articulos 28 y 30 de la Ley del Impuesto, con las especialidades siguientes: 2.ª El conjunto de las provisiones deducibles y los gastos de dificil justificacion se cuantificara aplicando el porcentaje del 5 por ciento sobre el rendimiento neto, excluido este concepto, sin que la cuantia resultante pueda superar 2.000 euros anuales."
+    },
+    {
       "notes": "Base reglamentaria del Modelo 115.",
       "numero": "100",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100",
