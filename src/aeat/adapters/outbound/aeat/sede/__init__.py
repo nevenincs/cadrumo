@@ -68,11 +68,15 @@ from __future__ import annotations
 
 from ._declarations import (
     Declaration,
+    DeclarationsRegisterSession,
     capture_declaration,
     capture_filed_declaration_observation,
     capture_previous_filing_observations,
+    capture_relation_source_observations,
+    open_declarations_register,
     registry_observation_from_filed_declaration,
     resolve_previous_filing_bindings_from_filed_declarations,
+    resolve_relation_values_from_filed_declarations,
     shared_playwright,
     walk_declarations_register,
 )
@@ -110,6 +114,7 @@ from ._walker import (
 
 __all__ = [
     "Declaration",
+    "DeclarationsRegisterSession",
     "Expediente",
     "ExpedienteNotFoundError",
     "FiledDeclarationArtefact",
@@ -128,9 +133,11 @@ __all__ = [
     "capture_filed_declaration_observation",
     "capture_justificante",
     "capture_previous_filing_observations",
+    "capture_relation_source_observations",
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "find_expediente",
+    "open_declarations_register",
     "parse_expediente_detail",
     "parse_notifications_query",
     "parse_notifications_summary",
@@ -138,6 +145,7 @@ __all__ = [
     "registry_observation_from_filed_declaration",
     "resolve_justificante_ref",
     "resolve_previous_filing_bindings_from_filed_declarations",
+    "resolve_relation_values_from_filed_declarations",
     "shared_playwright",
     "walk_declarations_register",
     "walk_expedientes_tree",

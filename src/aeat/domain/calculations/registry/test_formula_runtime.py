@@ -38,6 +38,18 @@ def _committed_modelo_130_snapshot() -> RegistrySnapshot:
     )
 
 
+def _committed_modelo_180_snapshot() -> RegistrySnapshot:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "180")
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period="0A",
+    )
+
+
 def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order() -> None:
     snapshot = _committed_modelo_130_snapshot()
 
@@ -155,6 +167,59 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
     source_casillas = selector["source_casillas"]
     assert isinstance(source_casillas, tuple)
     assert requirement.source_casillas == tuple(sorted(source_casillas))
+
+
+def test_previous_filing_requirements_cover_all_source_periods_for_annual_summary() -> None:
+    snapshot = _committed_modelo_180_snapshot()
+
+    requirements = previous_filing_observation_requirements(snapshot.revision, filing_year=2026, period="0A")
+
+    assert [requirement.period for requirement in requirements] == ["1T", "2T", "3T", "4T"]
+    assert {requirement.modelo for requirement in requirements} == {"115"}
+    assert {requirement.filing_year for requirement in requirements} == {2026}
+    assert {requirement.binding_ids for requirement in requirements} == {
+        (
+            "modelo-180-115-base-anual",
+            "modelo-180-115-perceptores-anual",
+            "modelo-180-115-retenciones-anual",
+        )
+    }
+    assert {requirement.source_casillas for requirement in requirements} == {("01", "02", "03")}
+
+
+def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods() -> None:
+    snapshot = _committed_modelo_180_snapshot()
+    observations = tuple(
+        RegistryFilingObservation(
+            modelo="115",
+            filing_year=2026,
+            period=period,
+            casilla_values={
+                "01": Decimal("1"),
+                "02": base,
+                "03": retention,
+            },
+        )
+        for period, base, retention in (
+            ("1T", Decimal("100.00"), Decimal("19.00")),
+            ("2T", Decimal("200.00"), Decimal("38.00")),
+            ("3T", Decimal("300.00"), Decimal("57.00")),
+            ("4T", Decimal("-50.00"), Decimal("0.00")),
+        )
+    )
+
+    result = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        observations,
+        filing_year=2026,
+        period="0A",
+    )
+
+    assert result == {
+        "modelo-180-115-perceptores-anual": Decimal("4"),
+        "modelo-180-115-base-anual": Decimal("550.00"),
+        "modelo-180-115-retenciones-anual": Decimal("114.00"),
+    }
 
 
 def test_previous_filing_binding_requires_complete_observed_casillas() -> None:

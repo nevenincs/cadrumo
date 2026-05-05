@@ -63,6 +63,28 @@ class RegistryValidator:
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
+    def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
+        """Validate every modelo and the cross-model relation graph."""
+
+        modelo_tuple = tuple(modelos)
+        failures: list[str] = []
+        modelo_ids = [modelo.id for modelo in modelo_tuple]
+        for duplicate in sorted(_duplicates(modelo_ids)):
+            failures.append(f"registry: duplicate modelo id {duplicate!r}")
+
+        modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
+        for modelo in modelo_tuple:
+            try:
+                self.validate_modelo(modelo)
+            except RegistryValidationError as exc:
+                failures.append(str(exc))
+
+        if len(modelos_by_id) == len(modelo_tuple):
+            failures.extend(self._validate_relation_closure(modelo_tuple, modelos_by_id))
+
+        if failures:
+            raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+
     def _validate_revision(self, modelo: ModeloDefinition, revision: ModeloRevision) -> list[str]:
         failures: list[str] = []
         prefix = f"modelo {modelo.id} revision {revision.id}"
@@ -83,6 +105,7 @@ class RegistryValidator:
         verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
         application_link_ids = [link.id for link in revision.application_links]
         deadline_window_ids = [window.id for window in revision.deadline_windows]
+        filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
         support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
         if not workbook_parity_ids:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
@@ -101,6 +124,7 @@ class RegistryValidator:
             ("verification expectation", verification_expectation_ids),
             ("application link", application_link_ids),
             ("deadline window", deadline_window_ids),
+            ("filing schedule", filing_schedule_ids),
             ("support removal decision", support_removal_decision_ids),
         ):
             for duplicate in sorted(_duplicates(ids)):
@@ -120,6 +144,7 @@ class RegistryValidator:
             + verification_expectation_ids
             + application_link_ids
             + deadline_window_ids
+            + filing_schedule_ids
             + support_removal_decision_ids
         )
         for duplicate in sorted(_duplicates(primary_ids)):
@@ -261,6 +286,48 @@ class RegistryValidator:
             if relation.target_binding not in bindings:
                 failures.append(
                     f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}"
+                )
+            unknown_target_periods = sorted(set(relation.target_periods).difference(revision.period_selector.periods))
+            if unknown_target_periods:
+                failures.append(
+                    f"{prefix}: relation {relation.id!r} targets periods outside revision selector "
+                    f"{unknown_target_periods!r}"
+                )
+
+        selector_periods = set(revision.period_selector.periods)
+        for schedule in revision.filing_schedules:
+            failures.extend(
+                self._missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix, f"filing schedule {schedule.id}", schedule.source_refs, self._sources, "source"
+                )
+            )
+            unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
+            if unknown_periods:
+                failures.append(
+                    f"{prefix}: filing schedule {schedule.id!r} declares periods outside revision selector "
+                    f"{unknown_periods!r}"
+                )
+            for condition in schedule.profile_conditions:
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"filing schedule {schedule.id} condition {condition.field}",
+                        condition.legal_refs,
+                        self._legal,
+                        "legal",
+                    )
+                )
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"filing schedule {schedule.id} condition {condition.field}",
+                        condition.source_refs,
+                        self._sources,
+                        "source",
+                    )
                 )
 
         for provider in revision.algorithm_providers:
@@ -502,6 +569,7 @@ class RegistryValidator:
                 verification_expectation_ids=verification_expectation_ids,
                 application_link_ids=application_link_ids,
                 deadline_window_ids=deadline_window_ids,
+                filing_schedule_ids=filing_schedule_ids,
             )
         )
         failures.extend(self._validate_application_link_closure(prefix, revision))
@@ -533,6 +601,119 @@ class RegistryValidator:
                     f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector"
                 )
         return failures
+
+    @staticmethod
+    def _validate_relation_closure(
+        modelos: Iterable[ModeloDefinition],
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        for modelo in modelos:
+            for revision in modelo.revisions.values():
+                prefix = f"modelo {modelo.id} revision {revision.id}"
+                for relation in revision.relations:
+                    relation_scope = f"{prefix}: relation {relation.id!r}"
+                    source_modelo = modelos_by_id.get(relation.source_modelo)
+                    if source_modelo is None:
+                        failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
+                        continue
+                    if not relation.source_periods:
+                        failures.append(f"{relation_scope} must declare source periods")
+                    if not relation.target_periods:
+                        failures.append(f"{relation_scope} must declare target periods")
+                    aggregation = relation.aggregation or {"op": "copy"}
+                    op = aggregation.get("op")
+                    if op not in {"copy", "sum"}:
+                        failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
+                    source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
+                        source_modelo,
+                        relation.source_revision_selector,
+                    )
+                    failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
+                    if not source_revisions:
+                        failures.append(
+                            f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
+                            f"matches no source revisions in modelo {source_modelo.id}"
+                        )
+                        continue
+                    for source_revision in source_revisions:
+                        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
+                        source_values = RegistryValidator._revision_output_ids(source_revision)
+                        if relation.source_output not in source_values:
+                            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
+                        unknown_source_periods = sorted(
+                            set(relation.source_periods).difference(source_revision.period_selector.periods)
+                        )
+                        if unknown_source_periods:
+                            failures.append(
+                                f"{source_scope} does not support source periods {unknown_source_periods!r}"
+                            )
+        return failures
+
+    @staticmethod
+    def _revision_output_ids(revision: ModeloRevision) -> set[str]:
+        outputs = {casilla.id for casilla in revision.casillas}
+        outputs.update(binding.id for binding in revision.bindings)
+        outputs.update(output for binding in revision.algorithm_bindings for output in binding.outputs.values())
+        return outputs
+
+    @staticmethod
+    def _select_relation_source_revisions(
+        modelo: ModeloDefinition,
+        selector: Mapping[str, str | int],
+    ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
+        allowed = {"revision", "revision_id", "year", "year_from", "year_to"}
+        failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
+        revision_id = selector.get("revision_id", selector.get("revision"))
+        year = selector.get("year")
+        year_from = selector.get("year_from")
+        year_to = selector.get("year_to")
+
+        if revision_id is not None and not isinstance(revision_id, str):
+            failures.append("selector revision_id must be a string")
+        for key, value in (("year", year), ("year_from", year_from), ("year_to", year_to)):
+            if value is not None and not isinstance(value, int):
+                failures.append(f"selector {key} must be an integer")
+        if year is not None and (year_from is not None or year_to is not None):
+            failures.append("selector must use year or year_from/year_to, not both")
+        if year_to is not None and year_from is None:
+            failures.append("selector year_to requires year_from")
+        if isinstance(year_from, int) and isinstance(year_to, int) and year_to < year_from:
+            failures.append("selector year_to must be on or after year_from")
+
+        selected: list[ModeloRevision] = []
+        for revision in modelo.revisions.values():
+            if isinstance(revision_id, str) and revision.id != revision_id:
+                continue
+            if isinstance(year, int) and not revision.period_selector.includes_year(year):
+                continue
+            if isinstance(year_from, int) and not RegistryValidator._revision_intersects_year_range(
+                revision,
+                year_from=year_from,
+                year_to=year_to if isinstance(year_to, int) else None,
+            ):
+                continue
+            selected.append(revision)
+        return tuple(selected), failures
+
+    @staticmethod
+    def _revision_intersects_year_range(
+        revision: ModeloRevision,
+        *,
+        year_from: int,
+        year_to: int | None,
+    ) -> bool:
+        if revision.period_selector.years:
+            return any(
+                year >= year_from and (year_to is None or year <= year_to) for year in revision.period_selector.years
+            )
+        revision_from = revision.period_selector.year_from
+        if revision_from is None:
+            return False
+        revision_to = revision.period_selector.year_to
+        if revision_to is not None and revision_to < year_from:
+            return False
+        return not (year_to is not None and revision_from > year_to)
 
     @staticmethod
     def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
@@ -636,6 +817,7 @@ class RegistryValidator:
         verification_expectation_ids: Iterable[str],
         application_link_ids: Iterable[str],
         deadline_window_ids: Iterable[str],
+        filing_schedule_ids: Iterable[str] = (),
     ) -> list[str]:
         failures: list[str] = []
         active_subjects = {
@@ -646,6 +828,7 @@ class RegistryValidator:
             "verification_expectation": set(verification_expectation_ids),
             "application_link": set(application_link_ids),
             "deadline_window": set(deadline_window_ids),
+            "filing_schedule": set(filing_schedule_ids),
         }
         for decision in revision.support_removal_decisions:
             failures.extend(

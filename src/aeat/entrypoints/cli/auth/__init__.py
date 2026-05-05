@@ -27,7 +27,13 @@ from ....adapters.outbound.google import (
     get_credentials,
     inspect_google_auth,
 )
-from ....application.auth import AuthProviderKind
+from ....application.auth import (
+    AuthProviderKind,
+    CorruptAuthSessionError,
+    delete_persisted_session,
+    load_persisted_session,
+    storage_state_paths,
+)
 from ....core.config import PROJECT_ROOT, Settings
 from ....core.env_io import write_env_vars
 from ....core.logging import get_logger
@@ -35,8 +41,7 @@ from .._errors import CliRefusedBoundaryError, json_output_requested
 from .._i18n import tr
 from .._schemas import OutputRootSchema, OutputSchema, emit_json_success, register_schema
 from ..oauth import CREDENTIALS_PAGE_TEMPLATE, REQUIRED_BLOCK, parse_oauth_client_json
-from . import _registry, _session
-from ._paths import storage_state_paths
+from . import _registry
 from ._render import (
     render_list_providers_json,
     render_list_providers_table,
@@ -266,10 +271,12 @@ def _parse_kind(raw: str) -> AuthProviderKind:
         kind = AuthProviderKind(raw)
     except ValueError as exc:
         valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(tr("cli.auth.init.errors.unknown_provider", raw=raw, valid=valid)) from exc
+        message = tr("cli.auth.init.errors.unknown_provider", raw=raw, valid=valid).format(raw=raw, valid=valid)
+        raise typer.BadParameter(message) from exc
     if kind not in _registry.iter_kinds():
         valid = ", ".join(k.value for k in _registry.iter_kinds())
-        raise typer.BadParameter(tr("cli.auth.init.errors.unsupported_provider", raw=raw, valid=valid))
+        message = tr("cli.auth.init.errors.unsupported_provider", raw=raw, valid=valid).format(raw=raw, valid=valid)
+        raise typer.BadParameter(message)
     return kind
 
 
@@ -807,7 +814,7 @@ def login(
         # surface — it is an internal file location that the operator has
         # no reason to consume from a login command. Downstream scripts
         # that need the path should resolve it via
-        # ``aeat.entrypoints.cli.auth._paths.storage_state_paths(settings, kind)``
+        # ``aeat.application.auth.storage_state_paths(settings, kind)``
         # rather than scraping login's output.
         payload = {
             "provider_kind": session.provider_kind.value,
@@ -855,8 +862,8 @@ def status(
     kind = _parse_kind(provider) if provider else None
 
     try:
-        session = _session.load(settings, kind)
-    except _session.CorruptAuthSessionError as exc:
+        session = load_persisted_session(settings, kind)
+    except CorruptAuthSessionError as exc:
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
@@ -920,8 +927,8 @@ def whoami(
     settings = _load_settings()
     explicit = _parse_kind(provider) if provider else None
     try:
-        persisted = _session.load(settings, explicit)
-    except _session.CorruptAuthSessionError as exc:
+        persisted = load_persisted_session(settings, explicit)
+    except CorruptAuthSessionError as exc:
         if json_output or json_output_requested():
             raise
         _CONSOLE.print(f"[red]{exc}[/red]")
@@ -1008,15 +1015,15 @@ def logout(
 
     if all_providers:
         for entry in _registry.iter_entries():
-            removed_for_kind = _session.delete(settings, entry.kind)
+            removed_for_kind = delete_persisted_session(settings, entry.kind)
             if removed_for_kind:
                 cleared_kinds.append(entry.kind)
                 removed.extend(removed_for_kind)
     elif provider is not None:
         target_kind = _parse_kind(provider)
         try:
-            persisted = _session.load(settings, target_kind)
-        except _session.CorruptAuthSessionError:
+            persisted = load_persisted_session(settings, target_kind)
+        except CorruptAuthSessionError:
             logger.warning(
                 "logout: corrupt session for provider %s; proceeding to delete",
                 target_kind.value,
@@ -1027,7 +1034,7 @@ def logout(
         # `--provider` only removes its own files. A mismatched persisted
         # session elsewhere on disk stays where it is.
         if persisted is not None or target_paths.metadata.exists() or target_paths.storage_state.exists():
-            removed_for_kind = _session.delete(settings, target_kind)
+            removed_for_kind = delete_persisted_session(settings, target_kind)
             if removed_for_kind:
                 cleared_kinds.append(target_kind)
                 removed.extend(removed_for_kind)
@@ -1036,12 +1043,12 @@ def logout(
         # This matches the operator's intuition: `aeat auth logout` clears
         # the active session regardless of which provider produced it.
         try:
-            persisted = _session.load(settings)
-        except _session.CorruptAuthSessionError:
+            persisted = load_persisted_session(settings)
+        except CorruptAuthSessionError:
             logger.warning("logout: corrupt session on disk; cannot determine provider; skipping delete", exc_info=True)
             persisted = None
         if persisted is not None:
-            removed_for_kind = _session.delete(settings, persisted.provider_kind)
+            removed_for_kind = delete_persisted_session(settings, persisted.provider_kind)
             if removed_for_kind:
                 cleared_kinds.append(persisted.provider_kind)
                 removed.extend(removed_for_kind)
@@ -1062,10 +1069,10 @@ def logout(
 
     labels = [_registry.get_entry(k).label for k in cleared_kinds]
     if len(labels) == 1:
-        _CONSOLE.print(tr("cli.auth.init.errors.signed_out", label=labels[0]))
+        _CONSOLE.print(tr("cli.auth.init.errors.signed_out", label=labels[0]).format(label=labels[0]))
     else:
         joined = ", ".join(labels)
-        _CONSOLE.print(tr("cli.auth.init.errors.signed_out_many", joined=joined))
+        _CONSOLE.print(tr("cli.auth.init.errors.signed_out_many", joined=joined).format(joined=joined))
 
 
 __all__ = ["app"]

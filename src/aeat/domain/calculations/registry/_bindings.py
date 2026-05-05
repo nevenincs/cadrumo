@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -103,10 +103,11 @@ def previous_filing_observation_requirements(
             continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
-        key = (selector.source_modelo, expected_year, selector.period)
-        bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
-        bucket["binding_ids"].add(binding.id)
-        bucket["source_casillas"].update(selector.source_casillas)
+        for required_period in selector.required_periods:
+            key = (selector.source_modelo, expected_year, required_period)
+            bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
+            bucket["binding_ids"].add(binding.id)
+            bucket["source_casillas"].update(selector.source_casillas)
     return tuple(
         RegistryFilingObservationRequirement(
             modelo=modelo,
@@ -135,27 +136,28 @@ def resolve_previous_filing_binding_values(
             continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
-        matches = tuple(
-            observation
-            for observation in available
-            if observation.modelo == selector.source_modelo
-            and observation.filing_year == expected_year
-            and observation.period == selector.period
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} expected one observed filing "
-                f"{selector.source_modelo!r}/{expected_year}/{selector.period!r}, found {len(matches)}"
-            )
         values = []
-        for casilla_id in selector.source_casillas:
-            casilla_value = matches[0].casilla_values.get(casilla_id)
-            if casilla_value is None:
+        for required_period in selector.required_periods:
+            matches = tuple(
+                observation
+                for observation in available
+                if observation.modelo == selector.source_modelo
+                and observation.filing_year == expected_year
+                and observation.period == required_period
+            )
+            if len(matches) != 1:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                    f"from {selector.source_modelo!r}/{expected_year}/{selector.period!r}"
+                    f"binding {binding.id!r} expected one observed filing "
+                    f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
                 )
-            values.append(casilla_value)
+            for casilla_id in selector.source_casillas:
+                casilla_value = matches[0].casilla_values.get(casilla_id)
+                if casilla_value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                        f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                    )
+                values.append(casilla_value)
         resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
     return resolved
 
@@ -164,9 +166,45 @@ class _PreviousFilingSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     source_modelo: str = Field(min_length=1, max_length=8)
-    filing_year_delta: int
-    period: str = Field(min_length=1, max_length=8)
+    filing_year_delta: int = 0
+    period: str | None = Field(default=None, min_length=1, max_length=8)
+    source_periods: tuple[str, ...] = ()
     source_casillas: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("source_periods")
+    @classmethod
+    def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("previous-filing source_periods entries must be unique")
+        return value
+
+    @property
+    def required_periods(self) -> tuple[str, ...]:
+        if self.period is not None:
+            return (self.period,)
+        return self.source_periods
+
+    @field_validator("period")
+    @classmethod
+    def _period_not_empty(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("previous-filing period must be non-empty")
+        return value
+
+    @field_validator("source_casillas")
+    @classmethod
+    def _source_casillas_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("previous-filing source_casillas entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_period_selector(self) -> _PreviousFilingSelector:
+        if self.period is not None and self.source_periods:
+            raise ValueError("previous-filing selector must use period or source_periods, not both")
+        if self.period is None and not self.source_periods:
+            raise ValueError("previous-filing selector must declare period or source_periods")
+        return self
 
 
 def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFilingSelector:

@@ -92,13 +92,24 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli.auth._session.CorruptAuthSessionError",
+        "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="INTEGRITY_CLI_AUTH_SESSION_CORRUPT_AUTH_SESSION",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_cli_auth_session_corrupt_auth_session",
             default_suggestion="aeat setup auth login",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._sessions.AuthSessionUnavailableError",
+        ErrorCode(
+            code="AUTH_CLI_AUTH_SESSION_UNAVAILABLE",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_cli_auth_session_unavailable",
+            default_suggestion="aeat auth login",
+            retryable=True,
             runbook_id=None,
         ),
     ),

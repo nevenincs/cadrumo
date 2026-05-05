@@ -11,10 +11,15 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 from typer.testing import CliRunner
 
-from ....application.auth import AuthProviderKind
+from ....application.auth import (
+    AuthProviderKind,
+    CorruptAuthSessionError,
+    PersistedAuthSession,
+    load_persisted_session,
+    storage_state_paths,
+)
 from ....core.config import Settings
-from . import _registry, _session, app
-from ._paths import storage_state_paths
+from . import _registry, app
 from ._render import render_status_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -436,7 +441,7 @@ class TestRender:
 
     def test_status_line_reports_minutes_remaining(self) -> None:
         now = datetime(2026, 4, 21, 12, 0, tzinfo=UTC)
-        session = _session.PersistedAuthSession(
+        session = PersistedAuthSession(
             provider_kind=AuthProviderKind.CERTIFICATE,
             identity_nif="11111111H",
             authenticated_at=now - timedelta(minutes=8),
@@ -448,18 +453,18 @@ class TestRender:
         assert "11111111H" in line
 
 
-# ── _session corruption paths ─────────────────────────────────────────────────
+# ── persisted session corruption paths ────────────────────────────────────────
 
 
 class TestSessionLoad:
-    """`_session.load` fails closed with an actionable message when the sidecar is broken."""
+    """Persisted session loading fails closed when the sidecar is broken."""
 
     def test_corrupt_metadata_raises(self, isolated_token_dir: Path) -> None:
         (isolated_token_dir / "default-storage.json").write_text("{}", encoding="utf-8")
         (isolated_token_dir / "default-storage.meta.json").write_text("not json", encoding="utf-8")
         settings = _isolated_settings()
-        with pytest.raises(_session.CorruptAuthSessionError):
-            _session.load(settings)
+        with pytest.raises(CorruptAuthSessionError):
+            load_persisted_session(settings)
 
 
 # ── conformance checks ───────────────────────────────────────────────────────

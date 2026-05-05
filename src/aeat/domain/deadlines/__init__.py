@@ -40,6 +40,7 @@ from ._errors import (
 )
 from ._models import (
     AutonomoProfile,
+    FilingEnrollment,
     FilingObligation,
     IVARegime,
     ObligationStatus,
@@ -51,6 +52,7 @@ __all__ = [
     "AutonomoProfile",
     "DeadlineEngine",
     "DeadlineError",
+    "FilingEnrollment",
     "FilingObligation",
     "IVARegime",
     "ModeloIdentifier",

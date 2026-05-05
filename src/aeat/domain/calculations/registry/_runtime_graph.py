@@ -15,11 +15,26 @@ def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
     return tuple(refs)
 
 
+def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
+    """Return all relation ids referenced by a formula expression."""
+
+    refs: list[str] = []
+    _collect_relation_refs(expression, refs)
+    return tuple(refs)
+
+
 def _collect_casilla_refs(expression: FormulaExpression, refs: list[str]) -> None:
     if expression.casilla is not None:
         refs.append(expression.casilla)
     for arg in expression.args:
         _collect_casilla_refs(arg, refs)
+
+
+def _collect_relation_refs(expression: FormulaExpression, refs: list[str]) -> None:
+    if expression.relation is not None:
+        refs.append(expression.relation)
+    for arg in expression.args:
+        _collect_relation_refs(arg, refs)
 
 
 def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:

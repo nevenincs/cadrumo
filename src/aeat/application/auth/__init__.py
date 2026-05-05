@@ -147,6 +147,17 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     )
 
 
+from ._sessions import (  # noqa: E402
+    AuthSessionUnavailableError,
+    CorruptAuthSessionError,
+    PersistedAuthSession,
+    StorageStatePaths,
+    delete_persisted_session,
+    load_persisted_session,
+    require_verified_aeat_session,
+    storage_state_paths,
+)
+
 __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
     "AuthProvider",
@@ -154,10 +165,18 @@ __all__ = [
     "AuthProviderDescription",
     "AuthProviderKind",
     "AuthProviderListing",
+    "AuthSessionUnavailableError",
+    "CorruptAuthSessionError",
+    "PersistedAuthSession",
+    "StorageStatePaths",
     "available_auth_providers",
+    "delete_persisted_session",
     "describe_provider_operator_impact",
     "get_auth_provider",
     "list_auth_providers",
+    "load_persisted_session",
+    "require_verified_aeat_session",
     "select_provider",
+    "storage_state_paths",
     "unavailable_auth_providers",
 ]

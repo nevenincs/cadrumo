@@ -43,9 +43,11 @@ from ._declarations import (
     _observed_casillas_from_submitted_file,
     _parse_listbox,
     _parse_presented_at,
+    _read_guard_policy_from_snapshot,
     _verify_submitted_file_context,
     registry_observation_from_filed_declaration,
     resolve_previous_filing_bindings_from_filed_declarations,
+    resolve_relation_values_from_filed_declarations,
 )
 from ._errors import SedeParseError
 from ._observation_store import FiledDeclarationObservationStore
@@ -598,6 +600,25 @@ class TestDeclarationPdfObservation:
 class TestReadOperationGuard:
     """Verify declaration-reader remote operations are fail-closed."""
 
+    def test_modelo_100_declaration_reader_uses_snapshot_guard(self) -> None:
+        snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
+        policy = _read_guard_policy_from_snapshot(snapshot)
+
+        assert policy.classification == "authenticated_read_surface"
+        assert policy.requires_authentication is True
+        assert policy.requires_aeat_authorization is True
+        _assert_read_http(
+            "GET",
+            "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul",
+            policy=policy,
+        )
+        with pytest.raises(RegistryValidationError, match="remote write method"):
+            _assert_read_http(
+                "POST",
+                "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul",
+                policy=policy,
+            )
+
     def test_cotejo_pdf_get_allowed(self) -> None:
         _assert_read_http(
             "GET",
@@ -776,3 +797,78 @@ class TestFiledObservationBindings:
 
         with pytest.raises(SedeParseError, match="incomplete extraction coverage"):
             registry_observation_from_filed_declaration(observation)
+
+
+class TestFiledObservationRelations:
+    """Verify filed observations can supply registry cross-model relations."""
+
+    def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self) -> None:
+        snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
+        quarterly_values = {
+            "1T": {"01": Decimal("2"), "02": Decimal("100.10"), "03": Decimal("19.20")},
+            "2T": {"01": Decimal("3"), "02": Decimal("200.20"), "03": Decimal("38.40")},
+            "3T": {"01": Decimal("1"), "02": Decimal("50.00"), "03": Decimal("9.50")},
+            "4T": {"01": Decimal("4"), "02": Decimal("300.30"), "03": Decimal("57.60")},
+        }
+
+        resolved = resolve_relation_values_from_filed_declarations(
+            snapshot.revision,
+            tuple(
+                _filed_observation(
+                    modelo="115",
+                    ejercicio=2026,
+                    period=period,
+                    casilla_values=casilla_values,
+                )
+                for period, casilla_values in quarterly_values.items()
+            ),
+            filing_year=2026,
+            period="0A",
+        )
+
+        assert resolved == {
+            "modelo-180-rel-115-base-anual": sum(values["02"] for values in quarterly_values.values()),
+            "modelo-180-rel-115-perceptores-anual": sum(values["01"] for values in quarterly_values.values()),
+            "modelo-180-rel-115-retenciones-anual": sum(values["03"] for values in quarterly_values.values()),
+        }
+
+    def test_missing_relation_source_filing_is_rejected(self) -> None:
+        snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
+        observations = tuple(
+            _filed_observation(
+                modelo="115",
+                ejercicio=2026,
+                period=period,
+                casilla_values={"01": Decimal("1"), "02": Decimal("10"), "03": Decimal("2")},
+            )
+            for period in ("1T", "2T", "3T")
+        )
+
+        with pytest.raises(RegistryValidationError, match="expected one observed filing"):
+            resolve_relation_values_from_filed_declarations(
+                snapshot.revision,
+                observations,
+                filing_year=2026,
+                period="0A",
+            )
+
+    def test_incomplete_relation_source_observation_is_rejected(self) -> None:
+        snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
+        observations = tuple(
+            _filed_observation(
+                modelo="115",
+                ejercicio=2026,
+                period=period,
+                casilla_values={"01": Decimal("1"), "02": Decimal("10"), "03": Decimal("2")},
+                extraction_coverage={"submitted_file": 0.5} if period == "4T" else None,
+            )
+            for period in ("1T", "2T", "3T", "4T")
+        )
+
+        with pytest.raises(SedeParseError, match="incomplete extraction coverage"):
+            resolve_relation_values_from_filed_declarations(
+                snapshot.revision,
+                observations,
+                filing_year=2026,
+                period="0A",
+            )

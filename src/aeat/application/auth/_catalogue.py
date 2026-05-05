@@ -58,7 +58,7 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="clave-movil",
         label=tr("auth.catalogue.clave_movil_label"),
-        availability=AuthProviderAvailability.UNAVAILABLE,
+        availability=AuthProviderAvailability.AVAILABLE,
         description=tr("auth.catalogue.clave_movil_description"),
     ),
     AuthProviderListing(

@@ -9,6 +9,7 @@ import pytest
 from . import (
     AutonomoProfile,
     DeadlineEngine,
+    FilingEnrollment,
     FilingObligation,
     IVARegime,
     ObligationStatus,
@@ -83,6 +84,32 @@ class TestCompute:
             "111",
             "111",
             "111",
+        ]
+
+    def test_profile_based_schedule_selects_monthly_withholding_deadlines_for_large_company(self) -> None:
+        schedule = _engine().compute(
+            _profile(
+                has_employees=True,
+                enrollment=FilingEnrollment(large_company=True),
+            ),
+            2026,
+            today=date(2026, 1, 1),
+        )
+        withholding_periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "111"]
+
+        assert withholding_periods == [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
         ]
 
     def test_registry_condition_can_add_rental_withholding_deadline(self) -> None:

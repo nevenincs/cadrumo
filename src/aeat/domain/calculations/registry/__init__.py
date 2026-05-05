@@ -16,7 +16,11 @@ from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_ex
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
-from ._relations import resolve_relation_values
+from ._relations import (
+    relation_source_requirements,
+    resolve_relation_values,
+    resolve_relation_values_from_observations,
+)
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -26,6 +30,7 @@ from ._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ._runtime_graph import expression_casilla_refs
+from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
     CasillaDefinition,
@@ -37,6 +42,7 @@ from ._schema import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExtractionProfileDefinition,
+    FilingScheduleDefinition,
     FormulaDefinition,
     FormulaExpression,
     LegalReference,
@@ -44,6 +50,7 @@ from ._schema import (
     ModeloDefinition,
     ModeloRevision,
     ParameterDefinition,
+    ProfilePredicateDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     SourceReference,
@@ -93,6 +100,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ExtractionProfileDefinition",
+    "FilingScheduleDefinition",
     "FormulaDefinition",
     "FormulaExpression",
     "LegalReference",
@@ -103,6 +111,7 @@ __all__ = [
     "ParameterDefinition",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
+    "ProfilePredicateDefinition",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCatalogues",
@@ -133,6 +142,7 @@ __all__ = [
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",
+    "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
     "assert_workbook_scan_clean",
@@ -143,6 +153,7 @@ __all__ = [
     "convert_binary_xls_with_libreoffice",
     "detect_workbook_runner",
     "discover_workbooks",
+    "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
     "expression_casilla_refs",
@@ -153,11 +164,14 @@ __all__ = [
     "parse_export_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
+    "relation_source_requirements",
+    "profile_condition_matches",
     "remote_state_policy_from_cross_reference",
     "resolve_bound_casilla_inputs",
     "resolve_export_layout",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
+    "resolve_relation_values_from_observations",
     "run_registry_workbook_parity",
     "run_workbook_with_excel_com",
     "run_workbook_with_libreoffice",

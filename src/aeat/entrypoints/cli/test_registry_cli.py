@@ -2,20 +2,36 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import typer
+from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
-from aeat.adapters.outbound.aeat.sede import Declaration
+from aeat.adapters.outbound.aeat.sede import (
+    Declaration,
+    FiledDeclarationArtefact,
+    FiledDeclarationObservation,
+    FiledDeclarationObservationStore,
+    ObservedCasillaValue,
+)
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.auth import AuthProviderKind
 from aeat.core.paths import PROJECT_ROOT
-from aeat.domain.calculations.registry import load_registry_tree
+from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 from . import app
-from .registry import _filed_data_listing_row, select_declarations_for_capture
+from .registry import (
+    _filed_data_listing_row,
+    capture_source_filed_data,
+    select_declarations_for_capture,
+    verify_filed_state,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -71,6 +87,9 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert payload["workbook_parity_ref_count"] > 0
     assert payload["verification_expectation_count"] > 0
     assert payload["application_link_count"] > 0
+    assert payload["relation_count"] > 0
+    assert "periodic_to_annual_summary" in payload["relation_dependency_roles"]
+    assert payload["filing_schedule_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
     assert len(payload["revision_details"]) == payload["revision_count"]
     revision = payload["revision_details"][0]
@@ -79,11 +98,14 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert revision["legal_refs"]
     assert revision["source_refs"]
     assert revision["export_layout_count"] == len(revision["export_layout_ids"])
-    assert revision["export_record_count"] > 0
-    assert revision["export_field_count"] > 0
     assert revision["deadline_window_count"] == len(revision["deadline_periods"])
-    assert revision["portal_guard_policy_ids"]
+    assert revision["relation_count"] == len(revision["relation_ids"])
+    assert revision["filing_schedule_count"] == len(revision["filing_schedule_ids"])
     assert revision["workbook_parity"]
+    export_revision = next(detail for detail in payload["revision_details"] if detail["export_field_count"] > 0)
+    assert export_revision["export_record_count"] > 0
+    guarded_revision = next(detail for detail in payload["revision_details"] if detail["portal_guard_policy_ids"])
+    assert guarded_revision["portal_guard_policy_ids"]
     workbook_reference = revision["workbook_parity"][0]
     assert workbook_reference["id"]
     assert workbook_reference["workbook_source"] in revision["source_refs"]
@@ -112,7 +134,13 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     assert payload["verified"] is True
     assert payload["source_reference_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
-    assert payload["revision_details"][0]["export_field_count"] > 0
+    assert payload["relation_count"] > 0
+    assert "periodic_to_annual_summary" in payload["relation_dependency_roles"]
+    assert payload["filing_schedule_count"] > 0
+    assert any(detail["export_field_count"] > 0 for detail in payload["revision_details"])
+    modelo_180 = next(detail for detail in payload["revision_details"] if detail["modelo"] == "180")
+    assert modelo_180["relation_count"] > 0
+    assert modelo_180["relation_dependency_roles"] == ["periodic_to_annual_summary"]
 
 
 def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> None:
@@ -283,7 +311,68 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
     assert listed.has_declaration_copy is False
 
 
-def test_list_filed_data_cli_refuses_expired_clave_session_before_remote_read(tmp_path: Path) -> None:
+def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(tmp_path: Path) -> None:
+    provider = EphemeralMasterKeyProvider()
+    store = FiledDeclarationObservationStore(tmp_path / "observations", master_key_provider=provider)
+    primary, source = _modelo_130_filed_state_observations()
+    primary_path = store.persist_observation(primary)
+    source_path = store.persist_observation(source)
+
+    report = verify_filed_state(
+        observation_path=primary_path,
+        source_observation_paths=(source_path,),
+        registry_root=_REGISTRY_ROOT,
+        source_root=PROJECT_ROOT,
+        master_key_provider=provider,
+    )
+
+    assert report.comparison.status == "satisfied"
+    assert report.comparison.modelo == "130"
+    assert "19" in report.comparison.compared_casillas
+    assert report.comparison.drifts == ()
+
+
+def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: Path) -> None:
+    provider = EphemeralMasterKeyProvider()
+    store = FiledDeclarationObservationStore(tmp_path / "observations", master_key_provider=provider)
+    primary, source = _modelo_130_filed_state_observations()
+    casillas = tuple(
+        item.model_copy(update={"value": str(Decimal(item.value) + Decimal("0.01"))})
+        if item.casilla_id == "19"
+        else item
+        for item in primary.casillas
+    )
+    primary_path = store.persist_observation(primary.model_copy(update={"casillas": casillas}))
+    source_path = store.persist_observation(source)
+
+    report = verify_filed_state(
+        observation_path=primary_path,
+        source_observation_paths=(source_path,),
+        registry_root=_REGISTRY_ROOT,
+        source_root=PROJECT_ROOT,
+        required_casillas=("19",),
+        master_key_provider=provider,
+    )
+
+    assert report.comparison.status == "failed"
+    assert report.comparison.drifts[0].casilla_id == "19"
+    assert report.comparison.drifts[0].delta == Decimal("-0.01")
+
+
+def test_verify_filed_state_cli_help_uses_locale_strings() -> None:
+    result = _RUNNER.invoke(
+        app,
+        ["app", "registry", "verify-filed-state", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0
+    assert "estado presentado capturado" in result.output
+    assert "cli.registry.verify_filed_state_help" not in result.output
+    assert "--source-observation" in result.output
+
+
+def test_list_filed_data_cli_refuses_expired_session_before_remote_read(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(
         tmp_path,
@@ -313,17 +402,11 @@ def test_list_filed_data_cli_refuses_expired_clave_session_before_remote_read(tm
     )
 
     assert result.exit_code != 0
-    assert "Cl@ve Movil AEAT session is expired" in result.output
+    assert "AEAT session is expired" in result.output
 
 
-def test_capture_filed_data_cli_refuses_expired_clave_session_before_local_writes(tmp_path: Path) -> None:
+def test_capture_filed_data_cli_refuses_expired_session_before_local_writes(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    _seed_session(
-        tmp_path,
-        AuthProviderKind.CERTIFICATE,
-        authenticated_at=now,
-        idle_deadline=now + timedelta(minutes=20),
-    )
     _seed_session(
         tmp_path,
         AuthProviderKind.CLAVE_MOVIL,
@@ -357,8 +440,118 @@ def test_capture_filed_data_cli_refuses_expired_clave_session_before_local_write
     )
 
     assert result.exit_code != 0
-    assert "Cl@ve Movil AEAT session is expired" in result.output
+    assert "AEAT session is expired" in result.output
     assert not output_root.exists()
+
+
+def test_capture_source_filed_data_refuses_expired_session_before_local_writes(tmp_path: Path) -> None:
+    now = datetime.now(UTC)
+    _seed_session(
+        tmp_path,
+        AuthProviderKind.CLAVE_MOVIL,
+        authenticated_at=now - timedelta(hours=2),
+        idle_deadline=now - timedelta(minutes=1),
+    )
+    output_root = tmp_path / "captured-sources"
+
+    with pytest.raises(typer.BadParameter, match="AEAT session is expired"):
+        asyncio.run(
+            capture_source_filed_data(
+                modelo="180",
+                year=2026,
+                period="0A",
+                output_root=output_root,
+                registry_root=_REGISTRY_ROOT,
+                source_root=PROJECT_ROOT,
+            )
+        )
+
+    assert not output_root.exists()
+
+
+def _modelo_130_filed_state_observations() -> tuple[FiledDeclarationObservation, FiledDeclarationObservation]:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "130")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+    calculation = calculate_registry_snapshot(
+        snapshot,
+        inputs=_modelo_130_inputs(),
+        date_context={"filing_period": datetime(2026, 3, 31, tzinfo=UTC).date()},
+        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+    )
+    primary_values = {**_modelo_130_inputs(), **calculation.values}
+    return (
+        _filed_observation(
+            modelo="130",
+            ejercicio=2026,
+            period="1T",
+            casilla_values=primary_values,
+        ),
+        _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={
+                "0224": Decimal("3000"),
+                "1479": Decimal("4000"),
+                "1553": Decimal("2000"),
+                "1577": Decimal("4000"),
+            },
+        ),
+    )
+
+
+def _modelo_130_inputs() -> dict[str, Decimal]:
+    return {
+        "01": Decimal("10000"),
+        "02": Decimal("4000"),
+        "05": Decimal("250"),
+        "06": Decimal("100"),
+        "08": Decimal("2000"),
+        "10": Decimal("10"),
+        "15": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+
+
+def _filed_observation(
+    *,
+    modelo: str,
+    ejercicio: int,
+    period: str,
+    casilla_values: dict[str, Decimal],
+) -> FiledDeclarationObservation:
+    return FiledDeclarationObservation(
+        modelo=modelo,
+        ejercicio=ejercicio,
+        period=period,
+        expediente_id=f"{ejercicio}{modelo}13522222A",
+        status="ALTA",
+        presented_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
+        authenticated_identity="12345678Z",
+        artefacts=(
+            FiledDeclarationArtefact(
+                kind="submitted_file",
+                source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                content_type="application/octet-stream",
+                byte_count=1,
+                sha256="0" * 64,
+                captured_at=datetime(ejercicio + 1, 1, 1, 10, 0, 0, tzinfo=UTC),
+            ),
+        ),
+        casillas=tuple(
+            ObservedCasillaValue(
+                casilla_id=casilla_id,
+                value=str(value),
+                source_artefact_kind="submitted_file",
+                source_locator=f"field:{casilla_id}",
+                confidence=1.0,
+            )
+            for casilla_id, value in casilla_values.items()
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+    )
 
 
 def _declaration(*, expediente_id: str, period: str, modelo: str | None = None) -> Declaration:
