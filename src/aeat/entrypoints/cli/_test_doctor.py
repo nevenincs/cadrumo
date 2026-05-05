@@ -240,7 +240,8 @@ class TestGoogleAuthDoctorRows:
         row = check_google_auth_readiness(settings)
 
         assert row.state == State.PARTIAL
-        assert row.detail
+        assert "Only CLI-based" in row.detail
+        assert "MCP" not in row.detail
 
     def test_mcp_cache_row_stays_partial_until_credentials_exist(
         self,
@@ -274,7 +275,7 @@ class TestGoogleAuthDoctorRows:
         row = check_mcp_credentials_cache(settings)
 
         assert row.state == State.PARTIAL
-        assert row.detail
+        assert "MCP credentials directory prepared" in row.detail
 
     def test_desktop_material_row_is_skipped_when_service_account_path_is_active(self, tmp_path: Path) -> None:
         service_account = tmp_path / "service-account.json"
@@ -289,7 +290,7 @@ class TestGoogleAuthDoctorRows:
         row = check_desktop_oauth_client_material(settings)
 
         assert row.state == State.SKIP
-        assert row.detail
+        assert "Not required, see drift" in row.detail
 
     def test_service_account_row_is_required_for_service_account_path(self, tmp_path: Path) -> None:
         service_account = tmp_path / "service-account.json"
@@ -317,7 +318,7 @@ class TestGoogleAuthDoctorRows:
         row = check_service_account(settings)
 
         assert row.state == State.SKIP
-        assert row.detail
+        assert "Not required, see drift" in row.detail
 
     def test_inactive_path_drift_reports_ignored_missing_service_account(self, tmp_path: Path) -> None:
         settings = IsolatedSettings(
@@ -340,9 +341,10 @@ class TestLiveAccessGateRow:
         monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
         monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
         row = check_live_access_gate(Settings())
-        assert row.section
+        assert row.section == "Live Access Gate"
         assert row.state == State.OK
-        assert row.detail
+        assert "Live reads enabled" in row.detail
+        assert "Live writes forbidden" in row.detail
 
     def test_reports_skipped_when_reads_not_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
@@ -366,9 +368,10 @@ class TestAuthProviderPathRow:
         monkeypatch.delenv("AEAT_CERTIFICATE_PATH", raising=False)
         monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
         row = check_auth_provider_path(Settings())
-        assert row.section
+        assert row.section == "AEAT Auth Path"
         assert row.state == State.SKIP
-        assert row.detail
+        assert "AEAT-backed reads stay unavailable" in row.detail
+        assert "auth provider is configured" in row.detail
 
     def test_warns_when_provider_is_configured_but_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "C:/missing/cert.p12")
@@ -398,9 +401,9 @@ class TestSecretStoreDirectoryRow:
 
     def test_missing_dir_is_a_remediation_hint(self, tmp_path: Path) -> None:
         row = check_secret_store_directory(_settings_with_secret_dir(tmp_path))
-        assert row.section
+        assert row.section == "Secret Store Directory"
         assert row.state == State.MISSING
-        assert row.detail
+        assert "Secret store directory missing" in row.detail
 
     def test_writable_dir_is_ok(self, tmp_path: Path) -> None:
         secret_dir = tmp_path / "secrets"
@@ -423,7 +426,7 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.OK
-        assert row.detail
+        assert "Active backend" in row.detail
 
     def test_unsecured_without_allow_flag_is_missing(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -436,7 +439,7 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.MISSING
-        assert row.detail
+        assert "Unsecured storage requires explicit allowance" in row.detail
 
     def test_unsecured_with_allow_flag_is_warn(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -449,7 +452,7 @@ class TestSecretStoreBackendRow:
             ),
         )
         assert row.state == State.WARN
-        assert row.detail
+        assert "unsecured key storage" in row.detail
 
 
 class TestMasterKeyReadinessRow:
@@ -467,7 +470,7 @@ class TestMasterKeyReadinessRow:
             ),
         )
         assert row.state == State.MISSING
-        assert row.detail
+        assert "Master key missing" in row.detail
 
     def test_file_backend_with_complete_artefacts_is_ok(self, tmp_path: Path) -> None:
         from ...core.config import SecretStoreBackend
@@ -498,7 +501,7 @@ class TestMasterKeyReadinessRow:
             ),
         )
         assert row.state == State.PARTIAL
-        assert row.detail
+        assert "Master key data is incomplete" in row.detail
 
 
 class TestKdfVersionRow:
