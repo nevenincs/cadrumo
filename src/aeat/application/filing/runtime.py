@@ -224,17 +224,25 @@ def build_runtime_schema_provider(
     source_root: Path | None = None,
     filing_year: int | None = None,
     period: str | None = None,
+    modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaProvider:
     """Build the production schema provider from validated registry TOML."""
 
     root = registry_root or PROJECT_ROOT / "registry" / "aeat"
     resolved_source_root = source_root or PROJECT_ROOT
-    modelos, catalogues = load_registry_tree(root)
-    if not modelos:
+    loaded_modelos, catalogues = load_registry_tree(root)
+    if not loaded_modelos:
         raise FilingBuilderError(f"registry root has no modelo definitions: {root}")
+    selected_ids = _normalize_modelo_selection(modelos)
+    if selected_ids is not None:
+        by_id = {modelo.id: modelo for modelo in loaded_modelos}
+        missing = sorted(selected_ids.difference(by_id))
+        if missing:
+            raise FilingBuilderError(f"registry root is missing requested modelo definitions: {missing!r}")
+        loaded_modelos = tuple(by_id[modelo_id] for modelo_id in sorted(selected_ids))
     validator = RegistryValidator(catalogues, source_root=resolved_source_root)
     snapshots: dict[str, RegistrySnapshot] = {}
-    for modelo in modelos:
+    for modelo in loaded_modelos:
         try:
             snapshots[modelo.id] = _snapshot_for_provider(
                 modelo,
@@ -255,6 +263,15 @@ def build_runtime_schema_provider(
         },
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
+
+
+def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:
+    if modelos is None:
+        return None
+    selected = {modelo.strip() for modelo in modelos}
+    if "" in selected:
+        raise FilingBuilderError("requested modelo selection must not contain blank modelo ids")
+    return selected
 
 
 def _snapshot_for_provider(

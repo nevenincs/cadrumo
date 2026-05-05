@@ -217,6 +217,144 @@ def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() 
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-193-rel-123-retenciones-anual",)
 
 
+@pytest.mark.parametrize(
+    ("filing_year", "period"),
+    [
+        (2020, "1T"),
+        (2024, "05"),
+        (2026, "12"),
+        (2026, "4T"),
+    ],
+)
+def test_modelo_349_snapshot_resolves_for_monthly_and_quarterly_periods(filing_year: int, period: str) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "349")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period=period,
+    )
+    revision = snapshot.revision
+
+    assert revision.id == "2020-y-siguientes"
+    assert not revision.relations
+    assert not revision.formulas
+    assert not revision.bindings
+
+    sections = {casilla.section[0] for casilla in revision.casillas}
+    assert sections == {"declarante", "operador", "rectificacion"}
+
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    assert {
+        "decl.numero-operadores",
+        "decl.importe-operaciones",
+        "decl.numero-rectificaciones",
+        "decl.importe-rectificaciones",
+        "op.codigo-pais",
+        "op.nif-comunitario",
+        "op.clave-operacion",
+        "op.base-imponible",
+        "rect.ejercicio-rectificado",
+        "rect.periodo-rectificado",
+        "rect.base-rectificada",
+        "rect.base-anterior",
+    } <= casilla_ids
+
+    assert all(casilla.input_kind == "manual" for casilla in revision.casillas)
+
+    cross_reference = revision.live_cross_references[0]
+    assert cross_reference.surface == "static_official_documentation"
+    assert cross_reference.requires_authentication is False
+    assert cross_reference.synthetic_data_allowed is False
+    forbidden = set(cross_reference.forbidden_actions)
+    assert {"presentation", "signing", "payment", "amendment", "cancellation", "document-submission"} <= forbidden
+
+    workbook = revision.workbook_parity_refs[0]
+    assert workbook.formula_coverage == "record_design_layout"
+    assert workbook.runner_required is False
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
+    assert result.entries == ()
+    assert all(value == Decimal("0") for value in result.values.values())
+
+
+@pytest.mark.parametrize("period", ["1P", "2P", "3P"])
+def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(period: str) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "202")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period=period,
+    )
+    revision = snapshot.revision
+    assert revision.id == "2025-y-siguientes"
+    assert len(revision.casillas) == 50
+    formula_targets = {formula.target for formula in revision.formulas}
+    assert formula_targets == {"03", "13", "18", "32", "34", "38", "39"}
+
+    inputs = {
+        # Modalidad 40.2 LIS — cuota integra method.
+        "01": Decimal("10000"),
+        "02": Decimal("0"),
+        # Modalidad 40.3 LIS — base imponible method, B1 caso general.
+        "04": Decimal("50000"),
+        "05": Decimal("2000"),
+        "06": Decimal("1000"),
+        "07": Decimal("500"),
+        "08": Decimal("300"),
+        "37": Decimal("200"),
+        "67": Decimal("100"),
+        "16": Decimal("46900"),
+        "17": Decimal("17"),
+        "47": Decimal("0"),
+        "40": Decimal("0"),
+        "48": Decimal("0"),
+        "49": Decimal("0"),
+        "27": Decimal("200"),
+        "28": Decimal("500"),
+        "29": Decimal("100"),
+        "30": Decimal("3000"),
+        "31": Decimal("0"),
+        "33": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(2026, 12, 31)},
+    )
+
+    # Modalidad 40.2: [03] = [01] x 18% - [02] = 10000 x 0.18 - 0 = 1800.
+    assert result.values["03"] == Decimal("1800.00")
+    # Aggregated correcciones: [38] = [05] + [67] + [07], [39] = [06] + [37] + [08].
+    assert result.values["38"] == Decimal("2600.00")
+    assert result.values["39"] == Decimal("1500.00")
+    # Base imponible previa: [13] = [04] + [38] - [39] = 50000 + 2600 - 1500.
+    assert result.values["13"] == Decimal("51100.00")
+    # Resultado previo B1: [18] = ([16] x [17]) / 100 + [47] - [40] + [48] - [49].
+    # = (46900 x 17) / 100 = 7973.
+    assert result.values["18"] == Decimal("7973.00")
+    # Resultado: [32] = ([18] - [27] - [28]) x [29]/100 - [30] - [31]
+    # = (7973 - 200 - 500) x 100/100 - 3000 - 0 = 7273 - 3000 = 4273.
+    assert result.values["32"] == Decimal("4273.00")
+    # Cantidad a ingresar: [34] = max([32], [33]).
+    assert result.values["34"] == Decimal("4273.00")
+
+    entries = {entry.target: entry for entry in result.entries}
+    assert entries["03"].operand_refs == ("01", "is.modalidad_cuota.percentage", "02")
+    assert entries["18"].operand_refs == ("16", "17", "47", "48", "40", "49")
+    assert entries["34"].operand_refs == ("32", "33")
+
+
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations() -> None:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     modelo = next(item for item in modelos if item.id == "100")
