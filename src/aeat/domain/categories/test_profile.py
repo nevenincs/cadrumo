@@ -33,7 +33,7 @@ def _citation() -> CategoryCitation:
         reference="Manual práctico Renta 2025",
         locator="test",
         url=parse_http_url("https://example.com/manual.pdf"),
-        quote="Texto de prueba suficientemente concreto.",
+        quote=tr("Texto de prueba suficientemente concreto."),
     )
 
 
@@ -41,7 +41,7 @@ def _rule() -> ProportionalityRule:
     return ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,
         citations=(_citation(),),
-        notes="Regla de prueba.",
+        notes=tr("Regla de prueba."),
     )
 
 
@@ -55,7 +55,7 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             fixed_pct=Decimal("1.00"),
             citations=(_citation(),),
-            notes="Perfil sin proyección a casillas.",
+            notes=tr("Perfil sin proyección a casillas."),
         ),
         vat_hint=None,
     )
