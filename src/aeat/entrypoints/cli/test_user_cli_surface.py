@@ -90,6 +90,30 @@ def test_app_surface_uses_singular_user_domains() -> None:
         assert removed_command not in result.output
 
 
+def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
+    commands = [
+        ["--help"],
+        ["setup", "--help"],
+        ["setup", "auth", "--help"],
+        ["setup", "auth", "status", "--help"],
+        ["setup", "auth", "configure", "--help"],
+        ["setup", "profile", "--help"],
+        ["setup", "profile", "set", "--help"],
+        ["setup", "profile", "validate", "--help"],
+        ["app", "--help"],
+        ["app", "overview", "--help"],
+        ["app", "overview", "status", "--help"],
+        ["app", "ledger", "--help"],
+        ["app", "invoice", "--help"],
+        ["app", "declaration", "--help"],
+    ]
+
+    for command in commands:
+        result = _invoke(command)
+        assert result.exit_code == 0, command
+        assert "cli." not in result.output, command
+
+
 def test_ledger_split_is_nested_inside_edit() -> None:
     ledger = _invoke(["app", "ledger", "--help"])
     edit = _invoke(["app", "ledger", "edit", "--help"])

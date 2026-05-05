@@ -990,19 +990,19 @@ cli:
       written: cli.oauth.success.written
   overview:
     app_help: Revisar l'estat actual de l'espai de treball fiscal
-    calendar_help: cli.overview.calendar_help
-    calendar_requires_dates: cli.overview.calendar_requires_dates
-    drafts: cli.overview.drafts
-    from_help: cli.overview.from_help
-    header: cli.overview.header
-    invoices: cli.overview.invoices
-    period: cli.overview.period
-    period_help: cli.overview.period_help
-    profile: cli.overview.profile
+    calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
+    calendar_requires_dates: Useu --from i --to quan consulteu el calendari
+    drafts: Esborranys
+    from_help: Data inicial del calendari (AAAA-MM-DD)
+    header: Model	Període	Estat	Obre	Tanca
+    invoices: Factures
+    period: Període
+    period_help: Període fiscal a revisar (per exemple, 2026-Q1)
+    profile: Perfil
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
-    to_help: cli.overview.to_help
-    transactions: cli.overview.transactions
-    verbose_help: cli.overview.verbose_help
+    to_help: Data final del calendari (AAAA-MM-DD)
+    transactions: Moviments
+    verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: cli.registry.app_help
     capture_filed_data_help: cli.registry.capture_filed_data_help
@@ -1066,69 +1066,69 @@ cli:
     auth:
       app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:
-        file_help: cli.setup.auth.configure.file_help
-        help: cli.setup.auth.configure.help
-        provider_help: cli.setup.auth.configure.provider_help
+        file_help: Ruta del certificat quan el proveïdor el requereixi
+        help: Configurar el proveïdor d'autenticació
+        provider_help: Proveïdor d'autenticació a usar
       login:
-        help: cli.setup.auth.login.help
+        help: Iniciar la sessió local d'autenticació configurada
       logout:
-        help: cli.setup.auth.logout.help
+        help: Tancar la sessió local d'autenticació
       providers:
-        help: cli.setup.auth.providers.help
+        help: Llistar proveïdors d'autenticació disponibles
       status:
-        help: cli.setup.auth.status.help
+        help: Mostrar el proveïdor configurat i l'estat de sessió
       whoami:
-        help: cli.setup.auth.whoami.help
+        help: Mostrar la identitat associada a la sessió actual
     errors:
-      certificate_file_required: cli.setup.errors.certificate_file_required
-      file_not_found: cli.setup.errors.file_not_found
-      not_configured: cli.setup.errors.not_configured
-      unknown_profile_key: cli.setup.errors.unknown_profile_key
-      unknown_provider: cli.setup.errors.unknown_provider
+      certificate_file_required: El proveïdor certificate requereix --file
+      file_not_found: No s'ha trobat el fitxer {file}
+      not_configured: Configureu un proveïdor abans d'iniciar sessió
+      unknown_profile_key: 'Clau de perfil desconeguda: {key}'
+      unknown_provider: 'Proveïdor d''autenticació desconegut: {provider}'
     headers:
-      active: cli.setup.headers.active
-      auth_provider: cli.setup.headers.auth_provider
-      authenticated_at: cli.setup.headers.authenticated_at
-      availability: cli.setup.headers.availability
-      description: cli.setup.headers.description
-      id: cli.setup.headers.id
-      key: cli.setup.headers.key
-      login_ready: cli.setup.headers.login_ready
-      logout: cli.setup.headers.logout
-      missing: cli.setup.headers.missing
-      next: cli.setup.headers.next
-      profile: cli.setup.headers.profile
-      profile_ready: cli.setup.headers.profile_ready
-      provider: cli.setup.headers.provider
-      ready: cli.setup.headers.ready
-      requirement: cli.setup.headers.requirement
-      subject: cli.setup.headers.subject
-      unknown: cli.setup.headers.unknown
-      valid: cli.setup.headers.valid
+      active: Actiu
+      auth_provider: Proveïdor d'autenticació
+      authenticated_at: Autenticat el
+      availability: Disponibilitat
+      description: Descripció
+      id: ID
+      key: Clau
+      login_ready: Sessió preparada
+      logout: Tancament de sessió
+      missing: Falta
+      next: Següent
+      profile: Perfil
+      profile_ready: Perfil preparat
+      provider: Proveïdor
+      ready: Preparat
+      requirement: Requisit
+      subject: Identitat
+      unknown: Desconegut
+      valid: Vàlid
     init:
-      activity_help: cli.setup.init.activity_help
+      activity_help: Activitat econòmica principal
       help: Crear o activar un perfil de contribuent
-      name_help: cli.setup.init.name_help
-      tax_id_help: cli.setup.init.tax_id_help
+      name_help: Nom del perfil local
+      tax_id_help: NIF/NIE/CIF del contribuent
     labels:
-      'no': cli.setup.labels.no
-      unset: cli.setup.labels.unset
-      'yes': cli.setup.labels.yes
+      'no': 'no'
+      unset: sense valor
+      'yes': 'sí'
     profile:
       app_help: Gestionar les dades del perfil de contribuent
-      get_help: cli.setup.profile.get_help
-      get_key_help: cli.setup.profile.get_key_help
-      list_help: cli.setup.profile.list_help
-      list_keys_help: cli.setup.profile.list_keys_help
-      set_help: cli.setup.profile.set_help
-      set_key_help: cli.setup.profile.set_key_help
-      set_value_help: cli.setup.profile.set_value_help
-      show_help: cli.setup.profile.show_help
-      unset_help: cli.setup.profile.unset_help
-      unset_key_help: cli.setup.profile.unset_key_help
-      use_help: cli.setup.profile.use_help
-      use_name_help: cli.setup.profile.use_name_help
-      validate_help: cli.setup.profile.validate_help
+      get_help: Mostrar el valor d'una clau de perfil
+      get_key_help: Clau de perfil a consultar
+      list_help: Llistar perfils locals
+      list_keys_help: Llistar claus editables del perfil
+      set_help: Establir un valor del perfil
+      set_key_help: Clau de perfil a modificar
+      set_value_help: Valor que es desarà
+      show_help: Mostrar les dades del perfil actiu
+      unset_help: Esborrar un valor del perfil
+      unset_key_help: Clau de perfil a esborrar
+      use_help: Activar un perfil local
+      use_name_help: Nom del perfil
+      validate_help: Validar si el perfil actiu està complet
     status:
       help: Mostrar la preparació de l'entorn i la següent acció requerida
   txs:

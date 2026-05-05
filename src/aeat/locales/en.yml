@@ -972,19 +972,19 @@ cli:
       written: cli.oauth.success.written
   overview:
     app_help: Review the current filing workspace
-    calendar_help: cli.overview.calendar_help
-    calendar_requires_dates: cli.overview.calendar_requires_dates
-    drafts: cli.overview.drafts
-    from_help: cli.overview.from_help
-    header: cli.overview.header
-    invoices: cli.overview.invoices
-    period: cli.overview.period
-    period_help: cli.overview.period_help
-    profile: cli.overview.profile
+    calendar_help: Show the obligations calendar for a date range
+    calendar_requires_dates: Use --from and --to when showing the calendar
+    drafts: Drafts
+    from_help: Calendar start date (YYYY-MM-DD)
+    header: "Model\tPeriod\tState\tOpens\tCloses"
+    invoices: Invoices
+    period: Period
+    period_help: Tax period to review (for example, 2026-Q1)
+    profile: Profile
     status_help: Show profile, ledger, invoice, and declaration readiness
-    to_help: cli.overview.to_help
-    transactions: cli.overview.transactions
-    verbose_help: cli.overview.verbose_help
+    to_help: Calendar end date (YYYY-MM-DD)
+    transactions: Transactions
+    verbose_help: Show details and next action when available
   registry:
     app_help: cli.registry.app_help
     capture_filed_data_help: cli.registry.capture_filed_data_help
@@ -1047,69 +1047,69 @@ cli:
     auth:
       app_help: Configure and check AEAT authentication
       configure:
-        file_help: cli.setup.auth.configure.file_help
-        help: cli.setup.auth.configure.help
-        provider_help: cli.setup.auth.configure.provider_help
+        file_help: Certificate path when the provider requires it
+        help: Configure the authentication provider
+        provider_help: Authentication provider to use
       login:
-        help: cli.setup.auth.login.help
+        help: Start the configured local authentication session
       logout:
-        help: cli.setup.auth.logout.help
+        help: End the local authentication session
       providers:
-        help: cli.setup.auth.providers.help
+        help: List available authentication providers
       status:
-        help: cli.setup.auth.status.help
+        help: Show the configured provider and session state
       whoami:
-        help: cli.setup.auth.whoami.help
+        help: Show the identity attached to the current session
     errors:
-      certificate_file_required: cli.setup.errors.certificate_file_required
-      file_not_found: cli.setup.errors.file_not_found
-      not_configured: cli.setup.errors.not_configured
-      unknown_profile_key: cli.setup.errors.unknown_profile_key
-      unknown_provider: cli.setup.errors.unknown_provider
+      certificate_file_required: The certificate provider requires --file
+      file_not_found: 'File not found: {file}'
+      not_configured: Configure a provider before logging in
+      unknown_profile_key: 'Unknown profile key: {key}'
+      unknown_provider: 'Unknown authentication provider: {provider}'
     headers:
-      active: cli.setup.headers.active
-      auth_provider: cli.setup.headers.auth_provider
-      authenticated_at: cli.setup.headers.authenticated_at
-      availability: cli.setup.headers.availability
-      description: cli.setup.headers.description
-      id: cli.setup.headers.id
-      key: cli.setup.headers.key
-      login_ready: cli.setup.headers.login_ready
-      logout: cli.setup.headers.logout
-      missing: cli.setup.headers.missing
-      next: cli.setup.headers.next
-      profile: cli.setup.headers.profile
-      profile_ready: cli.setup.headers.profile_ready
-      provider: cli.setup.headers.provider
-      ready: cli.setup.headers.ready
-      requirement: cli.setup.headers.requirement
-      subject: cli.setup.headers.subject
-      unknown: cli.setup.headers.unknown
-      valid: cli.setup.headers.valid
+      active: Active
+      auth_provider: Authentication provider
+      authenticated_at: Authenticated at
+      availability: Availability
+      description: Description
+      id: ID
+      key: Key
+      login_ready: Session ready
+      logout: Logout
+      missing: Missing
+      next: Next
+      profile: Profile
+      profile_ready: Profile ready
+      provider: Provider
+      ready: Ready
+      requirement: Requirement
+      subject: Identity
+      unknown: Unknown
+      valid: Valid
     init:
-      activity_help: cli.setup.init.activity_help
+      activity_help: Main economic activity
       help: Create or activate a taxpayer profile
-      name_help: cli.setup.init.name_help
-      tax_id_help: cli.setup.init.tax_id_help
+      name_help: Local profile name
+      tax_id_help: Taxpayer NIF/NIE/CIF
     labels:
-      'no': cli.setup.labels.no
-      unset: cli.setup.labels.unset
-      'yes': cli.setup.labels.yes
+      'no': 'no'
+      unset: unset
+      'yes': 'yes'
     profile:
       app_help: Manage taxpayer profile values
-      get_help: cli.setup.profile.get_help
-      get_key_help: cli.setup.profile.get_key_help
-      list_help: cli.setup.profile.list_help
-      list_keys_help: cli.setup.profile.list_keys_help
-      set_help: cli.setup.profile.set_help
-      set_key_help: cli.setup.profile.set_key_help
-      set_value_help: cli.setup.profile.set_value_help
-      show_help: cli.setup.profile.show_help
-      unset_help: cli.setup.profile.unset_help
-      unset_key_help: cli.setup.profile.unset_key_help
-      use_help: cli.setup.profile.use_help
-      use_name_help: cli.setup.profile.use_name_help
-      validate_help: cli.setup.profile.validate_help
+      get_help: Show one profile value
+      get_key_help: Profile key to read
+      list_help: List local profiles
+      list_keys_help: List editable profile keys
+      set_help: Set one profile value
+      set_key_help: Profile key to change
+      set_value_help: Value to save
+      show_help: Show the active profile values
+      unset_help: Clear one profile value
+      unset_key_help: Profile key to clear
+      use_help: Activate a local profile
+      use_name_help: Profile name
+      validate_help: Validate whether the active profile is complete
     status:
       help: Show setup readiness and the next required action
   txs:
