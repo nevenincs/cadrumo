@@ -22,12 +22,12 @@ source_refs = [
     "boe-modelo-180-2023-form",
 ]
 
-[revisions."2014-2022"]
-id = "2014-2022"
-label = "Orden HAP/1732/2014"
-valid_from = 2014-01-01
+[revisions."2019-2022"]
+id = "2019-2022"
+label = "Orden HAP/1732/2014, ejercicios 2019 a 2022"
+valid_from = 2019-01-01
 valid_to = 2022-12-31
-period_selector = { year_from = 2014, year_to = 2022, periods = ["0A"] }
+period_selector = { year_from = 2019, year_to = 2022, periods = ["0A"] }
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-100",
@@ -40,7 +40,7 @@ source_refs = [
     "boe-modelo-180-2014-form",
 ]
 
-[[revisions."2014-2022".bindings]]
+[[revisions."2019-2022".bindings]]
 id = "modelo-180-115-perceptores-anual"
 source = "previous_filing"
 selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["01"] }
@@ -48,11 +48,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".bindings.source_citations]]
+[[revisions."2019-2022".bindings.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["NÚMERO TOTAL DE PERCEPTORES", "Número de registros de tipo 2"]
 
-[[revisions."2014-2022".bindings]]
+[[revisions."2019-2022".bindings]]
 id = "modelo-180-115-base-anual"
 source = "previous_filing"
 selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["02"] }
@@ -60,11 +60,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".bindings.source_citations]]
+[[revisions."2019-2022".bindings.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["BASE RETENCIONES E INGRESOS A CUENTA", "Se consignará la suma total"]
 
-[[revisions."2014-2022".bindings]]
+[[revisions."2019-2022".bindings]]
 id = "modelo-180-115-retenciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["03"] }
@@ -72,11 +72,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".bindings.source_citations]]
+[[revisions."2019-2022".bindings.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["RETENCIONES E INGRESOS A CUENTA", "Se consignará sin signo la suma"]
 
-[[revisions."2014-2022".relations]]
+[[revisions."2019-2022".relations]]
 id = "modelo-180-rel-115-perceptores-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -91,7 +91,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".relations]]
+[[revisions."2019-2022".relations]]
 id = "modelo-180-rel-115-base-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -106,7 +106,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".relations]]
+[[revisions."2019-2022".relations]]
 id = "modelo-180-rel-115-retenciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -121,7 +121,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".casillas]]
+[[revisions."2019-2022".casillas]]
 id = "decl.total-perceptores"
 number = "136-144"
 label = "Numero total de perceptores"
@@ -134,7 +134,7 @@ export_refs = ["modelo-180-decl-total-perceptores"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".casillas]]
+[[revisions."2019-2022".casillas]]
 id = "decl.base-total"
 number = "145-160"
 label = "Base retenciones e ingresos a cuenta total"
@@ -147,7 +147,7 @@ export_refs = ["modelo-180-decl-base-total"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".casillas]]
+[[revisions."2019-2022".casillas]]
 id = "decl.retenciones-total"
 number = "161-175"
 label = "Retenciones e ingresos a cuenta total"
@@ -160,7 +160,7 @@ export_refs = ["modelo-180-decl-retenciones-total"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".casillas]]
+[[revisions."2019-2022".casillas]]
 id = "perc.base"
 number = "79-92"
 label = "Base retenciones e ingresos a cuenta del perceptor"
@@ -172,7 +172,7 @@ export_refs = ["modelo-180-perc-base"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".casillas]]
+[[revisions."2019-2022".casillas]]
 id = "perc.retenciones"
 number = "97-109"
 label = "Retenciones e ingresos a cuenta del perceptor"
@@ -184,7 +184,7 @@ export_refs = ["modelo-180-perc-retenciones"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".formulas]]
+[[revisions."2019-2022".formulas]]
 id = "modelo-180-total-perceptores"
 target = "decl.total-perceptores"
 expression = { op = "copy", args = [{ relation = "modelo-180-rel-115-perceptores-anual" }] }
@@ -192,11 +192,11 @@ rounding = "integer"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".formulas.source_citations]]
+[[revisions."2019-2022".formulas.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["NÚMERO TOTAL DE PERCEPTORES", "Número de registros de tipo 2"]
 
-[[revisions."2014-2022".formulas]]
+[[revisions."2019-2022".formulas]]
 id = "modelo-180-base-total"
 target = "decl.base-total"
 expression = { op = "copy", args = [{ relation = "modelo-180-rel-115-base-anual" }] }
@@ -204,11 +204,11 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".formulas.source_citations]]
+[[revisions."2019-2022".formulas.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["BASE RETENCIONES E INGRESOS A CUENTA", "Se consignará la suma total"]
 
-[[revisions."2014-2022".formulas]]
+[[revisions."2019-2022".formulas]]
 id = "modelo-180-retenciones-total"
 target = "decl.retenciones-total"
 expression = { op = "copy", args = [{ relation = "modelo-180-rel-115-retenciones-anual" }] }
@@ -216,23 +216,23 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".formulas.source_citations]]
+[[revisions."2019-2022".formulas.source_citations]]
 source_ref = "boe-modelo-180-2014-form"
 required_text = ["RETENCIONES E INGRESOS A CUENTA", "Se consignará sin signo la suma"]
 
-[[revisions."2014-2022".export_layouts]]
+[[revisions."2019-2022".export_layouts]]
 id = "modelo-180-fichero-boe-2014"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records]]
+[[revisions."2019-2022".export_layouts.records]]
 id = "modelo-180-declarante"
 record_type = "declarante"
 order = 0
 encoding = "latin-1"
 line_ending = "none"
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-record-type"
 offset = 1
 length = 1
@@ -246,7 +246,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-modelo"
 offset = 2
 length = 3
@@ -260,7 +260,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-year"
 offset = 5
 length = 4
@@ -274,7 +274,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-nif"
 offset = 9
 length = 9
@@ -288,7 +288,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-total-perceptores"
 offset = 136
 length = 9
@@ -302,7 +302,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-base-total"
 offset = 145
 length = 16
@@ -316,7 +316,7 @@ signed = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-retenciones-total"
 offset = 161
 length = 15
@@ -330,7 +330,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-blancos"
 offset = 176
 length = 62
@@ -343,7 +343,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-decl-sello-electronico"
 offset = 238
 length = 263
@@ -356,14 +356,14 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records]]
+[[revisions."2019-2022".export_layouts.records]]
 id = "modelo-180-perceptor"
 record_type = "perceptor"
 order = 1
 encoding = "latin-1"
 line_ending = "none"
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-record-type"
 offset = 1
 length = 1
@@ -377,7 +377,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-modelo"
 offset = 2
 length = 3
@@ -391,7 +391,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-year"
 offset = 5
 length = 4
@@ -405,7 +405,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-decl-nif"
 offset = 9
 length = 9
@@ -419,7 +419,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-base"
 offset = 79
 length = 14
@@ -433,7 +433,7 @@ signed = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-retenciones"
 offset = 97
 length = 13
@@ -447,7 +447,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".export_layouts.records.fields]]
+[[revisions."2019-2022".export_layouts.records.fields]]
 id = "modelo-180-perc-resto"
 offset = 110
 length = 391
@@ -460,7 +460,7 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".extraction_profiles]]
+[[revisions."2019-2022".extraction_profiles]]
 id = "modelo-180-export-record"
 surface = "export_record"
 artefact_kind = "submitted_file"
@@ -473,7 +473,7 @@ failure_semantics = "fail_hard"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".verification_expectations]]
+[[revisions."2019-2022".verification_expectations]]
 id = "modelo-180-annual-summary-verification"
 computed_casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 tolerance = "0.01"
@@ -483,7 +483,7 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".live_cross_references]]
+[[revisions."2019-2022".live_cross_references]]
 id = "modelo-180-2014-static-official"
 evidence_tier = "layout_authority"
 surface = "static_official_documentation"
@@ -495,7 +495,7 @@ requires_aeat_authorization = false
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".live_cross_references]]
+[[revisions."2019-2022".live_cross_references]]
 id = "modelo-180-2014-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"
@@ -518,7 +518,7 @@ requires_aeat_authorization = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".workbook_parity_refs]]
+[[revisions."2019-2022".workbook_parity_refs]]
 id = "modelo-180-dr-pdf-2014"
 workbook_source = "aeat-dr-180-2014"
 fixture_id = "modelo-180-2014-record-design-layout"
@@ -528,7 +528,7 @@ tolerance = "0.00"
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-portal-cross-reference"
 surface = "portal"
 consumer = "portal_m180_resumen_arrendamientos"
@@ -536,7 +536,7 @@ requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
@@ -544,7 +544,7 @@ requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
@@ -552,7 +552,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
@@ -560,7 +560,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-export"
 surface = "export"
 consumer = "aeat.application.filing.export"
@@ -568,7 +568,7 @@ requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-extractor"
 surface = "extractor"
 consumer = "aeat.domain.calculations.registry.parse_export_payload"
@@ -576,7 +576,7 @@ requires_snapshot = true
 legal_refs = ["orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
-[[revisions."2014-2022".application_links]]
+[[revisions."2019-2022".application_links]]
 id = "modelo-180-2014-verification"
 surface = "verification"
 consumer = "aeat.application.verification"

@@ -61,7 +61,7 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
 @pytest.mark.parametrize(
     ("filing_year", "expected_revision"),
     [
-        (2022, "2014-2022"),
+        (2022, "2019-2022"),
         (2026, "2023-y-siguientes"),
         (2027, "2023-y-siguientes"),
     ],
