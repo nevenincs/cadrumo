@@ -196,6 +196,7 @@
           "warn",
           "Ledger Record Gaps",
           "Invalid ledger input is rejected before state changes.",
+          false,
         );
       }
 
