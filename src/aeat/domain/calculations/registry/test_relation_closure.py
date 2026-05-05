@@ -176,6 +176,28 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
         )
 
 
+def test_registry_validator_rejects_previous_filing_binding_source_output_selector() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    binding = revision.bindings[0].model_copy(
+        update={
+            "selector": {
+                "source_modelo": "115",
+                "source_periods": ("1T", "2T", "3T", "4T"),
+                "source_output": "01",
+            }
+        }
+    )
+    mutated_revision = revision.model_copy(update={"bindings": (binding, *revision.bindings[1:])})
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match="source_casillas"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(
+            _replace_modelo(modelos, mutated_modelo)
+        )
+
+
 def test_modelo_file_requires_relation_dependency_role(tmp_path: Path) -> None:
     path = tmp_path / "180.toml"
     _copy_committed_modelo_180(path)
