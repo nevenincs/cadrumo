@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from playwright.async_api import async_playwright
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -51,6 +52,7 @@ from ._declarations import (
     _parse_listbox,
     _parse_presented_at,
     _read_guard_policy_from_snapshot,
+    _select_combobox_value,
     _verify_submitted_file_context,
     registry_observation_from_filed_declaration,
     resolve_previous_filing_bindings_from_filed_declarations,
@@ -364,6 +366,35 @@ class TestParsePresentedAt:
         """Assert a date-only string (no time component) is rejected."""
         with pytest.raises(ValueError):
             _parse_presented_at("01/02/2024")
+
+
+class TestSearchOptionSelection:
+    """Verify AEAT combobox selection failures do not select another offered value."""
+
+    @pytest.mark.asyncio
+    async def test_unavailable_ejercicio_option_returns_false_without_selecting_another_year(self) -> None:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(headless=True)
+            try:
+                page = await browser.new_page()
+                await page.set_content(
+                    """
+                    <main>
+                      <span>Ejercicio (*)</span>
+                      <a class="z-combobox-button" href="#">abrir</a>
+                      <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2024</div>
+                      <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2025</div>
+                    </main>
+                    """,
+                )
+
+                selected = await _select_combobox_value(page, label_text="Ejercicio (*)", option_match="2026")
+                selected_year = await page.evaluate("window.selectedYear ?? null")
+            finally:
+                await browser.close()
+
+        assert selected is False
+        assert selected_year is None
 
 
 class TestExtractCsvFromUrl:
