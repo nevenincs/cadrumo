@@ -26,6 +26,7 @@ from ._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ._runtime_graph import expression_casilla_refs
+from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
     CasillaDefinition,
@@ -37,6 +38,7 @@ from ._schema import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExtractionProfileDefinition,
+    FilingScheduleDefinition,
     FormulaDefinition,
     FormulaExpression,
     LegalReference,
@@ -44,6 +46,7 @@ from ._schema import (
     ModeloDefinition,
     ModeloRevision,
     ParameterDefinition,
+    ProfilePredicateDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
     SourceReference,
@@ -93,6 +96,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ExtractionProfileDefinition",
+    "FilingScheduleDefinition",
     "FormulaDefinition",
     "FormulaExpression",
     "LegalReference",
@@ -103,6 +107,7 @@ __all__ = [
     "ParameterDefinition",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
+    "ProfilePredicateDefinition",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCatalogues",
@@ -133,6 +138,7 @@ __all__ = [
     "WorkbookParityRunReport",
     "WorkbookRunnerAvailability",
     "WorkbookScanOptions",
+    "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
     "assert_workbook_scan_clean",
@@ -143,6 +149,7 @@ __all__ = [
     "convert_binary_xls_with_libreoffice",
     "detect_workbook_runner",
     "discover_workbooks",
+    "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
     "expression_casilla_refs",
@@ -153,6 +160,7 @@ __all__ = [
     "parse_export_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
+    "profile_condition_matches",
     "remote_state_policy_from_cross_reference",
     "resolve_bound_casilla_inputs",
     "resolve_export_layout",

@@ -352,6 +352,7 @@ class SupportRemovalDecisionDefinition(RegistryModel):
         "workbook_parity_ref",
         "verification_expectation",
         "deadline_window",
+        "filing_schedule",
     ]
     subject_id: str = Field(min_length=1, max_length=160)
     decision: Literal["remove_from_filing_grade"]
@@ -367,20 +368,20 @@ class SupportRemovalDecisionDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
-class DeadlineApplicabilityCondition(RegistryModel):
-    field: Literal[
-        "has_employees",
-        "pays_professionals_with_retencion",
-        "professional_income_withholding_ge_70pct",
-        "pays_rent_with_retencion",
-        "pays_capital_income_with_retencion",
-        "uses_objective_estimation_irpf",
-    ]
-    op: Literal["equals"]
-    value: bool
+ProfileFactValue = bool | int | str
+
+
+class ProfilePredicateDefinition(RegistryModel):
+    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
+    op: Literal["equals", "not_equals"]
+    value: ProfileFactValue
     explanation: str = Field(min_length=1)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+
+class DeadlineApplicabilityCondition(ProfilePredicateDefinition):
+    pass
 
 
 class DeadlineWindowDefinition(RegistryModel):
@@ -404,6 +405,29 @@ class DeadlineWindowDefinition(RegistryModel):
             raise ValueError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
         if self.applicability_condition_mode == "any" and not self.applicability_conditions:
             raise ValueError(f"deadline window {self.id!r} any-mode requires applicability conditions")
+        return self
+
+
+class FilingScheduleDefinition(RegistryModel):
+    id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
+    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    periods: tuple[str, ...] = Field(min_length=1)
+    profile_condition_mode: Literal["all", "any"] = "all"
+    profile_conditions: tuple[ProfilePredicateDefinition, ...] = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("periods")
+    @classmethod
+    def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("filing schedule periods must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_schedule(self) -> FilingScheduleDefinition:
+        if self.profile_condition_mode == "any" and not self.profile_conditions:
+            raise ValueError(f"filing schedule {self.id!r} any-mode requires profile conditions")
         return self
 
 
@@ -541,9 +565,18 @@ class RelationDefinition(RegistryModel):
     source_output: CasillaId | str
     target_binding: BindingId
     period_alignment: Mapping[str, str | int]
+    source_periods: tuple[str, ...] = ()
+    target_periods: tuple[str, ...] = ()
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @field_validator("source_periods", "target_periods")
+    @classmethod
+    def _relation_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("relation periods must be unique")
+        return value
 
 
 class ExportFieldDefinition(RegistryModel):
@@ -620,6 +653,7 @@ class ModeloRevision(RegistryModel):
     verification_expectations: tuple[VerificationExpectationDefinition, ...] = ()
     application_links: tuple[ApplicationLinkDefinition, ...] = ()
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
+    filing_schedules: tuple[FilingScheduleDefinition, ...] = ()
     support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
 
     @model_validator(mode="after")
@@ -634,7 +668,7 @@ class ModeloDefinition(RegistryModel):
     title: str
     official_name: str
     tax_domain: str
-    cadence: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -666,4 +700,5 @@ class RegistrySnapshot(RegistryModel):
     verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
     application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]
     deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
+    filing_schedules: Mapping[str, FilingScheduleDefinition]
     support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]

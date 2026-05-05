@@ -17,6 +17,7 @@ from ..calculations.registry import (
     DeadlineWindowDefinition,
     RegistryError,
     RegistryValidator,
+    evaluate_profile_conditions,
     load_registry_tree,
 )
 from ._errors import ScheduleComputationError
@@ -223,15 +224,11 @@ class DeadlineEngine:
     ) -> str | None:
         if not conditions:
             return "Aplica segun la ventana registral del modelo."
-        explanations: list[str] = []
-        for condition in conditions:
-            observed = getattr(profile, condition.field)
-            if condition.op == "equals" and observed != condition.value:
-                if mode == "all":
-                    return None
-                continue
-            explanations.append(condition.explanation)
-        if mode == "any" and not explanations:
+        try:
+            explanations = evaluate_profile_conditions(conditions, profile, mode=mode)
+        except RegistryError as exc:
+            raise ScheduleComputationError(f"deadline profile condition could not be evaluated: {exc}") from exc
+        if explanations is None:
             return None
         return " ".join(explanations)
 

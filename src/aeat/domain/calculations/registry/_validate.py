@@ -83,6 +83,7 @@ class RegistryValidator:
         verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
         application_link_ids = [link.id for link in revision.application_links]
         deadline_window_ids = [window.id for window in revision.deadline_windows]
+        filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
         support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
         if not workbook_parity_ids:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
@@ -101,6 +102,7 @@ class RegistryValidator:
             ("verification expectation", verification_expectation_ids),
             ("application link", application_link_ids),
             ("deadline window", deadline_window_ids),
+            ("filing schedule", filing_schedule_ids),
             ("support removal decision", support_removal_decision_ids),
         ):
             for duplicate in sorted(_duplicates(ids)):
@@ -120,6 +122,7 @@ class RegistryValidator:
             + verification_expectation_ids
             + application_link_ids
             + deadline_window_ids
+            + filing_schedule_ids
             + support_removal_decision_ids
         )
         for duplicate in sorted(_duplicates(primary_ids)):
@@ -261,6 +264,48 @@ class RegistryValidator:
             if relation.target_binding not in bindings:
                 failures.append(
                     f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}"
+                )
+            unknown_target_periods = sorted(set(relation.target_periods).difference(revision.period_selector.periods))
+            if unknown_target_periods:
+                failures.append(
+                    f"{prefix}: relation {relation.id!r} targets periods outside revision selector "
+                    f"{unknown_target_periods!r}"
+                )
+
+        selector_periods = set(revision.period_selector.periods)
+        for schedule in revision.filing_schedules:
+            failures.extend(
+                self._missing_refs(prefix, f"filing schedule {schedule.id}", schedule.legal_refs, self._legal, "legal")
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix, f"filing schedule {schedule.id}", schedule.source_refs, self._sources, "source"
+                )
+            )
+            unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
+            if unknown_periods:
+                failures.append(
+                    f"{prefix}: filing schedule {schedule.id!r} declares periods outside revision selector "
+                    f"{unknown_periods!r}"
+                )
+            for condition in schedule.profile_conditions:
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"filing schedule {schedule.id} condition {condition.field}",
+                        condition.legal_refs,
+                        self._legal,
+                        "legal",
+                    )
+                )
+                failures.extend(
+                    self._missing_refs(
+                        prefix,
+                        f"filing schedule {schedule.id} condition {condition.field}",
+                        condition.source_refs,
+                        self._sources,
+                        "source",
+                    )
                 )
 
         for provider in revision.algorithm_providers:
@@ -502,6 +547,7 @@ class RegistryValidator:
                 verification_expectation_ids=verification_expectation_ids,
                 application_link_ids=application_link_ids,
                 deadline_window_ids=deadline_window_ids,
+                filing_schedule_ids=filing_schedule_ids,
             )
         )
         failures.extend(self._validate_application_link_closure(prefix, revision))
@@ -636,6 +682,7 @@ class RegistryValidator:
         verification_expectation_ids: Iterable[str],
         application_link_ids: Iterable[str],
         deadline_window_ids: Iterable[str],
+        filing_schedule_ids: Iterable[str] = (),
     ) -> list[str]:
         failures: list[str] = []
         active_subjects = {
@@ -646,6 +693,7 @@ class RegistryValidator:
             "verification_expectation": set(verification_expectation_ids),
             "application_link": set(application_link_ids),
             "deadline_window": set(deadline_window_ids),
+            "filing_schedule": set(filing_schedule_ids),
         }
         for decision in revision.support_removal_decisions:
             failures.extend(

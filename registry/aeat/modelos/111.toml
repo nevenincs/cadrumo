@@ -3,7 +3,7 @@ id = "111"
 title = "IRPF retenciones e ingresos a cuenta"
 official_name = "Retenciones e ingresos a cuenta del IRPF. Rendimientos del trabajo y de actividades economicas, premios y determinadas ganancias patrimoniales e imputaciones de renta."
 tax_domain = "irpf"
-cadence = "quarterly"
+cadence = "profile_based"
 jurisdiction = "ES-AEAT"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
@@ -11,9 +11,57 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [revisions."2019-y-siguientes"]
 label = "Orden EHA/586/2011, ejercicios 2019 y siguientes"
 valid_from = 2019-01-01
-period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+period_selector = { year_from = 2019, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules]]
+id = "modelo-111-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = false
+explanation = "Modelo 111 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.public_administration_budget_gt_6000000"
+op = "equals"
+value = false
+explanation = "Modelo 111 trimestral cuando no aplica presupuesto publico anual superior a 6 millones de euros."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules]]
+id = "modelo-111-mensual"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+profile_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = true
+explanation = "Modelo 111 mensual para grandes empresas."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
+field = "enrollment.public_administration_budget_gt_6000000"
+op = "equals"
+value = true
+explanation = "Modelo 111 mensual para Administraciones publicas con presupuesto anual superior a 6 millones de euros."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "01"
