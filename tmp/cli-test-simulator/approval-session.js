@@ -27,7 +27,7 @@ aeat app
       status: "accepted anchor",
       question: "Approve authentication as provider configuration plus login?",
       context:
-        "Authentication remains setup work. Provider support must reflect implemented backend behavior; unsupported providers stay research-only.",
+        "Authentication remains setup work. Provider support must reflect implemented backend behavior; unsupported providers are not listed.",
       shape: `aeat setup auth providers
   Show implemented and research-only authentication providers.
 

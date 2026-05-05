@@ -6,7 +6,6 @@ import typer
 
 from ...application.auth import (
     AUTH_PROVIDER_CATALOGUE,
-    AuthProviderAvailability,
     get_auth_provider,
 )
 from ...application.profile import validate_profile
@@ -145,18 +144,13 @@ def auth_providers(ctx: typer.Context) -> None:
             {
                 "id": entry.id,
                 "label": _label_for(entry),
-                "availability": entry.availability.value,
                 "description": _description_for(entry),
             }
             for entry in AUTH_PROVIDER_CATALOGUE
         ]
     }
-    lines: list[str] = [
-        f"{tr('cli.setup.headers.id')}\t{tr('cli.setup.headers.availability')}\t{tr('cli.setup.headers.description')}"
-    ]
-    lines.extend(
-        f"{entry.id}\t{entry.availability.value}\t{_description_for(entry)}" for entry in AUTH_PROVIDER_CATALOGUE
-    )
+    lines: list[str] = [f"{tr('cli.setup.headers.id')}\t{tr('cli.setup.headers.description')}"]
+    lines.extend(f"{entry.id}\t{_description_for(entry)}" for entry in AUTH_PROVIDER_CATALOGUE)
     _emit(ctx, payload, lines)
 
 
@@ -170,18 +164,11 @@ def auth_configure(
     try:
         listing = get_auth_provider(provider.strip().lower())
     except KeyError as exc:
-        raise _bad(tr("cli.setup.errors.unknown_provider", provider=provider)) from exc
-    if listing.availability is AuthProviderAvailability.UNAVAILABLE:
-        _emit(
-            ctx,
-            {"error": "unavailable-provider", "provider": listing.id, "description": _description_for(listing)},
-            [f"error\tunavailable-provider\tprovider={listing.id}"],
-        )
-        _exit(2)
+        raise _bad(tr("cli.setup.errors.unknown_provider").format(provider=provider)) from exc
     if listing.id == "certificate" and file is None:
         raise _bad(tr("cli.setup.errors.certificate_file_required"))
     if listing.id == "certificate" and file is not None and not file.exists():
-        raise _bad(tr("cli.setup.errors.file_not_found", file=file))
+        raise _bad(tr("cli.setup.errors.file_not_found").format(file=file))
     updated = state_repository().update(
         lambda state: update_auth(
             state,
@@ -313,7 +300,7 @@ def profile_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key").format(key=key)) from exc
     record = state.active_profile_record()
     assert record is not None
     value = record.values.get(key, "")
@@ -329,7 +316,7 @@ def profile_set(
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key").format(key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
     updated = state_repository().update(lambda current: set_profile_values(current, name, {key: value}))
     record = updated.active_profile_record()
@@ -344,7 +331,7 @@ def profile_unset(
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise _bad(tr("cli.setup.errors.unknown_profile_key", key=key)) from exc
+        raise _bad(tr("cli.setup.errors.unknown_profile_key").format(key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
     state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
     _emit(ctx, {"key": key}, [f"{key}\t{tr('cli.setup.labels.unset')}"])

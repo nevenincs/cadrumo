@@ -251,19 +251,14 @@ def test_setup_auth_providers_renders_catalogue(monkeypatch: pytest.MonkeyPatch,
     assert result.exit_code == 0
     payload = json.loads(result.output)
     ids = {row["id"] for row in payload["providers"]}
-    assert "certificate" in ids
-    assert any(pid.startswith("clave") and "movil" in pid for pid in ids)
-    assert any(pid.startswith("clave") and "permanente" in pid for pid in ids)
-    unavailable = [row for row in payload["providers"] if row["availability"] == "unavailable"]
-    assert any("permanente" in row["id"] for row in unavailable)
+    assert ids == {"certificate", "clave_movil"}
+    assert all("availability" not in row for row in payload["providers"])
 
 
-def test_setup_auth_configure_refuses_research_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_setup_auth_configure_rejects_unsupported_provider(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
-    from aeat.application.auth import unavailable_auth_providers
 
-    unavailable_id = unavailable_auth_providers()[0].id
-    result = _invoke(["setup", "auth", "configure", "--provider", unavailable_id])
+    result = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
     assert result.exit_code == 2
 
 
@@ -281,11 +276,9 @@ def test_setup_auth_configure_clave_movil_round_trips(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    from aeat.application.auth import available_auth_providers
 
-    movil_id = next(p.id for p in available_auth_providers() if "movil" in p.id)
     assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z"]).exit_code == 0
-    configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", movil_id])
+    configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", "clave_movil"])
     assert configure.exit_code == 0
     login = _invoke(["--format", "json", "setup", "auth", "login"])
     assert login.exit_code == 0

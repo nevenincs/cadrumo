@@ -7,45 +7,22 @@ import pytest
 from ...core.i18n import Translatable as tr  # noqa: N813
 from . import (
     AUTH_PROVIDER_CATALOGUE,
-    AuthProviderAvailability,
     AuthProviderListing,
-    available_auth_providers,
     get_auth_provider,
     list_auth_providers,
-    unavailable_auth_providers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def test_availability_enum_carries_provider_states() -> None:
-    assert {item.value for item in AuthProviderAvailability} == {
-        "available",
-        "unavailable",
-    }
-
-
 def test_catalogue_carries_supported_entries() -> None:
     ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert ids == {"certificate", "clave_movil", "clave_permanente"}
+    assert ids == {"certificate", "clave_movil"}
 
 
-def test_available_providers_are_configurable() -> None:
-    available = {entry.id for entry in available_auth_providers()}
-    assert available == {"certificate", "clave_movil"}
-
-
-def test_unavailable_providers_are_listed_but_not_configurable() -> None:
-    unavailable = {entry.id for entry in unavailable_auth_providers()}
-    assert unavailable == {"clave_permanente"}
-
-
-def test_catalogue_partition_covers_every_listing() -> None:
-    available = list(available_auth_providers())
-    unavailable = list(unavailable_auth_providers())
-    assert sorted(entry.id for entry in available + unavailable) == sorted(
-        entry.id for entry in AUTH_PROVIDER_CATALOGUE
-    )
+def test_catalogue_lists_only_configurable_providers() -> None:
+    ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
+    assert "clave_permanente" not in ids
 
 
 def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
@@ -57,17 +34,17 @@ def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
 
 
 def test_get_auth_provider_returns_canonical_entry() -> None:
-    entry = get_auth_provider("clave-permanente")
+    entry = get_auth_provider("clave_movil")
     assert isinstance(entry, AuthProviderListing)
-    assert entry.id == "clave_permanente"
-    assert entry.availability is AuthProviderAvailability.UNAVAILABLE
+    assert entry.id == "clave_movil"
     assert entry.label
     assert entry.description
 
 
-def test_get_auth_provider_raises_keyerror_for_unknown() -> None:
+@pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave_permanente", "clave-movil"])
+def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_id: str) -> None:
     with pytest.raises(KeyError):
-        get_auth_provider("not.a.provider")
+        get_auth_provider(provider_id)
 
 
 def test_listing_rejects_blank_id() -> None:
@@ -75,7 +52,6 @@ def test_listing_rejects_blank_id() -> None:
         AuthProviderListing(
             id="",
             label=tr("label"),
-            availability=AuthProviderAvailability.AVAILABLE,
             description=tr("desc"),
         )
 
@@ -85,7 +61,6 @@ def test_listing_rejects_uppercase_id() -> None:
         AuthProviderListing(
             id="Certificate",
             label=tr("label"),
-            availability=AuthProviderAvailability.AVAILABLE,
             description=tr("desc"),
         )
 

@@ -99,7 +99,7 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     assert ready_payload["next_action"] == "aeat app overview status"
 
 
-def test_setup_auth_rejects_unavailable_provider(tmp_path: Path) -> None:
+def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
     result = _runner.invoke(
         app,
         ["setup", "auth", "configure", "--provider", "clave_permanente"],
@@ -107,4 +107,4 @@ def test_setup_auth_rejects_unavailable_provider(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "unavailable-provider" in result.output
+    assert "clave_permanente" in result.output
