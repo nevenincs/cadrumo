@@ -14,10 +14,48 @@ from ._relations import (
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
+from ._schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+
+
+def test_cross_model_relations_resolve_from_observations_for_revision_edge_years() -> None:
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            if not revision.relations:
+                continue
+            relation_ids = {relation.id for relation in revision.relations}
+            for filing_year in _revision_edge_years(revision):
+                for period in revision.period_selector.periods:
+                    active_relation_ids = {
+                        relation.id
+                        for relation in revision.relations
+                        if not relation.target_periods or period in relation.target_periods
+                    }
+                    if active_relation_ids != relation_ids:
+                        continue
+                    requirements = relation_source_requirements(
+                        revision,
+                        filing_year=filing_year,
+                        period=period,
+                    )
+                    observations = _observations_from_requirements(
+                        requirements,
+                        lambda _requirement, period_index: Decimal(period_index + 1),
+                    )
+
+                    resolved = resolve_relation_values_from_observations(
+                        revision,
+                        observations,
+                        filing_year=filing_year,
+                        period=period,
+                    )
+
+                    assert set(resolved) == relation_ids, f"{modelo.id}/{revision.id}/{filing_year}/{period}"
 
 
 @pytest.mark.parametrize(
@@ -211,6 +249,22 @@ def _observations_from_requirements(
         )
         for (modelo, filing_year, period), casilla_values in sorted(observed.items())
     )
+
+
+def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
+    if revision.period_selector.years:
+        years = sorted(revision.period_selector.years)
+        return tuple(dict.fromkeys((years[0], years[-1])))
+    year_from = revision.period_selector.year_from
+    if year_from is None:
+        raise AssertionError(f"revision {revision.id} has no filing-year selector")
+    year_to = revision.period_selector.year_to
+    if year_to is not None:
+        if year_to == year_from:
+            return (year_from,)
+        midpoint = year_from + ((year_to - year_from) // 2)
+        return tuple(dict.fromkeys((year_from, midpoint, year_to)))
+    return (year_from, year_from + 1, year_from + 7)
 
 
 def _renta_relation_observed_value(requirement: RegistryRelationSourceRequirement, period_index: int) -> Decimal:
