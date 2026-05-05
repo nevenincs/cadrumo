@@ -85,6 +85,18 @@ class FilingValue(BaseModel):
     formula_trace: tuple[str, ...] | None = None
 
 
+class FilingBindingValue(BaseModel):
+    """The typed value of one registry binding on a :class:`FilingDraft`."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    binding_id: str
+    value: FilingScalar
+    kind: FilingValueKind
+    source: str
+    row_index: int | None = Field(default=None, ge=1)
+
+
 class FilingValidationFinding(BaseModel):
     """One finding produced by the validator.
 
@@ -139,6 +151,7 @@ class FilingDraft(BaseModel):
     profile_tax_id: str
     status: FilingDraftStatus
     values: tuple[FilingValue, ...]
+    binding_values: tuple[FilingBindingValue, ...] = Field(default_factory=tuple)
     findings: tuple[FilingValidationFinding, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
@@ -157,6 +170,7 @@ def compute_draft_id(
     profile_tax_id: str,
     schema_version: str,
     values: tuple[FilingValue, ...],
+    binding_values: tuple[FilingBindingValue, ...] = (),
 ) -> str:
     """Compute the stable, content-addressed ``draft_id``.
 
@@ -172,12 +186,14 @@ def compute_draft_id(
         A 16-character lowercase hex SHA-256 prefix.
     """
     sorted_values = sorted(values, key=lambda v: v.casilla_id)
+    sorted_binding_values = sorted(binding_values, key=lambda v: (v.binding_id, v.row_index or 0))
     payload = {
         "modelo": modelo,
         "period": period,
         "profile_tax_id": profile_tax_id,
         "schema_version": schema_version,
         "values": [v.model_dump(mode="json") for v in sorted_values],
+        "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:16]

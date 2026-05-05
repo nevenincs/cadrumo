@@ -31,6 +31,7 @@ dependencies = [
   # PKCS#12 parsing for client-certificate auth.
   "cryptography>=47.0.0",
   # Google Cloud / Workspace
+  "defusedxml>=0.7.1",
   "google-api-python-client>=2.194.0",
   "google-auth>=2.49.1",
   "google-auth-httplib2>=0.3.1",
@@ -51,6 +52,9 @@ dependencies = [
   "openpyxl>=3.1.5",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9",
+  # Fast text extraction from official AEAT manual PDFs for registry
+  # source-citation validation.
+  "pypdfium2>=5.7.1",
   # PDF sanitiser; content-stream rewriter for PII redaction.
   "pikepdf>=10.0.0",
   # Browser automation
@@ -187,6 +191,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "T20"]
+# `tools/` holds contributor-only one-shot analysis scripts; print() is
+# the canonical surface for these CLIs.
+"tools/**/*.py" = ["T20"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests. Test modules also commonly use assert and print.
 "src/aeat/adapters/outbound/aeat/auth/test_*.py" = [

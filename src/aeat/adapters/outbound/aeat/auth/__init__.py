@@ -142,4 +142,4 @@ def select_provider(
             settings,
             browser_session_factory=browser_session_factory,
         )
-    raise NotImplementedError(f"auth provider {kind.value!r} is not implemented yet")
+    raise NotImplementedError(f"no factory bound for auth provider kind {kind!r}")

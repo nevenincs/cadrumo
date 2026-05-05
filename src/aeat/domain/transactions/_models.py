@@ -179,10 +179,6 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    # Placeholder for a future typed ``DecisionProvenance`` pydantic record.
-    # Because this model declares ``extra="forbid"``, widening must happen
-    # via a compatible union (``dict[str, Any] | DecisionProvenance | None``)
-    # rather than a type swap, so previously-written payloads keep validating.
     provenance: dict[str, Any] | None = None
 
     @model_validator(mode="before")

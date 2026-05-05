@@ -29,9 +29,9 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
         The concatenated text of every page in the PDF, joined by newlines.
 
     Raises:
-        :exc:`aeat.domain.justificante._errors.JustificanteParseError`: If
-            ``backend`` is not yet implemented or the underlying library
-            fails to open the PDF.
+        :exc:`aeat.domain.justificante._errors.JustificanteParseError`: When
+            the backend is unknown or the underlying library fails to open
+            the PDF.
     """
     backend_value = backend.value if hasattr(backend, "value") else str(backend)
     normalized_backend = backend_value.lower()
@@ -39,6 +39,4 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
         from ._pdfplumber_backend import extract_text_pdfplumber
 
         return extract_text_pdfplumber(pdf_path)
-    if normalized_backend == JustificanteParserBackend.PYMUPDF.value.lower():
-        raise JustificanteParseError("PYMUPDF backend is not implemented yet; use PDFPLUMBER (the default).")
     raise JustificanteParseError(f"unknown parser backend: {backend!r}")

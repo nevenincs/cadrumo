@@ -231,7 +231,7 @@ def render_error_json(
 
 
 def get_error_exit_code(category: ErrorCategory) -> int:
-    """Return the placeholder process exit code for ``category``."""
+    """Return the canonical process exit code for ``category``."""
 
     return {
         ErrorCategory.ERROR: 1,

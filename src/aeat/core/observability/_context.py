@@ -271,9 +271,8 @@ def run_context(
     finally:
         # If we were re-entered by ``replay_run``, label the persisted
         # trace with the original run id so ``aeat run show`` can tell a
-        # replay trace apart from a fresh one. Any non-16-hex value
-        # (e.g. a legacy ``"1"`` sentinel from earlier code) is ignored
-        # — only a legitimately-shaped run id is propagated.
+        # replay trace apart from a fresh one. Only a legitimately-shaped
+        # 16-hex run id is propagated; any other value is ignored.
         replay_of_env = os.environ.get(_REPLAY_ACTIVE_ENV_VAR)
         replay_of: str | None = None
         if replay_of_env and len(replay_of_env) == 16:

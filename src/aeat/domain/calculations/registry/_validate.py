@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    DataBindingDefinition,
     DatedValue,
     ExtractionProfileDefinition,
     FormulaExpression,
@@ -33,6 +35,33 @@ def _duplicates(values: Iterable[str]) -> set[str]:
             dupes.add(value)
         seen.add(value)
     return dupes
+
+
+def _is_layout_binding(binding: DataBindingDefinition) -> bool:
+    return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
+
+
+@lru_cache(maxsize=16)
+def _extract_pdf_text(path: Path) -> str:
+    try:
+        import pypdfium2 as pdfium
+    except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
+        raise OSError("pypdfium2 is required to validate manual PDF citations") from exc
+    try:
+        pdf = pdfium.PdfDocument(path)
+        pages: list[str] = []
+        try:
+            for index in range(len(pdf)):
+                page = pdf[index]
+                try:
+                    pages.append(page.get_textpage().get_text_range())
+                finally:
+                    page.close()
+        finally:
+            pdf.close()
+        return "\n".join(pages)
+    except Exception as exc:
+        raise OSError(f"could not extract text from manual PDF {path}") from exc
 
 
 class RegistryValidator:
@@ -81,6 +110,7 @@ class RegistryValidator:
 
         if len(modelos_by_id) == len(modelo_tuple):
             failures.extend(self._validate_relation_closure(modelo_tuple, modelos_by_id))
+            failures.extend(self._validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
 
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
@@ -107,6 +137,8 @@ class RegistryValidator:
         deadline_window_ids = [window.id for window in revision.deadline_windows]
         filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
         support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
+        construct_ids = [construct.id for construct in revision.constructs]
+        dependency_classification_ids = [classification.id for classification in revision.dependency_classifications]
         if not workbook_parity_ids:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
         for kind, ids in (
@@ -126,6 +158,8 @@ class RegistryValidator:
             ("deadline window", deadline_window_ids),
             ("filing schedule", filing_schedule_ids),
             ("support removal decision", support_removal_decision_ids),
+            ("construct", construct_ids),
+            ("dependency classification", dependency_classification_ids),
         ):
             for duplicate in sorted(_duplicates(ids)):
                 failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
@@ -146,16 +180,42 @@ class RegistryValidator:
             + deadline_window_ids
             + filing_schedule_ids
             + support_removal_decision_ids
+            + construct_ids
+            + dependency_classification_ids
         )
         for duplicate in sorted(_duplicates(primary_ids)):
             failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
 
-        casillas = set(casilla_ids)
+        casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
+        formula_by_id = {formula.id: formula for formula in revision.formulas}
+        binding_by_id = {binding.id: binding for binding in revision.bindings}
+        relation_by_id = {relation.id: relation for relation in revision.relations}
+        parameter_by_id = {parameter.id: parameter for parameter in revision.parameters}
+        provider_by_id = {provider.id: provider for provider in revision.algorithm_providers}
+        algorithm_binding_by_id = {binding.id: binding for binding in revision.algorithm_bindings}
+        export_layout_by_id = {layout.id: layout for layout in revision.export_layouts}
+        extraction_profile_by_id = {profile.id: profile for profile in revision.extraction_profiles}
+        cross_reference_by_id = {
+            cross_reference.id: cross_reference for cross_reference in revision.live_cross_references
+        }
+        workbook_parity_by_id = {workbook.id: workbook for workbook in revision.workbook_parity_refs}
+        verification_expectation_by_id = {
+            expectation.id: expectation for expectation in revision.verification_expectations
+        }
+        application_link_by_id = {link.id: link for link in revision.application_links}
+        deadline_window_by_id = {window.id: window for window in revision.deadline_windows}
+        filing_schedule_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
+        support_removal_decision_by_id = {decision.id: decision for decision in revision.support_removal_decisions}
+        dependency_classification_by_id = {
+            classification.id: classification for classification in revision.dependency_classifications
+        }
+
+        casillas = set(casilla_by_id)
         formulas = {formula.id: formula for formula in revision.formulas}
-        bindings = set(binding_ids)
-        relations = set(relation_ids)
-        parameters = set(parameter_ids)
-        providers = set(provider_ids)
+        bindings = set(binding_by_id)
+        relations = set(relation_by_id)
+        parameters = set(parameter_by_id)
+        providers = set(provider_by_id)
         resolvable_values = casillas | bindings | relations | parameters
 
         for casilla in revision.casillas:
@@ -258,23 +318,33 @@ class RegistryValidator:
                 self._missing_refs(prefix, f"binding {binding.id}", binding.source_refs, self._sources, "source")
             )
             failures.extend(self._require_legal_authority_refs(prefix, f"binding {binding.id}", binding.legal_refs))
-            failures.extend(
-                self._require_source_tier(
-                    prefix,
-                    f"binding {binding.id}",
-                    binding.source_refs,
-                    "official_source_guidance",
+            if _is_layout_binding(binding):
+                failures.extend(
+                    self._require_source_tier(
+                        prefix,
+                        f"binding {binding.id}",
+                        binding.source_refs,
+                        "layout_authority",
+                    )
                 )
-            )
-            failures.extend(
-                self._validate_source_citations(
-                    prefix,
-                    f"binding {binding.id}",
-                    binding.source_refs,
-                    binding.source_citations,
-                    "official_source_guidance",
+            else:
+                failures.extend(
+                    self._require_source_tier(
+                        prefix,
+                        f"binding {binding.id}",
+                        binding.source_refs,
+                        "official_source_guidance",
+                    )
                 )
-            )
+                failures.extend(
+                    self._validate_source_citations(
+                        prefix,
+                        f"binding {binding.id}",
+                        binding.source_refs,
+                        binding.source_citations,
+                        "official_source_guidance",
+                    )
+                )
 
         for relation in revision.relations:
             failures.extend(
@@ -293,6 +363,46 @@ class RegistryValidator:
                     f"{prefix}: relation {relation.id!r} targets periods outside revision selector "
                     f"{unknown_target_periods!r}"
                 )
+
+        for classification in revision.dependency_classifications:
+            failures.extend(
+                self._missing_refs(
+                    prefix,
+                    f"dependency classification {classification.id}",
+                    classification.legal_refs,
+                    self._legal,
+                    "legal",
+                )
+            )
+            failures.extend(
+                self._missing_refs(
+                    prefix,
+                    f"dependency classification {classification.id}",
+                    classification.source_refs,
+                    self._sources,
+                    "source",
+                )
+            )
+            for construct_id in classification.target_constructs:
+                if construct_id not in construct_ids:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} references unknown construct "
+                        f"{construct_id!r}"
+                    )
+            for relation_id in classification.relation_refs:
+                relation = relation_by_id.get(relation_id)
+                if relation is None:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} references unknown relation "
+                        f"{relation_id!r}"
+                    )
+                    continue
+                if relation.source_modelo != classification.source_modelo:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} source_modelo "
+                        f"{classification.source_modelo!r} does not match relation {relation_id!r} source_modelo "
+                        f"{relation.source_modelo!r}"
+                    )
 
         selector_periods = set(revision.period_selector.periods)
         for schedule in revision.filing_schedules:
@@ -406,6 +516,10 @@ class RegistryValidator:
                 self._require_source_tier(prefix, f"export {layout.id}", layout.source_refs, "layout_authority")
             )
             for record in layout.records:
+                if record.repeat == "binding_rows" and not any(field.kind == "binding" for field in record.fields):
+                    failures.append(
+                        f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
+                    )
                 for field in record.fields:
                     failures.extend(
                         self._missing_refs(prefix, f"export field {field.id}", field.legal_refs, self._legal, "legal")
@@ -418,6 +532,10 @@ class RegistryValidator:
                     if field.casilla is not None and field.casilla not in casillas:
                         failures.append(
                             f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}"
+                        )
+                    if field.binding is not None and field.binding not in bindings:
+                        failures.append(
+                            f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}"
                         )
 
         for profile in revision.extraction_profiles:
@@ -574,6 +692,31 @@ class RegistryValidator:
         )
         failures.extend(self._validate_application_link_closure(prefix, revision))
         failures.extend(self._validate_reconciliation_total_closure(prefix, revision))
+        failures.extend(
+            self._validate_construct_closure(
+                prefix,
+                revision,
+                member_objects={
+                    "casilla": casilla_by_id,
+                    "formula": formula_by_id,
+                    "parameter": parameter_by_id,
+                    "binding": binding_by_id,
+                    "algorithm provider": provider_by_id,
+                    "algorithm binding": algorithm_binding_by_id,
+                    "relation": relation_by_id,
+                    "export layout": export_layout_by_id,
+                    "extraction profile": extraction_profile_by_id,
+                    "cross-reference": cross_reference_by_id,
+                    "workbook parity reference": workbook_parity_by_id,
+                    "verification expectation": verification_expectation_by_id,
+                    "application link": application_link_by_id,
+                    "deadline window": deadline_window_by_id,
+                    "filing schedule": filing_schedule_by_id,
+                    "support removal decision": support_removal_decision_by_id,
+                    "dependency classification": dependency_classification_by_id,
+                },
+            )
+        )
         failures.extend(self._validate_formula_dag(prefix, revision))
         return failures
 
@@ -649,6 +792,80 @@ class RegistryValidator:
                                 f"{source_scope} does not support source periods {unknown_source_periods!r}"
                             )
         return failures
+
+    @staticmethod
+    def _validate_previous_filing_binding_closure(
+        modelos: Iterable[ModeloDefinition],
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        for modelo in modelos:
+            for revision in modelo.revisions.values():
+                prefix = f"modelo {modelo.id} revision {revision.id}"
+                for binding in revision.bindings:
+                    if binding.source != "previous_filing":
+                        continue
+                    binding_scope = f"{prefix}: binding {binding.id!r}"
+                    source_modelo_id = binding.selector.get("source_modelo")
+                    if not isinstance(source_modelo_id, str):
+                        failures.append(f"{binding_scope} must declare string selector source_modelo")
+                        continue
+                    source_modelo = modelos_by_id.get(source_modelo_id)
+                    if source_modelo is None:
+                        failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
+                        continue
+
+                    source_periods = RegistryValidator._binding_source_periods(binding)
+                    matching_revisions = tuple(
+                        source_revision
+                        for source_revision in source_modelo.revisions.values()
+                        if not source_periods
+                        or set(source_periods).issubset(set(source_revision.period_selector.periods))
+                    )
+                    if not matching_revisions:
+                        failures.append(
+                            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
+                            f"for periods {source_periods!r}"
+                        )
+                        continue
+
+                    source_outputs = RegistryValidator._binding_source_outputs(binding)
+                    if not source_outputs:
+                        continue
+
+                    revision_outputs = set().union(
+                        *(
+                            RegistryValidator._revision_output_ids(source_revision)
+                            for source_revision in matching_revisions
+                        )
+                    )
+                    for source_output in source_outputs:
+                        if source_output not in revision_outputs:
+                            failures.append(
+                                f"{binding_scope} source output {source_output!r} is not defined by any "
+                                f"period-compatible {source_modelo.id} revision"
+                            )
+        return failures
+
+    @staticmethod
+    def _binding_source_periods(binding: DataBindingDefinition) -> tuple[str, ...]:
+        source_periods = binding.selector.get("source_periods")
+        if isinstance(source_periods, tuple) and all(isinstance(period, str) for period in source_periods):
+            return source_periods
+        period = binding.selector.get("period")
+        if isinstance(period, str):
+            return (period,)
+        return ()
+
+    @staticmethod
+    def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:
+        source_casillas = binding.selector.get("source_casillas")
+        if isinstance(source_casillas, tuple) and all(isinstance(casilla, str) for casilla in source_casillas):
+            return source_casillas
+        source_output = binding.selector.get("source_output")
+        if isinstance(source_output, str):
+            return (source_output,)
+        return ()
 
     @staticmethod
     def _revision_output_ids(revision: ModeloRevision) -> set[str]:
@@ -805,6 +1022,63 @@ class RegistryValidator:
                 declared[total_kind] = casilla_id
         return failures
 
+    def _validate_construct_closure(
+        self,
+        scope: str,
+        revision: ModeloRevision,
+        *,
+        member_objects: Mapping[str, Mapping[str, object]],
+    ) -> list[str]:
+        failures: list[str] = []
+        member_attrs = {
+            "casilla": "casillas",
+            "formula": "formulas",
+            "parameter": "parameters",
+            "binding": "bindings",
+            "algorithm provider": "algorithm_providers",
+            "algorithm binding": "algorithm_bindings",
+            "relation": "relations",
+            "export layout": "export_layouts",
+            "extraction profile": "extraction_profiles",
+            "cross-reference": "live_cross_references",
+            "workbook parity reference": "workbook_parity_refs",
+            "verification expectation": "verification_expectations",
+            "application link": "application_links",
+            "deadline window": "deadline_windows",
+            "filing schedule": "filing_schedules",
+            "support removal decision": "support_removal_decisions",
+        }
+
+        for construct in revision.constructs:
+            owner = f"construct {construct.id}"
+            failures.extend(self._missing_refs(scope, owner, construct.legal_refs, self._legal, "legal"))
+            failures.extend(self._missing_refs(scope, owner, construct.source_refs, self._sources, "source"))
+            construct_legal_refs = set(construct.legal_refs)
+            construct_source_refs = set(construct.source_refs)
+            for kind, attr in member_attrs.items():
+                known = member_objects[kind]
+                for member_id in getattr(construct, attr):
+                    member = known.get(member_id)
+                    if member is None:
+                        failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
+                        continue
+                    member_legal_refs = set(getattr(member, "legal_refs", ()))
+                    missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
+                    if missing_legal:
+                        failures.append(
+                            f"{scope}: construct {construct.id!r} does not include legal refs "
+                            f"{missing_legal!r} required by {kind} {member_id!r}"
+                        )
+                    member_source_refs = set(getattr(member, "source_refs", ()))
+                    missing_sources = sorted(member_source_refs.difference(construct_source_refs))
+                    if missing_sources:
+                        failures.append(
+                            f"{scope}: construct {construct.id!r} does not include source refs "
+                            f"{missing_sources!r} required by {kind} {member_id!r}"
+                        )
+
+        return failures
+
     def _validate_support_removal_decisions(
         self,
         scope: str,
@@ -949,7 +1223,11 @@ class RegistryValidator:
             return cached
         if self._source_root is None:
             return ""
-        text = (self._source_root / source.corpus_path).read_text(encoding="utf-8", errors="replace")
+        source_path = self._source_root / source.corpus_path
+        if source.kind == "manual_pdf":
+            text = _extract_pdf_text(source_path)
+        else:
+            text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)
         self._source_text_cache[source.id] = normalised
         return normalised

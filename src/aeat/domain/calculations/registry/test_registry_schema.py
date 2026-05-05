@@ -17,7 +17,7 @@ from . import (
     load_modelo_file,
 )
 from ._loader import load_registry_tree
-from ._schema import ModeloDefinition, ModeloRevision, SupportRemovalDecisionDefinition
+from ._schema import ExportFieldDefinition, ModeloDefinition, ModeloRevision, SupportRemovalDecisionDefinition
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -37,6 +37,14 @@ def _revision(modelo: ModeloDefinition) -> ModeloRevision:
 
 def _with_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
     return modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: revision}})
+
+
+def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinition) -> ModeloRevision:
+    layout = revision.export_layouts[0]
+    record = layout.records[0]
+    updated_record = record.model_copy(update={"fields": (field, *record.fields[1:])})
+    updated_layout = layout.model_copy(update={"records": (updated_record, *layout.records[1:])})
+    return revision.model_copy(update={"export_layouts": (updated_layout, *revision.export_layouts[1:])})
 
 
 def _copy_committed_modelo(path: Path) -> None:
@@ -208,7 +216,7 @@ def test_validator_requires_workbook_parity_coverage() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, revision))
 
 
-def test_modelo_file_rejects_disabled_support_decision(tmp_path: Path) -> None:
+def test_modelo_file_rejects_unknown_support_removal_decision(tmp_path: Path) -> None:
     path = tmp_path / "130.toml"
     _copy_committed_modelo(path)
     path.write_text(
@@ -216,12 +224,12 @@ def test_modelo_file_rejects_disabled_support_decision(tmp_path: Path) -> None:
         + """
 
 [[revisions."2019-y-siguientes".support_removal_decisions]]
-id = "modelo-130-disabled-placeholder"
+id = "modelo-130-invalid-removal-decision"
 subject_type = "filing_path"
 subject_id = "aeat.entrypoints.cli.filing"
-decision = "disabled"
+decision = "not_a_supported_removal_decision"
 reason = "out_of_scope"
-evidence_note = "Invalid placeholder state."
+evidence_note = "Invalid support-removal decision value."
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-dr-130-2019-v12"]
 """,
@@ -330,6 +338,61 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
 
     with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_export_fields_can_reference_structured_bindings() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    bound_revision = _with_first_export_field(
+        revision,
+        ExportFieldDefinition.model_validate(
+            {
+                **revision.export_layouts[0].records[0].fields[0].model_dump(mode="python"),
+                "id": "modelo-130-export-bound-net-income",
+                "kind": "binding",
+                "binding": revision.bindings[0].id,
+                "casilla": None,
+                "literal": None,
+                "header_key": None,
+                "draft_attribute": None,
+                "computed_key": None,
+                "data_type": "money",
+                "required": False,
+                "padding": "left_zero",
+                "justification": "right",
+            }
+        ),
+    )
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, bound_revision))
+
+
+def test_validator_rejects_export_field_with_unknown_binding() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    bound_revision = _with_first_export_field(
+        revision,
+        ExportFieldDefinition.model_validate(
+            {
+                **revision.export_layouts[0].records[0].fields[0].model_dump(mode="python"),
+                "id": "modelo-130-export-bound-missing",
+                "kind": "binding",
+                "binding": "missing.export.binding",
+                "casilla": None,
+                "literal": None,
+                "header_key": None,
+                "draft_attribute": None,
+                "computed_key": None,
+                "data_type": "money",
+                "required": False,
+                "padding": "left_zero",
+                "justification": "right",
+            }
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="unknown binding"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, bound_revision))
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:

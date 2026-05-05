@@ -372,6 +372,19 @@ def test_verify_filed_state_cli_help_uses_locale_strings() -> None:
     assert "--source-observation" in result.output
 
 
+def test_capture_source_filed_data_cli_help_uses_locale_strings() -> None:
+    result = _RUNNER.invoke(
+        app,
+        ["app", "registry", "capture-source-filed-data", "--help"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code == 0
+    assert "observaciones fuente presentadas" in result.output
+    assert "cli.registry.capture_source_filed_data_help" not in result.output
+    assert "--source-root" in result.output
+
+
 def test_list_filed_data_cli_refuses_expired_session_before_remote_read(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(

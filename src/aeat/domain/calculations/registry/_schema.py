@@ -13,8 +13,10 @@ from ._ids import (
     ApplicationLinkId,
     BindingId,
     CasillaId,
+    ConstructId,
     CrossReferenceId,
     DeadlineWindowId,
+    DependencyClassificationId,
     ExportFieldId,
     ExportLayoutId,
     ExtractionProfileId,
@@ -244,7 +246,13 @@ class ExtractionProfileDefinition(RegistryModel):
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
     evidence_tier: EvidenceTier
-    surface: Literal["open_simulator", "integration_test_service", "static_official_documentation"]
+    surface: Literal[
+        "open_simulator",
+        "integration_test_service",
+        "public_read_surface",
+        "authenticated_read_surface",
+        "static_official_documentation",
+    ]
     guard_policy_id: str
     allowed_hosts: tuple[str, ...] = ()
     allowed_methods: tuple[str, ...] = ()
@@ -262,17 +270,39 @@ class LiveCrossReferenceDecision(RegistryModel):
             and self.evidence_tier != "executable_parity_evidence"
         ):
             raise ValueError(f"cross-reference {self.id!r} live surface requires executable parity evidence")
+        if self.surface in {"public_read_surface", "authenticated_read_surface"} and (
+            self.evidence_tier == "executable_parity_evidence"
+        ):
+            raise ValueError(f"cross-reference {self.id!r} read surface is observation evidence, not parity")
         if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
             raise ValueError(f"cross-reference {self.id!r} static documentation is not executable parity evidence")
-        if self.surface in {"open_simulator", "integration_test_service"} and not self.allowed_hosts:
+        if (
+            self.surface
+            in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
+            and not self.allowed_hosts
+        ):
             raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
         if self.surface == "open_simulator" and self.requires_authentication:
             raise ValueError(f"cross-reference {self.id!r} open simulator must not require authentication")
+        if self.surface == "public_read_surface" and self.requires_authentication:
+            raise ValueError(f"cross-reference {self.id!r} public read surface must not require authentication")
+        if self.surface == "authenticated_read_surface" and not self.requires_authentication:
+            raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authentication")
+        if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
+            raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authorization")
+        if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
+            raise ValueError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
             raise ValueError(f"cross-reference {self.id!r} static documentation cannot accept synthetic data")
         for method in self.allowed_methods:
             if method.upper() != method:
                 raise ValueError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
+            if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
+                "GET",
+                "HEAD",
+                "OPTIONS",
+            }:
+                raise ValueError(f"cross-reference {self.id!r} read surface method {method!r} is not read-only")
         return self
 
 
@@ -366,6 +396,109 @@ class SupportRemovalDecisionDefinition(RegistryModel):
     evidence_note: str = Field(min_length=1, max_length=2048)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+
+class ConstructDefinition(RegistryModel):
+    id: ConstructId
+    title: str = Field(min_length=1, max_length=200)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+    casillas: tuple[CasillaId, ...] = ()
+    formulas: tuple[FormulaId, ...] = ()
+    parameters: tuple[ParameterId, ...] = ()
+    bindings: tuple[BindingId, ...] = ()
+    algorithm_providers: tuple[str, ...] = ()
+    algorithm_bindings: tuple[str, ...] = ()
+    relations: tuple[RelationId, ...] = ()
+    export_layouts: tuple[ExportLayoutId, ...] = ()
+    extraction_profiles: tuple[ExtractionProfileId, ...] = ()
+    live_cross_references: tuple[CrossReferenceId, ...] = ()
+    workbook_parity_refs: tuple[WorkbookParityRefId, ...] = ()
+    verification_expectations: tuple[VerificationExpectationId, ...] = ()
+    application_links: tuple[ApplicationLinkId, ...] = ()
+    deadline_windows: tuple[DeadlineWindowId, ...] = ()
+    filing_schedules: tuple[str, ...] = ()
+    support_removal_decisions: tuple[SupportRemovalDecisionId, ...] = ()
+    dependency_classifications: tuple[DependencyClassificationId, ...] = ()
+
+    @field_validator(
+        "casillas",
+        "formulas",
+        "parameters",
+        "bindings",
+        "algorithm_providers",
+        "algorithm_bindings",
+        "relations",
+        "export_layouts",
+        "extraction_profiles",
+        "live_cross_references",
+        "workbook_parity_refs",
+        "verification_expectations",
+        "application_links",
+        "deadline_windows",
+        "filing_schedules",
+        "support_removal_decisions",
+        "dependency_classifications",
+    )
+    @classmethod
+    def _member_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("construct member ids must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_membership(self) -> ConstructDefinition:
+        member_groups = (
+            self.casillas,
+            self.formulas,
+            self.parameters,
+            self.bindings,
+            self.algorithm_providers,
+            self.algorithm_bindings,
+            self.relations,
+            self.export_layouts,
+            self.extraction_profiles,
+            self.live_cross_references,
+            self.workbook_parity_refs,
+            self.verification_expectations,
+            self.application_links,
+            self.deadline_windows,
+            self.filing_schedules,
+            self.support_removal_decisions,
+            self.dependency_classifications,
+        )
+        if not any(member_groups):
+            raise ValueError(f"construct {self.id!r} must declare at least one revision member")
+        return self
+
+
+class DependencyClassificationDefinition(RegistryModel):
+    id: DependencyClassificationId
+    source_modelo: ModeloId
+    treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+    target_constructs: tuple[ConstructId, ...] = ()
+    relation_refs: tuple[RelationId, ...] = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("target_constructs", "relation_refs")
+    @classmethod
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("dependency classification tuple entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_classification(self) -> DependencyClassificationDefinition:
+        if self.treatment == "non_dependency":
+            if self.target_constructs or self.relation_refs:
+                raise ValueError(f"non-dependency classification {self.id!r} must not declare target members")
+            return self
+        if not self.target_constructs:
+            raise ValueError(f"dependency classification {self.id!r} must declare target_constructs")
+        if not self.relation_refs:
+            raise ValueError(f"dependency classification {self.id!r} must declare relation_refs")
+        return self
 
 
 ProfileFactValue = bool | int | str
@@ -596,8 +729,9 @@ class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
     offset: int | None = Field(default=None, ge=0)
     length: int | None = Field(default=None, gt=0)
-    kind: Literal["literal", "casilla", "computed", "draft", "filler", "header", "checksum"]
+    kind: Literal["literal", "casilla", "binding", "computed", "draft", "filler", "header", "checksum"]
     casilla: CasillaId | None = None
+    binding: BindingId | None = None
     literal: str | None = None
     header_key: str | None = None
     draft_attribute: Literal["modelo", "period", "profile_tax_id", "filing_year", "period_code"] | None = None
@@ -615,6 +749,8 @@ class ExportFieldDefinition(RegistryModel):
     def _validate_field_kind(self) -> ExportFieldDefinition:
         if self.kind == "casilla" and self.casilla is None:
             raise ValueError(f"export field {self.id!r} must declare casilla")
+        if self.kind == "binding" and self.binding is None:
+            raise ValueError(f"export field {self.id!r} must declare binding")
         if self.kind == "literal" and self.literal is None:
             raise ValueError(f"export field {self.id!r} must declare literal")
         if self.kind == "header" and self.header_key is None:
@@ -634,14 +770,26 @@ class ExportRecordDefinition(RegistryModel):
     order: int = Field(ge=0)
     encoding: str
     line_ending: Literal["crlf", "lf", "none"]
+    repeat: Literal["binding_rows"] | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
 
 
 class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
+    format: Literal["fixed_width", "xml_dictionary"] = "fixed_width"
+    dictionary_source_ref: SourceRefId | None = None
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _validate_layout_format(self) -> ExportLayoutDefinition:
+        if self.format == "xml_dictionary":
+            if self.dictionary_source_ref is None:
+                raise ValueError(f"export layout {self.id!r} must declare dictionary_source_ref")
+            if self.dictionary_source_ref not in self.source_refs:
+                raise ValueError(f"export layout {self.id!r} dictionary source must be included in source_refs")
+        return self
 
 
 class ModeloRevision(RegistryModel):
@@ -668,6 +816,8 @@ class ModeloRevision(RegistryModel):
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
     filing_schedules: tuple[FilingScheduleDefinition, ...] = ()
     support_removal_decisions: tuple[SupportRemovalDecisionDefinition, ...] = ()
+    constructs: tuple[ConstructDefinition, ...] = ()
+    dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
@@ -715,3 +865,5 @@ class RegistrySnapshot(RegistryModel):
     deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
     filing_schedules: Mapping[str, FilingScheduleDefinition]
     support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]
+    constructs: Mapping[ConstructId, ConstructDefinition]
+    dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]

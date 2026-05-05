@@ -984,8 +984,12 @@ async def _capture_filed_declaration_observation_from_row(
             body=submitted_body,
             artefact=submitted_artefact,
         )
-        expected_casillas = len(resolve_export_layout(snapshot).fields_by_casilla)
-        extraction_coverage["submitted_file"] = len(casillas) / expected_casillas if expected_casillas else 0.0
+        resolved_layout = resolve_export_layout(snapshot)
+        if resolved_layout.layout.format == "xml_dictionary":
+            extraction_coverage["submitted_file"] = 1.0
+        else:
+            expected_casillas = len(resolved_layout.fields_by_casilla)
+            extraction_coverage["submitted_file"] = len(casillas) / expected_casillas if expected_casillas else 0.0
     elif declaration_pdf_body is not None:
         casillas = _observed_casillas_from_declaration_pdf(
             snapshot=snapshot,
@@ -1030,35 +1034,25 @@ async def capture_previous_filing_observations(
     """Capture filed declarations required by registry previous-filing bindings."""
 
     observations: list[FiledDeclarationObservation] = []
-    for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
-        rows = await walk_declarations_register(
-            session,
-            modelo=requirement.modelo,
-            ejercicio=requirement.filing_year,
-            settings=settings,
-            playwright=playwright,
-        )
-        matches = tuple(row for row in rows if row.period == requirement.period)
-        if len(matches) != 1:
-            raise SedeParseError(
-                f"previous-filing requirement {requirement.modelo!r}/"
-                f"{requirement.filing_year}/{requirement.period!r} expected one filed declaration, found {len(matches)}"
-            )
-        observation = await capture_filed_declaration_observation(
-            session,
-            matches[0],
-            settings=settings,
-            playwright=playwright,
-            artefact_sink=artefact_sink,
-        )
-        observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
-        missing = sorted(set(requirement.source_casillas).difference(observed_casillas))
-        if missing:
-            raise SedeParseError(
-                f"previous-filing requirement {requirement.modelo!r}/"
-                f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}"
-            )
-        observations.append(observation)
+    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
+        for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
+            rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
+            matches = tuple(row for row in rows if row.period == requirement.period)
+            if len(matches) != 1:
+                raise SedeParseError(
+                    f"previous-filing requirement {requirement.modelo!r}/"
+                    f"{requirement.filing_year}/{requirement.period!r} expected one filed declaration, "
+                    f"found {len(matches)}"
+                )
+            observation = await register.capture_observation(matches[0], artefact_sink=artefact_sink)
+            observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
+            missing = sorted(set(requirement.source_casillas).difference(observed_casillas))
+            if missing:
+                raise SedeParseError(
+                    f"previous-filing requirement {requirement.modelo!r}/"
+                    f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}"
+                )
+            observations.append(observation)
     return tuple(observations)
 
 
@@ -1180,7 +1174,12 @@ def _observed_casillas_from_submitted_file(
     artefact: FiledDeclarationArtefact,
 ) -> tuple[ObservedCasillaValue, ...]:
     resolved = resolve_export_layout(snapshot)
-    parsed = parse_export_payload(resolved.layout, body)
+    parsed = parse_export_payload(
+        resolved.layout,
+        body,
+        source_root=PROJECT_ROOT,
+        sources=snapshot.sources,
+    )
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.casillas:

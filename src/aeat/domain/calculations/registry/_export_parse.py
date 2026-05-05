@@ -2,12 +2,28 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from xml.etree.ElementTree import Element
+
+from defusedxml import ElementTree
 
 from ._errors import RegistryValidationError
-from ._schema import ExportFieldDefinition, ExportLayoutDefinition, RegistryModel
+from ._schema import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    RegistryModel,
+    SourceReference,
+)
 
 _MONEY_SCALE = Decimal("100")
+_DICTIONARY_LINE_RE = re.compile(
+    r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$"
+)
 
 
 class ParsedExportFieldValue(RegistryModel):
@@ -16,6 +32,7 @@ class ParsedExportFieldValue(RegistryModel):
     record_id: str
     field_id: str
     casilla_id: str | None = None
+    binding_id: str | None = None
     raw: str
     value: Decimal | str | bool | None
     source_locator: str
@@ -29,35 +46,218 @@ class ParsedExportPayload(RegistryModel):
     casillas: tuple[ParsedExportFieldValue, ...]
 
 
-def parse_export_payload(layout: ExportLayoutDefinition, payload: bytes) -> ParsedExportPayload:
+@dataclass(frozen=True)
+class _XmlDictionaryEntry:
+    field_id: str
+    path: str
+    data_type: str
+    casilla_id: str | None
+
+
+def parse_export_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    source_root: Path | None = None,
+    sources: Mapping[str, SourceReference] | None = None,
+) -> ParsedExportPayload:
     """Parse a complete AEAT payload according to a registry export layout."""
+
+    if layout.format == "xml_dictionary":
+        return _parse_xml_dictionary_payload(layout, payload, source_root=source_root, sources=sources)
 
     cursor = 0
     parsed: list[ParsedExportFieldValue] = []
-    for record in sorted(layout.records, key=lambda item: item.order):
-        record_length = _record_length(record.fields)
-        record_bytes = payload[cursor : cursor + record_length]
-        if len(record_bytes) != record_length:
-            raise RegistryValidationError(
-                f"payload ended before export record {record.id!r}; "
-                f"expected {record_length} bytes, got {len(record_bytes)}"
-            )
-        try:
-            record_text = record_bytes.decode(record.encoding)
-        except UnicodeDecodeError as exc:
-            raise RegistryValidationError(f"export record {record.id!r} is not {record.encoding!r}") from exc
-        parsed.extend(_parse_record_fields(layout.id, record.id, record_text, record.fields))
-        cursor += record_length
-        line_ending = _line_ending_bytes(record.line_ending)
-        if line_ending:
-            ending = payload[cursor : cursor + len(line_ending)]
-            if ending != line_ending:
-                raise RegistryValidationError(f"export record {record.id!r} missing declared line ending")
-            cursor += len(line_ending)
-    if cursor != len(payload):
+    records = tuple(sorted(layout.records, key=lambda item: item.order))
+    for index, record in enumerate(records):
+        if record.repeat == "binding_rows":
+            next_record = records[index + 1] if index + 1 < len(records) else None
+            while cursor < len(payload) and not _matches_record_start(next_record, payload, cursor):
+                record_values, cursor = _read_record(layout.id, record, payload, cursor)
+                parsed.extend(record_values)
+            continue
+        record_values, cursor = _read_record(layout.id, record, payload, cursor)
+        parsed.extend(record_values)
+    trailing = payload[cursor:]
+    if trailing and trailing.strip(b"\r\n"):
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+
+
+def _parse_xml_dictionary_payload(
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    *,
+    source_root: Path | None,
+    sources: Mapping[str, SourceReference] | None,
+) -> ParsedExportPayload:
+    entries = _load_xml_dictionary_entries(layout, source_root=source_root, sources=sources)
+    try:
+        root = ElementTree.fromstring(payload)
+    except ElementTree.ParseError as exc:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} could not parse payload") from exc
+
+    parsed: list[ParsedExportFieldValue] = []
+    for entry in entries:
+        for index, element in enumerate(_find_xml_path(root, entry.path), start=1):
+            raw = (element.text or "").strip()
+            if not raw:
+                continue
+            parsed.append(
+                ParsedExportFieldValue(
+                    record_id="xml",
+                    field_id=entry.field_id,
+                    casilla_id=entry.casilla_id,
+                    raw=raw,
+                    value=_parse_xml_dictionary_value(entry.data_type, raw),
+                    source_locator=f"{layout.id}:{entry.path}:{index}",
+                )
+            )
+    casillas = tuple(value for value in parsed if value.casilla_id is not None)
+    return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+
+
+def _load_xml_dictionary_entries(
+    layout: ExportLayoutDefinition,
+    *,
+    source_root: Path | None,
+    sources: Mapping[str, SourceReference] | None,
+) -> tuple[_XmlDictionaryEntry, ...]:
+    if layout.dictionary_source_ref is None:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
+    if source_root is None or sources is None:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} requires source_root and sources")
+    source = sources.get(str(layout.dictionary_source_ref))
+    if source is None:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}"
+        )
+    dictionary_path = source_root / Path(source.corpus_path)
+    entries: list[_XmlDictionaryEntry] = []
+    for line in _read_dictionary_text(dictionary_path).splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = _DICTIONARY_LINE_RE.match(stripped)
+        if match is None:
+            continue
+        casilla_id = _normalize_dictionary_casilla(match["casilla"])
+        entries.append(
+            _XmlDictionaryEntry(
+                field_id=match["field"].strip(),
+                path=match["path"].strip(),
+                data_type=match["type"].strip(),
+                casilla_id=casilla_id,
+            )
+        )
+    if not entries:
+        raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
+    return tuple(entries)
+
+
+def _read_dictionary_text(path: Path) -> str:
+    body = path.read_bytes()
+    try:
+        return body.decode("utf-8")
+    except UnicodeDecodeError:
+        return body.decode("latin-1")
+
+
+def _normalize_dictionary_casilla(value: str) -> str | None:
+    text = value.strip()
+    if not text or text.startswith("*"):
+        return None
+    return text if text.isdigit() else None
+
+
+def _find_xml_path(root: Element, absolute_path: str) -> tuple[Element, ...]:
+    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
+    if not parts:
+        return ()
+    current = (root,)
+    for index, part in enumerate(parts):
+        if index == 0 and len(current) == 1 and _local_name(current[0].tag) == part:
+            continue
+        next_elements: list[Element] = []
+        for element in current:
+            next_elements.extend(child for child in element if _local_name(child.tag) == part)
+        current = tuple(next_elements)
+        if not current:
+            return ()
+    return current
+
+
+def _local_name(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | bool | None:
+    normalized = data_type.upper()
+    if normalized.startswith(("N", "P")):
+        return _parse_xml_decimal(raw)
+    if normalized.startswith("L"):
+        return _parse_boolean(raw)
+    return raw
+
+
+def _parse_xml_decimal(raw: str) -> Decimal:
+    text = raw.strip().replace(",", ".")
+    if not text:
+        return Decimal("0")
+    try:
+        return Decimal(text)
+    except InvalidOperation as exc:
+        raise RegistryValidationError("XML dictionary numeric value contains invalid decimal data") from exc
+
+
+def _read_record(
+    layout_id: str,
+    record: ExportRecordDefinition,
+    payload: bytes,
+    cursor: int,
+) -> tuple[tuple[ParsedExportFieldValue, ...], int]:
+    record_length = _record_length(record.fields)
+    record_bytes = payload[cursor : cursor + record_length]
+    if len(record_bytes) != record_length:
+        raise RegistryValidationError(
+            f"payload ended before export record {record.id!r}; expected {record_length} bytes, got {len(record_bytes)}"
+        )
+    try:
+        record_text = record_bytes.decode(record.encoding)
+    except UnicodeDecodeError as exc:
+        raise RegistryValidationError(f"export record {record.id!r} is not {record.encoding!r}") from exc
+    parsed = _parse_record_fields(layout_id, record.id, record_text, record.fields)
+    cursor += record_length
+    line_ending = _line_ending_bytes(record.line_ending)
+    if line_ending:
+        ending = payload[cursor : cursor + len(line_ending)]
+        if ending != line_ending:
+            raise RegistryValidationError(f"export record {record.id!r} missing declared line ending")
+        cursor += len(line_ending)
+    return parsed, cursor
+
+
+def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes, cursor: int) -> bool:
+    if record is None:
+        return False
+    record_length = _record_length(record.fields)
+    record_bytes = payload[cursor : cursor + record_length]
+    if len(record_bytes) != record_length:
+        return False
+    try:
+        record_text = record_bytes.decode(record.encoding)
+    except UnicodeDecodeError:
+        return False
+    matched_literal = False
+    for field in record.fields:
+        if field.kind != "literal" or field.offset is None or field.length is None:
+            continue
+        matched_literal = True
+        raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
+        if _parse_field_value(field, raw) != field.literal:
+            return False
+    return matched_literal
 
 
 def _record_length(fields: tuple[ExportFieldDefinition, ...]) -> int:
@@ -94,6 +294,7 @@ def _parse_record_fields(
                 record_id=record_id,
                 field_id=field.id,
                 casilla_id=field.casilla,
+                binding_id=field.binding,
                 raw=raw,
                 value=value,
                 source_locator=f"{layout_id}:{record_id}:{field.id}:{field.offset}:{field.length}",

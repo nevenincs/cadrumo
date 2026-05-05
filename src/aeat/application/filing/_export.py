@@ -294,15 +294,39 @@ _MONEY_QUANT = Decimal("0.01")
 def _render_layout(layout: ExportLayoutDefinition, *, draft: FilingDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
-    values: dict[str, object] = {value.casilla_id: value.value for value in draft.values}
+    casilla_values: dict[str, object] = {value.casilla_id: value.value for value in draft.values}
+    binding_values: dict[tuple[str, int | None], object] = {
+        (value.binding_id, value.row_index): value.value for value in draft.binding_values
+    }
     for record in sorted(layout.records, key=lambda item: item.order):
-        text = _render_record(record, draft=draft, headers=normalized_headers, values=values)
-        if record.line_ending == "crlf":
-            text += "\r\n"
-        elif record.line_ending == "lf":
-            text += "\n"
-        chunks.append(text.encode(record.encoding))
+        for row_index in _record_row_indexes(record, binding_values):
+            text = _render_record(
+                record,
+                draft=draft,
+                headers=normalized_headers,
+                casilla_values=casilla_values,
+                binding_values=binding_values,
+                row_index=row_index,
+            )
+            if record.line_ending == "crlf":
+                text += "\r\n"
+            elif record.line_ending == "lf":
+                text += "\n"
+            chunks.append(text.encode(record.encoding))
     return b"".join(chunks)
+
+
+def _record_row_indexes(
+    record: ExportRecordDefinition,
+    binding_values: dict[tuple[str, int | None], object],
+) -> tuple[int | None, ...]:
+    if record.repeat != "binding_rows":
+        return (None,)
+    binding_ids = {field.binding for field in record.fields if field.kind == "binding" and field.binding is not None}
+    row_indexes = sorted(
+        row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
+    )
+    return tuple(dict.fromkeys(row_indexes))
 
 
 def _render_record(
@@ -310,17 +334,36 @@ def _render_record(
     *,
     draft: FilingDraft,
     headers: dict[str, str],
-    values: dict[str, object],
+    casilla_values: dict[str, object],
+    binding_values: dict[tuple[str, int | None], object],
+    row_index: int | None,
 ) -> str:
     positioned = all(field.offset is not None for field in record.fields)
     if not positioned:
-        return "".join(_render_field(field, draft=draft, headers=headers, values=values) for field in record.fields)
+        return "".join(
+            _render_field(
+                field,
+                draft=draft,
+                headers=headers,
+                casilla_values=casilla_values,
+                binding_values=binding_values,
+                row_index=row_index,
+            )
+            for field in record.fields
+        )
     length = max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         if field.offset is None:
             raise ValueError(f"export field {field.id!r} must declare offset")
-        rendered = _render_field(field, draft=draft, headers=headers, values=values)
+        rendered = _render_field(
+            field,
+            draft=draft,
+            headers=headers,
+            casilla_values=casilla_values,
+            binding_values=binding_values,
+            row_index=row_index,
+        )
         start = field.offset - 1
         end = start + len(rendered)
         if any(char != " " for char in buffer[start:end]):
@@ -334,11 +377,20 @@ def _render_field(
     *,
     draft: FilingDraft,
     headers: dict[str, str],
-    values: dict[str, object],
+    casilla_values: dict[str, object],
+    binding_values: dict[tuple[str, int | None], object],
+    row_index: int | None,
 ) -> str:
     if field.length is None:
         raise ValueError(f"export field {field.id!r} must declare length")
-    raw = _field_value(field, draft=draft, headers=headers, values=values)
+    raw = _field_value(
+        field,
+        draft=draft,
+        headers=headers,
+        casilla_values=casilla_values,
+        binding_values=binding_values,
+        row_index=row_index,
+    )
     return _format_field(field, raw)
 
 
@@ -347,7 +399,9 @@ def _field_value(
     *,
     draft: FilingDraft,
     headers: dict[str, str],
-    values: dict[str, object],
+    casilla_values: dict[str, object],
+    binding_values: dict[tuple[str, int | None], object],
+    row_index: int | None,
 ) -> object:
     if field.kind == "literal":
         return field.literal
@@ -356,7 +410,11 @@ def _field_value(
     if field.kind == "casilla":
         if field.casilla is None:
             raise ValueError(f"export field {field.id!r} must declare casilla")
-        return values.get(field.casilla)
+        return casilla_values.get(field.casilla)
+    if field.kind == "binding":
+        if field.binding is None:
+            raise ValueError(f"export field {field.id!r} must declare binding")
+        return binding_values.get((field.binding, row_index))
     if field.kind == "header":
         if field.header_key is None:
             raise ValueError(f"export field {field.id!r} must declare header_key")

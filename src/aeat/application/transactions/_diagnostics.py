@@ -108,9 +108,8 @@ def build_ledger_import_diagnostic(
 ) -> LedgerImportDiagnostic:
     """Construct a :class:`LedgerImportDiagnostic` with the canonical field order.
 
-    Wraps the constructor so the application use-case has a single
-    factory the CLI tests can stub. Adding new optional metadata
-    later means extending this helper rather than every emit site.
+    Centralised factory so adding new optional metadata later means
+    extending this helper rather than every emit site.
     """
     return LedgerImportDiagnostic(
         kind=kind,

@@ -56,6 +56,7 @@ from ._repository import (
 from ._schema import (
     APPROVAL_BASIS_VERSION,
     FilingApprovalBasis,
+    FilingBindingValue,
     FilingDraft,
     FilingDraftStatus,
     FilingFindingSeverity,
@@ -87,6 +88,7 @@ __all__ = [
     "FilingAmendmentRepository",
     "FilingAmendmentValidationError",
     "FilingApprovalBasis",
+    "FilingBindingValue",
     "FilingBuilderError",
     "FilingComputationError",
     "FilingDraft",

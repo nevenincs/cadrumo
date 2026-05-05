@@ -22,12 +22,9 @@ class JustificanteParserBackend(StrEnum):
 
     Attributes:
         PDFPLUMBER: Fidelity-first default backend.
-        PYMUPDF: Reserved for a future speed-optimised implementation
-            and currently raises on use.
     """
 
     PDFPLUMBER = "PDFPLUMBER"
-    PYMUPDF = "PYMUPDF"
 
 
 class Justificante(BaseModel):

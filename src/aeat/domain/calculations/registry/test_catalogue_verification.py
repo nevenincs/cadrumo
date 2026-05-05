@@ -66,6 +66,75 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
     assert checked
 
 
+def test_modelo_100_record_design_sources_match_manifest() -> None:
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    manifest_path = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro" / "modelo_100" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
+    checked: list[str] = []
+
+    for artefact in manifest["artefacts"]:
+        title = artefact["title"]
+        if not (
+            "Diccionario declaración individual" in title
+            or "Diccionario declaración individual (toma de datos)" in title
+            or "Esquema XSD Ejercicio" in title
+        ):
+            continue
+        corpus_path = f"corpus/aeat_official/disenos_registro/modelo_100/{artefact['stored_path']}"
+        source = sources_by_path.get(corpus_path)
+
+        assert source is not None, f"Modelo 100 corpus artefact has no registry source: {corpus_path}"
+        assert source.sha256 == artefact["sha256"]
+        assert source.bytes == artefact["bytes"]
+        assert source.source_url == artefact["url"]
+        assert source.evidence_tier == "layout_authority"
+        assert source.kind in {"dictionary", "xsd"}
+        verify_source_file(PROJECT_ROOT, source)
+        checked.append(source.id)
+
+    assert len(checked) == 18
+
+
+def test_renta_manual_sources_match_manifest() -> None:
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
+    manual_roots = (
+        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "parte1",
+        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "parte2-deducciones-autonomicas",
+    )
+    checked: list[str] = []
+
+    for root in manual_roots:
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        corpus_path = root.joinpath(manifest["relative_pdf_path"]).relative_to(PROJECT_ROOT).as_posix()
+        source = sources_by_path.get(corpus_path)
+
+        assert source is not None, f"Renta manual corpus artefact has no registry source: {corpus_path}"
+        assert source.sha256 == manifest["sha256"]
+        assert source.bytes == manifest["content_length"]
+        assert source.source_url == manifest["source_pdf_url"]
+        assert source.evidence_tier == "official_source_guidance"
+        assert source.kind == "manual_pdf"
+        verify_source_file(PROJECT_ROOT, source)
+        checked.append(source.id)
+
+    assert checked == ["aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas"]
+
+
+def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+
+    assert {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+    }.issubset(catalogues.legal)
+    verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
+
+
 def _legal_reference(
     *,
     ref_id: str = "rd-439-2007:art-110",
