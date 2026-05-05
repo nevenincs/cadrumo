@@ -1003,6 +1003,8 @@ cli:
     capture_filed_data_help: cli.registry.capture_filed_data_help
     capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
     capture_limit_help: cli.registry.capture_limit_help
+    capture_source_filed_data_help: Capturar observaciones fuente presentadas requeridas por el cálculo de un modelo objetivo
+    capture_source_filed_data_json_help: Emitir el informe de captura de datos fuente presentados como JSON
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas por defecto
     errors:
       invalid_year_range: cli.registry.errors.invalid_year_range
