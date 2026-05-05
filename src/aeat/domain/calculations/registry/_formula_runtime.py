@@ -60,7 +60,15 @@ def calculate_registry_snapshot(
 
     revision = snapshot.revision
     _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
-    _reject_unknown_external_values(resolved_relations, {relation.id for relation in revision.relations}, "relation")
+    _reject_unknown_external_values(
+        resolved_relations,
+        {
+            relation.id
+            for relation in revision.relations
+            if not relation.target_periods or snapshot.period in relation.target_periods
+        },
+        "relation",
+    )
     values = _initial_values(revision, inputs)
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}

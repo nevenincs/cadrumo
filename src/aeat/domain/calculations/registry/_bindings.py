@@ -3,19 +3,27 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
+_RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
+
 __all__ = [
     "DataBindingDefinition",
+    "InvoiceObservation",
+    "InvoiceObservationRequirement",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
+    "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_bound_casilla_inputs",
+    "resolve_invoice_binding_values",
     "resolve_previous_filing_binding_values",
 ]
 
@@ -223,3 +231,239 @@ def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: l
             raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
         return values[0]
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op!r}")
+
+
+# ---------------------------------------------------------------------------
+# Invoice-source bindings (modelo-agnostic factual aggregation from the user's
+# invoice ledger). Used by IVA modelos (303, 349, 369, 390) and any other
+# modelo that aggregates invoice facts into casilla values. Bindings of source
+# "invoice" carry no legal authority of their own; legal/source refs declared
+# alongside the binding identify the law backing the inclusion criteria.
+# ---------------------------------------------------------------------------
+
+
+class InvoiceObservation(BaseModel):
+    """One factual line from the user's invoice ledger.
+
+    The fields are scoped to the facts every IVA modelo needs to classify a
+    transaction. ``intracommunity_clave`` follows the AEAT clave-de-operacion
+    enum (E, M, H, A, T, S, I, R, D, C). ``vat_regime`` is open-ended so
+    domestic-IVA modelos can carry their regime classification alongside.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    invoice_id: str = Field(min_length=1, max_length=128)
+    party_tax_id: str = Field(min_length=1, max_length=64)
+    country_code: str = Field(min_length=2, max_length=2)
+    transaction_date: date
+    base_amount: Decimal
+    vat_regime: str | None = Field(default=None, max_length=64)
+    intracommunity_clave: str | None = Field(default=None, max_length=2)
+    is_rectification: bool = False
+    rectified_year: int | None = Field(default=None, ge=2000, le=2099)
+    rectified_period: str | None = Field(default=None, max_length=8)
+    rectified_base_previous: Decimal | None = None
+    party_legal_name: str | None = Field(default=None, max_length=200)
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper():
+            raise ValueError("country_code must be uppercase")
+        if not value.isalpha():
+            raise ValueError("country_code must be alphabetic")
+        return value
+
+    @field_validator("intracommunity_clave")
+    @classmethod
+    def _clave_uppercase(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value != value.upper():
+            raise ValueError("intracommunity_clave must be uppercase")
+        if value not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
+            raise ValueError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
+        return value
+
+    @field_validator("base_amount", "rectified_base_previous")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise ValueError("invoice amounts must be Decimal")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_rectification(self) -> InvoiceObservation:
+        if self.is_rectification:
+            if self.rectified_year is None or self.rectified_period is None:
+                raise ValueError("rectification observation must declare rectified_year and rectified_period")
+            if self.rectified_base_previous is None:
+                raise ValueError("rectification observation must declare rectified_base_previous")
+        else:
+            if self.rectified_year is not None or self.rectified_period is not None:
+                raise ValueError("non-rectification observation must not declare rectified_year/period")
+            if self.rectified_base_previous is not None:
+                raise ValueError("non-rectification observation must not declare rectified_base_previous")
+        return self
+
+
+class InvoiceObservationRequirement(BaseModel):
+    """Invoice-fact slice declared by one or more invoice-source bindings.
+
+    Modelo runtimes use this introspection to ask the invoice ledger for the
+    minimal set of observations the bindings need.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    claves: tuple[str, ...] = ()
+    rectification_scope: _RectificationScope = "any"
+    vat_regime: str | None = None
+
+    @field_validator("binding_ids", "claves")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("invoice requirement tuple entries must be unique")
+        return value
+
+
+class _InvoiceSelector(BaseModel):
+    """Strict validator for the selector mapping of an invoice-source binding."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    claves: tuple[str, ...] = ()
+    rectification_scope: _RectificationScope = "any"
+    vat_regime: str | None = Field(default=None, max_length=64)
+
+    @field_validator("claves")
+    @classmethod
+    def _claves_uppercase_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("invoice selector claves entries must be unique")
+        for clave in value:
+            if clave != clave.upper():
+                raise ValueError("invoice selector clave must be uppercase")
+            if clave not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
+                raise ValueError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
+        return value
+
+
+def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
+    try:
+        return _InvoiceSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
+
+
+def invoice_binding_requirements(
+    revision: ModeloRevision,
+) -> tuple[InvoiceObservationRequirement, ...]:
+    """Return invoice ledger slices needed by ``revision``'s invoice bindings."""
+
+    grouped: dict[
+        tuple[tuple[str, ...], _RectificationScope, str | None],
+        set[str],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source != "invoice":
+            continue
+        selector = _invoice_selector(binding)
+        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.vat_regime)
+        grouped.setdefault(key, set()).add(binding.id)
+    requirements: list[InvoiceObservationRequirement] = []
+    for (claves, scope, regime), binding_ids in sorted(
+        grouped.items(),
+        key=lambda item: (item[0][0], item[0][1], item[0][2] or ""),
+    ):
+        requirements.append(
+            InvoiceObservationRequirement(
+                binding_ids=tuple(sorted(binding_ids)),
+                claves=claves,
+                rectification_scope=scope,
+                vat_regime=regime,
+            )
+        )
+    return tuple(requirements)
+
+
+_INVOICE_FACTS = {
+    "operator_count",
+    "base_sum",
+    "rectified_base_delta_sum",
+}
+
+
+def resolve_invoice_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[InvoiceObservation],
+) -> dict[str, Decimal]:
+    """Resolve invoice-source bindings into scalar Decimal aggregates."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "invoice":
+            continue
+        selector = _invoice_selector(binding)
+        if selector.fact not in _INVOICE_FACTS:
+            raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+        scope_filtered = tuple(_filter_invoice_observations(available, selector))
+        resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
+    return resolved
+
+
+def _filter_invoice_observations(
+    observations: Iterable[InvoiceObservation],
+    selector: _InvoiceSelector,
+) -> Iterable[InvoiceObservation]:
+    clave_filter = set(selector.claves)
+    for observation in observations:
+        if selector.rectification_scope == "only_rectifications" and not observation.is_rectification:
+            continue
+        if selector.rectification_scope == "exclude_rectifications" and observation.is_rectification:
+            continue
+        if clave_filter and observation.intracommunity_clave not in clave_filter:
+            continue
+        if selector.vat_regime is not None and observation.vat_regime != selector.vat_regime:
+            continue
+        yield observation
+
+
+def _aggregate_invoice_binding(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    observations: tuple[InvoiceObservation, ...],
+) -> Decimal:
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if selector.fact == "operator_count":
+        if op != "count_distinct":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
+            )
+        operators = {(observation.party_tax_id, observation.country_code) for observation in observations}
+        return Decimal(len(operators))
+    if selector.fact == "base_sum":
+        if op != "sum":
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
+        return sum((observation.base_amount for observation in observations), Decimal("0"))
+    if selector.fact == "rectified_base_delta_sum":
+        if op != "sum":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires aggregation op 'sum'"
+            )
+        total = Decimal("0")
+        for observation in observations:
+            if not observation.is_rectification:
+                raise RegistryValidationError(f"binding {binding.id!r} requires rectification observations only")
+            previous = observation.rectified_base_previous
+            assert previous is not None  # guaranteed by InvoiceObservation validator
+            total += observation.base_amount - previous
+        return total
+    raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")

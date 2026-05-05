@@ -63,6 +63,8 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
 
     assert snapshot.modelo.id == "130"
     assert snapshot.revision.id == "2019-y-siguientes"
+    assert snapshot.filing_year == 2024
+    assert snapshot.period == "3T"
     assert "rd-439-2007:art-110" in snapshot.legal
     assert "aeat-dr-130-2019-v12" in snapshot.sources
     assert snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"

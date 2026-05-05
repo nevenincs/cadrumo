@@ -874,6 +874,8 @@ class RegistryCatalogues(RegistryModel):
 class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]
