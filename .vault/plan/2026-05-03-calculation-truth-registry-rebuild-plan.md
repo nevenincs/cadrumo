@@ -1721,6 +1721,10 @@ own ledger is checked.
   - [x] Add generalized cross-dependency contract tests for role semantics,
      source-requirement derivation, formula consumption of calculation
      relations, and casilla attachment for formula relation dependencies.
+  - [x] Extend cross-dependency contract tests so relation target bindings must
+     mirror source modelo, source output/casilla, source periods, and
+     aggregation, and formula-level relation dependencies must carry the
+     relation legal basis.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.

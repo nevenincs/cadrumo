@@ -123,3 +123,46 @@ def test_formula_relation_dependencies_are_attached_to_computed_casillas() -> No
                     assert casilla.input_kind == "computed", f"{modelo.id}/{revision.id}/{formula.id}"
                     assert casilla.formula == formula.id, f"{modelo.id}/{revision.id}/{formula.id}"
                     assert relation.target_binding in bindings, f"{modelo.id}/{revision.id}/{relation.id}"
+
+
+def test_relation_target_bindings_mirror_source_contract() -> None:
+    modelos, catalogues = _registry_tree()
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            bindings = {binding.id: binding for binding in revision.bindings}
+            for relation in revision.relations:
+                binding = bindings[relation.target_binding]
+                selector = binding.selector
+                selector_modelo = selector.get("source_modelo", selector.get("modelo"))
+                selector_output = selector.get("source_output")
+                selector_casillas = selector.get("source_casillas")
+                selector_periods = selector.get("source_periods")
+
+                assert binding.source == "previous_filing", f"{modelo.id}/{revision.id}/{relation.id}"
+                assert selector_modelo == relation.source_modelo, f"{modelo.id}/{revision.id}/{relation.id}"
+                if selector_output is not None:
+                    assert selector_output == relation.source_output, f"{modelo.id}/{revision.id}/{relation.id}"
+                if selector_casillas is not None:
+                    assert selector_casillas == (relation.source_output,), f"{modelo.id}/{revision.id}/{relation.id}"
+                if selector_periods is not None:
+                    assert selector_periods == relation.source_periods, f"{modelo.id}/{revision.id}/{relation.id}"
+                assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
+
+
+def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
+    modelos, catalogues = _registry_tree()
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            relations = {relation.id: relation for relation in revision.relations}
+            for formula in revision.formulas:
+                for relation_id in expression_relation_refs(formula.expression):
+                    relation = relations[relation_id]
+                    assert set(relation.legal_refs).issubset(formula.legal_refs), (
+                        f"{modelo.id}/{revision.id}/{formula.id}: {relation_id}"
+                    )
