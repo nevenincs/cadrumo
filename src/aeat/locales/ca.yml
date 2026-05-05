@@ -338,8 +338,8 @@ cli:
       year_help: Exercici fiscal a consultar
     next_help: Mostrar el proper termini tributari rellevant
   declaration:
-    app_help: Gestió i presentació de declaracions tributàries
-    approve_help: Aprovar una declaració per a la seva presentació
+    app_help: Preparació i exportació local de declaracions tributàries
+    approve_help: Aprovar una declaració per a l'exportació local
     calculate_help: Calcular els imports d'una declaració
     edit_help: Editar manualment una declaració existent
     errors:
