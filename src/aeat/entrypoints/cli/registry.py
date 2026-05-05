@@ -62,6 +62,7 @@ class RegistryTreeReport(BaseModel):
     verification_expectation_count: int
     application_link_count: int
     application_link_surfaces: tuple[str, ...]
+    filing_schedule_count: int
     modelos: tuple[str, ...]
     revision_details: tuple[RegistryRevisionDetailReport, ...]
     verified: bool
@@ -94,6 +95,8 @@ class RegistryRevisionDetailReport(BaseModel):
     export_field_count: int
     deadline_window_count: int
     deadline_periods: tuple[str, ...]
+    filing_schedule_ids: tuple[str, ...]
+    filing_schedule_count: int
     portal_guard_policy_ids: tuple[str, ...]
     workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
     support_removal_decision_count: int
@@ -150,6 +153,7 @@ class RegistryRevisionInventory(NamedTuple):
     verification_expectation_count: int
     application_link_count: int
     application_link_surfaces: tuple[str, ...]
+    filing_schedule_count: int
 
 
 def _revision_inventory(modelos) -> RegistryRevisionInventory:
@@ -164,6 +168,7 @@ def _revision_inventory(modelos) -> RegistryRevisionInventory:
         verification_expectation_count=sum(len(revision.verification_expectations) for revision in revisions),
         application_link_count=sum(len(revision.application_links) for revision in revisions),
         application_link_surfaces=tuple(sorted(application_surfaces)),
+        filing_schedule_count=sum(len(revision.filing_schedules) for revision in revisions),
     )
 
 
@@ -195,6 +200,8 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
                     export_field_count=len(export_fields),
                     deadline_window_count=len(revision.deadline_windows),
                     deadline_periods=tuple(sorted(window.period for window in revision.deadline_windows)),
+                    filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
+                    filing_schedule_count=len(revision.filing_schedules),
                     portal_guard_policy_ids=tuple(
                         sorted({decision.guard_policy_id for decision in revision.live_cross_references})
                     ),
@@ -229,6 +236,7 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
         verification_expectation_count=inventory.verification_expectation_count,
         application_link_count=inventory.application_link_count,
         application_link_surfaces=inventory.application_link_surfaces,
+        filing_schedule_count=inventory.filing_schedule_count,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         revision_details=_revision_details(modelos),
         verified=False,
@@ -258,6 +266,7 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         verification_expectation_count=inventory.verification_expectation_count,
         application_link_count=inventory.application_link_count,
         application_link_surfaces=inventory.application_link_surfaces,
+        filing_schedule_count=inventory.filing_schedule_count,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         revision_details=_revision_details(modelos),
         verified=True,

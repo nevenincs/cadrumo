@@ -71,6 +71,7 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert payload["workbook_parity_ref_count"] > 0
     assert payload["verification_expectation_count"] > 0
     assert payload["application_link_count"] > 0
+    assert payload["filing_schedule_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
     assert len(payload["revision_details"]) == payload["revision_count"]
     revision = payload["revision_details"][0]
@@ -82,6 +83,7 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     assert revision["export_record_count"] > 0
     assert revision["export_field_count"] > 0
     assert revision["deadline_window_count"] == len(revision["deadline_periods"])
+    assert revision["filing_schedule_count"] == len(revision["filing_schedule_ids"])
     assert revision["portal_guard_policy_ids"]
     assert revision["workbook_parity"]
     workbook_reference = revision["workbook_parity"][0]
@@ -112,6 +114,7 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     assert payload["verified"] is True
     assert payload["source_reference_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
+    assert payload["filing_schedule_count"] > 0
     assert payload["revision_details"][0]["export_field_count"] > 0
 
 
