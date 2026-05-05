@@ -112,7 +112,7 @@
         "aeat app declaration edit --id draft_{modelo}_{period} --set {column}={value} --reason {reason}",
         "aeat app declaration approve --id draft_{modelo}_{period} --by reviewer --reason {reason}",
         "aeat app declaration validate --id draft_{modelo}_{period}",
-        "aeat app declaration validate --id draft_{modelo}_{period} --format json --output {path}",
+        "aeat --format json app declaration validate --id draft_{modelo}_{period} --output {path}",
         "aeat app declaration preview --id draft_{modelo}_{period}",
         "aeat app declaration export --id draft_{modelo}_{period} --output {path}",
         "aeat app declaration verify --id draft_{modelo}_{period} --file {path}"

@@ -125,7 +125,7 @@ aeat app declaration approve --id draft_303_2026-Q1 --by reviewer --reason revie
 aeat app declaration validate --id draft_303_2026-Q1
   Validate only after approval.
 
-aeat app declaration validate --id draft_303_2026-Q1 --format json --output PATH
+aeat --format json app declaration validate --id draft_303_2026-Q1 --output PATH
   Write repair data when unresolved work remains.
 
 aeat app declaration preview --id draft_303_2026-Q1

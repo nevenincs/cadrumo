@@ -37,7 +37,7 @@
       "aeat app invoice edit --id INVOICE_ID --set base=VALUE --set iva.rate=VALUE --set iva.amount=VALUE --reason REASON",
       "aeat app declaration status --filter status=pending",
       "aeat app declaration approve --id draft_MODELO_PERIOD --by reviewer --reason REASON",
-      "aeat app declaration validate --id draft_MODELO_PERIOD --format json --output PATH",
+      "aeat --format json app declaration validate --id draft_MODELO_PERIOD --output PATH",
       "aeat app declaration calculate --period PERIOD --modelo MODELO",
       "aeat app declaration verify --id DRAFT_ID --file PATH",
     ];
@@ -391,7 +391,7 @@
           "Pending work is surfaced by status filters.",
         );
         event(
-          `aeat app declaration validate --id draft_303_${period} --format json --output ./exports/${period}-validation.json`,
+          `aeat --format json app declaration validate --id draft_303_${period} --output ./exports/${period}-validation.json`,
           "warn",
           "Export Reliability",
           "Validation report gives repair data without claiming export readiness.",
