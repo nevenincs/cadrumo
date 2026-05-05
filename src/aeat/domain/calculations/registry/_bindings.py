@@ -23,9 +23,22 @@ __all__ = [
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_bound_casilla_inputs",
+    "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_previous_filing_binding_values",
     "validate_invoice_binding_definition",
+]
+
+_InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
+_InvoiceRowField = Literal[
+    "party_tax_id",
+    "country_code",
+    "party_legal_name",
+    "clave",
+    "base_imponible",
+    "rectified_year",
+    "rectified_period",
+    "rectified_base_previous",
 ]
 
 
@@ -342,6 +355,8 @@ class _InvoiceSelector(BaseModel):
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
     vat_regime: str | None = Field(default=None, max_length=64)
+    row_field: _InvoiceRowField | None = None
+    grouping: _InvoiceGrouping | None = None
 
     @field_validator("claves")
     @classmethod
@@ -398,7 +413,12 @@ _INVOICE_FACTS = {
     "operator_count",
     "base_sum",
     "rectified_base_delta_sum",
+    "row_field",
 }
+
+_OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
+    {"rectified_year", "rectified_period", "rectified_base_previous"}
+)
 
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
@@ -427,13 +447,45 @@ def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selec
         raise RegistryValidationError(
             f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires rectification_scope 'only_rectifications'"
         )
+    if selector.fact == "row_field":
+        if op != "rows":
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+        if selector.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
+        if selector.grouping == "operator_clave_period" and selector.rectification_scope != "only_rectifications":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} grouping 'operator_clave_period' requires "
+                f"rectification_scope 'only_rectifications'"
+            )
+        if selector.row_field in _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS:
+            if selector.grouping != "operator_clave_period":
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} requires grouping 'operator_clave_period'"
+                )
+            if selector.rectification_scope != "only_rectifications":
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} requires "
+                    f"rectification_scope 'only_rectifications'"
+                )
+    elif selector.row_field is not None or selector.grouping is not None:
+        raise RegistryValidationError(f"binding {binding.id!r} non-row fact must not declare row_field or grouping")
+    if op == "rows" and selector.fact != "row_field":
+        raise RegistryValidationError(f"binding {binding.id!r} aggregation op 'rows' requires fact 'row_field'")
 
 
 def resolve_invoice_binding_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
 ) -> dict[str, Decimal]:
-    """Resolve invoice-source bindings into scalar Decimal aggregates."""
+    """Resolve scalar invoice-source bindings into Decimal aggregates.
+
+    Row-producer bindings (``aggregation.op == "rows"``) are skipped here; they
+    are resolved by :func:`resolve_invoice_binding_row_values`.
+    """
 
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -441,9 +493,203 @@ def resolve_invoice_binding_values(
         if binding.source != "invoice":
             continue
         selector = _validated_invoice_selector(binding)
+        if selector.fact == "row_field":
+            continue
         scope_filtered = tuple(_filter_invoice_observations(available, selector))
         resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
     return resolved
+
+
+def resolve_invoice_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[InvoiceObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer invoice bindings into per-row indexed values.
+
+    Bindings with ``aggregation.op == "rows"`` aggregate observations into rows
+    deterministically grouped by ``selector.grouping``. Bindings sharing the
+    same grouping/scope/clave-filter share row indexes, so that an export
+    record with ``repeat = "binding_rows"`` can correlate field values across
+    bindings on the same row. Returns a flat mapping keyed by
+    ``(binding_id, row_index)``.
+    """
+
+    available = tuple(observations)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    # Group bindings by (grouping, rectification_scope, claves, vat_regime) so
+    # that bindings sharing a row source share row indexes.
+    cohorts: dict[
+        tuple[_InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
+        list[tuple[DataBindingDefinition, _InvoiceSelector]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source != "invoice":
+            continue
+        selector = _validated_invoice_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        assert selector.grouping is not None  # guarded by validator
+        cohort_key = (
+            selector.grouping,
+            selector.rectification_scope,
+            tuple(sorted(selector.claves)),
+            selector.vat_regime,
+        )
+        cohorts.setdefault(cohort_key, []).append((binding, selector))
+    for cohort_key, members in cohorts.items():
+        grouping = cohort_key[0]
+        # The cohort selector for filtering is constant across members; use the
+        # first member's selector for filtering.
+        _, sample_selector = members[0]
+        scope_filtered = tuple(_filter_invoice_observations(available, sample_selector))
+        rows = _build_invoice_rows(grouping, scope_filtered)
+        for binding, selector in members:
+            assert selector.row_field is not None  # guarded by validator
+            for row_index, row in enumerate(rows):
+                value = row.get(selector.row_field)
+                if value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"for grouping {grouping!r}"
+                    )
+                resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+def _build_invoice_rows(
+    grouping: _InvoiceGrouping,
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    if grouping == "operator_clave":
+        return _build_operator_clave_rows(observations)
+    if grouping == "operator_clave_period":
+        return _build_operator_clave_period_rows(observations)
+    raise RegistryValidationError(f"unsupported invoice row grouping {grouping!r}")
+
+
+def _build_operator_clave_rows(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    grouped: dict[tuple[str, str, str], _OperatorClaveAccumulator] = {}
+    for observation in observations:
+        if observation.intracommunity_clave is None:
+            continue
+        key = (
+            observation.country_code,
+            observation.party_tax_id,
+            observation.intracommunity_clave,
+        )
+        bucket = grouped.setdefault(
+            key,
+            _OperatorClaveAccumulator(
+                country_code=observation.country_code,
+                party_tax_id=observation.party_tax_id,
+                clave=observation.intracommunity_clave,
+                party_legal_name=observation.party_legal_name,
+                base_total=Decimal("0"),
+            ),
+        )
+        bucket.base_total += observation.base_amount
+        if bucket.party_legal_name is None and observation.party_legal_name is not None:
+            bucket.party_legal_name = observation.party_legal_name
+    rows: list[Mapping[str, Decimal | str]] = []
+    for key in sorted(grouped):
+        bucket = grouped[key]
+        row: dict[str, Decimal | str] = {
+            "country_code": bucket.country_code,
+            "party_tax_id": bucket.party_tax_id,
+            "clave": bucket.clave,
+            "base_imponible": bucket.base_total,
+        }
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
+
+
+def _build_operator_clave_period_rows(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    grouped: dict[
+        tuple[str, str, str, int, str],
+        _OperatorClavePeriodAccumulator,
+    ] = {}
+    for observation in observations:
+        if observation.intracommunity_clave is None:
+            continue
+        if observation.rectified_year is None or observation.rectified_period is None:
+            raise RegistryValidationError(
+                "operator_clave_period grouping requires rectification metadata on every observation"
+            )
+        key = (
+            observation.country_code,
+            observation.party_tax_id,
+            observation.intracommunity_clave,
+            observation.rectified_year,
+            observation.rectified_period,
+        )
+        bucket = grouped.setdefault(
+            key,
+            _OperatorClavePeriodAccumulator(
+                country_code=observation.country_code,
+                party_tax_id=observation.party_tax_id,
+                clave=observation.intracommunity_clave,
+                party_legal_name=observation.party_legal_name,
+                rectified_year=observation.rectified_year,
+                rectified_period=observation.rectified_period,
+                base_total=Decimal("0"),
+                base_previous_total=Decimal("0"),
+            ),
+        )
+        bucket.base_total += observation.base_amount
+        previous = observation.rectified_base_previous
+        assert previous is not None  # guarded by InvoiceObservation validator
+        bucket.base_previous_total += previous
+        if bucket.party_legal_name is None and observation.party_legal_name is not None:
+            bucket.party_legal_name = observation.party_legal_name
+    rows: list[Mapping[str, Decimal | str]] = []
+    for key in sorted(grouped):
+        bucket = grouped[key]
+        row: dict[str, Decimal | str] = {
+            "country_code": bucket.country_code,
+            "party_tax_id": bucket.party_tax_id,
+            "clave": bucket.clave,
+            "rectified_year": str(bucket.rectified_year),
+            "rectified_period": bucket.rectified_period,
+            "base_imponible": bucket.base_total,
+            "rectified_base_previous": bucket.base_previous_total,
+        }
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
+
+
+class _OperatorClaveAccumulator(BaseModel):
+    """Mutable accumulator for operator_clave row aggregation."""
+
+    model_config = ConfigDict(strict=True)
+
+    country_code: str
+    party_tax_id: str
+    clave: str
+    party_legal_name: str | None
+    base_total: Decimal
+
+
+class _OperatorClavePeriodAccumulator(BaseModel):
+    """Mutable accumulator for operator_clave_period row aggregation."""
+
+    model_config = ConfigDict(strict=True)
+
+    country_code: str
+    party_tax_id: str
+    clave: str
+    party_legal_name: str | None
+    rectified_year: int
+    rectified_period: str
+    base_total: Decimal
+    base_previous_total: Decimal
 
 
 def _filter_invoice_observations(
