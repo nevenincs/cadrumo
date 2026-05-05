@@ -65,7 +65,9 @@ class _FailingAuthProvider:
     kind = AuthProviderKind.CERTIFICATE
 
     def describe(self) -> AuthProviderDescription:
-        raise RuntimeError("no smartcard")
+        from .....core.errors import AeatError
+
+        raise AeatError("no smartcard")
 
 
 _TODAY = date(2026, 4, 10)
