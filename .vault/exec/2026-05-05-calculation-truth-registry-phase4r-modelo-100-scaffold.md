@@ -153,6 +153,11 @@ reduction chain, casilla 0231 propagates the reduced net return, and casilla
 The corresponding registry tests exercise both mode branches against the real
 calculator instead of asserting declaration-state metadata.
 
+The objective-estimation reader surface now also round-trips the record-design
+outputs 1479, 1553, and 1577 from the 2025 export layout. Those outputs remain
+informational rather than calculated formulas, but they are now visible through
+the same registry-backed export parser path and covered by behavior tests.
+
 The registry validator now extracts text from reviewed AEAT manual PDFs and
 normalizes source text accent-insensitively before checking formula citations.
 That closes the gap where PDF manuals existed in corpus but could not

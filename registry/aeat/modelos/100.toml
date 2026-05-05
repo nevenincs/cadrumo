@@ -1905,6 +1905,7 @@ legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
     "ley-35-2006:art-32",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
@@ -1976,6 +1977,9 @@ casillas = [
     "0235",
     "0236",
     "0237",
+    "1479",
+    "1553",
+    "1577",
     "0604",
 ]
 formulas = [
@@ -2537,7 +2541,7 @@ required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercic
 [[revisions."2025".relations]]
 id = "renta-2025-rel-111-retenciones-trimestrales"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
@@ -2552,7 +2556,7 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".relations]]
 id = "renta-2025-rel-111-retenciones-mensuales"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2025 }
 source_output = "28"
@@ -2567,7 +2571,7 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".relations]]
 id = "renta-2025-rel-115-retenciones-trimestrales"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "115"
 source_revision_selector = { year = 2025 }
 source_output = "03"
@@ -2582,7 +2586,7 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".relations]]
 id = "renta-2025-rel-123-retenciones-trimestrales"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "123"
 source_revision_selector = { year = 2025 }
 source_output = "09"
@@ -2627,7 +2631,7 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".relations]]
 id = "renta-2025-rel-180-retenciones-anuales"
 kind = "cross_model_output"
-dependency_role = "direct_calculation"
+dependency_role = "factual_evidence"
 source_modelo = "180"
 source_revision_selector = { year = 2025 }
 source_output = "decl.retenciones-total"

@@ -113,6 +113,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert set(payments_retentions.bindings) == filed_dependency_bindings
     assert set(payments_retentions.relations) == {relation.id for relation in snapshot.revision.relations}
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
+    assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
@@ -434,18 +435,28 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
       <DPNIF_D>12345678Z</DPNIF_D>
     </Declarante>
   </DatosIdentificativos>
-  <DatosEconomicos>
-    <TomaDatosAmpliada>
-      <RegEstimaDirecta>
-        <ActividadEstDirecta>
-          <E1INGRESO>1234.56</E1INGRESO>
-        </ActividadEstDirecta>
-      </RegEstimaDirecta>
-      <Inmuebles>
-        <Inmueble>
-          <DisposicionTitulares>
-            <C_RII>10.00</C_RII>
-          </DisposicionTitulares>
+    <DatosEconomicos>
+      <TomaDatosAmpliada>
+        <RegEstimaDirecta>
+          <ActividadEstDirecta>
+            <E1INGRESO>1234.56</E1INGRESO>
+          </ActividadEstDirecta>
+        </RegEstimaDirecta>
+        <RegEstimaObj>
+          <ActividadEstObj>
+            <E4AL>2000.00</E4AL>
+          </ActividadEstObj>
+        </RegEstimaObj>
+        <RegEstimaObjAgricola>
+          <ActividadAgr>
+            <E5AK>1500.00</E5AK>
+          </ActividadAgr>
+        </RegEstimaObjAgricola>
+        <Inmuebles>
+          <Inmueble>
+            <DisposicionTitulares>
+              <C_RII>10.00</C_RII>
+            </DisposicionTitulares>
         </Inmueble>
       </Inmuebles>
     </TomaDatosAmpliada>
@@ -469,8 +480,54 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
         "0089": Decimal("10.00"),
         "0155": Decimal("10.00"),
         "0180": Decimal("1234.56"),
+        "1479": Decimal("2000.00"),
+        "1553": Decimal("1500.00"),
     }
     assert all(item.casilla_id != "01" for item in parsed.casillas)
+
+
+def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_export_layout() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    resolved = resolve_export_layout(snapshot)
+    payload = b"""<?xml version="1.0" encoding="UTF-8"?>
+<Renta>
+  <DatosEconomicos>
+    <TomaDatosAmpliada>
+      <RegEstimaObj>
+        <ActividadEstObj>
+          <E4AL>214.00</E4AL>
+        </ActividadEstObj>
+      </RegEstimaObj>
+      <RegEstimaObjAgricola>
+        <ActividadAgr>
+          <E5AK>315.00</E5AK>
+        </ActividadAgr>
+      </RegEstimaObjAgricola>
+      <RegimenesEspeciales>
+        <REAtRentas>
+          <ENTIDADAR>
+            <F1EH>128.00</F1EH>
+          </ENTIDADAR>
+        </REAtRentas>
+      </RegimenesEspeciales>
+    </TomaDatosAmpliada>
+  </DatosEconomicos>
+</Renta>
+"""
+
+    parsed = parse_export_payload(
+        resolved.layout,
+        payload,
+        source_root=PROJECT_ROOT,
+        sources=snapshot.sources,
+    )
+
+    assert {item.casilla_id: item.value for item in parsed.casillas} == {
+        "1479": Decimal("214.00"),
+        "1553": Decimal("315.00"),
+        "1577": Decimal("128.00"),
+    }
 
 
 def test_construct_reader_rejects_unknown_construct_id() -> None:

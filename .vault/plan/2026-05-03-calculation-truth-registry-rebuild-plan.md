@@ -3977,6 +3977,11 @@ application surface, and the old authority has been deleted.
          simplified-estimation final selection remain open.
      - [ ] Objective estimation: activity modules, signs, indices, reductions,
        annual module orders, and relation to Modelo 131.
+       - [x] Objective-estimation record-design outputs 1479, 1553, and 1577
+         are registry-backed as informational casillas and round-trip through
+         the official 2025 export parser paths.
+       - [ ] Objective-estimation formulas, signs, indices, and reductions
+         remain open until the module-order arithmetic is grounded.
      - [x] Payments on account, retentions, and relation to Modelos 130 and 131.
        Casilla 0604 is computed from the registered Modelo 130 and Modelo 131
        relation values; casilla 0609 totals the official AEAT payments-on-
