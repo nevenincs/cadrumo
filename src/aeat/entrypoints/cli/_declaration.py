@@ -76,7 +76,7 @@ def declaration_calculate(
         tax_id=tax_id,
         display_name=state.active_profile or "operator",
     )
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = build_runtime_schema_provider(modelos=(canonical_modelo,))
     inputs = _aggregate_filing_inputs(canonical_modelo, canonical_period, state)
     try:
         draft = build_draft(
@@ -208,7 +208,7 @@ def declaration_edit(
         tax_id=draft.profile_tax_id,
         display_name=draft.profile_tax_id,
     )
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     inputs: dict[str, object] = {entry.casilla_id: entry.value for entry in draft.values if entry.value is not None}
     inputs.update(edit_spec.casilla_edits)
     try:
@@ -256,7 +256,7 @@ def declaration_approve(
     reason: str = typer.Option(..., "--reason", help=tr("cli.declaration.opts.reason")),
 ) -> None:
     draft = _draft_by_id(draft_id)
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     approved = approve_draft(draft, approved_by=reviewer, schema_provider=schema_provider)
     _draft_repo().save(approved)
     state_repository().update(
@@ -292,7 +292,7 @@ def declaration_validate(
     output: Path | None = typer.Option(None, "--output", help=tr("cli.declaration.opts.output")),
 ) -> None:
     draft = _draft_by_id(draft_id)
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     refreshed = validate_draft(draft, schema_provider=schema_provider)
     payload = {
         "draft_id": refreshed.draft_id,

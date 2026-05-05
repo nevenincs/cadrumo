@@ -117,8 +117,18 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
-    assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
-    assert set(payments_retentions.dependency_classifications) == set(snapshot.dependency_classifications)
+    classified_dependencies = {
+        classification.id
+        for classification in snapshot.revision.dependency_classifications
+        if classification.treatment != "non_dependency"
+    }
+    payment_dependency_classifications = {
+        classification.id
+        for classification in snapshot.revision.dependency_classifications
+        if "renta-payments-retentions" in classification.target_constructs
+    }
+    assert set(dependencies.dependency_classifications) == classified_dependencies
+    assert set(payments_retentions.dependency_classifications) == payment_dependency_classifications
 
 
 def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
@@ -183,6 +193,53 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
         assert set(classification.relation_refs) == relation_ids
         assert "renta-dependent-modelos" in classification.target_constructs
         assert all(construct_id in snapshot.constructs for construct_id in classification.target_constructs)
+
+
+def test_modelo_100_dependency_classifications_gate_evidence_and_non_dependencies() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    classifications_by_source = {
+        classification.source_modelo: classification for classification in snapshot.revision.dependency_classifications
+    }
+
+    assert set(classifications_by_source) == {
+        "036",
+        "037",
+        "111",
+        "115",
+        "123",
+        "130",
+        "131",
+        "180",
+        "200",
+        "202",
+        "232",
+        "303",
+        "347",
+        "349",
+        "369",
+        "390",
+        "720",
+        "840",
+    }
+    assert {
+        source
+        for source, classification in classifications_by_source.items()
+        if classification.treatment == "factual_evidence"
+    } == {"036", "037", "303", "347", "349", "369", "390", "840"}
+    assert {
+        source
+        for source, classification in classifications_by_source.items()
+        if classification.treatment == "non_dependency"
+    } == {"200", "202", "232", "720"}
+    for source in ("036", "037", "303", "347", "349", "369", "390", "840"):
+        classification = classifications_by_source[source]
+        assert classification.relation_refs == ()
+        assert classification.target_constructs == ("renta-dependent-modelos",)
+    for source in ("200", "202", "232", "720"):
+        classification = classifications_by_source[source]
+        assert classification.relation_refs == ()
+        assert classification.target_constructs == ()
 
 
 def test_modelo_100_payments_on_account_calculate_from_registry_relations() -> None:
@@ -566,6 +623,47 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="does not match relation"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_unclassified_dependency_relation_source() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                classification
+                for classification in revision.dependency_classifications
+                if classification.source_modelo != "130"
+            )
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="has no dependency classification"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_validator_rejects_dependency_classification_missing_relation_coverage() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
+    mutated_classification = classification.model_copy(
+        update={"relation_refs": ("renta-2025-rel-111-retenciones-trimestrales",)}
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            )
+        }
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match="does not cover relation refs"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
 
 

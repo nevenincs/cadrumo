@@ -418,6 +418,33 @@ class RegistryValidator:
                         f"{relation.source_modelo!r}"
                     )
 
+        for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
+            failures.append(f"{prefix}: duplicate dependency classification source modelo {duplicate!r}")
+        classified_by_source = {
+            classification.source_modelo: classification for classification in revision.dependency_classifications
+        }
+        relation_ids_by_source: dict[str, set[str]] = {}
+        for relation in revision.relations:
+            relation_ids_by_source.setdefault(relation.source_modelo, set()).add(relation.id)
+        for source_modelo, relation_ids_for_source in sorted(relation_ids_by_source.items()):
+            classification = classified_by_source.get(source_modelo)
+            if classification is None:
+                failures.append(
+                    f"{prefix}: relation source modelo {source_modelo!r} has no dependency classification"
+                )
+                continue
+            if classification.treatment == "non_dependency":
+                failures.append(
+                    f"{prefix}: relation source modelo {source_modelo!r} cannot be classified as non_dependency"
+                )
+                continue
+            missing_relations = sorted(relation_ids_for_source.difference(classification.relation_refs))
+            if missing_relations:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} does not cover relation refs "
+                    f"{missing_relations!r}"
+                )
+
         selector_periods = set(revision.period_selector.periods)
         for schedule in revision.filing_schedules:
             failures.extend(

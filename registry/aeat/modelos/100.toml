@@ -1798,6 +1798,14 @@ dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",
     "renta-2025-dep-180",
+    "renta-2025-dep-303-evidence",
+    "renta-2025-dep-390-evidence",
+    "renta-2025-dep-347-evidence",
+    "renta-2025-dep-349-evidence",
+    "renta-2025-dep-369-evidence",
+    "renta-2025-dep-840-evidence",
+    "renta-2025-dep-036-evidence",
+    "renta-2025-dep-037-evidence",
 ]
 
 [[revisions."2025".constructs]]
@@ -2052,6 +2060,98 @@ treatment = "direct_annual_settlement"
 target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-real-estate-capital"]
 relation_refs = ["renta-2025-rel-180-retenciones-anuales"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-303-evidence"
+source_modelo = "303"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-390-evidence"
+source_modelo = "390"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-347-evidence"
+source_modelo = "347"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-349-evidence"
+source_modelo = "349"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-369-evidence"
+source_modelo = "369"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-840-evidence"
+source_modelo = "840"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-036-evidence"
+source_modelo = "036"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-037-evidence"
+source_modelo = "037"
+treatment = "factual_evidence"
+target_constructs = ["renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-202-non-dependency"
+source_modelo = "202"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-200-non-dependency"
+source_modelo = "200"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-232-non-dependency"
+source_modelo = "232"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-720-non-dependency"
+source_modelo = "720"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:art-30", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]

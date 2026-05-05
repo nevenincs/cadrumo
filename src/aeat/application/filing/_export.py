@@ -208,7 +208,7 @@ def export_draft(
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclarationExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt."""
-    provider = schema_provider or build_runtime_schema_provider()
+    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
         raise ValueError("declaration export requires a draft built from the active registry snapshot")
@@ -240,7 +240,7 @@ def verify_export(
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclarationVerifyResult:
     """Verify an exported file against an approved draft and return a verdict."""
-    provider = schema_provider or build_runtime_schema_provider()
+    provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
         raise ValueError("declaration verify requires a draft built from the active registry snapshot")

@@ -300,6 +300,174 @@ legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
 [[revisions."2019-2022".casillas]]
+id = "perc.inmueble-tipo-via"
+number = "135-139"
+label = "Tipo de via del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-nombre-via"
+number = "140-189"
+label = "Nombre de la via publica del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-nombre-via"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-tipo-numeracion"
+number = "190-192"
+label = "Tipo de numeracion del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-tipo-numeracion"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-numero-casa"
+number = "193-197"
+label = "Numero de casa del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-numero-casa"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-calificador-numero"
+number = "198-200"
+label = "Calificador del numero del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-calificador-numero"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-bloque"
+number = "201-203"
+label = "Bloque del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-bloque"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-portal"
+number = "204-206"
+label = "Portal del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-portal"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-escalera"
+number = "207-209"
+label = "Escalera del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-escalera"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-planta"
+number = "210-212"
+label = "Planta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-planta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-puerta"
+number = "213-215"
+label = "Puerta del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-puerta"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-complemento"
+number = "216-255"
+label = "Complemento de domicilio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-complemento"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-localidad"
+number = "256-285"
+label = "Localidad del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-localidad"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-municipio"
+number = "286-315"
+label = "Municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-municipio"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
+id = "perc.inmueble-codigo-municipio"
+number = "316-320"
+label = "Codigo de municipio del inmueble arrendado"
+section = ["perceptor", "inmueble", "direccion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-perc-inmueble-codigo-municipio"]
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".casillas]]
 id = "perc.inmueble-provincia"
 number = "321-322"
 label = "Codigo provincia del inmueble arrendado"

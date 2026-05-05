@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _HEX_DIGEST = "a" * 64
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
-_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None], object] = {}
+_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], object] = {}
 
 
 def _narrative() -> str:
@@ -38,12 +38,22 @@ def _narrative() -> str:
     return narrative
 
 
-def _schema_provider(*, filing_year: int | None = None, period: str | None = None):
+def _schema_provider(
+    *,
+    filing_year: int | None = None,
+    period: str | None = None,
+    modelos: tuple[str, ...] = ("130",),
+):
     """Return a real registry schema provider, cached per period selector."""
-    key = (filing_year, period)
+    selected_modelos = tuple(sorted(modelos))
+    key = (filing_year, period, selected_modelos)
     provider = _SCHEMA_PROVIDER_CACHE.get(key)
     if provider is None:
-        provider = build_runtime_schema_provider(filing_year=filing_year, period=period)
+        provider = build_runtime_schema_provider(
+            filing_year=filing_year,
+            period=period,
+            modelos=selected_modelos,
+        )
         _SCHEMA_PROVIDER_CACHE[key] = provider
     return provider
 
@@ -100,7 +110,7 @@ def _approved_modelo_131_registry_draft():
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -121,7 +131,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
             "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -139,7 +149,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
             "05": Decimal("0"),
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T"),
+        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -161,13 +171,13 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
             f"{binding_prefix}.dpa.031-032.vehiculos-afectos": {"1": "2"},
             f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=filing_year, period="1T"),
+        schema_provider=_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
 
 def _approved_modelo_131_historical_registry_draft():
-    provider = _schema_provider(filing_year=2023, period="4T")
+    provider = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
         period="2023Q4",
@@ -211,7 +221,7 @@ def _approved_modelo_111_registry_draft():
             "27": Decimal("9.00"),
             "29": Decimal("40.00"),
         },
-        schema_provider=_schema_provider(),
+        schema_provider=_schema_provider(modelos=("111",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -239,7 +249,7 @@ def _approved_modelo_115_registry_draft():
             "02": Decimal("1250.50"),
             "04": Decimal("10.00"),
         },
-        schema_provider=_schema_provider(),
+        schema_provider=_schema_provider(modelos=("115",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -273,7 +283,7 @@ def _approved_modelo_123_registry_draft():
             "11": Decimal("7.50"),
             "13": Decimal("12.25"),
         },
-        schema_provider=_schema_provider(),
+        schema_provider=_schema_provider(modelos=("123",)),
     )
     return draft.model_copy(update={"status": FilingDraftStatus.APPROVED})
 
@@ -288,7 +298,7 @@ def _modelo_123_export_headers() -> dict[str, str]:
 
 
 def _approved_modelo_123_2019_registry_draft():
-    provider = _schema_provider(filing_year=2023, period="4T")
+    provider = _schema_provider(filing_year=2023, period="4T", modelos=("123",))
     draft = build_draft(
         modelo="123",
         period="2023Q4",
