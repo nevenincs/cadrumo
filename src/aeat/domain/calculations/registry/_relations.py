@@ -32,6 +32,7 @@ class RegistryRelationSourceRequirement(BaseModel):
     relation_ids: tuple[str, ...] = Field(min_length=1)
     target_bindings: tuple[str, ...] = Field(min_length=1)
     dependency_role: str = Field(min_length=1)
+    dependency_treatment: str = Field(min_length=1)
     aggregation_op: str = Field(min_length=1)
 
 
@@ -43,10 +44,18 @@ def relation_source_requirements(
 ) -> tuple[RegistryRelationSourceRequirement, ...]:
     """Return source declarations needed to resolve relations for a filing."""
 
-    grouped: dict[tuple[str, int, tuple[str, ...], str, str, str], dict[str, set[str]]] = {}
+    classifications_by_source = {
+        classification.source_modelo: classification for classification in revision.dependency_classifications
+    }
+    grouped: dict[tuple[str, int, tuple[str, ...], str, str, str, str], dict[str, set[str]]] = {}
     for relation in revision.relations:
         if relation.target_periods and period not in relation.target_periods:
             continue
+        classification = classifications_by_source.get(relation.source_modelo)
+        if classification is None:
+            raise RegistryValidationError(
+                f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification"
+            )
         source_year = _relation_source_year(relation, filing_year=filing_year)
         source_periods = relation.source_periods or (period,)
         key = (
@@ -55,6 +64,7 @@ def relation_source_requirements(
             tuple(source_periods),
             str(relation.source_output),
             str(relation.dependency_role),
+            str(classification.treatment),
             str((relation.aggregation or {}).get("op", "copy")),
         )
         bucket = grouped.setdefault(key, {"relation_ids": set(), "target_bindings": set()})
@@ -69,6 +79,7 @@ def relation_source_requirements(
             relation_ids=tuple(sorted(values["relation_ids"])),
             target_bindings=tuple(sorted(values["target_bindings"])),
             dependency_role=dependency_role,
+            dependency_treatment=dependency_treatment,
             aggregation_op=aggregation_op,
         )
         for (
@@ -77,6 +88,7 @@ def relation_source_requirements(
             source_periods,
             source_output,
             dependency_role,
+            dependency_treatment,
             aggregation_op,
         ), values in sorted(grouped.items())
     )

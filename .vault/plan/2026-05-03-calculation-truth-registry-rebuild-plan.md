@@ -3908,6 +3908,10 @@ application surface, and the old authority has been deleted.
      dependent periodic, monthly, quarterly, and annual filings are selected by
      filing period, ejercicio, taxpayer, relation type, source evidence, and
      observation quality before their values can feed the annual declaration.
+     - [x] Relation source requirements now carry the registry dependency
+       treatment from the source classification, so callers can distinguish
+       annual-settlement inputs from factual evidence while resolving the same
+       observation backend.
   - [ ] Implement the dependency classification gate for every supported
      modelo. A supported modelo must be declared as direct dependency, factual
      evidence dependency, or non-dependency before Modelo 100 can emit a
