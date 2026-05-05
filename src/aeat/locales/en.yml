@@ -845,7 +845,7 @@ cli:
       ledger_help: Accounting ledger identifier
       period_help: Fiscal period for matching
     review:
-      filter_help: Filter invoices to review (e.g., by date or amount)
+      filter_help: Filter invoices by status=pending|reviewed|matched|paid or kind=issued|received
       help: Interactive review and validation of invoices
       id_help: Identifier of the specific invoice to review
       no_invoices: No invoices pending review
@@ -893,7 +893,7 @@ cli:
       skipped: Skipped
       'yes': 'Yes'
     review:
-      filter_help: Filter ledger entries to review (e.g., by date or amount)
+      filter_help: Filter rows by status, period, issue, or import
       header: ACCOUNTING LEDGER REVIEW SESSION
       help: Interactive review and validation of ledger entries
       id_help: Identifier of the specific entry to review

@@ -864,7 +864,7 @@ cli:
       ledger_help: Identificador del libro contable
       period_help: Periodo fiscal para el emparejamiento
     review:
-      filter_help: Filtrar facturas a revisar (p. ej., por fecha o importe)
+      filter_help: Filtrar facturas por status=pending|reviewed|matched|paid o kind=issued|received
       help: Revisión interactiva y validación de facturas
       id_help: Identificador de la factura específica a revisar
       no_invoices: No hay facturas pendientes de revisión
@@ -913,7 +913,7 @@ cli:
       skipped: Omitidos
       'yes': Sí
     review:
-      filter_help: Filtrar entradas del libro a revisar (p. ej., por fecha o importe)
+      filter_help: Filtrar filas por status, period, issue o import
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
       id_help: Identificador de la entrada específica a revisar

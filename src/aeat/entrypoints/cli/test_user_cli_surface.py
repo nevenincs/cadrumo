@@ -136,6 +136,20 @@ def test_invoice_and_ledger_share_review_wording() -> None:
     assert "show" not in invoice.output
 
 
+def test_review_filter_help_lists_supported_filter_keys() -> None:
+    ledger = _invoke(["app", "ledger", "review", "--help"])
+    invoice = _invoke(["app", "invoice", "review", "--help"])
+
+    assert ledger.exit_code == 0, ledger.output
+    assert invoice.exit_code == 0, invoice.output
+    for token in ("status", "period", "issue", "import"):
+        assert token in ledger.output
+    compact_invoice_help = " ".join(invoice.output.split())
+    for token in ("status=pending", "kind=issued|received"):
+        assert token in compact_invoice_help
+    assert "period" not in invoice.output
+
+
 def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
     edit = _invoke(["app", "invoice", "edit", "--help"])
     match = _invoke(["app", "invoice", "match", "--help"])
