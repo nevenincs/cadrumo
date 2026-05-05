@@ -364,6 +364,7 @@ cli:
       draft_id: ID del borrador
       edits: Ediciones
       findings: Hallazgos
+      matches_filter: Coincide con el filtro
       mismatched: No coincide
       modelo: Modelo
       next: Siguiente
@@ -374,11 +375,13 @@ cli:
       values: Valores
       verdict: Veredicto
       warnings: Advertencias
+      'yes': Sí
+      'no': 'No'
     opts:
       by: Persona que revisó la declaración
       draft_id: ID del borrador local
       file: Archivo local exportado a verificar
-      filter: Filtro
+      filter: Filtrar por status=pending|approved|stale|submitted|acknowledged
       modelo: Modelo
       output: Ruta del informe o archivo local de salida
       period: Periodo

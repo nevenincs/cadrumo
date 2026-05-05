@@ -20,6 +20,7 @@ from ...application.filing import (
 from ...application.filing._export import export_draft, verify_export
 from ...application.review import (
     DeclarationReviewFilterSpec,
+    DeclarationReviewStatus,
     EditParseError,
     FilterParseError,
 )
@@ -157,7 +158,7 @@ def declaration_status(
     filters: list[str] = typer.Option([], "--filter", help=tr("cli.declaration.opts.filter")),
 ) -> None:
     try:
-        DeclarationReviewFilterSpec.from_strings(filters)
+        spec = DeclarationReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
         raise _bad(tr("cli.declaration.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     canonical_period = _canonical_period(period)
@@ -172,11 +173,15 @@ def declaration_status(
         )
         _exit(2)
     assert pointer is not None
+    matches_filter = _declaration_status_matches(pointer.status, spec.status)
+    matches_filter_label = tr("cli.declaration.labels.yes") if matches_filter else tr("cli.declaration.labels.no")
     payload = {
         "draft_id": pointer.draft_id,
         "status": pointer.status,
         "modelo": canonical_modelo,
         "period": canonical_period,
+        "matches_filter": matches_filter,
+        "filters": list(spec.clauses),
     }
     _emit(
         ctx,
@@ -184,8 +189,26 @@ def declaration_status(
         [
             f"{tr('cli.declaration.labels.draft_id')}\t{pointer.draft_id}",
             f"{tr('cli.declaration.labels.status')}\t{pointer.status}",
+            f"{tr('cli.declaration.labels.matches_filter')}\t{matches_filter_label}",
         ],
     )
+
+
+def _declaration_status_matches(status: str, wanted: DeclarationReviewStatus | None) -> bool:
+    if wanted is None:
+        return True
+    normalized = status.strip().upper()
+    if wanted is DeclarationReviewStatus.PENDING:
+        return normalized in {"DRAFT", "VALIDATED", "READY_TO_SUBMIT"}
+    if wanted is DeclarationReviewStatus.APPROVED:
+        return normalized == "APPROVED"
+    if wanted is DeclarationReviewStatus.STALE:
+        return normalized == "APPROVAL_STALE"
+    if wanted is DeclarationReviewStatus.SUBMITTED:
+        return normalized == "SUBMITTED"
+    if wanted is DeclarationReviewStatus.ACKNOWLEDGED:
+        return normalized == "ACKNOWLEDGED"
+    return False
 
 
 @app.command("edit", help=tr("cli.declaration.edit_help"))
@@ -294,6 +317,16 @@ def declaration_validate(
     draft = _draft_by_id(draft_id)
     schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     refreshed = validate_draft(draft, schema_provider=schema_provider)
+    _draft_repo().save(refreshed)
+    state_repository().update(
+        lambda current: update_declaration_pointer(
+            current,
+            modelo=refreshed.modelo,
+            period=refreshed.period,
+            draft_id=refreshed.draft_id,
+            status=refreshed.status.value,
+        )
+    )
     payload = {
         "draft_id": refreshed.draft_id,
         "status": refreshed.status.value,

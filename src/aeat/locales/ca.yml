@@ -361,6 +361,7 @@ cli:
       draft_id: ID de l'esborrany
       edits: Edicions
       findings: Troballes
+      matches_filter: Coincideix amb el filtre
       mismatched: No coincideix
       modelo: Model
       next: Següent
@@ -371,11 +372,13 @@ cli:
       values: Valors
       verdict: Veredicte
       warnings: Advertiments
+      'yes': Sí
+      'no': 'No'
     opts:
       by: Persona que ha revisat la declaració
       draft_id: ID de l'esborrany local
       file: Fitxer local exportat a verificar
-      filter: Filtre
+      filter: Filtrar per status=pending|approved|stale|submitted|acknowledged
       modelo: Model
       output: Ruta de l'informe o fitxer local de sortida
       period: Període
