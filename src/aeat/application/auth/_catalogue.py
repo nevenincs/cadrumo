@@ -83,7 +83,8 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 def get_auth_provider(provider_id: str) -> AuthProviderListing:
     """Resolve a provider id to its catalogue listing.
 
-    Supports both hyphens (canonical) and underscores (legacy alias).
+    Hyphenated ids are canonical; underscores in operator input are
+    normalised to hyphens before lookup.
 
     Raises:
         KeyError: When ``provider_id`` is not in the catalogue. The

@@ -63,14 +63,12 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
             raise pytest.UsageError(f"{item.nodeid}: must carry at least one domain_* marker")
         if "live_write" in access:
             if not warned:
-                message = "live_write items dropped at collection; live AEAT writes are permanently forbidden"
-                issue = getattr(config, "issue_config_time_warning", None)
-                if callable(issue):
-                    issue(pytest.PytestWarning(message), stacklevel=2)
-                else:  # pragma: no cover - older pytest compatibility
-                    import warnings
-
-                    warnings.warn(message, pytest.PytestWarning, stacklevel=2)
+                config.issue_config_time_warning(
+                    pytest.PytestWarning(
+                        "live_write items dropped at collection; live AEAT writes are permanently forbidden"
+                    ),
+                    stacklevel=2,
+                )
                 warned = True
             continue
         remaining.append(item)

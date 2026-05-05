@@ -86,7 +86,6 @@ class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
     PDFPLUMBER = "pdfplumber"
-    PYMUPDF = "pymupdf"
 
 
 class Settings(BaseSettings):
@@ -653,9 +652,7 @@ class Settings(BaseSettings):
     )
     aeat_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
-        description=(
-            "Parser backend for `aeat.adapters.inbound.justificante` (PDFPLUMBER for fidelity, PYMUPDF reserved)"
-        ),
+        description="Parser backend for `aeat.adapters.inbound.justificante`",
     )
 
     # ── Filing history ──────────────────────────────────────────────────────
