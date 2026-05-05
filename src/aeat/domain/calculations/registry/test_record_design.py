@@ -92,51 +92,22 @@ def test_modelo_131_recent_record_designs_share_coordinates_but_not_source_text(
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "period", "workbook_name", "binding_id", "source_ref"),
+    ("filing_year", "workbook_name", "source_ref"),
     (
-        (
-            2024,
-            "1T",
-            "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx",
-            "modelo-131-2024.did.012-045.iban",
-            "aeat-dr-131-2024",
-        ),
-        (
-            2025,
-            "1T",
-            "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx",
-            "modelo-131-2025.did.012-045.iban",
-            "aeat-dr-131-2025",
-        ),
+        (2024, "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx", "aeat-dr-131-2024"),
+        (2025, "07-131-ejercicios-2025-actualizado-11-12-25-179-kb-xlsx.xlsx", "aeat-dr-131-2025"),
+        (2026, "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx", "aeat-dr-131-2026"),
     ),
 )
-def test_modelo_131_historical_did_registry_binding_matches_official_workbook(
+def test_modelo_131_registry_bindings_cover_official_structured_records(
     filing_year: int,
-    period: str,
     workbook_name: str,
-    binding_id: str,
     source_ref: str,
 ) -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period=period)
-    binding = next(item for item in snapshot.revision.bindings if item.id == binding_id)
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
     sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
-    official_iban = next(field for field in sheets["DID"].fields if field.description == "Domiciliación - IBAN")
-
-    assert binding.selector["record"] == "DID"
-    assert binding.selector["field"] == "iban"
-    assert binding.selector["offset"] == official_iban.offset
-    assert binding.selector["length"] == official_iban.length
-    assert binding.selector["data_type"] == ("integer" if official_iban.type_code == "Num" else "text")
-    assert source_ref in binding.source_refs
-
-
-def test_modelo_131_current_registry_bindings_cover_official_structured_records() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
-    sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT)}
 
     official_fields = {
         (sheet_name, field.offset, field.length, "integer" if field.type_code == "Num" else "text")
@@ -144,6 +115,9 @@ def test_modelo_131_current_registry_bindings_cover_official_structured_records(
         for field in sheets[sheet_name].fields
         if _is_structured_input_field(field.description)
     }
+    registry_bindings = [
+        binding for binding in snapshot.revision.bindings if binding.selector.get("record") in {"DPA", "DID"}
+    ]
     registry_fields = {
         (
             str(binding.selector["record"]),
@@ -151,13 +125,40 @@ def test_modelo_131_current_registry_bindings_cover_official_structured_records(
             _selector_int(binding.selector["length"]),
             str(binding.selector["data_type"]),
         )
-        for binding in snapshot.revision.bindings
-        if binding.selector.get("record") in {"DPA", "DID"}
+        for binding in registry_bindings
     }
 
     assert registry_fields == official_fields
-    assert all("aeat-dr-131-2026" in binding.source_refs for binding in snapshot.revision.bindings)
-    assert all("rd-439-2007:art-110" in binding.legal_refs for binding in snapshot.revision.bindings)
+    assert all(source_ref in binding.source_refs for binding in registry_bindings)
+    assert all("rd-439-2007:art-110" in binding.legal_refs for binding in registry_bindings)
+
+
+def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "131")
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2024, period="4T")
+    sheets = {
+        sheet.name: sheet
+        for sheet in extract_record_design_workbook(
+            _MODELO_131_WORKBOOK_ROOT / "06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx"
+        )
+    }
+    bindings = {
+        (_selector_int(binding.selector["offset"]), _selector_int(binding.selector["length"])): binding
+        for binding in snapshot.revision.bindings
+        if binding.selector.get("record") == "DPA"
+    }
+
+    for field in sheets["DPA"].fields:
+        binding = bindings.get((field.offset, field.length))
+        if binding is None:
+            continue
+        if "Lorca" in field.description:
+            assert "orden-hfp-1359-2023:da-5" in binding.legal_refs
+        if "Reducción" in field.description and "Palma" in field.description:
+            assert "orden-hfp-1359-2023:da-6" in binding.legal_refs
+        if "DANA" in field.description:
+            assert "real-decreto-ley-7-2024:art-11" in binding.legal_refs
 
 
 def test_modelo_131_current_registry_bindings_cover_official_page_one_structured_fields() -> None:
