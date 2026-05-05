@@ -410,6 +410,28 @@ def test_validator_rejects_invoice_rectification_delta_without_rectification_sco
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {
+                "fact": "row_field",
+                "row_field": "base_imponible",
+                "grouping": "operator_clave_period",
+                "claves": ("E",),
+            },
+            "aggregation": {"op": "rows"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="grouping 'operator_clave_period' requires"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_export_fields_can_reference_structured_bindings() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)

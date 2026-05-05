@@ -4113,6 +4113,10 @@ application surface, and the old authority has been deleted.
      transaction, bank, attachment, and review domains only as factual data
      bindings. Modelo 100 registry definitions must own the legal treatment and
      casilla targets.
+     - [x] Invoice-source bindings now support deterministic repeated-row
+       factual outputs for operator/clave and operator/clave/period groupings,
+       with registry validation rejecting period-grouped rows unless they are
+       scoped to rectification observations.
   - [ ] Implement ejercicio 2020 revision from reviewed AEAT dictionaries,
      toma-de-datos dictionary, XSD, manual/legal sources, source hashes,
      parser requirements, legal references, formula coverage ledger, export

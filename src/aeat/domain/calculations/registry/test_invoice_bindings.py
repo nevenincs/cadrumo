@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from ._bindings import (
     InvoiceObservation,
     invoice_binding_requirements,
+    resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
 from ._errors import RegistryValidationError
@@ -326,3 +327,219 @@ def test_resolve_invoice_binding_values_ignores_non_invoice_bindings() -> None:
     )
 
     assert resolved == {"iva-base": Decimal("100")}
+
+
+def _row_binding(
+    *,
+    binding_id: str,
+    row_field: str,
+    grouping: str,
+    claves: tuple[str, ...] = (),
+    rectification_scope: str = "any",
+) -> DataBindingDefinition:
+    selector: dict[str, str | int | Decimal | bool | tuple[str, ...]] = {
+        "fact": "row_field",
+        "row_field": row_field,
+        "grouping": grouping,
+    }
+    if claves:
+        selector["claves"] = claves
+    if rectification_scope != "any":
+        selector["rectification_scope"] = rectification_scope
+    return DataBindingDefinition(
+        id=binding_id,
+        source="invoice",
+        selector=selector,
+        aggregation={"op": "rows"},
+        legal_refs=(_LEGAL_REF,),
+        source_refs=(_SOURCE_REF,),
+    )
+
+
+def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing_bases() -> None:
+    revision = _revision(
+        _row_binding(
+            binding_id="row-pais",
+            row_field="country_code",
+            grouping="operator_clave",
+            claves=("E", "S"),
+            rectification_scope="exclude_rectifications",
+        ),
+        _row_binding(
+            binding_id="row-clave",
+            row_field="clave",
+            grouping="operator_clave",
+            claves=("E", "S"),
+            rectification_scope="exclude_rectifications",
+        ),
+        _row_binding(
+            binding_id="row-base",
+            row_field="base_imponible",
+            grouping="operator_clave",
+            claves=("E", "S"),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    observations = (
+        _observation(party="DE111", country="DE", base="1000.00", clave="E"),
+        _observation(party="DE111", country="DE", base="500.00", clave="E"),  # same group, summed
+        _observation(party="FR222", country="FR", base="200.00", clave="S"),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+
+    # Groups sorted by (country_code, party_tax_id, clave): (DE, DE111, E), (FR, FR222, S)
+    assert resolved == {
+        ("row-pais", 0): "DE",
+        ("row-clave", 0): "E",
+        ("row-base", 0): Decimal("1500.00"),
+        ("row-pais", 1): "FR",
+        ("row-clave", 1): "S",
+        ("row-base", 1): Decimal("200.00"),
+    }
+
+
+def test_resolve_invoice_binding_row_values_period_grouping_carries_rectification_metadata() -> None:
+    revision = _revision(
+        _row_binding(
+            binding_id="rect-pais",
+            row_field="country_code",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _row_binding(
+            binding_id="rect-year",
+            row_field="rectified_year",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _row_binding(
+            binding_id="rect-period",
+            row_field="rectified_period",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _row_binding(
+            binding_id="rect-base-new",
+            row_field="base_imponible",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+        _row_binding(
+            binding_id="rect-base-prev",
+            row_field="rectified_base_previous",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+    )
+    observations = (
+        _observation(
+            party="IT333",
+            country="IT",
+            base="200.00",
+            clave="E",
+            is_rectification=True,
+            previous="180.00",
+            period="4T",
+            year=2025,
+        ),
+        _observation(
+            party="DE111",
+            country="DE",
+            base="1100.00",
+            clave="E",
+            is_rectification=True,
+            previous="1000.00",
+            period="2T",
+            year=2025,
+        ),
+    )
+
+    resolved = resolve_invoice_binding_row_values(revision, observations)
+
+    # Sorted by (country_code, party_tax_id, clave, year, period): DE/2T first, IT/4T second.
+    assert resolved == {
+        ("rect-pais", 0): "DE",
+        ("rect-year", 0): "2025",
+        ("rect-period", 0): "2T",
+        ("rect-base-new", 0): Decimal("1100.00"),
+        ("rect-base-prev", 0): Decimal("1000.00"),
+        ("rect-pais", 1): "IT",
+        ("rect-year", 1): "2025",
+        ("rect-period", 1): "4T",
+        ("rect-base-new", 1): Decimal("200.00"),
+        ("rect-base-prev", 1): Decimal("180.00"),
+    }
+
+
+def test_resolve_invoice_binding_row_values_skips_scalar_bindings() -> None:
+    revision = _revision(
+        _binding(
+            binding_id="scalar-base",
+            fact="base_sum",
+            op="sum",
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+        _row_binding(
+            binding_id="row-clave",
+            row_field="clave",
+            grouping="operator_clave",
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    observations = (_observation(party="DE1", country="DE", base="100", clave="E"),)
+
+    rows = resolve_invoice_binding_row_values(revision, observations)
+    scalars = resolve_invoice_binding_values(revision, observations)
+
+    assert rows == {("row-clave", 0): "E"}
+    assert scalars == {"scalar-base": Decimal("100")}
+
+
+def test_row_binding_rejects_inconsistent_grouping_for_period_only_field() -> None:
+    revision = _revision(
+        _row_binding(
+            binding_id="bad",
+            row_field="rectified_year",
+            grouping="operator_clave",
+            claves=("E",),
+            rectification_scope="only_rectifications",
+        ),
+    )
+    with pytest.raises(RegistryValidationError):
+        resolve_invoice_binding_row_values(revision, ())
+
+
+def test_row_binding_requires_only_rectifications_for_period_field() -> None:
+    revision = _revision(
+        _row_binding(
+            binding_id="bad",
+            row_field="rectified_year",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    with pytest.raises(RegistryValidationError):
+        resolve_invoice_binding_row_values(revision, ())
+
+
+def test_row_binding_period_grouping_requires_rectification_scope() -> None:
+    revision = _revision(
+        _row_binding(
+            binding_id="bad",
+            row_field="base_imponible",
+            grouping="operator_clave_period",
+            claves=("E",),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    with pytest.raises(RegistryValidationError):
+        resolve_invoice_binding_row_values(revision, ())
