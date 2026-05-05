@@ -1,0 +1,384 @@
+"""Tests for committed Modelo 232 registry foundation."""
+
+from __future__ import annotations
+
+from datetime import date
+from itertools import pairwise
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from . import (
+    RegistryValidator,
+    build_snapshot,
+    load_registry_tree,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def _load_modelo_232():
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "232")
+    return modelo, catalogues
+
+
+def test_committed_modelo_232_validates_against_catalogues() -> None:
+    modelo, catalogues = _load_modelo_232()
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    assert set(modelo.revisions) == {"2018-y-siguientes", "2016-2017"}
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_revision"),
+    [
+        (2016, "2016-2017"),
+        (2017, "2016-2017"),
+        (2018, "2018-y-siguientes"),
+        (2024, "2018-y-siguientes"),
+    ],
+)
+def test_committed_modelo_232_resolves_revision_by_filing_year(
+    filing_year: int,
+    expected_revision: str,
+) -> None:
+    modelo, catalogues = _load_modelo_232()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period="0A",
+    )
+    assert snapshot.revision.id == expected_revision
+
+
+def test_committed_modelo_232_is_informative_only() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        assert revision.formulas == (), (
+            f"revision {revision.id!r} declares calculation formulas; "
+            "Modelo 232 is informative-only and must not own filing-grade calculations"
+        )
+        assert revision.relations == (), (
+            f"revision {revision.id!r} declares cross-model relations; "
+            "Modelo 232 is informative-only and Modelo 200 dependency is evidence-only"
+        )
+        for casilla in revision.casillas:
+            assert casilla.input_kind in {"informational", "manual"}, (
+                f"casilla {casilla.id!r} has input_kind={casilla.input_kind!r}; "
+                "Modelo 232 casillas must be informational/manual without computation"
+            )
+
+
+def test_committed_modelo_232_workbook_parity_resolves_to_corpus_artefact() -> None:
+    modelo, catalogues = _load_modelo_232()
+    expected_sources = {
+        "2018-y-siguientes": "aeat-dr-232-2018",
+        "2016-2017": "aeat-dr-232-2016",
+    }
+    for revision_id, expected_source in expected_sources.items():
+        revision = modelo.revisions[revision_id]
+        ref = next(
+            (r for r in revision.workbook_parity_refs if r.workbook_source == expected_source),
+            None,
+        )
+        assert ref is not None, f"{revision_id}: no parity ref for {expected_source}"
+        assert ref.formula_coverage == "record_design_layout"
+        assert ref.runner_required is False
+        source = catalogues.sources[expected_source]
+        assert source.evidence_tier == "layout_authority"
+        artefact_path = PROJECT_ROOT / source.corpus_path
+        assert artefact_path.is_file(), artefact_path
+
+
+_FORBIDDEN_REMOTE_ACTIONS = frozenset(
+    [
+        "server-side-save",
+        "signing",
+        "presentation",
+        "payment",
+        "amendment",
+        "cancellation",
+        "document-submission",
+        "declaration-submission",
+    ]
+)
+
+
+def test_committed_modelo_232_static_cross_reference_forbids_remote_writes() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
+        assert decision.requires_authentication is False
+        assert decision.synthetic_data_allowed is False
+        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+
+
+def test_committed_modelo_232_authenticated_read_surface_is_read_only_and_guarded() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
+        assert decision.requires_authentication is True
+        assert decision.requires_aeat_authorization is True
+        assert decision.synthetic_data_allowed is False
+        assert set(decision.allowed_methods) <= {"GET", "HEAD", "OPTIONS"}, revision.id
+        assert set(decision.allowed_hosts) == {
+            "www1.agenciatributaria.gob.es",
+            "www6.agenciatributaria.gob.es",
+        }, revision.id
+        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
+
+
+def test_committed_modelo_232_declaration_pdf_extraction_profile_targets_declarante_casillas() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        casilla_ids = {casilla.id for casilla in revision.casillas}
+        pdf_profiles = [profile for profile in revision.extraction_profiles if profile.surface == "declaracion_pdf"]
+        assert pdf_profiles, revision.id
+        for profile in pdf_profiles:
+            assert profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
+            assert profile.confidence == "strict"
+            assert profile.failure_semantics == "fail_hard"
+            assert set(profile.target_casillas) <= casilla_ids
+
+
+def test_committed_modelo_232_verification_expectation_is_informative_strict() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        casilla_ids = {casilla.id for casilla in revision.casillas}
+        assert revision.verification_expectations, revision.id
+        for expectation in revision.verification_expectations:
+            assert expectation.tolerance == 0, (revision.id, expectation.id)
+            assert expectation.rounding == "none"
+            assert expectation.discrepancy_causes == ("extraction_unreliable",)
+            assert set(expectation.computed_casillas) <= casilla_ids
+
+
+def test_committed_modelo_232_construct_includes_profile_and_expectation_and_extractor_link() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        assert len(revision.constructs) == 1, revision.id
+        construct = revision.constructs[0]
+        assert construct.extraction_profiles == tuple(p.id for p in revision.extraction_profiles)
+        assert construct.verification_expectations == tuple(e.id for e in revision.verification_expectations)
+        link_surfaces = {link.surface for link in revision.application_links}
+        assert {"portal", "filing", "extractor", "verification", "deadline"} <= link_surfaces, revision.id
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_open", "expected_close"),
+    [
+        (2016, date(2017, 11, 1), date(2017, 11, 30)),
+        (2017, date(2018, 11, 1), date(2018, 11, 30)),
+        (2018, date(2019, 11, 1), date(2019, 11, 30)),
+        (2023, date(2024, 11, 1), date(2024, 11, 30)),
+        (2026, date(2027, 11, 1), date(2027, 11, 30)),
+    ],
+)
+def test_committed_modelo_232_deadline_window_is_november_following_ejercicio(
+    filing_year: int,
+    expected_open: date,
+    expected_close: date,
+) -> None:
+    modelo, _ = _load_modelo_232()
+    windows = [
+        window
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
+        if window.filing_year == filing_year
+    ]
+    assert len(windows) == 1, f"filing_year {filing_year} resolves to {len(windows)} windows"
+    window = windows[0]
+    assert window.period_kind == "annual"
+    assert window.opens_on == expected_open
+    assert window.closes_on == expected_close
+    assert window.payment_cutoff_on is None
+
+
+def test_committed_modelo_232_deadline_windows_are_unique_by_filing_year() -> None:
+    modelo, _ = _load_modelo_232()
+    seen: set[int] = set()
+    for revision in modelo.revisions.values():
+        for window in revision.deadline_windows:
+            assert window.filing_year not in seen, f"duplicate deadline window for filing_year {window.filing_year}"
+            seen.add(window.filing_year)
+    # Modelo 232 was created by Orden HFP/816/2017 effective for ejercicio 2016 onwards;
+    # both revision boundaries (2016-2017 and 2018+) must have at least one window.
+    assert any(year <= 2017 for year in seen)
+    assert any(year >= 2018 for year in seen)
+
+
+def test_committed_modelo_232_filing_schedule_is_annual() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        assert revision.filing_schedules, revision.id
+        for schedule in revision.filing_schedules:
+            assert schedule.period_kind == "annual"
+            assert schedule.periods == ("0A",)
+
+
+def test_committed_modelo_232_construct_includes_deadline_and_schedule_members() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        construct = revision.constructs[0]
+        assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
+        assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
+
+
+def test_committed_modelo_232_envelope_export_layout_matches_official_workbook() -> None:
+    modelo, _ = _load_modelo_232()
+    expected_envelope_field_positions = {
+        "envelope-open": (1, 2, "literal"),
+        "envelope-modelo": (3, 3, "literal"),
+        "envelope-discriminante": (6, 1, "literal"),
+        "envelope-year": (7, 4, "draft"),
+        "envelope-period": (11, 2, "literal"),
+        "envelope-marker": (13, 5, "literal"),
+        "envelope-aux-open": (18, 5, "literal"),
+        "envelope-reserved-1": (23, 70, "filler"),
+        "envelope-program-version": (93, 4, "header"),
+        "envelope-reserved-2": (97, 4, "filler"),
+        "envelope-developer-nif": (101, 9, "header"),
+        "envelope-reserved-3": (110, 213, "filler"),
+        "envelope-aux-close": (323, 6, "literal"),
+    }
+    for revision in modelo.revisions.values():
+        assert revision.export_layouts, revision.id
+        layout = revision.export_layouts[0]
+        assert layout.format == "fixed_width"
+        record_types = {record.record_type for record in layout.records}
+        # The official AEAT envelope wraps page records with a closing tag.
+        assert {"envelope_header", "envelope_footer"} <= record_types, revision.id
+        header_record = next(record for record in layout.records if record.record_type == "envelope_header")
+        assert header_record.order == 0
+        for field in header_record.fields:
+            suffix = field.id.split("-envelope-", 1)[1]
+            key = f"envelope-{suffix}"
+            assert key in expected_envelope_field_positions, key
+            expected_offset, expected_length, expected_kind = expected_envelope_field_positions[key]
+            assert field.offset == expected_offset, (revision.id, field.id, field.offset)
+            assert field.length == expected_length, (revision.id, field.id, field.length)
+            assert field.kind == expected_kind, (revision.id, field.id, field.kind)
+        footer_record = next(record for record in layout.records if record.record_type == "envelope_footer")
+        assert footer_record.order == 99
+        assert len(footer_record.fields) == 1
+        close_field = footer_record.fields[0]
+        assert close_field.kind == "computed"
+        assert close_field.computed_key == "envelope_closing_tag"
+        assert close_field.length == 18
+
+
+def test_committed_modelo_232_construct_includes_export_layout_and_export_link() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        construct = revision.constructs[0]
+        assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
+        export_links = [link for link in revision.application_links if link.surface == "export"]
+        assert len(export_links) == 1, revision.id
+        assert export_links[0].consumer == "aeat.application.filing.export"
+        assert export_links[0].id in construct.application_links
+
+
+def test_committed_modelo_232_page_01_record_matches_official_layout() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        page_01 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_01")
+        last_field = page_01.fields[-1]
+        assert last_field.offset is not None and last_field.length is not None
+        assert last_field.offset + last_field.length - 1 == 1500, (
+            f"page_01 must extend to official position 1500 (got {last_field.offset + last_field.length - 1})"
+        )
+        # Closing tag fragments must appear in order at the end of the record.
+        closing_literals = [
+            field.literal for field in page_01.fields[-4:] if field.kind == "literal" and field.literal is not None
+        ]
+        assert closing_literals == ["</T", "232", "01", "000>"], closing_literals
+
+
+def test_committed_modelo_232_page_02_record_matches_official_layout() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        page_02 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_02")
+        last_field = page_02.fields[-1]
+        assert last_field.offset is not None and last_field.length is not None
+        assert last_field.offset + last_field.length - 1 == 3500, (
+            f"page_02 must extend to official position 3500 (got {last_field.offset + last_field.length - 1})"
+        )
+        opening_literals = [
+            field.literal for field in page_02.fields[:4] if field.kind == "literal" and field.literal is not None
+        ]
+        assert opening_literals == ["<T", "232", "02", "000>"], opening_literals
+        closing_literals = [
+            field.literal for field in page_02.fields[-4:] if field.kind == "literal" and field.literal is not None
+        ]
+        assert closing_literals == ["</T", "232", "02", "000>"], closing_literals
+
+
+_SECTION_3_4_RANGE = (144, 1171)
+_SECTION_5_6_RANGE = (13, 3072)
+
+
+def _layout_bindings_for(revision, record_name: str) -> tuple:
+    return tuple(
+        binding
+        for binding in revision.bindings
+        if isinstance(binding.selector.get("record"), str) and binding.selector["record"] == record_name
+    )
+
+
+def test_committed_modelo_232_section_3_4_bindings_cover_page_01_slots() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        bindings = _layout_bindings_for(revision, "page_01")
+        assert bindings, revision.id
+        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        first_offset = ranges[0][0]
+        last_offset, last_length = ranges[-1]
+        assert first_offset == _SECTION_3_4_RANGE[0], (revision.id, first_offset)
+        assert last_offset + last_length - 1 == _SECTION_3_4_RANGE[1], (
+            revision.id,
+            last_offset + last_length - 1,
+        )
+        for current, nxt in pairwise(ranges):
+            assert current[0] + current[1] == nxt[0], (revision.id, current, nxt)
+
+
+def test_committed_modelo_232_section_5_6_bindings_cover_page_02_slots() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        bindings = _layout_bindings_for(revision, "page_02")
+        assert bindings, revision.id
+        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        first_offset = ranges[0][0]
+        last_offset, last_length = ranges[-1]
+        assert first_offset == _SECTION_5_6_RANGE[0], (revision.id, first_offset)
+        assert last_offset + last_length - 1 == _SECTION_5_6_RANGE[1], (
+            revision.id,
+            last_offset + last_length - 1,
+        )
+        for current, nxt in pairwise(ranges):
+            assert current[0] + current[1] == nxt[0], (revision.id, current, nxt)
+
+
+def test_committed_modelo_232_construct_includes_layout_bindings() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        construct = revision.constructs[0]
+        revision_binding_ids = {binding.id for binding in revision.bindings}
+        assert revision_binding_ids, revision.id
+        assert revision_binding_ids <= set(construct.bindings)
+
+
+def test_committed_modelo_232_declarante_casillas_export_through_page_01_record() -> None:
+    modelo, _ = _load_modelo_232()
+    for revision in modelo.revisions.values():
+        page_01 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_01")
+        page_field_ids = {field.id for field in page_01.fields}
+        for casilla in revision.casillas:
+            assert casilla.export_refs, f"casilla {casilla.id!r} missing export_refs"
+            for export_ref in casilla.export_refs:
+                assert export_ref in page_field_ids, (
+                    f"casilla {casilla.id!r} export_ref {export_ref!r} not in page_01 fields"
+                )

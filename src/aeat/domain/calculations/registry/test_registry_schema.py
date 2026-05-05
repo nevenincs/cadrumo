@@ -393,6 +393,23 @@ def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="requires rectification_scope 'only_rectifications'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_export_fields_can_reference_structured_bindings() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)

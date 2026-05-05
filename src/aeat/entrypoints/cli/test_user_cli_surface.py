@@ -47,9 +47,11 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 @pytest.fixture
 def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+    from aeat.adapters.persistence.storage.sql import dispose_engine
 
     monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
     monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -59,16 +61,16 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         yield tmp_path
     finally:
         override_master_key_provider(None)
+        dispose_engine()
 
 
-def _assert_ciphertext_envelope(path: Path, *plaintext_canaries: str) -> None:
-    on_disk = path.read_text(encoding="utf-8")
-    assert '"classification":"financial"' in on_disk
-    assert '"encryption":' in on_disk
-    assert '"ciphertext_b64":' in on_disk
-    assert '"payload":' not in on_disk
+def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
+    db_path = tmp_path / "aeat.db"
+    assert db_path.exists()
+    on_disk = db_path.read_bytes()
+    assert b"secure_objects" in on_disk
     for canary in plaintext_canaries:
-        assert canary not in on_disk
+        assert canary.encode("utf-8") not in on_disk
 
 
 def test_root_surface_contains_setup_and_app_only() -> None:
@@ -260,10 +262,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "n26"])
 
     assert imported.exit_code == 0, imported.output
-    envelope_path = tmp_path / "txs" / "transactions.envelope.json"
-    assert envelope_path.exists()
-    _assert_ciphertext_envelope(envelope_path, canary, transaction_ref)
-    catalogue = TransactionCatalogueRepository(store_dir=tmp_path / "txs").load()
+    assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
+    _assert_secure_database_payload(tmp_path, canary, transaction_ref)
+    catalogue = TransactionCatalogueRepository().load()
     [stored] = list(catalogue.transactions.values())
     assert stored.raw.counterparty == canary
     assert stored.raw.transaction_id == transaction_ref
@@ -495,10 +496,9 @@ def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_
     imported = _invoke(["app", "invoice", "import", str(invoice_path), "--kind", "issued"])
 
     assert imported.exit_code == 0, imported.output
-    envelope_path = tmp_path / "invoices" / "invoices.envelope.json"
-    assert envelope_path.exists()
-    _assert_ciphertext_envelope(envelope_path, canary, invoice_number)
-    catalogue = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
+    assert not (tmp_path / "invoices" / "invoices.envelope.json").exists()
+    _assert_secure_database_payload(tmp_path, canary, invoice_number)
+    catalogue = InvoiceCatalogueRepository().load()
     [stored] = list(catalogue.values())
     assert stored.counterparty_name == canary
     assert stored.invoice_number == invoice_number

@@ -337,6 +337,158 @@ def test_modelo_130_calculation_resolves_previous_year_modelo_100_filed_casillas
     assert result.values["19"] == expected_result
 
 
+@pytest.mark.parametrize("period", ["1P", "2P", "3P"])
+def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(period: str) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "202")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2026,
+        period=period,
+    )
+    revision = snapshot.revision
+    assert revision.id == "2025-y-siguientes"
+    assert len(revision.casillas) == 50
+    formula_targets = {formula.target for formula in revision.formulas}
+    assert formula_targets == {"03", "13", "16", "18", "22", "25", "26", "32", "34", "38", "39", "63", "66"}
+
+    inputs = {
+        "01": Decimal("10000"),
+        "02": Decimal("0"),
+        "04": Decimal("50000"),
+        "05": Decimal("2000"),
+        "06": Decimal("1000"),
+        "07": Decimal("500"),
+        "08": Decimal("300"),
+        "37": Decimal("200"),
+        "67": Decimal("100"),
+        "14": Decimal("4200"),
+        "44": Decimal("0"),
+        "45": Decimal("0"),
+        "46": Decimal("0"),
+        "17": Decimal("17"),
+        "47": Decimal("0"),
+        "40": Decimal("0"),
+        "48": Decimal("0"),
+        "49": Decimal("0"),
+        "27": Decimal("200"),
+        "28": Decimal("500"),
+        "29": Decimal("100"),
+        "30": Decimal("3000"),
+        "31": Decimal("0"),
+        "33": Decimal("0"),
+        "20": Decimal("0"),
+        "21": Decimal("0"),
+        "23": Decimal("0"),
+        "24": Decimal("0"),
+        "42": Decimal("0"),
+        "50": Decimal("0"),
+        "51": Decimal("0"),
+        "52": Decimal("0"),
+        "61": Decimal("0"),
+        "62": Decimal("0"),
+        "64": Decimal("0"),
+        "65": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(2026, 12, 31)},
+    )
+
+    assert result.values["03"] == Decimal("1800.00")
+    assert result.values["38"] == Decimal("2600.00")
+    assert result.values["39"] == Decimal("1500.00")
+    assert result.values["13"] == Decimal("51100.00")
+    assert result.values["18"] == Decimal("7973.00")
+    assert result.values["32"] == Decimal("4273.00")
+    assert result.values["34"] == Decimal("4273.00")
+
+    entries = {entry.target: entry for entry in result.entries}
+    assert entries["03"].operand_refs == ("01", "is.modalidad_cuota.percentage", "02")
+    assert entries["16"].operand_refs == ("13", "44", "14", "45", "46")
+    assert entries["18"].operand_refs == ("16", "17", "47", "48", "40", "49")
+    assert entries["34"].operand_refs == ("32", "33")
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_revision", "expected_casilla_count"),
+    [
+        (2019, "2019-2022", 43),
+        (2020, "2019-2022", 43),
+        (2022, "2019-2022", 43),
+        (2023, "2023-2024", 43),
+        (2024, "2023-2024", 43),
+        (2025, "2025-y-siguientes", 50),
+        (2026, "2025-y-siguientes", 50),
+    ],
+)
+def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
+    filing_year: int,
+    expected_revision: str,
+    expected_casilla_count: int,
+) -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "202")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period="1P",
+    )
+    assert snapshot.revision.id == expected_revision
+    assert len(snapshot.revision.casillas) == expected_casilla_count
+
+    inputs = {
+        "01": Decimal("20000"),
+        "02": Decimal("0"),
+    }
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
+    assert result.values["03"] == Decimal("3600.00")
+
+
+def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(item for item in modelos if item.id == "202")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2024,
+        period="2P",
+    )
+    revision = snapshot.revision
+    assert revision.id == "2023-2024"
+    casilla_ids = {casilla.id for casilla in revision.casillas}
+    assert "67" not in casilla_ids
+    assert {"61", "62", "63", "64", "65", "66"}.isdisjoint(casilla_ids)
+
+    inputs = {
+        "05": Decimal("2000"),
+        "07": Decimal("500"),
+        "06": Decimal("1000"),
+        "37": Decimal("200"),
+        "08": Decimal("300"),
+        "04": Decimal("50000"),
+    }
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert result.values["38"] == Decimal("2500.00")
+    assert result.values["39"] == Decimal("1500.00")
+    assert result.values["13"] == Decimal("51000.00")
+
+
 def _observations_from_requirements(
     requirements: Iterable[RegistryRelationSourceRequirement],
     value_for: Callable[[RegistryRelationSourceRequirement, int], Decimal],

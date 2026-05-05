@@ -26,7 +26,7 @@ from aeat.entrypoints.cli._live import requires_live_enabled
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
-def _load_active_clave_session():
+async def _load_active_clave_session():
     """Return an active Cl@ve session or skip the test cleanly.
 
     Returns:
@@ -35,37 +35,27 @@ def _load_active_clave_session():
         operator hasn't opted into live tests.
     """
     # Local imports keep the test file lightweight when skipped.
-    from aeat.adapters.outbound.aeat.auth._authenticator import AEAT_SESSION_IDLE_TTL, AeatSession
-    from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind, ClaveMovilSessionDetail
+    from aeat.application.auth import (
+        AuthProviderKind,
+        AuthSessionUnavailableError,
+        CorruptAuthSessionError,
+        load_persisted_session,
+        require_verified_aeat_session,
+    )
     from aeat.core.config import load_settings
-    from aeat.entrypoints.cli.auth import _session
-    from aeat.entrypoints.cli.auth._paths import storage_state_paths
 
     settings = load_settings()
-    persisted = _session.load(settings, None)
+    persisted = load_persisted_session(settings, None)
     if persisted is None:
         pytest.skip("No active AEAT session; run `aeat auth login` to enable live tests.")
     if persisted.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         pytest.skip(
             f"Live walker test requires Cl@ve-móvil session (active provider: {persisted.provider_kind.value}).",
         )
-    paths = storage_state_paths(settings, persisted.provider_kind)
-    storage_path = paths.storage_state
-    if not storage_path.exists():
-        pytest.skip(f"Cl@ve storage state missing at {storage_path}")
-    detail = ClaveMovilSessionDetail(
-        dni_nie=persisted.identity_nif,
-        used_non_qr_fallback=True,
-        verification_code=None,
-    )
-    return AeatSession(
-        provider_kind=persisted.provider_kind,
-        authenticated_at=persisted.authenticated_at,
-        idle_deadline=persisted.authenticated_at + AEAT_SESSION_IDLE_TTL,
-        storage_state_path=storage_path,
-        identity_nif=persisted.identity_nif,
-        provider_detail=detail,
-    )
+    try:
+        return await require_verified_aeat_session(settings, kind=AuthProviderKind.CLAVE_MOVIL)
+    except (AuthSessionUnavailableError, CorruptAuthSessionError) as exc:
+        pytest.skip(f"No active Cl@ve session; run `aeat auth login` to enable live tests: {exc}")
 
 
 @pytest.mark.asyncio
@@ -77,7 +67,7 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
     structural shape — actual values vary per account.
     """
     requires_live_enabled()
-    session = _load_active_clave_session()
+    session = await _load_active_clave_session()
     try:
         declarations = await walk_declarations_register(
             session,
@@ -111,7 +101,7 @@ async def test_capture_declaration_returns_pdf_bytes() -> None:
     capture path issues GETs only (cotejo URL + CotejoDocIdSv).
     """
     requires_live_enabled()
-    session = _load_active_clave_session()
+    session = await _load_active_clave_session()
     try:
         declarations = await walk_declarations_register(
             session,
