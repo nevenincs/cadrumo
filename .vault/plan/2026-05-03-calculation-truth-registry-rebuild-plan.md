@@ -3879,6 +3879,10 @@ application surface, and the old authority has been deleted.
      - [x] Modelo 100 construct tests: verify snapshot exposure of construct
        ownership and fail validation when a construct references a member not
        declared by the selected revision.
+     - [x] Modelo 100 dependency classification closure tests: mutate the real
+       registry objects to prove validation fails when a relation source lacks
+       classification, a classification covers only part of its source
+       relations, or a source is classified more than once.
   - [ ] Mark Phase 4R complete only after the audit document, source ledger,
      deletion ledger, schema boundary, live-read classification, observation
      security path, and validation test plan are explicit and reviewable.
@@ -3903,6 +3907,9 @@ application surface, and the old authority has been deleted.
      modelo. A supported modelo must be declared as direct dependency, factual
      evidence dependency, or non-dependency before Modelo 100 can emit a
      filing-grade snapshot.
+     - [x] Registry validator now enforces one dependency classification per
+       relation source and requires each classification to cover every relation
+       for that source before a Modelo 100 snapshot can validate.
   - [ ] Implement dependency inputs from Modelo 111 and Modelo 190: work-income
      retentions, recipient/employer summaries, annual withholding totals,
      source/legal references, and contradiction checks against fiscal-data or
