@@ -489,6 +489,58 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
     assert result.values["13"] == Decimal("51000.00")
 
 
+def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados() -> None:
+    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo_200 = next(item for item in modelos if item.id == "200")
+    snapshot = build_snapshot(
+        modelo_200,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2024,
+        period="0A",
+    )
+    revision = snapshot.revision
+    assert revision.id == "2024-y-siguientes"
+    relation_ids = {relation.id for relation in revision.relations}
+    assert relation_ids == {"modelo-200-2024-rel-202-pagos-fraccionados"}
+    classification = revision.dependency_classifications[0]
+    assert classification.source_modelo == "202"
+    assert classification.treatment == "direct_annual_settlement"
+
+    requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
+    observations = _observations_from_requirements(
+        requirements,
+        lambda _requirement, period_index: (
+            Decimal("1200"),
+            Decimal("1500"),
+            Decimal("1800"),
+        )[period_index],
+    )
+
+    relation_values = resolve_relation_values_from_observations(
+        revision,
+        observations,
+        filing_year=2024,
+        period="0A",
+    )
+    assert relation_values == {
+        "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("4500"),
+    }
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={"00592": Decimal("12000")},
+        date_context={"filing_period": date(2024, 12, 31)},
+        relation_values=relation_values,
+    )
+    assert result.values["00599"] == Decimal("7500.00")
+    entries = {entry.target: entry for entry in result.entries}
+    assert entries["00599"].operand_refs == (
+        "00592",
+        "modelo-200-2024-rel-202-pagos-fraccionados",
+    )
+
+
 def _observations_from_requirements(
     requirements: Iterable[RegistryRelationSourceRequirement],
     value_for: Callable[[RegistryRelationSourceRequirement, int], Decimal],

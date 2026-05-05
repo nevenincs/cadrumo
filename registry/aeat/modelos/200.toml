@@ -1,0 +1,198 @@
+[modelo]
+id = "200"
+title = "IS autoliquidacion anual"
+official_name = "Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol). Declaracion-liquidacion."
+tax_domain = "is"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[revisions."2024-y-siguientes"]
+label = "Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)"
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["0A"] }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-general"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "tipo de gravamen",
+    "cuota integra",
+]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "00592"
+number = "00592"
+label = "Cuota liquida"
+section = ["liquidacion", "cuota_liquida"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "00599"
+number = "00599"
+label = "Cuota del ejercicio a ingresar o a devolver"
+section = ["liquidacion", "cuota_a_ingresar"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
+target = "00599"
+expression = { op = "subtract", args = [
+    { casilla = "00592" },
+    { relation = "modelo-200-2024-rel-202-pagos-fraccionados" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "cuota del ejercicio a ingresar o a devolver (casilla 00599)",
+    "pagos fraccionados",
+]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-pagos-fraccionados-anuales"
+source = "previous_filing"
+selector = { source_modelo = "202" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "modelo 202 de pago fraccionado",
+    "pagos fraccionados",
+]
+
+[[revisions."2024-y-siguientes".relations]]
+id = "modelo-200-2024-rel-202-pagos-fraccionados"
+kind = "cross_model_output"
+dependency_role = "instalment_to_final_settlement"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-200-2024-pagos-fraccionados-anuales"
+period_alignment = { target_period = "0A", source_period_kind = "quarterly" }
+source_periods = ["1P", "2P", "3P"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".dependency_classifications]]
+id = "modelo-200-2024-dep-202-instalments"
+source_modelo = "202"
+treatment = "direct_annual_settlement"
+target_constructs = ["modelo-200-2024-foundation"]
+relation_refs = ["modelo-200-2024-rel-202-pagos-fraccionados"]
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".workbook_parity_refs]]
+id = "modelo-200-2024-dr-xls"
+workbook_source = "aeat-dr-200-2025"
+fixture_id = "modelo-200-2024-record-design-layout"
+formula_coverage = "unsupported_binary_xls"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025"]
+
+[[revisions."2024-y-siguientes".live_cross_references]]
+id = "modelo-200-2024-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-200-2024-static-documentation-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-portal"
+surface = "portal"
+consumer = "aeat.domain.portals.Portal.PORTAL_M200_SOCIEDADES_ANUAL"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".constructs]]
+id = "modelo-200-2024-foundation"
+title = "Modelo 200 IS annual settlement foundation (2024 y siguientes) — pagos fraccionados deduction chain"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+casillas = ["00592", "00599"]
+parameters = ["is.modelo-200.tipo-gravamen-general"]
+formulas = ["modelo-200-cuota-ejercicio-a-ingresar-devolver"]
+bindings = ["modelo-200-2024-pagos-fraccionados-anuales"]
+relations = ["modelo-200-2024-rel-202-pagos-fraccionados"]
+dependency_classifications = ["modelo-200-2024-dep-202-instalments"]
+workbook_parity_refs = ["modelo-200-2024-dr-xls"]
+live_cross_references = ["modelo-200-2024-static-documentation"]
+application_links = [
+    "modelo-200-2024-portal",
+    "modelo-200-2024-calculation",
+    "modelo-200-2024-filing",
+    "modelo-200-2024-verification",
+]

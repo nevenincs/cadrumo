@@ -252,3 +252,49 @@ published_at = 2017-08-30
 applies_from = 2017-08-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
 review_status = "reviewed"
+
+[legal."ley-27-2014:art-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-41.html#a41"
+document_id = "BOE-A-2014-12328"
+article = "41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a41"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Deduccion de retenciones, ingresos a cuenta y pagos fraccionados de la cuota liquida del Impuesto sobre Sociedades. Establece el deber de devolucion del exceso por la Administracion."
+required_text = [
+    "Deducción de las retenciones, ingresos a cuenta y pagos fraccionados",
+    "Serán deducibles de la cuota líquida",
+    "Los pagos fraccionados",
+    "la Administración tributaria procederá a devolver, de oficio, el exceso",
+]
+
+[sources."aeat-dr-200-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xls"
+sha256 = "b7cdbcc9642c6588d13863997b26ed8e6ac2a751d01282f509658f7329ac0626"
+bytes = 11521024
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-200-manual-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt"
+sha256 = "530db60510ce8716fc61f90830adee120117a8127fc7825fbd8ba10d3eb501ab"
+bytes = 622
+retrieved_at = 2026-05-06
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+review_status = "reviewed"
