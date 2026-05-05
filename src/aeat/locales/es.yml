@@ -355,7 +355,7 @@ cli:
       not_approved_for_export: La declaración debe ser aprobada antes de ser exportada
       profile_tax_id_required: El perfil activo requiere un NIF/CIF configurado
       set_parse_error: Error al procesar la asignación del campo
-    export_help: Exportar una declaración aprobada al formato oficial de la AEAT
+    export_help: Exportar una declaración aprobada a un archivo local en formato AEAT
     format_help: Formato de salida (ej. json, text, table)
     labels:
       blockers: Bloqueos
@@ -826,8 +826,8 @@ cli:
       help: Editar manualmente los datos de una factura
       id_help: Identificador de la factura a editar
       reason_help: Motivo de la edición o corrección
-      set_help: Establecer campos de factura (base, iva.rate, iva.amount, payment.id,
-        document.path)
+      set_help: Establecer campos de factura (base, iva.rate, iva.amount, iva.category,
+        retention.rate, retention.amount, payment.id, document.path)
     errors:
       at_least_one_edit: Se requiere al menos una modificación de campo
       file_not_found: Archivo de factura no encontrado
@@ -876,8 +876,8 @@ cli:
       id_help: Identificador de la entrada del libro a editar
       reason_help: Motivo de la edición o corrección de la entrada
       set_help: Establecer valores de campos del libro (campo=valor)
-      skip_help: Omitir la edición de campos específicos
-      split_help: Dividir la entrada en múltiples líneas
+      skip_help: Marcar la fila como excluida o volver a incluirla en la revisión
+      split_help: Dividir la fila en porcentajes de uso profesional y personal
     errors:
       auto_detect_failed: Fallo en la detección automática del formato del libro
       edit_requires_one: Se requiere al menos una modificación de campo para editar

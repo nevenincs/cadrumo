@@ -350,7 +350,7 @@ cli:
       profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
         Run: aeat setup profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
-    export_help: Export an approved declaration to the official AEAT format
+    export_help: Export an approved declaration to a local AEAT-format file
     format_help: Output format (e.g. json, text, table)
     labels:
       blockers: Blockers
@@ -808,7 +808,8 @@ cli:
       help: Manually edit invoice data
       id_help: Identifier of the invoice to edit
       reason_help: Reason for the edit or correction
-      set_help: Set invoice fields (base, iva.rate, iva.amount, payment.id, document.path)
+      set_help: Set invoice fields (base, iva.rate, iva.amount, iva.category, retention.rate,
+        retention.amount, payment.id, document.path)
     errors:
       at_least_one_edit: At least one field modification is required
       file_not_found: Invoice file not found
@@ -856,8 +857,8 @@ cli:
       id_help: Identifier of the ledger entry to edit
       reason_help: Reason for the entry edit or correction
       set_help: Set ledger field values (field=value)
-      skip_help: Skip editing specific fields
-      split_help: Split the entry into multiple lines
+      skip_help: Mark the row excluded or return it to review
+      split_help: Split the row into business and personal-use shares
     errors:
       auto_detect_failed: Auto-detection of ledger format failed
       edit_requires_one: At least one field modification is required for editing
