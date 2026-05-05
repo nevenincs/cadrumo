@@ -66,6 +66,15 @@ class ObligationStatus(StrEnum):
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
+class FilingEnrollment(BaseModel):
+    """AEAT enrollment facts used by registry filing schedules."""
+
+    model_config = _STRICT_FROZEN
+
+    large_company: bool = False
+    public_administration_budget_gt_6000000: bool = False
+
+
 class AutonomoProfile(BaseModel):
     """The profile of a Spanish autónomo for filing-deadline computation.
 
@@ -92,6 +101,7 @@ class AutonomoProfile(BaseModel):
             threshold during the prior year.
         bienes_extranjero_above_threshold: Whether the autónomo holds
             bienes en el extranjero above the legal threshold.
+        enrollment: AEAT enrollment facts that can change filing cadence.
         notes: Free-form notes for the user. Never consumed by the
             engine.
     """
@@ -109,6 +119,7 @@ class AutonomoProfile(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    enrollment: FilingEnrollment = Field(default_factory=FilingEnrollment)
     notes: str = ""
 
 

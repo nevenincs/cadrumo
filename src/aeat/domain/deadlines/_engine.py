@@ -15,8 +15,10 @@ from ...core.paths import PROJECT_ROOT
 from ..calculations.registry import (
     DeadlineApplicabilityCondition,
     DeadlineWindowDefinition,
+    ModeloRevision,
     RegistryError,
     RegistryValidator,
+    applicable_filing_schedules,
     evaluate_profile_conditions,
     load_registry_tree,
 )
@@ -125,7 +127,14 @@ class DeadlineEngine:
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[FilingObligation] = []
-        for modelo, window in self._deadline_windows(year):
+        for modelo, revision, window in self._deadline_windows(year):
+            registry_period = _window_registry_period(window)
+            if revision.filing_schedules and not applicable_filing_schedules(
+                revision,
+                profile,
+                period=registry_period,
+            ):
+                continue
             condition_text = self._evaluate_conditions(
                 profile,
                 window.applicability_conditions,
@@ -168,7 +177,11 @@ class DeadlineEngine:
         """Return registry-backed deadline applicability text for ``modelo``."""
 
         selected_year = year or date.today().year
-        windows = [window for code, window in self._deadline_windows(selected_year) if code == modelo]
+        windows = [
+            window
+            for code, revision, window in self._deadline_windows(selected_year)
+            if code == modelo and self._schedule_applies(profile, revision, window)
+        ]
         if not windows:
             raise ScheduleComputationError(
                 f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}"
@@ -188,17 +201,18 @@ class DeadlineEngine:
         selected_year = year or date.today().year
         return any(
             code == modelo
+            and self._schedule_applies(profile, revision, window)
             and self._evaluate_conditions(
                 profile,
                 window.applicability_conditions,
                 mode=window.applicability_condition_mode,
             )
             is not None
-            for code, window in self._deadline_windows(selected_year)
+            for code, revision, window in self._deadline_windows(selected_year)
         )
 
-    def _deadline_windows(self, year: int) -> tuple[tuple[str, DeadlineWindowDefinition], ...]:
-        out: list[tuple[str, DeadlineWindowDefinition]] = []
+    def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+        out: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
         for modelo in self._modelos:
             try:
                 RegistryValidator(self._catalogues, source_root=self._source_root).validate_modelo(modelo)
@@ -208,12 +222,18 @@ class DeadlineEngine:
             for revision in modelo.revisions.values():
                 for window in revision.deadline_windows:
                     if window.filing_year == year:
-                        out.append((modelo.id, window))
-        out.sort(key=lambda item: (item[1].closes_on, item[0], item[1].period))
+                        out.append((modelo.id, revision, window))
+        out.sort(key=lambda item: (item[2].closes_on, item[0], item[2].period))
         return tuple(out)
 
     def _has_deadline_windows(self, year: int) -> bool:
         return bool(self._deadline_windows(year))
+
+    @staticmethod
+    def _schedule_applies(profile: AutonomoProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+        if not revision.filing_schedules:
+            return True
+        return bool(applicable_filing_schedules(revision, profile, period=_window_registry_period(window)))
 
     @staticmethod
     def _evaluate_conditions(
@@ -231,6 +251,16 @@ class DeadlineEngine:
         if explanations is None:
             return None
         return " ".join(explanations)
+
+
+def _window_registry_period(window: DeadlineWindowDefinition) -> str:
+    if window.period_kind == "quarterly" and "Q" in window.period:
+        return f"{window.period.rsplit('Q', 1)[1]}T"
+    if window.period_kind == "monthly" and "-" in window.period:
+        return window.period.rsplit("-", 1)[1]
+    if window.period_kind == "annual":
+        return "0A"
+    return window.period
 
 
 def next_deadline(schedule: Schedule, today: date | None = None) -> FilingObligation | None:
