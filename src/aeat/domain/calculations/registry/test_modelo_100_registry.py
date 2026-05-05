@@ -121,9 +121,35 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
     assert set(source_foundation.live_cross_references) == set(snapshot.live_cross_references)
+    assert set(source_foundation.application_links) == {
+        "modelo-100-renta-web-open-cross-reference",
+        "modelo-100-export",
+        "modelo-100-filed-declarations-observation",
+        "modelo-100-calculation",
+        "modelo-100-verification",
+        "modelo-100-review",
+        "modelo-100-workflow",
+    }
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
     assert set(payments_retentions.dependency_classifications) == payments_dependency_classifications
+
+
+def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    links_by_surface = {link.surface: link for link in snapshot.revision.application_links}
+
+    assert {"calculation", "export", "filing", "verification", "review", "workflow", "portal"}.issubset(
+        links_by_surface
+    )
+    assert all(link.requires_snapshot is True for link in snapshot.revision.application_links)
+    assert links_by_surface["calculation"].consumer == "aeat.domain.calculations.registry.calculate_registry_snapshot"
+    assert links_by_surface["export"].consumer == "aeat.application.filing.export"
+    assert links_by_surface["filing"].consumer == "aeat.application.filing"
+    assert links_by_surface["verification"].consumer == "aeat.application.verification"
+    assert links_by_surface["review"].consumer == "aeat.application.filing.review"
+    assert links_by_surface["workflow"].consumer == "aeat.application.workflow"
 
 
 def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
@@ -427,6 +453,49 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
                     url=AnyUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
                 ),
             )
+
+
+def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    expected_by_id = {
+        "modelo-100-renta-web-open": {
+            "authenticated-renta-web",
+            "fiscal-data-read",
+            "borrador-read",
+            "filed-declaration-read",
+            "server-side-save",
+            "signing",
+            "presentation",
+            "payment",
+            "amendment",
+            "cancellation",
+            "document-submission",
+        },
+        "modelo-100-filed-declarations-read": {
+            "server-side-save",
+            "signing",
+            "presentation",
+            "payment",
+            "amendment",
+            "cancellation",
+            "document-submission",
+            "borrador-confirmation",
+            "declaration-submission",
+        },
+    }
+
+    for cross_reference_id, expected_actions in expected_by_id.items():
+        cross_reference = snapshot.live_cross_references[cross_reference_id]
+        policy = remote_state_policy_from_cross_reference(cross_reference)
+
+        assert expected_actions.issubset(cross_reference.forbidden_actions)
+        for action in expected_actions:
+            with pytest.raises(RegistryValidationError, match="forbidden action"):
+                assert_remote_operation_allowed(
+                    policy,
+                    RemoteOperation(kind="browser_action", action=f"operator attempts {action}"),
+                )
 
 
 def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None:

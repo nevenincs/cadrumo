@@ -505,7 +505,7 @@ class DependencyClassificationDefinition(RegistryModel):
             return self
         if not self.target_constructs:
             raise ValueError(f"dependency classification {self.id!r} must declare target_constructs")
-        if not self.relation_refs:
+        if self.treatment == "direct_annual_settlement" and not self.relation_refs:
             raise ValueError(f"dependency classification {self.id!r} must declare relation_refs")
         return self
 

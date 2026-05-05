@@ -1355,58 +1355,193 @@ own ledger is checked.
 
 ### Wave 14 Modelo 202 Parity Ledger
 
-- [ ] Modelo 202 audit: enumerate every current code, corpus, TOML, parser,
+- [x] Modelo 202 audit: enumerate every current code, corpus, TOML, parser,
   fixture, workflow, and test surface that codifies Modelo 202 identity,
   casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 202 legal basis: identify and catalogue BOE legal references for
+  - [x] DR202e25.xlsx and DR202e23.xlsx record-design workbooks inspected;
+    casilla numbers and field offsets extracted from the official sheets.
+  - [x] AEAT instructions HTML for current 2025+ and historical 2023-2024
+    captured into `corpus/aeat_official/instructions/modelo_202/files/`.
+  - [x] Existing portal entry confirmed at
+    `aeat.domain.portals._entries.portal_m202_sociedades_fraccionado`.
+- [x] Modelo 202 legal basis: identify and catalogue BOE legal references for
   every filing-grade calculation, parameter, filing condition, and temporal
   applicability rule.
-- [ ] Modelo 202 AEAT official guidance: capture and hash AEAT instructions,
+  - [x] Ley 27/2014 art. 40 (LIS art. 40, BOE-A-2014-12328) catalogued as the
+    legal authority for both modalidad cuota (40.2) and modalidad base (40.3).
+- [x] Modelo 202 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
-- [ ] Modelo 202 workbook/layout coverage: discover official XLS/XLSX coverage,
+  - [x] Modelo 202 instrucciones (current 2025+) committed with sha256 and
+    bytes in `registry/aeat/legal/is.toml`.
+  - [x] Modelo 202 instrucciones (ejercicios 2023-2024) committed with sha256
+    and bytes in the same catalogue.
+- [x] Modelo 202 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
-- [ ] Modelo 202 live filed-data discovery: list available AEAT filed rows
+  - [x] DR202e25.xlsx classified `record_design_layout`, runner not required;
+    workbook parity reference declared on the 2025-y-siguientes revision.
+  - [x] DR202e23.xlsx classified `record_design_layout`, runner not required;
+    workbook parity reference declared on the 2023-2024 revision.
+  - [x] DR202v52.xlsx (Orden HAC/941/2018, ejercicios 2019-2022) classified
+    `record_design_layout`, runner not required; workbook parity reference
+    declared on the 2019-2022 revision.
+- [x] Modelo 202 live filed-data discovery: list available AEAT filed rows
   through the read-only surface and record the periods, submitted-file
   availability, declaration-copy availability, and justificante availability.
+  - [x] Authenticated Cl@ve Móvil read-only scan (2026-05-05) returned zero
+    filed Modelo 202 declarations across ejercicios 2020-2026 for the bound
+    taxpayer, so no submitted-file, declaration-copy, or justificante rows
+    were available — discovery evidence on par with the Modelo 131 zero-row
+    pattern recorded earlier in this plan.
 - [ ] Modelo 202 live sanitized fixture: capture at least one read-only live
   submitted-file or declaration-copy artefact, sanitize identity data, commit
   the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 202 legal/source catalogue closure: add every legal ref and source
+  - [ ] Row stays open until a real read-only AEAT artefact exists; do not
+    replace it with synthetic or local fixture evidence.
+- [x] Modelo 202 legal/source catalogue closure: add every legal ref and source
   ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
   applicability dates.
-- [ ] Modelo 202 TOML identity and revisions: define modelo identity, title,
+  - [x] `registry/aeat/legal/is.toml` carries the LIS art. 40 legal ref plus
+    the four Modelo 202 source refs (DR202e25.xlsx, DR202e23.xlsx, current
+    instructions, 2023-2024 instructions) with reviewed status.
+- [x] Modelo 202 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/202.toml`.
-- [ ] Modelo 202 casilla schema: define every filing-grade casilla with data
+  - [x] `[modelo]` block declares id 202, IS pago fraccionado, quarterly,
+    jurisdiction ES-AEAT, with LIS art. 40 legal ref.
+  - [x] `[revisions."2025-y-siguientes"]` covers ejercicios 2025 and onward
+    with periods 1P/2P/3P.
+  - [x] `[revisions."2023-2024"]` covers ejercicios 2023-2024 with periods
+    1P/2P/3P.
+  - [x] `[revisions."2019-2022"]` covers ejercicios 2019-2022 (Orden
+    HAC/941/2018, DR202v52.xlsx) with periods 1P/2P/3P. The AEAT layout is
+    identical to the 2023-2024 revision (43 casillas), and the AEAT 2018-2022
+    instructions surface only redirects to the 2023-2024 instructions, so the
+    historical revision shares formula citations with 2023-2024 while keeping
+    its own DR XLSX layout authority.
+- [x] Modelo 202 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
-- [ ] Modelo 202 formulas, parameters, and bindings: define every computation,
+  - [x] 50 casillas declared in the 2025-y-siguientes revision matching the
+    full DR202e25.xlsx layout (incluye claves [61]-[67] añadidas en 2025).
+  - [x] 43 casillas declared in the 2023-2024 revision matching DR202e23.xlsx;
+    omits [61]-[67] which the AEAT layout introduced in 2025+.
+  - [x] 43 casillas declared in the 2019-2022 revision matching DR202v52.xlsx;
+    layout-equivalent to the 2023-2024 revision.
+- [x] Modelo 202 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
+  - [x] Parameter `is.modalidad_cuota.percentage` (18% per LIS art. 40.2)
+    declared on both revisions with source citations grounded in real AEAT
+    prose.
+  - [x] Modalidad 40.2 chain: clave [03] = [01] × 18% − [02].
+  - [x] Modalidad 40.3 corrections aggregation: clave [38] and clave [39].
+    Current revision adds the IC corrections operand [67]; 2023-2024 sums
+    only [05] + [07] for [38].
+  - [x] Modalidad 40.3 base imponible previa: clave [13] = [04] + [38] − [39].
+  - [x] Modalidad 40.3 B1 caso general resultado previo: clave [18] =
+    ([16] × [17])/100 + [47] − [40] + [48] − [49].
+  - [x] Modalidad 40.3 resultado: clave [32] = ([18] − [27] − [28]) × [29]/100
+    − [30] − [31].
+  - [x] Cantidad a ingresar: clave [34] = max([32], [33]).
+  - [x] Modalidad 40.3 base imponible corregida (B1): clave [16] =
+    max(0, [13] − [44] − [14] + [45] − [46]). The "sin poder ser negativa"
+    floor matches the AEAT prose verbatim across both current and 2023-2024
+    instructions and is declared on every revision.
+  - [x] Modalidad 40.3 B2 importes (multi-rate): clave [22] = ([20] × [21])
+    / 100; clave [25] = ([23] × [24]) / 100. Equivalent formulas declared on
+    every revision.
+  - [x] Modalidad 40.3 B2 importes (current-only multi-rate): clave [63] =
+    ([61] × [62]) / 100; clave [66] = ([64] × [65]) / 100. Declared only on
+    the 2025-y-siguientes revision because the historical layout does not
+    expose multi-rate brackets 3 and 4.
+  - [x] Modalidad 40.3 B2 resultado previo: clave [26] = [22] + [25] (+
+    [63] + [66] in 2025+) + [50] − [42] + [51] − [52]. Per-revision formula
+    excludes the 2025+-only operands when not present in the layout.
 - [ ] Modelo 202 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
-- [ ] Modelo 202 live cross-reference guard: record the official live/static
+  - [ ] Row stays open until a sanitized declaration-copy or submitted-file
+    fixture lands; the extraction profile must be backed by a real artefact.
+- [x] Modelo 202 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, and cancellation actions.
+  - [x] `modelo-202-static-documentation` cross-reference declared on the
+    current revision with `surface = static_official_documentation`,
+    `synthetic_data_allowed = false`, and `forbidden_actions` covering
+    server-side-save, signing, presentation, payment, amendment, cancellation,
+    document-submission, and declaration-submission.
+  - [x] Equivalent `modelo-202-2023-2024-static-documentation` cross-reference
+    declared on the historical revision with the same forbidden_actions set.
 - [ ] Modelo 202 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
-- [ ] Modelo 202 legal correctness tests: run behaviour tests that prove formula
+  - [x] Modelo 202 calculation linkage: registry-backed
+    `calculate_registry_snapshot` consumer declared on both revisions through
+    `application_links`.
+  - [x] Modelo 202 filing/verification application links declared on both
+    revisions referencing `aeat.application.filing` and
+    `aeat.application.verification`.
+  - [x] Modelo 202 portal application link points at
+    `aeat.domain.portals.Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO`.
+  - [x] Modelo 202 export layout — envelope record: full DR202e25.xlsx
+    envelope structure transcribed in
+    `[[revisions."2025-y-siguientes".export_layouts]]` (id
+    `modelo-202-fichero-boe`, record `modelo-202-envelope-header`) with all
+    13 fixed-position envelope fields (open tag, modelo constant, period
+    placeholder, AUX block with reserved fillers plus program/developer
+    header keys, AUX close). The `modelo-202-export` application link
+    declares the export surface so the registry validator accepts the layout.
+  - [x] Modelo 202 export layout — page records: DR202e25.xlsx sheet
+    "dr M202 (1)" (page 01) is transcribed as the `modelo-202-page-01`
+    `ExportRecordDefinition` with 46 real fields covering page-01 envelope
+    constants, identification draft fields (NIF, surnames, name, foral
+    indicator), devengo (ejercicio/periodo/fecha-inicio/CNAE), datos
+    adicionales boolean headers, and page-01 casillas [01]-[08], [13],
+    [14], [37]-[39], [44]-[46], [67]. DR202e25.xlsx sheet "dr M202 (2)"
+    (page 02) is transcribed as the `modelo-202-page-02`
+    `ExportRecordDefinition` with 57 real fields covering page-02 envelope
+    constants and liquidacion casillas [16]-[34], [40], [42], [47]-[52],
+    [61]-[66]. All 50 casillas in the 2025-y-siguientes revision now
+    carry `export_refs` pointing at their page export field.
+  - [ ] Modelo 202 export layout — historical revisions: mirror the envelope
+    + page record structure into the 2023-2024 and 2019-2022 revisions using
+    DR202e23.xlsx and DR202v52.xlsx as the layout authority for each
+    historical window.
+- [x] Modelo 202 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, corporate instalment
   methods, and any filed-data bindings are correct against official authority.
+  - [x] `test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs`
+    parametrized over 1P/2P/3P verifies the full calculation chain for the
+    current revision.
+  - [x] `test_modelo_202_revision_selection_resolves_for_filing_year_boundaries`
+    parametrized over 2023/2024/2025/2026 proves the temporal selector picks
+    the correct revision and computes [03] consistently across both windows.
+  - [x] `test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column`
+    proves the historical revision drops claves [61]-[67] and that [38]
+    aggregates only [05] + [07].
 - [ ] Modelo 202 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
   silent degradation.
+  - [ ] Row stays open until a sanitized live artefact exists; zero filed
+    rows is recorded as discovery evidence rather than parser coverage.
 - [ ] Modelo 202 teardown: delete or neutralize all old Modelo 202 authorities
   in rulesets, filing builders, category mappings, casilla projections,
   deadlines, generated exports, hydrate paths, and legacy fixtures.
-- [ ] Modelo 202 quality gate: run registry verification, focused public
+- [x] Modelo 202 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
+  - [x] Whole-tree `RegistryValidator.validate_modelo` passes for Modelo 202
+    across both revisions; non-pre-broken modelos (100, 111, 115, 123, 130,
+    131, 202, 349) all pass.
+  - [x] `uv run pytest -k modelo_202` passes (11 cases after the historical
+    2019-2022 revision lands: formula chain across the expanded coverage,
+    revision selection across 2019-2022/2023-2024/2025-y-siguientes
+    boundaries, and historical-aumentos divergence tests).
+  - [x] `uv run ruff check` and `uv run ty check` clean on the touched test
+    surface.
 - [ ] Modelo 202 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 202 filing-grade values.
 
@@ -1774,11 +1909,11 @@ own ledger is checked.
 - [ ] Modelo 100 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
-- [ ] Modelo 100 live filed-data discovery: list available AEAT filed rows
+- [x] Modelo 100 live filed-data discovery: list available AEAT filed rows
   through the read-only surface and record the periods, submitted-file
   availability, declaration-copy availability, justificante availability,
   borrador/data-fiscal availability, and forbidden authenticated surfaces.
-- [ ] Modelo 100 live sanitized fixture: capture at least one read-only live
+- [x] Modelo 100 live sanitized fixture: capture at least one read-only live
   submitted-file, declaration-copy, or official filed-data artefact, sanitize
   identity data, commit the redacted fixture, and prove it parses through the
   registry layout.
@@ -1797,7 +1932,7 @@ own ledger is checked.
 - [ ] Modelo 100 extraction profiles: define submitted-file, declaration PDF,
   borrador, and data-fiscal extraction profiles with target casillas, accepted
   artefacts, min coverage, failure semantics, legal refs, and source refs.
-- [ ] Modelo 100 live cross-reference guard: record the official live/static
+- [x] Modelo 100 live cross-reference guard: record the official live/static
   cross-reference decision and prove remote-state guards reject AEAT writes,
   saves, presentation, signing, payment, amendment, cancellation, and
   authenticated Renta WEB synthetic-test actions.
@@ -1808,7 +1943,7 @@ own ledger is checked.
   outputs, trace legal refs, source refs, date boundaries, relations to Modelos
   130 and 131, Renta epochs, CCAA behaviour, rental behaviour, and any
   filed-data bindings are correct against official authority.
-- [ ] Modelo 100 live/filed-data tests: run committed sanitized submitted-file,
+- [x] Modelo 100 live/filed-data tests: run committed sanitized submitted-file,
   declaration-copy, borrador, or data-fiscal parser tests, encrypted
   observation-store roundtrip tests where applicable, and filed-data parser
   tests without defaults or silent degradation.
@@ -3736,32 +3871,32 @@ application surface, and the old authority has been deleted.
          - [x] Modelo 131 -> Modelo 100 objective-estimation instalment
            payments, module/activity evidence, and current-year objective
            estimation reconciliation.
-       - [ ] Factual evidence dependencies, not legal-calculation authorities:
-         - [ ] Modelo 303 -> Modelo 100 economic-activity factual VAT context,
+       - [x] Factual evidence dependencies, not legal-calculation authorities:
+         - [x] Modelo 303 -> Modelo 100 economic-activity factual VAT context,
            invoice/expense reconciliation, and VAT-deductibility evidence; it
            cannot decide IRPF income, expense, or casilla treatment.
-         - [ ] Modelo 390 -> Modelo 100 annual VAT-summary reconciliation for
+         - [x] Modelo 390 -> Modelo 100 annual VAT-summary reconciliation for
            economic-activity evidence only; it cannot decide IRPF formulas.
-         - [ ] Modelo 347 -> Modelo 100 third-party operation evidence for
+         - [x] Modelo 347 -> Modelo 100 third-party operation evidence for
            business income/expense reconciliation only.
-         - [ ] Modelo 349 -> Modelo 100 intra-community operation evidence for
+         - [x] Modelo 349 -> Modelo 100 intra-community operation evidence for
            business/fiscal-data reconciliation only.
-         - [ ] Modelo 369 -> Modelo 100 OSS/IOSS VAT evidence for activity
+         - [x] Modelo 369 -> Modelo 100 OSS/IOSS VAT evidence for activity
            context only.
-         - [ ] Modelo 840 -> Modelo 100 IAE activity/municipality evidence for
+         - [x] Modelo 840 -> Modelo 100 IAE activity/municipality evidence for
            economic-activity applicability and classification only.
-         - [ ] Modelos 036 and 037 -> Modelo 100 censal identity, activity,
+         - [x] Modelos 036 and 037 -> Modelo 100 censal identity, activity,
            regime, and obligation evidence only; they cannot own annual
            calculation values.
-       - [ ] Non-Renta calculation dependencies unless a future official source
+       - [x] Non-Renta calculation dependencies unless a future official source
          proves a concrete link:
-         - [ ] Modelo 202 is corporate-tax instalment evidence for a different
+         - [x] Modelo 202 is corporate-tax instalment evidence for a different
            taxpayer/tax and is not a Modelo 100 calculation dependency.
-         - [ ] Modelo 200 is corporate annual tax evidence for a different
+         - [x] Modelo 200 is corporate annual tax evidence for a different
            taxpayer/tax and is not a Modelo 100 calculation dependency.
-         - [ ] Modelo 232 is related-party reporting evidence and is not a
+         - [x] Modelo 232 is related-party reporting evidence and is not a
            Modelo 100 calculation dependency.
-         - [ ] Modelo 720 is foreign-asset reporting evidence and is not a
+         - [x] Modelo 720 is foreign-asset reporting evidence and is not a
            Modelo 100 calculation dependency; foreign income, gains, or
            imputations must be represented through Modelo 100 legal/source
            definitions, not inferred from Modelo 720 filing status.
@@ -3965,12 +4100,12 @@ application surface, and the old authority has been deleted.
   - [ ] Implement dependency inputs from Modelo 131: objective-estimation
      instalment payments, module/activity evidence, source/legal references,
      and date-axis checks across quarterly declarations.
-  - [ ] Implement evidence-only classification for Modelos 303, 390, 347, 349,
+  - [x] Implement evidence-only classification for Modelos 303, 390, 347, 349,
      369, 840, 036, and 037. These surfaces may support activity, VAT,
      invoice, census, operation, or obligation reconciliation, but cannot own
      Modelo 100 legal treatment, formulas, casilla targets, or final annual
      amounts.
-  - [ ] Implement explicit non-dependency classification for Modelos 202, 200,
+  - [x] Implement explicit non-dependency classification for Modelos 202, 200,
      232, and 720 unless a reviewed official source creates a concrete Modelo
      100 relation. Their filed status must not alter Renta calculations by
      inference.
