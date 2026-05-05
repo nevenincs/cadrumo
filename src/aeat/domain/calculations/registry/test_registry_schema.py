@@ -359,6 +359,40 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="malformed invoice selector"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"fact": "operator_count", "claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="requires aggregation op 'count_distinct'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_export_fields_can_reference_structured_bindings() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)

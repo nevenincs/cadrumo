@@ -12,6 +12,7 @@ from ._bindings import (
     resolve_bound_casilla_inputs,
     resolve_invoice_binding_values,
     resolve_previous_filing_binding_values,
+    validate_invoice_binding_definition,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
 from ._coverage import EvidenceTierCoverageGate, ModelLawCoverageLedger, build_model_law_coverage_ledger
@@ -221,6 +222,7 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "validate_invoice_binding_definition",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",

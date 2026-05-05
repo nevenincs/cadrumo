@@ -3929,6 +3929,9 @@ application surface, and the old authority has been deleted.
        contract and resolver for modelo-agnostic invoice-ledger facts, including
        intra-community claves, rectification scope, base totals, and distinct
        operator counts.
+     - [x] Registry validation now rejects malformed invoice-source selectors
+       and unsupported invoice fact or aggregation pairs before snapshot or
+       calculation runtime use.
   - [ ] Implement the dependency classification gate for every supported
      modelo. A supported modelo must be declared as direct dependency, factual
      evidence dependency, or non-dependency before Modelo 100 can emit a
