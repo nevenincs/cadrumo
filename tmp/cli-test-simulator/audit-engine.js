@@ -108,22 +108,12 @@
       const manualDeclarationEdit = rng() < 0.44;
       const recalculation = rng() < 0.24;
       const validationPending = rng() < 0.25;
-      const guessOldCommand = rng() < 0.34;
-
       function event(command, outcome, finding, recommendation, material = outcome !== "ok") {
         events.push({ command, outcome, finding, recommendation, material });
         if (outcome === "error") state.risks.push(command);
       }
 
       if (!state.setup) {
-        if (guessOldCommand) {
-          event(
-            "aeat setup auth configure --provider clave_permanente",
-            "warn",
-            "Top Failed Command Guesses",
-            "Clave Permanente should remain research-only until implemented.",
-          );
-        }
         event(
           "aeat setup auth status",
           "ok",

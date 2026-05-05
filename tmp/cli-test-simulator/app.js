@@ -610,16 +610,14 @@ function runAuth(tokens, flags) {
   if (action === "providers" || action === "list") {
     return ok(`Supported providers
 certificate: implemented
-clave_movil: implemented
-clave_permanente: research only, not implemented in this simulator`);
+clave_movil: implemented`);
   }
   if (action === "configure") {
     const provider = flags.provider;
     if (!provider) return error("Missing --provider certificate|clave_movil.");
     if (!["certificate", "clave_movil"].includes(provider)) {
       return warn(`Provider not available in v6 simulator: ${provider}
-Implemented providers: certificate, clave_movil
-Research only: clave_permanente`);
+Supported providers: certificate, clave_movil`);
     }
     state.authProvider = provider;
     state.authenticated = false;

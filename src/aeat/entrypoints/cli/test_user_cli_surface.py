@@ -163,22 +163,23 @@ def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
     assert "--ledger" in match.output
 
 
-def test_auth_configure_supports_user_provider_aliases(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
 
     providers = _invoke(["setup", "auth", "providers"])
     configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    unavailable = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
+    unsupported_spelling = _invoke(["setup", "auth", "configure", "--provider", "clave-movil"])
+    unsupported = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
 
     assert providers.exit_code == 0, providers.output
-    assert "clave_permanente" in providers.output
-    assert "unavailable" in providers.output
+    assert "clave_permanente" not in providers.output
+    assert "unavailable" not in providers.output
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
-    assert unavailable.exit_code != 0
-    assert "unavailable-provider" in unavailable.output
+    assert unsupported_spelling.exit_code != 0
+    assert unsupported.exit_code != 0
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
