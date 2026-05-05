@@ -1711,6 +1711,10 @@ own ledger is checked.
   - [x] Extend registry inspection and verification reports so relation counts
      and dependency roles are visible at tree and revision level for plan
      tracking and audit review.
+  - [x] Add a typed relation-source requirement resolver so registry relations
+     expose the exact source modelo, filing year, periods, source output,
+     target bindings, dependency role, and aggregation operation that secure
+     storage or read-only AEAT observation backends must fetch.
   - [x] Extend workbook parity tests so converted XLS record-design files are
      accepted as layout evidence only and rejected as calculation parity
      oracles.

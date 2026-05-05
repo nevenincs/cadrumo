@@ -10,6 +10,7 @@ from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
 from ._loader import load_registry_tree
+from ._relations import relation_source_requirements
 from ._schema import ModeloDefinition, ModeloRevision
 from ._validate import RegistryValidator
 
@@ -46,6 +47,38 @@ def test_registry_validator_checks_cross_model_relation_closure() -> None:
     modelos, catalogues = _committed_tree()
 
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+
+def test_modelo_180_relation_source_requirements_identify_source_filings() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    requirements = relation_source_requirements(revision, filing_year=2026, period="0A")
+
+    assert len(requirements) == 3
+    by_output = {requirement.source_output: requirement for requirement in requirements}
+    assert set(by_output) == {"01", "02", "03"}
+    for requirement in by_output.values():
+        assert requirement.source_modelo == "115"
+        assert requirement.filing_year == 2026
+        assert requirement.periods == ("1T", "2T", "3T", "4T")
+        assert requirement.dependency_role == "periodic_to_annual_summary"
+        assert requirement.aggregation_op == "sum"
+    assert by_output["01"].target_bindings == ("modelo-180-115-perceptores-anual",)
+    assert by_output["02"].target_bindings == ("modelo-180-115-base-anual",)
+    assert by_output["03"].target_bindings == ("modelo-180-115-retenciones-anual",)
+
+
+def test_relation_source_requirements_obey_target_periods() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "180")
+    revision = modelo.revisions["2023-y-siguientes"]
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+
+    assert relation_source_requirements(revision, filing_year=2026, period="1T") == ()
 
 
 def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:
