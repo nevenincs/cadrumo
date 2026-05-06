@@ -112,3 +112,61 @@ def test_modelo_322_construct_links_workbook_parity() -> None:
     construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
     assert "modelo-322-dr-2026" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-322-mensual",)
+
+
+def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directions() -> None:
+    """Modelo 322 declares the same IVA flow-direction binding pattern as
+    Modelo 303, scoped to the individual group entity."""
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    iva_bindings = {
+        binding.id: binding
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    }
+    assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
+    assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
+    assert "modelo-322-iva-repercutido-super-reducido-cuota" in iva_bindings
+    assert "modelo-322-iva-soportado-interiores-cuota" in iva_bindings
+    assert "modelo-322-iva-autorepercutido-intracomunitaria-cuota" in iva_bindings
+
+
+def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
+    from decimal import Decimal
+
+    from aeat.domain.calculations.registry._bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.vat import (
+        IvaFlowDirection,
+        VATCategory,
+        VATRateKind,
+    )
+
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    observations = [
+        IvaLedgerObservation(
+            ledger_id="rep-1",
+            transaction_date=date(2025, 6, 1),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("5000"),
+            iva_amount=Decimal("1050"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="sop-1",
+            transaction_date=date(2025, 6, 5),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("2000"),
+            iva_amount=Decimal("420"),
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result["modelo-322-iva-repercutido-general-cuota"] == Decimal("1050")
+    assert result["modelo-322-iva-soportado-interiores-cuota"] == Decimal("420")
+    assert result["modelo-322-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("0")
