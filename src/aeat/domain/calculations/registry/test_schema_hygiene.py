@@ -34,11 +34,17 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
 )
 
 _FORBIDDEN_TEST_NARRATIVE = (
+    "aspirational",
     "deleted as tautological",
+    "fails by design",
+    "not yet delivered",
     "previously in this file",
     "past-state",
     "migration state",
+    "phase ",
+    "wave ",
     "compatibility shim",
+    "xfail",
 )
 
 
