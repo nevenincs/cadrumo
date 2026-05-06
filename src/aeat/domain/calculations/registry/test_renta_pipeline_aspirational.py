@@ -131,21 +131,27 @@ def test_phase_b_minimo_personal_y_familiar_formulas_present_2025() -> None:
     assert not missing, f"mínimo personal y familiar regression: missing formula targets {sorted(missing)}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "phase c: base imponible / liquidable composition. "
-        "Register formulas for casillas 0432, 0435, 0460, 0500, 0510 in Modelo 100 ejercicio 2025."
-    ),
-)
 def test_phase_c_base_imponible_liquidable_formulas_present_2025() -> None:
-    """Base imponible general/ahorro and base liquidable general/ahorro formulas registered."""
+    """Base imponible general/ahorro and base liquidable general/ahorro formulas registered.
+
+    Phase C delivered: 5 formulas (0432, 0435, 0460, 0500, 0510). The base
+    case formulas aggregate computed income casillas (0025 trabajo, 0060
+    capital mobiliario general, 0155/0156 capital inmobiliario, 0235
+    estimacion directa) into the saldo neto rendimientos, then add the
+    saldo negativo de ganancias y pérdidas patrimoniales (0433) to produce
+    base imponible general (0435). Base imponible del ahorro (0460) sums
+    the saldo neto positivo de capital mobiliario ahorro (0429) and the
+    saldo neto positivo total ganancias patrimoniales (0424). Base
+    liquidable general/ahorro (0500/0510) subtract the tributación
+    conjunta and pensiones compensatorias reductions and the bases
+    negativas compensables. These are first-pass formulas covering the
+    base case (no prior-year carry-forward compensation chains); the
+    multi-year compensation refinement is tracked in Phase F.
+    """
     modelo, _ = _modelo_100()
     targets = _formula_target_casillas_for_revision(modelo, "2025")
     missing = _PHASE_C_REQUIRED_FORMULA_TARGETS - targets
-    assert not missing, (
-        f"phase c not yet delivered: missing base imponible / liquidable formula targets {sorted(missing)}"
-    )
+    assert not missing, f"base imponible/liquidable regression: missing formula targets {sorted(missing)}"
 
 
 def test_phase_d_cuota_integra_formulas_present_2025() -> None:
