@@ -2,10 +2,11 @@
 
 The LLM cache and usage log persist response text that may echo NIF or
 counterparty context from the original prompt. Both writers must apply the
-substrate's CACHE-class and DIAGNOSTIC-class redaction rules
+substrate's DIAGNOSTIC-class redaction rules
 (:func:`aeat.core.redaction.redact_structured`) before any payload reaches
-disk; these tests exercise canary NIF and bearer-token strings to prove that
-discipline holds.
+the encrypted secure-object backend; these tests exercise canary NIF and
+bearer-token strings to prove that discipline holds without materializing
+JSON files.
 """
 
 from __future__ import annotations
@@ -70,11 +71,8 @@ class TestCacheRedaction:
         response = _make_response(text=f"the customer's tax id is {_NIF_CANARY}")
         cache.write(request, response)
 
-        # Walk every cache file written and confirm the NIF canary is
-        # not present verbatim.
-        for path in (tmp_path / "cache").rglob("*.json"):
-            text = path.read_text(encoding="utf-8")
-            assert _NIF_CANARY not in text
+        assert not (tmp_path / "cache").exists()
+        assert _NIF_CANARY.encode() not in (tmp_path / "aeat.db").read_bytes()
 
     def test_bearer_token_redacted_in_cache(self, tmp_path: Path) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
@@ -82,23 +80,25 @@ class TestCacheRedaction:
         response = _make_response(text=f"the auth header was {_BEARER_CANARY}")
         cache.write(request, response)
 
-        for path in (tmp_path / "cache").rglob("*.json"):
-            text = path.read_text(encoding="utf-8")
-            assert _BEARER_TAIL not in text
+        assert not (tmp_path / "cache").exists()
+        assert _BEARER_TAIL.encode() not in (tmp_path / "aeat.db").read_bytes()
 
     def test_cache_entry_remains_parseable(self, tmp_path: Path) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
         request = _make_request()
         response = _make_response(text="non sensitive output")
         cache.write(request, response)
-        for path in (tmp_path / "cache").rglob("*.json"):
-            text = path.read_text(encoding="utf-8")
-            # The redacted JSON round-trips back to a CachedEntry —
-            # strict-mode validation requires model_validate_json
-            # rather than model_validate(json.loads(...)) because
-            # JSON strings need pydantic's coercion path.
-            entry = CachedEntry.model_validate_json(text)
-            assert entry.response.text == "non sensitive output"
+        cached = cache.read(request, LLMProvider.ANTHROPIC, "claude-test")
+        assert cached is not None
+        entry = CachedEntry(
+            provider=cached.provider,
+            model=cached.model,
+            prompt_hash=cache.build_key(request, cached.provider, cached.model).prompt_hash,
+            args_hash=cache.build_key(request, cached.provider, cached.model).args_hash,
+            response=cached.model_copy(update={"cache_hit": False}),
+            created_at=cached.created_at,
+        )
+        assert entry.response.text == "non sensitive output"
 
     def test_idempotent_re_read(self, tmp_path: Path) -> None:
         """A cache hit re-reads the (already-redacted) text. Re-applying
@@ -110,11 +110,10 @@ class TestCacheRedaction:
         first = cache.read(request, LLMProvider.ANTHROPIC, "claude-test")
         assert first is not None
         # Re-write the same response (simulate re-cache) — still no
-        # plaintext NIF on disk.
+        # plaintext NIF in the encrypted database bytes.
         cache.write(request, first.model_copy(update={"cache_hit": False}))
-        for path in (tmp_path / "cache").rglob("*.json"):
-            text = path.read_text(encoding="utf-8")
-            assert _NIF_CANARY not in text
+        assert not (tmp_path / "cache").exists()
+        assert _NIF_CANARY.encode() not in (tmp_path / "aeat.db").read_bytes()
 
 
 class TestUsageRedaction:
@@ -139,21 +138,23 @@ class TestUsageRedaction:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
         record = self._make_record(text=f"customer NIF: {_NIF_CANARY}")
         path = recorder.record(record)
-        assert _NIF_CANARY not in path.read_text(encoding="utf-8")
+        assert not path.exists()
+        assert _NIF_CANARY.encode() not in (tmp_path / "aeat.db").read_bytes()
 
     def test_bearer_token_redacted_in_usage(self, tmp_path: Path) -> None:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
         record = self._make_record(text=f"saw header {_BEARER_CANARY}")
         path = recorder.record(record)
-        assert _BEARER_TAIL not in path.read_text(encoding="utf-8")
+        assert not path.exists()
+        assert _BEARER_TAIL.encode() not in (tmp_path / "aeat.db").read_bytes()
 
     def test_each_record_is_one_jsonl_line(self, tmp_path: Path) -> None:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
         for _ in range(3):
             recorder.record(self._make_record(text="non sensitive"))
-        path = tmp_path / "usage" / "usage-2026-04-30.jsonl"
-        lines = path.read_text(encoding="utf-8").splitlines()
-        assert len(lines) == 3
-        for line in lines:
-            decoded = json.loads(line)
+        assert not (tmp_path / "usage").exists()
+        records = recorder.load_records()
+        assert len(records) == 3
+        for record in records:
+            decoded = json.loads(record.model_dump_json())
             assert decoded["caller"] == "test-caller"

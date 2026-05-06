@@ -93,16 +93,22 @@ def _check_directory(name: str, path: Path) -> VerifyFinding:
 
 def _check_profile_file(answers: SetupAnswers) -> VerifyFinding:
     path = answers.default_profile_path.expanduser()
-    if not path.exists():
+    from ._env_writer import load_profile_envelope
+
+    try:
+        load_profile_envelope(path)
+    except FileNotFoundError as exc:
+        if path.exists():
+            return _finding(
+                name="autonomo_profile_json_valid",
+                severity=VerifySeverity.ERROR,
+                message=tr("setup.verifier.t_837462", path=str(path), exc=str(exc)),
+            )
         return _finding(
             name="autonomo_profile_json_valid",
             severity=VerifySeverity.WARNING,
             message=tr("setup.verifier.t_394827", path=str(path)),
         )
-    from ._env_writer import load_profile_envelope
-
-    try:
-        load_profile_envelope(path)
     except (OSError, ValueError, ValidationError) as exc:
         return _finding(
             name="autonomo_profile_json_valid",

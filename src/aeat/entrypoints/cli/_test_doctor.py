@@ -16,6 +16,9 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from ...adapters.outbound.google import GoogleAuthPath
+from ...adapters.outbound.google._paths import save_oauth_token_cache
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.sql import dispose_engine
 from ...core.config import Settings
 from . import doctor as doctor_module
 from .doctor import (
@@ -44,6 +47,18 @@ from .doctor import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
+
+
+@pytest.fixture(autouse=True)
+def _secure_object_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 class IsolatedSettings(Settings):
@@ -217,7 +232,8 @@ class TestGoogleAuthDoctorRows:
         (tmp_path / "env" / "workspace-mcp-credentials").mkdir(parents=True, exist_ok=True)
         token_dir = tmp_path / ".tokens"
         token_dir.mkdir(parents=True, exist_ok=True)
-        (token_dir / "google_oauth_token.json").write_text(
+        save_oauth_token_cache(
+            token_dir / "google_oauth_token.json",
             (
                 '{"refresh_token": "refresh", "scopes": ['
                 '"https://www.googleapis.com/auth/drive",'
@@ -228,7 +244,6 @@ class TestGoogleAuthDoctorRows:
                 '"openid"'
                 "]}"
             ),
-            encoding="utf-8",
         )
         settings = IsolatedSettings(
             google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,
@@ -250,7 +265,8 @@ class TestGoogleAuthDoctorRows:
         (tmp_path / "env" / "workspace-mcp-credentials").mkdir(parents=True, exist_ok=True)
         token_dir = tmp_path / ".tokens"
         token_dir.mkdir(parents=True, exist_ok=True)
-        (token_dir / "google_oauth_token.json").write_text(
+        save_oauth_token_cache(
+            token_dir / "google_oauth_token.json",
             (
                 '{"refresh_token": "refresh", "scopes": ['
                 '"https://www.googleapis.com/auth/drive",'
@@ -261,7 +277,6 @@ class TestGoogleAuthDoctorRows:
                 '"openid"'
                 "]}"
             ),
-            encoding="utf-8",
         )
         settings = IsolatedSettings(
             google_auth_path=GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV,

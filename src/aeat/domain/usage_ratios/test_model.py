@@ -162,7 +162,7 @@ def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
 
 def test_saved_profile_has_canonical_key_order() -> None:
     """Two equal profiles serialise to identical bytes regardless of the
-    order in which ratios were added — preventing spurious diffs when Kent's
+    order in which ratios were added — preventing spurious diffs when operator's
     persisted usage-ratio envelope is git-tracked."""
     forward = UsageRatioProfile(
         ratios={

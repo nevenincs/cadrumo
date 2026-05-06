@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from ...adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
+from ...adapters.persistence.storage.sql import dispose_engine
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
 from . import (
@@ -38,6 +40,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture(autouse=True)
 def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     provider = EphemeralMasterKeyProvider()
+    old_database_url = os.environ.get("AEAT_DATABASE_URL")
+    os.environ["AEAT_DATABASE_URL"] = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
+    dispose_engine()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
         root_dir=tmp_path / "blobs-secret",
@@ -54,6 +59,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        if old_database_url is None:
+            os.environ.pop("AEAT_DATABASE_URL", None)
+        else:
+            os.environ["AEAT_DATABASE_URL"] = old_database_url
+        dispose_engine()
 
 
 def _answers(tmp_path: Path) -> SetupAnswers:

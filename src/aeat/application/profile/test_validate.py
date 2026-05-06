@@ -72,6 +72,41 @@ def test_absent_optional_keys_are_not_in_present_optional() -> None:
         assert entry.key not in result.present_optional
 
 
+def test_joint_taxation_requires_spouse_profile_fields() -> None:
+    values = _all_required_filled()
+    values["declaration.type"] = "2"
+
+    result = validate_profile(values)
+
+    assert result.valid is False
+    assert set(result.missing_required) >= {
+        "spouse.tax.id",
+        "spouse.name",
+        "spouse.surnames",
+        "spouse.birth_date",
+        "spouse.sex",
+    }
+
+
+def test_joint_taxation_spouse_profile_fields_clear_conditional_requirement() -> None:
+    values = _all_required_filled()
+    values.update(
+        {
+            "declaration.type": "2",
+            "spouse.tax.id": "12345678Z",
+            "spouse.name": "Ada",
+            "spouse.surnames": "Lovelace",
+            "spouse.birth_date": "1815-12-10",
+            "spouse.sex": "M",
+        }
+    )
+
+    result = validate_profile(values)
+
+    assert result.valid is True
+    assert result.missing_required == ()
+
+
 def test_unknown_keys_do_not_block_validation_but_are_surfaced() -> None:
     values = _all_required_filled()
     values["bogus.key"] = "set"

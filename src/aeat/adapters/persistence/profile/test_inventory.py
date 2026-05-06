@@ -11,24 +11,29 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from ....domain.profile.errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ..storage.sql import dispose_engine
 from .inventory import load_inventory, record_movement, save_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key() -> Iterator[None]:
+def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     override_master_key_provider(EphemeralMasterKeyProvider())
     try:
         yield
     finally:
         override_master_key_provider(None)
+        dispose_engine()
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:
@@ -61,7 +66,7 @@ def test_inventory_persistence_and_real_movement_append(tmp_path) -> None:
     assert load_inventory(storage_dir=tmp_path)[0] == updated
 
 
-def test_inventory_persistence_is_encrypted_financial_envelope(tmp_path) -> None:
+def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
         year=2025,
@@ -82,11 +87,11 @@ def test_inventory_persistence_is_encrypted_financial_envelope(tmp_path) -> None
     )
 
     path = save_inventory((ledger,), storage_dir=tmp_path)
-    text = path.read_text(encoding="utf-8")
+    db_bytes = (tmp_path / "aeat.db").read_bytes()
 
-    assert '"classification":"financial"' in text
-    assert '"encryption":' in text
-    assert "LEAK-CANARY-SKU" not in text
+    assert not path.exists()
+    assert b"LEAK-CANARY-SKU" not in db_bytes
+    assert b"purchase-canary" not in db_bytes
 
 
 def test_record_movement_refuses_invalid_negative_stock(tmp_path) -> None:

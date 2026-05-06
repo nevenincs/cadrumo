@@ -9,6 +9,7 @@ tuple. Errors from the underlying library and pathological inputs
 
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 
 import pdfplumber
@@ -42,4 +43,18 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
 
     if not any(pages):
         raise DeclaracionParseError(f"no text extracted from {pdf_path}; the PDF may be scan-only or XFA")
+    return pages
+
+
+def extract_pages_text_from_bytes(pdf_bytes: bytes, *, source_label: str = "in-memory PDF") -> tuple[str, ...]:
+    """Extract text from PDF bytes without materialising a plaintext file."""
+
+    try:
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
+    except Exception as exc:  # pragma: no cover - defensive; pdfplumber surface
+        raise DeclaracionParseError(f"pdfplumber could not open {source_label}: {exc}") from exc
+
+    if not any(pages):
+        raise DeclaracionParseError(f"no text extracted from {source_label}; the PDF may be scan-only or XFA")
     return pages

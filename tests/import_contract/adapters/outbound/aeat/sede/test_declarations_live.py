@@ -77,7 +77,7 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
     except SedeError as exc:
         pytest.skip(f"live walk failed (likely session-expired): {exc}")
 
-    # Ejercicio 2022 is the year Kent's M100 fixture was captured;
+    # Ejercicio 2022 is the year operator's M100 fixture was captured;
     # the live account should still expose it.
     assert isinstance(declarations, tuple)
     assert all(isinstance(d, Declaration) for d in declarations)

@@ -12,9 +12,8 @@ only as an informational comment line.
 
 The :class:`AutonomoProfile` carries the operator's NIF — IDENTITY
 class per the default policy table. :func:`write_profile_file` routes
-the write through the substrate's
-:func:`save_encrypted_envelope` helper at IDENTITY class so the
-on-disk record is always AES-256-GCM ciphertext.
+the write through the encrypted SQL secure-object backend, keyed by
+the configured profile path as a logical identifier.
 """
 
 from __future__ import annotations
@@ -26,15 +25,15 @@ from ...adapters.persistence.profile import save_tax_residence
 from ...core.env_io import write_env_vars
 from ...core.logging import get_logger
 from ...domain.deadlines import AutonomoProfile
-from ...domain.profile import KentTaxResidence
+from ...domain.profile import TaxResidenceProfile
 from ._models import SetupAnswers
 
 log = get_logger(__name__)
 
 
 _PASSWORD_COMMENT_PREFIX = "# PKCS#12 password sourced from env var: "
-_HKDF_CONTEXT_SETUP_PROFILE = b"aeat.application.setup.profile.v1"
-_PROFILE_ENVELOPE_VERSION = 1
+_PROFILE_NAMESPACE = "aeat.application.setup.profile"
+_PROFILE_VERSION = 1
 
 
 def owned_env_keys() -> tuple[str, ...]:
@@ -141,22 +140,19 @@ def write_env_file(answers: SetupAnswers, target: Path) -> None:
 
 
 def write_profile_file(answers: SetupAnswers, target: Path) -> None:
-    """Persist the user's :class:`AutonomoProfile` as ciphertext at ``target``.
+    """Persist the user's :class:`AutonomoProfile` as an encrypted secure object.
 
-    The profile file is consumed by ``aeat deadlines`` and is separate
-    from the env file so the wizard never has to hand-craft JSON for
-    a nested record. The profile carries the operator's NIF — IDENTITY
-    class per the default policy table — so the write routes through
-    :func:`save_encrypted_envelope` and lands as a
-    :class:`CipherEnvelope` on disk under HKDF context
-    ``aeat.application.setup.profile.v1``.
+    The profile is consumed by ``aeat deadlines`` and is separate from the env
+    file so the wizard never has to hand-craft JSON for a nested record. The
+    configured ``target`` remains the logical profile identity, but no JSON or
+    envelope file is materialized there.
 
     On a brand-new installation the master key is minted as a side
-    effect of the first ``save_encrypted_envelope`` call; this helper
-    detects that case and emits a one-line nudge pointing the operator
-    at ``aeat security provision --force`` so they can generate a
-    recovery key. Existing installations (where ``master.kdf`` already
-    exists, or the keyring entry is populated) skip the nudge.
+    effect of the first secure-object write; this helper detects that case and
+    emits a one-line nudge pointing the operator at
+    ``aeat security provision --force`` so they can generate a recovery key.
+    Existing installations (where ``master.kdf`` already exists, or the
+    keyring entry is populated) skip the nudge.
 
     Args:
         answers: Validated :class:`SetupAnswers` payload.
@@ -167,21 +163,15 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     # does not pull Alembic plugin discovery into every CLI command's
     # startup path. Mirrors the json-pipe-safety discipline applied to
     # every other governed-persistence consumer.
-    from ...adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        exclusive_file_lock,
-        refuse_unsecured_with_real_nif,
-        save_encrypted_envelope,
-    )
+    from ...adapters.persistence.storage import SensitivityClass, refuse_unsecured_with_real_nif
     from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
     from ...core.config import load_settings
 
     # Detect first-run state so we can surface a recovery-key nudge
-    # after the silent mint that save_encrypted_envelope triggers. The
-    # check looks at file-fallback artefacts; keyring-only stores have
-    # no on-disk signal and are silent by design (the OS keychain is
-    # the trust boundary).
+    # after the silent mint that secure-object encryption triggers. The check
+    # looks at file-fallback artefacts; keyring-only stores have no on-disk
+    # signal and are silent by design (the OS keychain is the trust boundary).
     settings = load_settings()
     secret_dir = Path(settings.aeat_secret_store_dir)
     pre_mint_state_present = (secret_dir / "master.kdf").exists()
@@ -205,36 +195,22 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
     # deterministic master key.
     provider = _resolve_master_key_provider()
     refuse_unsecured_with_real_nif(profile.tax_id, provider=provider)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    envelope = Envelope[AutonomoProfile](
-        schema_version=_PROFILE_ENVELOPE_VERSION,
-        written_at=datetime.now(UTC),
+    SecureObjectRepository().save(
+        namespace=_PROFILE_NAMESPACE,
+        object_key=_profile_object_key(target),
         classification=SensitivityClass.IDENTITY,
-        payload=profile,
+        schema_version=_PROFILE_VERSION,
+        written_at=datetime.now(UTC),
+        payload=profile.model_dump_json().encode("utf-8"),
     )
-    # Acquire the writer-canonical sidecar lock so concurrent
-    # ``aeat security rotate-master-key`` cannot race the profile
-    # write. The lock target matches what
-    # ``RotationPlanEntry.lock_path_for`` resolves to for a single-
-    # file consumer (``target.with_suffix('.lock')``); the
-    # alignment thus engages OS-level serialisation between rotation
-    # and writer.
-    with exclusive_file_lock(target.with_suffix(".lock")):
-        save_encrypted_envelope(
-            envelope,
-            target,
-            master_key_provider=provider,
-            hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
-        )
-    save_tax_residence(KentTaxResidence(ccaa=answers.tax_residence_ccaa))
-    log.info("setup: wrote AutonomoProfile envelope to %s", target)
+    save_tax_residence(TaxResidenceProfile(ccaa=answers.tax_residence_ccaa))
+    log.info("setup: wrote AutonomoProfile secure object for %s", target)
 
-    # Recovery-key nudge: if save_encrypted_envelope just minted a new
-    # master key (signalled by the post-write existence of master.kdf
-    # when no master.kdf existed pre-write), the operator now has an
-    # encrypted profile but no recovery wrapping. Without a recovery
-    # key, a forgotten passphrase / lost keychain means losing every
-    # persisted record.
+    # Recovery-key nudge: if secure-object encryption just minted a new master
+    # key (signalled by the post-write existence of master.kdf when no
+    # master.kdf existed pre-write), the operator now has an encrypted profile
+    # but no recovery wrapping. Without a recovery key, a forgotten passphrase
+    # / lost keychain means losing every persisted record.
     if (
         not pre_mint_state_present
         and (secret_dir / "master.kdf").exists()
@@ -250,12 +226,12 @@ def write_profile_file(answers: SetupAnswers, target: Path) -> None:
 
 
 def load_profile_envelope(target: Path) -> AutonomoProfile:
-    """Load the operator's :class:`AutonomoProfile` from a setup envelope.
+    """Load the operator's :class:`AutonomoProfile` from secure-object storage.
 
-    The setup wizard writes the profile through
-    :func:`save_encrypted_envelope`. Downstream consumers (the
-    ``aeat deadlines`` CLI) round-trip through this helper rather than
-    parsing the file as plaintext JSON.
+    The setup wizard writes the profile through the encrypted SQL
+    secure-object backend. Downstream consumers (the ``aeat deadlines`` CLI)
+    round-trip through this helper rather than parsing a file as plaintext
+    JSON.
 
     Args:
         target: Absolute path to the setup-profile envelope file.
@@ -263,19 +239,21 @@ def load_profile_envelope(target: Path) -> AutonomoProfile:
     Returns:
         The validated :class:`AutonomoProfile` payload.
     """
-    from ...adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        load_encrypted_envelope,
-    )
-    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage import SensitivityClass
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
-    envelope = load_encrypted_envelope(
-        target,
-        Envelope[AutonomoProfile],
+    record = SecureObjectRepository().load(
+        _PROFILE_NAMESPACE,
+        _profile_object_key(target),
         expected_class=SensitivityClass.IDENTITY,
-        master_key_provider=_resolve_master_key_provider(),
-        hkdf_context=_HKDF_CONTEXT_SETUP_PROFILE,
-        max_supported_version=_PROFILE_ENVELOPE_VERSION,
+        max_supported_version=_PROFILE_VERSION,
     )
-    return envelope.payload
+    if record is None:
+        raise FileNotFoundError(f"setup profile secure object not found for {target}")
+    return AutonomoProfile.model_validate_json(record.payload)
+
+
+def _profile_object_key(target: Path) -> str:
+    """Return the secure-object natural key for a logical profile path."""
+
+    return target.expanduser().resolve().as_posix()

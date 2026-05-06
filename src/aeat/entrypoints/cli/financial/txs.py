@@ -530,7 +530,7 @@ def classify_llm_cmd(
             response_category=effective_category,
             pct_override=resolved_pct_override,
         )
-        combined_reason = _combine_reason(kent_reason=reason, llm_reason=response.reason)
+        combined_reason = _combine_reason(operator_reason=reason, llm_reason=response.reason)
         llm_suffix = tr("cli.txs.classify_llm.llm_suffix")
         confidence = canonical_decimal(response.confidence)
         line = f"{prefix} {response.classification.value} @ {confidence}{llm_suffix}{combined_reason}"
@@ -664,20 +664,20 @@ def _resolve_effective_pct(
     return None
 
 
-def _combine_reason(*, kent_reason: str | None, llm_reason: str) -> str:
+def _combine_reason(*, operator_reason: str | None, llm_reason: str) -> str:
     """Combine an optional operator-authored reason with the LLM's rationale.
 
     Args:
-        kent_reason: Optional operator justification.
+        operator_reason: Optional operator justification.
         llm_reason: Mandatory LLM rationale.
 
     Returns:
         Either ``llm_reason`` alone (when no operator reason was given)
-        or ``"<kent_reason> — LLM: <llm_reason>"``.
+        or ``"<operator_reason> — LLM: <llm_reason>"``.
     """
-    if kent_reason is None or not kent_reason.strip():
+    if operator_reason is None or not operator_reason.strip():
         return llm_reason
-    return f"{kent_reason.strip()} — LLM: {llm_reason}"
+    return f"{operator_reason.strip()} — LLM: {llm_reason}"
 
 
 def _parse_tier(raw: str | None) -> ModelTier:

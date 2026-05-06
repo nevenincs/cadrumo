@@ -1,3 +1,11 @@
+---
+tags:
+  - '#exec'
+  - '#profile-keys-i18n-migration'
+date: '2025-02-13'
+related: []
+---
+
 # Execution Record - Profile Keys i18n Migration
 
 Migration of profile key descriptions from hardcoded values in `_keys.py` to the i18n system.

@@ -562,9 +562,9 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls"
-sha256 = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
-bytes = 180736
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx"
+sha256 = "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f"
+bytes = 39633
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR130e15v12.xls"
@@ -674,9 +674,9 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xls"
-sha256 = "ad26dbb538caaba681d6869e7ef7c8d472602f55f94b7adf67e1f011402d97af"
-bytes = 182784
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx"
+sha256 = "3a533d3f4cb888416da9ccfe856c1252001233303d712a83d7efc5b214b9add0"
+bytes = 39564
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls"
@@ -698,9 +698,9 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls"
-sha256 = "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694"
-bytes = 176640
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_115/files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx"
+sha256 = "b2c9f24fe77967ec460d355efb0a21158a4c41b53745524c70ae37a2634839a0"
+bytes = 40607
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls"
@@ -837,9 +837,9 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
-sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"
-bytes = 194560
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx"
+sha256 = "835520ea0edf8d182e7e5c839920a208040fcdc78c97d1628d5433518ef2f2dd"
+bytes = 38812
 retrieved_at = 2026-05-03
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
@@ -849,9 +849,9 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"
-sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"
-bytes = 173568
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx"
+sha256 = "035c322eadef3cd90211734216dc5e308c3f213b9a22226be8b4b67f8886a4d4"
+bytes = 38734
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2023-12-31
@@ -862,9 +862,9 @@ review_status = "reviewed"
 evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "form_spec"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
-sha256 = "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4"
-bytes = 194560
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt"
+sha256 = "8b231a85b7df3eb49d5cc8c5d1b8cbd5a99b5e93a1063fee1348191035aa4594"
+bytes = 7077
 retrieved_at = 2026-05-03
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls"
@@ -874,9 +874,9 @@ review_status = "reviewed"
 evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "form_spec"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls"
-sha256 = "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd"
-bytes = 173568
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_123/files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt"
+sha256 = "5e02b4d3096b8241c563074e63926ff913b44ce692b8ebf1f0f5c2ef0148e913"
+bytes = 6472
 retrieved_at = 2026-05-03
 applies_from = 2019-01-01
 applies_to = 2023-12-31
@@ -1148,6 +1148,177 @@ required_text = [
     "Artículo 3",
     "Modelo D-100",
     "Declaración del Impuesto sobre la Renta de las Personas Físicas. Ejercicio 2025",
+]
+
+[legal."ley-35-2006:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-17"
+document_id = "BOE-A-2006-20764"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del trabajo en Modelo 100."
+required_text = [
+    "rendimientos integros del trabajo",
+    "trabajo personal",
+]
+
+[legal."ley-35-2006:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-18"
+document_id = "BOE-A-2006-20764"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a18"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para reducciones de determinados rendimientos del trabajo en Modelo 100."
+required_text = [
+    "reducciones aplicables",
+    "rendimientos del trabajo",
+]
+
+[legal."ley-35-2006:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-19"
+document_id = "BOE-A-2006-20764"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a19"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimiento neto y gastos deducibles del trabajo en Modelo 100."
+required_text = [
+    "rendimiento neto del trabajo",
+    "gastos deducibles",
+]
+
+[legal."ley-35-2006:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-20"
+document_id = "BOE-A-2006-20764"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a20"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para reduccion por obtencion de rendimientos del trabajo en Modelo 100."
+required_text = [
+    "reduccion por obtencion de rendimientos del trabajo",
+    "rendimiento neto del trabajo",
+]
+
+[legal."ley-35-2006:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-22"
+document_id = "BOE-A-2006-20764"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a22"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del capital inmobiliario en Modelo 100."
+required_text = [
+    "rendimientos integros del capital inmobiliario",
+    "bienes inmuebles",
+]
+
+[legal."ley-35-2006:art-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-23"
+document_id = "BOE-A-2006-20764"
+article = "23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a23"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para gastos deducibles y reducciones del capital inmobiliario en Modelo 100."
+required_text = [
+    "gastos deducibles",
+    "rendimiento neto del capital inmobiliario",
+]
+
+[legal."ley-35-2006:art-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-24"
+document_id = "BOE-A-2006-20764"
+article = "24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a24"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimiento minimo computable en caso de parentesco en capital inmobiliario."
+required_text = [
+    "rendimiento minimo computable",
+    "parentesco",
+]
+
+[legal."ley-35-2006:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-25"
+document_id = "BOE-A-2006-20764"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a25"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para rendimientos integros del capital mobiliario en Modelo 100."
+required_text = [
+    "rendimientos integros del capital mobiliario",
+    "dividendos",
+]
+
+[legal."ley-35-2006:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-26"
+document_id = "BOE-A-2006-20764"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a26"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para gastos deducibles, rendimiento neto y reducciones de capital mobiliario en Modelo 100."
+required_text = [
+    "gastos deducibles",
+    "rendimiento neto del capital mobiliario",
 ]
 
 [sources."boe-modelo-100-2025-form"]

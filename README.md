@@ -46,7 +46,7 @@ files from the CLI. The project does not submit filings to AEAT.
 - **Builds typed filing drafts** for the supported modelos by joining
   validated registry definitions, the manual práctico, and the live
   normative corpus.
-- **Exports and verifies filing files** for Kent to upload manually in
+- **Exports and verifies filing files** for operator to upload manually in
   AEAT's official portal. There is no live-submit or dry-run-submit CLI
   path.
 - **Self-heals local state** by reconciling AEAT's view with the
@@ -224,7 +224,7 @@ This is the local default. The flow is deliberately two-step:
 
 - `uv run aeat auth init --path desktop-oauth-local-dev` is the guided
   entrypoint. It prints the Cloud Console URL, explains why the step
-  exists, and tells Kent what to do next. The legacy
+  exists, and tells operator what to do next. The legacy
   `just gsuite-oauth-client` recipe is only a wrapper around this
   command.
 - After you download the JSON, run
@@ -238,7 +238,7 @@ This is the local default. The flow is deliberately two-step:
   `just gcloud-auth` only if you still need the legacy ADC-backed
   wrapper path.
 - `uv run aeat oauth-client init` still exists as the low-level
-  compatibility helper, but the normal Kent-facing path is
+  compatibility helper, but the normal operator-facing path is
   `uv run aeat auth init`.
 - If `aeat doctor` reports a required `Drive round-trip` failure with a
   stale Desktop OAuth token, rerun
@@ -372,7 +372,7 @@ Apache 2.0 — see [LICENSE](LICENSE).
 Tax automation is legally significant. **This project is not a
 substitute for professional tax advice and is not affiliated with the
 Agencia Estatal de Administración Tributaria (AEAT).** Every
-live AEAT submission is permanently forbidden in this codebase; Kent
+live AEAT submission is permanently forbidden in this codebase; operator
 uploads any exported filing through AEAT's official tools himself. Use
 at your own risk. The authors accept no liability for filings produced
 or actions taken with this software. If in doubt, consult a qualified

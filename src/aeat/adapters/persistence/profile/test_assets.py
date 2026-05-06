@@ -11,23 +11,28 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from ....domain.profile.assets import AmortizationEntry, AmortizationLedger, AssetClass, AssetRecord
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ..storage.sql import dispose_engine
 from .assets import load_amortization_ledger, load_assets, save_amortization_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key() -> Iterator[None]:
+def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     override_master_key_provider(EphemeralMasterKeyProvider())
     try:
         yield
     finally:
         override_master_key_provider(None)
+        dispose_engine()
 
 
 def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00") -> AssetRecord:
@@ -49,7 +54,7 @@ def test_asset_persistence_round_trip(tmp_path) -> None:
     assert loaded == (asset,)
 
 
-def test_asset_persistence_is_encrypted_financial_envelope(tmp_path) -> None:
+def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> None:
     asset = AssetRecord(
         identifier="nas",
         description="LEAK-CANARY-NAS",
@@ -64,11 +69,11 @@ def test_asset_persistence_is_encrypted_financial_envelope(tmp_path) -> None:
     )
 
     path = save_assets((asset,), storage_dir=tmp_path)
-    text = path.read_text(encoding="utf-8")
+    db_bytes = (tmp_path / "aeat.db").read_bytes()
 
-    assert '"classification":"financial"' in text
-    assert '"encryption":' in text
-    assert "LEAK-CANARY-NAS" not in text
+    assert not path.exists()
+    assert b"LEAK-CANARY-NAS" not in db_bytes
+    assert b'"nas"' not in db_bytes
 
 
 def test_amortization_ledger_persistence_round_trip(tmp_path) -> None:

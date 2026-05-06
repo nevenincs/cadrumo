@@ -13,7 +13,7 @@ _CASILLA_RE = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
 
 type ModeloId = Annotated[str, Field(pattern=_MODELO_RE)]
 type RevisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
-type CasillaId = Annotated[str, Field(min_length=1, max_length=32, pattern=_CASILLA_RE)]
+type CasillaId = Annotated[str, Field(min_length=1, max_length=64, pattern=_CASILLA_RE)]
 type FormulaId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ParameterId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type BindingId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]

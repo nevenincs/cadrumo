@@ -32,21 +32,19 @@ Design notes:
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import hashlib
 import json
 import os
-import tempfile
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast, runtime_checkable
 
 from playwright.async_api import Error as PlaywrightError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.logging import get_logger
+from . import _session_store
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
     AuthLoginAssertionDetail,
@@ -97,7 +95,7 @@ AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
 
 
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
-"""Schema version for the persisted AEAT session metadata sidecar."""
+"""Schema version for the persisted AEAT session metadata."""
 
 
 _MARKER_ATTR = CERTIFICATE_CONTEXT_MARKER
@@ -319,6 +317,7 @@ class BrowserSessionLike(Protocol):
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
+        storage_state: dict[str, Any] | None = None,
     ) -> BrowserContextLike: ...
 
 
@@ -472,7 +471,7 @@ class AeatAuthenticator:
                 )
             target = target_url or self._settings.aeat_certificate_verify_url
             resume_path = self._resolve_storage_state_path(browser_session)
-            if resume_path.exists() or self._metadata_path_for(resume_path).exists():
+            if _session_store.exists(resume_path):
                 try:
                     return await self._resume_from_storage_state_locked(
                         resume_path,
@@ -685,7 +684,7 @@ class AeatAuthenticator:
         return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
-        """Persist the active Playwright storage state and AEAT sidecar."""
+        """Persist the active Playwright storage state and AEAT metadata."""
         async with self._lock:
             if self._active_session != session:
                 raise AeatLoginAssertionError(
@@ -870,14 +869,14 @@ class AeatAuthenticator:
         )
 
     async def _capture_storage_state_locked(self, session: AeatSession) -> Path:
-        """Persist the active Playwright storage-state and metadata sidecar."""
+        """Persist the active Playwright storage-state and metadata."""
         context = self._context
         if context is None:
             raise AeatLoginAssertionError("no active browser context; cannot capture storage_state")
 
         storage_state_path = session.storage_state_path or self._resolve_storage_state_path(self._browser_session)
-        self._write_json_atomic(storage_state_path, await context.storage_state())
-        storage_state_sha256 = self._validate_storage_state_file(storage_state_path)
+        storage_state = cast(dict[str, Any], await context.storage_state())
+        storage_state_sha256 = _session_store.storage_state_sha256(storage_state)
         certificate_thumbprint = session.certificate_thumbprint
         certificate_subject = session.certificate_subject
         handshake = session.handshake
@@ -894,9 +893,10 @@ class AeatAuthenticator:
             storage_state_sha256=storage_state_sha256,
             handshake=handshake,
         )
-        self._write_json_atomic(
-            self._metadata_path_for(storage_state_path),
-            metadata.model_dump(mode="json"),
+        _session_store.save(
+            storage_state_path,
+            storage_state=storage_state,
+            metadata=metadata.model_dump(mode="json"),
         )
         return storage_state_path
 
@@ -910,13 +910,14 @@ class AeatAuthenticator:
         """Resume a persisted Playwright state pair under ``self._lock``."""
         storage_state_path = path
         cert = self.load_certificate()
-        storage_state_sha256 = self._validate_storage_state_file(storage_state_path)
+        persisted = self._load_persisted_browser_session(storage_state_path)
+        storage_state_sha256 = persisted.storage_state_sha256
         metadata = self._read_persisted_metadata(storage_state_path)
 
         if metadata.storage_state_sha256 != storage_state_sha256:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                "persisted storage_state hash does not match metadata sidecar",
+                "persisted storage_state hash does not match metadata",
             )
         if metadata.idle_deadline <= datetime.now(UTC):
             self._raise_invalid_persisted_state(
@@ -944,7 +945,7 @@ class AeatAuthenticator:
                     cert,
                     origin=self._settings.aeat_certificate_verify_url,
                 ),
-                storage_state_path=storage_state_path,
+                storage_state=persisted.storage_state,
             )
             self._assert_context_marker(context, cert)
             session = AeatSession(
@@ -1038,29 +1039,36 @@ class AeatAuthenticator:
                 return storage_state_path
         return self._settings.aeat_token_dir / f"{self._settings.aeat_default_profile_name}-storage.json"
 
-    @staticmethod
-    def _metadata_path_for(storage_state_path: Path) -> Path:
-        """Return the metadata sidecar path for a storage-state JSON file."""
-        return storage_state_path.with_suffix(".meta.json")
+    def _load_persisted_browser_session(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
+        """Load encrypted browser session state or invalidate the logical path."""
+
+        try:
+            persisted = _session_store.load(storage_state_path)
+        except (ValueError, ValidationError) as exc:
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                f"persisted storage_state is malformed: {exc}",
+            )
+        if persisted is None:
+            self._raise_invalid_persisted_state(
+                storage_state_path,
+                f"persisted storage_state missing: {storage_state_path}",
+            )
+        return persisted
 
     def _read_persisted_metadata(self, storage_state_path: Path) -> _PersistedSessionMetadata:
-        """Load and validate the persisted metadata sidecar."""
-        metadata_path = self._metadata_path_for(storage_state_path)
-        if not metadata_path.exists():
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted metadata sidecar missing: {metadata_path}",
-            )
+        """Load and validate the persisted metadata."""
+        persisted = self._load_persisted_browser_session(storage_state_path)
         metadata: _PersistedSessionMetadata | None = None
         try:
-            metadata = _PersistedSessionMetadata.model_validate_json(metadata_path.read_text(encoding="utf-8"))
-        except (OSError, ValueError, ValidationError) as exc:
+            metadata = _PersistedSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+        except (ValueError, ValidationError) as exc:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                f"persisted metadata sidecar is malformed: {exc}",
+                f"persisted metadata is malformed: {exc}",
             )
         if metadata is None:
-            raise AeatLoginAssertionError("persisted metadata sidecar did not produce a parsed model")
+            raise AeatLoginAssertionError("persisted metadata did not produce a parsed model")
         if metadata.schema_version != AEAT_STORAGE_STATE_SCHEMA_VERSION:
             self._raise_invalid_persisted_state(
                 storage_state_path,
@@ -1069,27 +1077,14 @@ class AeatAuthenticator:
         return metadata
 
     def _validate_storage_state_file(self, storage_state_path: Path) -> str:
-        """Validate the Playwright storage-state JSON and return its SHA-256."""
-        if not storage_state_path.exists():
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted storage_state missing: {storage_state_path}",
-            )
-        raw = storage_state_path.read_bytes()
-        payload: Any = None
-        try:
-            payload = json.loads(raw.decode("utf-8"))
-        except (ValueError, UnicodeDecodeError) as exc:
-            self._raise_invalid_persisted_state(
-                storage_state_path,
-                f"persisted storage_state is not valid JSON: {exc}",
-            )
+        """Validate the encrypted Playwright storage-state and return its SHA-256."""
+        payload = self._load_persisted_browser_session(storage_state_path).storage_state
         if not isinstance(payload, dict):
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 "persisted storage_state root must be a JSON object",
             )
-        payload_dict = cast(dict[str, Any], payload)
+        payload_dict = payload
         if not isinstance(payload_dict.get("cookies"), list):
             self._raise_invalid_persisted_state(
                 storage_state_path,
@@ -1100,73 +1095,21 @@ class AeatAuthenticator:
                 storage_state_path,
                 "persisted storage_state is missing the origins array",
             )
-        return hashlib.sha256(raw).hexdigest()
+        return _session_store.storage_state_sha256(payload_dict)
 
-    def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> None:
+    def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> NoReturn:
         """Delete the persisted state pair and raise a typed invalidation error."""
         self._invalidate_persisted_state(storage_state_path, reason)
         raise _PersistedSessionInvalidError(reason)
 
     def _invalidate_persisted_state(self, storage_state_path: Path, reason: str) -> None:
         """Best-effort delete of the persisted state pair."""
-        metadata_path = self._metadata_path_for(storage_state_path)
-        for candidate in (storage_state_path, metadata_path):
-            try:
-                candidate.unlink(missing_ok=True)
-            except OSError as exc:
-                log.warning(
-                    "AeatAuthenticator: failed to remove invalid persisted session file %s: %s",
-                    candidate,
-                    exc,
-                )
+        _session_store.delete(storage_state_path)
         log.info(
             "AeatAuthenticator: invalidated persisted session at %s (%s)",
             storage_state_path,
             reason,
         )
-
-    def _write_json_atomic(self, path: Path, payload: Any) -> None:
-        """Atomically write ``payload`` as JSON to ``path``."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        json_text = json.dumps(payload, indent=2, sort_keys=True)
-        tmp_path: Path | None = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                dir=str(path.parent),
-                prefix=f".{path.name}.",
-                suffix=".tmp",
-                mode="w",
-                encoding="utf-8",
-                newline="\n",
-                delete=False,
-            ) as handle:
-                tmp_path = Path(handle.name)
-                handle.write(json_text)
-                handle.write("\n")
-                handle.flush()
-                os.fsync(handle.fileno())
-            self._restrict_file_permissions(tmp_path)
-            os.replace(tmp_path, path)
-            from .....core.locks import fsync_parent_dir
-
-            fsync_parent_dir(path)
-            self._restrict_file_permissions(path)
-        finally:
-            if tmp_path is not None:
-                with contextlib.suppress(FileNotFoundError):
-                    tmp_path.unlink()
-
-    @staticmethod
-    def _restrict_file_permissions(path: Path) -> None:
-        """Best-effort user-only permissions for persisted session files.
-
-        Delegates to :func:`aeat.core.file_permissions.restrict_file_permissions`
-        so the Windows ACL hardening discipline is shared with the
-        Cl@ve Móvil provider.
-        """
-        from .....core.file_permissions import restrict_file_permissions
-
-        restrict_file_permissions(path)
 
     def _require_bundle(self) -> CertificateBundle:
         """Assemble a :class:`CertificateBundle` from ``settings``.

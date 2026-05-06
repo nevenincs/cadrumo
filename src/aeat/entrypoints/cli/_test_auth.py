@@ -13,11 +13,30 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ...adapters.outbound.google._paths import (
+    google_oauth_client_cache_exists,
+    google_service_account_cache_exists,
+    save_oauth_token_cache,
+)
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.sql import dispose_engine
 from . import auth as auth_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _secure_object_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 def test_desktop_auth_init_imports_client_and_prepares_mcp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -26,7 +45,8 @@ def test_desktop_auth_init_imports_client_and_prepares_mcp(tmp_path: Path, monke
     (tmp_path / "env" / ".env.example").write_text("GOOGLE_CLOUD_PROJECT=test-project\n", encoding="utf-8")
     token_dir = tmp_path / ".tokens"
     token_dir.mkdir(parents=True, exist_ok=True)
-    (token_dir / "google_oauth_token.json").write_text(
+    save_oauth_token_cache(
+        token_dir / "google_oauth_token.json",
         (
             '{"refresh_token": "refresh", "scopes": ['
             '"https://www.googleapis.com/auth/drive",'
@@ -37,7 +57,6 @@ def test_desktop_auth_init_imports_client_and_prepares_mcp(tmp_path: Path, monke
             '"openid"'
             "]}"
         ),
-        encoding="utf-8",
     )
     oauth_json = tmp_path / "downloads" / "oauth-client.json"
     oauth_json.parent.mkdir(parents=True, exist_ok=True)
@@ -63,11 +82,14 @@ def test_desktop_auth_init_imports_client_and_prepares_mcp(tmp_path: Path, monke
     )
 
     assert result.exit_code == 0
-    assert "Next: uv run aeat doctor" in result.output
+    assert "Authentication status verified" in result.output
     env_text = (tmp_path / "env" / ".env").read_text(encoding="utf-8")
     assert "GOOGLE_AUTH_PATH=desktop-oauth-local-dev" in env_text
-    assert "GOOGLE_OAUTH_CLIENT_ID=client-id" in env_text
-    assert (tmp_path / "env" / "oauth-client.json").exists()
+    assert "GOOGLE_OAUTH_CLIENT_ID" not in env_text
+    assert "GOOGLE_OAUTH_CLIENT_SECRET" not in env_text
+    assert "GOOGLE_OAUTH_CLIENT_JSON=" in env_text
+    assert google_oauth_client_cache_exists(tmp_path / "env" / "oauth-client.secure-object")
+    assert not (tmp_path / "env" / "oauth-client.json").exists()
     assert (tmp_path / "env" / "workspace-mcp-credentials").exists()
 
 
@@ -95,7 +117,8 @@ def test_service_account_auth_init_imports_key(tmp_path: Path, monkeypatch: pyte
     env_text = (tmp_path / "env" / ".env").read_text(encoding="utf-8")
     assert "GOOGLE_AUTH_PATH=service-account-automation" in env_text
     assert "GOOGLE_APPLICATION_CREDENTIALS=" in env_text
-    assert (tmp_path / "env" / "service-account.json").exists()
+    assert google_service_account_cache_exists(tmp_path / "env" / "service-account.secure-object")
+    assert not (tmp_path / "env" / "service-account.json").exists()
     assert (tmp_path / "env" / "workspace-mcp-credentials").exists()
 
 

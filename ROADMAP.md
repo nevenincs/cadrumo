@@ -1,22 +1,22 @@
 # aeat roadmap
 
-This roadmap is written for **Kent** — our target user, a Spanish autónomo who needs to file his tax returns (modelos 130, 303, 390, ...) without being an AEAT domain expert.
+This roadmap is written for **operator** — our target user, a Spanish autónomo who needs to file his tax returns (modelos 130, 303, 390, ...) without being an AEAT domain expert.
 
-Every milestone answers ONE question: **_"What can Kent do at the end of this milestone that he could not do at the start?"_** Every milestone has ONE observable success moment — a single event that proves the milestone shipped.
+Every milestone answers ONE question: **_"What can operator do at the end of this milestone that he could not do at the start?"_** Every milestone has ONE observable success moment — a single event that proves the milestone shipped.
 
-Our product direction is **produce → verify → export**. The tool helps Kent produce verifiable filing data, lets him review and approve it, and exports an AEAT-importable file. Kent uploads the file himself via the AEAT portal. **The tool never submits on Kent's behalf.**
+Our product direction is **produce → verify → export**. The tool helps operator produce verifiable filing data, lets him review and approve it, and exports an AEAT-importable file. operator uploads the file himself via the AEAT portal. **The tool never submits on operator's behalf.**
 
-See also: product charter [#197](https://github.com/wgergely/aeat/issues/197) · PM governance [#240](https://github.com/wgergely/aeat/issues/240) · ADR [`export-first`](.vault/adr/2026-04-17-export-first-adr.md) · Kent journey audits [first-file](.vault/audit/2026-04-17-kent-ux-journey-audit.md) · [revise/review](.vault/audit/2026-04-17-kent-revise-review-audit.md).
+See also: product charter [#197](https://github.com/wgergely/aeat/issues/197) · PM governance [#240](https://github.com/wgergely/aeat/issues/240) · ADR [`export-first`](.vault/adr/2026-04-17-export-first-adr.md) · operator journey audits [first-file](.vault/audit/2026-04-17-operator-ux-journey-audit.md) · [revise/review](.vault/audit/2026-04-17-operator-revise-review-audit.md).
 
 ---
 
-## 0.0.2 — Kent can install the tool and see what he owes
+## 0.0.2 — operator can install the tool and see what he owes
 
 ### success moment
 
-On a clean laptop, Kent runs `git clone && just bootstrap && aeat setup && aeat deadlines list --year 2026` and sees a table of his upcoming modelos with due dates. Zero hand-edited JSON, zero Python tracebacks.
+On a clean laptop, operator runs `git clone && just bootstrap && aeat setup && aeat deadlines list --year 2026` and sees a table of his upcoming modelos with due dates. Zero hand-edited JSON, zero Python tracebacks.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Install without hitting dead ends in `just bootstrap` ([#209](https://github.com/wgergely/aeat/issues/209))
 - See the GCP-project prerequisite documented up front ([#210](https://github.com/wgergely/aeat/issues/210))
@@ -38,13 +38,13 @@ On a clean laptop, Kent runs `git clone && just bootstrap && aeat setup && aeat 
 
 ---
 
-## 0.1.0 — Kent can feed his bank data in and trust the classification
+## 0.1.0 — operator can feed his bank data in and trust the classification
 
 ### success moment
 
-Kent imports three bank CSVs (BBVA, Wise EUR, Wise GBP — multi-currency work waits for 0.3.1 but the single-currency path must be complete) with one command. The pipeline classifies most rows automatically, leaves a small review queue, and gives Kent a single `aeat pipeline status --period 2026Q1` dashboard showing confidence scores per decision. **No live AEAT reads required** — the full T1→T6 pipeline works locally.
+operator imports three bank CSVs (BBVA, Wise EUR, Wise GBP — multi-currency work waits for 0.3.1 but the single-currency path must be complete) with one command. The pipeline classifies most rows automatically, leaves a small review queue, and gives operator a single `aeat pipeline status --period 2026Q1` dashboard showing confidence scores per decision. **No live AEAT reads required** — the full T1→T6 pipeline works locally.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Import bank statements and have them persisted in one command ([#216](https://github.com/wgergely/aeat/issues/216))
 - Bulk-classify transactions via rules, not one at a time ([#217](https://github.com/wgergely/aeat/issues/217))
@@ -59,17 +59,17 @@ Kent imports three bank CSVs (BBVA, Wise EUR, Wise GBP — multi-currency work w
 
 ---
 
-## 0.1.5 — Codebase Restructure (tooling intermission, NOT a Kent-capability milestone)
+## 0.1.5 — Codebase Restructure (tooling intermission, NOT a operator-capability milestone)
 
 ### why this exists as a milestone
 
-Conscious project-mandate exception. Project mandates require every milestone to ship a Kent-observable success moment; this one does not. It is a **tooling intermission** that re-aligns `src/aeat/` to a hexagonal `domain/` + `adapters/{inbound,outbound,persistence}/` + `application/` + `entrypoints/{cli,mcp}/` + `core/` layout so every future capability ships under stable, layered destinations and boundary violations fail CI.
+Conscious project-mandate exception. Project mandates require every milestone to ship a operator-observable success moment; this one does not. It is a **tooling intermission** that re-aligns `src/aeat/` to a hexagonal `domain/` + `adapters/{inbound,outbound,persistence}/` + `application/` + `entrypoints/{cli,mcp}/` + `core/` layout so every future capability ships under stable, layered destinations and boundary violations fail CI.
 
 ### why now (the natural break)
 
 - 0.1.0 just landed its keystone (#218 T6 aggregation); the pipeline middle is real
 - 0.1.1 is calendar-blocked on #279 auth EPIC (no active children); free runway
-- 0.2.0 is gated on #390 (Kent-first CLI wireframe ADR) which the restructure subsumes — letting the 33-iteration CLI hardening EPIC #392 run under the OLD `cli/` path means churning every test post-move
+- 0.2.0 is gated on #390 (operator-first CLI wireframe ADR) which the restructure subsumes — letting the 33-iteration CLI hardening EPIC #392 run under the OLD `cli/` path means churning every test post-move
 - 6 agent slots are free; mechanical-in-bulk work fits parallel-slot delivery
 - `submission/` → `export/` rename matches the export-first charter; doing it later means another mass rename
 
@@ -96,13 +96,13 @@ ADR `2026-04-30-aeat-restructure-adr.md` (status: **accepted — execution-ready
 
 ---
 
-## 0.1.1 — Kent can see his AEAT filing history and inbox
+## 0.1.1 — operator can see his AEAT filing history and inbox
 
 ### success moment
 
-After pluggable auth lands (P12 certificate or Cl@ve), Kent runs `aeat status expedientes` and sees every return he has previously filed with AEAT — with casilla-level values, not just metadata. `aeat inbox list` shows pending notifications fetched live from his buzón electrónico.
+After pluggable auth lands (P12 certificate or Cl@ve), operator runs `aeat status expedientes` and sees every return he has previously filed with AEAT — with casilla-level values, not just metadata. `aeat inbox list` shows pending notifications fetched live from his buzón electrónico.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Authenticate against AEAT Sede Electrónica via a pluggable Auth Provider (P12 cert or Cl@ve 2FA) ([#141](https://github.com/wgergely/aeat/issues/141), [#270](https://github.com/wgergely/aeat/issues/270))
 - Retrieve previously-filed casilla values from AEAT ([#272](https://github.com/wgergely/aeat/issues/272)) — **load-bearing for revise** (originally #222; closed 2026-04-18 and rescoped under #272 for the cert-dependent live path and #305 for the PDF-verified import path)
@@ -111,13 +111,13 @@ After pluggable auth lands (P12 certificate or Cl@ve), Kent runs `aeat status ex
 
 ---
 
-## 0.2.0 — Kent can produce, review, approve, and export his Modelo 130
+## 0.2.0 — operator can produce, review, approve, and export his Modelo 130
 
 ### success moment
 
-Kent runs `aeat workflow next` for Q1 2026. The tool computes his Modelo 130, shows him every casilla with formula and operand values inline, he runs `aeat review approve`, then `aeat submission export`, uploads the `.130` file himself via AEAT's portal — and AEAT accepts it.
+operator runs `aeat workflow next` for Q1 2026. The tool computes his Modelo 130, shows him every casilla with formula and operand values inline, he runs `aeat review approve`, then `aeat submission export`, uploads the `.130` file himself via AEAT's portal — and AEAT accepts it.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Build a Modelo 130 draft via a wizard (not by writing casilla-code JSON) ([#219](https://github.com/wgergely/aeat/issues/219))
 - See formula expressions + operand values inline during review ([#220](https://github.com/wgergely/aeat/issues/220))
@@ -125,17 +125,17 @@ Kent runs `aeat workflow next` for Q1 2026. The tool computes his Modelo 130, sh
 - Export an AEAT-importable fichero BOE file ([#201](https://github.com/wgergely/aeat/issues/201))
 - Upload the file himself via the AEAT portal (manual step — documented)
 
-**Live AEAT submission writes are NOT in scope for this milestone.** Kent self-files via the AEAT portal.
+**Live AEAT submission writes are NOT in scope for this milestone.** operator self-files via the AEAT portal.
 
 ---
 
-## 0.3.0 — Kent can handle 303, 390, and fix past filings
+## 0.3.0 — operator can handle 303, 390, and fix past filings
 
 ### success moment
 
-Kent files his quarterly Modelo 303 via the tool (produce + export + self-upload). Separately, he realises a past Modelo 303 had an error; he runs `aeat revise start --modelo 303 --period 2026Q1`; the tool fetches previously-filed casilla values from AEAT, walks him through the rectificativa wizard (post-Q3-2024 mechanism), and exports an amendment file AEAT accepts.
+operator files his quarterly Modelo 303 via the tool (produce + export + self-upload). Separately, he realises a past Modelo 303 had an error; he runs `aeat revise start --modelo 303 --period 2026Q1`; the tool fetches previously-filed casilla values from AEAT, walks him through the rectificativa wizard (post-Q3-2024 mechanism), and exports an amendment file AEAT accepts.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Compute Modelo 303 and Modelo 390 via the formula engine ([#221](https://github.com/wgergely/aeat/issues/221))
 - Import a past filing he made outside the tool ([#233](https://github.com/wgergely/aeat/issues/233))
@@ -144,26 +144,26 @@ Kent files his quarterly Modelo 303 via the tool (produce + export + self-upload
 
 ---
 
-## 0.3.1 — Kent can work with multi-currency income and expenses
+## 0.3.1 — operator can work with multi-currency income and expenses
 
 ### success moment
 
-Kent has GBP invoices via Wise and EUR invoices via BBVA. He runs the full pipeline; every transaction gets its correct base-currency (EUR) value per AEAT FX rules; his Modelo 130 accounts for FX gains/losses correctly. Retentions modelos (111, 115, 190) and operaciones con terceros (347) also become available.
+operator has GBP invoices via Wise and EUR invoices via BBVA. He runs the full pipeline; every transaction gets its correct base-currency (EUR) value per AEAT FX rules; his Modelo 130 accounts for FX gains/losses correctly. Retentions modelos (111, 115, 190) and operaciones con terceros (347) also become available.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Pipeline correctly handles multi-currency transactions end-to-end ([#103](https://github.com/wgergely/aeat/issues/103))
 - Compute + export Modelo 111 (retenciones), 115 (retenciones alquiler), 190 (resumen anual retenciones), 347 (operaciones con terceros)
 
 ---
 
-## 0.4.0 — Kent can trust the tool's alerts, staleness checks, and verification loop
+## 0.4.0 — operator can trust the tool's alerts, staleness checks, and verification loop
 
 ### success moment
 
-Kent leaves the tool for a week. When he returns, `aeat doctor` tells him: two new AEAT notifications arrived, one approved draft went stale because new transactions landed, one deadline is approaching, and his uploaded Q1 2026 Modelo 130 matches AEAT's record byte-for-byte.
+operator leaves the tool for a week. When he returns, `aeat doctor` tells him: two new AEAT notifications arrived, one approved draft went stale because new transactions landed, one deadline is approaching, and his uploaded Q1 2026 Modelo 130 matches AEAT's record byte-for-byte.
 
-### What Kent can do at the end of this milestone
+### What operator can do at the end of this milestone
 
 - Prove his exported numbers match AEAT's record ([#239](https://github.com/wgergely/aeat/issues/239) — aeat verify)
 - Get proactive alerts on new notifications, stale drafts, approaching deadlines
@@ -174,10 +174,10 @@ Kent leaves the tool for a week. When he returns, `aeat doctor` tells him: two n
 
 ## 1.0.0
 
-1.0.0 is reserved for the next major Kent capability after the
+1.0.0 is reserved for the next major operator capability after the
 verification loop closes in 0.4.0. Live AEAT submission is
 permanently out of scope; the product remains
-**produce → verify → export**, and Kent uploads the exported fichero
+**produce → verify → export**, and operator uploads the exported fichero
 via the AEAT portal himself.
 
 ---
@@ -188,14 +188,14 @@ via the AEAT portal himself.
 
 - Charter compliance check (CI gate — [#205](https://github.com/wgergely/aeat/issues/205))
 - Coverage matrices updated if relevant (`docs/coverage/`)
-- Regression-prevention test if closing a Kent wall
+- Regression-prevention test if closing a operator wall
 
 ### monthly (recurring audits)
 
 - Feature + modelo coverage matrix refresh ([#241](https://github.com/wgergely/aeat/issues/241))
 - Code duplication sweep ([#242](https://github.com/wgergely/aeat/issues/242))
 - Code health — complexity, coverage delta, dead code ([#243](https://github.com/wgergely/aeat/issues/243))
-- Kent journey regression — re-run every wall ([#244](https://github.com/wgergely/aeat/issues/244))
+- operator journey regression — re-run every wall ([#244](https://github.com/wgergely/aeat/issues/244))
 
 ### quarterly (strategic audits)
 
@@ -216,7 +216,7 @@ Up to six parallel agent slots across Claude, Codex, Gemini. An agent can pick u
 
 ## how to read this roadmap
 
-- **Kent** is the user. Every milestone speaks in his voice — what he can *do*, not what we shipped.
+- **operator** is the user. Every milestone speaks in his voice — what he can *do*, not what we shipped.
 - Milestones deliberately carry no calendar due dates yet. Scheduling happens when capacity conversations happen.
 - Charter [#197](https://github.com/wgergely/aeat/issues/197) is the supreme authority on product direction. PM charter [#240](https://github.com/wgergely/aeat/issues/240) is the supreme authority on how we deliver.
-- Two walls remain discoverable *only* via the monthly Kent-journey regression audit ([#244](https://github.com/wgergely/aeat/issues/244)) — we do not assume the current audit list is complete.
+- Two walls remain discoverable *only* via the monthly operator-journey regression audit ([#244](https://github.com/wgergely/aeat/issues/244)) — we do not assume the current audit list is complete.

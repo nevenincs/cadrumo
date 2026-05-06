@@ -1,23 +1,9 @@
 """Governed-persistence repository for filing amendments.
 
-Wraps the substrate's :class:`aeat.adapters.persistence.storage.Envelope`
-contract behind a small typed surface that the complementaria flow can
-call. Each amendment is persisted as its own envelope file
-(``<amendment_id>.envelope.json``) under ``aeat_submissions_dir /
-amendments/`` with a per-record
-:func:`aeat.adapters.persistence.storage.exclusive_file_lock`.
-
-**Sensitivity classification.** An amendment record captures the casilla
-delta the operator is filing as a corrective. That carries
-identity-bearing context plus arithmetic that drives the corrected tax due
-— :attr:`aeat.adapters.persistence.storage.SensitivityClass.AUDIT` per the
-default policy table (the amendment is the audit-grade evidence of *why*
-the filing was changed).
-
-Co-located with :mod:`aeat.domain.filing._repository` because the existing
-complementaria flow consumes both submitted-filing records (to derive the
-amendment's ``submission_id``) and amendment records (to persist the
-result).
+Filing amendments carry corrected casilla deltas and original
+submission references. They are stored as encrypted byte objects in the
+primary SQL backend at AUDIT sensitivity; no plaintext amendment JSON
+or envelope file lands on disk.
 """
 
 from __future__ import annotations
@@ -26,149 +12,113 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ...adapters.persistence.storage import (
-    Envelope,
-    SensitivityClass,
-    exclusive_file_lock,
-    load_encrypted_envelope,
-    safe_repository_id,
-    save_encrypted_envelope,
-)
-from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._amendment import FilingAmendment
-
-_HKDF_CONTEXT_AMENDMENT = b"aeat.application.filing.amendment.v1"
 
 _log = get_logger(__name__)
 
 _AMENDMENT_ENVELOPE_VERSION = 1
-_AMENDMENT_ENVELOPE_SUFFIX = ".envelope.json"
-_AMENDMENT_LOCK_SUFFIX = ".lock"
+_AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 
 
 class FilingAmendmentRepository:
-    """Repository over the per-amendment, file-locked, envelope-backed store."""
+    """Repository over encrypted SQL-backed filing amendments."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        """Bind the repository to a store directory.
-
-        Args:
-            store_dir: Directory where the per-amendment envelope
-                files and lock sidecars live. Created on first write.
-        """
-        self._store_dir = Path(store_dir)
+    def __init__(self, *, store_dir: Path | None = None) -> None:
+        del store_dir
+        self._objects = SecureObjectRepository()
 
     @property
     def store_dir(self) -> Path:
-        """Return the bound store directory."""
-        return self._store_dir
+        """Return a logical backend marker for diagnostic messages."""
+
+        return Path("db://secure_objects") / _AMENDMENT_NAMESPACE
 
     def envelope_path_for(self, amendment_id: str) -> Path:
-        """Return the canonical envelope path for ``amendment_id``."""
+        """Return a logical object marker for ``amendment_id``."""
+
         safe_repository_id(amendment_id, context="amendment_id")
-        return self._store_dir / f"{amendment_id}{_AMENDMENT_ENVELOPE_SUFFIX}"
+        return self.store_dir / amendment_id
 
     def lock_target_for(self, amendment_id: str) -> Path:
-        """Return the canonical lock-sidecar path for ``amendment_id``."""
+        """Return a logical lock marker; SQL transactions govern writes."""
+
         safe_repository_id(amendment_id, context="amendment_id")
-        return self._store_dir / f"{amendment_id}{_AMENDMENT_LOCK_SUFFIX}"
+        return self.store_dir / f"{amendment_id}.lock"
 
     def load(self, amendment_id: str) -> FilingAmendment | None:
-        """Return the persisted amendment or ``None`` if absent.
+        """Return the persisted amendment or ``None`` if absent."""
 
-        Args:
-            amendment_id: Repository-safe amendment identifier.
-
-        Returns:
-            The :class:`aeat.domain.filing._amendment.FilingAmendment`
-            payload, or ``None`` when no envelope exists.
-
-        Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
-                If the on-disk envelope's class is not AUDIT.
-            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
-                If the envelope schema version is higher than the consumer
-                supports.
-        """
-        target = self.envelope_path_for(amendment_id)
-        if not target.exists():
-            return None
-        envelope = load_encrypted_envelope(
-            target,
-            Envelope[FilingAmendment],
+        safe_repository_id(amendment_id, context="amendment_id")
+        record = self._objects.load(
+            _AMENDMENT_NAMESPACE,
+            amendment_id,
             expected_class=SensitivityClass.AUDIT,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_AMENDMENT,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         )
+        if record is None:
+            return None
+        envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.AUDIT:
+            raise ClassificationError(
+                f"filing amendment {amendment_id} has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.AUDIT}",
+            )
+        if envelope.schema_version > _AMENDMENT_ENVELOPE_VERSION:
+            raise EnvelopeVersionError(
+                f"filing amendment {amendment_id} is at version {envelope.schema_version}; "
+                f"consumer supports up to {_AMENDMENT_ENVELOPE_VERSION}",
+            )
         return envelope.payload
 
     def save(self, amendment: FilingAmendment) -> None:
-        """Persist ``amendment`` atomically under its per-record file lock.
+        """Persist ``amendment`` in the encrypted database object store."""
 
-        The on-disk envelope is AES-256-GCM ciphertext at AUDIT class —
-        no plaintext casilla delta or original-CSV reference lands on
-        disk.
-
-        Args:
-            amendment: Amendment payload to persist; its
-                ``amendment_id`` selects the envelope path.
-        """
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target_for(amendment.amendment_id)):
-            envelope = Envelope[FilingAmendment](
-                schema_version=_AMENDMENT_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=amendment,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path_for(amendment.amendment_id),
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_AMENDMENT,
-            )
+        safe_repository_id(amendment.amendment_id, context="amendment_id")
+        envelope = Envelope[FilingAmendment](
+            schema_version=_AMENDMENT_ENVELOPE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.AUDIT,
+            payload=amendment,
+        )
+        self._objects.save(
+            namespace=_AMENDMENT_NAMESPACE,
+            object_key=amendment.amendment_id,
+            classification=SensitivityClass.AUDIT,
+            schema_version=_AMENDMENT_ENVELOPE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
         _log.debug("saved filing amendment %s kind=%s", amendment.amendment_id, amendment.amendment_kind.value)
 
     def delete(self, amendment_id: str) -> bool:
-        """Remove the envelope for ``amendment_id``.
+        """Remove the persisted amendment for ``amendment_id``."""
 
-        Returns:
-            ``True`` when an envelope existed and was removed,
-            ``False`` when nothing was on disk.
-        """
-        target = self.envelope_path_for(amendment_id)
-        if not self._store_dir.exists():
-            return False
-        with exclusive_file_lock(self.lock_target_for(amendment_id)):
-            if not target.exists():
-                return False
-            target.unlink()
-        _log.debug("deleted filing amendment %s", amendment_id)
-        return True
+        safe_repository_id(amendment_id, context="amendment_id")
+        deleted = self._objects.delete(_AMENDMENT_NAMESPACE, amendment_id)
+        if deleted:
+            _log.debug("deleted filing amendment %s", amendment_id)
+        return deleted
 
     def list_amendment_ids(self) -> tuple[str, ...]:
         """Return every amendment id persisted in this repository."""
-        if not self._store_dir.exists():
-            return ()
+
         ids: list[str] = []
-        for path in self._store_dir.iterdir():
-            if not path.is_file():
-                continue
-            name = path.name
-            if not name.endswith(_AMENDMENT_ENVELOPE_SUFFIX):
-                continue
-            amendment_id = name[: -len(_AMENDMENT_ENVELOPE_SUFFIX)]
-            if not amendment_id:
-                continue
-            ids.append(amendment_id)
-        ids.sort()
-        return tuple(ids)
+        for record in self._objects.list_records(
+            _AMENDMENT_NAMESPACE,
+            expected_class=SensitivityClass.AUDIT,
+            max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
+        ):
+            envelope = Envelope[FilingAmendment].model_validate_json(record.payload.decode("utf-8"))
+            ids.append(envelope.payload.amendment_id)
+        return tuple(sorted(ids))
 
     def iter_amendments(self) -> Iterator[FilingAmendment]:
         """Yield every persisted amendment, in lexicographic id order."""
+
         for amendment_id in self.list_amendment_ids():
             payload = self.load(amendment_id)
             if payload is not None:

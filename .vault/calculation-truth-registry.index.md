@@ -205,6 +205,8 @@ related:
   - '[[2026-05-06-calculation-truth-registry-invoice-row-bindings]]'
   - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes-review]]'
   - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links-review]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-193-application-links-review]]'
@@ -315,6 +317,7 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-calculation-truth-registry-informative-workflow-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-invoice-row-bindings-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-invoice-row-indexes-review` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review` - Calculation Truth Registry Modelo 180 Workflow Linkage Review
 - `2026-05-06-calculation-truth-registry-modelo-190-application-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-193-application-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-200-application-links-review` - `calculation-truth-registry` Code Review
@@ -439,6 +442,7 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-calculation-truth-registry-informative-workflow-links` - `calculation-truth-registry` `informative-modelos` `workflow-links`
 - `2026-05-06-calculation-truth-registry-invoice-row-bindings` - `calculation-truth-registry` `factual invoice row bindings`
 - `2026-05-06-calculation-truth-registry-invoice-row-indexes` - `calculation-truth-registry` `invoice row indexes`
+- `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage` - Calculation Truth Registry Modelo 180 Workflow Linkage Execution
 - `2026-05-06-calculation-truth-registry-modelo-190-application-links` - `calculation-truth-registry` `modelo-190` `application-links`
 - `2026-05-06-calculation-truth-registry-modelo-193-application-links` - `calculation-truth-registry` `modelo-193` `application-links`
 - `2026-05-06-calculation-truth-registry-modelo-200-application-links` - `calculation-truth-registry` `modelo-200` `application-links`

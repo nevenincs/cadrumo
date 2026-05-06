@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from . import AuthProviderKind, select_provider
@@ -22,12 +23,11 @@ _logger = get_logger(__name__)
 
 
 class StorageStatePaths(BaseModel):
-    """On-disk locations for one provider's persisted AEAT session."""
+    """Logical storage-state identifier for one provider's persisted AEAT session."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     storage_state: Path
-    metadata: Path
 
 
 class CorruptAuthSessionError(AeatError):
@@ -39,12 +39,12 @@ class AuthSessionUnavailableError(AeatError):
 
 
 class PersistedAuthSession(BaseModel):
-    """Provider-neutral view of an on-disk AEAT session sidecar."""
+    """Provider-neutral view of encrypted AEAT session metadata."""
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
     provider_kind: AuthProviderKind = Field(
-        description="Provider that produced the session sidecar.",
+        description="Provider that produced the session metadata.",
     )
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime
@@ -65,13 +65,12 @@ def storage_state_paths(
     settings: Settings,
     kind: AuthProviderKind | None = None,
 ) -> StorageStatePaths:
-    """Return the storage-state and metadata path pair for ``kind``."""
+    """Return the logical storage-state identifier for ``kind``."""
 
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
     storage_state = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-{stem}.json"
-    metadata = storage_state.with_suffix(".meta.json")
-    return StorageStatePaths(storage_state=storage_state, metadata=metadata)
+    return StorageStatePaths(storage_state=storage_state)
 
 
 def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
@@ -81,40 +80,30 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
         paths = storage_state_paths(settings, kind)
-        if not paths.metadata.exists():
+        if not _session_store.exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
-        return _parse_single(paths.metadata, kind)
+        return _parse_single(paths.storage_state, kind)
 
     for candidate in AuthProviderKind:
         paths = storage_state_paths(settings, candidate)
-        if paths.metadata.exists():
-            return _parse_single(paths.metadata, candidate)
+        if _session_store.exists(paths.storage_state):
+            return _parse_single(paths.storage_state, candidate)
     _logger.debug("load_persisted_session: no session metadata found for any registered provider")
     return None
 
 
 def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
-    """Remove persisted session files for ``kind`` or every supported provider."""
+    """Remove persisted encrypted sessions for ``kind`` or every supported provider."""
 
     removed: list[Path] = []
     kinds = [kind] if kind is not None else list(AuthProviderKind)
     for candidate_kind in kinds:
         paths = storage_state_paths(settings, candidate_kind)
-        for candidate_path in (paths.storage_state, paths.metadata):
-            try:
-                candidate_path.unlink()
-            except FileNotFoundError:
-                continue
-            except OSError:
-                _logger.warning(
-                    "delete_persisted_session: failed to remove auth session file %s",
-                    candidate_path,
-                    exc_info=True,
-                )
-                continue
-            _logger.debug("delete_persisted_session: removed auth session file %s", candidate_path)
-            removed.append(candidate_path)
+        if not _session_store.delete(paths.storage_state):
+            continue
+        _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
+        removed.append(paths.storage_state)
     return removed
 
 
@@ -131,7 +120,7 @@ async def require_verified_aeat_session(
     if persisted.is_expired(datetime.now(UTC)):
         raise AuthSessionUnavailableError("AEAT session is expired; run `aeat auth login` before reading AEAT data")
     paths = storage_state_paths(settings, persisted.provider_kind)
-    if not paths.storage_state.exists():
+    if not _session_store.exists(paths.storage_state):
         raise AuthSessionUnavailableError(
             "AEAT session state is missing; run `aeat auth login` before reading AEAT data"
         )
@@ -161,10 +150,19 @@ async def require_verified_aeat_session(
     return refreshed_session
 
 
-def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession:
+def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession | None:
     try:
-        raw = json.loads(metadata_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+        persisted = _session_store.load(storage_state_path)
+    except (ValueError, ValidationError) as exc:
+        raise CorruptAuthSessionError(
+            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+        ) from exc
+    if persisted is None:
+        return None
+
+    try:
+        raw = json.loads(json.dumps(persisted.metadata, default=str))
+    except (TypeError, ValueError) as exc:
         raise CorruptAuthSessionError(
             "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
         ) from exc
@@ -183,7 +181,7 @@ def _parse_single(metadata_path: Path, kind_hint: AuthProviderKind) -> Persisted
     if session.provider_kind is not kind_hint:
         _logger.debug(
             "_parse_single: provider_kind mismatch in %s (expected %s, got %s)",
-            metadata_path,
+            storage_state_path,
             kind_hint.value,
             session.provider_kind.value,
         )

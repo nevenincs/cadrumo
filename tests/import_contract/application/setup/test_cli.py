@@ -57,7 +57,7 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     env = _env(tmp_path)
     init = _runner.invoke(
         app,
-        ["--format", "json", "setup", "init", "--name", "kent", "--activity", "design", "--tax-id", "12345678Z"],
+        ["--format", "json", "setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         env=env,
     )
     show = _runner.invoke(app, ["--format", "json", "setup", "profile", "show"], env=env)
@@ -67,7 +67,7 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     assert show.exit_code == 0, show.output
     assert validate.exit_code == 0, validate.output
     payload = json.loads(show.output)
-    assert payload["active_profile"] == "kent"
+    assert payload["active_profile"] == "operator"
     assert payload["values"]["activity"] == "design"
     assert payload["values"]["tax.id"] == "12345678Z"
 
@@ -77,7 +77,7 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     missing = _runner.invoke(app, ["--format", "json", "setup", "status"], env=env)
     _runner.invoke(
         app,
-        ["setup", "init", "--name", "kent", "--activity", "design", "--tax-id", "12345678Z"],
+        ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         env=env,
     )
     certificate = tmp_path / "cert.p12"

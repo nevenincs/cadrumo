@@ -1,13 +1,14 @@
 """Unit tests for the usage-ratio persistence service (#259).
 
 Post-USAGE-001 the service routes through the substrate's encrypted-
-envelope helpers; every test here exercises the round-trip against a
-real on-disk envelope under an :class:`EphemeralMasterKeyProvider`.
+object backend; every test here exercises the round-trip against a
+real SQLite database under an :class:`EphemeralMasterKeyProvider`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,9 +18,12 @@ from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
     EphemeralMasterKeyProvider,
     SecretStore,
+    SensitivityClass,
     override_master_key_provider,
     override_secret_store,
 )
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     UsageRatioPersistenceError,
@@ -32,7 +36,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -50,6 +56,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 def test_load_missing_returns_empty(tmp_path: Path) -> None:
@@ -59,12 +70,13 @@ def test_load_missing_returns_empty(tmp_path: Path) -> None:
     assert load_usage_ratios(target) == UsageRatioProfile()
 
 
-def test_save_creates_missing_parent_directory(tmp_path: Path) -> None:
-    """``save_usage_ratios`` mkdirs parents when absent."""
+def test_save_does_not_create_requested_plaintext_file(tmp_path: Path) -> None:
+    """``save_usage_ratios`` stores in the secure database, not at ``path``."""
     target = tmp_path / "a" / "b" / "ratios.json"
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     save_usage_ratios(profile, target)
-    assert target.exists()
+    assert not target.exists()
+    assert (tmp_path / "aeat.db").exists()
 
 
 def test_save_round_trips(tmp_path: Path) -> None:
@@ -91,38 +103,41 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     assert list(tmp_path.glob("*.tmp")) == []
 
 
-def test_save_writes_ciphertext_envelope(tmp_path: Path) -> None:
-    """The on-disk record is a CipherEnvelope at FINANCIAL class.
-
-    The percentage values must not survive in plaintext.
-    """
+def test_save_writes_encrypted_database_object(tmp_path: Path) -> None:
+    """The database record is encrypted at FINANCIAL class."""
     target = tmp_path / "ratios.json"
     profile = UsageRatioProfile(
         ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")},
     )
     save_usage_ratios(profile, target)
-    on_disk = target.read_text(encoding="utf-8")
-    assert '"classification":"financial"' in on_disk
-    assert '"encryption":' in on_disk
-    # Plaintext canary — the ratio value itself must never appear in the
-    # on-disk bytes.
-    assert "0.21" not in on_disk
-    assert "suministros_home_office_luz" not in on_disk
+    on_disk = _database_bytes(tmp_path)
+    assert b"secure_objects" in on_disk
+    assert b"financial" in on_disk
+    assert b"0.21" not in on_disk
+    assert b"suministros_home_office_luz" not in on_disk
+    assert b"profile" not in on_disk
 
 
-def test_load_corrupt_envelope_raises_persistence_error(tmp_path: Path) -> None:
-    """A corrupted envelope file surfaces as :class:`UsageRatioPersistenceError`."""
+def test_load_corrupt_secure_object_raises_persistence_error(tmp_path: Path) -> None:
+    """A malformed encrypted payload surfaces as :class:`UsageRatioPersistenceError`."""
     target = tmp_path / "bad.json"
-    target.write_text("{not-a-cipher-envelope", encoding="utf-8")
+    SecureObjectRepository().save(
+        namespace="aeat.domain.usage_ratios",
+        object_key="profile",
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=b"{not-json",
+    )
     with pytest.raises(UsageRatioPersistenceError):
         load_usage_ratios(target)
 
 
-def test_save_target_is_existing_directory_raises(tmp_path: Path) -> None:
-    """Pointing ``target`` at an existing directory surfaces cleanly."""
+def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> None:
+    """The historical path argument no longer controls persistence."""
     target = tmp_path / "ratios-as-dir"
     target.mkdir()
     profile = UsageRatioProfile()
-    with pytest.raises(UsageRatioPersistenceError):
-        save_usage_ratios(profile, target)
+    save_usage_ratios(profile, target)
+    assert load_usage_ratios(target) == profile
     assert list(tmp_path.glob("*.tmp")) == []

@@ -9,7 +9,8 @@ Supports two operator-facing Google auth paths:
 
 Token lifecycle
 ---------------
-- OAuth tokens are cached in ``.tokens/google_oauth_token.json``.
+- OAuth tokens are cached as SECRET-class secure objects keyed by the logical
+  ``.tokens/google_oauth_token.json`` location.
 - Expired tokens are refreshed automatically using the stored refresh token.
 - Service-account credentials manage their own token lifecycle.
 
@@ -24,7 +25,7 @@ Narrower scope constants are provided for least-privilege scenarios.
 
 from __future__ import annotations
 
-import os
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -38,15 +39,19 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from ....core.file_permissions import restrict_file_permissions
 from ....core.logging import get_logger
 from ._paths import (
     GoogleAuthInspection,
     GoogleAuthPath,
     adc_well_known_path,
+    delete_oauth_token_cache,
     inspect_google_auth,
     inspect_oauth_token_cache,
+    load_google_oauth_client_json,
+    load_google_service_account_json,
+    load_oauth_token_cache,
     normalize_google_auth_path,
+    save_oauth_token_cache,
 )
 
 if TYPE_CHECKING:
@@ -80,6 +85,7 @@ __all__ = [
     "build_serviceusage_service",
     "build_sheets_service",
     "build_storage_client",
+    "delete_oauth_token_cache",
     "format_scope_csv",
     "get_adc_credentials_with_scopes",
     "get_credentials",
@@ -88,6 +94,8 @@ __all__ = [
     "get_service_account_credentials",
     "inspect_google_auth",
     "inspect_oauth_token_cache",
+    "load_google_oauth_client_json",
+    "load_google_service_account_json",
     "normalize_google_auth_path",
 ]
 
@@ -147,16 +155,9 @@ ADC_LOGIN_SCOPE_CSV = format_scope_csv(ADC_LOGIN_SCOPES)
 
 
 def _write_oauth_token_cache(token_path: Path, payload: str) -> None:
-    """Persist OAuth token JSON with operator-only permissions."""
+    """Persist OAuth token JSON as a SECRET-class secure object."""
 
-    token_path.parent.mkdir(parents=True, exist_ok=True)
-    if os.name == "posix":
-        try:
-            os.chmod(token_path.parent, 0o700)
-        except OSError:
-            log.warning("failed to restrict OAuth token directory permissions: %s", token_path.parent, exc_info=True)
-    token_path.write_text(payload, encoding="utf-8")
-    restrict_file_permissions(token_path)
+    save_oauth_token_cache(token_path, payload)
 
 
 def get_oauth_credentials(
@@ -186,8 +187,9 @@ def get_oauth_credentials(
     creds: OAuthCredentials | None = None
 
     # 1. Try loading a cached token
-    if token_path.exists():
-        creds = OAuthCredentials.from_authorized_user_file(str(token_path), scopes)  # type: ignore[no-untyped-call]
+    cached_payload = load_oauth_token_cache(token_path)
+    if cached_payload is not None:
+        creds = OAuthCredentials.from_authorized_user_info(json.loads(cached_payload), scopes)  # type: ignore[no-untyped-call]
 
     # 2. Refresh if expired, or run a new consent flow
     if creds and creds.expired and creds.refresh_token:
@@ -233,10 +235,17 @@ def get_service_account_credentials(
         Authenticated service-account credentials.
     """
     scopes = scopes or SCOPES
-    creds = service_account.Credentials.from_service_account_file(  # type: ignore[no-untyped-call]
-        str(key_path),
-        scopes=scopes,
-    )
+    secure_payload = load_google_service_account_json(Path(key_path))
+    if secure_payload is not None:
+        creds = service_account.Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
+            json.loads(secure_payload),
+            scopes=scopes,
+        )
+    else:
+        creds = service_account.Credentials.from_service_account_file(  # type: ignore[no-untyped-call]
+            str(key_path),
+            scopes=scopes,
+        )
     if subject:
         creds = creds.with_subject(subject)
     return creds  # type: ignore[no-any-return]
@@ -274,13 +283,19 @@ def get_credentials(settings: Settings, *, scopes: list[str] | None = None) -> B
         )
 
     if inspection.active_path == GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV:
-        if not (settings.google_oauth_client_id and settings.google_oauth_client_secret):
+        client_id = settings.google_oauth_client_id
+        client_secret = settings.google_oauth_client_secret
+        if not (client_id and client_secret) and settings.google_oauth_client_json:
+            client_payload = load_google_oauth_client_json(Path(settings.google_oauth_client_json))
+            if client_payload is not None:
+                client_id, client_secret = _oauth_client_id_secret(client_payload)
+        if not (client_id and client_secret):
             raise DefaultCredentialsError(inspection.blocking_reason or "desktop OAuth client config missing")
         log.info("using desktop oauth local-dev path")
         token_path = settings.aeat_token_dir / "google_oauth_token.json"
         return get_oauth_credentials(
-            settings.google_oauth_client_id,
-            settings.google_oauth_client_secret,
+            client_id,
+            client_secret,
             scopes=scopes,
             token_path=token_path,
         )
@@ -400,6 +415,26 @@ def get_adc_credentials_with_scopes(scopes: list[str] | None = None) -> BaseCred
     scopes = scopes or SCOPES
     credentials, _project = google.auth.default(scopes=scopes)
     return credentials
+
+
+def _oauth_client_id_secret(raw: str) -> tuple[str, str]:
+    """Extract Desktop OAuth client id and secret from encrypted JSON payload."""
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise DefaultCredentialsError(f"encrypted OAuth client JSON is unreadable: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise DefaultCredentialsError("encrypted OAuth client JSON is malformed")
+    for kind in ("installed", "web"):
+        candidate = payload.get(kind)
+        if (
+            isinstance(candidate, dict)
+            and isinstance(candidate.get("client_id"), str)
+            and isinstance(candidate.get("client_secret"), str)
+        ):
+            return candidate["client_id"], candidate["client_secret"]
+    raise DefaultCredentialsError("encrypted OAuth client JSON is missing client_id/client_secret")
 
 
 def get_credentials_for_scopes(scopes: list[str] | None = None) -> BaseCredentials:

@@ -136,8 +136,8 @@ def _write_catalogue(tmp_path: Path) -> TransactionCatalogue:
 def _write_four_state_catalogue(tmp_path: Path) -> TransactionCatalogue:
     """Seed a catalogue with one transaction in each of the four pipeline states.
 
-    Encodes the Kent success moment from #237 so tests can filter by
-    every non-classified state and verify Kent sees only the subset he
+    Encodes the operator success moment from #237 so tests can filter by
+    every non-classified state and verify operator sees only the subset he
     asked for.
     """
     catalogue = TransactionCatalogue.from_transactions(
@@ -194,7 +194,7 @@ def test_financial_txs_list_filters_by_state_option(tmp_path: Path) -> None:
 
 
 def test_financial_txs_list_every_pipeline_state_is_independently_filterable(tmp_path: Path) -> None:
-    """Kent success moment from #237: each of the four pipeline states filters independently."""
+    """operator success moment from #237: each of the four pipeline states filters independently."""
     catalogue = _write_four_state_catalogue(tmp_path)
     expected_by_state = {
         transaction.business_classification: transaction.transaction_id for transaction in catalogue.values()
@@ -219,7 +219,7 @@ def test_financial_txs_list_every_pipeline_state_is_independently_filterable(tmp
 
 
 def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> None:
-    """`aeat financial txs classify --reason` should embed Kent's justification in history."""
+    """`aeat financial txs classify --reason` should embed operator's justification in history."""
     catalogue = _write_catalogue(tmp_path)
     transaction = next(catalogue.values())
 
@@ -232,7 +232,7 @@ def test_financial_txs_classify_embeds_reason_into_history(tmp_path: Path) -> No
             "--as",
             "BUSINESS",
             "--reason",
-            "Kent flagged this as a client invoice",
+            "operator flagged this as a client invoice",
         ],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
@@ -354,7 +354,7 @@ def test_financial_txs_classify_accepts_category_and_reason(tmp_path: Path) -> N
 
 
 def test_financial_txs_classify_allows_metadata_only_update(tmp_path: Path) -> None:
-    """Kent can add a category and notes without repeating the classification target."""
+    """operator can add a category and notes without repeating the classification target."""
     catalogue = _write_catalogue(tmp_path)
     transaction = next(item for item in catalogue.values() if item.direction is TransactionDirection.OUTGOING)
     updated = set_classification(
@@ -388,7 +388,7 @@ def test_financial_txs_classify_allows_metadata_only_update(tmp_path: Path) -> N
 
 
 def test_financial_txs_classify_rejects_category_for_unprocessed_transaction(tmp_path: Path) -> None:
-    """Kent should classify the transaction first before assigning a spending category."""
+    """operator should classify the transaction first before assigning a spending category."""
     catalogue = _write_catalogue(tmp_path)
     transaction = next(
         item for item in catalogue.values() if item.business_classification is BusinessClassification.NOT_YET_PROCESSED
@@ -477,7 +477,7 @@ def test_financial_txs_build_creates_catalogue_from_ofx_ingest_ndjson(tmp_path: 
 
 
 def test_financial_txs_build_refuses_to_overwrite_existing_catalogue_without_replace(tmp_path: Path) -> None:
-    """Kent should hear a clear refusal instead of silently overwriting existing work."""
+    """operator should hear a clear refusal instead of silently overwriting existing work."""
     _write_catalogue(tmp_path)
     source, _ = _write_ndjson_from_provider(tmp_path, "synthetic-transactions.csv")
 
@@ -542,7 +542,7 @@ def test_financial_txs_build_rejects_duplicate_raw_rows_cleanly(tmp_path: Path) 
 
 
 def test_financial_txs_build_accepts_cp1252_encoded_ndjson(tmp_path: Path) -> None:
-    """Kent's redirected Windows files should still build when the NDJSON lands in cp1252."""
+    """operator's redirected Windows files should still build when the NDJSON lands in cp1252."""
     raw = RawTransaction(
         transaction_id="accented-row",
         booked_date=date(2026, 4, 10),
@@ -610,7 +610,7 @@ def test_financial_txs_build_accepts_utf8_bom_ndjson(tmp_path: Path) -> None:
 
 
 def test_financial_txs_build_accepts_direct_csv_source(tmp_path: Path) -> None:
-    """Kent should be able to build directly from a CSV export without an intermediate NDJSON file."""
+    """operator should be able to build directly from a CSV export without an intermediate NDJSON file."""
     fixture = Path("tests/fixtures/financial/synthetic-transactions.csv")
 
     result = _RUNNER.invoke(
@@ -629,7 +629,7 @@ def _write_confidence_catalogue(tmp_path: Path) -> TransactionCatalogue:
 
     Two transactions start as NOT_YET_PROCESSED; the CLI classifies them
     manually with different confidence levels, then a third remains
-    unclassified. This mirrors the Kent scenario from #236.
+    unclassified. This mirrors the operator scenario from #236.
     """
     catalogue = TransactionCatalogue.from_transactions(
         [
@@ -845,10 +845,10 @@ def test_financial_txs_list_rejects_out_of_range_confidence_below(tmp_path: Path
     assert "0..1 range" in result.output
 
 
-def test_financial_txs_list_empty_confidence_filter_guides_kent(tmp_path: Path) -> None:
-    """When a confidence filter matches nothing, Kent must hear WHY, not a bare silence.
+def test_financial_txs_list_empty_confidence_filter_guides_operator(tmp_path: Path) -> None:
+    """When a confidence filter matches nothing, operator must hear WHY, not a bare silence.
 
-    A Kent whose catalogue contains only manual (confidence=1.0) or bare
+    A operator whose catalogue contains only manual (confidence=1.0) or bare
     (confidence=None) classifications gets empty results from any
     sensible threshold. The message must tell him his manual
     classifications default to 1.0 and that a rule engine / LLM is
@@ -1168,11 +1168,11 @@ def test_classify_llm_category_hint_forces_category(tmp_path: Path) -> None:
         unregister_classifier("test-hint-override")
 
 
-def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
+def test_classify_llm_reason_prepends_operator_text_to_llm_rationale(
     tmp_path: Path,
     scripted_provider: str,
 ) -> None:
-    """Kent's `--reason` must be preserved alongside the LLM's reason."""
+    """operator's `--reason` must be preserved alongside the LLM's reason."""
     catalogue = _write_catalogue(tmp_path)
     transaction = next(catalogue.values())
 
@@ -1185,7 +1185,7 @@ def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
             "--provider",
             scripted_provider,
             "--reason",
-            "Kent checked the receipt",
+            "operator checked the receipt",
         ],
         env={"AEAT_FINANCIAL_TXS_DIR": str(tmp_path)},
     )
@@ -1194,7 +1194,7 @@ def test_classify_llm_reason_prepends_kent_text_to_llm_rationale(
     restored = _load_catalogue(tmp_path)
     updated = restored.get(transaction.transaction_id)
     assert updated is not None
-    assert "Kent checked the receipt" in updated.classification_reason
+    assert "operator checked the receipt" in updated.classification_reason
     assert "scripted test decision" in updated.classification_reason
 
 

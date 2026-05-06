@@ -357,6 +357,7 @@ class _InvoiceSelector(BaseModel):
     vat_regime: str | None = Field(default=None, max_length=64)
     row_field: _InvoiceRowField | None = None
     grouping: _InvoiceGrouping | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
 
     @field_validator("claves")
     @classmethod
@@ -721,8 +722,33 @@ def _aggregate_invoice_binding(
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
             )
-        operators = {(observation.party_tax_id, observation.country_code) for observation in observations}
-        return Decimal(len(operators))
+        # AEAT defines this count as the number of Tipo 2 records (one per
+        # (operator, clave) pair for the operador grouping; one per (operator,
+        # clave, ejercicio, periodo) for the rectificacion grouping). Per
+        # Orden EHA/769/2010 Anexo positions 138-146 and 162-170: "Número de
+        # registros de tipo 2 con clave de operación, posición 133, igual a
+        # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
+        if selector.rectification_scope == "only_rectifications":
+            keys = {
+                (
+                    observation.party_tax_id,
+                    observation.country_code,
+                    observation.intracommunity_clave,
+                    observation.rectified_year,
+                    observation.rectified_period,
+                )
+                for observation in observations
+            }
+        else:
+            keys = {
+                (
+                    observation.party_tax_id,
+                    observation.country_code,
+                    observation.intracommunity_clave,
+                )
+                for observation in observations
+            }
+        return Decimal(len(keys))
     if selector.fact == "base_sum":
         if op != "sum":
             raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")

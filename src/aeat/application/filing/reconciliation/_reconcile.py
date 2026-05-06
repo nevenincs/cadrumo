@@ -52,7 +52,7 @@ class _RegistryReconciliationProvider(Protocol):
     def get_subview(self, modelo: str) -> _RegistryReconciliationSubview: ...
 
 
-# Shared with aeat.application.verification: "one cent" is the Kent-visible
+# Shared with aeat.application.verification: "one cent" is the operator-visible
 # rounding floor on every monetary comparison across the CLI.
 _TOLERANCE: Final[Decimal] = Decimal("0.01")
 _QUARTER_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$", re.IGNORECASE)
