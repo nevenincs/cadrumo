@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
@@ -39,7 +40,6 @@ from ...domain.calculations.registry import (
     RegistryCatalogues,
     RegistrySnapshot,
     RegistrySnapshotError,
-    RegistryValidator,
     build_snapshot,
     expression_casilla_refs,
     load_registry_tree,
@@ -228,19 +228,39 @@ def build_runtime_schema_provider(
 ) -> RegistrySchemaProvider:
     """Build the production schema provider from validated registry TOML."""
 
-    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
-    resolved_source_root = source_root or PROJECT_ROOT
+    root = (registry_root or PROJECT_ROOT / "registry" / "aeat").resolve()
+    resolved_source_root = (source_root or PROJECT_ROOT).resolve()
+    selected_ids = _normalize_modelo_selection(modelos)
+    selected_tuple = None if selected_ids is None else tuple(sorted(selected_ids))
+    return _build_runtime_schema_provider_cached(
+        root,
+        resolved_source_root,
+        filing_year,
+        period,
+        selected_tuple,
+        _registry_tree_fingerprint(root),
+    )
+
+
+@lru_cache(maxsize=32)
+def _build_runtime_schema_provider_cached(
+    root: Path,
+    resolved_source_root: Path,
+    filing_year: int | None,
+    period: str | None,
+    selected_tuple: tuple[str, ...] | None,
+    _fingerprint: tuple[tuple[str, int, int], ...],
+) -> RegistrySchemaProvider:
     loaded_modelos, catalogues = load_registry_tree(root)
     if not loaded_modelos:
         raise FilingBuilderError(f"registry root has no modelo definitions: {root}")
-    selected_ids = _normalize_modelo_selection(modelos)
-    if selected_ids is not None:
+    if selected_tuple is not None:
+        selected_ids = set(selected_tuple)
         by_id = {modelo.id: modelo for modelo in loaded_modelos}
         missing = sorted(selected_ids.difference(by_id))
         if missing:
             raise FilingBuilderError(f"registry root is missing requested modelo definitions: {missing!r}")
-        loaded_modelos = tuple(by_id[modelo_id] for modelo_id in sorted(selected_ids))
-    validator = RegistryValidator(catalogues, source_root=resolved_source_root)
+        loaded_modelos = tuple(by_id[modelo_id] for modelo_id in selected_tuple)
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo in loaded_modelos:
         try:
@@ -258,11 +278,18 @@ def build_runtime_schema_provider(
     if not snapshots:
         raise FilingBuilderError(f"registry root has no modelo definitions for year={filing_year} period={period!r}")
     return RegistrySchemaProvider(
-        collections={
-            modelo_id: _collection_from_snapshot(snapshot, validator) for modelo_id, snapshot in snapshots.items()
-        },
+        collections={modelo_id: _collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
+
+
+def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:
+    paths = sorted((root / "legal").glob("*.toml")) + sorted((root / "modelos").glob("*.toml"))
+    fingerprint: list[tuple[str, int, int]] = []
+    for path in paths:
+        stat = path.stat()
+        fingerprint.append((path.relative_to(root).as_posix(), stat.st_mtime_ns, stat.st_size))
+    return tuple(fingerprint)
 
 
 def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:
@@ -315,13 +342,9 @@ def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
     return max(candidates, key=lambda revision: (revision.valid_from, revision.id))
 
 
-def _collection_from_snapshot(
-    snapshot: RegistrySnapshot,
-    validator: RegistryValidator,
-) -> RegistryCasillaCollection:
+def _collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaCollection:
     modelo = snapshot.modelo
     revision = snapshot.revision
-    validator.validate_modelo(modelo)
     casillas: dict[str, RegistryCasillaSchema] = {}
     formulas = {formula.id: formula for formula in revision.formulas}
     for casilla in revision.casillas:

@@ -34,5 +34,10 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
     """Verify every source reference in a source catalogue mapping."""
 
+    verified: set[tuple[Path, int, str]] = set()
     for source in sources.values():
+        key = ((root / source.corpus_path).resolve(), source.bytes, source.sha256)
+        if key in verified:
+            continue
         verify_source_file(root, source)
+        verified.add(key)
