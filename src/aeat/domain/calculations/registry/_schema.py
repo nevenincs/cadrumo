@@ -271,6 +271,32 @@ class LiveCrossReferenceDecision(RegistryModel):
     requires_aeat_authorization: bool
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    # Optional: id of an oracle adapter registered in LiveParityCatalogue.
+    # When set, the calculation engine looks up the bound adapter to drive
+    # synthetic-payload verification under the cross-reference's policy.
+    # Resolution against the catalogue happens at calculation time, not at
+    # registry-load time, so the registry remains loadable when adapters
+    # are imported lazily.
+    oracle_id: str | None = Field(default=None, min_length=1, max_length=128)
+
+    @field_validator("oracle_id")
+    @classmethod
+    def _oracle_id_shape(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        # kebab-case ASCII identifier: lowercase alpha start, alphanumerics
+        # plus hyphens, no trailing hyphen.
+        if not value[0].isalpha() or not value[0].islower():
+            raise ValueError("oracle_id must start with a lowercase ASCII letter")
+        if value.endswith("-"):
+            raise ValueError("oracle_id must not end with a hyphen")
+        for char in value:
+            if not (char.islower() and char.isascii()) and not char.isdigit() and char != "-":
+                raise ValueError(
+                    f"oracle_id contains unsupported character {char!r}; "
+                    f"only lowercase ASCII letters, digits, and hyphens are permitted"
+                )
+        return value
 
     @model_validator(mode="after")
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
