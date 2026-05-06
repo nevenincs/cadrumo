@@ -18,9 +18,7 @@ from ._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
-    WorkbookRunnerAvailability,
     WorkbookScanOptions,
-    assert_formula_workbook_runner_ready,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,
@@ -446,18 +444,14 @@ def test_inventory_workbook_coverage_can_report_scan_errors_for_audit(tmp_path: 
         )
 
 
-def test_formula_runner_gate_fails_for_formula_workbooks_without_runner(tmp_path: Path) -> None:
-    _write_formula_workbook(tmp_path / "modelo_390" / "files" / "390-test.xlsx")
-    report = verify_workbook_backend(tmp_path, fail_on_scan_error=True, require_formula_runner=False).model_copy(
-        update={
-            "runner": WorkbookRunnerAvailability(
-                status="unavailable",
-                engine=None,
-                executable=None,
-                detail="test runner unavailable",
-            )
-        }
-    )
+def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "formula.xlsx"
+    _write_formula_workbook(workbook_path)
 
-    with pytest.raises(Exception, match="require a local recalculation runner"):
-        assert_formula_workbook_runner_ready(report)
+    with pytest.raises(Exception, match="LibreOffice executable does not exist"):
+        run_workbook_with_libreoffice(
+            workbook_path,
+            inputs={},
+            outputs={},
+            executable=str(tmp_path / "missing-soffice"),
+        )

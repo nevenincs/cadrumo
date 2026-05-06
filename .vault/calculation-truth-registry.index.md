@@ -205,6 +205,10 @@ related:
   - '[[2026-05-06-calculation-truth-registry-invoice-row-bindings]]'
   - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes-review]]'
   - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-review]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links-review]]'
@@ -217,6 +221,8 @@ related:
   - '[[2026-05-06-calculation-truth-registry-modelo-200-deadline]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-200-foundation-review]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-200-foundation]]'
+  - '[[2026-05-06-calculation-truth-registry-parity-review]]'
+  - '[[2026-05-06-calculation-truth-registry-phase4-renta-family-row-profile-bindings]]'
   - '[[2026-05-06-calculation-truth-registry-phase4-renta-personal-family-profile-bindings]]'
   - '[[2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-review]]'
   - '[[2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses]]'
@@ -317,12 +323,15 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-calculation-truth-registry-informative-workflow-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-invoice-row-bindings-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-invoice-row-indexes-review` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-review` - Calculation Truth Registry Modelo 115 Construct Workflow Closure Review
+- `2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review` - Calculation Truth Registry Modelo 123 Construct Workflow Closure Review
 - `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review` - Calculation Truth Registry Modelo 180 Workflow Linkage Review
 - `2026-05-06-calculation-truth-registry-modelo-190-application-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-193-application-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-200-application-links-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-200-deadline-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-modelo-200-foundation-review` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-parity-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-review` - `calculation-truth-registry` Code Review
 - `2026-05-06-calculation-truth-registry-renta-personal-family-profile-bindings-review` - `calculation-truth-registry` Code Review
 
@@ -442,12 +451,15 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-calculation-truth-registry-informative-workflow-links` - `calculation-truth-registry` `informative-modelos` `workflow-links`
 - `2026-05-06-calculation-truth-registry-invoice-row-bindings` - `calculation-truth-registry` `factual invoice row bindings`
 - `2026-05-06-calculation-truth-registry-invoice-row-indexes` - `calculation-truth-registry` `invoice row indexes`
+- `2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure` - Calculation Truth Registry Modelo 115 Construct Workflow Closure Execution
+- `2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure` - Calculation Truth Registry Modelo 123 Construct Workflow Closure Execution
 - `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage` - Calculation Truth Registry Modelo 180 Workflow Linkage Execution
 - `2026-05-06-calculation-truth-registry-modelo-190-application-links` - `calculation-truth-registry` `modelo-190` `application-links`
 - `2026-05-06-calculation-truth-registry-modelo-193-application-links` - `calculation-truth-registry` `modelo-193` `application-links`
 - `2026-05-06-calculation-truth-registry-modelo-200-application-links` - `calculation-truth-registry` `modelo-200` `application-links`
 - `2026-05-06-calculation-truth-registry-modelo-200-deadline` - `calculation-truth-registry` `modelo-200` `deadline`
 - `2026-05-06-calculation-truth-registry-modelo-200-foundation` - `calculation-truth-registry` `modelo-200` `foundation`
+- `2026-05-06-calculation-truth-registry-phase4-renta-family-row-profile-bindings` - `calculation-truth-registry` `phase-4` `renta-family-row-profile-bindings`
 - `2026-05-06-calculation-truth-registry-phase4-renta-personal-family-profile-bindings` - `calculation-truth-registry` `phase-4` `renta-personal-family-profile-bindings`
 - `2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses` - `calculation-truth-registry` `renta difficult justification expenses`
 

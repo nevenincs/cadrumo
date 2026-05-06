@@ -747,13 +747,14 @@ cli:
     profile:
       app_help: Pénzügyi profilok kezelése
       errors:
-        category_not_eligible: cli.financial.profile.errors.category_not_eligible
+        category_not_eligible: a(z) %{category} kategória nem fogad el használati
+          arányt
         did_you_mean: Úgy értette, hogy...?
         eligible_categories: Választható kategóriák
         family_aliases: Családi álnevek
         invalid_ratio: Érvénytelen arány vagy százalék
-        must_be_finite: cli.financial.profile.errors.must_be_finite
-        out_of_range: cli.financial.profile.errors.out_of_range
+        must_be_finite: 'az aránynak végesnek kell lennie (kapott: %{raw})'
+        out_of_range: 'az arány a tartományon kívül esik: %{raw} nincs a [0, 1] intervallumban'
         unknown_key: Ismeretlen kulcs vagy tulajdonság a profilban
       headers:
         ratios: Arányok / Felosztások
@@ -951,68 +952,69 @@ cli:
     errors:
       invalid_input: Érvénytelen LLM bemenet
       missing_variable: Egy szükséges változó hiányzik a prompt sablonból
-    from_help: cli.llm.from_help
-    input_help: cli.llm.input_help
+    from_help: A fordítás vagy feldolgozás forrásnyelve
+    input_help: Bemeneti szöveg az LLM-mel való feldolgozáshoz
     labels:
-      removed_cache_files: cli.llm.labels.removed_cache_files
-    language_help: cli.llm.language_help
-    prompt_id_help: cli.llm.prompt_id_help
-    since_help: cli.llm.since_help
-    text_help: cli.llm.text_help
-    to_help: cli.llm.to_help
-    translate_help: cli.llm.translate_help
-    until_help: cli.llm.until_help
-    usage_help: cli.llm.usage_help
+      removed_cache_files: Törölt gyorsítótár-fájlok
+    language_help: Célnyelv vagy elsődleges nyelv a kimenethez
+    prompt_id_help: A használandó prompt azonosítója
+    since_help: Kezdő dátum szűréshez vagy lekérdezéshez (ÉÉÉÉ-HH-NN)
+    text_help: Az LLM által elemzendő vagy feldolgozandó szöveg
+    to_help: A fordítás célnyelve
+    translate_help: Szöveg fordítása egyik nyelvről a másikra LLM használatával
+    until_help: Záró dátum szűréshez vagy lekérdezéshez (ÉÉÉÉ-HH-NN)
+    usage_help: LLM tokenhasználat és költségek megjelenítése
   normatives:
-    app_help: cli.normatives.app_help
+    app_help: Adózási szabályozások és kötelezettségek lekérdezése
     errors:
-      load_failed: cli.normatives.errors.load_failed
+      load_failed: A normatív adatbázis betöltése sikertelen
     headers:
-      citation: cli.normatives.headers.citation
-      code: cli.normatives.headers.code
-      level: cli.normatives.headers.level
-      message: cli.normatives.headers.message
-      numero: cli.normatives.headers.numero
-      reference_id: cli.normatives.headers.reference_id
-      titulo: cli.normatives.headers.titulo
+      citation: Jogi hivatkozás
+      code: Kód
+      level: Szint
+      message: Üzenet
+      numero: Szám
+      reference_id: Referencia azonosító
+      titulo: Cím
     labels:
-      articles: cli.normatives.labels.articles
-      articulos: cli.normatives.labels.articulos
-      boe_id: cli.normatives.labels.boe_id
-      boe_url: cli.normatives.labels.boe_url
-      found: cli.normatives.labels.found
-      id: cli.normatives.labels.id
-      kind: cli.normatives.labels.kind
-      last_reviewed_at: cli.normatives.labels.last_reviewed_at
-      no_articulos: cli.normatives.labels.no_articulos
-      number: cli.normatives.labels.number
-      published_at: cli.normatives.labels.published_at
-      reviewed_by: cli.normatives.labels.reviewed_by
-      short_title: cli.normatives.labels.short_title
-      tags: cli.normatives.labels.tags
-    list_help: cli.normatives.list_help
-    list_tag_help: cli.normatives.list_tag_help
-    show_help: cli.normatives.show_help
-    show_ref_id_help: cli.normatives.show_ref_id_help
+      articles: Cikkek
+      articulos: Cikkek
+      boe_id: BOE azonosító
+      boe_url: BOE URL
+      found: Találat
+      id: Azonosító
+      kind: Típus
+      last_reviewed_at: Utolsó felülvizsgálat ideje
+      no_articulos: Nincsenek elérhető cikkek
+      number: Szám
+      published_at: Közzététel dátuma
+      reviewed_by: Felülvizsgálta
+      short_title: Rövid cím
+      tags: Címkék
+    list_help: Adózási szabályozások listázása és szűrése
+    list_tag_help: Szabályozások szűrése címke szerint (pl. iva, irpf)
+    show_help: Egy adott szabályozás részleteinek megjelenítése
+    show_ref_id_help: A megjelenítendő szabályozás referencia azonosítója
     success:
-      clean: cli.normatives.success.clean
-      verification_results: cli.normatives.success.verification_results
-    verify_help: cli.normatives.verify_help
+      clean: Normatívák tisztítása befejeződött
+      verification_results: Ellenőrzés eredményei
+    verify_help: Szabályozások integritásának és érvényességének ellenőrzése
   oauth:
-    app_help: cli.oauth.app_help
+    app_help: OAuth 2.0 hitelesítés kezelése
     errors:
-      invalid_json: cli.oauth.errors.invalid_json
+      invalid_json: 'Hiba: A hitelesítő adatok fájlja nem tartalmaz érvényes JSON-t'
     init:
-      help: cli.oauth.init.help
-      json_help: cli.oauth.init.json_help
-      success: cli.oauth.init.success
+      help: OAuth konfiguráció inicializálása fájlból
+      json_help: A Google Cloud hitelesítő adatok JSON-fájljának útvonala
+      success: Az OAuth konfiguráció sikeresen inicializálva lett
     labels:
-      next_step: cli.oauth.labels.next_step
-      open_url: cli.oauth.labels.open_url
-      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+      next_step: Következő lépés
+      open_url: Kérjük, nyissa meg a következő URL-t a böngészőjében az alkalmazás
+        engedélyezéséhez
+      run_gcloud_auth: Gcloud hitelesítés futtatása
     success:
-      copied: cli.oauth.success.copied
-      written: cli.oauth.success.written
+      copied: Hitelesítő adatok a vágólapra másolva
+      written: Konfiguráció sikeresen kiírva
   overview:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
@@ -1029,10 +1031,11 @@ cli:
     transactions: Tranzakciók
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
-    app_help: cli.registry.app_help
-    capture_filed_data_help: cli.registry.capture_filed_data_help
-    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
-    capture_limit_help: cli.registry.capture_limit_help
+    app_help: Adózási modellek nyilvántartásának kezelése
+    capture_filed_data_help: Az AEAT-hoz már benyújtott adatok rögzítése és a helyi
+      nyilvántartás frissítése
+    capture_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
+    capture_limit_help: A feldolgozandó bejegyzések korlátja
     capture_source_filed_data_help: A célmodell számításához szükséges benyújtott
       forrásmegfigyelések rögzítése
     capture_source_filed_data_json_help: A benyújtott forrásadat-rögzítési jelentés
@@ -1040,9 +1043,9 @@ cli:
     casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett
       számított casillák felülírásához
     errors:
-      invalid_year_range: cli.registry.errors.invalid_year_range
+      invalid_year_range: Érvénytelen évtartomány
       unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
-    expediente_help: cli.registry.expediente_help
+    expediente_help: A rögzítendő AEAT ügyszám
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
     inspect_registry_root_help: cli.registry.inspect_registry_root_help

@@ -13,6 +13,7 @@ from pydantic import AnyUrl
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
+from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 from ._constructs import resolve_construct, resolve_revision_constructs
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -130,6 +131,25 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
         "renta-2025-profile-spouse-display-name",
         "renta-2025-profile-spouse-birth-date",
         "renta-2025-profile-spouse-sex",
+        "renta-2025-profile-taxpayer-disability-grade",
+        "renta-2025-profile-taxpayer-death-date",
+        "renta-2025-profile-spouse-disability-grade",
+        "renta-2025-profile-spouse-non-resident-irpf",
+        "renta-2025-profile-spouse-eu-eea-resident",
+        "renta-2025-profile-spouse-eu-eea-country",
+        "renta-2025-profile-family-descendants-eu-eea-deduction",
+        "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-family-descendant-tax-id",
+        "renta-2025-family-descendant-display-name",
+        "renta-2025-family-descendant-birth-date",
+        "renta-2025-family-descendant-disability-grade",
+        "renta-2025-family-descendant-death-date",
+        "renta-2025-family-ascendant-tax-id",
+        "renta-2025-family-ascendant-display-name",
+        "renta-2025-family-ascendant-birth-date",
+        "renta-2025-family-ascendant-disability-grade",
+        "renta-2025-family-ascendant-cohabiting-descendant-count",
+        "renta-2025-family-ascendant-death-date",
     }
     assert set(personal_family.casillas) == {
         "DPNIF_D",
@@ -143,6 +163,25 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
         "DP_APENOM_C",
         "DPFNAC_C",
         "SEXO_C",
+        "DPGMIN_D",
+        "DECFAL",
+        "DPGMIN_C",
+        "NORESIDENTE",
+        "RESIDENTEUE",
+        "ZRUE2",
+        "HIJOSUE",
+        "PH18",
+        "NIFDLG",
+        "APENOMDLG",
+        "FNACDLG",
+        "MINUSDLG",
+        "FALLDLG",
+        "DNIASDLG",
+        "APENOMDLG_ASC",
+        "ANOASDLG",
+        "PCTMINASDLG",
+        "CONVASDLG",
+        "FALLASDLG",
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
@@ -187,6 +226,25 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
         "renta-2025-profile-spouse-display-name",
         "renta-2025-profile-spouse-birth-date",
         "renta-2025-profile-spouse-sex",
+        "renta-2025-profile-taxpayer-disability-grade",
+        "renta-2025-profile-taxpayer-death-date",
+        "renta-2025-profile-spouse-disability-grade",
+        "renta-2025-profile-spouse-non-resident-irpf",
+        "renta-2025-profile-spouse-eu-eea-resident",
+        "renta-2025-profile-spouse-eu-eea-country",
+        "renta-2025-profile-family-descendants-eu-eea-deduction",
+        "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-family-descendant-tax-id",
+        "renta-2025-family-descendant-display-name",
+        "renta-2025-family-descendant-birth-date",
+        "renta-2025-family-descendant-disability-grade",
+        "renta-2025-family-descendant-death-date",
+        "renta-2025-family-ascendant-tax-id",
+        "renta-2025-family-ascendant-display-name",
+        "renta-2025-family-ascendant-birth-date",
+        "renta-2025-family-ascendant-disability-grade",
+        "renta-2025-family-ascendant-cohabiting-descendant-count",
+        "renta-2025-family-ascendant-death-date",
     }
     assert casillas_by_id["DPNIF_D"].binding == "renta-2025-profile-tax-id"
     assert casillas_by_id["DP_APENOM_D"].binding == "renta-2025-profile-display-name"
@@ -199,6 +257,25 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
     assert casillas_by_id["DP_APENOM_C"].binding == "renta-2025-profile-spouse-display-name"
     assert casillas_by_id["DPFNAC_C"].binding == "renta-2025-profile-spouse-birth-date"
     assert casillas_by_id["SEXO_C"].binding == "renta-2025-profile-spouse-sex"
+    assert casillas_by_id["DPGMIN_D"].binding == "renta-2025-profile-taxpayer-disability-grade"
+    assert casillas_by_id["DECFAL"].binding == "renta-2025-profile-taxpayer-death-date"
+    assert casillas_by_id["DPGMIN_C"].binding == "renta-2025-profile-spouse-disability-grade"
+    assert casillas_by_id["NORESIDENTE"].binding == "renta-2025-profile-spouse-non-resident-irpf"
+    assert casillas_by_id["RESIDENTEUE"].binding == "renta-2025-profile-spouse-eu-eea-resident"
+    assert casillas_by_id["ZRUE2"].binding == "renta-2025-profile-spouse-eu-eea-country"
+    assert casillas_by_id["HIJOSUE"].binding == "renta-2025-profile-family-descendants-eu-eea-deduction"
+    assert casillas_by_id["PH18"].binding == "renta-2025-profile-family-minor-children-in-unit"
+    assert casillas_by_id["NIFDLG"].binding == "renta-2025-family-descendant-tax-id"
+    assert casillas_by_id["APENOMDLG"].binding == "renta-2025-family-descendant-display-name"
+    assert casillas_by_id["FNACDLG"].binding == "renta-2025-family-descendant-birth-date"
+    assert casillas_by_id["MINUSDLG"].binding == "renta-2025-family-descendant-disability-grade"
+    assert casillas_by_id["FALLDLG"].binding == "renta-2025-family-descendant-death-date"
+    assert casillas_by_id["DNIASDLG"].binding == "renta-2025-family-ascendant-tax-id"
+    assert casillas_by_id["APENOMDLG_ASC"].binding == "renta-2025-family-ascendant-display-name"
+    assert casillas_by_id["ANOASDLG"].binding == "renta-2025-family-ascendant-birth-date"
+    assert casillas_by_id["PCTMINASDLG"].binding == "renta-2025-family-ascendant-disability-grade"
+    assert casillas_by_id["CONVASDLG"].binding == "renta-2025-family-ascendant-cohabiting-descendant-count"
+    assert casillas_by_id["FALLASDLG"].binding == "renta-2025-family-ascendant-death-date"
     assert all(
         casillas_by_id[casilla_id].input_kind == "bound"
         for casilla_id in (
@@ -213,6 +290,25 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
             "DP_APENOM_C",
             "DPFNAC_C",
             "SEXO_C",
+            "DPGMIN_D",
+            "DECFAL",
+            "DPGMIN_C",
+            "NORESIDENTE",
+            "RESIDENTEUE",
+            "ZRUE2",
+            "HIJOSUE",
+            "PH18",
+            "NIFDLG",
+            "APENOMDLG",
+            "FNACDLG",
+            "MINUSDLG",
+            "FALLDLG",
+            "DNIASDLG",
+            "APENOMDLG_ASC",
+            "ANOASDLG",
+            "PCTMINASDLG",
+            "CONVASDLG",
+            "FALLASDLG",
         )
     )
 
@@ -230,6 +326,14 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
         "renta-2025-profile-spouse-tax-id",
         "renta-2025-profile-spouse-birth-date",
         "renta-2025-profile-spouse-sex",
+        "renta-2025-profile-taxpayer-disability-grade",
+        "renta-2025-profile-taxpayer-death-date",
+        "renta-2025-profile-spouse-disability-grade",
+        "renta-2025-profile-spouse-non-resident-irpf",
+        "renta-2025-profile-spouse-eu-eea-resident",
+        "renta-2025-profile-spouse-eu-eea-country",
+        "renta-2025-profile-family-descendants-eu-eea-deduction",
+        "renta-2025-profile-family-minor-children-in-unit",
     ):
         assert bindings_by_id[binding_id].selector["profile_key"] in profile_keys
     spouse_display_name_profile_keys = cast(
@@ -246,9 +350,48 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
         selector = bindings_by_id[binding_id].selector
         assert selector["required_when_profile_key"] == "declaration.type"
         assert selector["required_when_value"] == "2"
+    assert (
+        bindings_by_id["renta-2025-profile-spouse-eu-eea-resident"].selector["required_when_profile_key"]
+        == "spouse.non_resident_irpf"
+    )
+    assert bindings_by_id["renta-2025-profile-spouse-eu-eea-resident"].selector["required_when_value"] == "true"
+    assert (
+        bindings_by_id["renta-2025-profile-spouse-eu-eea-country"].selector["required_when_profile_key"]
+        == "spouse.eu_eea_resident"
+    )
+    assert bindings_by_id["renta-2025-profile-spouse-eu-eea-country"].selector["required_when_value"] == "true"
     tax_residence_selector = bindings_by_id["renta-2025-profile-tax-residence-ccaa"].selector
     assert tax_residence_selector["profile_model"] == "TaxResidenceProfile"
     assert tax_residence_selector["field"] in TaxResidenceProfile.model_fields
+
+    family_row_bindings = {
+        "renta-2025-family-descendant-tax-id": ("descendants", "tax_id"),
+        "renta-2025-family-descendant-display-name": ("descendants", "display_name"),
+        "renta-2025-family-descendant-birth-date": ("descendants", "birth_date"),
+        "renta-2025-family-descendant-disability-grade": ("descendants", "disability_grade"),
+        "renta-2025-family-descendant-death-date": ("descendants", "death_date"),
+        "renta-2025-family-ascendant-tax-id": ("ascendants", "tax_id"),
+        "renta-2025-family-ascendant-display-name": ("ascendants", "display_name"),
+        "renta-2025-family-ascendant-birth-date": ("ascendants", "birth_date"),
+        "renta-2025-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
+        "renta-2025-family-ascendant-cohabiting-descendant-count": (
+            "ascendants",
+            "cohabiting_descendant_count",
+        ),
+        "renta-2025-family-ascendant-death-date": ("ascendants", "death_date"),
+    }
+    for binding_id, (collection, field) in family_row_bindings.items():
+        selector = bindings_by_id[binding_id].selector
+        assert selector["profile_model"] == "RentaFamilyProfile"
+        assert selector["collection"] in RentaFamilyProfile.model_fields
+        assert selector["collection"] == collection
+        assert selector["field"] == field
+        assert selector["repeating"] is True
+        assert selector["dictionary_field"] in casillas_by_id
+        if collection == "descendants":
+            assert field in RentaDescendantProfile.model_fields
+        else:
+            assert field in RentaAscendantProfile.model_fields
 
 
 def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:

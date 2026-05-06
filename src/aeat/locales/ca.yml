@@ -741,13 +741,14 @@ cli:
     profile:
       app_help: Gestió de perfils financers
       errors:
-        category_not_eligible: cli.financial.profile.errors.category_not_eligible
+        category_not_eligible: la categoria %{category} no accepta un percentatge
+          d'ús
         did_you_mean: Volia dir...?
         eligible_categories: Categories elegibles
         family_aliases: Àlies familiars
         invalid_ratio: Ràtio o percentatge no vàlid
-        must_be_finite: cli.financial.profile.errors.must_be_finite
-        out_of_range: cli.financial.profile.errors.out_of_range
+        must_be_finite: la proporció ha de ser finita (s'ha rebut %{raw})
+        out_of_range: 'proporció fora de rang: %{raw} no està a [0, 1]'
         unknown_key: Clau o propietat desconeguda al perfil
       headers:
         ratios: Ràtios / Repartiments
@@ -945,68 +946,68 @@ cli:
     errors:
       invalid_input: Entrada per al LLM no vàlida
       missing_variable: Falta una variable requerida en la plantilla del prompt
-    from_help: cli.llm.from_help
-    input_help: cli.llm.input_help
+    from_help: Idioma d'origen per a la traducció o el processament
+    input_help: Text d'entrada per processar amb el LLM
     labels:
-      removed_cache_files: cli.llm.labels.removed_cache_files
-    language_help: cli.llm.language_help
-    prompt_id_help: cli.llm.prompt_id_help
-    since_help: cli.llm.since_help
-    text_help: cli.llm.text_help
-    to_help: cli.llm.to_help
-    translate_help: cli.llm.translate_help
-    until_help: cli.llm.until_help
-    usage_help: cli.llm.usage_help
+      removed_cache_files: Arxius de memòria cau eliminats
+    language_help: Idioma de destinació o principal per a la sortida
+    prompt_id_help: Identificador del prompt a utilitzar
+    since_help: Data d'inici per filtrar o consultar (AAAA-MM-DD)
+    text_help: Text a analitzar o processar pel LLM
+    to_help: Idioma de destinació per a la traducció
+    translate_help: Traduir un text d'un idioma a un altre usant LLM
+    until_help: Data de fi per filtrar o consultar (AAAA-MM-DD)
+    usage_help: Mostrar l'ús de tokens i costos de LLM
   normatives:
-    app_help: cli.normatives.app_help
+    app_help: Consultar normativa i obligacions fiscals
     errors:
-      load_failed: cli.normatives.errors.load_failed
+      load_failed: Fallada en carregar la base de dades normativa
     headers:
-      citation: cli.normatives.headers.citation
-      code: cli.normatives.headers.code
-      level: cli.normatives.headers.level
-      message: cli.normatives.headers.message
-      numero: cli.normatives.headers.numero
-      reference_id: cli.normatives.headers.reference_id
-      titulo: cli.normatives.headers.titulo
+      citation: Cita legal
+      code: Codi
+      level: Nivell
+      message: Missatge
+      numero: Número
+      reference_id: ID de referència
+      titulo: Títol
     labels:
-      articles: cli.normatives.labels.articles
-      articulos: cli.normatives.labels.articulos
-      boe_id: cli.normatives.labels.boe_id
-      boe_url: cli.normatives.labels.boe_url
-      found: cli.normatives.labels.found
-      id: cli.normatives.labels.id
-      kind: cli.normatives.labels.kind
-      last_reviewed_at: cli.normatives.labels.last_reviewed_at
-      no_articulos: cli.normatives.labels.no_articulos
-      number: cli.normatives.labels.number
-      published_at: cli.normatives.labels.published_at
-      reviewed_by: cli.normatives.labels.reviewed_by
-      short_title: cli.normatives.labels.short_title
-      tags: cli.normatives.labels.tags
-    list_help: cli.normatives.list_help
-    list_tag_help: cli.normatives.list_tag_help
-    show_help: cli.normatives.show_help
-    show_ref_id_help: cli.normatives.show_ref_id_help
+      articles: Articles
+      articulos: Articles
+      boe_id: ID BOE
+      boe_url: URL del BOE
+      found: Trobat
+      id: ID
+      kind: Tipus
+      last_reviewed_at: Última revisió
+      no_articulos: No hi ha articles disponibles
+      number: Número
+      published_at: Publicat el
+      reviewed_by: Revisat per
+      short_title: Títol curt
+      tags: Etiquetes
+    list_help: Llistar i filtrar normatives fiscals
+    list_tag_help: Filtrar normatives per etiqueta (ex. iva, irpf)
+    show_help: Mostrar detalls d'una normativa específica
+    show_ref_id_help: ID de referència de la normativa a mostrar
     success:
-      clean: cli.normatives.success.clean
-      verification_results: cli.normatives.success.verification_results
-    verify_help: cli.normatives.verify_help
+      clean: Neteja de normatives completada
+      verification_results: Resultats de verificació
+    verify_help: Verificar integritat i validesa de normatives
   oauth:
-    app_help: cli.oauth.app_help
+    app_help: Gestió d'autenticació OAuth 2.0
     errors:
-      invalid_json: cli.oauth.errors.invalid_json
+      invalid_json: 'Error: L''arxiu de credencials no conté JSON vàlid'
     init:
-      help: cli.oauth.init.help
-      json_help: cli.oauth.init.json_help
-      success: cli.oauth.init.success
+      help: Inicialitzar configuració d'OAuth des d'un arxiu
+      json_help: Ruta a l'arxiu JSON de credencials de Google Cloud
+      success: Configuració OAuth inicialitzada amb èxit
     labels:
-      next_step: cli.oauth.labels.next_step
-      open_url: cli.oauth.labels.open_url
-      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+      next_step: Següent pas
+      open_url: Si us plau, obre la següent URL al teu navegador per autoritzar l'aplicació
+      run_gcloud_auth: Executar l'autenticació de gcloud
     success:
-      copied: cli.oauth.success.copied
-      written: cli.oauth.success.written
+      copied: Credencials copiades al porta-retalls
+      written: Configuració escrita amb èxit
   overview:
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
@@ -1023,10 +1024,11 @@ cli:
     transactions: Moviments
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
-    app_help: cli.registry.app_help
-    capture_filed_data_help: cli.registry.capture_filed_data_help
-    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
-    capture_limit_help: cli.registry.capture_limit_help
+    app_help: Gestió del registre de models fiscals
+    capture_filed_data_help: Capturar dades ja presentades a l'AEAT i actualitzar
+      el registre local
+    capture_filed_data_json_help: Sortida en format JSON per a eines d'automatització
+    capture_limit_help: Límit de registres a processar
     capture_source_filed_data_help: Capturar observacions font presentades requerides
       pel càlcul d'un model objectiu
     capture_source_filed_data_json_help: Emetre l'informe de captura de dades font
@@ -1034,9 +1036,9 @@ cli:
     casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
       calculades per defecte
     errors:
-      invalid_year_range: cli.registry.errors.invalid_year_range
+      invalid_year_range: Rang d'anys no vàlid
       unknown_modelo: El registre no conté cap definició del model {modelo}
-    expediente_help: cli.registry.expediente_help
+    expediente_help: Número d'expedient de l'AEAT a capturar
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
     inspect_registry_root_help: cli.registry.inspect_registry_root_help
