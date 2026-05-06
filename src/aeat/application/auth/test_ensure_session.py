@@ -1,0 +1,145 @@
+"""Tests for the central AEAT auth-session ensure API."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from ...core.config import Settings
+from . import AuthProviderKind
+from ._acquisition_lock import inspect_auth_acquisition_lock
+from ._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+class _Provider:
+    def __init__(
+        self,
+        *,
+        probe: tuple[object, object] | Exception | None = None,
+        auth: tuple[object, object] | None = None,
+    ) -> None:
+        self._probe = probe
+        self._auth = auth
+        self.probe_calls = 0
+        self.authenticate_calls = 0
+        self.verify_calls = 0
+        self.close_calls = 0
+
+    async def probe_persisted_session(self) -> tuple[object, object]:
+        self.probe_calls += 1
+        if isinstance(self._probe, Exception):
+            raise self._probe
+        if self._probe is None:
+            raise AuthSessionUnavailableError("no persisted session")
+        return self._probe
+
+    async def authenticate(self) -> object:
+        self.authenticate_calls += 1
+        if self._auth is None:
+            raise AuthSessionUnavailableError("auth not configured")
+        return self._auth[0]
+
+    async def verify(self, session: object) -> object:
+        self.verify_calls += 1
+        if self._auth is None:
+            raise AuthSessionUnavailableError("auth not configured")
+        assert session is self._auth[0]
+        return self._auth[1]
+
+    async def close(self) -> None:
+        self.close_calls += 1
+
+
+def _settings(tmp_path: Path) -> Settings:
+    return Settings().model_copy(
+        update={
+            "aeat_token_dir": tmp_path / "tokens",
+            "aeat_default_profile_name": "operator",
+        }
+    )
+
+
+def _assertion(valid: bool = True) -> object:
+    return SimpleNamespace(is_valid=valid, status_code=200, error_message=None)
+
+
+def _factory(providers: list[_Provider]):
+    def build(kind: AuthProviderKind, settings: Settings, browser_session_factory: Any | None) -> _Provider:
+        del kind, settings, browser_session_factory
+        return providers.pop(0)
+
+    return build
+
+
+@pytest.mark.asyncio
+async def test_ensure_reuses_persisted_session_without_acquiring_lock(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    session = SimpleNamespace(identity_nif="12345678Z")
+    assertion = _assertion()
+    provider = _Provider(probe=(session, assertion))
+
+    result = await ensure_authenticated_aeat_session(
+        settings,
+        kind=AuthProviderKind.CLAVE_MOVIL,
+        provider_factory=_factory([provider]),
+    )
+
+    assert result.session is session
+    assert result.assertion is assertion
+    assert result.reused_persisted_session is True
+    assert result.acquired_lock is None
+    assert provider.probe_calls == 1
+    assert provider.authenticate_calls == 0
+    assert inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL).locked is False
+
+
+@pytest.mark.asyncio
+async def test_ensure_acquires_lock_then_authenticates_after_probe_failure(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    session = SimpleNamespace(identity_nif="12345678Z")
+    assertion = _assertion()
+    first_probe = _Provider(probe=AuthSessionUnavailableError("missing"))
+    second_probe = _Provider(probe=AuthSessionUnavailableError("missing"))
+    auth_provider = _Provider(auth=(session, assertion))
+
+    result = await ensure_authenticated_aeat_session(
+        settings,
+        kind=AuthProviderKind.CLAVE_MOVIL,
+        provider_factory=_factory([first_probe, second_probe, auth_provider]),
+    )
+
+    assert result.session is session
+    assert result.assertion is assertion
+    assert result.reused_persisted_session is False
+    assert result.acquired_lock is not None
+    assert first_probe.probe_calls == 1
+    assert second_probe.probe_calls == 1
+    assert auth_provider.authenticate_calls == 1
+    assert auth_provider.verify_calls == 1
+    assert inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL).locked is False
+
+
+@pytest.mark.asyncio
+async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    session = SimpleNamespace(identity_nif="12345678Z")
+    assertion = _assertion()
+    auth_provider = _Provider(auth=(session, assertion))
+
+    result = await ensure_authenticated_aeat_session(
+        settings,
+        kind=AuthProviderKind.CLAVE_MOVIL,
+        fresh=True,
+        provider_factory=_factory([auth_provider]),
+    )
+
+    assert result.session is session
+    assert result.fresh is True
+    assert result.reused_persisted_session is False
+    assert auth_provider.probe_calls == 0
+    assert auth_provider.authenticate_calls == 1

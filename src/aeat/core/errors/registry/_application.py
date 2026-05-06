@@ -4,6 +4,17 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
+        ErrorCode(
+            code="LOCKED_AUTH_ACQUISITION",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_auth_acquisition",
+            default_suggestion="aeat setup auth status --format json",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
