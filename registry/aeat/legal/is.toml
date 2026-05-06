@@ -274,6 +274,26 @@ required_text = [
     "la Administración tributaria procederá a devolver, de oficio, el exceso",
 ]
 
+[legal."ley-27-2014:art-124"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-124.html#a124"
+document_id = "BOE-A-2014-12328"
+article = "124"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a124"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Declaracion del Impuesto sobre Sociedades: lugar, forma, obligados y plazo general de 25 dias naturales tras los seis meses posteriores a la conclusion del periodo impositivo."
+required_text = [
+    "Los contribuyentes estarán obligados a presentar una declaración",
+    "25 días naturales siguientes a los 6 meses posteriores",
+    "conclusión del período impositivo",
+]
+
 [sources."aeat-dr-200-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -297,4 +317,18 @@ retrieved_at = 2026-05-06
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-200-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
+sha256 = "474cb765a2d0e7bf2c45b7504a4f3a3cbc9dde656e7d2b09b7813f94f8f1bfce"
+bytes = 2602
+retrieved_at = 2026-05-06
+published_at = 2025-06-24
+applies_from = 2025-07-01
+applies_to = 2025-07-25
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "reviewed"
