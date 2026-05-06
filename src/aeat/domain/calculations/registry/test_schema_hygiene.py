@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -30,6 +31,14 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
         "rootnode",
         "root_node",
     }
+)
+
+_FORBIDDEN_TEST_NARRATIVE = (
+    "deleted as tautological",
+    "previously in this file",
+    "past-state",
+    "migration state",
+    "compatibility shim",
 )
 
 
@@ -111,3 +120,18 @@ def test_section_paths_do_not_leak_xml_root_containers() -> None:
                         f"has XML root container {casilla.section[0]!r} as section[0]"
                     )
     assert not offences, "XML root containers leaked into section paths:\n  " + "\n  ".join(offences)
+
+
+def test_registry_tests_describe_current_behaviour_not_removed_work() -> None:
+    """Calculation-registry tests must describe executable behaviour, not old development states."""
+
+    offences: list[str] = []
+    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    for path in sorted(root.glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for phrase in _FORBIDDEN_TEST_NARRATIVE:
+            if phrase in text:
+                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} contains {phrase!r}")
+    assert not offences, "registry tests contain past-state narratives:\n  " + "\n  ".join(offences)
