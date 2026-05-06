@@ -677,7 +677,7 @@ legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
 
 # ---------------------------------------------------------------------------
-# Formulas (foundation slice).
+# Formulas.
 # ---------------------------------------------------------------------------
 
 [[revisions."2025-y-siguientes".formulas]]

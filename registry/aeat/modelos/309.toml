@@ -39,8 +39,8 @@ tolerance = "0.00"
 legal_refs = ["orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
-# Demonstrator ledger_iva_aggregation bindings for the non-periodic IVA
-# triggers covered by Modelo 309. The autorepercutido binding covers
+# Ledger IVA aggregation bindings for the non-periodic IVA triggers covered by
+# Modelo 309. The autorepercutido binding covers
 # intra-community acquisitions of medios de transporte nuevos and similar
 # triggers; the soportado binding covers recargo-de-equivalencia retailers
 # claiming devolución on traveler exports.

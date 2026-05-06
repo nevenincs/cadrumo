@@ -40,10 +40,7 @@ legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
 # -----------------------------------------------------------------------------
-# Demonstrator ledger_iva_aggregation bindings showing the cross-modelo IVA
-# substrate (VATCategory + VATRateKind + IvaFlowDirection) end-to-end.
-# Casilla deepening (mapping these to AEAT-numbered casillas 01, 03, 04, 06,
-# 07, 09, 28, 29 etc.) follows in a subsequent slice.
+# Ledger IVA aggregation bindings for periodic domestic VAT settlements.
 # -----------------------------------------------------------------------------
 
 [[revisions."2009-y-siguientes".bindings]]

@@ -1,9 +1,7 @@
 """Cross-modelo schema hygiene tests.
 
-These guards catch generator regressions that bulk-emit casillas from AEAT
-data dictionaries or workbook layouts. They run against every committed
-registry/aeat/modelos/*.toml so a future deepening pass cannot introduce
-duplicate casilla declarations, drop section structure, or leave XML-root
+These guards run against every committed registry/aeat/modelos/*.toml to
+prevent duplicate casilla declarations, missing section structure, or XML-root
 container names like ``DatosEconomicos`` leaking through into the section
 taxonomy.
 """
