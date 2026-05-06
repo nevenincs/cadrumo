@@ -5,9 +5,7 @@ the real AEAT sede with a Cl@ve-móvil session. Skips cleanly when:
 
 * ``AEAT_LIVE_TESTS_ENABLED`` is unset (every live test gates on
   this), OR
-* No active Cl@ve session is on disk (running this test would
-  prompt the operator for a 2FA push, which is not appropriate
-  for an automated suite).
+* Cl@ve-móvil credentials are not configured for the live backend.
 
 The test is read-only by construction — every public surface in
 :mod:`aeat.adapters.outbound.aeat.sede._declarations` is structurally incapable of
@@ -32,30 +30,26 @@ async def _load_active_clave_session():
     Returns:
         The :class:`AeatSession` reconstructed from the on-disk
         Cl@ve cookies. Skips when no session is persisted or the
-        operator hasn't opted into live tests.
+        operator has not opted into live tests.
     """
     # Local imports keep the test file lightweight when skipped.
     from aeat.application.auth import (
         AuthProviderKind,
-        AuthSessionUnavailableError,
-        CorruptAuthSessionError,
-        load_persisted_session,
-        require_verified_aeat_session,
+        ensure_authenticated_aeat_session,
     )
     from aeat.core.config import load_settings
+    from aeat.core.errors import AeatError
 
     settings = load_settings()
-    persisted = load_persisted_session(settings, None)
-    if persisted is None:
-        pytest.skip("No active AEAT session; run `aeat auth login` to enable live tests.")
-    if persisted.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
-        pytest.skip(
-            f"Live walker test requires Cl@ve-móvil session (active provider: {persisted.provider_kind.value}).",
-        )
     try:
-        return await require_verified_aeat_session(settings, kind=AuthProviderKind.CLAVE_MOVIL)
-    except (AuthSessionUnavailableError, CorruptAuthSessionError) as exc:
-        pytest.skip(f"No active Cl@ve session; run `aeat auth login` to enable live tests: {exc}")
+        result = await ensure_authenticated_aeat_session(
+            settings,
+            kind=AuthProviderKind.CLAVE_MOVIL,
+            operation="sede-declarations-live-test",
+        )
+        return result.session
+    except AeatError as exc:
+        pytest.skip(f"Cl@ve-móvil live authentication is not available: {exc}")
 
 
 @pytest.mark.asyncio

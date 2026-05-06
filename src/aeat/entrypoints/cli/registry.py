@@ -24,8 +24,10 @@ from ...adapters.outbound.aeat.sede import (
     shared_playwright,
 )
 from ...adapters.persistence.storage import MasterKeyProvider
-from ...application.auth import AuthSessionUnavailableError, CorruptAuthSessionError, require_verified_aeat_session
+from ...application.auth import ensure_authenticated_aeat_session
+from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
+from ...core.errors import AeatError
 from ...domain.calculations.registry import (
     RegistrySnapshotError,
     calculate_registry_snapshot,
@@ -405,8 +407,13 @@ def _filing_period_date(period: str, filing_year: int) -> date:
 async def _active_verified_session() -> tuple[AeatSession, Settings]:
     settings = load_settings()
     try:
-        return await require_verified_aeat_session(settings), settings
-    except (AuthSessionUnavailableError, CorruptAuthSessionError) as exc:
+        AeatAccessGate(settings).require_live_read()
+        result = await ensure_authenticated_aeat_session(
+            settings,
+            operation="registry-live-read",
+        )
+        return result.session, settings
+    except AeatError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
 

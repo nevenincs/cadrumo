@@ -8,7 +8,8 @@ import re
 import shutil
 import subprocess
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -49,6 +50,20 @@ _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 _LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
+
+
+class _BinaryXlsConversionError(Exception):
+    """Failure raised after a valid LibreOffice runner starts XLS conversion."""
+
+
+@dataclass(frozen=True)
+class _BinaryXlsConversionContext:
+    resolved_root: Path
+    resolved_path: Path
+    relative: str
+    digest: str
+    byte_count: int
+    modelo: str | None
 
 
 class WorkbookParityModel(BaseModel):
@@ -480,17 +495,97 @@ def convert_binary_xls_with_libreoffice(
     """Convert one official binary XLS in isolated storage and classify it."""
 
     started = time.monotonic()
+    context = _binary_xls_conversion_context(workbook_path, root=root)
     runner = _resolve_libreoffice_runner(executable)
+    try:
+        with _converted_binary_xls_path(context, runner=runner) as converted_path:
+            sheets, formulas, references = _inspect_converted_xlsx(
+                converted_path,
+                original_relative=context.relative,
+                started=started,
+            )
+    except _BinaryXlsConversionError as exc:
+        error = str(exc)
+        if "timed out" in error:
+            return _failed_conversion_report(
+                relative=context.relative,
+                modelo=context.modelo,
+                byte_count=context.byte_count,
+                digest=context.digest,
+                error=error,
+                started=started,
+            )
+        return _failed_conversion_report(
+            relative=context.relative,
+            modelo=context.modelo,
+            byte_count=context.byte_count,
+            digest=context.digest,
+            error=error,
+            started=started,
+        )
+    kind = _classify_xlsx(context.relative, formulas)
+    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
+    return WorkbookConversionReport(
+        path=context.relative,
+        modelo=context.modelo,
+        bytes=context.byte_count,
+        sha256=context.digest,
+        converted_extension=".xlsx",
+        sheets=sheets,
+        formula_cells=len(formulas),
+        input_candidates=tuple(_dedupe_cells(references)),
+        output_candidates=formulas,
+        workbook_kind=kind,
+        evidence_tier=evidence_tier,
+        not_evidence_for=not_evidence_for,
+        conversion_status="converted",
+        elapsed_seconds=_elapsed_decimal(started),
+    )
+
+
+@contextmanager
+def converted_binary_xls_with_libreoffice(
+    workbook_path: Path,
+    *,
+    root: Path,
+    executable: str | None = None,
+) -> Iterator[Path]:
+    """Yield a temporary XLSX converted from official binary XLS input."""
+
+    context = _binary_xls_conversion_context(workbook_path, root=root)
+    runner = _resolve_libreoffice_runner(executable)
+    try:
+        with _converted_binary_xls_path(context, runner=runner) as converted_path:
+            yield converted_path
+    except _BinaryXlsConversionError as exc:
+        raise RegistryValidationError(str(exc)) from exc
+
+
+def _binary_xls_conversion_context(workbook_path: Path, *, root: Path) -> _BinaryXlsConversionContext:
     resolved_root = root.resolve()
     resolved_path = workbook_path.resolve()
     if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
         raise RegistryValidationError(f"workbook path escapes conversion root: {workbook_path}")
     if resolved_path.suffix.lower() != ".xls":
         raise RegistryValidationError("binary workbook conversion accepts only XLS artefacts")
-
     relative = resolved_path.relative_to(resolved_root).as_posix()
     digest, byte_count = _hash_file(resolved_path)
-    modelo = _infer_modelo(relative)
+    return _BinaryXlsConversionContext(
+        resolved_root=resolved_root,
+        resolved_path=resolved_path,
+        relative=relative,
+        digest=digest,
+        byte_count=byte_count,
+        modelo=_infer_modelo(relative),
+    )
+
+
+@contextmanager
+def _converted_binary_xls_path(
+    context: _BinaryXlsConversionContext,
+    *,
+    runner: Path,
+) -> Iterator[Path]:
     with TemporaryDirectory(prefix="aeat-xls-conversion-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
@@ -509,62 +604,23 @@ def convert_binary_xls_with_libreoffice(
                     "xlsx",
                     "--outdir",
                     str(output_dir),
-                    str(resolved_path),
+                    str(context.resolved_path),
                 ],
                 check=True,
                 capture_output=True,
                 text=True,
                 timeout=120,
             )
-        except subprocess.TimeoutExpired:
-            return _failed_conversion_report(
-                relative=relative,
-                modelo=modelo,
-                byte_count=byte_count,
-                digest=digest,
-                error="LibreOffice binary XLS conversion timed out",
-                started=started,
-            )
+        except subprocess.TimeoutExpired as exc:
+            raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
         except subprocess.CalledProcessError as exc:
             detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
-            return _failed_conversion_report(
-                relative=relative,
-                modelo=modelo,
-                byte_count=byte_count,
-                digest=digest,
-                error=f"LibreOffice binary XLS conversion failed: {detail}",
-                started=started,
-            )
+            raise _BinaryXlsConversionError(f"LibreOffice binary XLS conversion failed: {detail}") from exc
         outputs = tuple(output_dir.glob("*.xlsx"))
         if len(outputs) != 1:
             detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
-            return _failed_conversion_report(
-                relative=relative,
-                modelo=modelo,
-                byte_count=byte_count,
-                digest=digest,
-                error=f"LibreOffice did not produce exactly one XLSX workbook: {detail}",
-                started=started,
-            )
-        sheets, formulas, references = _inspect_converted_xlsx(outputs[0], original_relative=relative, started=started)
-        kind = _classify_xlsx(relative, formulas)
-        evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
-        return WorkbookConversionReport(
-            path=relative,
-            modelo=modelo,
-            bytes=byte_count,
-            sha256=digest,
-            converted_extension=".xlsx",
-            sheets=sheets,
-            formula_cells=len(formulas),
-            input_candidates=tuple(_dedupe_cells(references)),
-            output_candidates=formulas,
-            workbook_kind=kind,
-            evidence_tier=evidence_tier,
-            not_evidence_for=not_evidence_for,
-            conversion_status="converted",
-            elapsed_seconds=_elapsed_decimal(started),
-        )
+            raise _BinaryXlsConversionError(f"LibreOffice did not produce exactly one XLSX workbook: {detail}")
+        yield outputs[0]
 
 
 def run_registry_workbook_parity(
