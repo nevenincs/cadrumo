@@ -9,6 +9,7 @@ from ._aeat_nif_iva_oracle import (
     AEAT_NIF_IVA_VERIFICATION_URL,
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
+    AeatNifIvaReplayDriver,
     register_default,
 )
 from ._errors import RegistryValidationError
@@ -100,20 +101,43 @@ def test_planned_operations_rejects_empty_expected() -> None:
         oracle.planned_operations(b"", expected={})
 
 
-def test_verify_payload_pre_flights_through_guard_before_raising_not_implemented() -> None:
+def test_verify_payload_without_driver_returns_unverifiable_after_guard_preflight() -> None:
     oracle = AeatNifIvaCheckerOracle()
     policy = _aeat_policy()
 
-    with pytest.raises(NotImplementedError, match="Playwright driver is not implemented"):
-        oracle.verify_payload(policy, b"", expected={"DE111": "valid"})
+    result = oracle.verify_payload(policy, b"", expected={"DE111": "valid"})
+
+    assert result.verdict == "unverifiable"
+    assert result.oracle_id == ORACLE_ID
+    assert "no executable driver configured" in result.narrative
 
 
-def test_verify_payload_blocked_by_guard_when_aeat_host_not_in_policy() -> None:
+def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> None:
     oracle = AeatNifIvaCheckerOracle()
     policy = _wrong_host_policy()
 
-    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        oracle.verify_payload(policy, b"", expected={"DE111": "valid"})
+    result = oracle.verify_payload(policy, b"", expected={"DE111": "valid"})
+
+    assert result.verdict == "blocked"
+    assert "not in allowed read-only hosts" in result.narrative
+
+
+def test_verify_payload_compares_replay_observations() -> None:
+    oracle = AeatNifIvaCheckerOracle(driver=AeatNifIvaReplayDriver())
+    policy = _aeat_policy()
+
+    result = oracle.verify_payload(
+        policy,
+        b'{"observed": {"DE111": "valid", "FR123": "invalid"}, "raw_evidence_locator": "corpus/nif-iva.json"}',
+        expected={"DE111": "valid", "FR123": "valid"},
+    )
+
+    assert result.verdict == "mismatch"
+    assert result.raw_evidence_locator == "corpus/nif-iva.json"
+    assert [(field.name, field.verdict) for field in result.fields] == [
+        ("DE111", "match"),
+        ("FR123", "mismatch"),
+    ]
 
 
 def test_register_default_under_production_environment() -> None:

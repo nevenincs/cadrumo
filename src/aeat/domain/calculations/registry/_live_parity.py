@@ -70,8 +70,8 @@ OracleEnvironment = Literal["production", "test_environment", "both"]
 # pairs. Bindings whose pair is not listed here are flagged by the boot-time
 # audit. ``static_official_documentation`` is intentionally absent: static-doc
 # surfaces have no verifiable response and cannot be the target of any oracle.
-# Adding a new oracle surface_kind or a new cross-reference surface in a
-# follow-up must extend this set in the same commit.
+# Any new oracle surface_kind or cross-reference surface must extend this set
+# in the same change that introduces it.
 _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
