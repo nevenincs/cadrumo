@@ -114,7 +114,6 @@ def test_removed_developer_commands_are_not_registered() -> None:
         ["bootstrap", "--help"],
         ["doctor", "--help"],
         ["auth", "--help"],
-        ["app", "registry", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
@@ -131,10 +130,18 @@ def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "invoice", "declaration"):
+    for command in ("overview", "ledger", "invoice", "declaration", "registry"):
         assert command in result.output
     for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
         assert removed_command not in result.output
+
+
+def test_registry_verification_gate_is_registered_under_app_surface() -> None:
+    result = _invoke(["app", "registry", "verify", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--registry-root" in result.output
+    assert "--source-root" in result.output
 
 
 def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
