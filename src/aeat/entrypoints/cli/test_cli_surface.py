@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.application.auth import AuthProviderKind, acquire_auth_acquisition_lock
 from aeat.application.filing import FilingOperatorProfile, build_draft, build_runtime_schema_provider
 from aeat.domain.calculations.registry import RegistryError
 from aeat.domain.filing import FilingBuilderError
@@ -137,8 +138,15 @@ def test_setup_profile_help_carries_subcommands() -> None:
 def test_setup_auth_help_carries_subcommands() -> None:
     result = _invoke(["setup", "auth", "--help"])
     assert result.exit_code == 0
-    for token in ("providers", "configure", "login", "status", "whoami", "logout"):
+    for token in ("providers", "configure", "login", "status", "reset", "whoami", "logout"):
         assert token in result.output
+
+
+def test_setup_auth_login_help_carries_manual_recovery_flags() -> None:
+    result = _invoke(["setup", "auth", "login", "--help"])
+    assert result.exit_code == 0
+    assert "--fresh" in result.output
+    assert "--reset-lock" in result.output
 
 
 def test_top_level_auth_is_not_user_facing() -> None:
@@ -299,7 +307,85 @@ def test_setup_auth_configure_clave_movil_round_trips(
     payload = json.loads(status.output)
     assert payload["auth"]["provider"] == "clave_movil"
     assert payload["ready"] is False
+    assert payload["acquisition_lock"]["state"] == "absent"
     assert _invoke(["setup", "auth", "logout"]).exit_code == 0
+
+
+def test_setup_auth_status_reports_live_acquisition_lock(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+
+    assert _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"]).exit_code == 0
+    assert _invoke(["setup", "auth", "configure", "--provider", "clave_movil"]).exit_code == 0
+
+    from aeat.core.config import Settings
+
+    settings = Settings().model_copy(
+        update={
+            "aeat_token_dir": tmp_path / "tokens",
+            "aeat_default_profile_name": "default",
+            "aeat_clave_movil_dni_nie": "12345678Z",
+        }
+    )
+    with acquire_auth_acquisition_lock(
+        settings,
+        AuthProviderKind.CLAVE_MOVIL,
+        ttl_seconds=300,
+        operation="test-auth-login",
+    ):
+        status = _invoke(["--format", "json", "setup", "auth", "status"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.output)
+    assert payload["ready"] is False
+    assert payload["acquisition_lock"]["state"] == "held"
+    assert payload["acquisition_lock"]["record"]["operation"] == "test-auth-login"
+
+
+def test_setup_auth_reset_requires_explicit_scope(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate(monkeypatch, tmp_path)
+
+    assert _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"]).exit_code == 0
+    assert _invoke(["setup", "auth", "configure", "--provider", "clave_movil"]).exit_code == 0
+
+    reset = _invoke(["setup", "auth", "reset"])
+
+    assert reset.exit_code == 2
+
+
+def test_setup_auth_reset_locks_removes_manual_acquisition_lock(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+
+    assert _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"]).exit_code == 0
+    assert _invoke(["setup", "auth", "configure", "--provider", "clave_movil"]).exit_code == 0
+
+    from aeat.core.config import Settings
+
+    settings = Settings().model_copy(
+        update={
+            "aeat_token_dir": tmp_path / "tokens",
+            "aeat_default_profile_name": "default",
+            "aeat_clave_movil_dni_nie": "12345678Z",
+        }
+    )
+    with acquire_auth_acquisition_lock(
+        settings,
+        AuthProviderKind.CLAVE_MOVIL,
+        ttl_seconds=300,
+        operation="test-auth-login",
+    ):
+        reset = _invoke(["--format", "json", "setup", "auth", "reset", "--locks"])
+
+    assert reset.exit_code == 0, reset.output
+    payload = json.loads(reset.output)
+    assert payload["reset_lock"]["state"] == "held"
+    assert payload["reset_lock"]["reason"] == "operator-reset-command"
+    assert payload["removed_sessions"] == []
 
 
 def test_setup_auth_clave_movil_status_and_logout_do_not_mark_login_without_verified_session(

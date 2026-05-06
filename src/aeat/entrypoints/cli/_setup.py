@@ -9,8 +9,11 @@ from ...application.auth import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderKind,
     AuthSessionUnavailableError,
+    clear_auth_acquisition_lock,
     delete_persisted_session,
+    ensure_authenticated_aeat_session,
     get_auth_provider,
+    inspect_auth_acquisition_lock,
     require_verified_aeat_session,
 )
 from ...application.profile import validate_profile
@@ -194,7 +197,22 @@ def auth_configure(
 
 
 @auth_app.command("login", help=tr("cli.setup.auth.login.help"))
-def auth_login(ctx: typer.Context) -> None:
+def auth_login(
+    ctx: typer.Context,
+    fresh: bool = typer.Option(
+        False,
+        "--fresh",
+        help="Clear the persisted provider session under the auth lock before authenticating.",
+    ),
+    reset_lock: bool = typer.Option(
+        False,
+        "--reset-lock",
+        help=(
+            "Remove an existing acquisition lock before authenticating; "
+            "use only after confirming no auth process is running."
+        ),
+    ),
+) -> None:
     """Authenticate with the configured AEAT provider and persist the verified session marker."""
     current = _state()
     if current.auth.provider is None:
@@ -205,10 +223,21 @@ def auth_login(ctx: typer.Context) -> None:
         raise _bad(tr("cli.setup.errors.unknown_provider").format(provider=current.auth.provider)) from exc
     record = current.active_profile_record()
     profile_tax_id = record.values.get("tax.id") if record is not None else None
-    session, assertion = asyncio.run(_authenticate_configured_provider(provider_kind, profile_tax_id=profile_tax_id))
+    if fresh:
+        state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+    result = asyncio.run(
+        _authenticate_configured_provider(
+            provider_kind,
+            profile_tax_id=profile_tax_id,
+            fresh=fresh,
+            reset_lock=reset_lock,
+        )
+    )
+    session = result.session
+    assertion = result.assertion
     subject = session.identity_nif or profile_tax_id
     updated = state_repository().update(lambda state: update_auth(state, authenticated=True, subject=subject))
-    payload = {"auth": updated.auth, "session": session, "assertion": assertion}
+    payload = {"auth": updated.auth, "session": session, "assertion": assertion, "result": result}
     _emit(
         ctx,
         payload,
@@ -225,12 +254,14 @@ def auth_status(ctx: typer.Context) -> None:
     ready = False
     session = None
     error: str | None = None
+    acquisition_lock = None
     if current.auth.provider is not None:
         try:
             provider_kind = AuthProviderKind(current.auth.provider)
             record = current.active_profile_record()
             profile_tax_id = record.values.get("tax.id") if record is not None else None
             settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+            acquisition_lock = inspect_auth_acquisition_lock(settings, provider_kind)
             session = asyncio.run(require_verified_aeat_session(settings, kind=provider_kind))
             ready = True
             state_repository().update(
@@ -240,9 +271,16 @@ def auth_status(ctx: typer.Context) -> None:
             error = str(exc)
             state_repository().update(lambda state: update_auth(state, authenticated=False))
     current = _state()
-    payload = {"auth": current.auth, "ready": ready, "session": session, "error": error}
+    payload = {
+        "auth": current.auth,
+        "ready": ready,
+        "session": session,
+        "error": error,
+        "acquisition_lock": acquisition_lock,
+    }
     yes_no = tr("cli.setup.labels.yes") if ready else tr("cli.setup.labels.no")
     authenticated_at = current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ""
+    lock_state = acquisition_lock.state.value if acquisition_lock is not None else ""
     _emit(
         ctx,
         payload,
@@ -250,6 +288,57 @@ def auth_status(ctx: typer.Context) -> None:
             f"{tr('cli.setup.headers.provider')}\t{current.auth.provider or ''}",
             f"{tr('cli.setup.headers.ready')}\t{yes_no}",
             f"{tr('cli.setup.headers.authenticated_at')}\t{authenticated_at}",
+            f"auth_lock\t{lock_state}",
+        ],
+    )
+
+
+@auth_app.command("reset", help="Reset persisted auth sessions and/or acquisition locks.")
+def auth_reset(
+    ctx: typer.Context,
+    sessions: bool = typer.Option(False, "--sessions", help="Remove persisted auth session state for the provider."),
+    locks: bool = typer.Option(False, "--locks", help="Remove the provider acquisition lock."),
+    all_: bool = typer.Option(False, "--all", help="Remove both persisted auth session state and acquisition lock."),
+) -> None:
+    """Manually clear local auth recovery state after a crash or broken login attempt."""
+
+    current = _state()
+    if current.auth.provider is None:
+        raise _bad(tr("cli.setup.errors.not_configured"))
+    try:
+        provider_kind = AuthProviderKind(current.auth.provider)
+    except ValueError as exc:
+        raise _bad(tr("cli.setup.errors.unknown_provider").format(provider=current.auth.provider)) from exc
+    reset_sessions = sessions or all_
+    reset_locks = locks or all_
+    if not reset_sessions and not reset_locks:
+        raise _bad("Choose at least one reset scope: --sessions, --locks, or --all.")
+
+    record = current.active_profile_record()
+    profile_tax_id = record.values.get("tax.id") if record is not None else None
+    settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+    removed_sessions: list[Path] = []
+    lock_status = None
+    if reset_locks:
+        lock_status = clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-command")
+    if reset_sessions:
+        removed_sessions = delete_persisted_session(settings, kind=provider_kind)
+        state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+
+    updated = _state()
+    payload = {
+        "auth": updated.auth,
+        "removed_sessions": removed_sessions,
+        "reset_lock": lock_status,
+    }
+    lock_state = lock_status.state.value if lock_status is not None else "-"
+    _emit(
+        ctx,
+        payload,
+        [
+            f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider or ''}",
+            f"removed_sessions\t{len(removed_sessions)}",
+            f"auth_lock\t{lock_state}",
         ],
     )
 
@@ -307,29 +396,19 @@ async def _authenticate_configured_provider(
     provider_kind: AuthProviderKind,
     *,
     profile_tax_id: str | None,
+    fresh: bool = False,
+    reset_lock: bool = False,
 ):
-    """Run the concrete outbound auth provider selected by the official CLI."""
-
-    from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
-    from .auth._registry import build_provider
+    """Ensure a verified AEAT session through the application auth API."""
 
     settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
-    provider = build_provider(provider_kind, settings)
-    try:
-        session = await provider.authenticate()
-        assertion = await provider.verify(session)
-        if not assertion.is_valid:
-            raise AeatLoginAssertionError(
-                "AEAT authentication completed but live verification failed: "
-                f"status={assertion.status_code} error={assertion.error_message!r}"
-            )
-        return session, assertion
-    finally:
-        close = getattr(provider, "close", None)
-        if callable(close):
-            result = close()
-            if asyncio.iscoroutine(result):
-                await result
+    return await ensure_authenticated_aeat_session(
+        settings,
+        kind=provider_kind,
+        fresh=fresh,
+        reset_lock=reset_lock,
+        operation="setup-auth-login",
+    )
 
 
 def _settings_for_auth_provider(provider_kind: AuthProviderKind, *, profile_tax_id: str | None) -> Settings:

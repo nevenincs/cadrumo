@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.domain.calculations.registry._bindings import (
     IvaLedgerObservation,
@@ -42,7 +43,7 @@ def _binding(
     fact: str | None = None,
     aggregation: dict[str, str] | None = None,
 ) -> DataBindingDefinition:
-    selector: dict[str, object] = {
+    selector: dict[str, str | int | Decimal | tuple[str, ...]] = {
         "categories": categories,
         "rate_kinds": rate_kinds,
         "flow_direction": flow,
@@ -84,9 +85,7 @@ def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="2009-y-siguientes",
         valid_from=date(2009, 1, 1),
-        period_selector=PeriodSelector(
-            year_from=2009, periods=("1T", "2T", "3T", "4T")
-        ),
+        period_selector=PeriodSelector(year_from=2009, periods=("1T", "2T", "3T", "4T")),
         legal_refs=("ley-37-1992:art-88",),
         source_refs=("boe-modelo-303-2008-form",),
         bindings=bindings,
@@ -124,9 +123,7 @@ def test_validate_rejects_empty_rate_kinds() -> None:
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with pytest.raises(RegistryValidationError, match="aggregation op 'sum'"):
-        validate_ledger_iva_aggregation_binding_definition(
-            _binding(aggregation={"op": "max"})
-        )
+        validate_ledger_iva_aggregation_binding_definition(_binding(aggregation={"op": "max"}))
 
 
 def test_validate_rejects_unknown_fact() -> None:
@@ -193,9 +190,6 @@ def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
 def test_resolve_filters_by_category_set() -> None:
     """The selector's categories tuple is interpreted as a SET match —
     observations whose category is in the tuple count, others don't."""
-    revision = _revision_with_bindings(
-        _binding(categories=("domestic_general_21", "domestic_reduced_10"))
-    )
     observations = [
         _observation(category=VATCategory.DOMESTIC_GENERAL_21, rate_kind=VATRateKind.GENERAL, iva=Decimal("210")),
         _observation(
@@ -206,7 +200,12 @@ def test_resolve_filters_by_category_set() -> None:
         _observation(category=VATCategory.RECARGO_EQUIVALENCIA, rate_kind=VATRateKind.GENERAL, iva=Decimal("999")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(
-        _revision_with_bindings(_binding(categories=("domestic_general_21", "domestic_reduced_10"), rate_kinds=("general", "reduced"))),
+        _revision_with_bindings(
+            _binding(
+                categories=("domestic_general_21", "domestic_reduced_10"),
+                rate_kinds=("general", "reduced"),
+            )
+        ),
         observations,
     )
     assert result["modelo-303-iva-repercutido-general"] == Decimal("310")
@@ -257,5 +256,5 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
 
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
-    with pytest.raises(Exception):  # noqa: PT011
+    with pytest.raises(ValidationError):
         obs.iva_amount = Decimal("999")  # type: ignore[misc]
