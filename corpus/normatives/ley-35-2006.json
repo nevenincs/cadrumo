@@ -226,6 +226,54 @@
       }
     },
     {
+      "numero": "49",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49",
+      "summary": {
+        "ca": "Estableix les regles d'integració i compensació entre els rendiments del capital mobiliari i les guanys i pèrdues patrimonials que componen la base imposable de l'estalvi, així com la compensació en els quatre anys següents dels saldos negatius no aplicats, amb un límit del 25 per cent de l'import del saldo positiu de l'altra classe de renda.",
+        "en": "Sets the integration and offsetting rules between movable-capital yields and capital gains and losses that make up the savings taxable base, together with the four-year carry-forward of unused negative balances, capped at 25 per cent of the positive balance of the other income class.",
+        "es": "Establece las reglas de integración y compensación entre los rendimientos del capital mobiliario y las ganancias y pérdidas patrimoniales que componen la base imponible del ahorro, así como la compensación en los cuatro años siguientes de los saldos negativos no aplicados, con un límite del 25 por ciento del importe del saldo positivo de la otra clase de renta.",
+        "hu": "Megállapítja a megtakarítási adóalapot képező tőkejövedelmek és vagyoni nyereségek és veszteségek beszámításának és kompenzációjának szabályait, valamint a fel nem használt negatív egyenlegek négy évre szóló továbbvitelét, a másik jövedelemosztály pozitív egyenlegének 25 százalékáig."
+      },
+      "titulo": {
+        "ca": "Integració i compensació de rendes en la base imposable de l'estalvi",
+        "en": "Integration and offsetting of income in the savings taxable base",
+        "es": "Integración y compensación de rentas en la base imponible del ahorro",
+        "hu": "Jövedelmek beszámítása és kompenzációja a megtakarítási adóalapban"
+      }
+    },
+    {
+      "numero": "50",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a50",
+      "summary": {
+        "ca": "Defineix la base liquidable general com el resultat d'aplicar a la base imposable general les reduccions aplicables (plans de pensions, tributació conjunta, pensions compensatòries i altres instruments previstos), sense que pugui resultar negativa, i la base liquidable de l'estalvi com la base imposable de l'estalvi menys el remanent no aplicat de les reduccions de tributació conjunta i pensions compensatòries, igualment sense possibilitat de signe negatiu.",
+        "en": "Defines the general taxable base (base liquidable general) as the result of applying to the general gross base the applicable reductions (pension plans, joint taxation, compensatory pensions and other statutory instruments), with no negative result allowed, and the savings taxable base (base liquidable del ahorro) as the savings gross base less any unused remainder of the joint-taxation and compensatory-pension reductions, likewise with no negative result allowed.",
+        "es": "Define la base liquidable general como el resultado de practicar en la base imponible general las reducciones aplicables (aportaciones a planes de pensiones, tributación conjunta, pensiones compensatorias y otros instrumentos previstos), sin que pueda resultar negativa, y la base liquidable del ahorro como la base imponible del ahorro menos el remanente no aplicado de las reducciones de tributación conjunta y pensiones compensatorias, igualmente sin posibilidad de signo negativo.",
+        "hu": "Meghatározza az általános adóalapot (base liquidable general) az általános bruttó adóalap és az alkalmazandó csökkentések (nyugdíjpénztári befizetések, közös adózás, kompenzációs nyugdíjak és egyéb törvényi eszközök) különbségeként, negatív eredmény kizárásával, valamint a megtakarítási adóalapot (base liquidable del ahorro) a megtakarítási bruttó adóalap mínusz a közös adózási és kompenzációs nyugdíj-csökkentések fel nem használt maradványaként, szintén negatív eredmény kizárásával."
+      },
+      "titulo": {
+        "ca": "Base liquidable general i de l'estalvi",
+        "en": "General and savings taxable bases",
+        "es": "Base liquidable general y del ahorro",
+        "hu": "Általános és megtakarítási adóalap"
+      }
+    },
+    {
+      "numero": "56",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a56",
+      "summary": {
+        "ca": "Defineix el mínim personal i familiar com la part de la base liquidable que, per destinar-se a satisfer les necessitats bàsiques personals i familiars del contribuent, no es sotmet a tributació, integrat pel mínim del contribuent i els mínims per descendents, ascendents i discapacitat regulats en els articles 57, 58, 59 i 60 d'aquesta Llei.",
+        "en": "Defines the personal and family minimum (mínimo personal y familiar) as the portion of the taxable base that is exempt from tax because it is allocated to satisfying the basic personal and family needs of the taxpayer, made up of the taxpayer minimum and the minimums for descendants, ascendants and disability regulated in articles 57, 58, 59 and 60 of this Law.",
+        "es": "Define el mínimo personal y familiar como la parte de la base liquidable que, por destinarse a satisfacer las necesidades básicas personales y familiares del contribuyente, no se somete a tributación, integrado por el mínimo del contribuyente y los mínimos por descendientes, ascendientes y discapacidad regulados en los artículos 57, 58, 59 y 60 de esta Ley.",
+        "hu": "Meghatározza a személyi és családi minimumot (mínimo personal y familiar) az adóalapnak azon részeként, amely az adózó és családja alapvető szükségleteinek kielégítésére szolgál, és ezért adómentes; ez tartalmazza az adózó minimumát és a leszármazottak, felmenők és fogyatékosság utáni minimumokat, melyeket a törvény 57., 58., 59. és 60. cikke szabályoz."
+      },
+      "titulo": {
+        "ca": "Mínim personal i familiar",
+        "en": "Personal and family minimum",
+        "es": "Mínimo personal y familiar",
+        "hu": "Személyi és családi minimum"
+      }
+    },
+    {
       "numero": "99",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99",
       "summary": {

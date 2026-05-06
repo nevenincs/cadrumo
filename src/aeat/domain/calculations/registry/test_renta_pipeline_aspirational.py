@@ -108,7 +108,7 @@ def _formula_target_casillas_for_revision(modelo, revision_id: str) -> frozenset
 def test_phase_a_cuota_chain_articles_are_catalogued() -> None:
     """All cuota chain Ley 35/2006 articles are registered in the IRPF catalogue."""
     _modelo, catalogues = _modelo_100()
-    catalogued = {ref.id for ref in catalogues.legal_refs}
+    catalogued = set(catalogues.legal.keys())
     missing = _PHASE_A_REQUIRED_ARTICLES - catalogued
     assert not missing, f"phase a not yet delivered: missing cuota chain legal articles {sorted(missing)}"
 
