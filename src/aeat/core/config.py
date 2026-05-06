@@ -2,7 +2,7 @@
 
 Single source of truth for all environment variables. Every field in
 :class:`Settings` maps 1:1 to an uppercase environment variable
-(e.g. ``google_oauth_client_id`` → ``GOOGLE_OAUTH_CLIENT_ID``).
+(e.g. ``aeat_base_url`` → ``AEAT_BASE_URL``).
 
 The companion test ``tests/test_config.py`` enforces that ``.env.example``
 and this module stay fully aligned.
@@ -17,10 +17,7 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .paths import (
-    normalize_project_relative_path,
-    normalize_project_relative_str,
-)
+from .paths import normalize_project_relative_path
 
 
 class SecretStoreBackend(StrEnum):
@@ -61,13 +58,6 @@ class LLMProviderSetting(StrEnum):
     LOCAL = "LOCAL"
 
 
-class GoogleAuthPathSetting(StrEnum):
-    """Settings-shape mirror of :class:`aeat.adapters.outbound.google.GoogleAuthPath`."""
-
-    DESKTOP_OAUTH_LOCAL_DEV = "desktop-oauth-local-dev"
-    SERVICE_ACCOUNT_AUTOMATION = "service-account-automation"
-
-
 class CertificateBackendSetting(StrEnum):
     """Settings-shape selector for the AEAT certificate-handshake backend."""
 
@@ -92,7 +82,7 @@ class Settings(BaseSettings):
     """Application settings populated from environment variables and ``.env``.
 
     Field names map directly to env var names (uppercased). For example,
-    ``google_oauth_client_id`` reads ``GOOGLE_OAUTH_CLIENT_ID``.
+    ``aeat_base_url`` reads ``AEAT_BASE_URL``.
     """
 
     model_config = SettingsConfigDict(
@@ -101,62 +91,10 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
     )
 
-    # ── Google OAuth 2.0 (Desktop / Interactive) ────────────────────────────
-    google_auth_path: GoogleAuthPathSetting | StrEnum | None = Field(
-        default=None,
-        description="Active Google auth path: desktop-oauth-local-dev or service-account-automation",
-    )
-    google_oauth_client_id: str = Field(
-        default="",
-        description="OAuth 2.0 client ID from Google Cloud Console",
-    )
-    google_oauth_client_secret: str = Field(
-        default="",
-        description="OAuth 2.0 client secret",
-    )
-    google_oauth_redirect_uri: str = Field(
-        default="http://localhost:8080",
-        description="OAuth redirect URI for local dev server",
-    )
-    google_oauth_client_json: str = Field(
-        default="",
-        description="Path to the downloaded OAuth Desktop client JSON (used by gcloud --client-id-file)",
-    )
-
-    # ── Google Service Account (Server / Automation) ────────────────────────
-    google_application_credentials: str = Field(
-        default="",
-        description="Path to service account JSON key file",
-    )
-    google_impersonate_email: str = Field(
-        default="",
-        description="Email to impersonate via domain-wide delegation",
-    )
-
-    # ── Google Cloud Project ────────────────────────────────────────────────
-    google_cloud_project: str = Field(
-        default="",
-        description="GCP project ID (not project number)",
-    )
-
-    # ── Google Resource IDs ─────────────────────────────────────────────────
-    google_sheets_spreadsheet_id: str = Field(
-        default="",
-        description="Target Google Sheets spreadsheet ID",
-    )
-    google_drive_folder_id: str = Field(
-        default="",
-        description="Target Google Drive folder ID",
-    )
-    google_cloud_storage_bucket: str = Field(
-        default="",
-        description="Cloud Storage bucket name (without gs:// prefix)",
-    )
-
     # ── Token Storage ───────────────────────────────────────────────────────
     aeat_token_dir: Path = Field(
         default=PROJECT_ROOT / ".tokens",
-        description="Directory for cached OAuth tokens",
+        description="Directory for cached authentication tokens",
     )
 
     # ── AEAT ────────────────────────────────────────────────────────────────
@@ -224,34 +162,6 @@ class Settings(BaseSettings):
         description=("Comma-separated fallback chain consulted when the target language is missing."),
     )
 
-    # ── Scratch resources (provisioned by `aeat bootstrap`) ─────────────────
-    aeat_scratch_folder_id: str = Field(
-        default="",
-        description="Drive folder ID for the aeat-scratch sandbox",
-    )
-    aeat_scratch_sheet_id: str = Field(
-        default="",
-        description="Spreadsheet ID for the aeat-scratch sandbox sheet",
-    )
-    aeat_scratch_doc_id: str = Field(
-        default="",
-        description="Document ID for the aeat-scratch sandbox doc",
-    )
-
-    # ── Google test fixture identifiers ────────────────────────────────────
-    aeat_google_test_fixtures_folder_id: str = Field(
-        default="",
-        description="Drive folder ID that roots every Google Workspace test fixture",
-    )
-    aeat_google_test_fixture_smoke_sheet_id: str = Field(
-        default="",
-        description="Spreadsheet ID for the smoke-test fixture Sheet (A1 seeded sentinel)",
-    )
-    aeat_google_test_fixture_smoke_doc_id: str = Field(
-        default="",
-        description="Document ID for the smoke-test fixture Doc (body seeded sentinel)",
-    )
-
     # ── Storage ─────────────────────────────────────────────────────────────
     aeat_database_url: str = Field(
         default=f"sqlite:///{(PROJECT_ROOT / 'var' / 'aeat.db').as_posix()}",
@@ -305,10 +215,6 @@ class Settings(BaseSettings):
     aeat_live_tests_enabled: bool = Field(
         default=False,
         description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
-    )
-    aeat_live_tests_google: bool = Field(
-        default=False,
-        description="Secondary opt-in specifically for Google Workspace fixture live tests",
     )
 
     # ── Manuals corpus (aeat.domain.manuals) ───────────────────────────────────────
@@ -806,14 +712,6 @@ class Settings(BaseSettings):
         """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
 
         return normalize_project_relative_path(value)
-
-    @field_validator("google_oauth_client_json", "google_application_credentials", mode="after")
-    @classmethod
-    def _normalize_repo_relative_path_strings(cls, value: str) -> str:
-        """Anchor string-backed path settings to ``PROJECT_ROOT``."""
-
-        return normalize_project_relative_str(value)
-
 
 def load_settings() -> Settings:
     """Create a Settings instance from environment variables and ``.env`` file."""
