@@ -164,7 +164,30 @@ def test_committed_modelo_232_construct_includes_profile_and_expectation_and_ext
         assert construct.extraction_profiles == tuple(p.id for p in revision.extraction_profiles)
         assert construct.verification_expectations == tuple(e.id for e in revision.verification_expectations)
         link_surfaces = {link.surface for link in revision.application_links}
-        assert {"portal", "filing", "extractor", "verification", "deadline"} <= link_surfaces, revision.id
+        assert {
+            "portal",
+            "filing",
+            "extractor",
+            "verification",
+            "deadline",
+            "review",
+            "approval",
+            "reconciliation",
+            "workflow",
+        } <= link_surfaces, revision.id
+
+
+def test_modelo_232_workflow_surfaces_are_snapshot_gated_and_construct_scoped() -> None:
+    modelo, _ = _load_modelo_232()
+    required_surfaces = {"review", "approval", "reconciliation", "workflow"}
+    for revision in modelo.revisions.values():
+        construct = revision.constructs[0]
+        linked_by_surface = {link.surface: link for link in revision.application_links}
+        assert required_surfaces <= set(linked_by_surface), revision.id
+        for surface in required_surfaces:
+            link = linked_by_surface[surface]
+            assert link.requires_snapshot is True
+            assert link.id in construct.application_links
 
 
 @pytest.mark.parametrize(

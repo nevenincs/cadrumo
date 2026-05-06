@@ -1768,6 +1768,8 @@ own ledger is checked.
   with annual cadence, `["0A"]` period selector, full deadline windows
   (Nov plazo for ejercicios 2016-2026), and the corresponding application
   links per revision.
+  - [x] Review, approval, reconciliation, and workflow links are declared for
+    both revisions and are scoped through each informative construct.
 - [x] Modelo 232 casilla schema: declarante header casillas (ejercicio,
   tipo de ejercicio, CNAE) with section, data type, requiredness, export
   refs, legal refs, and source refs per revision.
@@ -1786,18 +1788,23 @@ own ledger is checked.
   DR23201 (1500 chars) + page-02 DR23202 (3500 chars) + envelope close
   per revision; export-derive resolves to 95 page-01 fields and 155
   page-02 fields matching the official workbook.
-- [x] Modelo 232 legal correctness tests: 28 behaviour tests covering
+  - [x] Review, approval, reconciliation, and workflow entry points are
+    snapshot-gated application links; Modelo 232 remains informative-only.
+- [x] Modelo 232 legal correctness tests: 29 behaviour tests covering
   identity, revision selection by filing year, the informative-only
   invariant, workbook parity, both live cross-reference surfaces,
   November plazo (2016-2026), section 3+4 / 5+6 binding range
   contiguity, and construct membership consistency.
+  - [x] Workflow-link behavior test proves the review, approval,
+    reconciliation, and workflow surfaces require snapshots and are
+    construct-scoped for each revision.
 - [ ] Modelo 232 live/filed-data tests: gated on the live sanitized
   fixture — no fixture exists yet.
 - [ ] Modelo 232 teardown: N/A — Modelo 232 was greenfield; the audit
   confirmed no legacy ruleset, builder, hydrate, or category mapping
   surfaces exist outside the registry.
 - [x] Modelo 232 quality gate: validate_modelo passes against the
-  committed catalogues; 28 focused tests pass; `ruff check`, `ty check`,
+  committed catalogues; 29 focused tests pass; `ruff check`, `ty check`,
   and `git diff --check` clean for the touched surfaces.
 - [ ] Modelo 232 completion gate: gated on the live sanitized fixture
   and live tests rows; foundation + sections 3-6 + envelope/page export
@@ -1835,6 +1842,8 @@ own ledger is checked.
   (ejercicio 2012 transitional Feb-Apr 2013, then 1 Jan - 31 Mar of the
   year following ejercicio for 2013-2026), and the corresponding
   application links.
+  - [x] Review, approval, reconciliation, and workflow links are declared and
+    scoped through the informative construct.
 - [x] Modelo 720 casilla schema: declarante header casillas (ejercicio,
   tipo de declaración) with section, data type, requiredness, legal refs,
   and source refs.
@@ -1853,17 +1862,22 @@ own ledger is checked.
   ISO-8859-1, CRLF) + type_2 record (`repeat = "binding_rows"` for one
   record per declared asset) auto-derive their fields from the layout
   bindings via `derive_export_layouts_from_bindings`.
-- [x] Modelo 720 legal correctness tests: 19 behaviour tests covering
+  - [x] Review, approval, reconciliation, and workflow entry points are
+    snapshot-gated application links; Modelo 720 remains informative-only.
+- [x] Modelo 720 legal correctness tests: 20 behaviour tests covering
   identity, revision selection, the informative-only invariant, workbook
   parity, both live cross-reference surfaces, the January-March plazo
   (with the 2012 transitional window), the type_1 / type_2 binding
   scope, and construct membership consistency.
+  - [x] Workflow-link behavior test proves the review, approval,
+    reconciliation, and workflow surfaces require snapshots and are
+    construct-scoped.
 - [ ] Modelo 720 live/filed-data tests: gated on the live sanitized
   fixture.
 - [ ] Modelo 720 teardown: N/A — Modelo 720 was greenfield; no legacy
   authority surfaces exist outside the registry.
 - [x] Modelo 720 quality gate: validate_modelo passes against the
-  committed catalogues; 19 focused tests pass; `ruff check`, `ty check`,
+  committed catalogues; 20 focused tests pass; `ruff check`, `ty check`,
   and `git diff --check` clean for the touched surfaces.
 - [ ] Modelo 720 completion gate: gated on the live sanitized fixture
   and live tests rows; foundation landed in commit `b85b207b` (Add
@@ -3692,6 +3706,9 @@ application surface, and the old authority has been deleted.
      legal reference, source reference, and export layout.
   - [ ] Link Modelo 232 to registry-backed validation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
+     - [x] Review, approval, reconciliation, workflow, filing, extraction,
+       deadline, and export links are snapshot-gated in every Modelo 232
+       revision construct.
   - [ ] Verify Modelo 232 with real reporting-condition examples, invalid inputs,
      legal-reference checks, source-integrity checks, export roundtrips, and
      registry failure cases.
@@ -3700,6 +3717,8 @@ application surface, and the old authority has been deleted.
      generated export/layout paths.
   - [ ] Add behaviour tests proving Modelo 232 filing workflows require a
      validated registry snapshot and fail fast on coverage gaps.
+     - [x] Focused workflow-link behavior test covers snapshot-gated review,
+       approval, reconciliation, and workflow surfaces for every revision.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
@@ -3721,6 +3740,9 @@ application surface, and the old authority has been deleted.
      legal reference, source reference, and export layout.
   - [ ] Link Modelo 720 to registry-backed validation, trace, review, approval,
      filing draft, declaration parsing where relevant, and export workflows.
+     - [x] Review, approval, reconciliation, workflow, filing, extraction,
+       deadline, and export links are snapshot-gated in the Modelo 720
+       construct.
   - [ ] Verify Modelo 720 with real asset-class examples, threshold failures,
      legal-reference checks, source-integrity checks, export roundtrips, and
      registry failure cases.
@@ -3729,6 +3751,8 @@ application surface, and the old authority has been deleted.
      generated export/layout paths.
   - [ ] Add behaviour tests proving Modelo 720 filing workflows require a
      validated registry snapshot and fail fast on coverage gaps.
+     - [x] Focused workflow-link behavior test covers snapshot-gated review,
+       approval, reconciliation, and workflow surfaces.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 

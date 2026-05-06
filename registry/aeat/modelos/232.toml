@@ -886,6 +886,38 @@ requires_snapshot = true
 legal_refs = ["orden-hfp-816-2017:art-3"]
 source_refs = ["aeat-dr-232-2018"]
 
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
+
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
+
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form"]
+
+[[revisions."2018-y-siguientes".application_links]]
+id = "modelo-232-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
+
 [[revisions."2018-y-siguientes".filing_schedules]]
 id = "modelo-232-anual"
 period_kind = "annual"
@@ -2753,6 +2785,10 @@ application_links = [
     "modelo-232-verification",
     "modelo-232-deadline",
     "modelo-232-export",
+    "modelo-232-review",
+    "modelo-232-approval",
+    "modelo-232-reconciliation",
+    "modelo-232-workflow",
 ]
 export_layouts = ["modelo-232-2018-fichero-aeat"]
 filing_schedules = ["modelo-232-anual"]
@@ -3635,6 +3671,38 @@ consumer = "aeat.application.filing.export"
 requires_snapshot = true
 legal_refs = ["orden-hfp-816-2017:art-3"]
 source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form"]
+
+[[revisions."2016-2017".application_links]]
+id = "modelo-232-2016-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hfp-816-2017:art-1"]
+source_refs = ["boe-modelo-232-2017-form", "aeat-modelo-232-procedure"]
 
 [[revisions."2016-2017".filing_schedules]]
 id = "modelo-232-2016-anual"
@@ -5433,6 +5501,10 @@ application_links = [
     "modelo-232-2016-verification",
     "modelo-232-2016-deadline",
     "modelo-232-2016-export",
+    "modelo-232-2016-review",
+    "modelo-232-2016-approval",
+    "modelo-232-2016-reconciliation",
+    "modelo-232-2016-workflow",
 ]
 export_layouts = ["modelo-232-2016-fichero-aeat"]
 filing_schedules = ["modelo-232-2016-anual"]
