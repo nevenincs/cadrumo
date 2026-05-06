@@ -198,7 +198,7 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
 
 
 def test_verify_declaracion_fails_without_registry_snapshot() -> None:
-    filing = _build_filing(values=(("01", Decimal("0")),), modelo="303")
+    filing = _build_filing(values=(("01", Decimal("0")),), modelo="999")
 
     with pytest.raises(VerificationError, match="not present in the calculation registry"):
         verify_declaracion(filing)

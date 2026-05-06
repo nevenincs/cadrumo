@@ -15,9 +15,8 @@ from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
-    build_snapshot,
+    ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    load_registry_tree,
 )
 from ._errors import VerificationError
 from ._schema import (
@@ -168,14 +167,12 @@ def _verification_policy(snapshot: RegistrySnapshot) -> _VerificationPolicy:
 def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:
     try:
         filing_year, registry_period = _registry_period(declaracion.period, declaracion.ejercicio)
-        modelos, catalogues = load_registry_tree(registry_root or PROJECT_ROOT / "registry" / "aeat")
-        modelo = next((candidate for candidate in modelos if candidate.id == declaracion.modelo), None)
-        if modelo is None:
-            raise VerificationError(f"modelo {declaracion.modelo!r} is not present in the calculation registry")
-        return build_snapshot(
-            modelo,
-            catalogues,
+        authority = ValidatedRegistryAuthority.load(
+            registry_root or PROJECT_ROOT / "registry" / "aeat",
             source_root=PROJECT_ROOT,
+        )
+        return authority.snapshot(
+            declaracion.modelo,
             filing_year=filing_year,
             period=registry_period,
         )

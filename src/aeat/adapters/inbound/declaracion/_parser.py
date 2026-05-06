@@ -12,11 +12,9 @@ from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
 from ....domain.calculations.registry import (
     ExtractionProfileDefinition,
-    ModeloDefinition,
     RegistrySnapshot,
     RegistrySnapshotError,
-    build_snapshot,
-    load_registry_tree,
+    ValidatedRegistryAuthority,
 )
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
@@ -290,28 +288,18 @@ def _load_registry_snapshot(
     source_root: Path | None,
 ) -> RegistrySnapshot:
     root = registry_root or PROJECT_ROOT / "registry" / "aeat"
-    modelos, catalogues = load_registry_tree(root)
-    modelo = _select_modelo(modelos, template.modelo)
+    authority = ValidatedRegistryAuthority.load(root, source_root=source_root or PROJECT_ROOT)
     try:
-        return build_snapshot(
-            modelo,
-            catalogues,
-            source_root=source_root or PROJECT_ROOT,
+        return authority.snapshot(
+            template.modelo,
             filing_year=template.año,
             period=period,
         )
     except RegistrySnapshotError as exc:
         raise DeclaracionParseError(
             "declaracion extraction requires a validated registry snapshot "
-            f"for modelo={template.modelo} año={template.año} period={period}"
+            f"for modelo={template.modelo} año={template.año} period={period}: {exc}"
         ) from exc
-
-
-def _select_modelo(modelos: tuple[ModeloDefinition, ...], modelo_id: str) -> ModeloDefinition:
-    for modelo in modelos:
-        if modelo.id == modelo_id:
-            return modelo
-    raise DeclaracionParseError(f"modelo {modelo_id!r} is not present in the calculation registry")
 
 
 def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: TemplateRevision) -> None:
