@@ -315,3 +315,7 @@ release-apply:
     Write-Host '       git tag -a vX.Y.Z -m "aeat vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main --tags"
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

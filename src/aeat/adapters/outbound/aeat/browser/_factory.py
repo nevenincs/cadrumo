@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -34,10 +36,9 @@ from .profile import Profile
 from .session import BrowserSession
 
 if TYPE_CHECKING:
-    from playwright.async_api import Playwright
+    from playwright.async_api import BrowserContext, Page, Playwright, Response
 
     from .....core.config import Settings
-    from ..auth import BrowserContextLike
 
 
 logger = get_logger(__name__)
@@ -74,12 +75,17 @@ class DefaultBrowserSession:
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
         storage_state: dict[str, Any] | None = None,
-    ) -> BrowserContextLike:
+    ) -> BrowserContext:
         return await self._session.create_context(
             provisioner=provisioner,
             storage_state_path=storage_state_path,
             storage_state=storage_state,
         )
+
+    async def navigate(self, page: Page, url: str) -> Response | None:
+        """Navigate through the central BrowserSession health-probed path."""
+
+        return await self._session.navigate(page, url)
 
     async def close(self) -> None:
         async with self._close_lock:
@@ -104,20 +110,22 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     when you are done — auth providers already do this in their
     ``close()`` path.
     """
-    from playwright.async_api import async_playwright
+    profile_name = settings.aeat_default_profile_name
+    # Profile.storage_state_path is superseded by every auth-provider
+    # passing an explicit kind-namespaced storage_state_path to
+    # BrowserSession.create_context(). The value here is a fallback
+    # for hypothetical future callers that do not override it; no
+    # shipping provider currently relies on it.
+    storage_state_path = settings.aeat_token_dir / f"{profile_name}-storage.json"
+    profile = Profile(name=profile_name, storage_state_path=storage_state_path)
+    return await create_browser_session(settings, profile)
 
-    playwright_manager = async_playwright()
-    playwright = await playwright_manager.start()
+
+async def create_browser_session(settings: Settings, profile: Profile) -> DefaultBrowserSession:
+    """Start Playwright and return a wrapped :class:`BrowserSession` for ``profile``."""
+
+    playwright = await _start_playwright()
     try:
-        profile_name = settings.aeat_default_profile_name
-        # Profile.storage_state_path is superseded by every auth-provider
-        # passing an explicit kind-namespaced storage_state_path to
-        # BrowserSession.create_context(). The value here is a fallback
-        # for hypothetical future callers that do not override it; no
-        # shipping provider currently relies on it.
-        storage_state_path = settings.aeat_token_dir / f"{profile_name}-storage.json"
-        profile = Profile(name=profile_name, storage_state_path=storage_state_path)
-
         session = BrowserSession(
             playwright=playwright,
             settings=settings,
@@ -134,4 +142,58 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
         raise
 
 
-__all__ = ["DefaultBrowserSession", "default_browser_session_factory"]
+@asynccontextmanager
+async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
+    """Yield a centrally owned Playwright runtime for bulk browser workflows."""
+
+    playwright = await _start_playwright()
+    try:
+        yield playwright
+    finally:
+        with contextlib.suppress(Exception):
+            await playwright.stop()
+
+
+async def _start_playwright() -> Playwright:
+    """Start the single browser-base Playwright runtime."""
+
+    from playwright.async_api import async_playwright
+
+    playwright_manager = async_playwright()
+    return await playwright_manager.start()
+
+
+@asynccontextmanager
+async def opened_browser_page(
+    playwright: Playwright,
+    settings: Settings,
+    profile: Profile,
+    *,
+    provisioner: Any | None = None,
+    storage_state_path: Path | None = None,
+    storage_state: dict[str, Any] | None = None,
+) -> AsyncIterator[tuple[Page, BrowserContext]]:
+    """Yield a central :class:`BrowserSession` page/context pair and close both."""
+
+    browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
+    context = await browser_session.create_context(
+        provisioner=provisioner,
+        storage_state_path=storage_state_path,
+        storage_state=storage_state,
+    )
+    try:
+        page = await context.new_page()
+        yield page, context
+    finally:
+        with contextlib.suppress(Exception):
+            await context.close()
+        await browser_session.close()
+
+
+__all__ = [
+    "DefaultBrowserSession",
+    "create_browser_session",
+    "default_browser_session_factory",
+    "opened_browser_page",
+    "shared_playwright_runtime",
+]

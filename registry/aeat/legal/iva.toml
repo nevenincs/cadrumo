@@ -38,6 +38,160 @@ required_text = [
     "treinta primeros días naturales del mes de enero",
 ]
 
+[legal."orden-hac-610-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-1.html#a1"
+document_id = "BOE-A-2021-10161"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a1"
+published_at = 2021-06-22
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobacion del modelo 369 'Impuesto sobre el Valor Anadido. Autoliquidacion de los regimenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condicion de sujetos pasivos, que efectuen ventas a distancia de bienes y ciertas entregas interiores de bienes'."
+required_text = [
+    "Aprobación",
+    "modelo 369",
+    "regímenes especiales",
+]
+
+[legal."orden-hac-610-2021:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-2.html#a2"
+document_id = "BOE-A-2021-10161"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a2"
+published_at = 2021-06-22
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 2 de la Orden HAC/610/2021: obligados y periodo de liquidacion. Letras (a) Esquema Exterior trimestral, (b) Esquema Union trimestral, (c) Esquema Importacion (IOSS) directo mensual, (d) intermediario IOSS mensual y por cada empresario representado."
+required_text = [
+    "Obligados a presentar el modelo 369",
+    "trimestre natural",
+    "mes natural",
+]
+
+[legal."orden-hac-610-2021:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-3.html#a3"
+document_id = "BOE-A-2021-10161"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a3"
+published_at = 2021-06-22
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 3 de la Orden HAC/610/2021: plazo de presentacion. El modelo 369 se presenta dentro del mes natural siguiente al del final del periodo al que se refiera la autoliquidacion."
+required_text = [
+    "Plazo de presentación",
+    "mes natural siguiente",
+    "final del período",
+]
+
+[legal."ley-37-1992:art-163-octiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-octiesdecies.html#a163octiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163 octiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 163 octiesdecies: ambito de aplicacion del regimen especial Exterior. Empresarios o profesionales no establecidos en la Comunidad que presten servicios a no sujetos pasivos."
+required_text = [
+    "establecidos en la Comunidad",
+    "régimen especial",
+]
+
+[legal."ley-37-1992:art-163-unvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-unvicies.html#a163unvicies"
+document_id = "BOE-A-1992-28740"
+article = "163 unvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 163 unvicies: ambito de aplicacion del regimen especial Union. Ventas intracomunitarias a distancia de bienes, entregas via interfaces electronicas, servicios prestados por sujetos pasivos establecidos en la Comunidad pero no en el Estado miembro de consumo."
+required_text = [
+    "Estado miembro de consumo",
+    "régimen especial",
+]
+
+[legal."ley-37-1992:art-163-quinvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-quinvicies.html#a163quinvicies"
+document_id = "BOE-A-1992-28740"
+article = "163 quinvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 163 quinvicies: ambito de aplicacion del regimen especial de Importacion (IOSS). Ventas a distancia de bienes importados de paises o territorios terceros con valor intrinseco no superior a 150 EUR."
+required_text = [
+    "ventas a distancia de bienes importados",
+    "150 euros",
+]
+
+[sources."aeat-dr-369-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx"
+sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+bytes = 958950
+retrieved_at = 2026-05-06
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/369.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-369-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/modelo-369-procedure.html"
+sha256 = "5c776cc0640147af7a937963fe7cf88a53fb67e3b465924f742f7ba9273be1b6"
+bytes = 20824
+retrieved_at = 2026-05-06
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-369-2021-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"
+sha256 = "69423013b661ae0b5c302b97d9d6ba244ae5f11e345dd3ffca04f6f6dd36bdcf"
+bytes = 64856
+retrieved_at = 2026-05-06
+published_at = 2021-06-22
+applies_from = 2021-07-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
+review_status = "reviewed"
+
 [legal."orden-eha-3111-2009:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

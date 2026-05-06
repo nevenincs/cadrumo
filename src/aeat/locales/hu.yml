@@ -648,10 +648,10 @@ cli:
       invalid_year_range: Érvénytelen évtartomány
       unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
     expediente_help: A rögzítendő AEAT ügyszám
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
+    from_year_help: Kezdő év a bejegyzések rögzítéséhez vagy felülvizsgálatához
+    inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
+    inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
+    json_help: Kimenet JSON formátumban
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
     modelo_help: cli.registry.modelo_help

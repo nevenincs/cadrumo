@@ -948,6 +948,7 @@ The following decisions are proposed for review:
 | D30 | Modelo 100 live AEAT access is read-only evidence capture only. | Renta WEB Open can be parity evidence; authenticated Renta WEB, fiscal-data, borrador, filed-declaration and justificante surfaces may provide observations only through the remote-state guard and encrypted storage. |
 | D31 | Modelo 100 is selected by ejercicio-specific `ModeloRevision` records, not by Python module names or variant slots. | Renta record designs and manual content change by year; the registry must select the exact revision before calculation, parsing, export, or observation reconciliation. |
 | D32 | Modelo 100 is decomposed into gated Renta constructs under the one official modelo parent. | The implementation can progress section by section without inventing unofficial AEAT modelo ids or leaving unverified partial Renta snapshots executable. |
+| D33 | Local registry scenarios are a required verification backend for Renta slices. | Workbook/live parity remains necessary where available, but locally curated scenarios with known outcomes are the practical guard against delayed or unavailable official executable oracles and must assert trace/evidence contracts, not only numeric totals. |
 
 ## Modelo 100 Renta Aggregation Decision
 
@@ -980,6 +981,19 @@ artefacts for ejercicio 2020 through 2025, with 2025 files updated on
 2026-04-14 and 2023/2024 historical files updated in January 2026. The plan
 must close the source ledger for every retained ejercicio rather than assuming
 that a previous Renta ruleset or PDF parser proves coverage.
+
+Renta verification also needs local registry scenarios. These scenarios do not
+replace official examples, workbook parity, or Renta WEB Open parity; they
+encode reviewed assumptions with known outputs and execute them through the
+same validated snapshot calculator used by filing-grade code. A scenario is
+only useful when it checks the value and the trace/evidence contract together:
+declared modelo revision, operand references, legal references, and source
+references must be part of the expected result so formula rewrites cannot
+preserve totals while silently dropping the audit trail.
+As Renta subdomains become registry-backed, the local scenario matrix must
+expand by subdomain and by settlement effect, so income rollups, withholdings,
+payments on account, cuota diferencial, and result-of-declaration behaviour are
+verified through the same contract before old authorities are removed.
 
 Authority tiers for Modelo 100 are explicit:
 

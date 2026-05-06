@@ -33,13 +33,11 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
 from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import async_playwright
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from ..browser import Profile
-from ..browser.session import BrowserSession
+from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._errors import SedeNavigationError, SedeParseError
 
@@ -442,15 +440,9 @@ async def _fetch_and_parse(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=storage_state_path,
-    )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state=storage_state,
-        )
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
         try:
             page = await context.new_page()
             # Warm the cookie jar on the authenticated landing.
@@ -479,7 +471,8 @@ async def _fetch_and_parse(
                 await context.close()
             except Exception as _exc:
                 log.debug("fetch_notifications: context.close suppressed: %s", _exc)
-            await browser_session.close()
+    finally:
+        await browser_session.close()
 
 
 __all__ = [

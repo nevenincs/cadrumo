@@ -57,7 +57,7 @@ def test_regime_periodicity_quarterly_for_exterior_and_union_monthly_for_ioss() 
 
 def test_regime_periodicity_mapping_is_immutable() -> None:
     with pytest.raises(TypeError):
-        REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # type: ignore[index]
+        REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # type: ignore[invalid-assignment]
 
 
 def test_regime_allows_deduction_is_false_within_modelo_369_for_every_regime() -> None:

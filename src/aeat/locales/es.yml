@@ -656,10 +656,10 @@ cli:
       invalid_year_range: Rango de años no válido
       unknown_modelo: El registro no contiene una definición del modelo {modelo}
     expediente_help: Número de expediente de la AEAT a capturar
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
+    from_year_help: Año inicial para capturar o revisar registros
+    inspect_help: Inspeccionar el estado del registro y las referencias
+    inspect_registry_root_help: Ruta al directorio raíz del registro
+    json_help: Salida en formato JSON
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
     modelo_help: cli.registry.modelo_help

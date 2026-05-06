@@ -35,7 +35,6 @@ from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import parse_qs, urlsplit
 
 from bs4 import BeautifulSoup
-from playwright.async_api import BrowserContext, Page, Playwright, async_playwright
 from playwright.async_api import Error as PlaywrightError
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 
@@ -62,8 +61,7 @@ from .....domain.calculations.registry import (
     resolve_relation_values_from_observations,
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
-from ..browser import Profile
-from ..browser.session import BrowserSession
+from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._auth_state import storage_state_for_session
 from ._errors import JustificanteFetchError, SedeNavigationError, SedeParseError
 from ._schema import (
@@ -75,6 +73,8 @@ from ._schema import (
 )
 
 if TYPE_CHECKING:
+    from playwright.async_api import BrowserContext, Page, Playwright
+
     from .....domain.calculations.registry import ModeloRevision
     from ..auth._authenticator import AeatSession
 
@@ -203,7 +203,7 @@ async def shared_playwright(
         SedeNavigationError: When the session has no encrypted browser state.
     """
     storage_state_for_session(session)
-    async with async_playwright() as pw:
+    async with shared_playwright_runtime() as pw:
         yield pw
 
 
@@ -334,11 +334,8 @@ async def _open_register_page(
             yield page, context
         return
     async with (
-        async_playwright() as pw,
-        _opened_browser_session(pw, settings, profile, storage_state) as (
-            page,
-            context,
-        ),
+        shared_playwright_runtime() as pw,
+        _opened_browser_session(pw, settings, profile, storage_state) as (page, context),
     ):
         yield page, context
 
@@ -351,22 +348,8 @@ async def _opened_browser_session(
     storage_state: dict[str, object],
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
     """Inner helper: create + tear down a BrowserSession + context."""
-    browser_session = BrowserSession(pw, settings, profile)
-    context = await browser_session.create_context(
-        storage_state=storage_state,
-    )
-    try:
-        page = await context.new_page()
+    async with opened_browser_page(pw, settings, profile, storage_state=storage_state) as (page, context):
         yield page, context
-    finally:
-        try:
-            await context.close()
-        except Exception as _exc:
-            log.debug("_opened_browser_session: context.close suppressed: %s", _exc)
-        try:
-            await browser_session.close()
-        except Exception as _exc:
-            log.debug("_opened_browser_session: browser_session.close suppressed: %s", _exc)
 
 
 async def walk_declarations_register(
