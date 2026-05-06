@@ -510,6 +510,38 @@ requires_snapshot = true
 legal_refs = ["orden-hap-72-2013:art-1"]
 source_refs = ["aeat-dr-720"]
 
+[[revisions."2013-y-siguientes".application_links]]
+id = "modelo-720-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["orden-hap-72-2013:art-1"]
+source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".application_links]]
+id = "modelo-720-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hap-72-2013:art-1"]
+source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".application_links]]
+id = "modelo-720-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hap-72-2013:art-1"]
+source_refs = ["boe-modelo-720-2013-form"]
+
+[[revisions."2013-y-siguientes".application_links]]
+id = "modelo-720-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hap-72-2013:art-1"]
+source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
+
 [[revisions."2013-y-siguientes".filing_schedules]]
 id = "modelo-720-anual"
 period_kind = "annual"
@@ -746,6 +778,10 @@ application_links = [
     "modelo-720-verification",
     "modelo-720-deadline",
     "modelo-720-export",
+    "modelo-720-review",
+    "modelo-720-approval",
+    "modelo-720-reconciliation",
+    "modelo-720-workflow",
 ]
 filing_schedules = ["modelo-720-anual"]
 deadline_windows = [
