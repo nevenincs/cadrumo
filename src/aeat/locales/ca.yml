@@ -24,10 +24,6 @@ auth:
     clave_movil_description: Autenticació amb aprovació push al mòbil del titular
       registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Autenticació amb usuari, contrasenya reforçada i
-      codi SMS de Cl@ve Permanente. No està disponible en aquesta instal·lació, així
-      que ``configure`` i ``login`` es rebutgen.
-    clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
@@ -64,61 +60,6 @@ cli:
       o factura)
     show_help: Mostrar els detalls i metadades d'un justificant
     show_id_help: Identificador del justificant a mostrar
-  auth:
-    app_help: Gestió d'autenticació i credencials
-    configure:
-      dni_fecha_help: Data de validesa o expedició del DNI (YYYY-MM-DD)
-      dni_nie_help: Número de DNI o NIE del contribuent
-      help: Configurar les credencials i paràmetres d'autenticació localment
-      nie_soporte_help: Número de suport del NIE
-      non_interactive_help: Executar la configuració en mode no interactiu (sense
-        demanar confirmació)
-      prefer_non_qr_help: Preferir el mètode sense codi QR (usant DNI/NIE) per a Cl@ve
-        Móvil
-      provider_help: Proveïdor d'autenticació (ex. certificat, clave_movil)
-      set_default_help: Establir aquest proveïdor com el mètode d'autenticació per
-        defecte
-    list_providers:
-      all_help: Llistar tots els proveïdors compatibles, no només els configurats
-      configured_help: Llistar els proveïdors d'autenticació configurats
-      help: Llistar els proveïdors d'autenticació disponibles i el seu estat
-      json_help: Mostrar la llista de proveïdors en format JSON
-    login:
-      help: Iniciar sessió a la Seu Electrònica de l'AEAT
-      json_help: Mostrar el resultat de l'inici de sessió en format JSON
-      non_interactive_help: Intentar l'inici de sessió sense intervenció humana (requereix
-        certificat configurat)
-      provider_help: Proveïdor d'autenticació a utilitzar (ex. certificat, clave_movil)
-    logout:
-      all_help: Tancar totes les sessions actives
-      help: Tancar la sessió actual a l'AEAT
-      json_output_help: Mostrar el resultat del tancament de sessió en format JSON
-      provider_help: Proveïdor d'autenticació a tancar (ex. certificat, clave_movil)
-    status:
-      help: Mostrar l'estat actual de l'autenticació a l'AEAT
-      json_help: Mostrar l'estat de l'autenticació en format JSON
-      provider_help: Proveïdor d'autenticació a consultar (ex. certificat, clave_movil)
-    whoami:
-      help: Mostrar informació detallada del subjecte autenticat actualment
-      json_help: Mostrar la informació del subjecte en format JSON
-      provider_help: Proveïdor d'autenticació a consultar (ex. certificat, clave_movil)
-  bootstrap:
-    errors:
-      already_bootstrapped: L'entorn ja ha estat inicialitzat (bootstrapped)
-      destructive_warning: ADVERTIMENT! Aquesta operació pot ser destructiva i sobreescriure
-        recursos existents
-      force_instruction: Useu el flag --force per procedir si n'esteu segur
-      missing_env: Manquen variables d'entorn requerides per a la inicialització
-      missing_target: No s'ha especificat l'objectiu (target) per a la inicialització
-      target_instruction: Si us plau, especifiqueu un objectiu vàlid usant --target
-    labels:
-      active_env: Entorn actiu
-      active_target: Objectiu actiu
-      auth_method: Mètode d'autenticació
-      auth_path: Ruta d'autenticació
-      mcp_status: Estat d'MCP
-    success:
-      complete: Inicialització de l'entorn completada correctament
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:
@@ -333,7 +274,6 @@ cli:
       errors:
         not_found: Catàleg financer no trobat
     ingest:
-      catalogue_dir_help: Directori on es troba el catàleg financer
       help: Ingerir dades financeres (p. ex., extractes bancaris)
       output_json_help: Arxiu JSON de sortida per a les dades ingerides
       path_help: Ruta a l'arxiu o directori amb les dades financeres
@@ -653,16 +593,17 @@ cli:
       invalid_year_range: Rang d'anys no vàlid
       unknown_modelo: El registre no conté cap definició del model {modelo}
     expediente_help: Número d'expedient de l'AEAT a capturar
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
-    list_filed_data_help: cli.registry.list_filed_data_help
-    list_filed_data_json_help: cli.registry.list_filed_data_json_help
-    modelo_help: cli.registry.modelo_help
+    from_year_help: Any inicial per capturar o revisar registres
+    inspect_help: Inspeccionar l'estat del registre i les referències
+    inspect_registry_root_help: Ruta al directori arrel del registre
+    json_help: Sortida en format JSON
+    list_filed_data_help: Llistar presentacions existents a l'AEAT per al rang d'anys
+      especificat
+    list_filed_data_json_help: Sortida en format JSON per a eines d'automatització
+    modelo_help: Filtre opcional per model fiscal (ex. 303, 130)
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
-    output_root_help: cli.registry.output_root_help
+    output_root_help: Ruta al directori arrel de sortida per als registres
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
     parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
     parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
@@ -671,31 +612,31 @@ cli:
     parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
     parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
     parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
-    period_help: cli.registry.period_help
+    period_help: Filtre opcional per període fiscal (ex. Q1, 01)
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
-    to_year_help: cli.registry.to_year_help
+    to_year_help: Any final per capturar o revisar registres
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
       capturat de l'AEAT
-    verify_help: cli.registry.verify_help
-    verify_source_root_help: cli.registry.verify_source_root_help
-    workbooks_app_help: cli.registry.workbooks_app_help
-    workbooks_limit_help: cli.registry.workbooks_limit_help
-    workbooks_output_help: cli.registry.workbooks_output_help
-    workbooks_resume_help: cli.registry.workbooks_resume_help
-    workbooks_root_help: cli.registry.workbooks_root_help
-    workbooks_timeout_help: cli.registry.workbooks_timeout_help
-    workbooks_verify_help: cli.registry.workbooks_verify_help
-    year_help: cli.registry.year_help
+    verify_help: Verificar la integritat del registre local
+    verify_source_root_help: Ruta al directori d'origen per verificar
+    workbooks_app_help: Gestió de llibres de treball del registre
+    workbooks_limit_help: Límit de llibres a compilar
+    workbooks_output_help: Directori de sortida per als llibres compilats
+    workbooks_resume_help: Reprendre la compilació de llibres des de l'últim punt
+    workbooks_root_help: Directori arrel que conté les definicions dels llibres
+    workbooks_timeout_help: Temps d'espera màxim (en segons) per a la compilació
+    workbooks_verify_help: Verificar la integritat dels llibres de treball generats
+    year_help: Exercici fiscal a consultar o processar
   root:
     app_app_help: Espai de treball fiscal per a llibres, factures i declaracions
     app_help: Assistent per preparar declaracions tributàries espanyoles
     format_help: Format de sortida per als resultats de l'ordre
   sanitize:
-    app_help: cli.sanitize.app_help
+    app_help: Gestió de la sanetització i anonimització de dades
     labels:
-      available: cli.sanitize.labels.available
-    status_help: cli.sanitize.status_help
+      available: Disponible
+    status_help: Mostrar l'estat de la sanetització de l'entorn
   setup:
     app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
     auth:
@@ -724,7 +665,6 @@ cli:
       active: Actiu
       auth_provider: Proveïdor d'autenticació
       authenticated_at: Autenticat el
-      availability: Disponibilitat
       description: Descripció
       id: ID
       key: Clau
@@ -767,142 +707,152 @@ cli:
     status:
       help: Mostrar la preparació de l'entorn i la següent acció requerida
   txs:
-    app_help: cli.txs.app_help
+    app_help: Gestió de transaccions bancàries i conciliació
     build:
-      exists_err: cli.txs.build.exists_err
-      help: cli.txs.build.help
-      replace_help: cli.txs.build.replace_help
-      source_help: cli.txs.build.source_help
-      success: cli.txs.build.success
+      exists_err: L'arxiu de transaccions ja existeix
+      help: Generar un nou arxiu de transaccions
+      replace_help: Reemplaçar l'arxiu de transaccions si ja existeix
+      source_help: Arxiu font de transaccions (ex. Excel, CSV, PDF)
+      success: Arxiu de transaccions generat amb èxit a {path}
     classify:
-      as_help: cli.txs.classify.as_help
-      business_category_err: cli.txs.classify.business_category_err
-      category_help: cli.txs.classify.category_help
-      confidence_help: cli.txs.classify.confidence_help
-      confidence_range_err: cli.txs.classify.confidence_range_err
-      help: cli.txs.classify.help
-      id_help: cli.txs.classify.id_help
-      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
-      invalid_pct_err: cli.txs.classify.invalid_pct_err
-      mixed_pct_err: cli.txs.classify.mixed_pct_err
-      no_changes_err: cli.txs.classify.no_changes_err
-      outgoing_category_err: cli.txs.classify.outgoing_category_err
-      pct_help: cli.txs.classify.pct_help
-      reason_help: cli.txs.classify.reason_help
+      as_help: Categoria o tipus per classificar la transacció
+      business_category_err: La categoria de negoci '{cat}' no és vàlida
+      category_help: Categoria de negoci per classificar la transacció
+      confidence_help: Nivell de confiança o certesa de la classificació
+      confidence_range_err: El nivell de confiança ha d'estar entre 0 i 1
+      help: Classificar manualment una transacció
+      id_help: Identificador únic de la transacció a classificar
+      invalid_confidence_err: El nivell de confiança '{conf}' no és un número vàlid
+      invalid_pct_err: El percentatge deduïble '{pct}' no és un número vàlid
+      mixed_pct_err: El percentatge deduïble per a ús mixt ha d'estar entre 0 i 100
+      no_changes_err: No s'han proporcionat canvis per a la classificació
+      outgoing_category_err: La categoria de despesa '{cat}' no és vàlida
+      pct_help: Percentatge deduïble per a transaccions d'ús mixt
+      reason_help: Motiu o justificació de la classificació manual
     classify_llm:
-      all_help: cli.txs.classify_llm.all_help
-      category_hint_help: cli.txs.classify_llm.category_hint_help
-      dry_run_help: cli.txs.classify_llm.dry_run_help
-      dry_run_label: cli.txs.classify_llm.dry_run_label
+      all_help: Processar totes les transaccions pendents
+      category_hint_help: Suggeriment de categoria per guiar el model d'IA
+      dry_run_help: Executar sense guardar canvis (previsualitzar)
+      dry_run_label: MODE PROVA (sense canvis)
       errors:
-        classification_failed: cli.txs.classify_llm.errors.classification_failed
-        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
-        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
-        missing_target: cli.txs.classify_llm.errors.missing_target
-        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
-        save_failed: cli.txs.classify_llm.errors.save_failed
-      help: cli.txs.classify_llm.help
-      id_help: cli.txs.classify_llm.id_help
+        classification_failed: Fallada en classificar la transacció '{id}'
+        exclusive_all_id: No es pot usar --all i un ID de transacció alhora
+        invalid_max_seconds: El temps màxim de processament ha de ser positiu
+        missing_target: Cal especificar --all o un ID de transacció
+        persistence_failed: Fallada en guardar els canvis a l'arxiu de transaccions
+        save_failed: No s'ha pogut guardar la classificació per a '{id}'
+      help: Classificar transaccions automàticament usant IA
+      id_help: Identificador de la transacció específica a classificar
       labels:
-        no_targets: cli.txs.classify_llm.labels.no_targets
-      llm_suffix: cli.txs.classify_llm.llm_suffix
-      max_seconds_help: cli.txs.classify_llm.max_seconds_help
-      model_alias_help: cli.txs.classify_llm.model_alias_help
-      model_help: cli.txs.classify_llm.model_help
-      pct_override_help: cli.txs.classify_llm.pct_override_help
-      persisted_label: cli.txs.classify_llm.persisted_label
-      provider_help: cli.txs.classify_llm.provider_help
-      reason_help: cli.txs.classify_llm.reason_help
-      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
-      summary: cli.txs.classify_llm.summary
-      tier_help: cli.txs.classify_llm.tier_help
-      timeout: cli.txs.classify_llm.timeout
+        no_targets: No s'han trobat transaccions per processar
+      llm_suffix: (via IA)
+      max_seconds_help: Temps màxim (en segons) per al processament per IA
+      model_alias_help: Àlies del model d'IA a utilitzar (ex. gemini-pro)
+      model_help: Nom complet del model d'IA (incloent-hi la versió)
+      pct_override_help: Forçar un percentatge deduïble específic
+      persisted_label: PERSISTIT
+      provider_help: Proveïdor d'IA (ex. google, openai, anthropic)
+      reason_help: Justificació o raonament de la classificació per IA
+      stopped_early_suffix: (aturat per temps)
+      summary: 'Resum de classificació IA: {total} processades, {success} èxits, {failed}
+        fallades'
+      tier_help: Nivell o capacitat del model (ex. flash, pro, ultra)
+      timeout: TEMPS EXHAURIT
     list:
-      confidence_below_help: cli.txs.list.confidence_below_help
-      header: cli.txs.list.header
-      help: cli.txs.list.help
-      no_matches_confidence: cli.txs.list.no_matches_confidence
-      no_transactions: cli.txs.list.no_transactions
-      state_help: cli.txs.list.state_help
+      confidence_below_help: Filtrar transaccions amb confiança inferior al llindar
+      header: Llistat de Transaccions
+      help: Llistar transaccions filtrades per criteris
+      no_matches_confidence: No s'han trobat transaccions amb confiança inferior al
+        {threshold}%
+      no_transactions: No s'han trobat transaccions
+      state_help: Filtrar per estat de la transacció (ex. pending, classified)
     show:
-      help: cli.txs.show.help
-      id_help: cli.txs.show.id_help
-      not_found_err: cli.txs.show.not_found_err
+      help: Mostrar detalls d'una transacció específica
+      id_help: Identificador de la transacció a mostrar
+      not_found_err: No s'ha trobat la transacció amb ID '{id}'
 filing:
   validation:
-    deadline_missed: filing.validation.deadline_missed
-    formula_divergence: filing.validation.formula_divergence
-    out_of_range: filing.validation.out_of_range
-    required_missing: filing.validation.required_missing
-    schema_mismatch: filing.validation.schema_mismatch
+    deadline_missed: Termini de presentació vençut
+    formula_divergence: Divergència en el càlcul de la fórmula
+    out_of_range: Valor fora de rang permès
+    required_missing: Falta camp obligatori
+    schema_mismatch: Discrepància amb l'esquema esperat
 profile:
   test_keys:
-    description_490119: profile.test_keys.description_490119
+    description_490119: x
 review:
   adapters:
-    t_135562: review.adapters.t_135562
-    t_142007: review.adapters.t_142007
-    t_145612: review.adapters.t_145612
-    t_167733: review.adapters.t_167733
-    t_189155: review.adapters.t_189155
-    t_298389: review.adapters.t_298389
-    t_352338: review.adapters.t_352338
-    t_352928: review.adapters.t_352928
-    t_551826: review.adapters.t_551826
-    t_607122: review.adapters.t_607122
-    t_619063: review.adapters.t_619063
-    t_629803: review.adapters.t_629803
-    t_754183: review.adapters.t_754183
-    t_787894: review.adapters.t_787894
-    t_791512: review.adapters.t_791512
-    t_870243: review.adapters.t_870243
-    t_968325: review.adapters.t_968325
+    t_135562: traspàs intern
+    t_142007: negoci
+    t_145612: Resultat de la validació oficial
+    t_167733: vençuda
+    t_189155: motiu
+    t_298389: pagament pendent
+    t_352338: validació fallida
+    t_352928: parcialment pagada
+    t_551826: sense aparellar
+    t_607122: omesa per regla
+    t_619063: mixt
+    t_629803: despesa
+    t_754183: sense processar
+    t_787894: aprovació caducada — requereix nova revisió (estat=APPROVAL_STALE)
+    t_791512: processada sense classificar
+    t_870243: personal
+    t_968325: ingrés
 setup:
   verifier:
-    t_049382: setup.verifier.t_049382
-    t_104932: setup.verifier.t_104932
-    t_104938: setup.verifier.t_104938
-    t_193582: setup.verifier.t_193582
-    t_204938: setup.verifier.t_204938
-    t_293847: setup.verifier.t_293847
-    t_394821: setup.verifier.t_394821
-    t_394827: setup.verifier.t_394827
-    t_501723: setup.verifier.t_501723
-    t_649302: setup.verifier.t_649302
-    t_749321: setup.verifier.t_749321
-    t_837462: setup.verifier.t_837462
-    t_938472: setup.verifier.t_938472
-    t_938475: setup.verifier.t_938475
+    t_049382: La ruta '{path}' no és un fitxer
+    t_104932: La variable d'entorn '{var}' està configurada
+    t_104938: El perfil d'autònom a '{path}' és vàlid
+    t_193582: Assegureu-vos que la ruta al vostre certificat sigui correcta i el fitxer
+      existeixi
+    t_204938: El directori '{name}' a '{path}' està llest
+    t_293847: La configuració d'inici és coherent
+    t_394821: Definiu la variable d'entorn '{var}' amb la contrasenya del vostre certificat
+    t_394827: El perfil d'autònom a '{path}' no existeix (s'usaran els valors per
+      defecte)
+    t_501723: Certificat no trobat a '{path}'
+    t_649302: 'No s''ha pogut crear el directori ''{name}'' a ''{path}'': {exc}'
+    t_749321: Certificat trobat a '{path}'
+    t_837462: 'El perfil d''autònom a ''{path}'' no és vàlid: {exc}'
+    t_938472: La variable d'entorn '{var}' per a la contrasenya del certificat no
+      està configurada
+    t_938475: 'La configuració d''inici és incoherent: {exc}'
   wizard:
-    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
-    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
-    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
-    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
-    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
-    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
-    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
-    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
-    certificate_path_prompt: setup.wizard.certificate_path_prompt
-    default_language_prompt: setup.wizard.default_language_prompt
-    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
-    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
-    has_employees_prompt: setup.wizard.has_employees_prompt
-    iva_regime_prompt: setup.wizard.iva_regime_prompt
-    output_language_prompt: setup.wizard.output_language_prompt
-    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
-    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
-    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
-    tax_id_prompt: setup.wizard.tax_id_prompt
-    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
-    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
-    welcome: setup.wizard.welcome
+    aeat_drafts_dir_prompt: Directori per a esborranys de l'AEAT
+    aeat_live_tests_enabled_prompt: Habilitar proves en viu de l'AEAT?
+    aeat_manuals_root_prompt: Directori arrel per a manuals de l'AEAT
+    aeat_submissions_dir_prompt: Directori per a presentacions de l'AEAT
+    bienes_extranjero_above_threshold_prompt: Posseïu béns a l'estranger per sobre
+      del llindar (Model 720)?
+    certificate_backend_prompt: Motor de gestió de certificats
+    certificate_friendly_name_prompt: Nom descriptiu del certificat
+    certificate_password_secret_var_name_prompt: Nom de la variable d'entorn per a
+      la contrasenya del certificat
+    certificate_path_prompt: Ruta a l'arxiu del certificat (.p12, .pfx)
+    default_language_prompt: Idioma per defecte per a la interfície
+    default_profile_path_prompt: Ruta a l'arxiu de perfil d'autònom (.json)
+    does_intracomunitario_prompt: Realitzeu operacions intracomunitàries (ROI)?
+    has_employees_prompt: Teniu empleats contractats?
+    iva_regime_prompt: Règim d'IVA
+    output_language_prompt: Idioma per a informes i documents generats
+    pays_professionals_with_retencion_prompt: Pagueu a professionals amb retenció
+      (Model 111)?
+    pays_rent_with_retencion_prompt: Pagueu lloguer amb retenció (Model 115)?
+    professional_income_withholding_ge_70pct_prompt: Teniu retencions en més del 70%
+      dels vostres ingressos professionals?
+    tax_id_prompt: NIF/NIE del titular
+    tax_residence_ccaa_prompt: Comunitat Autònoma de residència fiscal
+    third_party_transactions_above_347_threshold_prompt: Realitzeu operacions amb
+      tercers per sobre de 3005,06€ (Model 347)?
+    welcome: Benvingut a l'assistent de configuració d'AEAT CLI
 transactions:
   import:
-    message_053465: transactions.import.message_053465
-    message_082074: transactions.import.message_082074
-    message_185962: transactions.import.message_185962
-    message_829073: transactions.import.message_829073
-    unreadable: transactions.import.unreadable
-    verified: transactions.import.verified
+    message_053465: Transacció duplicada detectada dins de l'arxiu importat.
+    message_082074: Transacció duplicada ja present al llibre major.
+    message_185962: L'arxiu d'origen no conté transaccions vàlides.
+    message_829073: 'Possible buit: més de 35 dies entre transaccions.'
+    unreadable: Arxiu il·legible o format no suportat
+    verified: Importació verificada amb èxit
   test_diagnostics:
-    message: transactions.test_diagnostics.message
+    message: Falta el mes 2026-03 a l'arxiu importat.
