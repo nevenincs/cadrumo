@@ -403,6 +403,20 @@ class RegistryValidator:
                 failures.append(
                     f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}"
                 )
+            else:
+                target_binding = binding_by_id[relation.target_binding]
+                missing_legal_refs = sorted(set(relation.legal_refs).difference(target_binding.legal_refs))
+                if missing_legal_refs:
+                    failures.append(
+                        f"{prefix}: relation {relation.id!r} target binding {relation.target_binding!r} "
+                        f"does not include relation legal refs {missing_legal_refs!r}"
+                    )
+                missing_source_refs = sorted(set(relation.source_refs).difference(target_binding.source_refs))
+                if missing_source_refs:
+                    failures.append(
+                        f"{prefix}: relation {relation.id!r} target binding {relation.target_binding!r} "
+                        f"does not include relation source refs {missing_source_refs!r}"
+                    )
             unknown_target_periods = sorted(set(relation.target_periods).difference(revision.period_selector.periods))
             if unknown_target_periods:
                 failures.append(
@@ -455,6 +469,18 @@ class RegistryValidator:
                         f"{prefix}: dependency classification {classification.id!r} source_modelo "
                         f"{classification.source_modelo!r} does not match relation {relation_id!r} source_modelo "
                         f"{relation.source_modelo!r}"
+                    )
+                missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
+                if missing_legal_refs:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
+                        f"does not include relation legal refs {missing_legal_refs!r}"
+                    )
+                missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
+                if missing_source_refs:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
+                        f"does not include relation source refs {missing_source_refs!r}"
                     )
 
         for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
