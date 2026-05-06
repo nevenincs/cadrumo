@@ -5087,3 +5087,22 @@ Pending VAT-centric slices per the ADR sequencing:
   returning the aggregated Decimal. Wired into the modelo validator
   alongside the existing invoice-binding check. 21 focused tests +
   80 modelo registry regression tests all pass. Commit `283abb4f`.
+
+- [x] Modelo 369 (IVA OSS / IOSS) per-Esquema registry slice. Lands
+  the centerpiece modelo of the centralization ADR: three revisions
+  (esquema-exterior trimestral with EXT-prefixed periods, esquema-union
+  trimestral, esquema-importacion mensual with 01-12), parent cadence
+  ad_hoc, and five demonstrator ledger_oss_aggregation bindings
+  (Exterior DE-services, Unión DE-services, Unión FR-services, Unión
+  DE-goods-distance covering both distance-sale and interface-facilitated
+  kinds, IOSS DE-low-value-distance) resolving end-to-end via the
+  substrate-typed selector + runtime resolver. Authority chain HAC/610/2021
+  arts 1/2/3 + LIVA 163 octiesdecies / unvicies / quinvicies. 25 focused
+  tests pass (validator, three-Esquema split, scheme selection by period,
+  scheme authority in snapshots, filing schedules, per-Esquema deadline
+  windows with "mes natural siguiente" closing rule, read-only cross
+  references, workbook parity, record-design parseable to 1515 fields
+  across 14 sheets, constructs close over revision members, each revision
+  declares OSS bindings, end-to-end Unión + IOSS binding resolution,
+  construct binding linkage). Closes ADR Decisions D1-D8; casilla /
+  formula / numeric-result deepening follows. Commit `a78d221f`.
