@@ -1615,6 +1615,76 @@ required_text = [
     "rendimiento neto del capital mobiliario",
 ]
 
+[sources."boe-modelo-100-2020-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-248-2021.html"
+sha256 = "4ba1c2d5e161cf5425e2512f094c8f0d75883ecd3a6b48dbf47a1875c7744d9d"
+bytes = 143508
+retrieved_at = 2026-05-06
+published_at = 2021-03-18
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-4238"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2021-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
+sha256 = "6a488558b26a805676e3705171339df0bfd4ae27f3f29221777a4794d8da4e1f"
+bytes = 156515
+retrieved_at = 2026-05-06
+published_at = 2022-03-18
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-310-2023.html"
+sha256 = "fe725626f992b4a3cabf69b4a472551bd52481d4cc742604f33336b18093294c"
+bytes = 153278
+retrieved_at = 2026-05-06
+published_at = 2023-03-31
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-8118"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-265-2024.html"
+sha256 = "de39535931a2324d4776a7ce92cefb5fcb464b91b4752b2775b5ba6c12b34eb1"
+bytes = 177147
+retrieved_at = 2026-05-06
+published_at = 2024-03-22
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-5721"
+review_status = "reviewed"
+
+[sources."boe-modelo-100-2024-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/orden-hac-242-2025.json"
+sha256 = "21989f88f4f10c66209d2b7bb616be5fb901d5ab065bc11781542e103be368f8"
+bytes = 3051
+retrieved_at = 2026-04-12
+published_at = 2025-03-14
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
+review_status = "reviewed"
+
 [sources."boe-modelo-100-2025-form"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -1886,6 +1956,71 @@ retrieved_at = 2026-05-03
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Renta2025.xsd"
+review_status = "reviewed"
+
+[sources."aeat-renta-2020-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2020/parte1/source.pdf"
+sha256 = "2916a4ee52ec0cf6d5c68600fdc1de8604d2eda19db4a8aa3232e23ff34ef8ab"
+bytes = 32387072
+retrieved_at = 2026-05-06
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2021-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2021/parte1/source.pdf"
+sha256 = "76949adf843e46b4c552923cd268249c954d8761c983bac449479543533164e0"
+bytes = 26314752
+retrieved_at = 2026-05-06
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2022-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2022/parte1/source.pdf"
+sha256 = "b8ddf161891630ab5b130128257f9b1307fbfe7f8519b775d3022b41bd1316be"
+bytes = 9706572
+retrieved_at = 2026-05-06
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2023-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2023/parte1/source.pdf"
+sha256 = "c048be1b2fba82c5d8f99abe1eec9a8865a617aa99f6d3488c88540c59e6a0a0"
+bytes = 11604722
+retrieved_at = 2026-05-06
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-renta-2024-manual-parte1"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/renta/2024/parte1/source.pdf"
+sha256 = "15ff0d1fa69b5a2b7094a6c498403b1c55aa89a0e6eed4d87a5a2632eab34923"
+bytes = 9214502
+retrieved_at = 2026-05-06
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf"
 review_status = "reviewed"
 
 [sources."aeat-renta-2025-manual-parte1"]

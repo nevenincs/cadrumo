@@ -35,9 +35,8 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
     adjustments. Mínimo del contribuyente at the statutory default of 5,550
     EUR split 50% estatal / 50% autonómica per LIRPF arts 56-57. Escala
     estatal/autonómica applications and cuotas-base-ahorro are provided as
-    manual inputs because their generative formulas are not in the
-    registry yet (the progressive scale algorithm still lives outside the
-    formula runtime).
+    manual inputs because the progressive scale algorithm is not represented
+    in the formula runtime.
     """
     return RegistryCalculationScenario(
         id="modelo-100-2025-employee-default-minimo",
@@ -47,11 +46,7 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
         period="0A",
         inputs={
             # Income side
-            "0025": Decimal("30000.00"),
-            "0060": Decimal("0"),
-            "0155": Decimal("0"),
-            "0156": Decimal("0"),
-            "0235": Decimal("0"),
+            "0003": Decimal("30000.00"),
             # Saldo G/P 2025 negativo
             "0433": Decimal("0"),
             # Capital mobiliario ahorro and ganancias patrimoniales saldo positivo
@@ -163,24 +158,14 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
                 value=Decimal("0.00"),
                 operand_refs=("0520", "0523", "0510"),
             ),
-            # Base imponible / liquidable. The income side (0432, 0435, 0500)
-            # is intentionally zero in this scenario because the upstream
-            # trabajo / capital mobiliario / capital inmobiliario / estimación
-            # directa formula chains expect granular inputs (per-row payroll
-            # gastos, ingresos íntegros, reducciones por rendimientos
-            # irregulares) that this test does not synthesise. The cuota
-            # chain proper is exercised through 0505 (base liquidable general
-            # sometida a gravamen) which is a manual casilla; that decoupling
-            # allows the cuota chain to be verified independently of the
-            # income aggregation chain.
             RegistryScenarioExpectedOutput(
                 target="0432",
-                value=Decimal("0.00"),
+                value=Decimal("30000.00"),
                 operand_refs=("0025", "0060", "0155", "0156", "0235"),
             ),
             RegistryScenarioExpectedOutput(
                 target="0435",
-                value=Decimal("0.00"),
+                value=Decimal("30000.00"),
                 operand_refs=("0432", "0433"),
             ),
             RegistryScenarioExpectedOutput(
@@ -190,7 +175,7 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             ),
             RegistryScenarioExpectedOutput(
                 target="0500",
-                value=Decimal("0.00"),
+                value=Decimal("30000.00"),
                 operand_refs=("0435", "0461", "0501"),
             ),
             RegistryScenarioExpectedOutput(
@@ -333,9 +318,6 @@ _REVISION_BINDING_VALUES: dict[str, dict[str, Decimal]] = {
 def _zero_income_scenario_for_revision(revision: str) -> RegistryCalculationScenario:
     """Zero-income synthetic scenario for a given Modelo 100 ejercicio."""
     base_inputs = {
-        # Income side
-        "0025": Decimal("0"), "0060": Decimal("0"), "0155": Decimal("0"),
-        "0156": Decimal("0"), "0235": Decimal("0"),
         # G/P 2025 negativo + capital ahorro saldos
         "0433": Decimal("0"), "0429": Decimal("0"), "0424": Decimal("0"),
         # Reductions to base liquidable
