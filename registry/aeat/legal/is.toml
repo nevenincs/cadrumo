@@ -289,10 +289,10 @@ review_status = "reviewed"
 [sources."aeat-modelo-200-manual-2024"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt"
-sha256 = "530db60510ce8716fc61f90830adee120117a8127fc7825fbd8ba10d3eb501ab"
-bytes = 622
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf"
+sha256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179"
+bytes = 6266062
 retrieved_at = 2026-05-06
 applies_from = 2024-01-01
 applies_to = 2024-12-31

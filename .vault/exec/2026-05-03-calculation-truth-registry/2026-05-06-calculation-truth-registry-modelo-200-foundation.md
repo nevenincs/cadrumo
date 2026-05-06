@@ -25,7 +25,7 @@ connected its annual settlement to Modelo 202 instalment observations.
 - Created: `registry/aeat/modelos/200.toml`
 - Modified: `registry/aeat/legal/is.toml`
 - Created: `corpus/normatives/html/ley-27-2014-art-41.html`
-- Created: `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt`
+- Created: `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf`
 - Modified: `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`
 
 ## Description
@@ -41,9 +41,8 @@ Python calculation authority is introduced.
 
 Ley 27/2014 article 41 is catalogued as the legal basis for deducting
 withholdings, payments on account, and instalment payments from corporate-tax
-liability. A small AEAT Modelo 200 manual excerpt is committed as official
-guidance for source-citation validation; the large upstream PDF is not committed
-directly.
+liability. The AEAT Modelo 200 manual PDF is committed as official guidance for
+source-citation validation.
 
 ## Tests
 
