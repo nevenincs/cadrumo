@@ -1,3 +1,80 @@
+[legal."orden-eha-3434-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3434-2007-art-1.html#a1"
+document_id = "BOE-A-2007-20484"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a1"
+published_at = 2007-11-29
+effective_from = 2007-11-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden EHA/3434/2007: aprobacion del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
+required_text = [
+    "Aprobación del modelo 322",
+    "Grupo de entidades",
+    "Modelo individual",
+]
+
+[legal."orden-eha-3434-2007:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3434-2007-art-8.html#a8"
+document_id = "BOE-A-2007-20484"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a8"
+published_at = 2007-11-29
+effective_from = 2007-11-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentacion de los modelos 322 y 353. Treinta dias naturales del mes siguiente al periodo de liquidacion mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
+required_text = [
+    "Plazo de presentación de los modelos 322 y 353",
+    "treinta días naturales del mes siguiente",
+    "último día del mes de febrero",
+]
+
+[sources."aeat-dr-322-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx"
+sha256 = "f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76"
+bytes = 774672
+retrieved_at = 2026-05-06
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-322-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_322/files/modelo-322-procedure.html"
+sha256 = "4482db95c5b2b74630f32a6504775e7afd1169c425fb1dc099e4f57be723ff88"
+bytes = 24721
+retrieved_at = 2026-05-06
+applies_from = 2007-11-30
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G407.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-322-2007-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
+sha256 = "210fbb70546bcc8b71154c5836e9f8fb6f28979f2317fbe709d30938993fe2d7"
+bytes = 169822
+retrieved_at = 2026-05-06
+published_at = 2007-11-29
+applies_from = 2007-11-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484"
+review_status = "reviewed"
+
 [legal."orden-eha-3786-2008:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -346,4 +423,162 @@ bytes = 46458
 retrieved_at = 2026-05-05
 applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
+review_status = "reviewed"
+
+[legal."orden-hac-610-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-1.html#a1"
+document_id = "BOE-A-2021-10161"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a1"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobacion del modelo 369, autoliquidacion de los regimenes especiales OSS/IOSS del IVA."
+required_text = [
+    "Aprobación del modelo 369",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación de los regímenes especiales",
+]
+
+[legal."orden-hac-610-2021:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-2.html#a2"
+document_id = "BOE-A-2021-10161"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a2"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el regimen de importacion presenta por mes natural."
+required_text = [
+    "por cada trimestre natural",
+    "por cada mes natural",
+    "Estado miembro de identificación sea España",
+]
+
+[legal."orden-hac-610-2021:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-3.html#a3"
+document_id = "BOE-A-2021-10161"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a3"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidacion."
+required_text = [
+    "Plazo de presentación del modelo 369",
+    "dentro del mes natural siguiente",
+    "período al que se refiera la autoliquidación",
+]
+
+[legal."ley-37-1992:art-163-octiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-octiesdecies.html#a163octiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163 octiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163octiesdecies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 octiesdecies: ambito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
+required_text = [
+    "Artículo 163 octiesdecies",
+    "empresarios o profesionales no establecidos en la Comunidad",
+    "régimen especial previsto en esta sección",
+]
+
+[legal."ley-37-1992:art-163-unvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-unvicies.html#a163unvicies"
+document_id = "BOE-A-1992-28740"
+article = "163 unvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163unvicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 unvicies: ambito del regimen de la Union para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
+required_text = [
+    "Artículo 163 unvicies",
+    "ventas a distancia intracomunitarias de bienes",
+    "régimen especial previsto en esta sección",
+]
+
+[legal."ley-37-1992:art-163-quinvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-quinvicies.html#a163quinvicies"
+document_id = "BOE-A-1992-28740"
+article = "163 quinvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinvicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Ley 37/1992, articulo 163 quinvicies: ambito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+required_text = [
+    "Artículo 163 quinvicies",
+    "ventas a distancia de bienes importados",
+    "valor intrínseco no exceda de 150 euros",
+]
+
+[sources."aeat-dr-369-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx"
+sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+bytes = 958950
+retrieved_at = 2026-05-03
+published_at = 2021-09-17
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR369e21.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-369-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/modelo-369-procedure.html"
+sha256 = "5c776cc0640147af7a937963fe7cf88a53fb67e3b465924f742f7ba9273be1b6"
+bytes = 20824
+retrieved_at = 2026-05-06
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-369-2021-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"
+sha256 = "69423013b661ae0b5c302b97d9d6ba244ae5f11e345dd3ffca04f6f6dd36bdcf"
+bytes = 64856
+retrieved_at = 2026-05-06
+published_at = 2021-06-18
+applies_from = 2021-07-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
 review_status = "reviewed"

@@ -1,0 +1,114 @@
+"""Tests for the committed Modelo 322 (IVA grupos individual) registry foundation."""
+
+from __future__ import annotations
+
+from datetime import date
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from ._schema import ModeloDefinition
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(m for m in modelos if m.id == "322")
+    return modelo, catalogues
+
+
+def test_modelo_322_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_322()
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+
+
+def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
+    modelo, _ = _load_modelo_322()
+    assert modelo.tax_domain == "iva"
+    assert modelo.cadence == "monthly"
+    assert modelo.jurisdiction == "ES-AEAT"
+    assert "orden-eha-3434-2007:art-1" in modelo.legal_refs
+    assert "orden-eha-3434-2007:art-8" in modelo.legal_refs
+    assert "aeat-dr-322-2026" in modelo.source_refs
+
+
+def test_modelo_322_revision_starts_at_2008() -> None:
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    assert revision.valid_from == date(2008, 1, 1)
+    assert revision.period_selector.year_from == 2008
+    assert len(revision.period_selector.periods) == 12
+
+
+def test_modelo_322_snapshot_builds_for_each_month() -> None:
+    modelo, catalogues = _load_modelo_322()
+    for period in [f"{m:02d}" for m in range(1, 13)]:
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=PROJECT_ROOT,
+            filing_year=2025,
+            period=period,
+        )
+        assert snapshot.revision.id == "2008-y-siguientes"
+
+
+def test_modelo_322_january_period_closes_last_day_of_february() -> None:
+    """Art 8 special case: January period closes on the last day of February."""
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+
+    jan_2025 = windows["modelo-322-2025-01"]
+    assert jan_2025.opens_on == date(2025, 2, 1)
+    assert jan_2025.closes_on == date(2025, 2, 28)
+
+    jan_2026 = windows["modelo-322-2026-01"]
+    assert jan_2026.opens_on == date(2026, 2, 1)
+    assert jan_2026.closes_on == date(2026, 2, 28)
+
+
+def test_modelo_322_other_months_close_within_30_days_of_following_month() -> None:
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+
+    jun_2025 = windows["modelo-322-2025-06"]
+    assert jun_2025.opens_on == date(2025, 7, 1)
+    assert jun_2025.closes_on == date(2025, 7, 30)
+
+    dec_2025 = windows["modelo-322-2025-12"]
+    assert dec_2025.opens_on == date(2026, 1, 1)
+    assert dec_2025.closes_on == date(2026, 1, 30)
+
+
+def test_modelo_322_live_cross_references_forbid_writes() -> None:
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    cross_refs = {ref.id: ref for ref in revision.live_cross_references}
+
+    filed_ref = cross_refs["modelo-322-filed-declarations-read"]
+    assert filed_ref.requires_authentication is True
+    assert filed_ref.requires_aeat_authorization is True
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(
+        set(filed_ref.forbidden_actions)
+    )
+
+
+def test_modelo_322_filing_schedule_is_monthly() -> None:
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    schedule = next(s for s in revision.filing_schedules if s.id == "modelo-322-mensual")
+    assert schedule.period_kind == "monthly"
+    assert len(schedule.periods) == 12
+
+
+def test_modelo_322_construct_links_workbook_parity() -> None:
+    modelo, _ = _load_modelo_322()
+    revision = modelo.revisions["2008-y-siguientes"]
+    construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
+    assert "modelo-322-dr-2026" in construct.workbook_parity_refs
+    assert construct.filing_schedules == ("modelo-322-mensual",)
