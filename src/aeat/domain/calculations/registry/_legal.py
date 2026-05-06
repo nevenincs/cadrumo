@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 
@@ -74,4 +75,9 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
     if not path.is_file():
         raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
+    return _read_normalised_legal_corpus(path)
+
+
+@lru_cache(maxsize=512)
+def _read_normalised_legal_corpus(path: Path) -> str:
     return normalise_corpus_text(path.read_text(encoding="utf-8", errors="replace"))
