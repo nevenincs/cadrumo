@@ -5162,3 +5162,27 @@ bindings resolving end-to-end through the substrate from commit
 prorrata, 319 regularizacion, 341 reintegración agrícola, 360
 devolución no establecidos, 380 territorios especiales) are
 candidates for subsequent foundation slices.
+
+- [x] Modelo 360 (IVA devolución 8a Directiva — cuotas soportadas en
+  otros Estados miembros) registry foundation. Authority: Orden
+  EHA/789/2010 (BOE-A-2010-5210), articulos 1 (aprobacion) + 4
+  (plazo). High-value modelo for autonomos with cross-border
+  purchases recovering EU VAT through the Eighth-Directive
+  procedure. Article 4 plazo: opens day after the refund period
+  closes and concludes on 30 September of the year following the
+  ejercicio in which the cuotas were borne. Foundation lands legal
+  references, AEAT record-design PDF, AEAT GZ09 procedure URL
+  (combined 360+361), ad_hoc cadence with 2024 and 2025 deadline
+  windows closing on 30-Sep, and read-only live cross-references
+  with all writes forbidden. 7 focused tests. Commit `2fac1357`.
+- [x] LIVA art 161 recargo de equivalencia substrate. Closes the
+  recargo rate gap in the VAT substrate by registering the four
+  art-161 rates (general 5.2 %, reducido 1.4 %, super-reducido
+  0.5 %, tabaco 1.75 %) as registry-grounded parameters rather
+  than Python literals. Adds the BOE per-article corpus excerpt,
+  registry/aeat/legal/iva-recargo-equivalencia.toml with explicit
+  legal_refs and required_text quotes, and a pydantic-strict loader
+  module aeat.domain.vat._recargo_equivalencia exposing
+  LIVA_ART_161_RECARGO and recargo_rate_for(rate_kind). The
+  substrate is now the canonical authority for recargo rates
+  across the codebase. 12 focused tests. Commit `517b00df`.
