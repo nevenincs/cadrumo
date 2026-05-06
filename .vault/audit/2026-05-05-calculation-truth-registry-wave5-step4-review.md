@@ -1,3 +1,11 @@
+---
+tags:
+  - '#audit'
+  - '#calculation-truth-registry'
+date: '2026-05-05'
+related: []
+---
+
 # Modelo 131 Annual Legal Grounding Review
 
 ## Review Scope

@@ -1,3 +1,11 @@
+---
+tags:
+  - '#exec'
+  - '#calculation-truth-registry'
+date: '2026-05-05'
+related: []
+---
+
 # Modelo 131 2024 And 2025 Revision Step
 
 ## Scope

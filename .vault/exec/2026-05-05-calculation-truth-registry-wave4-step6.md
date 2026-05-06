@@ -1,3 +1,11 @@
+---
+tags:
+  - '#exec'
+  - '#calculation-truth-registry'
+date: '2026-05-05'
+related: []
+---
+
 # Modelo 123 Extraction And Export Behaviour Step
 
 ## Scope
