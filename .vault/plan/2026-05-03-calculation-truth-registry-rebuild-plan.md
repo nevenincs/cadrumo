@@ -4993,3 +4993,15 @@ Pending VAT-centric slices per the ADR sequencing:
   (BOE-A-2014-13180) which exempts quarterly filers in simplified
   regime or urban real-estate rental — that subset gates on a
   profile condition in a deepening slice. Commit `4f00a293`.
+
+- [x] Modelo 308 (IVA solicitud de devolucion) registry foundation.
+  Authority: Orden EHA/3786/2008 (BOE-A-2008-20953), articulos 2 and
+  11. Ad-hoc cadence reflecting the four operator-type plazo
+  patterns from art. 11 (sujetos pasivos ocasionales 30 days,
+  regimen simplificado transporte 20 days, recargo de equivalencia
+  per-quarter with 4T-30-January exception, etc). Foundation
+  includes legal references, AEAT 2019 record-design XLS as workbook
+  parity source, AEAT G403 procedure URL, and read-only live
+  cross-references with all writes / signing / payment forbidden.
+  Operator-type plazo pattern refinement (profile-conditional
+  deadline windows) deferred to a deepening slice. Commit `dc3b4d0c`.
