@@ -1,3 +1,80 @@
+[legal."orden-eha-789-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-789-2010-art-1.html#a1"
+document_id = "BOE-A-2010-5210"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden EHA/789/2010: aprobacion del formulario 360 de solicitud de devolucion del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
+required_text = [
+    "Aprobación del formulario 360",
+    "solicitud de devolución",
+    "territorio de aplicación del Impuesto",
+]
+
+[legal."orden-eha-789-2010:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-789-2010-art-4.html#a4"
+document_id = "BOE-A-2010-5210"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a4"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentacion del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolucion y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
+required_text = [
+    "Plazo de presentación del formulario 360",
+    "30 de septiembre",
+    "año natural",
+]
+
+[sources."aeat-dr-360-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf"
+sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+bytes = 47415
+retrieved_at = 2026-05-06
+applies_from = 2010-04-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/DR360.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-360-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_360/files/modelo-360-procedure.html"
+sha256 = "4afe7e5fda67d582722bc623a6998cccfd14de4b92fb3204e97f4661ae1df98e"
+bytes = 24585
+retrieved_at = 2026-05-06
+applies_from = 2010-04-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-360-2010-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
+sha256 = "fcdf59303556fed6edfed2798c8db2ecc16345cf101a66d289947b22fec0b61d"
+bytes = 104451
+retrieved_at = 2026-05-06
+published_at = 2010-03-31
+applies_from = 2010-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
+review_status = "reviewed"
+
 [legal."orden-hac-3625-2003:apartado-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
