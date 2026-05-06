@@ -148,6 +148,203 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "boe-modelo-390-2009-form"
 required_text = ["modelo 390"]
 
+# -----------------------------------------------------------------------------
+# Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# casillas pulling each total from the four 303 quarters.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.general"
+number = "iva.anual.repercutido.general"
+label = "Cuota IVA repercutido al tipo general (21%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.reducido"
+number = "iva.anual.repercutido.reducido"
+label = "Cuota IVA repercutido al tipo reducido (10%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.super-reducido"
+number = "iva.anual.repercutido.super-reducido"
+label = "Cuota IVA repercutido al tipo super-reducido (4%) - anual"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.soportado.interiores"
+number = "iva.anual.soportado.interiores"
+label = "Cuota IVA soportado en operaciones interiores corrientes - anual"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.autorepercutido.intracomunitaria"
+number = "iva.anual.autorepercutido.intracomunitaria"
+label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual"
+section = ["iva", "anual", "autorepercutido"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.devengada-303"
+number = "iva.anual.reconciliacion.devengada-303"
+label = "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.deducible-303"
+number = "iva.anual.reconciliacion.deducible-303"
+label = "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.reconciliacion.resultado-303"
+number = "iva.anual.reconciliacion.resultado-303"
+label = "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales"
+section = ["iva", "anual", "reconciliacion"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-390-prev-303-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# -----------------------------------------------------------------------------
+# Computed annual totals — same shape as Modelo 303 result-casillas, applied
+# over the full ejercicio rather than per quarter.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.cuota-devengada-total"
+number = "iva.anual.cuota-devengada-total"
+label = "Total cuota IVA devengada anual (repercutido + autorepercutido)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.cuota-deducible-total"
+number = "iva.anual.cuota-deducible-total"
+label = "Total cuota IVA deducible anual (soportado + autorepercutido)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.resultado-regimen-general"
+number = "iva.anual.resultado-regimen-general"
+label = "Resultado anual del regimen general (cuota devengada - cuota deducible)"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# -----------------------------------------------------------------------------
+# Formulas backing the three computed annual result-casillas.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-cuota-devengada-total"
+target = "iva.anual.cuota-devengada-total"
+expression = { op = "add", args = [
+    { casilla = "iva.anual.repercutido.general" },
+    { casilla = "iva.anual.repercutido.reducido" },
+    { casilla = "iva.anual.repercutido.super-reducido" },
+    { casilla = "iva.anual.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-cuota-deducible-total"
+target = "iva.anual.cuota-deducible-total"
+expression = { op = "add", args = [
+    { casilla = "iva.anual.soportado.interiores" },
+    { casilla = "iva.anual.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-resultado-regimen-general"
+target = "iva.anual.resultado-regimen-general"
+expression = { op = "subtract", args = [
+    { casilla = "iva.anual.cuota-devengada-total" },
+    { casilla = "iva.anual.cuota-deducible-total" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
@@ -254,6 +451,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
+[[revisions."2010-y-siguientes".application_links]]
+id = "modelo-390-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
 [[revisions."2010-y-siguientes".filing_schedules]]
 id = "modelo-390-anual"
 period_kind = "annual"
@@ -347,7 +552,26 @@ source_refs = [
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
-casillas = ["decl.ejercicio", "decl.tipo-declaracion"]
+casillas = [
+    "iva.anual.repercutido.general",
+    "iva.anual.repercutido.reducido",
+    "iva.anual.repercutido.super-reducido",
+    "iva.anual.soportado.interiores",
+    "iva.anual.autorepercutido.intracomunitaria",
+    "iva.anual.reconciliacion.devengada-303",
+    "iva.anual.reconciliacion.deducible-303",
+    "iva.anual.reconciliacion.resultado-303",
+    "iva.anual.cuota-devengada-total",
+    "iva.anual.cuota-deducible-total",
+    "iva.anual.resultado-regimen-general",
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+]
+formulas = [
+    "modelo-390-iva-anual-cuota-devengada-total",
+    "modelo-390-iva-anual-cuota-deducible-total",
+    "modelo-390-iva-anual-resultado-regimen-general",
+]
 bindings = [
     "modelo-390-iva-repercutido-general-cuota",
     "modelo-390-iva-repercutido-reducido-cuota",
@@ -369,6 +593,7 @@ application_links = [
     "modelo-390-extractor",
     "modelo-390-verification",
     "modelo-390-deadline",
+    "modelo-390-calculation",
 ]
 filing_schedules = ["modelo-390-anual"]
 deadline_windows = [
