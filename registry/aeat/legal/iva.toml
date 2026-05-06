@@ -38,6 +38,83 @@ required_text = [
     "treinta primeros días naturales del mes de enero",
 ]
 
+[legal."orden-eha-3111-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3111-2009-art-1.html#a1"
+document_id = "BOE-A-2009-18472"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472#a1"
+published_at = 2009-11-20
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden EHA/3111/2009: aprobacion del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
+required_text = [
+    "Aprobación del modelo 390",
+    "Declaración-resumen anual",
+    "Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-eha-3111-2009:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3111-2009-art-8.html#a8"
+document_id = "BOE-A-2009-18472"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472#a8"
+published_at = 2009-11-20
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden EHA/3111/2009: plazo de presentacion del Modelo 390. La declaracion-resumen anual del IVA se presenta en los treinta primeros dias naturales del mes de enero siguiente al ejercicio."
+required_text = [
+    "Plazo de presentación del modelo 390",
+    "treinta primeros días naturales",
+    "mes de enero siguiente",
+]
+
+[sources."aeat-dr-390-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx"
+sha256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+bytes = 556062
+retrieved_at = 2026-05-06
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-390-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_390/files/modelo-390-procedure.html"
+sha256 = "d441d3465926f40485bb70e37c6bd6625aca7a6de99d78dd428bd3a88fa90450"
+bytes = 25574
+retrieved_at = 2026-05-06
+applies_from = 2010-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G412.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-390-2009-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3111-2009.html"
+sha256 = "5a36f3665039cdaab4122e3758fc0844880a5d8239eecf52954d0e6d176d2c13"
+bytes = 165012
+retrieved_at = 2026-05-06
+published_at = 2009-11-20
+applies_from = 2010-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472"
+review_status = "reviewed"
+
 [sources."aeat-dr-303-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
