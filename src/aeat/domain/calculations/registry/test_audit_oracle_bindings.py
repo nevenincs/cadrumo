@@ -90,7 +90,19 @@ def test_no_bindings_produces_empty_audit() -> None:
 
 
 def test_binding_to_production_oracle_passes_under_production() -> None:
-    modelo = _bind_oracle_id_on_first_cross_reference(_modelo_130(), "stub-prod")
+    # Override the cross-reference's surface so the (surface, surface_kind)
+    # pair is in the compatibility allow-list. The default Modelo 130 first
+    # cross-reference is static_official_documentation, which the audit
+    # rejects for every oracle by construction.
+    modelo = _modelo_130()
+    revision = next(iter(modelo.revisions.values()))
+    cross_references = list(revision.live_cross_references)
+    cross_references[0] = cross_references[0].model_copy(
+        update={"oracle_id": "stub-prod", "surface": "public_read_surface"}
+    )
+    new_revision = revision.model_copy(update={"live_cross_references": tuple(cross_references)})
+    modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, new_revision.id: new_revision}})
+
     catalogue = LiveParityCatalogue()
     catalogue.register(_StubOracle("stub-prod"), environment="production")
 
