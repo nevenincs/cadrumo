@@ -15,7 +15,8 @@ from types import MappingProxyType
 
 from ...core.logging import get_logger
 from ...core.paths import PROJECT_ROOT
-from ..calculations.registry import RegistryError, RegistryValidator, load_registry_tree
+from ..calculations.registry import RegistryError, RegistrySnapshotError
+from ..calculations.registry._authority import ValidatedRegistryAuthority
 from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._codes import Portal
@@ -194,6 +195,28 @@ def _finalise_registry(
 PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
 
 
+def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
+    """Resolve registry application consumers that identify portal dispatch entries."""
+
+    enum_prefix = f"{Portal.__module__}.{Portal.__qualname__}."
+    if consumer.startswith(enum_prefix):
+        member_name = consumer.removeprefix(enum_prefix)
+        try:
+            return Portal[member_name]
+        except KeyError as exc:
+            raise PortalIntegrityError(
+                f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}"
+            ) from exc
+    if consumer.startswith("portal_"):
+        try:
+            return Portal(consumer)
+        except ValueError as exc:
+            raise PortalIntegrityError(
+                f"modelo {modelo_id} revision {revision_id} binds unknown portal {consumer!r}"
+            ) from exc
+    return None
+
+
 def get_portal(portal: Portal | str) -> PortalMetadata:
     """Return the registry entry for a portal.
 
@@ -227,23 +250,19 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
     """Return portal ids bound to ``code`` by validated registry data."""
 
     try:
-        modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-        validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+        authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+        try:
+            modelo = authority.validate_modelo(str(code))
+        except RegistrySnapshotError:
+            return frozenset()
         bound: set[Portal] = set()
-        for modelo in modelos:
-            if modelo.id != str(code):
-                continue
-            validator.validate_modelo(modelo)
-            for revision in modelo.revisions.values():
-                for link in revision.application_links:
-                    if link.surface != "portal":
-                        continue
-                    try:
-                        bound.add(Portal(link.consumer))
-                    except ValueError as exc:
-                        raise PortalIntegrityError(
-                            f"modelo {modelo.id} revision {revision.id} binds unknown portal {link.consumer!r}"
-                        ) from exc
+        for revision in modelo.revisions.values():
+            for link in revision.application_links:
+                if link.surface != "portal":
+                    continue
+                portal = _portal_consumer_binding(modelo.id, revision.id, link.consumer)
+                if portal is not None:
+                    bound.add(portal)
         return frozenset(bound)
     except RegistryError as exc:
         raise PortalIntegrityError(f"registry-backed portal lookup failed: {exc}") from exc
