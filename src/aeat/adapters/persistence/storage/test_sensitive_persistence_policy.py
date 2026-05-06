@@ -187,11 +187,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_text",
     ): "explicit user-directed validation report export",
     (
-        "src/aeat/entrypoints/cli/drive.py",
-        "fetch",
-        "target.write_bytes",
-    ): "explicit user-directed Drive download",
-    (
         "src/aeat/entrypoints/cli/registry.py",
         "verify_workbooks_cmd",
         "output.write_text",
@@ -201,6 +196,28 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "scaffold",
         "open",
     ): "developer translation scaffold generation",
+}
+_REQUIRED_SECURE_OBJECT_CONSUMERS = {
+    "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
+    "src/aeat/adapters/outbound/aeat/auth/_session_store.py",
+    "src/aeat/adapters/outbound/aeat/sede/_observation_store.py",
+    "src/aeat/adapters/outbound/llm/_cache.py",
+    "src/aeat/adapters/outbound/llm/_usage.py",
+    "src/aeat/adapters/persistence/profile/assets.py",
+    "src/aeat/adapters/persistence/profile/inventory.py",
+    "src/aeat/adapters/persistence/profile/tax_residence.py",
+    "src/aeat/application/filing/_history_repository.py",
+    "src/aeat/application/setup/_env_writer.py",
+    "src/aeat/application/user_cli.py",
+    "src/aeat/application/workflow/_persistence.py",
+    "src/aeat/domain/attachments/_repository.py",
+    "src/aeat/domain/filing/_complementaria_repository.py",
+    "src/aeat/domain/filing/_repository.py",
+    "src/aeat/domain/invoices/_repository.py",
+    "src/aeat/domain/justificante/_repository.py",
+    "src/aeat/domain/submission/_repository.py",
+    "src/aeat/domain/transactions/_repository.py",
+    "src/aeat/domain/usage_ratios/_service.py",
 }
 
 
@@ -347,6 +364,31 @@ def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> N
                     violations.append(f"{relative}:{node.lineno}: calls {name}()")
                 if _calls_file_open_for_write(node):
                     violations.append(f"{relative}:{node.lineno}: opens a file in write/append mode")
+
+    assert violations == []
+
+
+def test_required_sensitive_domains_use_secure_object_repository() -> None:
+    """ADR-governed sensitive domains must stay on encrypted SQL object storage."""
+
+    violations: list[str] = []
+    sensitive_files = {
+        path.relative_to(_ROOT).as_posix() for surface in _SENSITIVE_SURFACES for path in _iter_python_files(surface)
+    }
+
+    for relative in sorted(_REQUIRED_SECURE_OBJECT_CONSUMERS):
+        path = _ROOT / relative
+        if not path.is_file():
+            violations.append(f"{relative}: required secure storage consumer is missing")
+            continue
+        if relative not in sensitive_files:
+            violations.append(f"{relative}: missing from sensitive persistence policy surface scan")
+        text = path.read_text(encoding="utf-8")
+        if "SecureObjectRepository" not in text:
+            violations.append(f"{relative}: does not use SecureObjectRepository")
+        for token in ("save_envelope", "save_encrypted_envelope", "load_encrypted_envelope"):
+            if token in text:
+                violations.append(f"{relative}: references legacy file envelope helper {token!r}")
 
     assert violations == []
 

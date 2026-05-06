@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -34,7 +36,7 @@ from .profile import Profile
 from .session import BrowserSession
 
 if TYPE_CHECKING:
-    from playwright.async_api import Playwright
+    from playwright.async_api import BrowserContext, Page, Playwright, Response
 
     from .....core.config import Settings
     from ..auth import BrowserContextLike
@@ -80,6 +82,11 @@ class DefaultBrowserSession:
             storage_state_path=storage_state_path,
             storage_state=storage_state,
         )
+
+    async def navigate(self, page: Page, url: str) -> Response | None:
+        """Navigate through the central BrowserSession health-probed path."""
+
+        return await self._session.navigate(page, url)
 
     async def close(self) -> None:
         async with self._close_lock:
@@ -134,4 +141,51 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
         raise
 
 
-__all__ = ["DefaultBrowserSession", "default_browser_session_factory"]
+@asynccontextmanager
+async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
+    """Yield a centrally owned Playwright runtime for bulk browser workflows."""
+
+    from playwright.async_api import async_playwright
+
+    playwright_manager = async_playwright()
+    playwright = await playwright_manager.start()
+    try:
+        yield playwright
+    finally:
+        with contextlib.suppress(Exception):
+            await playwright.stop()
+
+
+@asynccontextmanager
+async def opened_browser_page(
+    playwright: Playwright,
+    settings: Settings,
+    profile: Profile,
+    *,
+    provisioner: Any | None = None,
+    storage_state_path: Path | None = None,
+    storage_state: dict[str, Any] | None = None,
+) -> AsyncIterator[tuple[Page, BrowserContext]]:
+    """Yield a central :class:`BrowserSession` page/context pair and close both."""
+
+    browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
+    context = await browser_session.create_context(
+        provisioner=provisioner,
+        storage_state_path=storage_state_path,
+        storage_state=storage_state,
+    )
+    try:
+        page = await context.new_page()
+        yield page, context
+    finally:
+        with contextlib.suppress(Exception):
+            await context.close()
+        await browser_session.close()
+
+
+__all__ = [
+    "DefaultBrowserSession",
+    "default_browser_session_factory",
+    "opened_browser_page",
+    "shared_playwright_runtime",
+]

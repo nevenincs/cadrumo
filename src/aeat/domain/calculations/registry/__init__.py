@@ -53,7 +53,27 @@ from ._remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
+from ._renta_web_open_oracle import (
+    RENTA_WEB_OPEN_APP_URL,
+    RENTA_WEB_OPEN_LANDING_URL,
+    RentaWebOpenDriver,
+    RentaWebOpenLivePayload,
+    RentaWebOpenObservation,
+    RentaWebOpenOracle,
+    RentaWebOpenReplayDriver,
+    RentaWebOpenSyntheticProfile,
+    equivalent_renta_web_open_value,
+    parse_renta_web_open_live_payload,
+)
 from ._runtime_graph import expression_casilla_refs
+from ._scenarios import (
+    RegistryCalculationScenario,
+    RegistryScenarioComparison,
+    RegistryScenarioExpectedOutput,
+    RegistryScenarioRunReport,
+    assert_registry_scenario_matches,
+    run_registry_calculation_scenario,
+)
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
@@ -115,6 +135,8 @@ from ._workbook_parity import (
 )
 
 __all__ = [
+    "RENTA_WEB_OPEN_APP_URL",
+    "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicationLinkDefinition",
     "CasillaDefinition",
     "ConstructDefinition",
@@ -147,11 +169,15 @@ __all__ = [
     "ProfilePredicateDefinition",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
+    "RegistryCalculationScenario",
     "RegistryCatalogues",
     "RegistryError",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
     "RegistryLoadError",
+    "RegistryScenarioComparison",
+    "RegistryScenarioExpectedOutput",
+    "RegistryScenarioRunReport",
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistryValidationError",
@@ -159,6 +185,12 @@ __all__ = [
     "RemoteOperation",
     "RemoteStateGuardPolicy",
     "RemoteStateGuardResult",
+    "RentaWebOpenDriver",
+    "RentaWebOpenLivePayload",
+    "RentaWebOpenObservation",
+    "RentaWebOpenOracle",
+    "RentaWebOpenReplayDriver",
+    "RentaWebOpenSyntheticProfile",
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
@@ -179,6 +211,7 @@ __all__ = [
     "WorkbookScanOptions",
     "applicable_filing_schedules",
     "assert_formula_workbook_runner_ready",
+    "assert_registry_scenario_matches",
     "assert_remote_operation_allowed",
     "assert_workbook_scan_clean",
     "build_model_law_coverage_ledger",
@@ -189,6 +222,7 @@ __all__ = [
     "derive_export_layouts_from_bindings",
     "detect_workbook_runner",
     "discover_workbooks",
+    "equivalent_renta_web_open_value",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
@@ -202,6 +236,7 @@ __all__ = [
     "load_parity_tape",
     "load_registry_tree",
     "parse_export_payload",
+    "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
     "profile_condition_matches",
@@ -218,6 +253,7 @@ __all__ = [
     "resolve_relation_values_from_observations",
     "resolve_revision_constructs",
     "run_parity_scenario",
+    "run_registry_calculation_scenario",
     "run_registry_workbook_parity",
     "run_workbook_with_excel_com",
     "run_workbook_with_libreoffice",
