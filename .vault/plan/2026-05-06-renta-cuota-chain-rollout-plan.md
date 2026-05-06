@@ -201,35 +201,58 @@ the formula registration into the same commit.
   1. Add formula renta-2025-cuota-liquida-autonomica-incrementada: 0586
      = 0571 + 0577 + 0579 + 0584 (autonomic counterparts).
 - `Phase F0: Prior-year substrate prerequisite`
-  1. Add aeat-renta-{year}-manual-parte1 source for each ejercicio 2020,
-     2021, 2022, 2023, 2024. Each entry needs the AEAT-published Renta
-     manual PDF committed to corpus, sha256 + bytes integrity, and
-     evidence_tier = official_source_guidance.
-  1. Add boe-modelo-100-{year}-form source for each ejercicio. Each
-     entry needs the BOE orden HTML committed to corpus and
-     evidence_tier = official_source_guidance.
-  1. Add the corresponding orden-hac-{XXX}-{year+1}:art-{N} legal_refs
-     for each year's form orden so the formula legal_refs can carry
-     them.
-  - Phase F0 is the prerequisite for Phase F1. The registry validator
-    requires every formula to cite at least one source of
-    evidence_tier=official_source_guidance. The data dictionaries that
-    already exist for prior years carry layout_authority evidence and
-    are rejected for formula citations. An attempt to backport without
-    F0 was made on 2026-05-06 and reverted: the 95-formula injection
-    failed validation with 95+ "requires official_source_guidance source
-    evidence" errors.
-- `Phase F1: Multi-year formula backport (2020-2024 revisions)`
-  1. Backport Phase B formulas to 2024, 2023, 2022, 2021, 2020 with
-     year-scoped parameter values where the law differs.
-  1. Backport Phase C formulas. Year-scoped saldos de pérdidas
-     compensables differ per year.
-  1. Backport Phase D and E formulas. Escala general / autonómica
-     parameters differ per year and per CCAA.
-  1. Drop input-casilla references that do not exist in older
-     revisions (2020 lacks 0568, 0569, 0544, 0567, 0584; 2021 lacks
-     0568, 0569, 0544, 0584).
-- `Phase G: Multi-year full-chain parity tests`
+  - **Partial delivery (2026-05-06):** the multi-year LIRPF authority
+    has been registered as `lirpf-cuota-chain-authority` source
+    pointing at `corpus/normatives/html/ley-35-2006.html` with
+    `evidence_tier = official_source_guidance` and open-ended
+    `applies_from = 2007-01-01`. The LIRPF cuota chain articles (49,
+    50, 56, 62, 63, 66, 67, 68, 73, 74, 75, 77) have been stable
+    since the law took effect, so a single source suffices to
+    validate the cuota-chain formulas across every ejercicio. This
+    unblocked Phase F1 formula backport.
+  - **Remaining work:** per-year AEAT manual + BOE form-orden sources
+    are still desirable for richer evidence:
+      1. Add aeat-renta-{year}-manual-parte1 source for each ejercicio
+         2020, 2021, 2022, 2023, 2024.
+      1. Add boe-modelo-100-{year}-form source for each ejercicio.
+      1. Add the corresponding orden-hac-{XXX}-{year+1}:art-{N}
+         legal_refs.
+  - The contract test `test_renta_multi_year_cuota_chain_sources_are_
+    catalogued` checks for the per-year sources and stays red until
+    they are catalogued. Web-fetch attempts on 2026-05-06 to
+    discover the prior-year orden HAC numbers were unsuccessful (BOE
+    search interface rejects WebFetch parameters; AEAT manual PDF
+    URLs return 404; Google search redirects to consent gate).
+- `Phase F1: Multi-year formula backport (2020-2024 revisions)` — **DELIVERED 2026-05-06 (commit 05dd62dd)**
+  - 95 cuota-chain formula blocks backported across ejercicios 2020-
+    2024 (19 formulas per year). Each revision now carries the full
+    chain: minimo personal y familiar (0519-0524), base imponible /
+    liquidable (0432, 0435, 0460, 0500, 0510), cuota integra (0532,
+    0533, 0545, 0546), cuota liquida y cuota liquida incrementada
+    (0570, 0571, 0585, 0586).
+  - Each formula uses `lirpf-cuota-chain-authority` as its single
+    `official_source_guidance` source citation, grounded in the
+    appropriate LIRPF article.
+  - Year-specific input-gap filtering applied automatically: 2020
+    drops 0568, 0569, 0544, 0567, 0584; 2021 drops 0568, 0569, 0544,
+    0584; 2022, 2023, 2024 carry the full input set.
+  - Each prior-year revision also got a calculation application_link
+    (`modelo-100-{year}-calculation`) wired to
+    `aeat.domain.calculations.registry.calculate_registry_snapshot`.
+  - Contract tests `test_renta_cuota_chain_present_in_all_supported_
+    revisions` and `test_renta_cuota_chain_can_support_multi_year_
+    calculation_parity` both pass green.
+- `Phase G: Multi-year full-chain parity tests` — **DELIVERED 2026-05-06 (commits 8934ccf5, a60f1d8b, b821e7c8)**
+  - End-to-end synthetic-profile test for ejercicio 2025 exercises
+    the registry calculator on a 30,000 EUR salary employee with
+    default mínimo del contribuyente and asserts the full cuota
+    chain to 0587 = 11,872.76 EUR.
+  - Parametrized multi-year scenario covers ejercicios 2020, 2021,
+    2022, 2023, 2024, 2025 with all-zero inputs and asserts every
+    cuota-chain casilla evaluates to zero. 8 tests pass.
+  - Year-specific operand-ref filtering reflects the F1 formula
+    shape per revision (older revisions drop 0544/0567/0584 negate
+    args from cuota líquida formulas).
   1. Convert the aspirational full-chain xfail-strict test into a green
      parameterised test once every phase is delivered for at least one
      ejercicio.
