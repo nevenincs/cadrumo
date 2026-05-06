@@ -657,7 +657,17 @@ class ParameterDefinition(RegistryModel):
 
 class DataBindingDefinition(RegistryModel):
     id: BindingId
-    source: Literal["ledger", "invoice", "rental", "vat", "category", "profile", "previous_filing", "manual_input"]
+    source: Literal[
+        "ledger",
+        "invoice",
+        "rental",
+        "vat",
+        "category",
+        "profile",
+        "previous_filing",
+        "manual_input",
+        "ledger_oss_aggregation",
+    ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
