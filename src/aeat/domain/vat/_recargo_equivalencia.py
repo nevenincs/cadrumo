@@ -1,0 +1,145 @@
+"""Registry-backed loader for LIVA art. 161 recargo de equivalencia rates.
+
+Closes the recargo de equivalencia rate gap in the VAT substrate:
+the four LIVA art. 161 rate values (general 5.2 %, reduced 1.4 %,
+super-reduced 0.5 %, tobacco 1.75 %) live in
+``registry/aeat/legal/iva-recargo-equivalencia.toml`` under
+``[parameters."liva-art-161:*"]`` entries with explicit BOE
+citations and review metadata, and Python consumers import them
+from this module.
+
+The loader follows the same idiom as
+:mod:`aeat.domain.rental._imputacion_parameters`: a frozen pydantic
+record loaded once at module import time, with an explicit
+:func:`recargo_rate_for` helper that maps from the substrate's
+:class:`VATRateKind` tier to the corresponding recargo Decimal.
+The ``LIVA_ART_161_RECARGO`` accessor is the canonical source for
+recargo de equivalencia rates across the codebase.
+
+The recargo de equivalencia regime (LIVA arts. 148-163) applies to
+comerciantes minoristas (retailers) with limited annual revenue who
+buy stock for resale; their suppliers charge them an additional
+recargo on top of the regular IVA rate. The four rates align with
+the four IVA tiers per LIVA art. 161:
+
+* General (21 % IVA) → 5.2 % recargo (art. 161 1.º).
+* Reduced (10 % IVA, art. 91 uno) → 1.4 % recargo (art. 161 2.º).
+* Super-reduced (4 % IVA, art. 91 dos) → 0.5 % recargo (art. 161 3.º).
+* Tobacco-specific → 1.75 % recargo (art. 161 4.º).
+"""
+
+from __future__ import annotations
+
+import tomllib
+from decimal import Decimal
+from pathlib import Path
+from typing import Final
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ...core.paths import PROJECT_ROOT
+from ._schema import VATRateKind
+
+
+class LivaArt161RecargoRates(BaseModel):
+    """Frozen record of the LIVA art. 161 recargo de equivalencia rates.
+
+    Attributes:
+        general_rate: 5.2 % recargo applied alongside the 21 % IVA
+            tier (LIVA art. 161 1.º).
+        reducido_rate: 1.4 % recargo applied alongside the 10 % IVA
+            tier (LIVA art. 161 2.º, referencing art. 91 uno).
+        super_reducido_rate: 0.5 % recargo applied alongside the 4 %
+            IVA tier (LIVA art. 161 3.º, referencing art. 91 dos).
+        tabaco_rate: 1.75 % recargo applied to entregas de labores
+            del tabaco (LIVA art. 161 4.º).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    general_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    reducido_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    super_reducido_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    tabaco_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+
+
+_PARAMETER_TABLE_PATH: Final[Path] = (
+    PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-recargo-equivalencia.toml"
+)
+
+_GENERAL_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-general"
+_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-reducido"
+_SUPER_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-super-reducido"
+_TABACO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-tabaco"
+
+
+def _load_rates() -> LivaArt161RecargoRates:
+    """Read the four LIVA art. 161 rate parameters from the registry TOML.
+
+    Raises:
+        FileNotFoundError: If the parameter TOML is missing.
+        KeyError: If any of the four expected parameter ids is absent.
+        ValueError: If any value cannot be parsed as a Decimal.
+    """
+    with _PARAMETER_TABLE_PATH.open("rb") as handle:
+        data = tomllib.load(handle)
+
+    parameters = data.get("parameters", {})
+    try:
+        general_raw = parameters[_GENERAL_PARAM_ID]["value"]
+        reducido_raw = parameters[_REDUCIDO_PARAM_ID]["value"]
+        super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID]["value"]
+        tabaco_raw = parameters[_TABACO_PARAM_ID]["value"]
+    except KeyError as exc:
+        raise KeyError(
+            f"registry/aeat/legal/iva-recargo-equivalencia.toml is missing "
+            f"LIVA art. 161 parameter {exc.args[0]!r}"
+        ) from exc
+
+    return LivaArt161RecargoRates(
+        general_rate=Decimal(str(general_raw)),
+        reducido_rate=Decimal(str(reducido_raw)),
+        super_reducido_rate=Decimal(str(super_reducido_raw)),
+        tabaco_rate=Decimal(str(tabaco_raw)),
+    )
+
+
+LIVA_ART_161_RECARGO: Final[LivaArt161RecargoRates] = _load_rates()
+"""Module-level frozen record loaded once at import time.
+
+Consumers reference ``LIVA_ART_161_RECARGO.general_rate`` etc. for the
+recargo de equivalencia rates instead of carrying numeric literals.
+The :func:`recargo_rate_for` helper is the convenient lookup keyed by
+:class:`VATRateKind` tier."""
+
+
+def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
+    """Return the recargo de equivalencia rate aligned with ``rate_kind``.
+
+    Args:
+        rate_kind: The substrate IVA rate tier.
+
+    Returns:
+        The matching recargo Decimal for ``GENERAL`` / ``REDUCED`` /
+        ``SUPER_REDUCED`` tiers; ``None`` for ``ZERO`` and ``EXEMPT``
+        (recargo de equivalencia does not apply to operations whose
+        underlying IVA rate is zero or exempt).
+
+    The tobacco-specific 1.75 % rate is not keyed by ``VATRateKind``;
+    callers that handle labores del tabaco read
+    ``LIVA_ART_161_RECARGO.tabaco_rate`` directly.
+    """
+    if rate_kind is VATRateKind.GENERAL:
+        return LIVA_ART_161_RECARGO.general_rate
+    if rate_kind is VATRateKind.REDUCED:
+        return LIVA_ART_161_RECARGO.reducido_rate
+    if rate_kind is VATRateKind.SUPER_REDUCED:
+        return LIVA_ART_161_RECARGO.super_reducido_rate
+    return None
+
+
+__all__ = [
+    "LIVA_ART_161_RECARGO",
+    "LivaArt161RecargoRates",
+    "recargo_rate_for",
+]
