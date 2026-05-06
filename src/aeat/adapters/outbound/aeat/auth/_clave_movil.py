@@ -28,18 +28,18 @@ import re
 import sys
 import time
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import quote
 
-from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import AeatError
 from .....core.logging import get_logger
 from ....persistence.storage.sql import SecureObjectRepository
+from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
@@ -83,6 +83,34 @@ class ClaveMovilConfigurationError(AeatError):
 class ClaveMovilApprovalTimeoutError(AeatError):
     """Raised when the operator does not approve the Cl@ve push within the time window."""
 
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        failure_mode: ClaveMovilFailureMode | str | None = None,
+        context: dict[str, object] | None = None,
+        suggestion: str | None = None,
+    ) -> None:
+        """Construct a Cl@ve Móvil approval failure with stable mode context."""
+
+        enriched_context = dict(context) if context is not None else {}
+        if failure_mode is not None:
+            failure_mode_value = (
+                failure_mode.value if isinstance(failure_mode, ClaveMovilFailureMode) else str(failure_mode)
+            )
+            enriched_context["failure_mode"] = failure_mode_value
+            self.failure_mode: str | None = failure_mode_value
+        else:
+            self.failure_mode = None
+        super().__init__(message, context=enriched_context or None, suggestion=suggestion)
+
+
+class ClaveMovilFailureMode(StrEnum):
+    """Closed Cl@ve Móvil live-auth failure modes."""
+
+    PENDING_PETITION_BLOCKED = "pending_petition_blocked"
+    APPROVAL_TIMEOUT = "approval_timeout"
+
 
 class _ClaveMovilSessionMetadata(BaseModel):
     """Encrypted metadata stored with the Cl@ve Móvil storage state.
@@ -110,7 +138,7 @@ class _ClaveMovilSessionMetadata(BaseModel):
         description=(
             "Concrete URL Playwright observed after AEAT dispatched the "
             "successful login (e.g. www6.agenciatributaria.gob.es/wlpl/...). "
-            "Used as the probe target by `aeat auth whoami` because AEAT's "
+            "Used as the probe target by `aeat setup auth whoami` because AEAT's "
             "SelectorAccesos.html is a static dispatch page that always "
             "returns 200 regardless of auth state."
         ),
@@ -263,7 +291,7 @@ class ClaveMovilAuthProvider:
 
         Unlike :meth:`authenticate`, this method NEVER falls back to a
         fresh login and NEVER deletes the persisted session —
-        even when the probe fails. Callers (``aeat auth whoami``) can
+        even when the probe fails. Callers (``aeat setup auth whoami``) can
         therefore use it as a pure diagnostic without accidentally
         triggering a phone-approval push.
         """
@@ -274,7 +302,7 @@ class ClaveMovilAuthProvider:
                 )
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
-                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat auth login` first")
+                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat setup auth login` first")
 
             persisted = self._load_persisted(storage_state_path)
             metadata = self._load_metadata(storage_state_path, persisted)
@@ -295,6 +323,7 @@ class ClaveMovilAuthProvider:
                         dni_nie=metadata.identity_nif,
                         used_non_qr_fallback=metadata.used_non_qr_fallback,
                         verification_code=metadata.verification_code,
+                        landing_url=metadata.landing_url,
                     ),
                 )
                 self._browser_session = session_like
@@ -380,13 +409,19 @@ class ClaveMovilAuthProvider:
                 "ClaveMovilAuthProvider.verify() requires an active browser context; call authenticate() first"
             )
         target_path = self._settings.aeat_sede_expedientes_path
-        if target_url and target_path in target_url:
-            probe_url = target_url
+        session_landing_url = (
+            session.provider_detail.landing_url
+            if isinstance(session.provider_detail, ClaveMovilSessionDetail)
+            else None
+        )
+        resolved_target_url = target_url or session_landing_url
+        if resolved_target_url and target_path in resolved_target_url:
+            probe_url = resolved_target_url
         else:
             # No recorded post-auth URL — probe via the button's
             # DialogoRepresentacion dispatcher, which requires auth cookies
             # to forward through.
-            dispatcher_target = target_url or self._selector_url(target_path)
+            dispatcher_target = resolved_target_url or self._selector_url(target_path)
             probe_url = dispatcher_target
         attempted_at = datetime.now(UTC)
         start = time.perf_counter()
@@ -482,7 +517,7 @@ class ClaveMovilAuthProvider:
         if not raw:
             raise ClaveMovilConfigurationError(
                 "AEAT_CLAVE_MOVIL_DNI_NIE is not set; set it to your DNI or NIE "
-                "before running `aeat auth login --provider clave_movil`."
+                "before running `aeat setup auth configure --provider clave_movil` and `aeat setup auth login`."
             )
         _classify_identity(raw)
         return raw.strip().upper()
@@ -561,7 +596,7 @@ class ClaveMovilAuthProvider:
     def _load_persisted(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         persisted = _session_store.load(storage_state_path)
         if persisted is None:
-            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat auth login` first")
+            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat setup auth login` first")
         return persisted
 
     @staticmethod
@@ -607,6 +642,7 @@ class ClaveMovilAuthProvider:
                 await self._drive_non_qr_fallback(page, dni_nie)
             else:
                 await self._click_clave_movil_button(page)
+                await self._raise_if_pending_request_error(page)
                 verification_code = await self._extract_verification_code(page)
 
             timeout_ms = int(self._settings.aeat_clave_movil_timeout_ms)
@@ -623,7 +659,9 @@ class ClaveMovilAuthProvider:
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
                     "Open the Cl@ve app on your phone and approve the login request, "
-                    "then run `aeat auth login` again."
+                    "then run `aeat setup auth login` again.",
+                    failure_mode=ClaveMovilFailureMode.APPROVAL_TIMEOUT,
+                    context={"timeout_ms": timeout_ms},
                 ) from exc
 
             storage_state = await context.storage_state()
@@ -677,6 +715,7 @@ class ClaveMovilAuthProvider:
                 dni_nie=dni_nie,
                 used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
                 verification_code=verification_code,
+                landing_url=landing_url,
             ),
         )
         self._browser_session = session_like
@@ -720,13 +759,14 @@ class ClaveMovilAuthProvider:
                     dni_nie=metadata.identity_nif,
                     used_non_qr_fallback=metadata.used_non_qr_fallback,
                     verification_code=metadata.verification_code,
+                    landing_url=metadata.landing_url,
                 ),
             )
             self._browser_session = session_like
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify(session, target_url=target_url)
+            assertion = await self.verify(session, target_url=target_url or metadata.landing_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "
@@ -865,14 +905,30 @@ class ClaveMovilAuthProvider:
             html = await content()
         except PlaywrightError:
             return
-        if "No ha sido posible generar una nueva petici" in html:
+        normalized = " ".join(html.replace("\xa0", " ").split()).lower()
+        pending_markers = (
+            "no ha sido posible generar una nueva petición",
+            "no ha sido posible generar una nueva petici",
+            "petición pendiente",
+            "peticion pendiente",
+            "rechace la petición pendiente",
+            "rechace la peticion pendiente",
+        )
+        if any(marker in normalized for marker in pending_markers):
             await self._dump_diagnostic(page, reason="pending-request-refusal")
             raise ClaveMovilApprovalTimeoutError(
                 "AEAT refused to issue a new Cl@ve Móvil push: a prior "
                 "authentication request is still pending server-side. Open the "
                 "Cl@ve app on your phone and REJECT every pending request, then "
-                "retry `aeat auth login` (or wait up to 5 minutes for AEAT to "
-                "time them out automatically)."
+                "retry `aeat setup auth login` (or wait up to 5 minutes for AEAT "
+                "to time them out automatically).",
+                failure_mode=ClaveMovilFailureMode.PENDING_PETITION_BLOCKED,
+                context={
+                    "reason": "aeat-refused-new-clave-movil-petition",
+                    "url": getattr(page, "url", "") or "",
+                    "detected_markers": tuple(marker for marker in pending_markers if marker in normalized),
+                },
+                suggestion="Open the Cl@ve app, reject the pending request, then run `aeat setup auth login`.",
             )
 
     @staticmethod
@@ -1048,4 +1104,5 @@ __all__ = [
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilAuthProvider",
     "ClaveMovilConfigurationError",
+    "ClaveMovilFailureMode",
 ]

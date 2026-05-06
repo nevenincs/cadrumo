@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import typer
 
 from ...application.auth import (
     AUTH_PROVIDER_CATALOGUE,
+    AuthProviderKind,
+    AuthSessionUnavailableError,
+    delete_persisted_session,
     get_auth_provider,
+    require_verified_aeat_session,
 )
 from ...application.profile import validate_profile
 from ...application.user_cli import (
@@ -16,6 +21,7 @@ from ...application.user_cli import (
     state_repository,
     update_auth,
 )
+from ...core.config import Settings, load_settings
 from ...domain.profile import (
     PROFILE_KEYS,
     get_profile_key,
@@ -189,14 +195,20 @@ def auth_configure(
 
 @auth_app.command("login", help=tr("cli.setup.auth.login.help"))
 def auth_login(ctx: typer.Context) -> None:
-    """Mark the configured provider as logged-in (offline marker for now)."""
+    """Authenticate with the configured AEAT provider and persist the verified session marker."""
     current = _state()
     if current.auth.provider is None:
         raise _bad(tr("cli.setup.errors.not_configured"))
+    try:
+        provider_kind = AuthProviderKind(current.auth.provider)
+    except ValueError as exc:
+        raise _bad(tr("cli.setup.errors.unknown_provider").format(provider=current.auth.provider)) from exc
     record = current.active_profile_record()
-    subject = record.values.get("tax.id") if record is not None else None
+    profile_tax_id = record.values.get("tax.id") if record is not None else None
+    session, assertion = asyncio.run(_authenticate_configured_provider(provider_kind, profile_tax_id=profile_tax_id))
+    subject = session.identity_nif or profile_tax_id
     updated = state_repository().update(lambda state: update_auth(state, authenticated=True, subject=subject))
-    payload = {"auth": updated.auth}
+    payload = {"auth": updated.auth, "session": session, "assertion": assertion}
     _emit(
         ctx,
         payload,
@@ -210,8 +222,25 @@ def auth_login(ctx: typer.Context) -> None:
 @auth_app.command("status", help=tr("cli.setup.auth.status.help"))
 def auth_status(ctx: typer.Context) -> None:
     current = _state()
-    ready = current.auth.provider is not None and current.auth.authenticated_at is not None
-    payload = {"auth": current.auth, "ready": ready}
+    ready = False
+    session = None
+    error: str | None = None
+    if current.auth.provider is not None:
+        try:
+            provider_kind = AuthProviderKind(current.auth.provider)
+            record = current.active_profile_record()
+            profile_tax_id = record.values.get("tax.id") if record is not None else None
+            settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+            session = asyncio.run(require_verified_aeat_session(settings, kind=provider_kind))
+            ready = True
+            state_repository().update(
+                lambda state: update_auth(state, authenticated=True, subject=session.identity_nif)
+            )
+        except (ValueError, AuthSessionUnavailableError) as exc:
+            error = str(exc)
+            state_repository().update(lambda state: update_auth(state, authenticated=False))
+    current = _state()
+    payload = {"auth": current.auth, "ready": ready, "session": session, "error": error}
     yes_no = tr("cli.setup.labels.yes") if ready else tr("cli.setup.labels.no")
     authenticated_at = current.auth.authenticated_at.isoformat() if current.auth.authenticated_at else ""
     _emit(
@@ -228,26 +257,93 @@ def auth_status(ctx: typer.Context) -> None:
 @auth_app.command("whoami", help=tr("cli.setup.auth.whoami.help"))
 def auth_whoami(ctx: typer.Context) -> None:
     current = _state()
-    payload = {"provider": current.auth.provider, "subject": current.auth.subject}
+    if current.auth.provider is None:
+        raise _bad(tr("cli.setup.errors.not_configured"))
+    try:
+        provider_kind = AuthProviderKind(current.auth.provider)
+    except ValueError as exc:
+        raise _bad(tr("cli.setup.errors.unknown_provider").format(provider=current.auth.provider)) from exc
+    record = current.active_profile_record()
+    profile_tax_id = record.values.get("tax.id") if record is not None else None
+    settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+    session = asyncio.run(require_verified_aeat_session(settings, kind=provider_kind))
+    updated = state_repository().update(
+        lambda state: update_auth(state, authenticated=True, subject=session.identity_nif)
+    )
+    payload = {"provider": updated.auth.provider, "subject": updated.auth.subject, "session": session}
     _emit(
         ctx,
         payload,
         [
-            f"{tr('cli.setup.headers.provider')}\t{current.auth.provider or ''}",
-            f"{tr('cli.setup.headers.subject')}\t{current.auth.subject or ''}",
+            f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider or ''}",
+            f"{tr('cli.setup.headers.subject')}\t{updated.auth.subject or ''}",
         ],
     )
 
 
 @auth_app.command("logout", help=tr("cli.setup.auth.logout.help"))
 def auth_logout(ctx: typer.Context) -> None:
-    updated = state_repository().update(lambda state: update_auth(state, authenticated=False))
-    payload = {"auth": updated.auth}
+    current = _state()
+    removed: list[Path] = []
+    if current.auth.provider is not None:
+        try:
+            provider_kind = AuthProviderKind(current.auth.provider)
+            record = current.active_profile_record()
+            profile_tax_id = record.values.get("tax.id") if record is not None else None
+            settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+            removed = delete_persisted_session(settings, kind=provider_kind)
+        except ValueError:
+            removed = []
+    updated = state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+    payload = {"auth": updated.auth, "removed_sessions": removed}
     _emit(
         ctx,
         payload,
         [f"{tr('cli.setup.headers.provider')}\t{updated.auth.provider or ''}", f"{tr('cli.setup.headers.logout')}\tok"],
     )
+
+
+async def _authenticate_configured_provider(
+    provider_kind: AuthProviderKind,
+    *,
+    profile_tax_id: str | None,
+):
+    """Run the concrete outbound auth provider selected by the official CLI."""
+
+    from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
+    from .auth._registry import build_provider
+
+    settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
+    provider = build_provider(provider_kind, settings)
+    try:
+        session = await provider.authenticate()
+        assertion = await provider.verify(session)
+        if not assertion.is_valid:
+            raise AeatLoginAssertionError(
+                "AEAT authentication completed but live verification failed: "
+                f"status={assertion.status_code} error={assertion.error_message!r}"
+            )
+        return session, assertion
+    finally:
+        close = getattr(provider, "close", None)
+        if callable(close):
+            result = close()
+            if asyncio.iscoroutine(result):
+                await result
+
+
+def _settings_for_auth_provider(provider_kind: AuthProviderKind, *, profile_tax_id: str | None) -> Settings:
+    """Return settings with CLI-owned auth defaults applied."""
+
+    settings = load_settings()
+    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return settings
+
+    updates: dict[str, object] = {}
+    if settings.aeat_clave_movil_dni_nie is None and profile_tax_id:
+        updates["aeat_clave_movil_dni_nie"] = profile_tax_id
+
+    return settings.model_copy(update=updates) if updates else settings
 
 
 # ---------------------------------------------------------------------

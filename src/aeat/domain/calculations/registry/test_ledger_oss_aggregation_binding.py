@@ -14,6 +14,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.domain.calculations.registry._bindings import (
     OssIossLedgerObservation,
@@ -48,7 +49,7 @@ def _binding(
     fact: str | None = None,
     aggregation: dict[str, str] | None = None,
 ) -> DataBindingDefinition:
-    selector: dict[str, object] = {
+    selector: dict[str, str | int | Decimal | tuple[str, ...]] = {
         "regime": regime,
         "destination_member_state": destination,
         "rate_kind": rate_kind,
@@ -96,9 +97,7 @@ def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="esquema-union",
         valid_from=date(2021, 7, 1),
-        period_selector=PeriodSelector(
-            year_from=2021, periods=("UN-1T", "UN-2T", "UN-3T", "UN-4T")
-        ),
+        period_selector=PeriodSelector(year_from=2021, periods=("UN-1T", "UN-2T", "UN-3T", "UN-4T")),
         legal_refs=("orden-hac-610-2021:art-1",),
         source_refs=("aeat-dr-369-2021",),
         bindings=bindings,
@@ -142,9 +141,7 @@ def test_validate_rejects_empty_transaction_kinds() -> None:
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with pytest.raises(RegistryValidationError, match="aggregation op 'sum'"):
-        validate_ledger_oss_aggregation_binding_definition(
-            _binding(aggregation={"op": "max"})
-        )
+        validate_ledger_oss_aggregation_binding_definition(_binding(aggregation={"op": "max"}))
 
 
 def test_validate_rejects_unknown_fact() -> None:
@@ -218,9 +215,7 @@ def test_resolve_filters_observations_by_invoice_direction() -> None:
 
 
 def test_resolve_filters_observations_by_transaction_kind_set() -> None:
-    revision = _revision_with_bindings(
-        _binding(kinds=("oss_union_services", "oss_union_goods_distance_sale"))
-    )
+    revision = _revision_with_bindings(_binding(kinds=("oss_union_services", "oss_union_goods_distance_sale")))
     observations = [
         _observation(kind=TransactionKind.OSS_UNION_SERVICES, iva=Decimal("10")),
         _observation(kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE, iva=Decimal("20")),
@@ -290,5 +285,5 @@ def test_resolve_ignores_non_oss_bindings_on_the_revision() -> None:
 
 def test_oss_iross_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
-    with pytest.raises(Exception):  # noqa: PT011 — pydantic ValidationError on frozen mutation
+    with pytest.raises(ValidationError):
         obs.iva_amount = Decimal("999")  # type: ignore[misc]

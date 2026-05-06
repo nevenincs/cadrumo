@@ -26,8 +26,10 @@ from ....persistence.storage import EphemeralMasterKeyProvider, override_master_
 from ....persistence.storage.sql.engine import dispose_engine
 from . import _session_store
 from ._clave_movil import (
+    ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
+    ClaveMovilFailureMode,
     _classify_identity,
     _ClaveMovilSessionMetadata,
 )
@@ -127,6 +129,14 @@ class _RecordingPage:
         self.closed = True
 
 
+class _PendingPetitionPage(_RecordingPage):
+    async def content(self) -> str:
+        return (
+            "<html><body>No ha sido posible generar una nueva petición de autenticación "
+            "con Cl@ve Móvil. Rechace la petición pendiente en la APP Cl@ve.</body></html>"
+        )
+
+
 class _RecordingContext:
     def __init__(
         self,
@@ -211,7 +221,7 @@ def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -
         monkeypatch.setenv(key, value)
 
     # Pydantic-settings reads env/.env by default; a developer who ran
-    # `aeat auth configure` would then leak their real DNI/NIE into
+    # `aeat setup auth configure` would then leak their real DNI/NIE into
     # the test suite. Point the test Settings at a non-existent file.
     class _IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
@@ -312,6 +322,7 @@ class TestAuthenticateFresh:
             # provider_detail is Cl@ve-shaped
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assert session.provider_detail.dni_nie == "12345678Z"
+            assert session.provider_detail.landing_url == (f"https://www6.agenciatributaria.gob.es{target_path}")
 
         asyncio.run(run())
 
@@ -398,6 +409,28 @@ class TestPostAuthLanding:
 
         asyncio.run(run())
         assert page.clicks == []
+
+
+class TestPendingPetitionRefusal:
+    def test_pending_petition_page_fails_fast_with_actionable_mode(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
+
+        async def run() -> None:
+            with pytest.raises(ClaveMovilApprovalTimeoutError) as excinfo:
+                await provider._raise_if_pending_request_error(page)
+            assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
+            assert excinfo.value.context is not None
+            assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
+            assert "detected_markers" in excinfo.value.context
+            assert excinfo.value.suggestion is not None
+
+        asyncio.run(run())
 
 
 # ── authenticate() — resume path ─────────────────────────────────────────────
@@ -491,6 +524,8 @@ class TestResume:
             assert session.identity_nif == "12345678Z"
             # Verify() is called by the resume path; assertion should be valid.
             assert browser_session_b.contexts, "resume must have opened a new context"
+            page = browser_session_b.contexts[0].pages[0]
+            assert page.gotos == [f"https://www6.agenciatributaria.gob.es{target_path}"]
             await resumed_provider.close()
 
         asyncio.run(run_resume())
