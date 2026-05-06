@@ -33,17 +33,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _PHASE_A_REQUIRED_ARTICLES: frozenset[str] = frozenset(
     {
         "ley-35-2006:art-49",  # Integración y compensación de rentas en la base imponible del ahorro
-        "ley-35-2006:art-50",  # Base imponible general y del ahorro
+        "ley-35-2006:art-50",  # Base liquidable general y del ahorro
         "ley-35-2006:art-56",  # Mínimo personal y familiar
         "ley-35-2006:art-63",  # Escala general del Impuesto
-        "ley-35-2006:art-66",  # Tipos de gravamen del ahorro: parte estatal
-        "ley-35-2006:art-67",  # Cuota íntegra estatal
+        "ley-35-2006:art-66",  # Tipos de gravamen del ahorro
+        "ley-35-2006:art-67",  # Cuota líquida estatal
         "ley-35-2006:art-68",  # Deducciones de la cuota íntegra estatal
-        "ley-35-2006:art-73",  # Escala autonómica
-        "ley-35-2006:art-74",  # Escala autonómica complementaria
+        "ley-35-2006:art-73",  # Base liquidable autonómica sometida a gravamen
+        "ley-35-2006:art-74",  # Escala autonómica del Impuesto
         "ley-35-2006:art-75",  # Cuota íntegra autonómica
         "ley-35-2006:art-77",  # Cuota líquida autonómica
-        "ley-35-2006:art-79",  # Cuota líquida total
     }
 )
 
@@ -101,16 +100,20 @@ def _formula_target_casillas_for_revision(modelo, revision_id: str) -> frozenset
     return frozenset(formula.target for formula in revision.formulas)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=("phase a: cuota chain legal substrate. Add Ley 35/2006 cuota chain articles to corpus + irpf catalogue."),
-)
 def test_phase_a_cuota_chain_articles_are_catalogued() -> None:
-    """All cuota chain Ley 35/2006 articles are registered in the IRPF catalogue."""
+    """All cuota chain Ley 35/2006 articles are registered in the IRPF catalogue.
+
+    Phase A delivered: 11 articles (49, 50, 56, 63, 66, 67, 68, 73, 74, 75, 77)
+    catalogued and corpus-grounded. Cuota líquida total is the sum of art-67
+    (estatal) and art-77 (autonómica); there is no separate "total" article in
+    Ley 35/2006 (art-79 is the cuota diferencial). This test now stays green
+    as a regression guard against any of the cuota chain articles being
+    removed from the catalogue.
+    """
     _modelo, catalogues = _modelo_100()
     catalogued = set(catalogues.legal.keys())
     missing = _PHASE_A_REQUIRED_ARTICLES - catalogued
-    assert not missing, f"phase a not yet delivered: missing cuota chain legal articles {sorted(missing)}"
+    assert not missing, f"cuota chain regression: missing IRPF articles {sorted(missing)}"
 
 
 @pytest.mark.xfail(

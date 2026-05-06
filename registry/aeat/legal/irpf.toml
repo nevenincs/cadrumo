@@ -1304,6 +1304,86 @@ required_text = [
     "inversión",
 ]
 
+[legal."ley-35-2006:art-73"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-73"
+document_id = "BOE-A-2006-20764"
+article = "73"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a73"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la base liquidable autonomica sometida a gravamen en Modelo 100, casillas 0500 y 0510 (parte autonomica)."
+required_text = [
+    "base liquidable general",
+    "base liquidable del ahorro",
+    "autonómica",
+]
+
+[legal."ley-35-2006:art-74"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-74"
+document_id = "BOE-A-2006-20764"
+article = "74"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a74"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la escala autonomica progresiva del IRPF aplicable a la base liquidable general en Modelo 100, casillas 0529 y 0531."
+required_text = [
+    "escala autonómica",
+    "base liquidable general",
+    "Comunidad Autónoma",
+]
+
+[legal."ley-35-2006:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-75"
+document_id = "BOE-A-2006-20764"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a75"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota integra autonomica en Modelo 100, casilla 0546."
+required_text = [
+    "cuota íntegra autonómica",
+    "base liquidable",
+    "tipos de gravamen autonómicos",
+]
+
+[legal."ley-35-2006:art-77"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-77"
+document_id = "BOE-A-2006-20764"
+article = "77"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota liquida autonomica en Modelo 100, casillas 0571 y 0586 (cuota liquida autonomica incrementada)."
+required_text = [
+    "cuota líquida autonómica",
+    "cuota íntegra autonómica",
+    "deducciones",
+]
+
 [legal."ley-35-2006:art-50"]
 evidence_tier = "legal_authority"
 authority = "boe"

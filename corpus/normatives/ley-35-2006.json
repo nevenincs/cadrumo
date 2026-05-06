@@ -338,6 +338,70 @@
       }
     },
     {
+      "numero": "73",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a73",
+      "summary": {
+        "ca": "Estableix la part autonòmica de la base liquidable general i de la base liquidable de l'estalvi sotmesa a gravamen, com a base de càlcul per als gravàmens autonòmics regulats pels articles 74 i següents.",
+        "en": "Establishes the autonomic share of the general taxable base and of the savings taxable base subject to tax, as the calculation base for the autonomic tax rates regulated by articles 74 and following.",
+        "es": "Establece la parte autonómica de la base liquidable general y de la base liquidable del ahorro sometida a gravamen, como base de cálculo para los gravámenes autonómicos regulados por los artículos 74 y siguientes.",
+        "hu": "Megállapítja az általános és megtakarítási adóalap autonóm közösségi részét, mint a 74. és azt követő cikkek által szabályozott autonóm közösségi adókulcsok kiszámítási alapját."
+      },
+      "titulo": {
+        "ca": "Base liquidable autonòmica",
+        "en": "Autonomic taxable base",
+        "es": "Base liquidable autonómica",
+        "hu": "Autonóm közösségi adóalap"
+      }
+    },
+    {
+      "numero": "74",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a74",
+      "summary": {
+        "ca": "Regula l'escala autonòmica progressiva aplicable a la part autonòmica de la base liquidable general per determinar la quota íntegra autonòmica, amb tipus marginals establerts per cada Comunitat Autònoma dins els seus marges normatius.",
+        "en": "Regulates the progressive autonomic scale applied to the autonomic share of the general taxable base to determine the autonomic gross tax liability, with marginal rates set by each Autonomous Community within its statutory ranges.",
+        "es": "Regula la escala autonómica progresiva aplicable a la parte autonómica de la base liquidable general para determinar la cuota íntegra autonómica, con tipos marginales establecidos por cada Comunidad Autónoma dentro de sus márgenes normativos.",
+        "hu": "Szabályozza az általános adóalap autonóm közösségi részére alkalmazandó progresszív autonóm közösségi skálát, az autonóm közösségi bruttó adókötelezettség meghatározásához, amelyben a határadókulcsokat minden Autonóm Közösség saját szabályozási mozgásterén belül állapítja meg."
+      },
+      "titulo": {
+        "ca": "Escala autonòmica de l'Impost",
+        "en": "Autonomic scale of the Tax",
+        "es": "Escala autonómica del Impuesto",
+        "hu": "Az adó autonóm közösségi skálája"
+      }
+    },
+    {
+      "numero": "75",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a75",
+      "summary": {
+        "ca": "Defineix la quota íntegra autonòmica com el resultat d'aplicar a la base liquidable general la part autonòmica de l'escala progressiva i a la base liquidable de l'estalvi els tipus de gravamen autonòmics, sumant les quotes resultants.",
+        "en": "Defines the autonomic gross tax liability (cuota íntegra autonómica) as the result of applying to the general taxable base the autonomic share of the progressive scale and to the savings taxable base the autonomic tax rates, adding the resulting tax amounts.",
+        "es": "Define la cuota íntegra autonómica como el resultado de aplicar a la base liquidable general la parte autonómica de la escala progresiva y a la base liquidable del ahorro los tipos de gravamen autonómicos, sumando las cuotas resultantes.",
+        "hu": "Meghatározza az autonóm közösségi bruttó adókötelezettséget (cuota íntegra autonómica) annak eredményeként, hogy az általános adóalapra a progresszív skála autonóm közösségi részét és a megtakarítási adóalapra az autonóm közösségi adókulcsokat alkalmazzák, majd az így kapott adóösszegeket összeadják."
+      },
+      "titulo": {
+        "ca": "Quota íntegra autonòmica",
+        "en": "Autonomic gross tax liability",
+        "es": "Cuota íntegra autonómica",
+        "hu": "Autonóm közösségi bruttó adókötelezettség"
+      }
+    },
+    {
+      "numero": "77",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77",
+      "summary": {
+        "ca": "Defineix la quota líquida autonòmica com el resultat de minorar la quota íntegra autonòmica en el 50 per cent de l'import total de les deduccions previstes als apartats 2, 3, 4 i 5 de l'article 68 d'aquesta Llei i en l'import de les deduccions establertes per la Comunitat Autònoma corresponent en l'exercici de les seves competències normatives.",
+        "en": "Defines the autonomic net tax liability (cuota líquida autonómica) as the result of reducing the autonomic gross tax liability by 50 per cent of the total amount of the deductions in sections 2, 3, 4 and 5 of article 68 of this Law and by the deductions established by the corresponding Autonomous Community in exercise of its statutory powers.",
+        "es": "Define la cuota líquida autonómica como el resultado de minorar la cuota íntegra autonómica en el 50 por ciento del importe total de las deducciones previstas en los apartados 2, 3, 4 y 5 del artículo 68 de esta Ley y en el importe de las deducciones establecidas por la Comunidad Autónoma correspondiente en ejercicio de sus competencias normativas.",
+        "hu": "Meghatározza az autonóm közösségi nettó adókötelezettséget (cuota líquida autonómica) az autonóm közösségi bruttó adókötelezettség azon csökkentett összegeként, amelyet a törvény 68. cikke (2), (3), (4) és (5) bekezdésében meghatározott levonások teljes összegének 50 százaléka és a megfelelő Autonóm Közösség által szabályozási hatáskörén belül megállapított levonások levonása után kapunk."
+      },
+      "titulo": {
+        "ca": "Quota líquida autonòmica",
+        "en": "Autonomic net tax liability",
+        "es": "Cuota líquida autonómica",
+        "hu": "Autonóm közösségi nettó adókötelezettség"
+      }
+    },
+    {
       "numero": "99",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99",
       "summary": {
