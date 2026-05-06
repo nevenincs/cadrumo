@@ -1,24 +1,9 @@
-"""Governed-persistence repository for parsed-justificante metadata.
+"""Governed-persistence repository for parsed justificante metadata.
 
-Wraps the storage substrate's :class:`Envelope[Justificante]` contract
-behind a small typed surface (:class:`JustificanteRepository`) that the
-justificante parser and any future consumer can call. Each parsed
-justificante's metadata is persisted as its own envelope file
-(``<csv>.envelope.json``) under a caller-supplied store directory with
-a per-record :func:`~aeat.adapters.persistence.storage.exclusive_file_lock`.
-
-Sensitivity classification: the metadata captures the AEAT-assigned
-CSV, the operator's NIF, the ``presented_at`` timestamp, and the
-verification URL — auditable evidence with identity-bearing context,
-hence :attr:`~aeat.adapters.persistence.storage.SensitivityClass.AUDIT`.
-
-Out of scope: the PDF blob itself remains in
-:attr:`aeat.core.config.AeatSettings.aeat_justificantes_dir` (operator-class
-legal proof; the substrate already handles encrypted blobs via
-:class:`aeat.adapters.persistence.storage.EncryptedBlobStore`). This
-repository persists only the *parsed metadata* — so the CSV, NIF, and
-URL pass through the classification gate at load time even when the
-PDF is not co-located with the metadata.
+Justificante metadata captures AEAT verification identifiers, operator
+identity, timestamps, and verification URLs. The structured metadata is
+stored as encrypted byte objects in the primary SQL backend at AUDIT
+sensitivity; no plaintext metadata JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations
@@ -27,186 +12,113 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ...adapters.persistence.storage import (
-    Envelope,
-    SensitivityClass,
-    exclusive_file_lock,
-    load_encrypted_envelope,
-    safe_repository_id,
-    save_encrypted_envelope,
-)
-from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._schema import Justificante
-
-_HKDF_CONTEXT_JUSTIFICANTE = b"aeat.domain.justificante.metadata.v1"
 
 _log = get_logger(__name__)
 
 _JUSTIFICANTE_ENVELOPE_VERSION = 1
-_JUSTIFICANTE_ENVELOPE_SUFFIX = ".envelope.json"
-_JUSTIFICANTE_LOCK_SUFFIX = ".lock"
+_JUSTIFICANTE_NAMESPACE = "aeat.domain.justificante.metadata"
 
 
 class JustificanteRepository:
-    """Repository over the per-record, file-locked, envelope-backed store.
+    """Repository over encrypted SQL-backed justificante metadata."""
 
-    Each justificante's parsed metadata is stored as its own
-    encrypted-envelope file keyed by its
-    :attr:`~aeat.domain.justificante.Justificante.csv` identifier under
-    a single :attr:`store_dir`.
-    """
-
-    def __init__(self, *, store_dir: Path) -> None:
-        """Bind the repository to a store directory.
-
-        Args:
-            store_dir: Directory where the per-record envelope files
-                and lock sidecars live. Created on first write.
-        """
-        self._store_dir = Path(store_dir)
+    def __init__(self, *, store_dir: Path | None = None) -> None:
+        del store_dir
+        self._objects = SecureObjectRepository()
 
     @property
     def store_dir(self) -> Path:
-        """Return the bound store directory."""
-        return self._store_dir
+        """Return a logical backend marker for diagnostic messages."""
+
+        return Path("db://secure_objects") / _JUSTIFICANTE_NAMESPACE
 
     def envelope_path_for(self, csv: str) -> Path:
-        """Return the canonical envelope path for a justificante CSV.
+        """Return a logical object marker for a justificante CSV."""
 
-        Args:
-            csv: Código Seguro de Verificación that keys the record.
-
-        Returns:
-            The fully-qualified path to the per-record envelope file.
-        """
         safe_repository_id(csv, context="csv")
-        return self._store_dir / f"{csv}{_JUSTIFICANTE_ENVELOPE_SUFFIX}"
+        return self.store_dir / csv
 
     def lock_target_for(self, csv: str) -> Path:
-        """Return the canonical lock-sidecar path for a justificante CSV.
+        """Return a logical lock marker; SQL transactions govern writes."""
 
-        Args:
-            csv: Código Seguro de Verificación that keys the record.
-
-        Returns:
-            The fully-qualified path to the per-record lock sidecar.
-        """
         safe_repository_id(csv, context="csv")
-        return self._store_dir / f"{csv}{_JUSTIFICANTE_LOCK_SUFFIX}"
+        return self.store_dir / f"{csv}.lock"
 
     def load(self, csv: str) -> Justificante | None:
-        """Return the persisted justificante metadata or ``None`` if absent.
+        """Return the persisted justificante metadata or ``None`` if absent."""
 
-        Args:
-            csv: Código Seguro de Verificación to load.
-
-        Returns:
-            The deserialised :class:`~aeat.domain.justificante.Justificante`,
-            or ``None`` when no envelope exists for ``csv``.
-
-        Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
-                If the on-disk envelope's classification is not
-                :attr:`~aeat.adapters.persistence.storage.SensitivityClass.AUDIT`.
-            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
-                If the envelope schema version is higher than the
-                consumer supports.
-        """
-        target = self.envelope_path_for(csv)
-        if not target.exists():
-            return None
-        envelope = load_encrypted_envelope(
-            target,
-            Envelope[Justificante],
+        safe_repository_id(csv, context="csv")
+        record = self._objects.load(
+            _JUSTIFICANTE_NAMESPACE,
+            csv,
             expected_class=SensitivityClass.AUDIT,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
             max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
         )
+        if record is None:
+            return None
+        envelope = Envelope[Justificante].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.AUDIT:
+            raise ClassificationError(
+                f"justificante {csv} has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.AUDIT}",
+            )
+        if envelope.schema_version > _JUSTIFICANTE_ENVELOPE_VERSION:
+            raise EnvelopeVersionError(
+                f"justificante {csv} is at version {envelope.schema_version}; "
+                f"consumer supports up to {_JUSTIFICANTE_ENVELOPE_VERSION}",
+            )
         return envelope.payload
 
     def save(self, justificante: Justificante) -> None:
-        """Persist ``justificante`` atomically under its per-record file lock.
+        """Persist ``justificante`` in the encrypted database object store."""
 
-        The on-disk envelope is AES-256-GCM ciphertext at the
-        :attr:`~aeat.adapters.persistence.storage.SensitivityClass.AUDIT`
-        classification — no plaintext NIF, CSV, or verification URL
-        lands on disk.
-
-        Args:
-            justificante: The :class:`~aeat.domain.justificante.Justificante`
-                metadata record to persist.
-        """
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target_for(justificante.csv)):
-            envelope = Envelope[Justificante](
-                schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.AUDIT,
-                payload=justificante,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path_for(justificante.csv),
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_JUSTIFICANTE,
-            )
+        safe_repository_id(justificante.csv, context="csv")
+        envelope = Envelope[Justificante](
+            schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.AUDIT,
+            payload=justificante,
+        )
+        self._objects.save(
+            namespace=_JUSTIFICANTE_NAMESPACE,
+            object_key=justificante.csv,
+            classification=SensitivityClass.AUDIT,
+            schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
         _log.debug("saved justificante metadata for csv=%s", justificante.csv)
 
     def delete(self, csv: str) -> bool:
-        """Remove the metadata envelope for ``csv``.
+        """Remove the metadata object for ``csv``."""
 
-        Args:
-            csv: Código Seguro de Verificación to delete.
-
-        Returns:
-            ``True`` if a record was removed; ``False`` if the store
-            directory is missing or no envelope existed for ``csv``.
-        """
-        target = self.envelope_path_for(csv)
-        if not self._store_dir.exists():
-            return False
-        with exclusive_file_lock(self.lock_target_for(csv)):
-            if not target.exists():
-                return False
-            target.unlink()
-        _log.debug("deleted justificante metadata for csv=%s", csv)
-        return True
+        safe_repository_id(csv, context="csv")
+        deleted = self._objects.delete(_JUSTIFICANTE_NAMESPACE, csv)
+        if deleted:
+            _log.debug("deleted justificante metadata for csv=%s", csv)
+        return deleted
 
     def list_csvs(self) -> tuple[str, ...]:
-        """Return every justificante CSV persisted in this repository.
+        """Return every justificante CSV persisted in this repository."""
 
-        Returns:
-            A lexicographically-sorted tuple of every Código Seguro de
-            Verificación currently materialised in :attr:`store_dir`.
-        """
-        if not self._store_dir.exists():
-            return ()
-        ids: list[str] = []
-        for path in self._store_dir.iterdir():
-            if not path.is_file():
-                continue
-            name = path.name
-            if not name.endswith(_JUSTIFICANTE_ENVELOPE_SUFFIX):
-                continue
-            csv = name[: -len(_JUSTIFICANTE_ENVELOPE_SUFFIX)]
-            if not csv:
-                continue
-            ids.append(csv)
-        ids.sort()
-        return tuple(ids)
+        csvs: list[str] = []
+        for record in self._objects.list_records(
+            _JUSTIFICANTE_NAMESPACE,
+            expected_class=SensitivityClass.AUDIT,
+            max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
+        ):
+            envelope = Envelope[Justificante].model_validate_json(record.payload.decode("utf-8"))
+            csvs.append(envelope.payload.csv)
+        return tuple(sorted(csvs))
 
     def iter_justificantes(self) -> Iterator[Justificante]:
-        """Yield every persisted justificante, in lexicographic CSV order.
+        """Yield every persisted justificante, in lexicographic CSV order."""
 
-        Yields:
-            Each loaded :class:`~aeat.domain.justificante.Justificante`
-            record. CSVs whose envelopes have vanished between the
-            initial listing and the per-record load are silently
-            skipped.
-        """
         for csv in self.list_csvs():
             payload = self.load(csv)
             if payload is not None:

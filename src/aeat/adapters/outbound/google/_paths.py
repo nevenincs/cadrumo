@@ -17,9 +17,13 @@ import json
 import os
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from ....core.classification import SensitivityClass
+from ...persistence.storage.sql import SecureObjectRepository
 
 if TYPE_CHECKING:
     from ....core.config import Settings
@@ -51,6 +55,13 @@ DESKTOP_OAUTH_REQUIRED_SCOPES: tuple[str, ...] = (
     "openid",
 )
 """OAuth scopes the Desktop OAuth local-dev token cache must carry to be usable."""
+
+_OAUTH_TOKEN_NAMESPACE = "aeat.outbound.google.oauth_tokens"  # noqa: S105 - secure-object namespace, not a token
+_OAUTH_TOKEN_VERSION = 1
+_OAUTH_CLIENT_NAMESPACE = "aeat.outbound.google.oauth_clients"
+_OAUTH_CLIENT_VERSION = 1
+_SERVICE_ACCOUNT_NAMESPACE = "aeat.outbound.google.service_accounts"
+_SERVICE_ACCOUNT_VERSION = 1
 
 
 def adc_well_known_path() -> Path:
@@ -171,8 +182,8 @@ class GoogleAuthInspection:
 
     @property
     def oauth_token_exists(self) -> bool:
-        """Whether the repo-local OAuth refresh-token file exists on disk."""
-        return self.oauth_token_path.exists()
+        """Whether the repo-local OAuth refresh-token cache exists."""
+        return oauth_token_cache_exists(self.oauth_token_path)
 
     @property
     def mcp_credentials_exist(self) -> bool:
@@ -242,18 +253,19 @@ def inspect_oauth_token_cache(token_path: Path) -> str | None:
         when the cache is well-formed.
     """
 
-    if not token_path.exists():
+    payload = load_oauth_token_cache(token_path)
+    if payload is None:
         return "repo-local CLI OAuth token missing"
     try:
-        payload = json.loads(token_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError as exc:
         return f"repo-local CLI OAuth token is unreadable: {exc.__class__.__name__}"
-    if not isinstance(payload, dict):
+    if not isinstance(parsed, dict):
         return "repo-local CLI OAuth token is malformed"
-    refresh_token = payload.get("refresh_token")
+    refresh_token = parsed.get("refresh_token")
     if not isinstance(refresh_token, str) or not refresh_token:
         return "repo-local CLI OAuth token is missing a refresh_token"
-    raw_scopes = payload.get("scopes")
+    raw_scopes = parsed.get("scopes")
     if not isinstance(raw_scopes, list):
         return "repo-local CLI OAuth token is missing its scope list"
     granted = {str(scope) for scope in raw_scopes}
@@ -262,6 +274,119 @@ def inspect_oauth_token_cache(token_path: Path) -> str | None:
         missing_csv = ", ".join(missing)
         return f"repo-local CLI OAuth token is missing required scopes: {missing_csv}"
     return None
+
+
+def oauth_token_cache_exists(token_path: Path) -> bool:
+    """Return whether an encrypted OAuth token cache exists for ``token_path``."""
+
+    return SecureObjectRepository().exists(_OAUTH_TOKEN_NAMESPACE, _oauth_token_key(token_path))
+
+
+def load_oauth_token_cache(token_path: Path) -> str | None:
+    """Load the encrypted OAuth token cache payload."""
+
+    record = SecureObjectRepository().load(
+        _OAUTH_TOKEN_NAMESPACE,
+        _oauth_token_key(token_path),
+        expected_class=SensitivityClass.SECRET,
+        max_supported_version=_OAUTH_TOKEN_VERSION,
+    )
+    if record is None:
+        return None
+    return record.payload.decode("utf-8")
+
+
+def save_oauth_token_cache(token_path: Path, payload: str) -> None:
+    """Persist OAuth token JSON as a SECRET-class secure object."""
+
+    SecureObjectRepository().save(
+        namespace=_OAUTH_TOKEN_NAMESPACE,
+        object_key=_oauth_token_key(token_path),
+        classification=SensitivityClass.SECRET,
+        schema_version=_OAUTH_TOKEN_VERSION,
+        written_at=datetime.now(UTC),
+        payload=payload.encode("utf-8"),
+    )
+
+
+def delete_oauth_token_cache(token_path: Path) -> bool:
+    """Delete the encrypted OAuth token cache for ``token_path``."""
+
+    return SecureObjectRepository().delete(_OAUTH_TOKEN_NAMESPACE, _oauth_token_key(token_path))
+
+
+def _oauth_token_key(token_path: Path) -> str:
+    return Path(token_path).expanduser().as_posix()
+
+
+def google_oauth_client_cache_exists(client_path: Path) -> bool:
+    """Return whether an encrypted OAuth client JSON payload exists."""
+
+    return SecureObjectRepository().exists(_OAUTH_CLIENT_NAMESPACE, _secure_path_key(client_path))
+
+
+def load_google_oauth_client_json(client_path: Path) -> str | None:
+    """Load encrypted Google OAuth client JSON for ``client_path``."""
+
+    record = SecureObjectRepository().load(
+        _OAUTH_CLIENT_NAMESPACE,
+        _secure_path_key(client_path),
+        expected_class=SensitivityClass.SECRET,
+        max_supported_version=_OAUTH_CLIENT_VERSION,
+    )
+    if record is None:
+        return None
+    return record.payload.decode("utf-8")
+
+
+def save_google_oauth_client_json(client_path: Path, payload: str) -> None:
+    """Persist Google OAuth client JSON as a SECRET-class secure object."""
+
+    SecureObjectRepository().save(
+        namespace=_OAUTH_CLIENT_NAMESPACE,
+        object_key=_secure_path_key(client_path),
+        classification=SensitivityClass.SECRET,
+        schema_version=_OAUTH_CLIENT_VERSION,
+        written_at=datetime.now(UTC),
+        payload=payload.encode("utf-8"),
+    )
+
+
+def google_service_account_cache_exists(key_path: Path) -> bool:
+    """Return whether an encrypted service-account JSON payload exists."""
+
+    return SecureObjectRepository().exists(_SERVICE_ACCOUNT_NAMESPACE, _secure_path_key(key_path))
+
+
+def load_google_service_account_json(key_path: Path) -> str | None:
+    """Load encrypted Google service-account JSON for ``key_path``."""
+
+    record = SecureObjectRepository().load(
+        _SERVICE_ACCOUNT_NAMESPACE,
+        _secure_path_key(key_path),
+        expected_class=SensitivityClass.SECRET,
+        max_supported_version=_SERVICE_ACCOUNT_VERSION,
+    )
+    if record is None:
+        return None
+    return record.payload.decode("utf-8")
+
+
+def save_google_service_account_json(key_path: Path, payload: str) -> None:
+    """Persist Google service-account JSON as a SECRET-class secure object."""
+
+    SecureObjectRepository().save(
+        namespace=_SERVICE_ACCOUNT_NAMESPACE,
+        object_key=_secure_path_key(key_path),
+        classification=SensitivityClass.SECRET,
+        schema_version=_SERVICE_ACCOUNT_VERSION,
+        written_at=datetime.now(UTC),
+        payload=payload.encode("utf-8"),
+    )
+
+
+def _secure_path_key(path: Path) -> str:
+    return Path(path).expanduser().resolve().as_posix()
 
 
 def inspect_google_auth(settings: Settings, *, project_root: Path) -> GoogleAuthInspection:
@@ -288,19 +413,26 @@ def inspect_google_auth(settings: Settings, *, project_root: Path) -> GoogleAuth
     """
 
     configured_path = normalize_google_auth_path(settings.google_auth_path)
-    desktop_oauth_complete = bool(settings.google_oauth_client_id and settings.google_oauth_client_secret)
+    desktop_oauth_json_path = Path(settings.google_oauth_client_json) if settings.google_oauth_client_json else None
+    desktop_oauth_secure_complete = desktop_oauth_json_path is not None and google_oauth_client_cache_exists(
+        desktop_oauth_json_path
+    )
+    desktop_oauth_complete = bool(settings.google_oauth_client_id and settings.google_oauth_client_secret) or bool(
+        desktop_oauth_secure_complete
+    )
     desktop_oauth_partial = (
         bool(
             settings.google_oauth_client_id or settings.google_oauth_client_secret or settings.google_oauth_client_json
         )
         and not desktop_oauth_complete
     )
-    desktop_oauth_json_path = Path(settings.google_oauth_client_json) if settings.google_oauth_client_json else None
     service_account_configured_path = (
         Path(settings.google_application_credentials) if settings.google_application_credentials else None
     )
     service_account_existing_path = None
-    if service_account_configured_path and service_account_configured_path.exists():
+    if service_account_configured_path and (
+        service_account_configured_path.exists() or google_service_account_cache_exists(service_account_configured_path)
+    ):
         service_account_existing_path = service_account_configured_path
 
     active_path: GoogleAuthPath | None = None

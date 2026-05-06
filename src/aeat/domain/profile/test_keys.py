@@ -75,3 +75,21 @@ def test_profile_key_rejects_descriptions_without_authoritative_spanish() -> Non
             requirement=ProfileKeyRequirement.OPTIONAL,
             description=tr("translation"),
         )
+
+
+def test_profile_key_conditional_requirement_fields_must_be_paired() -> None:
+    with pytest.raises(ValueError):
+        ProfileKey(
+            key="spouse.tax.id",
+            requirement=ProfileKeyRequirement.OPTIONAL,
+            description=tr("profile.test_keys.description_490119"),
+            required_when_key="declaration.type",
+        )
+
+
+def test_spouse_profile_keys_are_conditionally_required_for_joint_taxation() -> None:
+    for key in ("spouse.tax.id", "spouse.name", "spouse.surnames", "spouse.birth_date", "spouse.sex"):
+        entry = get_profile_key(key)
+        assert entry.requirement is ProfileKeyRequirement.OPTIONAL
+        assert entry.required_when_key == "declaration.type"
+        assert entry.required_when_value == "2"

@@ -1,0 +1,95 @@
+"""Tests for encrypted SQL-backed attachment persistence."""
+
+from __future__ import annotations
+
+import hashlib
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ._enums import AttachmentKind, AttachmentSource
+from ._errors import AttachmentNotFoundError, AttachmentValidationError
+from ._models import Attachment
+from ._repository import AttachmentStore
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+@pytest.fixture(autouse=True)
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
+
+
+def _attachment(body: bytes, *, tx_id: str = "tx-001") -> Attachment:
+    digest = hashlib.sha256(body).hexdigest()
+    return Attachment(
+        attachment_id=digest,
+        kind=AttachmentKind.INVOICE_PDF,
+        source=AttachmentSource.LOCAL_FILE,
+        source_reference="invoice.pdf",
+        sha256=digest,
+        mime_type="application/pdf",
+        bytes_size=len(body),
+        captured_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        linked_transaction_ids=(tx_id,),
+        notes="deductible invoice",
+    )
+
+
+def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) -> None:
+    store = AttachmentStore.at(tmp_path / "attachments")
+    body = b"%PDF-1.4\nATTACHMENT_CANARY_00000000T\n%%EOF"
+    digest = store.put_bytes(body)
+    attachment = _attachment(body)
+    store.write_manifest(attachment)
+
+    assert digest == attachment.attachment_id
+    assert store.read_bytes(digest) == body
+    with store.open_bytes(digest) as handle:
+        assert handle.read() == body
+    assert store.load_manifest(digest) == attachment
+    assert tuple(store.iter_manifests()) == (attachment,)
+    store.verify_blob(digest)
+
+    assert list((tmp_path / "attachments").rglob("*")) == []
+    database_bytes = (tmp_path / "aeat.db").read_bytes()
+    assert b"secure_objects" in database_bytes
+    assert body not in database_bytes
+    assert b"ATTACHMENT_CANARY_00000000T" not in database_bytes
+    assert digest.encode("utf-8") not in database_bytes
+    assert b"deductible invoice" not in database_bytes
+
+
+def test_put_file_reads_source_but_persists_only_secure_database_object(tmp_path: Path) -> None:
+    source = tmp_path / "source.pdf"
+    body = b"%PDF-1.4\nsource invoice\n%%EOF"
+    source.write_bytes(body)
+    store = AttachmentStore.at(tmp_path / "attachments")
+
+    digest, size = store.put_file(source)
+
+    assert digest == hashlib.sha256(body).hexdigest()
+    assert size == len(body)
+    assert store.read_bytes(digest) == body
+    assert list((tmp_path / "attachments").rglob("*")) == []
+
+
+def test_missing_blob_and_invalid_digest_fail_closed(tmp_path: Path) -> None:
+    store = AttachmentStore.at(tmp_path / "attachments")
+    missing = "a" * 64
+
+    with pytest.raises(AttachmentNotFoundError):
+        store.read_bytes(missing)
+    with pytest.raises(AttachmentValidationError):
+        store.read_bytes("../escape")

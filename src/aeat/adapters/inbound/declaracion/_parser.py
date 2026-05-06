@@ -20,9 +20,9 @@ from ....domain.calculations.registry import (
 )
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
-from ._detect import detect_template_revision
+from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
-from ._parsers import extract_pages_text
+from ._parsers import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import DeclaracionObservation, TemplateRevision
 
 _logger = get_logger(__name__)
@@ -89,10 +89,72 @@ def parse_declaracion(
     """
     path = Path(pdf_path)
     pages = extract_pages_text(path)
+    return _parse_declaracion_pages(
+        pages=pages,
+        source_path=path.resolve(),
+        source_pdf_sha256=sha256(path.read_bytes()).hexdigest(),
+        modelo_override=modelo_override,
+        template_revision_override=template_revision_override,
+        año_override=año_override,
+        period_override=period_override,
+        extraction_profile_id=extraction_profile_id,
+        registry_snapshot=registry_snapshot,
+        registry_root=registry_root,
+        source_root=source_root,
+    )
+
+
+def parse_declaracion_bytes(
+    pdf_bytes: bytes,
+    *,
+    source_label: str = "in-memory declaracion PDF",
+    modelo_override: str | None = None,
+    template_revision_override: str | None = None,
+    año_override: int | None = None,
+    period_override: str | None = None,
+    extraction_profile_id: str | None = None,
+    registry_snapshot: RegistrySnapshot | None = None,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> DeclaracionObservation:
+    """Parse declaración PDF bytes without writing them to a plaintext temp file."""
+
+    pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
+    digest = sha256(pdf_bytes).hexdigest()
+    return _parse_declaracion_pages(
+        pages=pages,
+        source_path=(PROJECT_ROOT / ".secure-source" / f"{digest}.pdf").resolve(),
+        source_pdf_sha256=digest,
+        modelo_override=modelo_override,
+        template_revision_override=template_revision_override,
+        año_override=año_override,
+        period_override=period_override,
+        extraction_profile_id=extraction_profile_id,
+        registry_snapshot=registry_snapshot,
+        registry_root=registry_root,
+        source_root=source_root,
+    )
+
+
+def _parse_declaracion_pages(
+    *,
+    pages: tuple[str, ...],
+    source_path: Path,
+    source_pdf_sha256: str,
+    modelo_override: str | None,
+    template_revision_override: str | None,
+    año_override: int | None,
+    period_override: str | None,
+    extraction_profile_id: str | None,
+    registry_snapshot: RegistrySnapshot | None,
+    registry_root: Path | None,
+    source_root: Path | None,
+) -> DeclaracionObservation:
     text = "\n".join(pages)
 
     template = _resolve_template(
-        path=path,
+        path=source_path,
+        pages=pages,
         modelo_override=modelo_override,
         template_revision_override=template_revision_override,
         año_override=año_override,
@@ -110,7 +172,7 @@ def parse_declaracion(
     values = _extract_profile_values(pages, profile)
     _logger.debug(
         "parse_declaracion: path=%s modelo=%s año=%s period=%s revision=%s profile=%s",
-        path.name,
+        source_path.name,
         template.modelo,
         template.año,
         period,
@@ -126,8 +188,8 @@ def parse_declaracion(
         template_revision=template,
         values=values,
         warnings=(),
-        source_pdf_path=path.resolve(),
-        source_pdf_sha256=sha256(path.read_bytes()).hexdigest(),
+        source_pdf_path=source_path,
+        source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime.now(tz=UTC),
     )
 
@@ -135,6 +197,7 @@ def parse_declaracion(
 def _resolve_template(
     *,
     path: Path,
+    pages: tuple[str, ...] | None = None,
     modelo_override: str | None,
     template_revision_override: str | None,
     año_override: int | None,
@@ -170,7 +233,7 @@ def _resolve_template(
             detected_from="explicit_override",
         )
 
-    detected = detect_template_revision(path)
+    detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
     if detected is None and not (modelo_override and año_override):
         raise TemplateNotDetectedError(
             f"could not auto-detect template for {path}; pass --modelo and --año to override"

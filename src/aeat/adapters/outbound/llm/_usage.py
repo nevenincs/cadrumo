@@ -1,10 +1,9 @@
-"""Append-only usage recorder for LLM calls.
+"""Encrypted usage recorder for LLM calls.
 
-Persists :class:`aeat.adapters.outbound.llm.UsageRecord` payloads to
-day-partitioned JSONL files under a configured root directory and exposes
-load and aggregate helpers. Records are routed through
-:func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC sensitivity
-class before they reach disk.
+Persists :class:`aeat.adapters.outbound.llm.UsageRecord` payloads to the
+encrypted SQL secure-object backend and exposes load and aggregate helpers.
+Records are routed through :func:`aeat.core.redaction.redact_structured` at
+DIAGNOSTIC sensitivity class before they are encrypted.
 """
 
 from __future__ import annotations
@@ -13,22 +12,24 @@ import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from uuid import uuid4
 
 from ....core.config import PROJECT_ROOT
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
+_USAGE_NAMESPACE = "aeat.outbound.llm.usage"
+_USAGE_VERSION = 1
+
 
 class UsageRecorder:
-    """Append LLM usage records to day-partitioned JSONL files.
+    """Append LLM usage records to encrypted secure objects.
 
     Each call to :meth:`record` appends a single redacted JSON line to
-    ``usage-YYYY-MM-DD.jsonl`` under :attr:`root_dir`, guarded by an
-    exclusive file lock so concurrent writers cannot interleave bytes
-    inside a line.
+    the secure-object backend under the recorder's logical root.
 
     Attributes:
-        root_dir: Directory in which the daily JSONL files live.
+        root_dir: Logical partition used for usage records.
     """
 
     def __init__(self, root_dir: Path | None = None) -> None:
@@ -39,7 +40,6 @@ class UsageRecorder:
                 ``<PROJECT_ROOT>/var/llm-usage``.
         """
         self.root_dir = root_dir or (PROJECT_ROOT / "var" / "llm-usage")
-        self.root_dir.mkdir(parents=True, exist_ok=True)
 
     def build_record(self, response: LLMResponse, prompt_id: str, caller: str) -> UsageRecord:
         """Build a :class:`UsageRecord` from a public LLM response.
@@ -69,7 +69,7 @@ class UsageRecorder:
         )
 
     def record(self, record: UsageRecord) -> Path:
-        """Append a redacted ``record`` to the day-partitioned JSONL file.
+        """Append a redacted ``record`` to encrypted secure-object storage.
 
         The record is routed through
         :func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC class
@@ -83,14 +83,14 @@ class UsageRecorder:
             record: Usage record to append.
 
         Returns:
-            Path to the JSONL file that received the record.
+            Logical daily usage path for operator display only.
 
         Raises:
             :exc:`aeat.adapters.outbound.llm.LLMCacheError`: When the JSONL
                 file cannot be appended to.
         """
+        from ....adapters.persistence.storage.sql import SecureObjectRepository
         from ....core.classification import SensitivityClass
-        from ....core.locks import exclusive_file_lock
         from ....core.redaction import default_rules_for_class, redact_structured
 
         path = self.root_dir / f"usage-{record.created_at.date().isoformat()}.jsonl"
@@ -98,19 +98,21 @@ class UsageRecorder:
             record.model_dump(mode="json"),
             rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
         )
-        line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
-        # Hold an exclusive lock across the open-append-close so two
-        # concurrent writers cannot interleave bytes mid-line. The
-        # JSONL contract is one record per line; a torn line would
-        # surface as a parse error in ``load_records``.
+        payload = {
+            "logical_root": self._logical_root(),
+            "record": redacted,
+        }
         try:
-            with (
-                exclusive_file_lock(path),
-                path.open("a", encoding="utf-8") as handle,
-            ):
-                handle.write(line)
-        except OSError as exc:  # pragma: no cover - defensive filesystem path
-            msg = f"Failed to append usage record to {path}"
+            SecureObjectRepository().save(
+                namespace=_USAGE_NAMESPACE,
+                object_key=self._object_key_for(record),
+                classification=SensitivityClass.DIAGNOSTIC,
+                schema_version=_USAGE_VERSION,
+                written_at=record.created_at,
+                payload=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+            )
+        except OSError as exc:  # pragma: no cover - defensive storage path
+            msg = f"Failed to append usage record to logical path {path}"
             raise LLMCacheError(msg) from exc
         return path
 
@@ -125,19 +127,26 @@ class UsageRecorder:
             Loaded usage records in file-iteration order.
         """
 
+        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....core.classification import SensitivityClass
+
         records: list[UsageRecord] = []
-        for path in sorted(self.root_dir.glob("usage-*.jsonl")):
-            for line in path.read_text(encoding="utf-8").splitlines():
-                if not line.strip():
-                    continue
-                record = UsageRecord.model_validate_json(line)
-                record_date = record.created_at.date()
-                if since is not None and record_date < since:
-                    continue
-                if until is not None and record_date > until:
-                    continue
-                records.append(record)
-        return tuple(records)
+        for stored in SecureObjectRepository().list_records(
+            _USAGE_NAMESPACE,
+            expected_class=SensitivityClass.DIAGNOSTIC,
+            max_supported_version=_USAGE_VERSION,
+        ):
+            decoded = json.loads(stored.payload.decode("utf-8"))
+            if decoded.get("logical_root") != self._logical_root():
+                continue
+            record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
+            record_date = record.created_at.date()
+            if since is not None and record_date < since:
+                continue
+            if until is not None and record_date > until:
+                continue
+            records.append(record)
+        return tuple(sorted(records, key=lambda item: (item.created_at, item.request_id, item.prompt_id, item.caller)))
 
     def summarize(self, since: date | None = None, until: date | None = None) -> UsageSummary:
         """Aggregate usage records into a :class:`UsageSummary`.
@@ -160,4 +169,21 @@ class UsageRecorder:
             total_cost_estimate_usd=total_cost,
             since=since,
             until=until,
+        )
+
+    def _logical_root(self) -> str:
+        """Return the stable logical usage partition."""
+
+        return self.root_dir.resolve().as_posix()
+
+    def _object_key_for(self, record: UsageRecord) -> str:
+        """Return a unique natural key for one usage record append."""
+
+        return "|".join(
+            (
+                self._logical_root(),
+                record.created_at.isoformat(),
+                record.request_id,
+                uuid4().hex,
+            )
         )

@@ -75,6 +75,7 @@ class BrowserSession:
         *,
         provisioner: BrowserContextProvisioner | None = None,
         storage_state_path: Path | None = None,
+        storage_state: dict[str, Any] | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
@@ -128,7 +129,9 @@ class BrowserSession:
                 if self.profile.user_agent:
                     context_kwargs["user_agent"] = self.profile.user_agent
 
-                if effective_storage_state_path.exists():
+                if storage_state is not None:
+                    context_kwargs["storage_state"] = storage_state
+                elif effective_storage_state_path.exists():
                     context_kwargs["storage_state"] = str(effective_storage_state_path)
 
                 if provisioner is not None:

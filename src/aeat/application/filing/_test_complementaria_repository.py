@@ -23,6 +23,8 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain.filing._amendment import (
     AmendmentKind,
     CasillaChange,
@@ -31,28 +33,37 @@ from ...domain.filing._amendment import (
 from ...domain.filing._complementaria_repository import (
     FilingAmendmentRepository,
 )
-from .testing import build_registry_filing_draft
+from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind, compute_draft_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
-    amended_draft = build_registry_filing_draft(
+    now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    values = (
+        FilingValue(
+            casilla_id="01",
+            value=Decimal("13000"),
+            kind=FilingValueKind.LITERAL,
+            source="test correction",
+        ),
+    )
+    amended_draft = FilingDraft(
+        draft_id=compute_draft_id(
+            modelo="130",
+            period="2026Q1",
+            profile_tax_id="00000000T",
+            schema_version="test-schema-v1",
+            values=values,
+        ),
         modelo="130",
         period="2026Q1",
-        casilla_values={
-            "01": Decimal("13000"),
-            "02": Decimal("3500"),
-            "05": Decimal("400"),
-            "06": Decimal("0"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
-        },
         profile_tax_id="00000000T",
+        status=FilingDraftStatus.VALIDATED,
+        values=values,
+        created_at=now,
+        updated_at=now,
+        schema_version="test-schema-v1",
     )
     return FilingAmendment(
         amendment_id=amendment_id,
@@ -70,7 +81,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
             ),
         ),
         amended_draft=amended_draft,
-        created_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        created_at=now,
     )
 
 
@@ -80,7 +91,9 @@ def store_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -98,6 +111,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -105,9 +123,9 @@ class TestEmptyState:
         repo = FilingAmendmentRepository(store_dir=store_dir)
         assert repo.load("missing-id") is None
 
-    def test_envelope_path_under_store_dir(self, store_dir: Path) -> None:
+    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
         repo = FilingAmendmentRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("xyz") == store_dir / "xyz.envelope.json"
+        assert repo.envelope_path_for("xyz").as_posix().endswith("aeat.domain.filing.amendments/xyz")
 
 
 class TestSaveLoad:
@@ -146,18 +164,19 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_envelope_records_audit_class(self, store_dir: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
         repo = FilingAmendmentRepository(store_dir=store_dir)
         amendment = _make_amendment()
         repo.save(amendment)
-        text = repo.envelope_path_for(amendment.amendment_id).read_text(encoding="utf-8")
-        assert '"classification":"audit"' in text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert b"CSV-ORIG-001" not in raw
+        assert b"Test correction" not in raw
+        assert amendment.amendment_id.encode("utf-8") not in raw
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         amendment = _make_amendment()
         bad = Envelope[FilingAmendment](
             schema_version=1,
@@ -166,11 +185,13 @@ class TestClassificationGate:
             payload=amendment,
         )
         repo = FilingAmendmentRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for(amendment.amendment_id),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.application.filing.amendment.v1",
+        SecureObjectRepository().save(
+            namespace="aeat.domain.filing.amendments",
+            object_key=amendment.amendment_id,
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load(amendment.amendment_id)

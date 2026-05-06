@@ -25,7 +25,7 @@ def _description(
         configured=configured,
         available=available,
         identity_nif="X1234567L" if available else None,
-        subject="CN=Kent" if available else None,
+        subject="CN=operator" if available else None,
         health_severity="OK" if available else None,
         health_summary="OK:200" if available else "credential not loaded",
     )

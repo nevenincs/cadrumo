@@ -36,7 +36,7 @@ _Reviewer = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
-"""Reviewer handle or ID (e.g. 'kent')."""
+"""Reviewer handle or ID (e.g. 'operator')."""
 
 _CasillaRef = Annotated[
     str,

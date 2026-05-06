@@ -22,30 +22,41 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain.filing._repository import FilingDraftRepository
-from ...domain.filing._schema import FilingDraft
-from .testing import build_registry_filing_draft
+from ...domain.filing._schema import FilingDraft, FilingDraftStatus, FilingValue, FilingValueKind, compute_draft_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> FilingDraft:
-    return build_registry_filing_draft(
+    now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    values = (
+        FilingValue(
+            casilla_id="01",
+            value=Decimal(ingresos),
+            kind=FilingValueKind.LITERAL,
+            source="test input",
+        ),
+    )
+    draft_id = compute_draft_id(
         modelo="130",
         period=period,
-        casilla_values={
-            "01": Decimal(ingresos),
-            "02": Decimal("3500"),
-            "05": Decimal("400"),
-            "06": Decimal("0"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
-        },
         profile_tax_id="00000000T",
+        schema_version="test-schema-v1",
+        values=values,
+    )
+    return FilingDraft(
+        draft_id=draft_id,
+        modelo="130",
+        period=period,
+        profile_tax_id="00000000T",
+        status=FilingDraftStatus.VALIDATED,
+        values=values,
+        created_at=now,
+        updated_at=now,
+        schema_version="test-schema-v1",
     )
 
 
@@ -55,7 +66,9 @@ def store_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -73,6 +86,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -80,9 +98,9 @@ class TestEmptyState:
         repo = FilingDraftRepository(store_dir=store_dir)
         assert repo.load("does-not-exist") is None
 
-    def test_envelope_path_is_under_store_dir(self, store_dir: Path) -> None:
+    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
         repo = FilingDraftRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("abc123") == store_dir / "abc123.envelope.json"
+        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.filing.drafts/abc123")
 
     def test_list_draft_ids_empty(self, store_dir: Path) -> None:
         repo = FilingDraftRepository(store_dir=store_dir)
@@ -128,7 +146,7 @@ class TestListAndIter:
         assert loaded[d1.draft_id] == d1
         assert loaded[d2.draft_id] == d2
 
-    def test_list_ignores_non_envelope_files(self, store_dir: Path) -> None:
+    def test_list_ignores_plain_files_next_to_legacy_store_dir(self, store_dir: Path) -> None:
         store_dir.mkdir(parents=True, exist_ok=True)
         (store_dir / "stray.json").write_text("{}", encoding="utf-8")
         (store_dir / "stray.txt").write_text("x", encoding="utf-8")
@@ -139,7 +157,7 @@ class TestListAndIter:
 
 
 class TestDelete:
-    def test_delete_removes_envelope(self, store_dir: Path) -> None:
+    def test_delete_removes_object(self, store_dir: Path) -> None:
         repo = FilingDraftRepository(store_dir=store_dir)
         draft = _make_draft()
         repo.save(draft)
@@ -152,18 +170,19 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_envelope_records_financial_class(self, store_dir: Path) -> None:
+    def test_database_payload_is_encrypted_financial_data(self, store_dir: Path, tmp_path: Path) -> None:
         repo = FilingDraftRepository(store_dir=store_dir)
         draft = _make_draft()
         repo.save(draft)
-        envelope_text = repo.envelope_path_for(draft.draft_id).read_text(encoding="utf-8")
-        assert '"classification":"financial"' in envelope_text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert b"00000000T" not in raw
+        assert b"2026Q1" not in raw
+        assert draft.draft_id.encode("utf-8") not in raw
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         draft = _make_draft()
         bad = Envelope[FilingDraft](
             schema_version=1,
@@ -172,11 +191,13 @@ class TestClassificationGate:
             payload=draft,
         )
         repo = FilingDraftRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for(draft.draft_id),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.application.filing.draft.v1",
+        SecureObjectRepository().save(
+            namespace="aeat.domain.filing.drafts",
+            object_key=draft.draft_id,
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load(draft.draft_id)
@@ -217,5 +238,4 @@ class TestPerDraftLockIsolation:
         a = repo.lock_target_for("draft-a")
         b = repo.lock_target_for("draft-b")
         assert a != b
-        assert a.parent == store_dir
-        assert b.parent == store_dir
+        assert a.parent == b.parent

@@ -44,7 +44,12 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
     the ``INFORMACIÓN DE LA PRESENTACIÓN`` cover page without the
     ``Ejercicio YYYY`` line, deferring that marker to page 2.
     """
-    pages = extract_pages_text(pdf_path)
+    return detect_template_revision_from_pages(extract_pages_text(pdf_path))
+
+
+def detect_template_revision_from_pages(pages: tuple[str, ...]) -> TemplateRevision | None:
+    """Return a template revision from already-extracted PDF page text."""
+
     if not pages:
         return None
     # Union of pages 1-2 header region: some Modelo 100 PDFs print

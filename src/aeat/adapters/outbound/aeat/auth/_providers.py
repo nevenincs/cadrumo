@@ -56,10 +56,8 @@ class ClaveMovilSessionDetail(BaseModel):
     user approves the push notification on their phone. The session
     does not carry any long-lived credential material — only the
     identity used during login and a rendezvous timestamp. The real
-    authority is the cookie set persisted in the Playwright
-    storage-state file, which is round-tripped by
-    :class:`aeat.adapters.outbound.aeat.auth._authenticator.AeatAuthenticator` via the
-    provider-agnostic sidecar.
+    authority is the cookie set persisted with the provider metadata in
+    the encrypted session object.
     """
 
     model_config = _STRICT_FROZEN

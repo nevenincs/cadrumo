@@ -73,10 +73,12 @@ class DefaultBrowserSession:
         *,
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
+        storage_state: dict[str, Any] | None = None,
     ) -> BrowserContextLike:
         return await self._session.create_context(
             provisioner=provisioner,
             storage_state_path=storage_state_path,
+            storage_state=storage_state,
         )
 
     async def close(self) -> None:

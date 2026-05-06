@@ -1,32 +1,19 @@
-"""Content-addressed byte and manifest repository for the attachment service.
-
-The :class:`AttachmentStore` separates write-once byte blobs from encrypted
-JSON manifests under a shared configured root:
-
-* ``<root>/blobs/<sha256>`` — raw bytes, write-once.
-* ``<root>/manifests/<sha256>.envelope.json`` — encrypted manifest envelope at
-  ``FINANCIAL`` sensitivity via
-  :func:`aeat.adapters.persistence.storage.save_encrypted_envelope`.
-
-Every public method that composes a path from an ``attachment_id`` / ``sha256``
-input first validates the token is a 64-character lowercase hex digest, so
-untrusted CLI inputs cannot traverse out of the store root or exploit NTFS
-case-insensitivity to alias blobs across ``<digest>`` and ``<DIGEST>`` on
-case-preserving filesystems.
-"""
+"""Content-addressed attachment repository backed by encrypted SQL objects."""
 
 from __future__ import annotations
 
 import hashlib
-import os
-import tempfile
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
 from ._models import Attachment
@@ -34,33 +21,17 @@ from ._models import Attachment
 _LOGGER = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_BLOBS_DIRNAME = "blobs"
-_MANIFESTS_DIRNAME = "manifests"
-_MANIFEST_SUFFIX = ".envelope.json"
-_MANIFEST_LOCK_SUFFIX = ".lock"
-_STREAM_CHUNK_SIZE = 1024 * 1024  # 1 MiB
+_STREAM_CHUNK_SIZE = 1024 * 1024
 _HEX_DIGITS = frozenset("0123456789abcdef")
-_HKDF_CONTEXT_ATTACHMENT_MANIFEST = b"aeat.domain.attachments.manifest.v1"
+_ATTACHMENT_BLOB_VERSION = 1
 _ATTACHMENT_MANIFEST_VERSION = 1
+_ATTACHMENT_BLOB_NAMESPACE = "aeat.domain.attachments.blobs"
+_ATTACHMENT_MANIFEST_NAMESPACE = "aeat.domain.attachments.manifests"
 
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
-    """Reject any digest input that is not a 64-char lowercase hex string.
+    """Reject any digest input that is not a 64-char lowercase hex string."""
 
-    Args:
-        value: Untrusted digest candidate.
-        field_name: Human-readable field name used in the raised error.
-
-    Returns:
-        The validated digest, lowercase.
-
-    Raises:
-        :exc:`aeat.domain.attachments.AttachmentValidationError`: When the
-            input is not a 64-character lowercase hex digest. The validation
-            deliberately rejects uppercase digests so NTFS case-insensitivity
-            cannot be used to alias blobs across ``<digest>`` and ``<DIGEST>``
-            on case-preserving filesystems.
-    """
     if not isinstance(value, str):
         raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
     if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
@@ -69,17 +40,7 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 
 
 class AttachmentStore(BaseModel):
-    """Filesystem-backed content-addressed attachment store.
-
-    Combines write-once byte storage under :attr:`blobs_dir` with encrypted
-    JSON manifests under :attr:`manifests_dir`. The store is itself a frozen
-    pydantic model so it can be shared across threads without aliasing risk;
-    instances are constructed via :meth:`at`.
-
-    Attributes:
-        root: Absolute, resolved root directory hosting ``blobs/`` and
-            ``manifests/``.
-    """
+    """Encrypted SQL-backed content-addressed attachment store."""
 
     model_config = _STRICT_FROZEN
 
@@ -88,371 +49,178 @@ class AttachmentStore(BaseModel):
     @field_validator("root")
     @classmethod
     def _resolve_root(cls, value: Path) -> Path:
-        """Persist an absolute, resolved root so later reads are portable."""
+        """Persist an absolute root only as a diagnostic compatibility marker."""
+
         return Path(value).resolve()
 
     @classmethod
     def at(cls, root: Path) -> Self:
-        """Construct a store rooted at ``root``.
+        """Construct a store.
 
-        Args:
-            root: Directory that will host ``blobs/`` and ``manifests/``.
-
-        Returns:
-            A validated, frozen store instance.
+        The ``root`` argument is retained as a diagnostic marker for callers
+        that still carry settings, but persistence is the secure SQL backend.
         """
+
         return cls(root=root)
 
     @property
     def blobs_dir(self) -> Path:
-        """Directory holding write-once byte blobs keyed by SHA-256."""
-        return self.root / _BLOBS_DIRNAME
+        """Return the logical byte-object namespace marker."""
+
+        return Path("db://secure_objects") / _ATTACHMENT_BLOB_NAMESPACE
 
     @property
     def manifests_dir(self) -> Path:
-        """Directory holding mutable JSON manifests keyed by SHA-256."""
-        return self.root / _MANIFESTS_DIRNAME
+        """Return the logical manifest-object namespace marker."""
+
+        return Path("db://secure_objects") / _ATTACHMENT_MANIFEST_NAMESPACE
 
     def blob_path(self, sha256: str) -> Path:
-        """Return the on-disk blob path for ``sha256``.
+        """Return a logical object marker for ``sha256``."""
 
-        Raises:
-            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
-        """
         return self.blobs_dir / _require_digest(sha256, field_name="sha256")
 
     def manifest_path(self, attachment_id: str) -> Path:
-        """Return the on-disk manifest path for ``attachment_id``.
+        """Return a logical object marker for ``attachment_id``."""
 
-        Raises:
-            AttachmentValidationError: When ``attachment_id`` is not a
-                64-char hex digest.
-        """
-        digest = _require_digest(attachment_id)
-        return self.manifests_dir / f"{digest}{_MANIFEST_SUFFIX}"
+        return self.manifests_dir / _require_digest(attachment_id)
 
     def _manifest_lock_target(self, attachment_id: str) -> Path:
-        """Return the per-manifest lock sidecar path."""
-        digest = _require_digest(attachment_id)
-        return self.manifests_dir / f"{digest}{_MANIFEST_LOCK_SUFFIX}"
+        """Return a logical lock marker; SQL transactions govern writes."""
+
+        return self.manifest_path(attachment_id).with_suffix(".lock")
 
     def put_bytes(self, data: bytes) -> str:
-        """Write ``data`` under its SHA-256 digest if not already present.
+        """Write ``data`` under its SHA-256 digest if not already present."""
 
-        Args:
-            data: Raw attachment bytes to persist.
-
-        Returns:
-            The lowercase hex SHA-256 digest of ``data``.
-
-        Raises:
-            AttachmentPersistenceError: When the blob cannot be written.
-        """
         digest = hashlib.sha256(data).hexdigest()
-        target = self.blob_path(digest)
-        if target.exists():
-            _LOGGER.debug("reusing existing blob for %s", digest)
+        objects = SecureObjectRepository()
+        if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
+            _LOGGER.debug("reusing existing attachment object for %s", digest)
             return digest
-        try:
-            self.blobs_dir.mkdir(parents=True, exist_ok=True)
-            _write_once_bytes(target, data)
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to write attachment blob: {target}") from exc
-        _LOGGER.debug("stored attachment blob %s (%d bytes)", digest, len(data))
+        objects.save(
+            namespace=_ATTACHMENT_BLOB_NAMESPACE,
+            object_key=digest,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_ATTACHMENT_BLOB_VERSION,
+            written_at=datetime.now(UTC),
+            payload=data,
+        )
+        _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
         return digest
 
     def put_file(self, source: Path) -> tuple[str, int]:
-        """Stream ``source`` into the store, hashing and writing in chunks.
+        """Read ``source`` into the encrypted object backend."""
 
-        Reads and writes happen in 1 MiB chunks so large attachments (scans,
-        multi-page invoices) never force the full payload into memory. If a
-        blob for the resulting digest already exists the streamed tempfile is
-        discarded to preserve the write-once invariant. If a concurrent
-        writer creates the target blob between the streaming pass and the
-        final rename, the rename is retried as a no-op and the tempfile is
-        unlinked so the original blob survives untouched.
-
-        Args:
-            source: Filesystem path of the bytes to stream into the store.
-
-        Returns:
-            A ``(digest, bytes_size)`` tuple with the lowercase hex SHA-256
-            digest and the exact byte count of the source payload.
-
-        Raises:
-            AttachmentPersistenceError: When the source cannot be read or the
-                blob cannot be written.
-        """
         hasher = hashlib.sha256()
+        chunks: list[bytes] = []
         bytes_size = 0
-        tmp_path: Path | None = None
         try:
-            self.blobs_dir.mkdir(parents=True, exist_ok=True)
-            with tempfile.NamedTemporaryFile(
-                mode="wb",
-                dir=self.blobs_dir,
-                prefix="stream.",
-                suffix=".tmp",
-                delete=False,
-            ) as tmp_handle:
-                tmp_path = Path(tmp_handle.name)
-                with source.open("rb") as reader:
-                    while True:
-                        chunk = reader.read(_STREAM_CHUNK_SIZE)
-                        if not chunk:
-                            break
-                        hasher.update(chunk)
-                        bytes_size += len(chunk)
-                        tmp_handle.write(chunk)
-                tmp_handle.flush()
-                os.fsync(tmp_handle.fileno())
-            digest = hasher.hexdigest()
-            target = self.blob_path(digest)
-            _commit_write_once(tmp_path, target)
-            tmp_path = None
-            _LOGGER.debug("stored attachment blob %s (%d bytes)", digest, bytes_size)
-            return digest, bytes_size
-        except OSError as exc:
-            if tmp_path is not None:
-                tmp_path.unlink(missing_ok=True)
-            raise AttachmentPersistenceError(f"unable to stream attachment source: {source}") from exc
-
-    def read_bytes(self, sha256: str) -> bytes:
-        """Return the raw bytes for ``sha256``.
-
-        Args:
-            sha256: 64-character lowercase hex digest of the blob to read.
-
-        Returns:
-            The raw attachment bytes.
-
-        Raises:
-            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
-            AttachmentNotFoundError: When no blob exists for ``sha256``.
-            AttachmentPersistenceError: When the blob cannot be read.
-        """
-        target = self.blob_path(sha256)
-        if not target.exists():
-            raise AttachmentNotFoundError(f"attachment blob not found: {sha256}")
-        try:
-            return target.read_bytes()
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to read attachment blob: {target}") from exc
-
-    def open_bytes(self, sha256: str) -> BinaryIO:
-        """Open the blob for ``sha256`` as a streaming binary handle.
-
-        Callers must close the returned handle (use a ``with`` block).
-
-        Args:
-            sha256: 64-character lowercase hex digest of the blob to read.
-
-        Returns:
-            A binary file handle positioned at byte zero.
-
-        Raises:
-            AttachmentValidationError: When ``sha256`` is not a 64-char hex digest.
-            AttachmentNotFoundError: When no blob exists for ``sha256``.
-            AttachmentPersistenceError: When the blob cannot be opened.
-        """
-        target = self.blob_path(sha256)
-        if not target.exists():
-            raise AttachmentNotFoundError(f"attachment blob not found: {sha256}")
-        try:
-            return target.open("rb")
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to open attachment blob: {target}") from exc
-
-    def verify_blob(self, attachment_id: str) -> None:
-        """Re-hash the on-disk blob and verify it matches ``attachment_id``.
-
-        Args:
-            attachment_id: Stable attachment identifier (SHA-256 hex digest).
-
-        Raises:
-            AttachmentValidationError: When ``attachment_id`` is not a
-                64-char hex digest, or when the on-disk blob's SHA-256
-                disagrees with ``attachment_id``.
-            AttachmentNotFoundError: When no blob exists for ``attachment_id``.
-            AttachmentPersistenceError: When the blob cannot be read.
-        """
-        digest = _require_digest(attachment_id)
-        target = self.blob_path(digest)
-        if not target.exists():
-            raise AttachmentNotFoundError(f"attachment blob not found: {digest}")
-        hasher = hashlib.sha256()
-        try:
-            with target.open("rb") as reader:
+            with source.open("rb") as reader:
                 while True:
                     chunk = reader.read(_STREAM_CHUNK_SIZE)
                     if not chunk:
                         break
                     hasher.update(chunk)
+                    bytes_size += len(chunk)
+                    chunks.append(chunk)
         except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to re-hash attachment blob: {target}") from exc
-        actual = hasher.hexdigest()
+            raise AttachmentPersistenceError(f"unable to read attachment source: {source}") from exc
+        digest = hasher.hexdigest()
+        SecureObjectRepository().save(
+            namespace=_ATTACHMENT_BLOB_NAMESPACE,
+            object_key=digest,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_ATTACHMENT_BLOB_VERSION,
+            written_at=datetime.now(UTC),
+            payload=b"".join(chunks),
+        )
+        _LOGGER.debug("stored attachment object %s (%d bytes)", digest, bytes_size)
+        return digest, bytes_size
+
+    def read_bytes(self, sha256: str) -> bytes:
+        """Return the raw bytes for ``sha256``."""
+
+        digest = _require_digest(sha256, field_name="sha256")
+        record = SecureObjectRepository().load(
+            _ATTACHMENT_BLOB_NAMESPACE,
+            digest,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_ATTACHMENT_BLOB_VERSION,
+        )
+        if record is None:
+            raise AttachmentNotFoundError(f"attachment blob not found: {digest}")
+        return record.payload
+
+    def open_bytes(self, sha256: str) -> BinaryIO:
+        """Open the blob for ``sha256`` as a streaming binary handle."""
+
+        return BytesIO(self.read_bytes(sha256))
+
+    def verify_blob(self, attachment_id: str) -> None:
+        """Re-hash the stored blob and verify it matches ``attachment_id``."""
+
+        digest = _require_digest(attachment_id)
+        actual = hashlib.sha256(self.read_bytes(digest)).hexdigest()
         if actual != digest:
-            raise AttachmentValidationError(f"blob digest drift for {digest}: on-disk sha256 is {actual}")
+            raise AttachmentValidationError(f"blob digest drift for {digest}: stored sha256 is {actual}")
 
     def write_manifest(self, attachment: Attachment) -> None:
-        """Persist ``attachment`` to its manifest file atomically.
+        """Persist ``attachment`` as an encrypted database object."""
 
-        Args:
-            attachment: Validated attachment whose manifest should be written.
-
-        Raises:
-            AttachmentPersistenceError: When the manifest cannot be written.
-        """
-        from ...adapters.persistence.storage import (
-            Envelope,
-            SensitivityClass,
-            exclusive_file_lock,
-            save_encrypted_envelope,
+        envelope = Envelope[Attachment](
+            schema_version=_ATTACHMENT_MANIFEST_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.FINANCIAL,
+            payload=attachment,
         )
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
-
-        target = self.manifest_path(attachment.attachment_id)
-        try:
-            self.manifests_dir.mkdir(parents=True, exist_ok=True)
-            with exclusive_file_lock(self._manifest_lock_target(attachment.attachment_id)):
-                envelope = Envelope[Attachment](
-                    schema_version=_ATTACHMENT_MANIFEST_VERSION,
-                    written_at=datetime.now(UTC),
-                    classification=SensitivityClass.FINANCIAL,
-                    payload=attachment,
-                )
-                save_encrypted_envelope(
-                    envelope,
-                    target,
-                    master_key_provider=_resolve_master_key_provider(),
-                    hkdf_context=_HKDF_CONTEXT_ATTACHMENT_MANIFEST,
-                )
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to write attachment manifest: {target}") from exc
+        SecureObjectRepository().save(
+            namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
+            object_key=attachment.attachment_id,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_ATTACHMENT_MANIFEST_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
     def load_manifest(self, attachment_id: str) -> Attachment:
-        """Load and validate the manifest for ``attachment_id``.
-
-        Args:
-            attachment_id: Stable attachment identifier (SHA-256 hex digest).
-
-        Returns:
-            The validated attachment manifest.
-
-        Raises:
-            AttachmentValidationError: When ``attachment_id`` is not a
-                64-char hex digest, the manifest JSON is invalid, or the
-                stored ``attachment_id`` disagrees with the filename.
-            AttachmentNotFoundError: When no manifest exists.
-            AttachmentPersistenceError: When the manifest cannot be read.
-        """
-        from ...adapters.persistence.storage import (
-            Envelope,
-            SensitivityClass,
-            load_encrypted_envelope,
-        )
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
-        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+        """Load and validate the manifest for ``attachment_id``."""
 
         digest = _require_digest(attachment_id)
-        target = self.manifest_path(digest)
-        if not target.exists():
+        record = SecureObjectRepository().load(
+            _ATTACHMENT_MANIFEST_NAMESPACE,
+            digest,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
+        )
+        if record is None:
             raise AttachmentNotFoundError(f"attachment manifest not found: {digest}")
         try:
-            envelope = load_encrypted_envelope(
-                target,
-                Envelope[Attachment],
-                expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_ATTACHMENT_MANIFEST,
-                max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
-            )
+            envelope = Envelope[Attachment].model_validate_json(record.payload.decode("utf-8"))
         except (ClassificationError, EnvelopeVersionError) as exc:
-            raise AttachmentValidationError(f"invalid attachment manifest: {target}") from exc
+            raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
         except ValidationError as exc:
-            raise AttachmentValidationError(f"invalid attachment manifest: {target}") from exc
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to read attachment manifest: {target}") from exc
+            raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
         attachment = envelope.payload
         if attachment.attachment_id != digest:
             raise AttachmentValidationError(
-                f"manifest filename {digest} does not match stored attachment_id {attachment.attachment_id}"
+                f"manifest key {digest} does not match stored attachment_id {attachment.attachment_id}"
             )
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
-        """Iterate over every manifest on disk in sorted-filename order.
+        """Iterate over every manifest in sorted attachment-id order."""
 
-        Only filenames matching ``<digest>.envelope.json`` whose digest
-        is a valid 64-char lowercase hex digest are yielded; any other
-        file under ``manifests/`` is ignored.
-
-        Yields:
-            Each validated ``Attachment`` manifest stored under the root.
-
-        Raises:
-            AttachmentPersistenceError: When the manifests directory cannot be read.
-            AttachmentValidationError: When any manifest fails validation.
-        """
-        if not self.manifests_dir.exists():
-            return
-        try:
-            entries = sorted(self.manifests_dir.iterdir())
-        except OSError as exc:
-            raise AttachmentPersistenceError(f"unable to list attachment manifests: {self.manifests_dir}") from exc
-        for entry in entries:
-            if not entry.is_file():
-                continue
-            name = entry.name
-            if not name.endswith(_MANIFEST_SUFFIX):
-                continue
-            digest = name[: -len(_MANIFEST_SUFFIX)]
-            if len(digest) != 64 or any(char not in _HEX_DIGITS for char in digest):
-                _LOGGER.debug("skipping non-digest manifest filename: %s", entry.name)
-                continue
-            yield self.load_manifest(digest)
-
-
-def _commit_write_once(tmp_path: Path, target: Path) -> None:
-    """Commit ``tmp_path`` as ``target`` while preserving write-once."""
-    from ...core.locks import fsync_parent_dir
-
-    try:
-        os.link(tmp_path, target)
-    except FileExistsError:
-        tmp_path.unlink(missing_ok=True)
-        return
-    except OSError:
-        if target.exists():
-            tmp_path.unlink(missing_ok=True)
-            return
-        _LOGGER.debug("os.link unsupported for %s; falling back to os.replace", target)
-        os.replace(tmp_path, target)
-        fsync_parent_dir(target)
-        return
-    fsync_parent_dir(target)
-    tmp_path.unlink(missing_ok=True)
-
-
-def _write_once_bytes(target: Path, data: bytes) -> None:
-    """Atomically write ``data`` to ``target`` if and only if it does not yet exist."""
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="wb",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(data)
-            handle.flush()
-            os.fsync(handle.fileno())
-        _commit_write_once(tmp_path, target)
-        tmp_path = None
-    except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
-        raise
+        manifests: list[Attachment] = []
+        for record in SecureObjectRepository().list_records(
+            _ATTACHMENT_MANIFEST_NAMESPACE,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
+        ):
+            try:
+                envelope = Envelope[Attachment].model_validate_json(record.payload.decode("utf-8"))
+            except ValidationError as exc:
+                raise AttachmentValidationError("invalid attachment manifest") from exc
+            manifests.append(envelope.payload)
+        yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)

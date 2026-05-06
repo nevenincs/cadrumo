@@ -40,6 +40,7 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from ..browser import Profile
 from ..browser.session import BrowserSession
+from ._auth_state import storage_state_for_session
 from ._errors import SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
@@ -383,15 +384,15 @@ async def fetch_notifications_summary(
     """Live-fetch ``ResumenInteresados`` using the authenticated session.
 
     Args:
-        session: An authenticated :class:`AeatSession` whose
-            ``storage_state_path`` carries valid AEAT cookies.
+        session: An authenticated :class:`AeatSession` whose encrypted
+            browser state carries valid AEAT cookies.
         settings: Optional :class:`aeat.core.config.Settings` override.
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.
 
     Raises:
-        SedeNavigationError: If the session has no ``storage_state_path``
+        SedeNavigationError: If the session has no persisted browser state
             or the navigation fails.
     """
     return await _fetch_and_parse(
@@ -417,7 +418,7 @@ async def fetch_notifications_query(
         A :class:`NotificationsSnapshot` parsed from the live HTML.
 
     Raises:
-        SedeNavigationError: If the session has no ``storage_state_path``
+        SedeNavigationError: If the session has no persisted browser state
             or the navigation fails.
     """
     return await _fetch_and_parse(
@@ -437,16 +438,18 @@ async def _fetch_and_parse(
 ) -> NotificationsSnapshot:
     """Drive Playwright to ``url`` under the authenticated session and parse the HTML."""
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
+        storage_state_path=storage_state_path,
     )
     async with async_playwright() as pw:
         browser_session = BrowserSession(pw, settings, profile)
         context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+            storage_state=storage_state,
         )
         try:
             page = await context.new_page()

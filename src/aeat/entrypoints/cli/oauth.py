@@ -10,7 +10,6 @@ so bootstrap/operation can proceed.
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
@@ -18,6 +17,9 @@ from typing import Any, cast
 import typer
 from rich.console import Console
 
+from ...adapters.outbound.google._paths import save_google_oauth_client_json
+from ...core.config import PROJECT_ROOT
+from ...core.env_io import write_env_vars
 from ._i18n import tr
 
 app = typer.Typer(name="oauth-client", no_args_is_help=True, help=tr("cli.oauth.app_help"))
@@ -87,31 +89,24 @@ def init_cmd(
         console.print(tr("cli.oauth.init.success"))
         return
 
-    # 1. Parse and extract
+    # 1. Parse and validate
     raw = json_path.read_text(encoding="utf-8")
-    client_id, client_secret = parse_oauth_client_json(raw)
+    parse_oauth_client_json(raw)
 
-    # 2. Persist to env/.env
+    # 2. Persist non-secret selector + logical secure-object reference to env/.env
     env_file = settings.model_config.get("env_file")
     if isinstance(env_file, Path):
-        content = env_file.read_text(encoding="utf-8")
-        if "GOOGLE_OAUTH_CLIENT_ID" not in content:
-            content += f"\nGOOGLE_OAUTH_CLIENT_ID={client_id}\n"
-        else:
-            content = re.sub(r"GOOGLE_OAUTH_CLIENT_ID=.*", f"GOOGLE_OAUTH_CLIENT_ID={client_id}", content)
-
-        if "GOOGLE_OAUTH_CLIENT_SECRET" not in content:
-            content += f"GOOGLE_OAUTH_CLIENT_SECRET={client_secret}\n"
-        else:
-            content = re.sub(r"GOOGLE_OAUTH_CLIENT_SECRET=.*", f"GOOGLE_OAUTH_CLIENT_SECRET={client_secret}", content)
-
-        env_file.write_text(content, encoding="utf-8")
+        stable_client_path = PROJECT_ROOT / "env" / "oauth-client.secure-object"
+        save_google_oauth_client_json(stable_client_path, raw)
+        write_env_vars(
+            env_file,
+            {
+                "GOOGLE_AUTH_PATH": "desktop-oauth-local-dev",
+                "GOOGLE_OAUTH_CLIENT_JSON": str(stable_client_path),
+            },
+        )
         console.print(f"[green]{tr('cli.oauth.success.written')}[/]")
-
-    # 3. Copy to stable path
-    stable_client_path = Path("env/oauth-client.json")
-    stable_client_path.write_text(raw, encoding="utf-8")
-    console.print(f"[green]{tr('cli.oauth.success.copied', path=str(stable_client_path))}[/]")
+        console.print(f"[green]{tr('cli.oauth.success.copied', path=str(stable_client_path))}[/]")
 
     next_step = tr("cli.oauth.labels.next_step")
     console.print(f"[bold]{next_step}[/] {tr('cli.oauth.labels.run_gcloud_auth')}")

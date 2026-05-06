@@ -7,36 +7,26 @@ import re
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ....persistence.storage import (
-    BlobReference,
-    EncryptedBlobStore,
-    Envelope,
-    MasterKeyProvider,
-    SensitivityClass,
-    get_master_key_provider,
-    load_encrypted_envelope,
-    save_encrypted_envelope,
-)
+from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
+from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ....persistence.storage.sql import SecureObjectRepository
 from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
 _OBSERVATION_CLASSIFICATION = SensitivityClass.FINANCIAL
 _OBSERVATION_ENVELOPE_VERSION = 1
-_OBSERVATION_HKDF_CONTEXT = b"aeat.sede.filed-declaration-observation.v1"
-_STORAGE_REF_PREFIX = "blob:financial:"
+_ARTEFACT_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.artefacts"
+_OBSERVATION_NAMESPACE = "aeat.outbound.aeat.sede.filed_declaration.observations"
+_STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
 class FiledDeclarationObservationStore:
-    """Persist captured AEAT filed data through the encrypted storage substrate."""
+    """Persist captured AEAT filed data through the encrypted SQL backend."""
 
     def __init__(self, root: Path, *, master_key_provider: MasterKeyProvider | None = None) -> None:
-        self.root = Path(root)
-        self._master_key_provider = master_key_provider
-        self._blob_store = EncryptedBlobStore(
-            root_dir=self.root,
-            master_key_provider=master_key_provider,
-        )
+        del root, master_key_provider
+        self._objects = SecureObjectRepository()
 
     def persist_artefact(
         self,
@@ -52,68 +42,90 @@ class FiledDeclarationObservationStore:
             raise ValueError("filed-declaration artefact byte count does not match its body")
 
         del observation_key
-        reference = self._blob_store.put(
-            body,
-            classification=_ARTEFACT_CLASSIFICATION,
-            content_type=artefact.content_type,
-        )
-        if reference.sha256_plaintext_hex != artefact.sha256:
+        digest = hashlib.sha256(body).hexdigest()
+        if digest != artefact.sha256:
             raise ValueError("filed-declaration artefact SHA-256 does not match its body")
-        return artefact.model_copy(update={"storage_ref": _format_storage_ref(reference)})
+        self._objects.save(
+            namespace=_ARTEFACT_NAMESPACE,
+            object_key=digest,
+            classification=_ARTEFACT_CLASSIFICATION,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=body,
+        )
+        return artefact.model_copy(update={"storage_ref": _format_storage_ref(digest)})
 
     def load_artefact(self, storage_ref: str) -> bytes:
         """Return plaintext artefact bytes from an encrypted storage reference."""
 
-        return self._blob_store.get(_parse_storage_ref(storage_ref))
+        digest = _parse_storage_ref(storage_ref)
+        record = self._objects.load(
+            _ARTEFACT_NAMESPACE,
+            digest,
+            expected_class=_ARTEFACT_CLASSIFICATION,
+            max_supported_version=1,
+        )
+        if record is None:
+            raise FileNotFoundError(f"filed-declaration artefact not found: {digest}")
+        return record.payload
 
     def persist_observation(self, observation: FiledDeclarationObservation) -> Path:
-        """Persist a normalized observation manifest as ciphertext and return its path."""
+        """Persist a normalized observation manifest and return its logical object path."""
 
-        folder = self._observation_dir(
+        object_key = self._observation_key(
             observation.modelo,
             observation.ejercicio,
             observation.period,
             observation.expediente_id,
         )
-        folder.mkdir(parents=True, exist_ok=True)
-        path = folder / "observation.envelope.json"
         envelope = Envelope[FiledDeclarationObservation](
             schema_version=_OBSERVATION_ENVELOPE_VERSION,
             written_at=datetime.now(UTC),
             classification=_OBSERVATION_CLASSIFICATION,
             payload=observation,
         )
-        save_encrypted_envelope(
-            envelope,
-            path,
-            master_key_provider=self._master_key(),
-            hkdf_context=_OBSERVATION_HKDF_CONTEXT,
+        self._objects.save(
+            namespace=_OBSERVATION_NAMESPACE,
+            object_key=object_key,
+            classification=_OBSERVATION_CLASSIFICATION,
+            schema_version=_OBSERVATION_ENVELOPE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
         )
-        return path
+        return _logical_path(_OBSERVATION_NAMESPACE, object_key)
 
     def load_observation(self, path: Path) -> FiledDeclarationObservation:
         """Load and decrypt a normalized filed-declaration observation."""
 
-        envelope = load_encrypted_envelope(
-            Path(path),
-            Envelope[FiledDeclarationObservation],
+        object_key = Path(path).name
+        record = self._objects.load(
+            _OBSERVATION_NAMESPACE,
+            object_key,
             expected_class=_OBSERVATION_CLASSIFICATION,
-            master_key_provider=self._master_key(),
-            hkdf_context=_OBSERVATION_HKDF_CONTEXT,
             max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
         )
+        if record is None:
+            raise FileNotFoundError(f"filed-declaration observation not found: {object_key}")
+        envelope = Envelope[FiledDeclarationObservation].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+            raise ClassificationError(
+                f"filed-declaration observation {object_key} has classification {envelope.classification}; "
+                f"consumer expected {_OBSERVATION_CLASSIFICATION}",
+            )
+        if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+            raise EnvelopeVersionError(
+                f"filed-declaration observation {object_key} is at version {envelope.schema_version}; "
+                f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+            )
         return envelope.payload
 
-    def _master_key(self) -> MasterKeyProvider:
-        return self._master_key_provider or get_master_key_provider()
-
-    def _observation_dir(
+    def _observation_key(
         self,
         modelo: str,
         ejercicio: int,
         period: str,
         expediente_id: str,
-    ) -> Path:
+    ) -> str:
         key = "\x1f".join(
             (
                 _safe_segment(modelo),
@@ -122,8 +134,7 @@ class FiledDeclarationObservationStore:
                 _safe_segment(expediente_id),
             )
         )
-        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
-        return self.root / "observations" / digest[:2] / digest
+        return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
 def _safe_segment(value: str) -> str:
@@ -134,19 +145,18 @@ def _safe_segment(value: str) -> str:
     return cleaned
 
 
-def _format_storage_ref(reference: BlobReference) -> str:
-    if reference.classification is not _ARTEFACT_CLASSIFICATION:
-        raise ValueError("filed-declaration artefacts must be stored as financial data")
-    return f"{_STORAGE_REF_PREFIX}{reference.sha256_plaintext_hex}"
+def _logical_path(namespace: str, object_key: str) -> Path:
+    return Path("db://secure_objects") / namespace / object_key
 
 
-def _parse_storage_ref(storage_ref: str) -> BlobReference:
+def _format_storage_ref(digest: str) -> str:
+    return f"{_STORAGE_REF_PREFIX}{digest}"
+
+
+def _parse_storage_ref(storage_ref: str) -> str:
     if not storage_ref.startswith(_STORAGE_REF_PREFIX):
         raise ValueError("filed-declaration artefact storage reference is not financial")
-    return BlobReference(
-        sha256_plaintext_hex=storage_ref.removeprefix(_STORAGE_REF_PREFIX),
-        classification=_ARTEFACT_CLASSIFICATION,
-    )
+    return storage_ref.removeprefix(_STORAGE_REF_PREFIX)
 
 
 __all__ = ["FiledDeclarationObservationStore"]

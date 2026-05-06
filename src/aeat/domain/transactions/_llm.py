@@ -33,11 +33,9 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
-import tempfile
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
-from pathlib import Path
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -376,12 +374,9 @@ class SubprocessLLMClassifier:
     positional argument for long multi-line prompts, especially on
     Windows where CreateProcess quoting can corrupt arguments).
 
-    Reads output from stdout by default. Some CLIs (notably ``codex``)
-    emit event-stream noise on stdout but write the final agent
-    message to a separate file; set ``output_from_file_flag`` to the
-    CLI's flag name for that file (e.g. ``"--output-last-message"``)
-    and the classifier will append a tempfile path, read it back, and
-    parse that instead of stdout.
+    Reads output from stdout. Transaction prompts and classifier
+    responses are sensitive financial data, so this adapter deliberately
+    avoids file-backed subprocess handoff.
 
     Set ``prompt_via_argument=True`` for CLIs that reject stdin and
     require the prompt as the final positional argument.
@@ -392,7 +387,6 @@ class SubprocessLLMClassifier:
     model: str | None = None
     timeout_seconds: float = _DEFAULT_TIMEOUT_SECONDS
     spec: PromptSpec = field(default_factory=default_prompt_spec)
-    output_from_file_flag: str | None = None
     prompt_via_argument: bool = False
 
     @property
@@ -410,87 +404,63 @@ class SubprocessLLMClassifier:
             _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
             raise LLMClassifierError(f"{self.name} CLI not found on PATH: {self.command[0]}")
 
-        output_file: Path | None = None
-        extra_flags: tuple[str, ...] = ()
-        if self.output_from_file_flag is not None:
-            # Create an empty tempfile and close it immediately; the LLM CLI
-            # will write into it, we read it back after the subprocess exits.
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                suffix=f".{self.name}.out",
-                delete=False,
-            ) as handle:
-                output_file = Path(handle.name)
-            extra_flags = (self.output_from_file_flag, str(output_file))
-
-        argv: list[str] = [resolved_binary, *self.command[1:], *extra_flags]
+        argv: list[str] = [resolved_binary, *self.command[1:]]
         stdin_input: str | None = None
         if self.prompt_via_argument:
             argv.append(prompt)
         else:
             stdin_input = prompt
 
+        _logger.debug(
+            "llm classify: spawning %s argv=%s transaction_id=%s",
+            self.name,
+            argv[0],
+            transaction.transaction_id,
+        )
         try:
-            _logger.debug(
-                "llm classify: spawning %s argv=%s transaction_id=%s",
+            completed = subprocess.run(  # noqa: S603 — explicit command list, trusted binary.
+                argv,
+                input=stdin_input,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            _logger.warning(
+                "llm classify: %s timed out after %ss for transaction %s",
                 self.name,
-                argv[0],
+                self.timeout_seconds,
+                transaction.transaction_id,
+                exc_info=True,
+            )
+            raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
+        except OSError as exc:
+            # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
+            # CreateProcess errors). Translate so the --all CLI loop can
+            # skip this one transaction and continue on the next.
+            _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
+            raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
+        if completed.returncode != 0:
+            _logger.warning(
+                "llm classify: %s exited with returncode=%d for transaction %s",
+                self.name,
+                completed.returncode,
                 transaction.transaction_id,
             )
-            try:
-                completed = subprocess.run(  # noqa: S603 — explicit command list, trusted binary.
-                    argv,
-                    input=stdin_input,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    timeout=self.timeout_seconds,
-                    check=False,
-                )
-            except subprocess.TimeoutExpired as exc:
-                _logger.warning(
-                    "llm classify: %s timed out after %ss for transaction %s",
-                    self.name,
-                    self.timeout_seconds,
-                    transaction.transaction_id,
-                    exc_info=True,
-                )
-                raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
-            except OSError as exc:
-                # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
-                # CreateProcess errors). Translate so the --all CLI loop can
-                # skip this one transaction and continue on the next.
-                _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
-                raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
-            if completed.returncode != 0:
-                _logger.warning(
-                    "llm classify: %s exited with returncode=%d for transaction %s",
-                    self.name,
-                    completed.returncode,
-                    transaction.transaction_id,
-                )
-                raise LLMClassifierError(
-                    f"{self.name} CLI exited with {completed.returncode}: "
-                    f"{(completed.stderr or completed.stdout)[:400]!r}"
-                )
-            try:
-                output = output_file.read_text(encoding="utf-8") if output_file else completed.stdout
-            except OSError as exc:
-                _logger.error("llm classify: %s output file unreadable", self.name, exc_info=True)
-                raise LLMClassifierError(f"{self.name} CLI output file unreadable: {exc}") from exc
-            response = parse_response(output, spec=self.spec)
-            _logger.debug(
-                "llm classify: %s returned classification=%s confidence=%s for transaction %s",
-                self.name,
-                response.classification.value,
-                response.confidence,
-                transaction.transaction_id,
+            raise LLMClassifierError(
+                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}"
             )
-            return response
-        finally:
-            if output_file is not None:
-                output_file.unlink(missing_ok=True)
+        response = parse_response(completed.stdout, spec=self.spec)
+        _logger.debug(
+            "llm classify: %s returned classification=%s confidence=%s for transaction %s",
+            self.name,
+            response.classification.value,
+            response.confidence,
+            transaction.transaction_id,
+        )
+        return response
 
 
 # ── builders + registry ───────────────────────────────────────────
@@ -581,8 +551,8 @@ def build_codex_classifier(
 
     Uses ``--ephemeral`` + ``--skip-git-repo-check`` so the invocation
     does not require a git repo and does not persist sessions. The
-    final agent message is written via ``--output-last-message`` so
-    stdout chatter (reasoning events, warnings) is ignored.
+    The subprocess adapter parses JSON candidates from stdout so no
+    transaction data is written to a temporary file.
 
     Args:
         alias: Capability-tier alias (``codex-default`` / ``codex-o3``).
@@ -593,7 +563,7 @@ def build_codex_classifier(
 
     Returns:
         A :class:`SubprocessLLMClassifier` configured for the
-        ``codex`` CLI with ``output_from_file_flag`` set.
+        ``codex`` CLI.
     """
     resolved_model = _resolve_model_id(provider="codex", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
     command: tuple[str, ...] = ("codex", "exec", "--ephemeral", "--skip-git-repo-check")
@@ -604,7 +574,6 @@ def build_codex_classifier(
         command=command,
         model=resolved_model or None,
         spec=spec or default_prompt_spec(),
-        output_from_file_flag="--output-last-message",
     )
 
 

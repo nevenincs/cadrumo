@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
 from ._models import Transaction, TransactionCatalogue, derive_transaction_id

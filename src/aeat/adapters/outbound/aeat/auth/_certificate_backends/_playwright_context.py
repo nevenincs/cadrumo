@@ -71,8 +71,9 @@ class PlaywrightContextBackend(_CertBackend):
 
     Implements the
     :class:`aeat.adapters.outbound.aeat.auth._certificate_backends._base._CertBackend`
-    contract for browser-driven sessions. The verify leg is delegated
-    to :class:`HttpxFallbackBackend`.
+    contract for browser-driven sessions. The verify leg delegates to
+    :class:`HttpxFallbackBackend`, which fails closed unless a future backend
+    can perform mTLS verification without materialising plaintext key files.
     """
 
     def preload(
@@ -118,11 +119,12 @@ class PlaywrightContextBackend(_CertBackend):
         )
 
     def verify(self, cert: LoadedCertificate, url: str) -> HandshakeResult:
-        """Delegate to the httpx fallback for the handshake smoke test.
+        """Delegate to the fail-closed httpx fallback for handshake verification.
 
         The Playwright backend has no standalone handshake primitive —
-        spinning up a full browser just to probe TLS would be wasteful.
-        Borrows :class:`HttpxFallbackBackend` for the verify leg.
+        spinning up a full browser just to probe TLS would be wasteful. The
+        fallback refuses verification rather than writing decrypted PEM/key
+        material to temporary files.
 
         Args:
             cert: The loaded PKCS#12 certificate to present.

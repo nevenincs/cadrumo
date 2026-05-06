@@ -6,10 +6,11 @@ its own hardcoded list of mandatory keys. This module exposes the typed
 validation result and factory the CLI calls; the CLI binding stays pure
 transport.
 
-``required`` keys block the operator from advancing to declaration
-work, ``optional`` keys are surfaced as informational presence or
-absence, and any key not in the registry is flagged as ``unknown_keys``
-so renderers can warn the operator about typos.
+``required`` keys and active conditional requirements block the
+operator from advancing to declaration work, ``optional`` keys are
+surfaced as informational presence or absence, and any key not in the
+registry is flagged as ``unknown_keys`` so renderers can warn the
+operator about typos.
 """
 
 from __future__ import annotations
@@ -23,7 +24,6 @@ from ...domain.profile import (
     ProfileKey,
     ProfileKeyRequirement,
     optional_profile_keys,
-    required_profile_keys,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -64,6 +64,14 @@ def _has_value(values: Mapping[str, str], key: str) -> bool:
     return raw is not None and raw.strip() != ""
 
 
+def _conditional_requirement_applies(values: Mapping[str, str], entry: ProfileKey) -> bool:
+    """Return whether an optional key is required by another profile value."""
+    if entry.required_when_key is None or entry.required_when_value is None:
+        return False
+    raw = values.get(entry.required_when_key)
+    return raw is not None and raw.strip() == entry.required_when_value
+
+
 def validate_profile(values: Mapping[str, str]) -> ProfileValidationResult:
     """Validate ``values`` against the domain :data:`PROFILE_KEYS` registry.
 
@@ -82,7 +90,12 @@ def validate_profile(values: Mapping[str, str]) -> ProfileValidationResult:
         ordering: each field's tuple is ordered by the registry's
         canonical key order so renders are reproducible across runs.
     """
-    required_keys = tuple(entry.key for entry in required_profile_keys())
+    entries = PROFILE_KEYS
+    required_keys = tuple(
+        entry.key
+        for entry in entries
+        if entry.requirement is ProfileKeyRequirement.REQUIRED or _conditional_requirement_applies(values, entry)
+    )
     optional_keys = tuple(entry.key for entry in optional_profile_keys())
     known_keys = set(required_keys) | set(optional_keys)
 

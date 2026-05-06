@@ -12,13 +12,14 @@ Public API:
         DeclaracionParseError,
         TemplateRevision,
         parse_declaracion,
+        parse_declaracion_bytes,
     )
 """
 
 from __future__ import annotations
 
 from ._errors import DeclaracionParseError
-from ._parser import parse_declaracion
+from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
     DeclaracionObservation,
     ExtractionWarning,
@@ -31,4 +32,5 @@ __all__ = [
     "ExtractionWarning",
     "TemplateRevision",
     "parse_declaracion",
+    "parse_declaracion_bytes",
 ]

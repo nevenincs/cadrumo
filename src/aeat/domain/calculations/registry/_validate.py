@@ -581,6 +581,11 @@ class RegistryValidator:
                             f"{record.binding_record!r}"
                         )
                     for binding in matching_bindings:
+                        # Row-producer bindings (aggregation.op == "rows") source their
+                        # byte coordinates from explicit export-field offsets, not from
+                        # the binding selector itself.
+                        if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
+                            continue
                         missing_selector_keys = sorted(
                             key for key in ("offset", "length", "data_type") if key not in binding.selector
                         )
@@ -991,7 +996,7 @@ class RegistryValidator:
         modelo: ModeloDefinition,
         selector: Mapping[str, str | int],
     ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
-        allowed = {"revision", "revision_id", "year", "year_from", "year_to"}
+        allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
         failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
         revision_id = selector.get("revision_id", selector.get("revision"))
         year = selector.get("year")
@@ -1003,6 +1008,9 @@ class RegistryValidator:
         for key, value in (("year", year), ("year_from", year_from), ("year_to", year_to)):
             if value is not None and not isinstance(value, int):
                 failures.append(f"selector {key} must be an integer")
+        delta = selector.get("filing_year_delta")
+        if delta is not None and not isinstance(delta, int):
+            failures.append("selector filing_year_delta must be an integer")
         if year is not None and (year_from is not None or year_to is not None):
             failures.append("selector must use year or year_from/year_to, not both")
         if year_to is not None and year_from is None:

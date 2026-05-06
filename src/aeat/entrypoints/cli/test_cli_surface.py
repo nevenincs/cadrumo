@@ -163,7 +163,7 @@ def test_setup_init_seeds_profile_and_activates(monkeypatch: pytest.MonkeyPatch,
             "setup",
             "init",
             "--name",
-            "kent",
+            "operator",
             "--tax-id",
             "12345678Z",
             "--activity",
@@ -172,7 +172,7 @@ def test_setup_init_seeds_profile_and_activates(monkeypatch: pytest.MonkeyPatch,
     )
     assert result.exit_code == 0
     payload = json.loads(result.output)
-    assert payload["active_profile"] == "kent"
+    assert payload["active_profile"] == "operator"
     assert payload["values"]["tax.id"] == "12345678Z"
 
 
@@ -181,7 +181,7 @@ def test_setup_profile_validate_routes_through_application_api(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    init = _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"])
+    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z", "--activity", "design"])
     assert init.exit_code == 0
     result = _invoke(["--format", "json", "setup", "profile", "validate"])
     assert result.exit_code == 0
@@ -195,7 +195,7 @@ def test_setup_profile_validate_blocks_when_required_missing(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator"]).exit_code == 0
     result = _invoke(["--format", "json", "setup", "profile", "validate"])
     assert result.exit_code == 2
 
@@ -212,7 +212,7 @@ def test_setup_profile_list_keys_renders_registry(monkeypatch: pytest.MonkeyPatc
 
 def test_setup_profile_set_get_unset_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator"]).exit_code == 0
     set_result = _invoke(["--format", "json", "setup", "profile", "set", "tax.id", "X1234567L"])
     assert set_result.exit_code == 0
     get_result = _invoke(["--format", "json", "setup", "profile", "get", "tax.id"])
@@ -223,21 +223,21 @@ def test_setup_profile_set_get_unset_round_trip(monkeypatch: pytest.MonkeyPatch,
 
 def test_setup_profile_get_rejects_unknown_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator"]).exit_code == 0
     result = _invoke(["setup", "profile", "get", "fictional.key"])
     assert result.exit_code != 0
 
 
 def test_setup_profile_list_renders_active_marker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator"]).exit_code == 0
     result = _invoke(["--format", "json", "setup", "profile", "list"])
     assert result.exit_code == 0
     payload = json.loads(result.output)
     # Field is named `active` (the active profile name) plus `profiles` (the list).
     active = payload.get("active") or payload.get("active_profile")
-    assert active == "kent"
-    assert "kent" in payload["profiles"]
+    assert active == "operator"
+    assert "operator" in payload["profiles"]
 
 
 # ---------------------------------------------------------------------
@@ -277,7 +277,7 @@ def test_setup_auth_configure_clave_movil_round_trips(
 ) -> None:
     _isolate(monkeypatch, tmp_path)
 
-    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"]).exit_code == 0
     configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", "clave_movil"])
     assert configure.exit_code == 0
     login = _invoke(["--format", "json", "setup", "auth", "login"])
@@ -424,7 +424,9 @@ def test_app_declaration_calculate_persists_draft(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    assert (
+        _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    )
     modelo = _registry_modelo_calculable_without_cli_sources()
     result = _invoke(["--format", "json", "app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
     assert result.exit_code == 0
@@ -500,7 +502,7 @@ def test_app_declaration_calculate_requires_profile_tax_id(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent", "--activity", "design"]).exit_code == 0
+    assert _invoke(["setup", "init", "--name", "operator", "--activity", "design"]).exit_code == 0
     modelo = _registry_modelo_calculable_without_cli_sources()
     result = _invoke(["app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
     assert result.exit_code == 2
@@ -512,7 +514,9 @@ def test_app_declaration_calculate_refuses_missing_registry_inputs(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    assert _invoke(["setup", "init", "--name", "kent", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    assert (
+        _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
+    )
     modelo = _registry_modelo_requiring_cli_sources()
     result = _invoke(["app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
     assert result.exit_code == 2

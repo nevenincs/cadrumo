@@ -1,13 +1,21 @@
 aggregation:
   models:
-    t_944805: YYYY-MM o YYYY.
+    t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
 application:
   auth:
     provider_impact:
-      certificate_ready: application.auth.provider_impact.certificate_ready
-      generic_ready: application.auth.provider_impact.generic_ready
-      unavailable: application.auth.provider_impact.unavailable
-      unconfigured: application.auth.provider_impact.unconfigured
+      certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
+        el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
+        tots els proveïdors utilitzen el mateix flux d'ordres.
+      generic_ready: '%{label} està a punt. L''operador manté el mateix flux de presentació
+        a la CLI mentre aquest proveïdor es connecta al protocol d''autenticació compartit.'
+      unavailable: '%{label} està configurat/da però encara no està a punt. L''operador
+        encara pot generar, verificar i exportar presentacions localment, però les
+        lectures recolzades per l''AEAT romandran no disponibles fins que se solucioni
+        l''autenticació.'
+      unconfigured: L'operador encara pot generar, verificar i exportar presentacions
+        localment, però les lectures recolzades per l'AEAT romandran no disponibles
+        fins que es configuri un proveïdor d'autenticació.
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
@@ -365,6 +373,7 @@ cli:
       mismatched: No coincideix
       modelo: Model
       next: Següent
+      'no': 'No'
       path: Ruta
       period: Període
       sha256: SHA256
@@ -373,7 +382,6 @@ cli:
       verdict: Veredicte
       warnings: Advertiments
       'yes': Sí
-      'no': 'No'
     opts:
       by: Persona que ha revisat la declaració
       draft_id: ID de l'esborrany local
@@ -751,7 +759,8 @@ cli:
       set_ratio_key_help: 'Clau o categoria del ràtio. Àlies de família: %{aliases}'
       set_ratio_value_help: Valor del ràtio (p. ex., 0.5 per a 50%)
       unset_ratio_help: Eliminar un ràtio de repartiment específic
-      unset_ratio_key_help: 'Clau o categoria del ràtio a eliminar. Àlies de família: %{aliases}'
+      unset_ratio_key_help: 'Clau o categoria del ràtio a eliminar. Àlies de família:
+        %{aliases}'
     txs:
       app_help: Gestió de transaccions bancàries
   financial_invoices:
@@ -882,9 +891,9 @@ cli:
       auto_detect_failed: Fallada en la detecció automàtica del format del llibre
       edit_requires_one: Es requereix almenys una modificació de camp per editar
       filter_parse_error: Fallada en analitzar el filtre del llibre
+      invalid_skip: Camp d'omissió no vàlid
       invalid_source: 'No es pot importar el fitxer del llibre: {reason}'
       invalid_source_unknown: origen no vàlid
-      invalid_skip: Camp d'omissió no vàlid
       invalid_split_format: Format de divisió no vàlid
       invalid_split_value: Valor de divisió no vàlid
       match_both_required: Es requereix tant l'entrada del llibre com la transacció
@@ -907,6 +916,7 @@ cli:
       amount: Import
       date: Data
       description: Descripció
+      dialect: Format detectat
       dry_run: MODE DE PROVA (DRY RUN)
       fields: Camps
       id: ID
@@ -915,7 +925,6 @@ cli:
       rows: Files
       skipped: Omesos
       source: Origen
-      dialect: Format detectat
       valid: Vàlid
       warnings: Avisos
       'yes': Sí
@@ -1004,7 +1013,7 @@ cli:
     calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
     from_help: Data inicial del calendari (AAAA-MM-DD)
-    header: Model	Període	Estat	Obre	Tanca
+    header: "Model\tPeríode\tEstat\tObre\tTanca"
     invoices: Factures
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
@@ -1123,7 +1132,7 @@ cli:
     labels:
       'no': 'no'
       unset: sense valor
-      'yes': 'sí'
+      'yes': sí
     profile:
       app_help: Gestionar les dades del perfil de contribuent
       get_help: Mostrar el valor d'una clau de perfil

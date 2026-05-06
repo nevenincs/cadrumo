@@ -775,6 +775,22 @@ class ExportFieldDefinition(RegistryModel):
         return self
 
 
+class RecordDiscriminator(RegistryModel):
+    """Record-shape discriminator for record types that share literal prefixes.
+
+    A record's literal-prefix matcher cannot tell two records apart when they
+    share their leading literal fields (AEAT models several Tipo-2 record
+    sub-shapes that all start with the same record-type literal). The
+    discriminator declares a contiguous byte range whose populated-or-blank
+    pattern uniquely identifies this record subtype, letting the parser pick
+    the correct record while reading binding-row sequences.
+    """
+
+    offset: int = Field(ge=1)
+    length: int = Field(gt=0)
+    requires: Literal["blank", "non_blank"]
+
+
 class ExportRecordDefinition(RegistryModel):
     id: RecordId
     record_type: str
@@ -784,6 +800,7 @@ class ExportRecordDefinition(RegistryModel):
     required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
+    discriminator: RecordDiscriminator | None = None
     requires_positive_casilla: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
 

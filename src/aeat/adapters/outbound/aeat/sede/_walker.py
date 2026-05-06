@@ -1,7 +1,7 @@
 """Playwright-driven sede walker: session → expedientes → PDF bytes.
 
 The walker is the only side-effectful layer in :mod:`aeat.adapters.outbound.aeat.sede`. It
-takes an :class:`AeatSession` whose ``storage_state_path`` carries
+takes an :class:`AeatSession` whose encrypted browser state carries
 valid AEAT cookies, drives a read-only Playwright session over the
 sede, and exposes three operations to callers:
 
@@ -29,6 +29,7 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from ..browser import Profile
 from ..browser.session import BrowserSession
+from ._auth_state import storage_state_for_session
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -63,9 +64,8 @@ async def walk_expedientes_tree(
     resulting DOM for leaf expediente rows.
 
     Args:
-        session: An authenticated session whose ``storage_state_path``
-            points at cached AEAT cookies. Cl@ve-móvil and certificate
-            sessions both qualify.
+        session: An authenticated session with encrypted cached AEAT
+            cookies. Cl@ve-móvil and certificate sessions both qualify.
         modelo: When set, only expand category branches whose label
             references this modelo code (e.g. ``"100"`` for IRPF).
             Saves DOM expansion work on large corpora.
@@ -81,17 +81,19 @@ async def walk_expedientes_tree(
         SedeParseError: If the ResumenVlt page cannot be parsed.
     """
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
+        storage_state_path=storage_state_path,
     )
     async with async_playwright() as pw:
         browser_session = BrowserSession(pw, settings, profile)
         context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+            storage_state=storage_state,
         )
         try:
             page = await context.new_page()
@@ -128,7 +130,7 @@ async def resolve_justificante_ref(
     """Navigate to an expediente's detail page and extract its CSV ref.
 
     Args:
-        session: Authenticated session with live cookies on disk.
+        session: Authenticated session with encrypted cached AEAT cookies.
         expediente: Expediente to look up. ``expediente.detail_url``
             is used verbatim.
         settings: Optional override.
@@ -142,18 +144,20 @@ async def resolve_justificante_ref(
         SedeParseError: If the detail HTML does not expose a CSV link.
     """
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
+        storage_state_path=storage_state_path,
     )
     detail_url = str(expediente.detail_url)
     async with async_playwright() as pw:
         browser_session = BrowserSession(pw, settings, profile)
         context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+            storage_state=storage_state,
         )
         try:
             # Warm the session on ResumenVlt so AEAT's redirect chain
@@ -215,18 +219,20 @@ async def capture_justificante(
         JustificanteFetchError: On PDF download failures.
     """
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
+        storage_state_path=storage_state_path,
     )
     detail_url = str(expediente.detail_url)
     async with async_playwright() as pw:
         browser_session = BrowserSession(pw, settings, profile)
         context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+            storage_state=storage_state,
         )
         try:
             page = await context.new_page()

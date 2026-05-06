@@ -1,19 +1,13 @@
-"""Encrypted persistence for actividad economica inventory ledgers.
+"""Encrypted SQL persistence for actividad economica inventory ledgers.
 
-Wraps :mod:`aeat.adapters.persistence.storage`'s envelope, master-key, and
-file-locking primitives to persist
-:class:`aeat.domain.profile.inventory.InventoryLedger` payloads as
-FINANCIAL-class ciphertext. Module-level helpers wrap the
-:class:`InventoryLedgerRepository` for common one-shot operations.
-
-Attributes:
-    INVENTORY_LEDGER_FILENAME: Filename used inside the storage directory for
-        the encrypted inventory envelope.
+:class:`aeat.domain.profile.inventory.InventoryLedger` payloads are stored
+as FINANCIAL-class secure objects in the primary database. ``store_dir`` is
+accepted only as a logical partition key for callers that used separate
+ledger roots before the secure-object backend.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 from ....core.config import load_settings
@@ -26,14 +20,14 @@ from ....domain.profile.inventory import (
     MovementRecord,
     compute_inventory_valuation,
 )
-from ..storage import Envelope, SensitivityClass, exclusive_file_lock, load_encrypted_envelope, save_encrypted_envelope
-from ..storage.crypto._encrypted_columns import _resolve_master_key_provider
+from ..storage import SensitivityClass
+from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
-INVENTORY_LEDGER_FILENAME = "inventory-ledger.envelope.json"
-_ENVELOPE_VERSION = 1
-_HKDF_CONTEXT_INVENTORY = b"aeat.domain.profile.inventory.ledger.v1"
+INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
+_SECURE_OBJECT_VERSION = 1
+_INVENTORY_NAMESPACE = "aeat.persistence.profile.inventory"
 
 
 def default_storage_dir() -> Path:
@@ -62,14 +56,14 @@ def load_inventory(*, storage_dir: Path | None = None) -> tuple[InventoryLedger,
 
 
 def save_inventory(ledgers: tuple[InventoryLedger, ...], *, storage_dir: Path | None = None) -> Path:
-    """Persist ``ledgers`` as a governed FINANCIAL-class encrypted envelope.
+    """Persist ``ledgers`` as a governed FINANCIAL-class secure object.
 
     Args:
         ledgers: Inventory ledgers to persist.
         storage_dir: Override for the ledger storage directory.
 
     Returns:
-        Path to the encrypted envelope file that was written.
+        Logical path identifying the secure object.
     """
 
     repository = InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir())
@@ -127,31 +121,27 @@ def record_movement(
 
 
 class InventoryLedgerRepository:
-    """Governed repository for the encrypted inventory ledger.
-
-    Each method takes an exclusive file lock on :attr:`lock_target` for the
-    duration of the read-modify-write cycle so concurrent processes cannot
-    corrupt the ledger envelope.
-    """
+    """Governed repository for the encrypted inventory ledger."""
 
     def __init__(self, *, store_dir: Path) -> None:
         """Initialize the repository.
 
         Args:
             store_dir: Directory in which the encrypted envelope and lock
-                sidecar live.
+                sidecar used to live; now a logical partition key only.
         """
         self._store_dir = Path(store_dir)
+        self._objects = SecureObjectRepository()
 
     @property
     def envelope_path(self) -> Path:
-        """Path to the canonical encrypted envelope file."""
+        """Logical path retained for callers that display the storage target."""
 
         return self._store_dir / INVENTORY_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
-        """Path to the canonical exclusive-lock sidecar file."""
+        """Logical lock target retained for API stability."""
 
         return self._store_dir / "inventory-ledger.lock"
 
@@ -166,20 +156,18 @@ class InventoryLedgerRepository:
                 envelope exists but cannot be loaded or decrypted.
         """
 
-        if not self.envelope_path.exists():
-            return InventoryLedgerDocument()
         try:
-            envelope = load_encrypted_envelope(
-                self.envelope_path,
-                Envelope[InventoryLedgerDocument],
+            record = self._objects.load(
+                _INVENTORY_NAMESPACE,
+                self._object_key,
                 expected_class=SensitivityClass.FINANCIAL,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_INVENTORY,
-                max_supported_version=_ENVELOPE_VERSION,
+                max_supported_version=_SECURE_OBJECT_VERSION,
             )
-            return envelope.payload
+            if record is None:
+                return InventoryLedgerDocument()
+            return InventoryLedgerDocument.model_validate_json(record.payload.decode("utf-8"))
         except (OSError, AeatError) as exc:
-            raise InventoryLedgerError(f"unable to load inventory ledger: {self.envelope_path}") from exc
+            raise InventoryLedgerError(f"unable to load inventory ledger: {self._object_key}") from exc
 
     def save(self, document: InventoryLedgerDocument) -> None:
         """Persist ``document`` as FINANCIAL-class ciphertext.
@@ -188,21 +176,8 @@ class InventoryLedgerRepository:
             document: Ledger document to encrypt and write.
         """
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[InventoryLedgerDocument](
-                schema_version=_ENVELOPE_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=document,
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_INVENTORY,
-            )
-        _log.info("saved %d inventory ledgers to %s", len(document.ledgers), self.envelope_path)
+        self._save_unlocked(document)
+        _log.info("saved %d inventory ledgers to secure object %s", len(document.ledgers), self._object_key)
 
     def create(self, ledger: InventoryLedger) -> InventoryLedgerDocument:
         """Atomically create ``ledger`` and refuse duplicate actividad/year pairs.
@@ -218,21 +193,19 @@ class InventoryLedgerRepository:
                 ledger with the same ``(actividad_id, year)`` pair exists.
         """
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            current = self._load_unlocked()
-            if any(
-                existing.actividad_id == ledger.actividad_id and existing.year == ledger.year
-                for existing in current.ledgers
-            ):
-                raise InventoryLedgerError(
-                    f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
-                    context={"actividad_id": ledger.actividad_id, "year": ledger.year},
-                    suggestion="aeat data ledgers inventory list",
-                )
-            updated = InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
-            self._save_unlocked(updated)
-            return updated
+        current = self._load_unlocked()
+        if any(
+            existing.actividad_id == ledger.actividad_id and existing.year == ledger.year
+            for existing in current.ledgers
+        ):
+            raise InventoryLedgerError(
+                f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
+                context={"actividad_id": ledger.actividad_id, "year": ledger.year},
+                suggestion="aeat data ledgers inventory list",
+            )
+        updated = InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
+        self._save_unlocked(updated)
+        return updated
 
     def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
         """Atomically append ``movement`` after validating the new valuation.
@@ -255,53 +228,43 @@ class InventoryLedgerRepository:
                 or the resulting valuation is invalid.
         """
 
-        self._store_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            ledgers = list(self._load_unlocked().ledgers)
-            for index, ledger in enumerate(ledgers):
-                if ledger.actividad_id == actividad_id and ledger.year == year:
-                    if any(existing.movement_id == movement.movement_id for existing in ledger.period_movements):
-                        raise InventoryLedgerError(
-                            f"movement {movement.movement_id!r} already exists",
-                            context={"movement_id": movement.movement_id},
-                            suggestion="aeat data ledgers inventory valuation preview",
-                        )
-                    updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})
-                    compute_inventory_valuation(updated)
-                    ledgers[index] = updated
-                    self._save_unlocked(InventoryLedgerDocument(ledgers=tuple(ledgers)))
-                    return updated
+        ledgers = list(self._load_unlocked().ledgers)
+        for index, ledger in enumerate(ledgers):
+            if ledger.actividad_id == actividad_id and ledger.year == year:
+                if any(existing.movement_id == movement.movement_id for existing in ledger.period_movements):
+                    raise InventoryLedgerError(
+                        f"movement {movement.movement_id!r} already exists",
+                        context={"movement_id": movement.movement_id},
+                        suggestion="aeat data ledgers inventory valuation preview",
+                    )
+                updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})
+                compute_inventory_valuation(updated)
+                ledgers[index] = updated
+                self._save_unlocked(InventoryLedgerDocument(ledgers=tuple(ledgers)))
+                return updated
         raise InventoryLedgerError(
             f"inventory ledger not found for {actividad_id!r} in {year}",
             context={"actividad_id": actividad_id, "year": year},
         )
 
     def _load_unlocked(self) -> InventoryLedgerDocument:
-        if not self.envelope_path.exists():
-            return InventoryLedgerDocument()
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[InventoryLedgerDocument],
-            expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_INVENTORY,
-            max_supported_version=_ENVELOPE_VERSION,
-        )
-        return envelope.payload
+        return self.load()
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
-        envelope = Envelope[InventoryLedgerDocument](
-            schema_version=_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
+        from datetime import UTC, datetime
+
+        self._objects.save(
+            namespace=_INVENTORY_NAMESPACE,
+            object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
-            payload=document,
+            schema_version=_SECURE_OBJECT_VERSION,
+            written_at=datetime.now(UTC),
+            payload=document.model_dump_json().encode("utf-8"),
         )
-        save_encrypted_envelope(
-            envelope,
-            self.envelope_path,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_INVENTORY,
-        )
+
+    @property
+    def _object_key(self) -> str:
+        return self._store_dir.as_posix()
 
 
 __all__ = [

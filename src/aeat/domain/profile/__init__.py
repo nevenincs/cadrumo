@@ -81,7 +81,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
         return value
 
 
-class KentTaxResidence(BaseModel, frozen=True, strict=True):
+class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     """The operator's current ordinary CCAA tax residence for RENTA."""
 
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
@@ -147,11 +147,11 @@ __all__ = [
     "CCAA",
     "PROFILE_KEYS",
     "ForalRegimeError",
-    "KentTaxResidence",
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileNotConfiguredError",
     "ResidenceChange",
+    "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "get_profile_key",
     "optional_profile_keys",

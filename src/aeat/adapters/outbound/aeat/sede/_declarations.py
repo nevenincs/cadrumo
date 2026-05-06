@@ -25,7 +25,6 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import tempfile
 import unicodedata
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
@@ -62,9 +61,10 @@ from .....domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
 )
-from ....inbound.declaracion import DeclaracionParseError, parse_declaracion
+from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ..browser import Profile
 from ..browser.session import BrowserSession
+from ._auth_state import storage_state_for_session
 from ._errors import JustificanteFetchError, SedeNavigationError, SedeParseError
 from ._schema import (
     FiledDeclarationArtefact,
@@ -200,13 +200,9 @@ async def shared_playwright(
         on exit.
 
     Raises:
-        SedeNavigationError: When ``session.storage_state_path`` is
-            ``None``.
+        SedeNavigationError: When the session has no encrypted browser state.
     """
-    if session.storage_state_path is None:
-        raise SedeNavigationError(
-            "AeatSession.storage_state_path is None; run `aeat auth login` first",
-        )
+    storage_state_for_session(session)
     async with async_playwright() as pw:
         yield pw
 
@@ -300,7 +296,7 @@ async def _open_register_page(
     """Yield a Playwright ``(page, context)`` bound to the AEAT session.
 
     Both :func:`walk_declarations_register` and :func:`capture_declaration`
-    need the same bringup: validate ``session.storage_state_path``,
+    need the same bringup: validate persisted session state,
     build a :class:`Profile`, spin up Playwright, and create a
     context preloaded with the session cookies. Centralising the
     helper keeps the two callers structurally identical and
@@ -322,23 +318,28 @@ async def _open_register_page(
         :class:`Page` inside the storage-state-loaded context.
 
     Raises:
-        SedeNavigationError: When ``session.storage_state_path`` is
-            ``None``.
+        SedeNavigationError: When the session has no encrypted browser state.
     """
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError(
-            "AeatSession.storage_state_path is None; run `aeat auth login` first",
-        )
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
     profile = Profile(
         name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
+        storage_state_path=storage_state_path,
     )
     if playwright is not None:
-        async with _opened_browser_session(playwright, settings, profile, session) as (page, context):
+        async with _opened_browser_session(playwright, settings, profile, storage_state) as (page, context):
             yield page, context
         return
-    async with async_playwright() as pw, _opened_browser_session(pw, settings, profile, session) as (page, context):
+    async with (
+        async_playwright() as pw,
+        _opened_browser_session(pw, settings, profile, storage_state) as (
+            page,
+            context,
+        ),
+    ):
         yield page, context
 
 
@@ -347,12 +348,12 @@ async def _opened_browser_session(
     pw: Playwright,
     settings: Settings,
     profile: Profile,
-    session: AeatSession,
+    storage_state: dict[str, object],
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
     """Inner helper: create + tear down a BrowserSession + context."""
     browser_session = BrowserSession(pw, settings, profile)
     context = await browser_session.create_context(
-        storage_state_path=session.storage_state_path,
+        storage_state=storage_state,
     )
     try:
         page = await context.new_page()
@@ -1245,12 +1246,10 @@ def _observed_casillas_from_declaration_pdf(
     declaration: Declaration,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as handle:
-        handle.write(body)
-        pdf_path = Path(handle.name)
     try:
-        filing = parse_declaracion(
-            pdf_path,
+        filing = parse_declaracion_bytes(
+            body,
+            source_label=f"secure declaration PDF {declaration.expediente_id}",
             modelo_override=declaration.modelo,
             año_override=declaration.ejercicio,
             period_override=declaration.period,
@@ -1260,8 +1259,6 @@ def _observed_casillas_from_declaration_pdf(
         raise SedeParseError(
             f"declaration PDF for {declaration.expediente_id!r} did not yield registry casilla observations"
         ) from exc
-    finally:
-        pdf_path.unlink(missing_ok=True)
 
     observations: list[ObservedCasillaValue] = []
     for casilla in filing.values:

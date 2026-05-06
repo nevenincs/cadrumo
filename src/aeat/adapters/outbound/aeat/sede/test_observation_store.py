@@ -3,17 +3,31 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Literal
 
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....persistence.storage import EphemeralMasterKeyProvider
+from ....persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....persistence.storage.sql.engine import dispose_engine
 from ._observation_store import FiledDeclarationObservationStore
 from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+@pytest.fixture(autouse=True)
+def _patch_secure_backend(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(tmp_path) -> None:
@@ -49,7 +63,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     manifest_path = store.persist_observation(observation)
 
     assert stored.storage_ref is not None
-    assert stored.storage_ref.startswith("blob:financial:")
+    assert stored.storage_ref.startswith("secure-object:financial:")
     assert store.load_artefact(stored.storage_ref) == body
     assert store.load_observation(manifest_path) == observation
     persisted_bytes = b"\n".join(path.read_bytes() for path in root.rglob("*") if path.is_file())
@@ -57,6 +71,11 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
+    database_bytes = (tmp_path / "aeat.db").read_bytes()
+    assert body not in database_bytes
+    assert b"12345678Z" not in database_bytes
+    assert b"12.34" not in database_bytes
+    assert b"202610013522222A" not in database_bytes
     persisted_paths = "\n".join(str(path.relative_to(root).as_posix()) for path in root.rglob("*"))
     assert "12345678Z" not in persisted_paths
     assert "202610013522222A" not in persisted_paths

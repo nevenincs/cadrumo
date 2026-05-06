@@ -197,7 +197,7 @@ def test_corrupt_file_surfaces_error_not_silent_empty(
 
     set_result = _invoke("set-ratio", "suministros_home_office_luz", "0.5")
     assert set_result.exit_code == 2, set_result.output
-    # Kent's corrupt bytes must still be on disk — the CLI did not silently
+    # operator's corrupt bytes must still be on disk — the CLI did not silently
     # overwrite them with a fresh valid profile.
     assert _isolate_usage_ratios_path.read_text(encoding="utf-8") == "{ not json"
 
@@ -307,7 +307,7 @@ def test_set_ratio_rejects_spanish_locale_comma_decimal() -> None:
     assert "invalid ratio" in result.output
 
 
-def test_kent_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> None:
+def test_operator_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> None:
     """End-to-end: setting the home-office alias to 0.21 lists every member with 0.21 beside the statutory 0.3."""
     set_result = _invoke("set-ratio", "home_office_area", "0.21")
     assert set_result.exit_code == 0, set_result.output

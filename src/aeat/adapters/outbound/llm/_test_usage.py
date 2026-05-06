@@ -1,8 +1,8 @@
 """Unit tests for usage recording.
 
 Verifies that :class:`aeat.adapters.outbound.llm.UsageRecorder` round-trips
-records through its daily JSONL files and produces accurate aggregate
-summaries via :meth:`aeat.adapters.outbound.llm.UsageRecorder.summarize`.
+records through encrypted secure-object storage and produces accurate
+aggregate summaries via :meth:`aeat.adapters.outbound.llm.UsageRecorder.summarize`.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def test_usage_recorder_round_trip_and_summary(tmp_path: Path) -> None:
     )
     record = recorder.build_record(response, prompt_id="translation_v1", caller="test-suite")
     path = recorder.record(record)
-    assert path.exists()
+    assert not path.exists()
     assert recorder.load_records() == (record,)
     summary = recorder.summarize()
     assert summary.entries == 1

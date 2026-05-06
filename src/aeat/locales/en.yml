@@ -1,6 +1,6 @@
 aggregation:
   models:
-    t_944805: YYYYQn
+    t_944805: Invalid period format. Use YYYY, YYYY-Qn, or YYYY-MM.
 application:
   auth:
     provider_impact:
@@ -363,6 +363,7 @@ cli:
       mismatched: Mismatched
       modelo: Tax Form
       next: Next
+      'no': 'No'
       path: Path
       period: Period
       sha256: SHA256
@@ -370,6 +371,7 @@ cli:
       values: Values
       verdict: Verdict
       warnings: Warnings
+      'yes': 'Yes'
     opts:
       by: Person who reviewed the declaration
       draft_id: Local draft ID
@@ -864,9 +866,9 @@ cli:
       auto_detect_failed: Auto-detection of ledger format failed
       edit_requires_one: At least one field modification is required for editing
       filter_parse_error: Failed to parse ledger filter
+      invalid_skip: Invalid skip field
       invalid_source: 'The ledger file cannot be imported: {reason}'
       invalid_source_unknown: invalid source
-      invalid_skip: Invalid skip field
       invalid_split_format: Invalid split format
       invalid_split_value: Invalid split value
       match_both_required: Both ledger entry and transaction are required for matching
@@ -888,6 +890,7 @@ cli:
       amount: Amount
       date: Date
       description: Description
+      dialect: Detected format
       dry_run: DRY RUN MODE
       fields: Fields
       id: ID
@@ -896,7 +899,6 @@ cli:
       rows: Rows
       skipped: Skipped
       source: Source
-      dialect: Detected format
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'

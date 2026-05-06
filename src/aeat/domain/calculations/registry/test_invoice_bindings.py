@@ -178,7 +178,7 @@ def test_resolve_invoice_binding_values_aggregates_operator_count_distinct_per_c
     )
     observations = (
         _observation(party="DE1", country="DE", base="100", clave="E"),
-        _observation(party="DE1", country="DE", base="200", clave="E"),  # same operator deduped
+        _observation(party="DE1", country="DE", base="200", clave="E"),  # same operator+clave deduped
         _observation(party="FR1", country="FR", base="50", clave="M"),
         _observation(party="IT1", country="IT", base="75", clave="A"),  # outside selected claves
     )
@@ -186,6 +186,34 @@ def test_resolve_invoice_binding_values_aggregates_operator_count_distinct_per_c
     resolved = resolve_invoice_binding_values(revision, observations)
 
     assert resolved == {"iva-operadores-count": Decimal("2")}
+
+
+def test_resolve_invoice_binding_values_counts_one_record_per_operator_clave_pair() -> None:
+    """Per Orden EHA/769/2010 Anexo 138-146: count is "Número de registros de tipo 2".
+
+    A single operator with operations under multiple claves contributes one
+    Tipo 2 record per clave, so the count must include the clave dimension.
+    """
+    revision = _revision(
+        _binding(
+            binding_id="iva-records-count",
+            fact="operator_count",
+            op="count_distinct",
+            claves=("E", "S"),
+            rectification_scope="exclude_rectifications",
+        ),
+    )
+    observations = (
+        _observation(party="DE1", country="DE", base="100", clave="E"),  # 1 record (DE1, E)
+        _observation(party="DE1", country="DE", base="50", clave="S"),  # 2 records: (DE1, E) + (DE1, S)
+        _observation(party="DE1", country="DE", base="25", clave="S"),  # still 2 records (S accumulated)
+        _observation(party="FR1", country="FR", base="10", clave="E"),  # 3 records
+    )
+
+    resolved = resolve_invoice_binding_values(revision, observations)
+
+    # 3 Tipo 2 records: (DE1, E), (DE1, S), (FR1, E)
+    assert resolved == {"iva-records-count": Decimal("3")}
 
 
 def test_resolve_invoice_binding_values_sums_base_amounts_within_selector_scope() -> None:

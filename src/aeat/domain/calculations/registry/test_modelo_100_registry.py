@@ -12,6 +12,7 @@ import pytest
 from pydantic import AnyUrl
 
 from aeat.core.paths import PROJECT_ROOT
+from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 
 from ._constructs import resolve_construct, resolve_revision_constructs
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -101,6 +102,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     modelo = modelos_by_id["100"]
     snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
     source_foundation = snapshot.constructs["renta-source-foundation"]
+    personal_family = snapshot.constructs["renta-personal-family"]
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     payments_retentions = snapshot.constructs["renta-payments-retentions"]
     economic_activities = snapshot.constructs["renta-economic-activities"]
@@ -114,6 +116,34 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
         if "renta-payments-retentions" in classification.target_constructs
     }
 
+    assert set(snapshot.revision.legal_refs).issubset(source_foundation.legal_refs)
+    assert set(snapshot.revision.source_refs).issubset(source_foundation.source_refs)
+    assert set(personal_family.bindings) == {
+        "renta-2025-profile-tax-id",
+        "renta-2025-profile-display-name",
+        "renta-2025-profile-tax-residence-ccaa",
+        "renta-2025-profile-declaration-type",
+        "renta-2025-profile-taxpayer-sex",
+        "renta-2025-profile-marital-status",
+        "renta-2025-profile-taxpayer-birth-date",
+        "renta-2025-profile-spouse-tax-id",
+        "renta-2025-profile-spouse-display-name",
+        "renta-2025-profile-spouse-birth-date",
+        "renta-2025-profile-spouse-sex",
+    }
+    assert set(personal_family.casillas) == {
+        "DPNIF_D",
+        "DP_APENOM_D",
+        "ZCCAD",
+        "TIPOTRIBUTACION",
+        "SEXO_D",
+        "ECIVIL",
+        "DPFNAC_D",
+        "DPNIF_C",
+        "DP_APENOM_C",
+        "DPFNAC_C",
+        "SEXO_C",
+    }
     assert set(dependencies.bindings) == filed_dependency_bindings
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
     assert set(payments_retentions.bindings) == filed_dependency_bindings
@@ -136,6 +166,89 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     assert observation_parsing.live_cross_references == ("modelo-100-filed-declarations-read",)
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
     assert set(payments_retentions.dependency_classifications) == payments_dependency_classifications
+
+
+def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    profile_keys = {entry.key for entry in PROFILE_KEYS}
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+
+    assert bindings_by_id.keys() >= {
+        "renta-2025-profile-tax-id",
+        "renta-2025-profile-display-name",
+        "renta-2025-profile-tax-residence-ccaa",
+        "renta-2025-profile-declaration-type",
+        "renta-2025-profile-taxpayer-sex",
+        "renta-2025-profile-marital-status",
+        "renta-2025-profile-taxpayer-birth-date",
+        "renta-2025-profile-spouse-tax-id",
+        "renta-2025-profile-spouse-display-name",
+        "renta-2025-profile-spouse-birth-date",
+        "renta-2025-profile-spouse-sex",
+    }
+    assert casillas_by_id["DPNIF_D"].binding == "renta-2025-profile-tax-id"
+    assert casillas_by_id["DP_APENOM_D"].binding == "renta-2025-profile-display-name"
+    assert casillas_by_id["ZCCAD"].binding == "renta-2025-profile-tax-residence-ccaa"
+    assert casillas_by_id["TIPOTRIBUTACION"].binding == "renta-2025-profile-declaration-type"
+    assert casillas_by_id["SEXO_D"].binding == "renta-2025-profile-taxpayer-sex"
+    assert casillas_by_id["ECIVIL"].binding == "renta-2025-profile-marital-status"
+    assert casillas_by_id["DPFNAC_D"].binding == "renta-2025-profile-taxpayer-birth-date"
+    assert casillas_by_id["DPNIF_C"].binding == "renta-2025-profile-spouse-tax-id"
+    assert casillas_by_id["DP_APENOM_C"].binding == "renta-2025-profile-spouse-display-name"
+    assert casillas_by_id["DPFNAC_C"].binding == "renta-2025-profile-spouse-birth-date"
+    assert casillas_by_id["SEXO_C"].binding == "renta-2025-profile-spouse-sex"
+    assert all(
+        casillas_by_id[casilla_id].input_kind == "bound"
+        for casilla_id in (
+            "DPNIF_D",
+            "DP_APENOM_D",
+            "ZCCAD",
+            "TIPOTRIBUTACION",
+            "SEXO_D",
+            "ECIVIL",
+            "DPFNAC_D",
+            "DPNIF_C",
+            "DP_APENOM_C",
+            "DPFNAC_C",
+            "SEXO_C",
+        )
+    )
+
+    assert bindings_by_id["renta-2025-profile-tax-id"].selector["profile_key"] in profile_keys
+    display_name_profile_keys = cast(
+        tuple[str, ...],
+        bindings_by_id["renta-2025-profile-display-name"].selector["profile_keys"],
+    )
+    assert set(display_name_profile_keys).issubset(profile_keys)
+    assert bindings_by_id["renta-2025-profile-declaration-type"].selector["profile_key"] in profile_keys
+    for binding_id in (
+        "renta-2025-profile-taxpayer-sex",
+        "renta-2025-profile-marital-status",
+        "renta-2025-profile-taxpayer-birth-date",
+        "renta-2025-profile-spouse-tax-id",
+        "renta-2025-profile-spouse-birth-date",
+        "renta-2025-profile-spouse-sex",
+    ):
+        assert bindings_by_id[binding_id].selector["profile_key"] in profile_keys
+    spouse_display_name_profile_keys = cast(
+        tuple[str, ...],
+        bindings_by_id["renta-2025-profile-spouse-display-name"].selector["profile_keys"],
+    )
+    assert set(spouse_display_name_profile_keys).issubset(profile_keys)
+    for binding_id in (
+        "renta-2025-profile-spouse-tax-id",
+        "renta-2025-profile-spouse-display-name",
+        "renta-2025-profile-spouse-birth-date",
+        "renta-2025-profile-spouse-sex",
+    ):
+        selector = bindings_by_id[binding_id].selector
+        assert selector["required_when_profile_key"] == "declaration.type"
+        assert selector["required_when_value"] == "2"
+    tax_residence_selector = bindings_by_id["renta-2025-profile-tax-residence-ccaa"].selector
+    assert tax_residence_selector["profile_model"] == "TaxResidenceProfile"
+    assert tax_residence_selector["field"] in TaxResidenceProfile.model_fields
 
 
 def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:
@@ -240,7 +353,7 @@ def test_modelo_100_payments_on_account_calculate_from_registry_relations() -> N
             "0594": Decimal("3.00"),
             "0596": Decimal("4.00"),
             "0597": Decimal("5.00"),
-            "0598": Decimal("6.00"),
+            "0153": Decimal("6.00"),
             "0599": Decimal("7.00"),
             "0600": Decimal("8.00"),
             "0601": Decimal("9.00"),
@@ -259,7 +372,9 @@ def test_modelo_100_payments_on_account_calculate_from_registry_relations() -> N
     entries = {entry.target: entry for entry in result.entries}
 
     assert result.values["0604"] == Decimal("360.00")
+    assert result.values["0598"] == Decimal("6.00")
     assert result.values["0609"] == Decimal("451.00")
+    assert entries["0598"].operand_refs == ("0153",)
     assert entries["0604"].operand_refs == (
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
@@ -279,6 +394,276 @@ def test_modelo_100_payments_on_account_calculate_from_registry_relations() -> N
         "0604",
         "0605",
         "0606",
+    )
+
+
+def test_modelo_100_final_settlement_calculates_result_from_registry() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "0585": Decimal("8000.00"),
+            "0586": Decimal("7000.00"),
+            "0588": Decimal("100.00"),
+            "0414": Decimal("200.00"),
+            "0589": Decimal("300.00"),
+            "0590": Decimal("400.00"),
+            "0591": Decimal("500.00"),
+            "0592": Decimal("10.00"),
+            "0593": Decimal("20.00"),
+            "0594": Decimal("30.00"),
+            "0596": Decimal("40.00"),
+            "0597": Decimal("50.00"),
+            "0153": Decimal("60.00"),
+            "0599": Decimal("70.00"),
+            "0600": Decimal("80.00"),
+            "0601": Decimal("90.00"),
+            "0602": Decimal("100.00"),
+            "0603": Decimal("110.00"),
+            "0605": Decimal("120.00"),
+            "0606": Decimal("130.00"),
+            "0611": Decimal("100.00"),
+            "0612": Decimal("10.00"),
+            "0613": Decimal("20.00"),
+            "0623": Decimal("30.00"),
+            "0624": Decimal("40.00"),
+            "0636": Decimal("50.00"),
+            "0637": Decimal("60.00"),
+            "0248": Decimal("70.00"),
+            "0249": Decimal("80.00"),
+            "0660": Decimal("90.00"),
+            "0661": Decimal("100.00"),
+            "0662": Decimal("110.00"),
+            "0663": Decimal("120.00"),
+            "0664": Decimal("130.00"),
+            "0666": Decimal("140.00"),
+            "0669": Decimal("150.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("600.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("400.00"),
+        },
+    )
+    entries = {entry.target: entry for entry in result.entries}
+
+    assert result.values["0587"] == Decimal("15000.00")
+    assert result.values["0595"] == Decimal("13500.00")
+    assert result.values["0598"] == Decimal("60.00")
+    assert result.values["0604"] == Decimal("1000.00")
+    assert result.values["0609"] == Decimal("1910.00")
+    assert result.values["0610"] == Decimal("11590.00")
+    assert result.values["0670"] == Decimal("11950.00")
+    assert entries["0610"].operand_refs == ("0595", "0609")
+    assert entries["0670"].operand_refs == (
+        "0610",
+        "0611",
+        "0612",
+        "0613",
+        "0623",
+        "0624",
+        "0636",
+        "0637",
+        "0248",
+        "0249",
+        "0660",
+        "0661",
+        "0662",
+        "0663",
+        "0664",
+        "0666",
+        "0669",
+    )
+
+
+def test_modelo_100_real_estate_capital_calculates_from_registry() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "0089": Decimal("123.45"),
+            "0102": Decimal("10000.00"),
+            "0104": Decimal("100.00"),
+            "0107": Decimal("200.00"),
+            "0109": Decimal("300.00"),
+            "0110": Decimal("40.00"),
+            "0111": Decimal("50.00"),
+            "0112": Decimal("60.00"),
+            "0113": Decimal("70.00"),
+            "0114": Decimal("80.00"),
+            "0115": Decimal("90.00"),
+            "0116": Decimal("110.00"),
+            "0117": Decimal("120.00"),
+            "0131": Decimal("400.00"),
+            "0132": Decimal("30.00"),
+            "0146": Decimal("20.00"),
+            "0147": Decimal("10.00"),
+            "0148": Decimal("500.00"),
+            "0150": Decimal("1000.00"),
+            "0151": Decimal("250.00"),
+            "0152": Decimal("7000.00"),
+            "0153": Decimal("800.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+    entries = {entry.target: entry for entry in result.entries}
+
+    assert result.values["0149"] == Decimal("7820.00")
+    assert result.values["0154"] == Decimal("7000.00")
+    assert result.values["0155"] == Decimal("123.45")
+    assert result.values["0156"] == Decimal("7000.00")
+    assert result.values["0598"] == Decimal("800.00")
+    assert entries["0149"].operand_refs == (
+        "0102",
+        "0104",
+        "0107",
+        "0109",
+        "0110",
+        "0111",
+        "0112",
+        "0113",
+        "0114",
+        "0115",
+        "0116",
+        "0117",
+        "0131",
+        "0132",
+        "0146",
+        "0147",
+        "0148",
+    )
+    assert entries["0154"].operand_refs == ("0149", "0150", "0151", "0152")
+    assert entries["0598"].source_refs == (
+        "aeat-dr-100-2025-dictionary",
+        "aeat-renta-2025-manual-parte1",
+        "boe-modelo-100-2025-form",
+    )
+
+
+def test_modelo_100_work_income_calculates_from_registry() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "0003": Decimal("30000.00"),
+            "0004": Decimal("1200.00"),
+            "0005": Decimal("228.00"),
+            "0006": Decimal("100.00"),
+            "0008": Decimal("500.00"),
+            "0024": Decimal("200.00"),
+            "0009": Decimal("150.00"),
+            "0010": Decimal("50.00"),
+            "0011": Decimal("300.00"),
+            "0058": Decimal("75.00"),
+            "0013": Decimal("1800.00"),
+            "0014": Decimal("120.00"),
+            "0015": Decimal("80.00"),
+            "0016": Decimal("40.00"),
+            "0019": Decimal("2000.00"),
+            "0020": Decimal("1000.00"),
+            "0021": Decimal("500.00"),
+            "0057": Decimal("250.00"),
+            "0023": Decimal("1500.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+    entries = {entry.target: entry for entry in result.entries}
+
+    assert result.values["0007"] == Decimal("1328.00")
+    assert result.values["0012"] == Decimal("31853.00")
+    assert result.values["0017"] == Decimal("29813.00")
+    assert result.values["0018"] == Decimal("29813.00")
+    assert result.values["0022"] == Decimal("26313.00")
+    assert result.values["0025"] == Decimal("24563.00")
+    assert entries["0012"].operand_refs == (
+        "0003",
+        "0007",
+        "0008",
+        "0024",
+        "0009",
+        "0010",
+        "0011",
+        "0058",
+    )
+    assert entries["0025"].legal_refs == (
+        "ley-35-2006:art-18",
+        "ley-35-2006:art-19",
+        "ley-35-2006:art-20",
+        "orden-hac-277-2026:art-3",
+    )
+
+
+def test_modelo_100_movable_capital_income_calculates_from_registry() -> None:
+    modelos_by_id, catalogues = _loaded_registry()
+    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "0027": Decimal("10.00"),
+            "0028": Decimal("20.00"),
+            "0029": Decimal("30.00"),
+            "0030": Decimal("40.00"),
+            "0031": Decimal("50.00"),
+            "0032": Decimal("60.00"),
+            "0033": Decimal("70.00"),
+            "0034": Decimal("80.00"),
+            "0035": Decimal("90.00"),
+            "0037": Decimal("25.00"),
+            "0039": Decimal("5.00"),
+            "0046": Decimal("100.00"),
+            "0047": Decimal("200.00"),
+            "0048": Decimal("300.00"),
+            "0050": Decimal("400.00"),
+            "0051": Decimal("500.00"),
+            "0053": Decimal("45.00"),
+            "0055": Decimal("15.00"),
+        },
+        date_context={},
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        relation_values={
+            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+        },
+    )
+    entries = {entry.target: entry for entry in result.entries}
+
+    assert result.values["0036"] == Decimal("450.00")
+    assert result.values["0038"] == Decimal("425.00")
+    assert result.values["0040"] == Decimal("420.00")
+    assert result.values["0041"] == Decimal("420.00")
+    assert result.values["0052"] == Decimal("1500.00")
+    assert result.values["0054"] == Decimal("1455.00")
+    assert result.values["0056"] == Decimal("1440.00")
+    assert result.values["0060"] == Decimal("1440.00")
+    assert entries["0036"].operand_refs == (
+        "0027",
+        "0028",
+        "0029",
+        "0030",
+        "0031",
+        "0032",
+        "0033",
+        "0034",
+        "0035",
+    )
+    assert entries["0056"].legal_refs == (
+        "ley-35-2006:art-25",
+        "ley-35-2006:art-26",
+        "orden-hac-277-2026:art-3",
     )
 
 

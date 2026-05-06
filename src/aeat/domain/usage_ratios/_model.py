@@ -87,7 +87,7 @@ class UsageRatioProfile(BaseModel):
             if not (Decimal("0") <= ratio <= Decimal("1")):
                 raise ValueError(f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})")
         # Canonicalise key order so two equal profiles serialise to identical bytes.
-        # Kent's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
+        # operator's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
         # stable ordering prevents spurious diffs when ratios are toggled.
         return {category: value[category] for category in sorted(value, key=lambda c: c.value)}
 

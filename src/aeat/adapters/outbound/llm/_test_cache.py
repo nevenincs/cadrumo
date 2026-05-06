@@ -1,8 +1,9 @@
-"""Unit tests for the on-disk LLM cache.
+"""Unit tests for the encrypted LLM cache.
 
 Covers cache key determinism, hit/miss accounting, statistics, and the
 defensive containment checks in :class:`aeat.adapters.outbound.llm.LLMCache`
-that prevent operator-supplied model identifiers from escaping the cache root.
+that prevent operator-supplied model identifiers from composing unsafe logical
+cache paths.
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ def test_cache_hit_miss_and_stats(tmp_path: Path) -> None:
     assert cached.cache_hit is True
     assert cached.cost_estimate_usd == Decimal("0")
     assert cache.stats().entries == 1
+    assert not any(tmp_path.rglob("*.json"))
 
 
 @pytest.mark.parametrize(
@@ -110,3 +112,14 @@ def test_cache_path_normalises_namespaced_model(tmp_path: Path) -> None:
     composed = cache._path_for(key)
     assert composed.is_relative_to(tmp_path)
     assert composed.parent.name == "anthropic__claude-3-7-sonnet"
+
+
+def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
+    cache = LLMCache(root_dir=tmp_path / "cache")
+    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    response = _response().model_copy(update={"text": "CACHE-CANARY-123"})
+
+    cache.write(request, response)
+
+    assert not (tmp_path / "cache").exists()
+    assert b"CACHE-CANARY-123" not in (tmp_path / "aeat.db").read_bytes()

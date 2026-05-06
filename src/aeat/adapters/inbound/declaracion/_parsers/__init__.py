@@ -8,6 +8,6 @@ extraction needs grow.
 
 from __future__ import annotations
 
-from ._pdfplumber_backend import extract_pages_text
+from ._pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 
-__all__ = ["extract_pages_text"]
+__all__ = ["extract_pages_text", "extract_pages_text_from_bytes"]

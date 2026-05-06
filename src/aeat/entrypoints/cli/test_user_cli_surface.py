@@ -36,8 +36,12 @@ def _json_output(result: Any) -> str:
 
 
 def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from aeat.adapters.persistence.storage.sql import dispose_engine
+
+    dispose_engine()
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -49,6 +53,7 @@ def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
+    dispose_engine()
     monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
     monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
@@ -215,10 +220,7 @@ def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.Mo
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
+    _isolate_user_cli(monkeypatch, tmp_path)
     statement = tmp_path / "n26-q1.csv"
     statement.write_text(
         "\n".join(
@@ -529,7 +531,22 @@ def test_profile_keys_match_domain_registry_names() -> None:
     result = _invoke(["setup", "profile", "list-keys"])
 
     assert result.exit_code == 0, result.output
-    for key in ("tax.id", "activity", "name", "surnames", "address.postcode", "declaration.type"):
+    for key in (
+        "tax.id",
+        "activity",
+        "name",
+        "surnames",
+        "address.postcode",
+        "declaration.type",
+        "taxpayer.sex",
+        "taxpayer.marital_status",
+        "taxpayer.birth_date",
+        "spouse.tax.id",
+        "spouse.name",
+        "spouse.surnames",
+        "spouse.birth_date",
+        "spouse.sex",
+    ):
         assert key in result.output
     for retired_key in ("tax.name", "activity.label", "activity.code"):
         assert retired_key not in result.output
@@ -546,7 +563,7 @@ def test_profile_validate_routes_through_application_layer(
             "setup",
             "init",
             "--name",
-            "kent",
+            "operator",
             "--activity",
             "design",
             "--tax-id",
@@ -580,7 +597,7 @@ def test_profile_validate_blocks_when_required_missing(
             "setup",
             "init",
             "--name",
-            "kent",
+            "operator",
             "--activity",
             "design",
             "--tax-id",
@@ -600,7 +617,7 @@ def test_profile_validate_blocks_when_required_missing(
     assert "tax.id" in payload["missing_required"]
 
 
-def test_kent_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
+def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -629,7 +646,7 @@ def test_kent_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     export_path = tmp_path / "modelo-303-2027-q2.txt"
 
     commands = [
-        ["setup", "init", "--name", "kent", "--activity", "design", "--tax-id", "12345678Z"],
+        ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         ["setup", "auth", "configure", "--provider", "clave_movil"],
         ["setup", "auth", "login"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],

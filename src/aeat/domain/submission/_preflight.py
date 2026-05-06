@@ -44,24 +44,24 @@ def _describe_provider_operator_impact(description: AuthProviderDescriptionLike)
     """
     if not description.configured:
         return (
-            "Kent can still produce, verify, and export filings locally, but "
+            "operator can still produce, verify, and export filings locally, but "
             "AEAT-backed reads stay unavailable until an auth "
             "provider is configured."
         )
     if not description.available:
         return (
-            f"{description.label} is configured but not ready yet. Kent can still "
+            f"{description.label} is configured but not ready yet. operator can still "
             "produce, verify, and export filings locally, but AEAT-backed reads "
             "stay unavailable until auth is fixed."
         )
     if _enum_value(description.kind) == _AUTH_KIND_CERTIFICATE:
         return (
-            "Certificate auth is ready. Kent keeps the same CLI filing flow for "
+            "Certificate auth is ready. operator keeps the same CLI filing flow for "
             "AEAT-backed reads, and future providers can plug into the same "
             "commands without changing the workflow."
         )
     return (
-        f"{description.label} is ready. Kent keeps the same CLI filing flow while "
+        f"{description.label} is ready. operator keeps the same CLI filing flow while "
         "this provider plugs into the shared auth protocol."
     )
 

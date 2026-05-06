@@ -26,7 +26,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto._encrypted_columns import EncryptedBytes, EncryptedString
+from ..crypto._encrypted_columns import EncryptedBytes, EncryptedString, HashedLookup
 
 
 class Base(DeclarativeBase):
@@ -139,7 +139,7 @@ class SecureObjectRow(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     namespace: Mapped[str] = mapped_column(String(128), nullable=False)
-    object_key: Mapped[str] = mapped_column(String(256), nullable=False)
+    object_key: Mapped[bytes] = mapped_column(HashedLookup(), nullable=False)
     classification: Mapped[str] = mapped_column(String(32), nullable=False)
     schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
     written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

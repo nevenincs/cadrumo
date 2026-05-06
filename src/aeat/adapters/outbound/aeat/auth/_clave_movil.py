@@ -14,23 +14,18 @@ Design summary:
 * The provider opens a headed Playwright window on fresh login so the
   operator can scan the QR visually. Resume-from-storage-state runs
   headlessly because no human interaction is required.
-* The persisted session uses :class:`aeat.adapters.outbound.aeat.auth._authenticator.AeatAuthenticator`'s
-  existing sidecar layout, but with cert-specific fields left as
-  placeholders and a ``provider_kind`` marker for the session detail.
-  Kind-namespaced sidecar paths keep the Cl@ve and certificate
-  sessions from overwriting each other.
+* The persisted session stores Playwright state and provider metadata
+  together in the encrypted session object. Kind-namespaced logical
+  storage keys keep the Cl@ve and certificate sessions separate.
 """
 
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import hashlib
+import base64
 import json
-import os
 import re
 import sys
-import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -41,8 +36,11 @@ from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from .....core.classification import SensitivityClass
 from .....core.errors import AeatError
 from .....core.logging import get_logger
+from ....persistence.storage.sql import SecureObjectRepository
+from . import _session_store
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
@@ -67,8 +65,10 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-AEAT_CLAVE_MOVIL_SIDECAR_SCHEMA_VERSION: Final[int] = 2
-"""Bumped from cert sidecar's v1 so a stale v1 file is never mistaken for Cl@ve data."""
+AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
+"""Distinct from certificate metadata v1 so stale certificate objects are rejected."""
+
+_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 
 
 # NIE: X/Y/Z + 7 digits + letter. DNI: 8 digits + letter.
@@ -84,10 +84,10 @@ class ClaveMovilApprovalTimeoutError(AeatError):
     """Raised when the operator does not approve the Cl@ve push within the time window."""
 
 
-class _ClaveMovilSidecar(BaseModel):
-    """On-disk metadata pair beside the Cl@ve Móvil storage-state file.
+class _ClaveMovilSessionMetadata(BaseModel):
+    """Encrypted metadata stored with the Cl@ve Móvil storage state.
 
-    Strict mode is ON so a malformed sidecar (e.g. ``"2"`` where the
+    Strict mode is ON so malformed metadata (e.g. ``"2"`` where the
     integer ``2`` is expected, or an unknown enum value) fails at
     validation rather than being silently coerced. Datetimes are
     stored as ISO-8601 strings by ``model_dump(mode="json")`` and
@@ -97,7 +97,7 @@ class _ClaveMovilSidecar(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
 
-    schema_version: int = Field(default=AEAT_CLAVE_MOVIL_SIDECAR_SCHEMA_VERSION, ge=2)
+    schema_version: int = Field(default=AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION, ge=2)
     provider_kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
     identity_nif: str = Field(min_length=1)
     authenticated_at: datetime
@@ -232,12 +232,10 @@ class ClaveMovilAuthProvider:
                 )
             dni_nie = self._require_identity()
             resume_path = self._storage_state_path()
-            sidecar_path = self._sidecar_path_for(resume_path)
-            if resume_path.exists() and sidecar_path.exists():
+            if _session_store.exists(resume_path):
                 try:
                     return await self._resume_locked(
                         resume_path,
-                        sidecar_path,
                         browser_session=browser_session,
                         target_url=target_url,
                     )
@@ -246,12 +244,11 @@ class ClaveMovilAuthProvider:
                         "ClaveMovilAuthProvider: persisted session unusable; falling back to fresh login (%s)",
                         exc,
                     )
-                    self._invalidate_persisted(resume_path, sidecar_path)
+                    self._invalidate_persisted(resume_path)
 
             return await self._fresh_login_locked(
                 dni_nie=dni_nie,
                 storage_state_path=resume_path,
-                sidecar_path=sidecar_path,
                 browser_session=browser_session,
                 target_url=target_url,
             )
@@ -262,10 +259,10 @@ class ClaveMovilAuthProvider:
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> tuple[AeatSession, AeatLoginAssertion]:
-        """Probe the on-disk session without side effects.
+        """Probe the encrypted persisted session without side effects.
 
         Unlike :meth:`authenticate`, this method NEVER falls back to a
-        fresh login and NEVER deletes the persisted session files —
+        fresh login and NEVER deletes the persisted session —
         even when the probe fails. Callers (``aeat auth whoami``) can
         therefore use it as a pure diagnostic without accidentally
         triggering a phone-approval push.
@@ -276,43 +273,39 @@ class ClaveMovilAuthProvider:
                     "ClaveMovilAuthProvider already has an active session; call close() first"
                 )
             storage_state_path = self._storage_state_path()
-            sidecar_path = self._sidecar_path_for(storage_state_path)
-            if not (storage_state_path.exists() and sidecar_path.exists()):
-                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session on disk; run `aeat auth login` first")
+            if not _session_store.exists(storage_state_path):
+                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat auth login` first")
 
-            try:
-                sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
-            except (OSError, ValueError, ValidationError) as exc:
-                raise AeatLoginAssertionError(f"Cl@ve Móvil sidecar invalid: {exc}") from exc
-            if sidecar.idle_deadline <= datetime.now(UTC):
+            persisted = self._load_persisted(storage_state_path)
+            metadata = self._load_metadata(storage_state_path, persisted)
+            if metadata.idle_deadline <= datetime.now(UTC):
                 raise AeatLoginAssertionError("Cl@ve Móvil session past idle deadline")
 
             session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
             context: BrowserContextLike | None = None
             try:
-                context = await session_like.create_context(storage_state_path=storage_state_path)
+                context = await session_like.create_context(storage_state=persisted.storage_state)
                 session = AeatSession(
                     provider_kind=self.kind,
-                    authenticated_at=sidecar.authenticated_at,
-                    idle_deadline=sidecar.idle_deadline,
+                    authenticated_at=metadata.authenticated_at,
+                    idle_deadline=metadata.idle_deadline,
                     storage_state_path=storage_state_path,
-                    identity_nif=sidecar.identity_nif,
+                    identity_nif=metadata.identity_nif,
                     provider_detail=ClaveMovilSessionDetail(
-                        dni_nie=sidecar.identity_nif,
-                        used_non_qr_fallback=sidecar.used_non_qr_fallback,
-                        verification_code=sidecar.verification_code,
+                        dni_nie=metadata.identity_nif,
+                        used_non_qr_fallback=metadata.used_non_qr_fallback,
+                        verification_code=metadata.verification_code,
                     ),
                 )
                 self._browser_session = session_like
                 self._context = context
                 self._active_session = session
                 # Prefer an explicit target, then the recorded landing URL
-                # from the successful login. If neither is available (legacy
-                # sidecar written before schema v2), fall back to the
+                # from the successful login. If neither is available, fall back to the
                 # default target — a bare selector URL would always return
                 # 200 against static HTML and falsely report an invalid
                 # session.
-                probe_target = target_url or sidecar.landing_url or self._default_target_url()
+                probe_target = target_url or metadata.landing_url or self._default_target_url()
                 assertion = await self.verify(session, target_url=probe_target)
                 # Refresh idle TTL on successful probe so long-running
                 # discovery sessions stay alive without re-auth. AEAT's
@@ -326,17 +319,21 @@ class ClaveMovilAuthProvider:
                         }
                     )
                     self._active_session = refreshed
+                    refreshed_metadata = metadata.model_copy(
+                        update={
+                            "authenticated_at": refreshed.authenticated_at,
+                            "idle_deadline": refreshed.idle_deadline,
+                        }
+                    )
                     try:
-                        refreshed_sidecar = sidecar.model_copy(
-                            update={
-                                "authenticated_at": refreshed.authenticated_at,
-                                "idle_deadline": refreshed.idle_deadline,
-                            }
+                        self._persist_session(
+                            storage_state_path,
+                            storage_state=persisted.storage_state,
+                            metadata=refreshed_metadata,
                         )
-                        self._write_json_atomic(sidecar_path, refreshed_sidecar.model_dump(mode="json"))
-                    except Exception:  # sidecar write best-effort; OSError must not abort a valid session
+                    except Exception:
                         log.warning(
-                            "ClaveMovilAuthProvider: sidecar refresh write failed;"
+                            "ClaveMovilAuthProvider: encrypted session refresh write failed;"
                             " session valid but deadline not persisted",
                             exc_info=True,
                         )
@@ -541,7 +538,7 @@ class ClaveMovilAuthProvider:
         except Exception:  # BrowserSessionLike.close() exception surface is undocumented; teardown must not abort
             log.warning("ClaveMovilAuthProvider: browser session close failed", exc_info=True)
 
-    # ── Sidecar + storage state ─────────────────────────────────────────────
+    # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
         token_dir = self._settings.aeat_token_dir
@@ -549,45 +546,36 @@ class ClaveMovilAuthProvider:
         return token_dir / f"{profile}-clave-movil-storage.json"
 
     @staticmethod
-    def _sidecar_path_for(storage_state_path: Path) -> Path:
-        return storage_state_path.with_suffix(".meta.json")
+    def _persist_session(
+        storage_state_path: Path,
+        *,
+        storage_state: dict[str, Any],
+        metadata: _ClaveMovilSessionMetadata,
+    ) -> None:
+        _session_store.save(
+            storage_state_path,
+            storage_state=storage_state,
+            metadata=metadata.model_dump(mode="json"),
+        )
 
-    def _write_json_atomic(self, path: Path, payload: Any) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        data = json.dumps(payload, indent=2, sort_keys=True, default=str).encode("utf-8")
-        fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
-        tmp_path = Path(tmp_name)
-        try:
-            with os.fdopen(fd, "wb") as handle:
-                handle.write(data)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(tmp_path, path)
-            from .....core.locks import fsync_parent_dir
-
-            fsync_parent_dir(path)
-        except Exception:  # OSError/RuntimeError from fdopen/fsync/os.replace; clean up tmp then re-raise
-            with contextlib.suppress(FileNotFoundError):
-                tmp_path.unlink()
-            raise
-        # Harden ACLs on every platform via the shared helper. The
-        # storage-state JSON contains localStorage + cookies of the
-        # AEAT browser session (bearer-equivalent material) and must
-        # not inherit the parent directory's ACL on Windows.
-        from .....core.file_permissions import restrict_file_permissions
-
-        restrict_file_permissions(path)
+    def _load_persisted(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
+        persisted = _session_store.load(storage_state_path)
+        if persisted is None:
+            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat auth login` first")
+        return persisted
 
     @staticmethod
-    def _sha256_file(path: Path) -> str:
-        digest = hashlib.sha256()
-        digest.update(path.read_bytes())
-        return digest.hexdigest()
+    def _load_metadata(
+        storage_state_path: Path,
+        persisted: _session_store.PersistedBrowserSession,
+    ) -> _ClaveMovilSessionMetadata:
+        try:
+            return _ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+        except (ValueError, ValidationError) as exc:
+            raise AeatLoginAssertionError(f"Cl@ve Móvil metadata invalid for {storage_state_path}: {exc}") from exc
 
-    def _invalidate_persisted(self, storage_state_path: Path, sidecar_path: Path) -> None:
-        for candidate in (storage_state_path, sidecar_path):
-            with contextlib.suppress(FileNotFoundError):
-                candidate.unlink()
+    def _invalidate_persisted(self, storage_state_path: Path) -> None:
+        _session_store.delete(storage_state_path)
 
     # ── Flow ────────────────────────────────────────────────────────────────
 
@@ -596,7 +584,6 @@ class ClaveMovilAuthProvider:
         *,
         dni_nie: str,
         storage_state_path: Path,
-        sidecar_path: Path,
         browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
@@ -660,23 +647,24 @@ class ClaveMovilAuthProvider:
         authenticated_at = datetime.now(UTC)
         idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
         try:
-            self._write_json_atomic(storage_state_path, storage_state)
-            storage_state_sha256 = self._sha256_file(storage_state_path)
-            sidecar = _ClaveMovilSidecar(
+            metadata = _ClaveMovilSessionMetadata(
                 identity_nif=dni_nie,
                 authenticated_at=authenticated_at,
                 idle_deadline=idle_deadline,
-                storage_state_sha256=storage_state_sha256,
+                storage_state_sha256=_session_store.storage_state_sha256(storage_state),
                 used_non_qr_fallback=self._settings.aeat_clave_prefer_non_qr,
                 verification_code=verification_code,
                 landing_url=landing_url,
             )
-            self._write_json_atomic(sidecar_path, sidecar.model_dump(mode="json"))
+            self._persist_session(
+                storage_state_path,
+                storage_state=storage_state,
+                metadata=metadata,
+            )
         except Exception:
-            # If either write fails, remove any partial pair so the next
-            # authenticate() call sees a clean slate and runs a fresh login
-            # rather than silently ignoring an orphaned cookie file.
-            self._invalidate_persisted(storage_state_path, sidecar_path)
+            # If the encrypted save fails, remove any partial object so the
+            # next authenticate() call sees a clean slate and runs fresh.
+            self._invalidate_persisted(storage_state_path)
             raise
 
         session = AeatSession(
@@ -704,40 +692,34 @@ class ClaveMovilAuthProvider:
     async def _resume_locked(
         self,
         storage_state_path: Path,
-        sidecar_path: Path,
         *,
         browser_session: BrowserSessionLike | None,
         target_url: str | None,
     ) -> AeatSession:
-        try:
-            # Read as raw text and use `model_validate_json` so Pydantic's
-            # strict-JSON mode coerces ISO-8601 strings into datetimes
-            # while still rejecting type drift on every other field.
-            sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
-        except Exception as exc:
-            raise AeatLoginAssertionError(f"Cl@ve Móvil sidecar invalid: {exc}") from exc
-        if sidecar.idle_deadline <= datetime.now(UTC):
+        persisted = self._load_persisted(storage_state_path)
+        metadata = self._load_metadata(storage_state_path, persisted)
+        if metadata.idle_deadline <= datetime.now(UTC):
             raise AeatLoginAssertionError("Cl@ve Móvil session past idle deadline")
-        observed_sha256 = self._sha256_file(storage_state_path)
-        if observed_sha256 != sidecar.storage_state_sha256:
+        observed_sha256 = persisted.storage_state_sha256
+        if observed_sha256 != metadata.storage_state_sha256:
             raise AeatLoginAssertionError("Cl@ve Móvil storage-state hash mismatch")
 
         session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
         context: BrowserContextLike | None = None
         try:
             context = await session_like.create_context(
-                storage_state_path=storage_state_path,
+                storage_state=persisted.storage_state,
             )
             session = AeatSession(
                 provider_kind=self.kind,
-                authenticated_at=sidecar.authenticated_at,
-                idle_deadline=sidecar.idle_deadline,
+                authenticated_at=metadata.authenticated_at,
+                idle_deadline=metadata.idle_deadline,
                 storage_state_path=storage_state_path,
-                identity_nif=sidecar.identity_nif,
+                identity_nif=metadata.identity_nif,
                 provider_detail=ClaveMovilSessionDetail(
-                    dni_nie=sidecar.identity_nif,
-                    used_non_qr_fallback=sidecar.used_non_qr_fallback,
-                    verification_code=sidecar.verification_code,
+                    dni_nie=metadata.identity_nif,
+                    used_non_qr_fallback=metadata.used_non_qr_fallback,
+                    verification_code=metadata.verification_code,
                 ),
             )
             self._browser_session = session_like
@@ -757,6 +739,17 @@ class ClaveMovilAuthProvider:
                 }
             )
             self._active_session = refreshed
+            refreshed_metadata = metadata.model_copy(
+                update={
+                    "authenticated_at": refreshed.authenticated_at,
+                    "idle_deadline": refreshed.idle_deadline,
+                }
+            )
+            self._persist_session(
+                storage_state_path,
+                storage_state=persisted.storage_state,
+                metadata=refreshed_metadata,
+            )
             log.info(
                 "ClaveMovilAuthProvider: resumed landing=%s",
                 assertion.assertion_detail.landing_url
@@ -916,26 +909,38 @@ class ClaveMovilAuthProvider:
     async def _dump_diagnostic(self, page: BrowserPageLike, *, reason: str) -> None:
         """Capture page URL + HTML + screenshot on login failure for offline triage.
 
-        Writes artefacts to ``scratch/clave-diag/<utc-timestamp>/`` so a
-        human (or the next patch author) can inspect exactly what AEAT
-        served at the moment the authenticator gave up.
+        Stores artefacts as encrypted session-class objects so a human
+        can inspect what AEAT served at the moment the authenticator
+        gave up without leaving bearer-equivalent page state in
+        plaintext files.
         """
         try:
             ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-            root = Path("scratch") / "clave-diag" / ts
-            root.mkdir(parents=True, exist_ok=True)
             url = getattr(page, "url", "") or ""
-            (root / "url.txt").write_text(f"reason={reason}\nurl={url}\n", encoding="utf-8")
+            payload: dict[str, Any] = {
+                "reason": reason,
+                "url": url,
+                "captured_at": datetime.now(UTC).isoformat(),
+            }
             content = getattr(page, "content", None)
             if content is not None:
-                html = await content()
-                (root / "page.html").write_text(html, encoding="utf-8")
+                payload["html"] = await content()
             screenshot = getattr(page, "screenshot", None)
             if screenshot is not None:
-                await screenshot(path=str(root / "page.png"), full_page=True)
+                image = await screenshot(full_page=True)
+                if isinstance(image, (bytes, bytearray)):
+                    payload["screenshot_png_base64"] = base64.b64encode(bytes(image)).decode("ascii")
+            SecureObjectRepository().save(
+                namespace=_DIAGNOSTIC_NAMESPACE,
+                object_key=ts,
+                classification=SensitivityClass.SESSION,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=json.dumps(payload, sort_keys=True, default=str).encode("utf-8"),
+            )
             log.warning(
-                "ClaveMovilAuthProvider: diagnostic captured at %s (url=%s reason=%s)",
-                root,
+                "ClaveMovilAuthProvider: encrypted diagnostic captured id=%s (url=%s reason=%s)",
+                ts,
                 url,
                 reason,
             )

@@ -8,13 +8,15 @@ would otherwise hit Google APIs.
 
 from __future__ import annotations
 
-import os
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 from pydantic_settings import SettingsConfigDict
 
+from ....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....adapters.persistence.storage.sql import dispose_engine
 from ....core.config import Settings
 from . import (
     ADC_LOGIN_SCOPE_CSV,
@@ -33,10 +35,23 @@ from . import (
     inspect_google_auth,
     inspect_oauth_token_cache,
 )
+from ._paths import load_oauth_token_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
+
+
+@pytest.fixture(autouse=True)
+def _secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 @dataclass
@@ -184,14 +199,14 @@ class TestInspectOauthTokenCache:
 
     def test_missing_required_scope_is_reported(self, tmp_path: Path) -> None:
         token_path = tmp_path / "google_oauth_token.json"
-        token_path.write_text(
+        _write_oauth_token_cache(
+            token_path,
             (
                 '{"refresh_token": "refresh", "scopes": ['
                 '"https://www.googleapis.com/auth/drive",'
                 '"https://www.googleapis.com/auth/spreadsheets"'
                 "]}"
             ),
-            encoding="utf-8",
         )
 
         issue = inspect_oauth_token_cache(token_path)
@@ -201,14 +216,16 @@ class TestInspectOauthTokenCache:
 
 
 class TestOauthTokenCacheWriter:
-    """OAuth token cache writes must persist token payloads and permissions."""
+    """OAuth token cache writes must persist token payloads securely."""
 
-    def test_write_oauth_token_cache_restricts_file(self, tmp_path: Path) -> None:
+    def test_write_oauth_token_cache_uses_secure_object_store(self, tmp_path: Path) -> None:
         token_path = tmp_path / ".tokens" / "google_oauth_token.json"
+        payload = '{"refresh_token":"TOKEN-CANARY-123"}'
 
-        _write_oauth_token_cache(token_path, '{"refresh_token":"secret"}')
+        _write_oauth_token_cache(token_path, payload)
 
-        assert token_path.read_text(encoding="utf-8") == '{"refresh_token":"secret"}'
-        if os.name == "posix":
-            assert (token_path.stat().st_mode & 0o777) == 0o600
-            assert (token_path.parent.stat().st_mode & 0o777) == 0o700
+        assert load_oauth_token_cache(token_path) == payload
+        assert not token_path.exists()
+        database_bytes = (tmp_path / "aeat.db").read_bytes()
+        assert b"refresh_token" not in database_bytes
+        assert b"TOKEN-CANARY-123" not in database_bytes

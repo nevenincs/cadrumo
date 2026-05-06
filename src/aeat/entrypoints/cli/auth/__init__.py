@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import shutil
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -24,15 +23,16 @@ from rich.console import Console
 from ....adapters.outbound.google import (
     SCOPES,
     GoogleAuthPath,
+    delete_oauth_token_cache,
     get_credentials,
     inspect_google_auth,
 )
+from ....adapters.outbound.google._paths import save_google_oauth_client_json, save_google_service_account_json
 from ....application.auth import (
     AuthProviderKind,
     CorruptAuthSessionError,
     delete_persisted_session,
     load_persisted_session,
-    storage_state_paths,
 )
 from ....core.config import PROJECT_ROOT, Settings
 from ....core.env_io import write_env_vars
@@ -77,10 +77,12 @@ def ensure_project_env_file(env_path: Path, example_path: Path) -> Path:
 
     env_path.parent.mkdir(parents=True, exist_ok=True)
     if not env_path.exists():
+        from ....core.env_io import _atomic_write_text
+
         if example_path.exists():
-            shutil.copyfile(example_path, env_path)
+            _atomic_write_text(env_path, example_path.read_text(encoding="utf-8"))
         else:
-            env_path.touch()
+            _atomic_write_text(env_path, "")
     return env_path
 
 
@@ -203,15 +205,13 @@ def _copy_oauth_client_json(json_path: Path) -> Path:
         logger.warning("_copy_oauth_client_json: invalid JSON in %s", json_path, exc_info=True)
         raise ValueError(f"invalid JSON in {json_path}: {exc}") from exc
     client_id, client_secret = parse_oauth_client_json(payload)
-    stable_client_path = PROJECT_ROOT / "env" / "oauth-client.json"
-    stable_client_path.parent.mkdir(parents=True, exist_ok=True)
-    stable_client_path.write_text(raw, encoding="utf-8")
+    del client_id, client_secret
+    stable_client_path = PROJECT_ROOT / "env" / "oauth-client.secure-object"
+    save_google_oauth_client_json(stable_client_path, raw)
     write_env_vars(
         PROJECT_ROOT / "env" / ".env",
         {
             "GOOGLE_AUTH_PATH": GoogleAuthPath.DESKTOP_OAUTH_LOCAL_DEV.value,
-            "GOOGLE_OAUTH_CLIENT_ID": client_id,
-            "GOOGLE_OAUTH_CLIENT_SECRET": client_secret,
             "GOOGLE_OAUTH_CLIENT_JSON": str(stable_client_path),
         },
     )
@@ -219,9 +219,10 @@ def _copy_oauth_client_json(json_path: Path) -> Path:
 
 
 def _copy_service_account_json(json_path: Path) -> Path:
-    stable_path = PROJECT_ROOT / "env" / "service-account.json"
-    stable_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(json_path, stable_path)
+    raw = json_path.read_text(encoding="utf-8")
+    json.loads(raw)
+    stable_path = PROJECT_ROOT / "env" / "service-account.secure-object"
+    save_google_service_account_json(stable_path, raw)
     write_env_vars(
         PROJECT_ROOT / "env" / ".env",
         {
@@ -352,7 +353,7 @@ def init(
 
         inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
         if reset_cli_token and inspection.oauth_token_exists:
-            inspection.oauth_token_path.unlink(missing_ok=True)
+            delete_oauth_token_cache(inspection.oauth_token_path)
             inspection = inspect_google_auth(_google_settings(), project_root=PROJECT_ROOT)
             _print_step(
                 console,
@@ -401,7 +402,7 @@ def init(
 
         if acquire_cli_token and inspection.oauth_token_issue is not None:
             if inspection.oauth_token_exists:
-                inspection.oauth_token_path.unlink(missing_ok=True)
+                delete_oauth_token_cache(inspection.oauth_token_path)
             _print_step(
                 console,
                 tr("cli.auth.init.step_acq_title"),
@@ -1030,14 +1031,13 @@ def logout(
                 exc_info=True,
             )
             persisted = None
-        target_paths = storage_state_paths(settings, target_kind)
-        # `--provider` only removes its own files. A mismatched persisted
-        # session elsewhere on disk stays where it is.
-        if persisted is not None or target_paths.metadata.exists() or target_paths.storage_state.exists():
-            removed_for_kind = delete_persisted_session(settings, target_kind)
-            if removed_for_kind:
-                cleared_kinds.append(target_kind)
-                removed.extend(removed_for_kind)
+        # `--provider` only removes its own encrypted session. A
+        # mismatched persisted session for a different provider stays
+        # where it is.
+        removed_for_kind = delete_persisted_session(settings, target_kind)
+        if removed_for_kind:
+            cleared_kinds.append(target_kind)
+            removed.extend(removed_for_kind)
     else:
         # No --provider clears whichever provider has a session on disk.
         # This matches the operator's intuition: `aeat auth logout` clears
