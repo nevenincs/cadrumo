@@ -1022,6 +1022,10 @@ own ledger is checked.
     unrelated quarterly filing providers.
   - [x] Registry export signed-money rendering: render signed positive money
     fields with the official blank sign slot and preserve `N` for negatives.
+  - [x] Modelo 180 annual-summary workflow linkage: current and historical
+    revision constructs now own calculation, filing, verification, extractor,
+    portal, review, approval, reconciliation, and workflow application links,
+    all requiring validated registry snapshots.
 - [ ] Modelo 180 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, relation to Modelo
   115, and any filed-data bindings are correct against official authority.
@@ -1039,6 +1043,9 @@ own ledger is checked.
     parsing of the optional legal-representative NIF field.
   - [x] Modelo 180 address parser tests: prove fixed-width parsing of the type
     2 inmueble address block through the committed registry layout.
+  - [x] Modelo 180 annual-summary behaviour tests: resolve Modelo 115 quarterly
+    observations through registry relations, calculate annual totals through
+    the current registry engine, and reject incomplete source-period chains.
 - [ ] Modelo 180 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -1058,6 +1065,8 @@ own ledger is checked.
   - [x] Modelo 180 dependency-closure gate: whole-tree registry verification
     passes with Modelo 180, Modelo 190, and Modelo 193 annual-summary source
     relations covered by dependency classifications.
+  - [x] Modelo 180 focused workflow gate: `ruff`, `ty`, and focused pytest pass
+    for the registry definition and annual-summary behaviour tests.
 - [ ] Modelo 180 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 180 filing-grade values.
 
@@ -3535,14 +3544,20 @@ application surface, and the old authority has been deleted.
   - [ ] Link Modelo 180 to registry-backed relation resolution, trace, review,
      approval, filing draft, declaration parsing where relevant, and export
      workflows.
+     - [x] Current and historical Modelo 180 constructs own snapshot-gated
+       review, approval, reconciliation, and workflow links.
   - [ ] Verify Modelo 180 with real annual-summary examples, relation tests over
      Modelo 115 outputs, invalid inputs, legal-reference checks,
      source-integrity checks, export roundtrips, and registry failure cases.
+     - [x] Focused relation tests cover Modelo 115 quarterly observations,
+       annual aggregation, and fail-fast missing source periods.
   - [ ] Delete Modelo 180 old authorities in rulesets, annual summary code,
      declaration extractor truth, casilla projections, duplicated metadata, and
      generated export/layout paths.
   - [ ] Add behaviour tests proving Modelo 180 relation and filing workflows
      require a validated registry snapshot and fail fast on coverage gaps.
+     - [x] Snapshot-gate behaviour test covers both supported Modelo 180
+       revisions without using old-state or transition assertions.
   - [ ] Mark the wave complete only after full registry validation, project tests,
      and vault checks pass.
 
