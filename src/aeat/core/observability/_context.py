@@ -208,7 +208,7 @@ def run_context(
                     )
                 except Exception:
                     # Best-effort emit: a recorder/sink failure here must
-                    # never shadow the yielded body's outcome. Broad catch
+                    # never mask the yielded body's outcome. Broad catch
                     # because the recorder swallows any sink-level disk /
                     # serialisation error and re-raises an opaque type
                     # (logged with traceback above).
@@ -298,7 +298,7 @@ def run_context(
             save_trace(trace)
         except Exception:
             # Persisting the trace is best-effort — a disk-full at exit
-            # must never shadow the real exception the caller is
+            # must never mask the real exception the caller is
             # propagating. Log and move on.
             _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
         finally:
@@ -316,7 +316,7 @@ def run_context(
                 sink.close()
             except Exception:
                 # Sink teardown is infallible-by-policy: a close failure
-                # cannot be allowed to shadow the run's real outcome.
+                # cannot be allowed to mask the run's real outcome.
                 # Broad catch because the file-handle close path can
                 # surface OSError, ValueError, or RuntimeError depending
                 # on platform and sink lifecycle state.
