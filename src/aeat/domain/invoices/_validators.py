@@ -5,11 +5,33 @@ remain in this module because they are invoice-domain concerns.
 Each helper raises :class:`ValueError` on failure so pydantic
 surfaces the error as a validation error in the enclosing
 ``Invoice`` model.
+
+The registry-grounded helpers
+:func:`is_eu_member_state_code` and :func:`assert_eu_member_state_code`
+anchor the EU axis to the substrate's :class:`aeat.domain.vat.EUMemberState`
+enum. Modelo 369 binding selectors and the OSS / IOSS classifier
+boundary checks consume these helpers so the EU membership decision
+flows from the substrate, not from a hand-maintained list.
 """
 
 from __future__ import annotations
 
-__all__ = ["validate_country_code", "validate_vat_number"]
+from ..vat import EUMemberState
+
+__all__ = [
+    "EU_MEMBER_STATE_CODES",
+    "assert_eu_member_state_code",
+    "is_eu_member_state_code",
+    "validate_country_code",
+    "validate_vat_number",
+]
+
+
+EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
+    member.value.upper() for member in EUMemberState
+)
+"""Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
+Member States, sourced directly from :class:`aeat.domain.vat.EUMemberState`."""
 
 
 def validate_country_code(value: str) -> str:
@@ -27,6 +49,48 @@ def validate_country_code(value: str) -> str:
     normalized = value.strip().upper()
     if len(normalized) != 2 or not normalized.isalpha():
         raise ValueError("country code must be an ISO-3166 alpha-2 value")
+    return normalized
+
+
+def is_eu_member_state_code(value: str) -> bool:
+    """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
+
+    The membership check is anchored to
+    :class:`aeat.domain.vat.EUMemberState`; if the substrate's enum
+    changes (Brexit-style additions or withdrawals) the helper picks
+    up the new shape automatically.
+
+    Args:
+        value: Raw country code to check.
+
+    Returns:
+        ``True`` when ``value`` normalises to one of the 27 EU codes.
+    """
+    try:
+        normalized = validate_country_code(value)
+    except ValueError:
+        return False
+    return normalized in EU_MEMBER_STATE_CODES
+
+
+def assert_eu_member_state_code(value: str) -> str:
+    """Validate ``value`` and assert it names an EU Member State.
+
+    Args:
+        value: Raw country code to validate.
+
+    Returns:
+        The uppercased two-letter EU Member State code.
+
+    Raises:
+        ValueError: If the input is malformed or names a non-EU country.
+    """
+    normalized = validate_country_code(value)
+    if normalized not in EU_MEMBER_STATE_CODES:
+        raise ValueError(
+            f"country code {normalized!r} is not one of the 27 EU Member States; "
+            "use validate_country_code if a non-EU counterparty is acceptable"
+        )
     return normalized
 
 
