@@ -185,6 +185,38 @@ requires_snapshot = true
 legal_refs = ["ley-27-2014:art-124"]
 source_refs = ["boe-modelo-200-2025-form"]
 
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-200-2024-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-124"]
+source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+
 [[revisions."2024-y-siguientes".filing_schedules]]
 id = "modelo-200-2024-anual"
 period_kind = "annual"
@@ -223,6 +255,10 @@ application_links = [
     "modelo-200-2024-filing",
     "modelo-200-2024-verification",
     "modelo-200-2024-deadline",
+    "modelo-200-2024-review",
+    "modelo-200-2024-approval",
+    "modelo-200-2024-reconciliation",
+    "modelo-200-2024-workflow",
 ]
 filing_schedules = ["modelo-200-2024-anual"]
 deadline_windows = ["modelo-200-2024-0a"]

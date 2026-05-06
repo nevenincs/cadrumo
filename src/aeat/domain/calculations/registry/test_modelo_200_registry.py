@@ -37,7 +37,20 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
     construct = snapshot.revision.constructs[0]
     assert construct.filing_schedules == ("modelo-200-2024-anual",)
     assert construct.deadline_windows == ("modelo-200-2024-0a",)
-    assert "modelo-200-2024-deadline" in construct.application_links
+    linked_surfaces = {
+        link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
+    }
+    assert {
+        "calculation",
+        "filing",
+        "review",
+        "verification",
+        "approval",
+        "reconciliation",
+        "deadline",
+        "portal",
+        "workflow",
+    } <= linked_surfaces
 
 
 def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
