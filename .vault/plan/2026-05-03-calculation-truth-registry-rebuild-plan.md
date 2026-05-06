@@ -5127,3 +5127,38 @@ Pending VAT-centric slices per the ADR sequencing:
   AEAT G408 procedure URL, monthly deadline windows, and
   read-only live cross-references with all writes forbidden.
   8 focused tests pass. Commit `ffdb19ad`.
+
+- [x] Modelo 309 (IVA declaracion-liquidacion no periodica) registry
+  foundation. Authority: Orden HAC/3625/2003 (BOE-A-2003-23809),
+  apartados primero (aprobacion) and tercero (plazo). Filed by
+  sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion
+  who must report only when triggered: medios de transporte nuevos,
+  regimen agricola/ganadero/pesquero exits, recargo de equivalencia
+  con devoluciones a viajeros, ejecuciones forzosas. Modelled as
+  ad_hoc cadence with the four trigger patterns surfaced through
+  `decl.tipo-trigger` casilla. Foundation lands legal references,
+  AEAT 2023 record-design XLS as workbook parity source, AEAT G404
+  procedure URL, and read-only live cross-references with all
+  writes forbidden. 7 focused tests pass. Commit `53c079ea`.
+
+### IVA Modelo Surface Coverage Summary (after this roll-out)
+
+The IVA modelo registry now covers eight foundation modelos:
+
+| Modelo | Cadence | Authority | Foundation slice |
+|--------|---------|-----------|-------------------|
+| 303    | quarterly | Orden EHA/3786/2008 art 1+7 | `333fa559` |
+| 308    | ad_hoc | Orden EHA/3786/2008 art 2+11 | `dc3b4d0c` |
+| 309    | ad_hoc | Orden HAC/3625/2003 ap 1+3 | `53c079ea` |
+| 322    | monthly | Orden EHA/3434/2007 art 1+8 | `f963708a` |
+| 349    | quarterly/monthly | Orden EHA/769/2010 (pre-existing) | (pre-existing) |
+| 353    | monthly | Orden EHA/3434/2007 art 2+8 | `ffdb19ad` |
+| 369    | ad_hoc parent (per-Esquema cadence) | Orden HAC/610/2021 + LIVA 163 | `a78d221f` |
+| 390    | annual | Orden EHA/3111/2009 art 1+8 | `4f00a293` |
+
+Modelo 369 carries five demonstrator `ledger_oss_aggregation`
+bindings resolving end-to-end through the substrate from commit
+`283abb4f`. The remaining IVA modelos in 300-399 series (318
+prorrata, 319 regularizacion, 341 reintegración agrícola, 360
+devolución no establecidos, 380 territorios especiales) are
+candidates for subsequent foundation slices.
