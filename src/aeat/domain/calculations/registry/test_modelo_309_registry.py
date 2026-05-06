@@ -77,3 +77,56 @@ def test_modelo_309_construct_links_workbook_parity() -> None:
     construct = next(c for c in revision.constructs if c.id == "modelo-309-iva-no-periodica")
     assert "modelo-309-dr-2023" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-309-ad-hoc",)
+
+
+def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() -> None:
+    """Modelo 309 covers triggered non-periodic IVA — primarily
+    intra-community acquisition reverse charge (medios de transporte
+    nuevos) and recargo de equivalencia retailers' devoluciones."""
+    modelo, _ = _load_modelo_309()
+    revision = modelo.revisions["2004-y-siguientes"]
+    iva_binding_ids = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    }
+    assert iva_binding_ids == {
+        "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
+        "modelo-309-iva-soportado-recargo-equivalencia-cuota",
+    }
+
+
+def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None:
+    from decimal import Decimal
+
+    from aeat.domain.calculations.registry._bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+
+    modelo, _ = _load_modelo_309()
+    revision = modelo.revisions["2004-y-siguientes"]
+    observations = [
+        IvaLedgerObservation(
+            ledger_id="vehicle-acquisition",
+            transaction_date=date(2025, 6, 1),
+            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+            base_amount=Decimal("25000"),
+            iva_amount=Decimal("5250"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="recargo-devolucion",
+            transaction_date=date(2025, 6, 5),
+            category=VATCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("100"),
+            iva_amount=Decimal("21"),
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result["modelo-309-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("5250")
+    assert result["modelo-309-iva-soportado-recargo-equivalencia-cuota"] == Decimal("21")
