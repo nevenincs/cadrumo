@@ -555,9 +555,16 @@ own ledger is checked.
   - [x] Modelo 115 declaration verification boundary: `verify_declaracion`
     compares parsed declaration casillas against the committed registry
     calculation expectation for casillas 03 and 05.
+  - [x] Modelo 115 construct workflow closure: the current registry revision
+    declares one construct that owns calculation, filing, export, verification,
+    review, approval, reconciliation, extractor, portal, deadline, and workflow
+    application links through validated snapshots.
 - [x] Modelo 115 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, and any filed-data
   bindings are correct against official authority.
+  - [x] Modelo 115 focused formula behaviour: direct registry calculation
+    verifies the 19 percent withholding and result-to-pay formula with emitted
+    legal trace references.
 - [ ] Modelo 115 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -568,6 +575,8 @@ own ledger is checked.
 - [x] Modelo 115 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
+  - [x] Modelo 115 construct-focused gate: `ruff`, `ty`, and focused pytest pass
+    for the registry construct and quarterly formula behaviour tests.
 - [ ] Modelo 115 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 115 filing-grade values.
 
