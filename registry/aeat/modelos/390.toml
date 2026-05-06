@@ -39,11 +39,9 @@ tolerance = "0.00"
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-# Demonstrator ledger_iva_aggregation bindings — annual resumen aggregating
-# the same flow categories as Modelo 303 over the full ejercicio. The
-# substrate's IVA classification triple lets 390 recompute from the ledger
-# directly; a complementary previous_filing dependency on 303 follows in
-# a subsequent slice once 303 declares result-casillas.
+# Ledger IVA aggregation bindings for the annual resumen over the full
+# ejercicio. The IVA classification tuple lets Modelo 390 recompute directly
+# from ledger observations and cross-check periodic Modelo 303 filings.
 
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-repercutido-general-cuota"

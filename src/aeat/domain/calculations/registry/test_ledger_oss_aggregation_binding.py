@@ -1,11 +1,8 @@
 """Tests for the ledger_oss_aggregation binding source kind.
 
-Covers ADR Decision 8 from the Modelo 369 VAT centralization ADR:
-the binding declares a regime + destination Member State + rate
-tier + invoice direction selector, and the runtime resolver
-aggregates substrate-classified ledger lines that match the
-selector. This is the precondition unblock for Modelo 369 registry
-slices.
+The binding declares a regime, destination Member State, rate tier, and
+invoice direction selector. The runtime resolver aggregates
+substrate-classified ledger lines that match the selector.
 """
 
 from __future__ import annotations
