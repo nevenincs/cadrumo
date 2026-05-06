@@ -1,0 +1,84 @@
+"""Tests for the committed Modelo 353 (IVA grupos agregado) registry foundation."""
+
+from __future__ import annotations
+
+from datetime import date
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from ._schema import ModeloDefinition
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def _load_modelo_353() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(m for m in modelos if m.id == "353")
+    return modelo, catalogues
+
+
+def test_modelo_353_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_353()
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+
+
+def test_modelo_353_metadata_matches_orden_eha_3434_2007() -> None:
+    modelo, _ = _load_modelo_353()
+    assert modelo.tax_domain == "iva"
+    assert modelo.cadence == "monthly"
+    assert "orden-eha-3434-2007:art-2" in modelo.legal_refs
+    assert "orden-eha-3434-2007:art-8" in modelo.legal_refs
+    assert "aeat-dr-353-2026" in modelo.source_refs
+
+
+def test_modelo_353_revision_is_monthly_from_2008() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    assert revision.valid_from == date(2008, 1, 1)
+    assert len(revision.period_selector.periods) == 12
+
+
+def test_modelo_353_january_deadline_extends_to_february_28() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+    jan = windows["modelo-353-2025-01"]
+    assert jan.opens_on == date(2025, 2, 1)
+    assert jan.closes_on == date(2025, 2, 28)
+
+
+def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    windows = {w.id: w for w in revision.deadline_windows}
+    jun = windows["modelo-353-2025-06"]
+    assert jun.opens_on == date(2025, 7, 1)
+    assert jun.closes_on == date(2025, 7, 30)
+
+
+def test_modelo_353_snapshot_builds_per_month() -> None:
+    modelo, catalogues = _load_modelo_353()
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="06"
+    )
+    assert snapshot.revision.id == "2008-y-siguientes"
+    assert "orden-eha-3434-2007:art-2" in snapshot.legal
+
+
+def test_modelo_353_live_cross_references_forbid_writes() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    cross_refs = {ref.id: ref for ref in revision.live_cross_references}
+    filed_ref = cross_refs["modelo-353-filed-declarations-read"]
+    assert filed_ref.requires_authentication is True
+    assert filed_ref.requires_aeat_authorization is True
+
+
+def test_modelo_353_construct_links_workbook_parity() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    construct = next(c for c in revision.constructs if c.id == "modelo-353-iva-grupo-agregado")
+    assert "modelo-353-dr-2026" in construct.workbook_parity_refs
