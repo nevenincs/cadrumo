@@ -1,9 +1,1290 @@
 aggregation:
   models:
-    t_944805: Formato de periodo no válido. Use YYYY, YYYY-Qn o YYYY-MM.
+    t_944805: Periodo no valido. Usa YYYY-Qn
 application:
   auth:
     provider_impact:
-      certificate_ready: La autenticación con certificado está lista. El operador
-        mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
-        por la AEAT; todos los proveedores utilizan el mismo flujo de comandos.
+      certificate_ready: application.auth.provider_impact.certificate_ready
+      generic_ready: application.auth.provider_impact.generic_ready
+      unavailable: application.auth.provider_impact.unavailable
+      unconfigured: application.auth.provider_impact.unconfigured
+auth:
+  catalogue:
+    certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
+      u otra autoridad reconocida). Compatible con todos los flujos de la sede electrónica.
+    certificate_label: Certificado digital
+    clave_movil_description: Autenticación con aprobación push en el móvil del titular
+      registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
+    clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Autenticación con usuario, contraseña reforzada
+      y código SMS de Cl@ve Permanente. No está disponible en esta instalación; ``configure``
+      y ``login`` se rechazan.
+    clave_permanente_label: Cl@ve Permanente
+categories:
+  test_profile:
+    display_label_851219: Etiqueta de visualización 851219
+cli:
+  attachments:
+    add_help: Añadir un justificante o archivo adjunto
+    add_kind_help: Tipo de archivo adjunto (ej. factura, justificante, contrato)
+    add_link_invoice_help: Vincular el justificante a un ID de factura existente
+    add_link_tx_help: Vincular el justificante a un ID de transacción bancaria
+    add_metadata_help: Añadir metadatos personalizados (clave=valor) al justificante
+    add_mime_type_help: Forzar un tipo MIME específico para el justificante
+    add_notes_help: Añadir notas u observaciones al justificante
+    add_path_help: Ruta local del archivo justificante a añadir
+    add_source_help: Origen o fuente del justificante (ej. correo, escáner, portal)
+    add_source_ref_help: Referencia de origen del justificante (ej. Message-ID de
+      correo, URL, localizador)
+    app_help: Gestión de justificantes y archivos adjuntos (añadir, listar, visualizar)
+    errors:
+      duplicate_metadata_key: 'La clave de metadatos del justificante está duplicada:
+        {key}'
+      empty_metadata_key: La clave de metadatos del justificante no puede estar vacía
+      empty_metadata_value: El valor de metadatos del justificante no puede estar
+        vacío
+      empty_mime_type: El tipo MIME del justificante no puede estar vacío
+      empty_source_reference: La referencia de origen del justificante no puede estar
+        vacía
+      invalid_metadata_format: Formato de metadatos del justificante no válido. Debe
+        ser clave=valor
+    list:
+      no_attachments: No se encontraron justificantes o archivos adjuntos
+    list_header: Justificantes y archivos adjuntos
+    list_help: Listar los justificantes y archivos adjuntos registrados
+    list_kind_filter_help: Filtrar justificantes por tipo (ej. factura, ticket, contrato)
+    list_linked_to_help: Filtrar justificantes vinculados a un ID específico (transacción
+      o factura)
+    show_help: Mostrar los detalles y metadatos de un justificante
+    show_id_help: Identificador del justificante a mostrar
+  auth:
+    app_help: Gestión de autenticación y credenciales
+    configure:
+      dni_fecha_help: Fecha de validez o expedición del DNI (YYYY-MM-DD)
+      dni_nie_help: Número de DNI o NIE del contribuyente
+      help: Configurar las credenciales y parámetros de autenticación localmente
+      nie_soporte_help: Número de soporte del NIE
+      non_interactive_help: Ejecutar la configuración en modo no interactivo (sin
+        pedir confirmación)
+      prefer_non_qr_help: Preferir el método sin código QR (usando DNI/NIE) para Cl@ve
+        Móvil
+      provider_help: Proveedor de autenticación (ej. certificado, clave_movil)
+      set_default_help: Establecer este proveedor como el método de autenticación
+        por defecto
+    init:
+      acquire_cli_token_help: Adquirir el token de Google para la CLI (abre el navegador)
+      doctor_help: Ejecutar la validación del entorno (doctor) tras inicializar
+      errors:
+        accepted_cached: Credenciales en caché aceptadas
+        auth_failed: Fallo en la autenticación
+        clave_movil_config_purpose: Configuración obligatoria para el acceso mediante
+          Cl@ve Móvil
+        desktop_client_not_found: 'No se encontró el archivo JSON del cliente OAuth
+          de escritorio: {path}'
+        dni_fecha_required: Se requiere la fecha de validez del DNI al usar Cl@ve
+          Móvil sin código QR
+        dni_nie_required: Se requiere el DNI o NIE para usar Cl@ve Móvil
+        interactive_required: Se requiere un terminal interactivo para esta operación
+        missing_provider_or_all: Debe especificar un proveedor (--provider) o usar
+          el flag --all
+        nie_soporte_required: Se requiere el número de soporte del NIE al usar Cl@ve
+          Móvil sin código QR
+        no_env_file: No se encontró el archivo de entorno (.env)
+        no_session_found: No se encontró ninguna sesión activa
+        probe_failed: La prueba de conexión o autenticación ha fallado
+        provider_not_supported: El proveedor de autenticación no es compatible
+        sa_key_not_found: 'No se encontró el archivo JSON de la clave de cuenta de
+          servicio (Service Account): {path}'
+        session_stale: La sesión actual ha caducado y no se puede utilizar
+        signed_in: Sesión iniciada correctamente
+        signed_out: Sesión cerrada para {label}
+        signed_out_many: Sesión cerrada para {joined}
+        stale_or_revoked: La sesión ha caducado o ha sido revocada
+        unknown_provider: 'Proveedor de autenticación desconocido: {raw}. Proveedores
+          compatibles: {valid}'
+        unsupported_env_file: Formato de archivo de entorno (.env) no compatible
+        unsupported_provider: 'Proveedor no compatible: {raw}. Proveedores compatibles:
+          {valid}'
+      help: Inicializar el estado de autenticación del proyecto (Google, AEAT)
+      json_help: Ruta al archivo JSON de credenciales
+      labels:
+        action: Acción
+        and: y
+        browser: Navegador
+        next: Siguiente
+        purpose: Propósito
+        source: Origen
+        success: Éxito
+      login_instruction: Por favor, inicie sesión en el navegador que se acaba de
+        abrir
+      path_help: Familia de rutas a inicializar (ej. desktop-oauth-local-dev, service-account)
+      prepare_mcp_help: Preparar la configuración del servidor MCP (Model Context
+        Protocol)
+      prompts:
+        dni_fecha: Fecha de validez del DNI (YYYY-MM-DD)
+        dni_nie: Número de DNI o NIE del contribuyente
+        nie_soporte: Número de soporte del NIE
+      reset_cli_token_help: Eliminar el token de Google existente y solicitar uno
+        nuevo
+      saved_config: Configuración guardada correctamente en {path}
+      service_account_json_help: Ruta al archivo JSON de la clave de cuenta de servicio
+        (Service Account)
+      step_acq_action: Adquirir token
+      step_acq_browser: Navegador por defecto
+      step_acq_next: Continuar
+      step_acq_purpose: Acceso a Google Drive, Sheets y Docs para gestión de archivos
+      step_acq_source: Consola de Google Cloud
+      step_acq_success: Token adquirido correctamente
+      step_acq_title: 'Paso: Adquirir Token de Google CLI'
+      step_desktop_imported_action: Importar JSON de cliente
+      step_desktop_imported_browser: Explorador de archivos
+      step_desktop_imported_next: Continuar
+      step_desktop_imported_purpose: Configurar el cliente de escritorio para autenticación
+        OAuth 2.0
+      step_desktop_imported_source: Consola de Google Cloud
+      step_desktop_imported_success: JSON del cliente importado correctamente
+      step_desktop_imported_title: 'Paso: Importar Cliente OAuth de Escritorio'
+      step_mcp_action: Configurar MCP
+      step_mcp_browser: N/A
+      step_mcp_next: Finalizar
+      step_mcp_purpose: Permitir que agentes de IA utilicen las herramientas de la
+        CLI
+      step_mcp_source: Archivo local
+      step_mcp_success: MCP configurado correctamente
+      step_mcp_title: 'Paso: Configurar Servidor MCP'
+      step_repair_action: Reparar entorno
+      step_repair_browser: N/A
+      step_repair_next: Continuar
+      step_repair_purpose: Corregir inconsistencias detectadas en la configuración
+      step_repair_source: Auto-reparación
+      step_repair_success: Entorno reparado correctamente
+      step_repair_title: 'Paso: Reparar Entorno'
+      step_sa_imported_action: Importar clave de SA
+      step_sa_imported_browser: Explorador de archivos
+      step_sa_imported_next: Continuar
+      step_sa_imported_purpose: Configurar la cuenta de servicio para automatización
+        headless
+      step_sa_imported_source: Consola de Google Cloud
+      step_sa_imported_success: Clave de cuenta de servicio importada correctamente
+      step_sa_imported_title: 'Paso: Importar Clave de Cuenta de Servicio (SA)'
+      step_sa_req_action: Verificar Cuenta de Servicio
+      step_sa_req_browser: N/A
+      step_sa_req_next: Continuar
+      step_sa_req_purpose: Verificar permisos de la cuenta de servicio para acceso
+        a la nube
+      step_sa_req_source: API de Google
+      step_sa_req_success: Cuenta de servicio verificada correctamente
+      step_sa_req_title: 'Paso: Verificar Cuenta de Servicio (SA)'
+      step_sa_status_action: Consultar estado
+      step_sa_status_browser: N/A
+      step_sa_status_next: Continuar
+      step_sa_status_purpose: Asegurar que la cuenta de servicio esté activa y operativa
+      step_sa_status_source: Google IAM
+      step_sa_status_success: Estado de la cuenta de servicio verificado
+      step_sa_status_title: 'Paso: Consultar Estado de Cuenta de Servicio'
+      step_setup_req_action: Verificar configuración
+      step_setup_req_browser: N/A
+      step_setup_req_next: Continuar
+      step_setup_req_purpose: Verificar la integridad de los archivos de configuración
+        locales
+      step_setup_req_source: Sistema de archivos local
+      step_setup_req_success: Configuración verificada correctamente
+      step_setup_req_title: 'Paso: Verificar Configuración'
+      step_status_action: Consultar estado
+      step_status_browser: N/A
+      step_status_next: Continuar
+      step_status_purpose: Verificar si ya existe una sesión de autenticación activa
+      step_status_source: Caché de tokens
+      step_status_success: Estado de autenticación verificado
+      step_status_title: 'Paso: Verificar Estado de Autenticación'
+      step_token_reset_action: Reiniciar token
+      step_token_reset_browser: N/A
+      step_token_reset_next: Continuar
+      step_token_reset_purpose: Forzar la re-autenticación borrando el token almacenado
+      step_token_reset_source: Caché local
+      step_token_reset_success: Token reiniciado correctamente
+      step_token_reset_title: 'Paso: Reiniciar Token de Google'
+      terms:
+        default_provider: proveedor por defecto
+        direct_push: notificación directa (push)
+        dni_fecha: fecha de validez del DNI
+        dni_nie: DNI/NIE
+        nie_soporte: número de soporte del NIE
+        qr_code: código QR
+      url_prompt: 'Si el navegador no se ha abierto automáticamente, visite esta URL:'
+    list_providers:
+      all_help: Listar todos los proveedores compatibles, no solo los configurados
+      configured_help: Listar los proveedores de autenticación configurados
+      help: Listar los proveedores de autenticación disponibles y su estado
+      json_help: Mostrar la lista de proveedores en formato JSON
+    login:
+      help: Iniciar sesión en la Sede Electrónica de la AEAT
+      json_help: Mostrar el resultado del inicio de sesión en formato JSON
+      non_interactive_help: Intentar el inicio de sesión sin intervención humana (requiere
+        certificado configurado)
+      provider_help: Proveedor de autenticación a utilizar (ej. certificado, clave_movil)
+    logout:
+      all_help: Cerrar todas las sesiones activas
+      help: Cerrar la sesión actual en la AEAT
+      json_output_help: Mostrar el resultado del cierre de sesión en formato JSON
+      provider_help: Proveedor de autenticación a cerrar (ej. certificado, clave_movil)
+    status:
+      help: Mostrar el estado actual de la autenticación en la AEAT
+      json_help: Mostrar el estado de la autenticación en formato JSON
+      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
+    whoami:
+      help: Mostrar información detallada del sujeto autenticado actualmente
+      json_help: Mostrar la información del sujeto en formato JSON
+      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
+  bootstrap:
+    errors:
+      already_bootstrapped: El entorno ya ha sido inicializado (bootstrapped)
+      destructive_warning: ¡ADVERTENCIA! Esta operación puede ser destructiva y sobrescribir
+        recursos existentes
+      force_instruction: Use el flag --force para proceder si está seguro
+      missing_env: Faltan variables de entorno requeridas para la inicialización
+      missing_target: No se ha especificado el objetivo (target) para la inicialización
+      target_instruction: Por favor, especifique un objetivo válido usando --target
+    labels:
+      active_env: Entorno activo
+      active_target: Objetivo activo
+      auth_method: Método de autenticación
+      auth_path: Ruta de autenticación
+      mcp_status: Estado de MCP
+    success:
+      complete: Inicialización del entorno completada correctamente
+  browser:
+    app_help: Gestión de la automatización del navegador (Playwright)
+    health:
+      json_help: Mostrar el estado de salud del navegador en formato JSON
+    health_help: Comprobar el estado de salud y conectividad del navegador
+    labels:
+      http_status: Estado HTTP
+      markers: Marcadores detectados
+      none: Ninguno
+      retry_after_seconds: Reintentar después (segundos)
+      state: Estado operativo
+  categories:
+    app_help: Gestión de categorías de trámites de la AEAT
+    id_help: Identificador único de la categoría
+    list_help: Listar todas las categorías de trámites disponibles
+    show_help: Mostrar detalles de una categoría específica
+    year_help: Ejercicio fiscal
+  cloud:
+    app_help: Gestión de funciones en la nube (Google Cloud)
+    environment_col: Entorno
+    errors:
+      missing_project: No se ha configurado el ID del proyecto de Google Cloud
+    functions_app_help: Gestión de Google Cloud Functions
+    functions_describe_help: Mostrar detalles de una función específica en la nube
+    functions_describe_name_help: Nombre de la función a describir
+    functions_list_help: Listar todas las funciones en la nube desplegadas
+    functions_list_title: Funciones en la Nube (Google Cloud Functions)
+    generation_col: Generación
+    labels:
+      buckets_found: Buckets encontrados
+      functions_found: Funciones encontradas
+      objects_found: Objetos encontrados
+      services_found: Servicios encontrados
+    location_col: Ubicación
+    name_col: Nombre
+    run_app_help: Gestión de Google Cloud Run
+    run_describe_help: Mostrar detalles de un servicio específico en Cloud Run
+    run_describe_name_help: Nombre del servicio a describir
+    run_list_help: Listar todos los servicios de Cloud Run desplegados
+    run_list_title: Servicios de Cloud Run (Google Cloud Run)
+    size_col: Tamaño
+    state_col: Estado
+    storage_app_help: Gestión de Google Cloud Storage
+    storage_buckets_help: Listar todos los buckets de almacenamiento disponibles
+    storage_buckets_title: Buckets de Almacenamiento (Google Cloud Storage)
+    storage_class_col: Clase de almacenamiento
+    storage_ls_bucket_help: Nombre del bucket a listar
+    storage_ls_help: Listar los objetos contenidos en un bucket
+    storage_ls_prefix_help: Prefijo (ruta) para filtrar los objetos
+    update_time_col: Fecha de actualización
+    updated_col: Actualizado
+  common:
+    errors:
+      invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
+      period_empty: El periodo fiscal no puede estar vacío
+      period_unrecognised: Periodo no reconocido
+  data:
+    app_help: Gestión de datos y registros fiscales
+    ledgers:
+      app_help: Gestión de Libros Registro de IVA e IRPF
+      inventory_help: Listar el inventario de Libros Registro disponibles
+    ledgers_help: Gestión de Libros Registro de la AEAT
+  deadlines:
+    app_help: Gestión del calendario y plazos del contribuyente
+    explain:
+      modelo_help: Número del modelo tributario (ej. 303, 111)
+      profile_help: Perfil del contribuyente (ej. autonomo, pyme)
+    explain_help: Explicar los plazos y obligaciones para un modelo y perfil específicos
+    list:
+      closes_on_col: Cierre el
+      labels:
+        tax_deadlines: Plazos Tributarios
+      modelo_col: Modelo
+      opens_on_col: Apertura el
+      period_col: Periodo
+      profile_help: Filtrar por perfil del contribuyente (ej. pyme, gran_empresa)
+      status_col: Estado
+      table_title: Calendario de Plazos Tributarios
+      year_help: Ejercicio fiscal a consultar
+    list_help: Listar los plazos tributarios para un ejercicio fiscal
+    next:
+      labels:
+        closes: Cierra
+        no_upcoming: No hay plazos próximos
+      profile_help: Filtrar por perfil del contribuyente (ej. pyme)
+      year_help: Ejercicio fiscal a consultar
+    next_help: Mostrar el próximo plazo tributario relevante
+  declaration:
+    app_help: Preparación y exportación local de declaraciones tributarias
+    approve_help: Aprobar una declaración para exportación local
+    calculate_help: Calcular los importes de una declaración
+    edit_help: Editar manualmente una declaración existente
+    errors:
+      activate_profile: Por favor, active un perfil antes de gestionar declaraciones
+      at_least_one_edit: Se debe editar al menos un campo
+      file_not_found: No se ha encontrado el archivo de la declaración
+      filter_parse_error: Error al procesar el filtro
+      missing_id_or_period_modelo: Se debe proporcionar el ID o el (periodo + modelo)
+      no_draft_for_period: No existe un borrador para el periodo especificado
+      not_approved_for_export: La declaración debe ser aprobada antes de ser exportada
+      profile_tax_id_required: El perfil activo requiere un NIF/CIF configurado
+      set_parse_error: Error al procesar la asignación del campo
+    export_help: Exportar una declaración aprobada a un archivo local en formato AEAT
+    format_help: Formato de salida (ej. json, text, table)
+    labels:
+      blockers: Bloqueos
+      by: Por
+      bytes: bytes
+      draft_id: ID del borrador
+      edits: Ediciones
+      findings: Hallazgos
+      matches_filter: Coincide con el filtro
+      mismatched: No coincide
+      modelo: Modelo
+      next: Siguiente
+      path: Ruta
+      period: Periodo
+      sha256: SHA256
+      status: Estado
+      values: Valores
+      verdict: Veredicto
+      warnings: Advertencias
+      'yes': Sí
+      'no': 'No'
+    opts:
+      by: Persona que revisó la declaración
+      draft_id: ID del borrador local
+      file: Archivo local exportado a verificar
+      filter: Filtrar por status=pending|approved|stale|submitted|acknowledged
+      modelo: Modelo
+      output: Ruta del informe o archivo local de salida
+      period: Periodo
+      reason: Motivo auditado del cambio o aprobación
+      set: Asignar (SET)
+    preview_help: Previsualizar el contenido de una declaración
+    review_help: Revisar las validaciones y errores de una declaración
+    status:
+      absent: AUSENTE
+    status_help: Mostrar el estado actual de una declaración
+    validate_help: Ejecutar validaciones técnicas oficiales sobre una declaración
+    verify_help: Verificar la integridad y coherencia de una declaración
+  docs:
+    app_help: Gestión de manuales y normativa de la AEAT
+    append_doc_id_help: Identificador del documento al que añadir contenido
+    append_help: Añadir una nueva sección o contenido a un documento existente
+    append_text_help: Texto a añadir al documento
+    errors:
+      empty_text: El texto no puede estar vacío
+    get_doc_id_help: Identificador del documento a obtener
+    get_help: Obtener el contenido de un documento específico
+    get_plaintext_help: Mostrar el contenido en formato de texto plano
+    new_help: Crear un nuevo documento de documentación
+    new_title_help: Título del nuevo documento
+    replace_doc_id_help: Identificador del documento cuyo contenido se va a reemplazar
+    replace_help: Reemplazar completamente el contenido de un documento existente
+    replace_new_text_help: Nuevo texto para el documento
+    replace_old_help: Texto antiguo a ser reemplazado
+    success:
+      appended: Contenido añadido correctamente al documento
+      replaced: Contenido del documento reemplazado correctamente
+  doctor:
+    details:
+      adc_granted_scopes: Ámbitos (scopes) concedidos por ADC
+      adc_missing_scopes: Ámbitos (scopes) faltantes en ADC
+      adc_no_scopes: Sin ámbitos configurados
+      adc_not_configured_advisory: ADC no está configurado. Ejecute 'gcloud auth application-default
+        login' para activarlo.
+      adc_substep_json_not_configured: Archivo JSON de ADC no configurado
+      api_call_failed: La llamada a la API ha fallado
+      api_enabled: API habilitada
+      api_needs_billing: La API requiere facturación habilitada
+      auth_path_active: Ruta de autenticación activa
+      auth_path_adc: 'Ruta de autenticación: ADC (Application Default Credentials)'
+      auth_path_oauth_desktop: 'Ruta de autenticación: OAuth Desktop'
+      auth_path_service_account: 'Ruta de autenticación: Cuenta de servicio (Service
+        Account)'
+      auth_ready_both: Autenticación lista tanto para Cloud como para la AEAT
+      auth_ready_cli_only: Solo la autenticación de la CLI (Cloud) está lista
+      auth_ready_mcp_only: Solo la autenticación MCP (AEAT) está lista
+      auth_ready_none: Ningún sistema de autenticación está listo
+      backend_active: Backend activo
+      buckets_visible: Buckets de almacenamiento visibles
+      cert_health_detail: Detalles de salud del certificado
+      drive_scope_check_failed: Fallo en la comprobación del ámbito de Google Drive
+      functions_visible: Funciones en la nube visibles
+      gcloud_env_project_mismatch: Desajuste entre el proyecto de gcloud y la configuración
+        del entorno
+      gcloud_installed: Google Cloud SDK (gcloud) instalado
+      gcloud_version_failed: Fallo al obtener la versión de gcloud
+      gcp_project_not_set: ID del proyecto de Google Cloud no configurado
+      install_gcloud_advisory: Por favor, instale el Google Cloud SDK (gcloud) para
+        continuar.
+      live_reads_enabled: Lecturas en tiempo real habilitadas
+      live_reads_skipped: Lecturas en tiempo real omitidas
+      live_tests_disabled: Pruebas en tiempo real deshabilitadas
+      live_writes_forbidden: Escrituras en tiempo real prohibidas
+      master_kdf_absent: KDF maestro ausente
+      master_kdf_argon2id: 'KDF maestro: Argon2id'
+      master_kdf_not_object: Los datos del KDF maestro no son válidos (no es un objeto)
+      master_kdf_parse_failed: Fallo al procesar el archivo KDF maestro
+      master_kdf_unrecognised: Algoritmo KDF maestro no reconocido
+      master_kdf_unsupported: Algoritmo KDF maestro no soportado
+      master_key_file_present: Archivo de clave maestra presente
+      master_key_keychain_preferred: Se prefiere el llavero (keychain) para la clave
+        maestra
+      master_key_keyring: 'Clave maestra: Llavero del sistema (Keyring)'
+      master_key_missing: Clave maestra no encontrada
+      master_key_partial: Datos de la clave maestra incompletos
+      master_key_unsecured: La clave maestra se almacena de forma no segura
+      mcp_credentials_dir_prepared: Directorio de credenciales MCP preparado
+      mcp_credentials_present: Credenciales MCP presentes
+      no_active_auth_path: Ninguna ruta de autenticación activa
+      no_credentials_configured: No se han configurado credenciales
+      no_scratch_doc: Documento borrador (scratch) no encontrado
+      no_scratch_sheet: Hoja de cálculo borrador (scratch) no encontrada
+      no_stale_artifacts: No se encontraron artefactos obsoletos
+      not_required_active_path: La ruta activa no es necesaria
+      not_required_see_drift: No es necesario, consulte la desviación (drift)
+      oauth_config_missing: Configuración de OAuth no encontrada
+      oauth_config_partial: Configuración de OAuth incompleta
+      oauth_json_present: Archivo JSON de OAuth presente
+      oauth_token_issue: Problema con el token de OAuth
+      provider_not_configured: Proveedor no configurado
+      provider_unavailable: Proveedor no disponible
+      pytest_current_test_present: Entorno de prueba detectado (PYTEST_CURRENT_TEST
+        presente)
+      run_auth_init_mcp: Ejecute 'aeat auth init-mcp' para configurar las credenciales
+        de la AEAT.
+      run_env_setup: Ejecute la configuración del entorno para inicializar el proyecto.
+      run_gcloud_auth: Ejecute 'gcloud auth login' para autenticarse con Google Cloud.
+      run_gcloud_config_set_project: Ejecute 'gcloud config set project [PROJECT_ID]'
+        para configurar el proyecto activo.
+      run_gcloud_services_enable: Ejecute 'gcloud services enable [SERVICE_NAME]'
+        para habilitar la API requerida.
+      sa_key_not_found: Archivo de clave de la cuenta de servicio no encontrado
+      sa_key_unparseable: El archivo de clave de la cuenta de servicio no es procesable
+        (JSON inválido)
+      sa_key_unset: Ruta de la clave de la cuenta de servicio no configurada
+      secret_store_dir_missing: Directorio del almacén de secretos no encontrado
+      secret_store_dir_not_writable: El directorio del almacén de secretos no tiene
+        permisos de escritura
+      select_auth_path_first: Por favor, seleccione primero una ruta de autenticación.
+      select_prepare_auth_path: Seleccione y prepare una ruta de autenticación para
+        continuar.
+      service_usage_failed: Fallo al comprobar el uso del servicio (Service Usage)
+      services_visible: Servicios (APIs) habilitados visibles
+      set_gcp_project: Configure el ID del proyecto de Google Cloud en su entorno.
+      unsecured_requires_allow: El almacenamiento no seguro requiere permiso explícito
+        (p. ej., --allow-unsecured)
+      unsecured_warning: 'ADVERTENCIA: Se está utilizando un método de almacenamiento
+        de claves no seguro.'
+    errors:
+      findings: Resultados del diagnóstico
+    sections:
+      active_google_auth_path: Ruta activa de autenticación de Google
+      adc_file: Archivo ADC
+      adc_scopes: Ámbitos (scopes) de ADC
+      aeat_auth_path: Ruta de autenticación de la AEAT
+      aeat_certificate: Certificado de la AEAT
+      api_enablement: Habilitación de APIs
+      api_service: Servicio de API
+      auth_path: Ruta de autenticación
+      cli_oauth_cache: Caché de OAuth de la CLI
+      desktop_oauth_client_material: Material del cliente OAuth de escritorio
+      docs_round_trip: Prueba de ida y vuelta de Google Docs
+      drive_round_trip: Prueba de ida y vuelta de Google Drive
+      env_file: Archivo de entorno (.env)
+      functions_list: Lista de funciones en la nube
+      gcloud_auth: Autenticación de gcloud
+      gcloud_binary: Binario de gcloud
+      gcloud_project: Proyecto de gcloud
+      google_auth_readiness: Disponibilidad de la autenticación de Google
+      google_cloud_project: Proyecto de Google Cloud
+      inactive_path_drift: Desviación (drift) de la ruta inactiva
+      kdf_version: Versión de KDF
+      live_access_gate: Control de acceso en tiempo real
+      live_tests: Pruebas en tiempo real
+      master_key_readiness: Disponibilidad de la clave maestra
+      mcp_credentials_cache: Caché de credenciales MCP
+      run_list: Lista de servicios de Cloud Run
+      secret_store_backend: Backend del almacén de secretos
+      secret_store_dir: Directorio del almacén de secretos
+      service_account_key_state: Estado de la clave de la cuenta de servicio
+      sheets_round_trip: Prueba de ida y vuelta de Google Sheets
+      storage_list: Lista de depósitos de Cloud Storage
+    success:
+      all_clean: Todo está limpio. No se encontraron problemas.
+    table:
+      detail: Detalle
+      'no': 'No'
+      required: Requerido
+      section: Sección
+      state: Estado
+      title: Título
+      'yes': Sí
+  drive:
+    app_help: Gestión de archivos y carpetas en Google Drive
+    cat_export_mime_help: Tipo MIME para exportar el archivo (p. ej., para Google
+      Docs)
+    cat_file_id_help: Identificador del archivo de Google Drive a mostrar
+    cat_help: Mostrar el contenido de un archivo de Google Drive en la consola
+    errors:
+      already_exists: El archivo o carpeta ya existe
+      local_not_found: No se encontró el archivo o ruta local
+      multiple_matches: Se encontraron múltiples coincidencias
+      not_found: Archivo no encontrado en Google Drive
+    fetch_help: Descargar un archivo de Google Drive al sistema local
+    fetch_name_help: Nombre del archivo de Google Drive a buscar y descargar
+    fetch_out_help: Ruta de destino local para el archivo descargado
+    fetch_overwrite_help: Sobrescribir el archivo local si ya existe
+    find_help: Buscar archivos o carpetas en Google Drive por nombre
+    find_query_help: Nombre o patrón de búsqueda para encontrar archivos
+    find_table_title: Archivos encontrados en Google Drive
+    ls_folder_help: Identificador de la carpeta a listar (por defecto, la raíz)
+    ls_help: Listar los archivos y carpetas en una ubicación de Google Drive
+    ls_page_size_help: Número máximo de elementos a mostrar por página
+    ls_table_title: Contenido de la carpeta en Google Drive
+    mkdir_help: Crear una nueva carpeta en Google Drive
+    mkdir_name_help: Nombre de la nueva carpeta
+    mkdir_parent_help: Identificador de la carpeta padre (por defecto, la raíz)
+    put_folder_help: Identificador de la carpeta de destino en Google Drive
+    put_help: Subir un archivo local a Google Drive
+    put_local_help: Ruta del archivo local a subir
+    put_mime_help: Tipo MIME para el archivo subido (p. ej., para convertirlo a Google
+      Docs)
+    put_name_help: Nombre que tendrá el archivo en Google Drive
+    rm_file_id_help: Identificador del archivo o carpeta de Google Drive a eliminar
+    rm_help: Eliminar un archivo o carpeta de Google Drive
+    rm_permanent_help: Eliminar permanentemente (saltar la papelera)
+    success:
+      deleted: Archivo o carpeta eliminado correctamente de Google Drive
+      fetched: Archivo descargado correctamente de Google Drive
+      trashed: Archivo o carpeta movido a la papelera de Google Drive
+    table_id: ID del archivo
+    table_mime: Tipo MIME
+    table_modified: Modificado
+    table_name: Nombre
+    table_size: Tamaño
+  filing:
+    amendment:
+      delta_table_title: Diferencias de la declaración complementaria
+      title: Declaración Complementaria / Rectificativa
+    app_help: Gestión y presentación de declaraciones tributarias
+    build:
+      inputs_help: Archivos o directorios de entrada para construir la declaración
+      modelo_help: Modelo tributario a construir (p. ej., 303, 111, 130)
+      period_help: Periodo fiscal (p. ej., 1T, 2T, 01, 12)
+      profile_help: Perfil de contribuyente a utilizar
+      profile_name_help: Nombre del perfil de contribuyente
+      profile_tax_id_help: NIF del contribuyente
+      success: Declaración construida correctamente
+    complementaria:
+      app_help: Gestión de declaraciones complementarias y rectificativas
+      build:
+        delta_json_help: Archivo JSON con las diferencias (delta) para la declaración
+          complementaria
+    draft:
+      approved_by_you: Aprobado por usted
+      next_steps_label: Próximos pasos
+      title: Borrador de la declaración
+      values_table_title: Valores de las casillas de la declaración
+    errors:
+      amendment_success: Declaración complementaria procesada correctamente
+      casilla_key_not_string: La clave de la casilla debe ser una cadena de texto
+        (string)
+      draft_not_found: Borrador de la declaración no encontrado
+      failed_to_load_draft: Fallo al cargar el borrador de la declaración
+      inputs_not_found: No se encontraron los archivos de entrada
+      inputs_not_object: Los datos de entrada deben ser un objeto (JSON)
+      invalid_draft_extension: Extensión del archivo de borrador no válida
+      invalid_json: Archivo JSON no válido
+      invalid_status: Estado de la declaración no válido
+      missing_import_source: Falta la fuente de importación
+      missing_original_submission_id: Falta el ID de la presentación original
+      missing_updated_inputs: Faltan los archivos de entrada actualizados
+      modelo_mismatch: El modelo tributario no coincide
+      multiple_import_sources: Se encontraron múltiples fuentes de importación
+      period_mismatch: El periodo fiscal no coincide
+      profile_tax_id_required: Se requiere el NIF del contribuyente en el perfil
+      reasons_not_object: Los motivos deben ser un objeto (JSON)
+      submission_not_found: Presentación no encontrada
+      submission_validation_failed: Fallo en la validación de la presentación
+      unsupported_value_type: Tipo de valor no soportado
+    field:
+      approved_at: Aprobado el
+      approved_by: Aprobado por
+      casilla: Casilla
+      code: Código
+      created_at: Creado el
+      draft_id: ID del borrador
+      kind: Tipo / Clase
+      message: Mensaje
+      modelo: Modelo
+      new: Nuevo
+      old: Anterior
+      original_csv: CSV Original
+      path: Ruta
+      period: Periodo
+      profile_tax_id: NIF del Perfil
+      reason: Motivo
+      review_checksum: Suma de comprobación de la revisión
+      schema_version: Versión del esquema
+      severity: Gravedad
+      source: Origen / Fuente
+      stale_reason: Motivo de obsolescencia
+      status: Estado
+      submission_id: ID de la presentación
+      updated_at: Actualizado el
+      value: Valor
+    import:
+      actual: Actual (Encontrado)
+      borrador_unsupported: La importación desde borrador oficial no está soportada
+        para este modelo
+      casilla_label: Casilla
+      cause: Causa / Motivo
+      expected: Esperado
+      extraction_complete: Extracción completada correctamente
+      from_borrador_help: Importar datos desde un borrador oficial (PDF de la AEAT)
+      from_declaracion_help: Importar datos desde una declaración presentada (PDF
+        de la AEAT)
+      from_justificante_help: Importar datos desde un justificante de presentación
+        (PDF de la AEAT)
+      importing_declaration: Importando declaración...
+      justificante_success: Justificante importado correctamente
+      modelo_help: Modelo tributario de la declaración a importar
+      scaffold_created: Andamiaje (scaffold) de importación creado correctamente
+      verification_result: Resultado de la verificación
+      warning_label: ADVERTENCIA
+      warnings_found: Se encontraron advertencias durante el proceso
+    init:
+      findings_table_title: Resultados de la detección inicial
+    list:
+      modelo_help: Filtrar por modelo tributario
+      status_help: Filtrar por estado de la declaración
+      table_title: Listado de declaraciones
+    show:
+      findings_only_help: Mostrar solo los hallazgos (findings) de la declaración
+    validate:
+      draft_path_help: Ruta al archivo de borrador a validar
+      success: Validación completada correctamente. La declaración es válida.
+  financial:
+    app_help: Gestión de datos financieros y cuentas bancarias
+    catalogue:
+      errors:
+        not_found: Catálogo financiero no encontrado
+    ingest:
+      catalogue_dir_help: Directorio donde se encuentra el catálogo financiero
+      help: Ingestar datos financieros (p. ej., extractos bancarios)
+      output_json_help: Archivo JSON de salida para los datos ingestados
+      path_help: Ruta al archivo o directorio con los datos financieros
+      persist_help: Persistir los datos ingestados en el sistema
+      provider_help: Proveedor de los datos financieros (p. ej., nombre del banco)
+      verbose_help: Mostrar información detallada del proceso de ingesta
+    invoices:
+      app_help: Gestión de facturas y documentos de gasto
+      apply_help: Aplicar cambios o acciones a las facturas
+      consistent: Consistente
+      errors:
+        final_save_failed: Fallo al realizar el guardado final de las facturas
+        not_found: Factura no encontrada
+        not_found_after_update: No se pudo encontrar la factura después de la actualización
+        skipped_suggestion: Sugerencia omitida
+      headers:
+        list: Lista
+        unmatched: No conciliadas
+      id_help: Identificador de la factura
+      kind_help: Tipo de factura (p. ej., emitida, recibida)
+      labels:
+        applied: Aplicado
+      link_help: Vincular una factura a una transacción bancaria
+      link_invoice_id_help: Identificador de la factura a vincular
+      link_transaction_id_help: Identificador de la transacción bancaria a vincular
+      list_help: Listar facturas
+      no_invoices: No se encontraron facturas
+      no_suggestions: No hay sugerencias disponibles
+      no_unmatched: No hay facturas sin conciliar
+      reconcile_help: Conciliación interactiva de facturas y transacciones bancarias
+      show_help: Mostrar detalles de una factura
+      unmatched_help: Listar facturas que no han sido conciliadas
+      verify_help: Verificar la integridad y consistencia de las facturas
+    profile:
+      app_help: Gestión de perfiles financieros
+      errors:
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
+        did_you_mean: ¿Quiso decir...?
+        eligible_categories: Categorías elegibles
+        family_aliases: Alias familiares
+        invalid_ratio: Ratio o porcentaje no válido
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
+        unknown_key: Clave o propiedad desconocida en el perfil
+      headers:
+        ratios: Ratios / Repartos
+      labels:
+        no_active: No hay un perfil activo seleccionado
+      ratios_help: Definir ratios de reparto para el perfil financiero
+      ratios_list_help: Listar los ratios de reparto definidos en el perfil
+      set_ratio_help: Establecer un ratio de reparto específico
+      set_ratio_key_help: 'Clave o categoría del ratio. Alias de familia: %{aliases}'
+      set_ratio_value_help: Valor del ratio (p. ej., 0.5 para 50%)
+      unset_ratio_help: Eliminar un ratio de reparto específico
+      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia: %{aliases}'
+    txs:
+      app_help: Gestión de transacciones bancarias
+  financial_invoices:
+    errors:
+      catalogue_not_found: Catálogo de facturas no encontrado
+    headers:
+      inconsistencies: Inconsistencias
+      suggestions: Sugerencias
+    labels:
+      'no': 'No'
+      'yes': Sí
+  ingest:
+    errors:
+      at_least_one_row: Se requiere al menos una fila de datos para la ingesta
+      auto_detect_failed: Fallo en la autodetección del formato o proveedor
+      ingest_failed: El proceso de ingesta ha fallado
+    labels:
+      complete: Completado
+      ingesting: Ingestando...
+      rows_found: Filas encontradas
+  inventory:
+    app_help: Gestión de inventario de activos y existencias
+    create:
+      actividad_help: Código de la actividad económica relacionada
+      help: Registrar un nuevo elemento en el inventario
+      opening_quantity_help: Cantidad inicial (apertura) en inventario
+      opening_stock_help: Valor de las existencias iniciales
+      opening_unit_cost_help: Coste unitario inicial
+      sku_help: Código SKU del elemento
+      storage_dir_help: Directorio de almacenamiento para los datos del inventario
+      valuation_method_help: Método de valoración (p. ej., PMP, FIFO, LIFO)
+      year_help: Año fiscal relacionado
+    errors:
+      invalid_valuation: Valoración de inventario no válida
+      ledger_not_found: Libro de inventario no encontrado
+      missing_opening_fields: Faltan campos obligatorios para las existencias iniciales
+      valuation_failed: Fallo en el proceso de valoración del inventario
+    labels:
+      ledger_created: Libro de inventario creado correctamente
+      ledger_empty: El libro de inventario está vacío
+      movement_added: Movimiento de inventario añadido correctamente
+    list:
+      help: Listar elementos del inventario
+      opening_label: Apertura
+      storage_dir_help: Directorio de almacenamiento del inventario
+    movement:
+      actividad_help: Código de la actividad económica relacionada con el movimiento
+      add_help: Añadir un nuevo movimiento de inventario (compra, venta, etc.)
+      date_help: Fecha del movimiento (AAAA-MM-DD)
+      kind_help: Tipo de movimiento (entrada o salida)
+      movement_id_help: Identificador del movimiento de inventario
+      quantity_help: Cantidad involucrada en el movimiento
+      sku_help: Código SKU del elemento del movimiento
+      storage_dir_help: Directorio de almacenamiento del inventario para los movimientos
+      taxable_base_help: Base imponible del movimiento
+      unit_cost_help: Coste unitario del movimiento
+      vat_rate_help: Tipo de IVA aplicado
+      year_help: Año fiscal del movimiento
+    movement_help: Gestión de movimientos de inventario
+    valuation:
+      actividad_help: Código de la actividad económica relacionada con la valoración
+      closing_label: Cierre
+      cogs_label: Coste de Ventas
+      preview_help: Previsualizar el informe de valoración antes de generarlo
+      preview_line: 'Previsualización: {sku} - {method}'
+      storage_dir_help: Directorio de almacenamiento del inventario para la valoración
+      year_help: Año fiscal para el informe de valoración
+    valuation_help: Gestión de valoración de existencias (PMP, FIFO, LIFO)
+  invoice:
+    app_help: Gestión y procesamiento de facturas
+    edit:
+      help: Editar manualmente los datos de una factura
+      id_help: Identificador de la factura a editar
+      reason_help: Motivo de la edición o corrección
+      set_help: Establecer campos de factura (base, iva.rate, iva.amount, iva.category,
+        retention.rate, retention.amount, payment.id, document.path)
+    errors:
+      at_least_one_edit: Se requiere al menos una modificación de campo
+      file_not_found: Archivo de factura no encontrado
+      filter_parse_error: Fallo al analizar el filtro de facturas
+      invalid_kind: Tipo de factura no válido
+      invoice_not_found: Factura no encontrada
+      match_both_required: Se requiere tanto la factura como la transacción para realizar
+        el emparejamiento
+      set_parse_error: Fallo al analizar la asignación del campo (campo=valor)
+    import:
+      dry_run_help: Ejecutar en modo de prueba (sin guardar cambios)
+      help: Importar facturas desde fuentes externas (p. ej., PDF, Excel)
+      kind_help: Tipo de facturas a importar (emitidas o recibidas)
+      path_help: Ruta al archivo o directorio con las facturas
+    labels:
+      base: Base Imponible
+      dry_run: MODO DE PRUEBA (DRY RUN)
+      fields: Campos
+      id: ID
+      imported: Facturas importadas
+      iva: IVA
+      kind: Tipo
+      matched: Factura emparejada
+      payment: Pago
+      period: Periodo
+      rows: Filas
+      skipped: Omitidos
+      status: Estado
+      unmatched: No emparejados
+      'yes': Sí
+    match:
+      help: Emparejar manualmente una factura con una transacción bancaria
+      invoice_help: Identificador de la factura para el emparejamiento
+      ledger_help: Identificador del libro contable
+      period_help: Periodo fiscal para el emparejamiento
+    review:
+      filter_help: Filtrar facturas por status=pending|reviewed|matched|paid o kind=issued|received
+      help: Revisión interactiva y validación de facturas
+      id_help: Identificador de la factura específica a revisar
+      no_invoices: No hay facturas pendientes de revisión
+      verbose_help: Mostrar información detallada durante la revisión
+  ledger:
+    app_help: Gestión de libros contables y registros de IVA
+    edit:
+      help: Editar manualmente una entrada del libro contable
+      id_help: Identificador de la entrada del libro a editar
+      reason_help: Motivo de la edición o corrección de la entrada
+      set_help: Establecer valores de campos del libro (campo=valor)
+      skip_help: Marcar la fila como excluida o volver a incluirla en la revisión
+      split_help: Dividir la fila en porcentajes de uso profesional y personal
+    errors:
+      auto_detect_failed: Fallo en la detección automática del formato del libro
+      edit_requires_one: Se requiere al menos una modificación de campo para editar
+      filter_parse_error: Fallo al analizar el filtro del libro
+      invalid_source: 'El archivo del libro no se puede importar: {reason}'
+      invalid_source_unknown: origen no válido
+      invalid_skip: Campo de omisión no válido
+      invalid_split_format: Formato de división no válido
+      invalid_split_value: Valor de división no válido
+      match_both_required: Se requiere tanto la entrada del libro como la transacción
+        para realizar el emparejamiento
+      n26_auto_detect_failed: Fallo en la detección automática del formato de N26
+      row_not_found: Fila del libro no encontrada
+      set_parse_error: Fallo al analizar la asignación del campo (campo=valor)
+      source_not_found: 'No se ha encontrado el archivo de origen: {source}'
+      unknown_provider: Proveedor de libro contable desconocido
+    import:
+      dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
+      help: Importar extractos bancarios o registros al libro contable
+      path_help: Ruta al archivo del extracto bancario o directorio
+      period_help: Periodo fiscal para la importación
+      provider_help: Proveedor del formato del extracto (p. ej., N26, Revolut)
+      source_help: Archivo original para verificar las filas importadas
+      verbose_help: Mostrar información detallada durante la importación
+      verify_help: Verificar las entradas después de la importación
+    labels:
+      amount: Importe
+      date: Fecha
+      description: Descripción
+      dry_run: MODO DE PRUEBA (DRY RUN)
+      fields: Campos
+      id: ID
+      imported: Entradas importadas
+      'no': 'No'
+      rows: Filas
+      skipped: Omitidos
+      source: Origen
+      dialect: Formato detectado
+      valid: Válido
+      warnings: Avisos
+      'yes': Sí
+    review:
+      filter_help: Filtrar filas por status, period, issue o import
+      header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
+      help: Revisión interactiva y validación de entradas del libro
+      id_help: Identificador de la entrada específica a revisar
+      no_rows: No hay entradas del libro pendientes de revisión
+      verbose_help: Mostrar información detallada durante la revisión
+  llm:
+    app_help: Utilidades de modelos de lenguaje (LLM)
+    cache_app_help: Gestión de la caché de respuestas de LLM
+    cache_prune_help: Limpiar entradas antiguas de la caché de LLM
+    cache_stats_help: Mostrar estadísticas de uso de la caché de LLM
+    complete_help: Generar una respuesta completando el texto proporcionado
+    context_help: Añadir contexto adicional para la solicitud al LLM
+    errors:
+      invalid_input: Entrada para el LLM no válida
+      missing_variable: Falta una variable requerida en la plantilla del prompt
+    from_help: cli.llm.from_help
+    input_help: cli.llm.input_help
+    labels:
+      removed_cache_files: cli.llm.labels.removed_cache_files
+    language_help: cli.llm.language_help
+    prompt_id_help: cli.llm.prompt_id_help
+    since_help: cli.llm.since_help
+    text_help: cli.llm.text_help
+    to_help: cli.llm.to_help
+    translate_help: cli.llm.translate_help
+    until_help: cli.llm.until_help
+    usage_help: cli.llm.usage_help
+  normatives:
+    app_help: cli.normatives.app_help
+    errors:
+      load_failed: cli.normatives.errors.load_failed
+    headers:
+      citation: cli.normatives.headers.citation
+      code: cli.normatives.headers.code
+      level: cli.normatives.headers.level
+      message: cli.normatives.headers.message
+      numero: cli.normatives.headers.numero
+      reference_id: cli.normatives.headers.reference_id
+      titulo: cli.normatives.headers.titulo
+    labels:
+      articles: cli.normatives.labels.articles
+      articulos: cli.normatives.labels.articulos
+      boe_id: cli.normatives.labels.boe_id
+      boe_url: cli.normatives.labels.boe_url
+      found: cli.normatives.labels.found
+      id: cli.normatives.labels.id
+      kind: cli.normatives.labels.kind
+      last_reviewed_at: cli.normatives.labels.last_reviewed_at
+      no_articulos: cli.normatives.labels.no_articulos
+      number: cli.normatives.labels.number
+      published_at: cli.normatives.labels.published_at
+      reviewed_by: cli.normatives.labels.reviewed_by
+      short_title: cli.normatives.labels.short_title
+      tags: cli.normatives.labels.tags
+    list_help: cli.normatives.list_help
+    list_tag_help: cli.normatives.list_tag_help
+    show_help: cli.normatives.show_help
+    show_ref_id_help: cli.normatives.show_ref_id_help
+    success:
+      clean: cli.normatives.success.clean
+      verification_results: cli.normatives.success.verification_results
+    verify_help: cli.normatives.verify_help
+  oauth:
+    app_help: cli.oauth.app_help
+    errors:
+      invalid_json: cli.oauth.errors.invalid_json
+    init:
+      help: cli.oauth.init.help
+      json_help: cli.oauth.init.json_help
+      success: cli.oauth.init.success
+    labels:
+      next_step: cli.oauth.labels.next_step
+      open_url: cli.oauth.labels.open_url
+      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+    success:
+      copied: cli.oauth.success.copied
+      written: cli.oauth.success.written
+  overview:
+    app_help: Revisar el estado actual del espacio de trabajo fiscal
+    calendar_help: Mostrar calendario de obligaciones para un rango de fechas
+    calendar_requires_dates: Use --from y --to al consultar el calendario
+    drafts: Borradores
+    from_help: Fecha inicial del calendario (AAAA-MM-DD)
+    header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
+    invoices: Facturas
+    period: Periodo
+    period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
+    profile: Perfil
+    status_help: Mostrar el estado del perfil, libro, facturas y declaraciones
+    to_help: Fecha final del calendario (AAAA-MM-DD)
+    transactions: Movimientos
+    verbose_help: Mostrar detalles y siguiente acción cuando existan
+  registry:
+    app_help: cli.registry.app_help
+    capture_filed_data_help: cli.registry.capture_filed_data_help
+    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
+    capture_limit_help: cli.registry.capture_limit_help
+    capture_source_filed_data_help: Capturar observaciones fuente presentadas requeridas
+      por el cálculo de un modelo objetivo
+    capture_source_filed_data_json_help: Emitir el informe de captura de datos fuente
+      presentados como JSON
+    casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
+      por defecto
+    errors:
+      invalid_year_range: cli.registry.errors.invalid_year_range
+      unknown_modelo: El registro no contiene una definición del modelo {modelo}
+    expediente_help: cli.registry.expediente_help
+    from_year_help: cli.registry.from_year_help
+    inspect_help: cli.registry.inspect_help
+    inspect_registry_root_help: cli.registry.inspect_registry_root_help
+    json_help: cli.registry.json_help
+    list_filed_data_help: cli.registry.list_filed_data_help
+    list_filed_data_json_help: cli.registry.list_filed_data_json_help
+    modelo_help: cli.registry.modelo_help
+    observation_help: Manifiesto cifrado de observación de declaración presentada
+      que se va a verificar
+    output_root_help: cli.registry.output_root_help
+    parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
+    parity_output_help: Archivo JSON de destino para la cinta de paridad generada
+    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
+      actual del registro
+    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
+      resultante
+    parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
+    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
+      generadas
+    parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
+    period_help: cli.registry.period_help
+    source_observation_help: Manifiesto cifrado de observación fuente requerido por
+      vínculos de declaraciones previas o relaciones
+    to_year_help: cli.registry.to_year_help
+    verify_filed_state_help: Comparar el cálculo local del registro con el estado
+      presentado capturado de AEAT
+    verify_help: cli.registry.verify_help
+    verify_source_root_help: cli.registry.verify_source_root_help
+    workbooks_app_help: cli.registry.workbooks_app_help
+    workbooks_limit_help: cli.registry.workbooks_limit_help
+    workbooks_output_help: cli.registry.workbooks_output_help
+    workbooks_resume_help: cli.registry.workbooks_resume_help
+    workbooks_root_help: cli.registry.workbooks_root_help
+    workbooks_timeout_help: cli.registry.workbooks_timeout_help
+    workbooks_verify_help: cli.registry.workbooks_verify_help
+    year_help: cli.registry.year_help
+  root:
+    app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
+    app_help: Asistente para preparar declaraciones tributarias españolas
+    format_help: Formato de salida para los resultados del comando
+  sanitize:
+    app_help: cli.sanitize.app_help
+    labels:
+      available: cli.sanitize.labels.available
+    status_help: cli.sanitize.status_help
+  setup:
+    app_help: Preparar el perfil local y la autenticación necesarios para usar la aplicación
+    auth:
+      app_help: Configurar y comprobar la autenticación de AEAT
+      configure:
+        file_help: Ruta del certificado cuando el proveedor lo requiera
+        help: Configurar el proveedor de autenticación
+        provider_help: Proveedor de autenticación a usar
+      login:
+        help: Iniciar la sesión local de autenticación configurada
+      logout:
+        help: Cerrar la sesión local de autenticación
+      providers:
+        help: Listar proveedores de autenticación disponibles
+      status:
+        help: Mostrar el proveedor configurado y el estado de sesión
+      whoami:
+        help: Mostrar la identidad asociada a la sesión actual
+    errors:
+      certificate_file_required: El proveedor certificate requiere --file
+      file_not_found: No se ha encontrado el archivo {file}
+      not_configured: Configure un proveedor antes de iniciar sesión
+      unknown_profile_key: "Clave de perfil desconocida: {key}"
+      unknown_provider: "Proveedor de autenticación desconocido: {provider}"
+    headers:
+      active: Activo
+      auth_provider: Proveedor de autenticación
+      authenticated_at: Autenticado el
+      availability: Disponibilidad
+      description: Descripción
+      id: ID
+      key: Clave
+      login_ready: Sesión lista
+      logout: Cierre de sesión
+      missing: Falta
+      next: Siguiente
+      profile: Perfil
+      profile_ready: Perfil listo
+      provider: Proveedor
+      ready: Listo
+      requirement: Requisito
+      subject: Identidad
+      unknown: Desconocido
+      valid: Válido
+    init:
+      activity_help: Actividad económica principal
+      help: Crear o activar un perfil de contribuyente
+      name_help: Nombre del perfil local
+      tax_id_help: NIF/NIE/CIF del contribuyente
+    labels:
+      'no': 'no'
+      unset: sin valor
+      'yes': 'sí'
+    profile:
+      app_help: Gestionar los datos del perfil de contribuyente
+      get_help: Mostrar el valor de una clave de perfil
+      get_key_help: Clave de perfil a consultar
+      list_help: Listar perfiles locales
+      list_keys_help: Listar claves editables del perfil
+      set_help: Establecer un valor del perfil
+      set_key_help: Clave de perfil a modificar
+      set_value_help: Valor que se guardará
+      show_help: Mostrar los datos del perfil activo
+      unset_help: Borrar un valor del perfil
+      unset_key_help: Clave de perfil a borrar
+      use_help: Activar un perfil local
+      use_name_help: Nombre del perfil
+      validate_help: Validar si el perfil activo está completo
+    status:
+      help: Mostrar la preparación del entorno y la siguiente acción requerida
+  txs:
+    app_help: cli.txs.app_help
+    build:
+      exists_err: cli.txs.build.exists_err
+      help: cli.txs.build.help
+      replace_help: cli.txs.build.replace_help
+      source_help: cli.txs.build.source_help
+      success: cli.txs.build.success
+    classify:
+      as_help: cli.txs.classify.as_help
+      business_category_err: cli.txs.classify.business_category_err
+      category_help: cli.txs.classify.category_help
+      confidence_help: cli.txs.classify.confidence_help
+      confidence_range_err: cli.txs.classify.confidence_range_err
+      help: cli.txs.classify.help
+      id_help: cli.txs.classify.id_help
+      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
+      invalid_pct_err: cli.txs.classify.invalid_pct_err
+      mixed_pct_err: cli.txs.classify.mixed_pct_err
+      no_changes_err: cli.txs.classify.no_changes_err
+      outgoing_category_err: cli.txs.classify.outgoing_category_err
+      pct_help: cli.txs.classify.pct_help
+      reason_help: cli.txs.classify.reason_help
+    classify_llm:
+      all_help: cli.txs.classify_llm.all_help
+      category_hint_help: cli.txs.classify_llm.category_hint_help
+      dry_run_help: cli.txs.classify_llm.dry_run_help
+      dry_run_label: cli.txs.classify_llm.dry_run_label
+      errors:
+        classification_failed: cli.txs.classify_llm.errors.classification_failed
+        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
+        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
+        missing_target: cli.txs.classify_llm.errors.missing_target
+        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
+        save_failed: cli.txs.classify_llm.errors.save_failed
+      help: cli.txs.classify_llm.help
+      id_help: cli.txs.classify_llm.id_help
+      labels:
+        no_targets: cli.txs.classify_llm.labels.no_targets
+      llm_suffix: cli.txs.classify_llm.llm_suffix
+      max_seconds_help: cli.txs.classify_llm.max_seconds_help
+      model_alias_help: cli.txs.classify_llm.model_alias_help
+      model_help: cli.txs.classify_llm.model_help
+      pct_override_help: cli.txs.classify_llm.pct_override_help
+      persisted_label: cli.txs.classify_llm.persisted_label
+      provider_help: cli.txs.classify_llm.provider_help
+      reason_help: cli.txs.classify_llm.reason_help
+      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
+      summary: cli.txs.classify_llm.summary
+      tier_help: cli.txs.classify_llm.tier_help
+      timeout: cli.txs.classify_llm.timeout
+    list:
+      confidence_below_help: cli.txs.list.confidence_below_help
+      header: cli.txs.list.header
+      help: cli.txs.list.help
+      no_matches_confidence: cli.txs.list.no_matches_confidence
+      no_transactions: cli.txs.list.no_transactions
+      state_help: cli.txs.list.state_help
+    show:
+      help: cli.txs.show.help
+      id_help: cli.txs.show.id_help
+      not_found_err: cli.txs.show.not_found_err
+filing:
+  validation:
+    deadline_missed: filing.validation.deadline_missed
+    formula_divergence: filing.validation.formula_divergence
+    out_of_range: filing.validation.out_of_range
+    required_missing: filing.validation.required_missing
+    schema_mismatch: filing.validation.schema_mismatch
+profile:
+  test_keys:
+    description_490119: x
+review:
+  adapters:
+    t_135562: traspaso interno
+    t_142007: negocio
+    t_145612: review.adapters.t_145612
+    t_167733: vencida
+    t_189155: reason
+    t_298389: pago pendiente
+    t_352338: validación fallida
+    t_352928: parcialmente pagada
+    t_551826: sin emparejar
+    t_607122: omitida por regla
+    t_619063: mixto
+    t_629803: gasto
+    t_754183: sin procesar
+    t_787894: aprobación caducada — requiere nueva revisión (estado=APPROVAL_STALE)
+    t_791512: procesada sin clasificar
+    t_870243: personal
+    t_968325: ingreso
+setup:
+  verifier:
+    t_049382: setup.verifier.t_049382
+    t_104932: setup.verifier.t_104932
+    t_104938: setup.verifier.t_104938
+    t_193582: setup.verifier.t_193582
+    t_204938: setup.verifier.t_204938
+    t_293847: setup.verifier.t_293847
+    t_394821: setup.verifier.t_394821
+    t_394827: setup.verifier.t_394827
+    t_501723: setup.verifier.t_501723
+    t_649302: setup.verifier.t_649302
+    t_749321: setup.verifier.t_749321
+    t_837462: setup.verifier.t_837462
+    t_938472: setup.verifier.t_938472
+    t_938475: setup.verifier.t_938475
+  wizard:
+    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
+    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
+    aeat_live_tests_google_prompt: setup.wizard.aeat_live_tests_google_prompt
+    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
+    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
+    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
+    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
+    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
+    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
+    certificate_path_prompt: setup.wizard.certificate_path_prompt
+    default_language_prompt: setup.wizard.default_language_prompt
+    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
+    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
+    has_employees_prompt: setup.wizard.has_employees_prompt
+    iva_regime_prompt: setup.wizard.iva_regime_prompt
+    output_language_prompt: setup.wizard.output_language_prompt
+    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
+    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
+    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
+    provision_google_fixtures_prompt: setup.wizard.provision_google_fixtures_prompt
+    tax_id_prompt: setup.wizard.tax_id_prompt
+    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
+    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
+    welcome: setup.wizard.welcome
+transactions:
+  import:
+    message_053465: Transacción duplicada detectada dentro del archivo importado.
+    message_082074: Transacción duplicada ya presente en el libro mayor.
+    message_185962: El archivo de origen no contiene transacciones válidas.
+    message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
+    unreadable: transactions.import.unreadable
+    verified: transactions.import.verified
+  test_diagnostics:
+    message: Falta el mes 2026-03 en el archivo importado.
