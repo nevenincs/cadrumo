@@ -77,134 +77,6 @@ cli:
         Móvil
       provider_help: Authentication provider (e.g. certificate, clave_movil)
       set_default_help: Set this provider as the default authentication method
-    init:
-      acquire_cli_token_help: Acquire the Google token for the CLI (opens browser)
-      doctor_help: Run environment validation (doctor) after initialization
-      errors:
-        accepted_cached: Cached credentials accepted
-        auth_failed: Authentication failed
-        clave_movil_config_purpose: Required configuration for access via Cl@ve Móvil
-        desktop_client_not_found: 'Desktop OAuth client JSON file not found: {path}'
-        dni_fecha_required: DNI validity date is required when using Cl@ve Móvil without
-          a QR code
-        dni_nie_required: DNI or NIE is required to use Cl@ve Móvil
-        interactive_required: An interactive terminal is required for this operation
-        missing_provider_or_all: You must specify a provider (--provider) or use the
-          --all flag
-        nie_soporte_required: NIE support number is required when using Cl@ve Móvil
-          without a QR code
-        no_env_file: Environment file (.env) not found
-        no_session_found: No active session found
-        probe_failed: The connection or authentication probe failed
-        provider_not_supported: The authentication provider is not supported
-        sa_key_not_found: 'Service Account JSON key file not found: {path}'
-        session_stale: The current session is stale and cannot be used
-        signed_in: Signed in successfully
-        signed_out: Signed out of {label}
-        signed_out_many: Signed out of {joined}
-        stale_or_revoked: The session is stale or has been revoked
-        unknown_provider: 'Unknown authentication provider: {raw}. Supported providers:
-          {valid}'
-        unsupported_env_file: Unsupported environment file (.env) format
-        unsupported_provider: 'Unsupported provider: {raw}. Supported providers: {valid}'
-      help: Initialize the project's authentication state (Google, AEAT)
-      json_help: Path to the JSON credentials file
-      labels:
-        action: Action
-        and: and
-        browser: Browser
-        next: Next
-        purpose: Purpose
-        source: Source
-        success: Success
-      login_instruction: Please sign in using the browser window that just opened
-      path_help: Path family to initialize (e.g. desktop-oauth-local-dev, service-account)
-      prepare_mcp_help: Prepare the MCP (Model Context Protocol) server configuration
-      prompts:
-        dni_fecha: DNI validity date (YYYY-MM-DD)
-        dni_nie: DNI or NIE number of the taxpayer
-        nie_soporte: Support number of the NIE
-      reset_cli_token_help: Remove the existing Google token and request a new one
-      saved_config: Configuration saved successfully to {path}
-      service_account_json_help: Path to the Service Account JSON key file
-      step_acq_action: Acquire token
-      step_acq_browser: Default browser
-      step_acq_next: Continue
-      step_acq_purpose: Access to Google Drive, Sheets, and Docs for file management
-      step_acq_source: Google Cloud Console
-      step_acq_success: Token acquired successfully
-      step_acq_title: 'Step: Acquire Google CLI Token'
-      step_desktop_imported_action: Import client JSON
-      step_desktop_imported_browser: File explorer
-      step_desktop_imported_next: Continue
-      step_desktop_imported_purpose: Configure the desktop client for OAuth 2.0 authentication
-      step_desktop_imported_source: Google Cloud Console
-      step_desktop_imported_success: Client JSON imported successfully
-      step_desktop_imported_title: 'Step: Import Desktop OAuth Client'
-      step_mcp_action: Configure MCP
-      step_mcp_browser: N/A
-      step_mcp_next: Finish
-      step_mcp_purpose: Allow AI agents to use the CLI tools
-      step_mcp_source: Local file
-      step_mcp_success: MCP configured successfully
-      step_mcp_title: 'Step: Configure MCP Server'
-      step_repair_action: Repair environment
-      step_repair_browser: N/A
-      step_repair_next: Continue
-      step_repair_purpose: Fix inconsistencies detected in the configuration
-      step_repair_source: Auto-repair
-      step_repair_success: Environment repaired successfully
-      step_repair_title: 'Step: Repair Environment'
-      step_sa_imported_action: Import SA key
-      step_sa_imported_browser: File explorer
-      step_sa_imported_next: Continue
-      step_sa_imported_purpose: Configure the service account for headless automation
-      step_sa_imported_source: Google Cloud Console
-      step_sa_imported_success: Service account key imported successfully
-      step_sa_imported_title: 'Step: Import Service Account (SA) Key'
-      step_sa_req_action: Verify Service Account
-      step_sa_req_browser: N/A
-      step_sa_req_next: Continue
-      step_sa_req_purpose: Verify service account permissions for cloud access
-      step_sa_req_source: Google API
-      step_sa_req_success: Service account verified successfully
-      step_sa_req_title: 'Step: Verify Service Account (SA)'
-      step_sa_status_action: Check status
-      step_sa_status_browser: N/A
-      step_sa_status_next: Continue
-      step_sa_status_purpose: Ensure the service account is active and operational
-      step_sa_status_source: Google IAM
-      step_sa_status_success: Service account status verified
-      step_sa_status_title: 'Step: Check Service Account Status'
-      step_setup_req_action: Verify setup
-      step_setup_req_browser: N/A
-      step_setup_req_next: Continue
-      step_setup_req_purpose: Verify the integrity of local configuration files
-      step_setup_req_source: Local file system
-      step_setup_req_success: Setup verified successfully
-      step_setup_req_title: 'Step: Verify Setup'
-      step_status_action: Check status
-      step_status_browser: N/A
-      step_status_next: Continue
-      step_status_purpose: Check if an active authentication session already exists
-      step_status_source: Token cache
-      step_status_success: Authentication status verified
-      step_status_title: 'Step: Verify Authentication Status'
-      step_token_reset_action: Reset token
-      step_token_reset_browser: N/A
-      step_token_reset_next: Continue
-      step_token_reset_purpose: Force re-authentication by deleting the stored token
-      step_token_reset_source: Local cache
-      step_token_reset_success: Token reset successfully
-      step_token_reset_title: 'Step: Reset Google Token'
-      terms:
-        default_provider: default provider
-        direct_push: direct push
-        dni_fecha: DNI validity date
-        dni_nie: DNI/NIE
-        nie_soporte: NIE support number
-        qr_code: QR code
-      url_prompt: 'If the browser did not open automatically, visit this URL:'
     list_providers:
       all_help: List all supported providers, not just the configured ones
       configured_help: List configured authentication providers
@@ -263,40 +135,6 @@ cli:
     list_help: List all available procedure categories
     show_help: Show details of a specific category
     year_help: Fiscal year
-  cloud:
-    app_help: Cloud functions management (Google Cloud)
-    environment_col: Environment
-    errors:
-      missing_project: Google Cloud project ID is not configured
-    functions_app_help: Management of Google Cloud Functions
-    functions_describe_help: Show details of a specific cloud function
-    functions_describe_name_help: Name of the function to describe
-    functions_list_help: List all deployed cloud functions
-    functions_list_title: Cloud Functions (Google Cloud Functions)
-    generation_col: Generation
-    labels:
-      buckets_found: Buckets found
-      functions_found: Functions found
-      objects_found: Objects found
-      services_found: Services found
-    location_col: Location
-    name_col: Name
-    run_app_help: Management of Google Cloud Run
-    run_describe_help: Show details of a specific Cloud Run service
-    run_describe_name_help: Name of the service to describe
-    run_list_help: List all deployed Cloud Run services
-    run_list_title: Cloud Run Services (Google Cloud Run)
-    size_col: Size
-    state_col: State
-    storage_app_help: Management of Google Cloud Storage
-    storage_buckets_help: List all available storage buckets
-    storage_buckets_title: Storage Buckets (Google Cloud Storage)
-    storage_class_col: Storage Class
-    storage_ls_bucket_help: Name of the bucket to list
-    storage_ls_help: List the objects contained in a bucket
-    storage_ls_prefix_help: Prefix (path) to filter the objects
-    update_time_col: Update Time
-    updated_col: Updated
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -389,193 +227,6 @@ cli:
     status_help: Show the current status of a declaration
     validate_help: Run official technical validations on a declaration
     verify_help: Verify the integrity and consistency of a declaration
-  docs:
-    app_help: Management of AEAT manuals and regulations
-    append_doc_id_help: Identifier of the document to append content to
-    append_help: Append a new section or content to an existing document
-    append_text_help: Text to append to the document
-    errors:
-      empty_text: Text cannot be empty
-    get_doc_id_help: Identifier of the document to get
-    get_help: Get the content of a specific document
-    get_plaintext_help: Show the content in plain text format
-    new_help: Create a new documentation document
-    new_title_help: Title of the new document
-    replace_doc_id_help: Identifier of the document whose content will be replaced
-    replace_help: Completely replace the content of an existing document
-    replace_new_text_help: New text for the document
-    replace_old_help: Old text to be replaced
-    success:
-      appended: Content successfully appended to the document
-      replaced: Document content successfully replaced
-  doctor:
-    details:
-      adc_granted_scopes: ADC Granted Scopes
-      adc_missing_scopes: ADC Missing Scopes
-      adc_no_scopes: No scopes configured
-      adc_not_configured_advisory: ADC is not configured. Run 'gcloud auth application-default
-        login' to activate it.
-      adc_substep_json_not_configured: ADC JSON file not configured
-      api_call_failed: API call failed
-      api_enabled: API enabled
-      api_needs_billing: API requires billing enabled
-      auth_path_active: Active authentication path
-      auth_path_adc: 'Authentication path: ADC (Application Default Credentials)'
-      auth_path_oauth_desktop: 'Authentication path: OAuth Desktop'
-      auth_path_service_account: 'Authentication path: Service Account'
-      auth_ready_both: Authentication ready for both Cloud and AEAT
-      auth_ready_cli_only: Only CLI-based (Cloud) authentication is ready
-      auth_ready_mcp_only: Only MCP (AEAT) authentication is ready
-      auth_ready_none: No authentication systems are ready
-      backend_active: Active backend
-      buckets_visible: Visible storage buckets
-      cert_health_detail: Certificate health details
-      drive_scope_check_failed: Google Drive scope check failed
-      functions_visible: Visible cloud functions
-      gcloud_env_project_mismatch: Mismatch between gcloud project and environment
-        configuration
-      gcloud_installed: Google Cloud SDK (gcloud) installed
-      gcloud_version_failed: Failed to get gcloud version
-      gcp_project_not_set: Google Cloud project ID not set
-      install_gcloud_advisory: Please install the Google Cloud SDK (gcloud) to proceed.
-      live_reads_enabled: Live reads enabled
-      live_reads_skipped: Live reads skipped
-      live_tests_disabled: Live tests disabled
-      live_writes_forbidden: Live writes forbidden
-      master_kdf_absent: Master KDF absent
-      master_kdf_argon2id: 'Master KDF: Argon2id'
-      master_kdf_not_object: Master KDF data is invalid (not an object)
-      master_kdf_parse_failed: Failed to parse master KDF file
-      master_kdf_unrecognised: Unrecognized master KDF algorithm
-      master_kdf_unsupported: Unsupported master KDF algorithm
-      master_key_file_present: Master key file present
-      master_key_keychain_preferred: Keychain is preferred for master key storage
-      master_key_keyring: 'Master Key: System Keyring'
-      master_key_missing: Master key missing
-      master_key_partial: Master key data is incomplete
-      master_key_unsecured: Master key is stored in an unsecured way
-      mcp_credentials_dir_prepared: MCP credentials directory prepared
-      mcp_credentials_present: MCP credentials present
-      no_active_auth_path: No active authentication path
-      no_credentials_configured: No credentials configured
-      no_scratch_doc: Scratch document not found
-      no_scratch_sheet: Scratch spreadsheet not found
-      no_stale_artifacts: No stale artifacts found
-      not_required_active_path: Active path not required
-      not_required_see_drift: Not required, see drift
-      oauth_config_missing: OAuth configuration missing
-      oauth_config_partial: OAuth configuration is incomplete
-      oauth_json_present: OAuth JSON file present
-      oauth_token_issue: Issue with OAuth token
-      provider_not_configured: Provider not configured
-      provider_unavailable: Provider unavailable
-      pytest_current_test_present: Test environment detected (PYTEST_CURRENT_TEST
-        present)
-      run_auth_init_mcp: Run 'aeat auth init-mcp' to configure AEAT credentials.
-      run_env_setup: Run environment setup to initialize the project.
-      run_gcloud_auth: Run 'gcloud auth login' to authenticate with Google Cloud.
-      run_gcloud_config_set_project: Run 'gcloud config set project [PROJECT_ID]'
-        to set the active project.
-      run_gcloud_services_enable: Run 'gcloud services enable [SERVICE_NAME]' to enable
-        the required API.
-      sa_key_not_found: Service account key file not found
-      sa_key_unparseable: Service account key file is unparseable (invalid JSON)
-      sa_key_unset: Service account key path not set
-      secret_store_dir_missing: Secret store directory missing
-      secret_store_dir_not_writable: Secret store directory is not writable
-      select_auth_path_first: Please select an authentication path first.
-      select_prepare_auth_path: Select and prepare an authentication path to proceed.
-      service_usage_failed: Failed to check service usage
-      services_visible: Visible enabled services (APIs)
-      set_gcp_project: Set the Google Cloud project ID in your environment.
-      unsecured_requires_allow: Unsecured storage requires explicit allowance (e.g.,
-        --allow-unsecured)
-      unsecured_warning: 'WARNING: An unsecured key storage method is being used.'
-    errors:
-      findings: Diagnostic findings
-    sections:
-      active_google_auth_path: Active Google Auth Path
-      adc_file: ADC File
-      adc_scopes: ADC Scopes
-      aeat_auth_path: AEAT Auth Path
-      aeat_certificate: AEAT Certificate
-      api_enablement: API Enablement
-      api_service: API Service
-      auth_path: Authentication Path
-      cli_oauth_cache: CLI OAuth Cache
-      desktop_oauth_client_material: Desktop OAuth Client Material
-      docs_round_trip: Google Docs Round Trip
-      drive_round_trip: Google Drive Round Trip
-      env_file: Environment File (.env)
-      functions_list: Cloud Functions List
-      gcloud_auth: gcloud Auth
-      gcloud_binary: gcloud Binary
-      gcloud_project: gcloud Project
-      google_auth_readiness: Google Auth Readiness
-      google_cloud_project: Google Cloud Project
-      inactive_path_drift: Inactive Path Drift
-      kdf_version: KDF Version
-      live_access_gate: Live Access Gate
-      live_tests: Live Tests
-      master_key_readiness: Master Key Readiness
-      mcp_credentials_cache: MCP Credentials Cache
-      run_list: Cloud Run List
-      secret_store_backend: Secret Store Backend
-      secret_store_dir: Secret Store Directory
-      service_account_key_state: Service Account Key State
-      sheets_round_trip: Google Sheets Round Trip
-      storage_list: Cloud Storage List
-    success:
-      all_clean: Everything is clean. No issues found.
-    table:
-      detail: Detail
-      'no': 'No'
-      required: Required
-      section: Section
-      state: State
-      title: Title
-      'yes': 'Yes'
-  drive:
-    app_help: Manage files and folders in Google Drive
-    cat_export_mime_help: MIME type to export the file as (e.g., for Google Docs)
-    cat_file_id_help: Identifier of the Google Drive file to display
-    cat_help: Display the content of a Google Drive file in the console
-    errors:
-      already_exists: File or folder already exists
-      local_not_found: Local file or path not found
-      multiple_matches: Multiple matches found
-      not_found: File not found in Google Drive
-    fetch_help: Download a file from Google Drive to the local system
-    fetch_name_help: Name of the Google Drive file to search for and download
-    fetch_out_help: Local destination path for the downloaded file
-    fetch_overwrite_help: Overwrite the local file if it already exists
-    find_help: Search for files or folders in Google Drive by name
-    find_query_help: Name or search pattern to find files
-    find_table_title: Files found in Google Drive
-    ls_folder_help: Identifier of the folder to list (defaults to root)
-    ls_help: List files and folders in a Google Drive location
-    ls_page_size_help: Maximum number of items to display per page
-    ls_table_title: Folder content in Google Drive
-    mkdir_help: Create a new folder in Google Drive
-    mkdir_name_help: Name of the new folder
-    mkdir_parent_help: Identifier of the parent folder (defaults to root)
-    put_folder_help: Identifier of the destination folder in Google Drive
-    put_help: Upload a local file to Google Drive
-    put_local_help: Path of the local file to upload
-    put_mime_help: MIME type for the uploaded file (e.g., to convert to Google Docs)
-    put_name_help: Name for the file in Google Drive
-    rm_file_id_help: Identifier of the Google Drive file or folder to delete
-    rm_help: Delete a file or folder from Google Drive
-    rm_permanent_help: Delete permanently (skip trash)
-    success:
-      deleted: File or folder successfully deleted from Google Drive
-      fetched: File successfully downloaded from Google Drive
-      trashed: File or folder moved to Google Drive trash
-    table_id: File ID
-    table_mime: MIME Type
-    table_modified: Modified
-    table_name: Name
-    table_size: Size
   filing:
     amendment:
       delta_table_title: Amendment Delta (Differences)
@@ -966,21 +617,6 @@ cli:
       clean: Normative cleanup completed
       verification_results: Verification results
     verify_help: Verify integrity and validity of regulations
-  oauth:
-    app_help: OAuth 2.0 authentication management
-    errors:
-      invalid_json: 'Error: The credentials file does not contain valid JSON'
-    init:
-      help: Initialize OAuth configuration from a file
-      json_help: Path to the Google Cloud credentials JSON file
-      success: OAuth configuration successfully initialized
-    labels:
-      next_step: Next step
-      open_url: Please open the following URL in your browser to authorize the application
-      run_gcloud_auth: Run gcloud authentication
-    success:
-      copied: Credentials copied to clipboard
-      written: Configuration written successfully
   overview:
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
@@ -1234,7 +870,6 @@ setup:
   wizard:
     aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
     aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
-    aeat_live_tests_google_prompt: setup.wizard.aeat_live_tests_google_prompt
     aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
     aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
     bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
@@ -1251,7 +886,6 @@ setup:
     pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
     pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
     professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
-    provision_google_fixtures_prompt: setup.wizard.provision_google_fixtures_prompt
     tax_id_prompt: setup.wizard.tax_id_prompt
     tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
     third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt

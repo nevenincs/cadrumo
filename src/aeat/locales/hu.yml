@@ -87,144 +87,6 @@ cli:
       provider_help: Hitelesítési szolgáltató (pl. certificate, clave_movil)
       set_default_help: Ennek a szolgáltatónak a beállítása alapértelmezett hitelesítési
         módszerként
-    init:
-      acquire_cli_token_help: Google token beszerzése a CLI-hez (megnyitja a böngészőt)
-      doctor_help: Környezet-ellenőrzés (doctor) futtatása inicializálás után
-      errors:
-        accepted_cached: Gyorsítótárazott hitelesítő adatok elfogadva
-        auth_failed: A hitelesítés sikertelen
-        clave_movil_config_purpose: Kötelező beállítás a Cl@ve Móvil-on keresztüli
-          hozzáféréshez
-        desktop_client_not_found: 'Az asztali OAuth-kliens JSON-fájlja nem található:
-          {path}'
-        dni_fecha_required: A DNI érvényességi dátuma kötelező a Cl@ve Móvil használatakor
-          QR-kód nélkül
-        dni_nie_required: DNI vagy NIE kötelező a Cl@ve Móvil használatához
-        interactive_required: Ehhez a művelethez interaktív terminál szükséges
-        missing_provider_or_all: Meg kell adnia egy szolgáltatót (--provider) vagy
-          használnia kell az --all kapcsolót
-        nie_soporte_required: A NIE támogatási száma kötelező a Cl@ve Móvil használatakor
-          QR-kód nélkül
-        no_env_file: A környezeti fájl (.env) nem található
-        no_session_found: Nem található aktív munkamenet
-        probe_failed: A kapcsolat vagy hitelesítés tesztje sikertelen
-        provider_not_supported: A hitelesítési szolgáltató nem támogatott
-        sa_key_not_found: 'A szolgáltatásfiók (Service Account) JSON-kulcsfájlja nem
-          található: {path}'
-        session_stale: Az aktuális munkamenet lejárt és nem használható
-        signed_in: Sikeres bejelentkezés
-        signed_out: 'Kijelentkezés innen: {label}'
-        signed_out_many: 'Kijelentkezés innen: {joined}'
-        stale_or_revoked: A munkamenet lejárt vagy visszavonásra került
-        unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {raw}. Támogatott
-          szolgáltatók: {valid}'
-        unsupported_env_file: Nem támogatott környezeti fájl (.env) formátum
-        unsupported_provider: 'Nem támogatott szolgáltató: {raw}. Támogatott szolgáltatók:
-          {valid}'
-      help: A projekt hitelesítési állapotának inicializálása (Google, AEAT)
-      json_help: A JSON hitelesítő adatfájl útvonala
-      labels:
-        action: Művelet
-        and: és
-        browser: Böngésző
-        next: Következő
-        purpose: Cél
-        source: Forrás
-        success: Siker
-      login_instruction: Kérjük, jelentkezzen be az éppen megnyílt böngészőablakban
-      path_help: Inicializálandó útvonalcsalád (pl. desktop-oauth-local-dev, service-account)
-      prepare_mcp_help: Az MCP (Model Context Protocol) szerver konfigurációjának
-        előkészítése
-      prompts:
-        dni_fecha: A DNI érvényességi dátuma (ÉÉÉÉ-HH-NN)
-        dni_nie: Az adózó DNI vagy NIE száma
-        nie_soporte: A NIE támogatási száma
-      reset_cli_token_help: A meglévő Google token törlése és új kérése
-      saved_config: 'Konfiguráció sikeresen mentve ide: {path}'
-      service_account_json_help: A szolgáltatásfiók (Service Account) JSON-kulcsfájljának
-        útvonala
-      step_acq_action: Token beszerzése
-      step_acq_browser: Alapértelmezett böngésző
-      step_acq_next: Folytatás
-      step_acq_purpose: Hozzáférés a Google Drive-hoz, Sheets-hez és Docs-hoz fájlkezelés
-        céljából
-      step_acq_source: Google Cloud Konzol
-      step_acq_success: Token sikeresen beszerezve
-      step_acq_title: 'Lépés: Google CLI Token beszerzése'
-      step_desktop_imported_action: Kliens JSON importálása
-      step_desktop_imported_browser: Fájlkezelő
-      step_desktop_imported_next: Folytatás
-      step_desktop_imported_purpose: Az asztali kliens konfigurálása OAuth 2.0 hitelesítéshez
-      step_desktop_imported_source: Google Cloud Konzol
-      step_desktop_imported_success: Kliens JSON sikeresen importálva
-      step_desktop_imported_title: 'Lépés: Asztali OAuth-kliens importálása'
-      step_mcp_action: MCP konfigurálása
-      step_mcp_browser: N/A
-      step_mcp_next: Befejezés
-      step_mcp_purpose: AI ágensek számára lehetővé teszi a CLI eszközök használatát
-      step_mcp_source: Helyi fájl
-      step_mcp_success: MCP sikeresen konfigurálva
-      step_mcp_title: 'Lépés: MCP szerver konfigurálása'
-      step_repair_action: Környezet javítása
-      step_repair_browser: N/A
-      step_repair_next: Folytatás
-      step_repair_purpose: A konfigurációban észlelt ellentmondások javítása
-      step_repair_source: Automatikus javítás
-      step_repair_success: A környezet sikeresen javítva
-      step_repair_title: 'Lépés: Környezet javítása'
-      step_sa_imported_action: SA-kulcs importálása
-      step_sa_imported_browser: Fájlkezelő
-      step_sa_imported_next: Folytatás
-      step_sa_imported_purpose: A szolgáltatásfiók konfigurálása headless automatizáláshoz
-      step_sa_imported_source: Google Cloud Konzol
-      step_sa_imported_success: Szolgáltatásfiók-kulcs sikeresen importálva
-      step_sa_imported_title: 'Lépés: Szolgáltatásfiók (SA) kulcs importálása'
-      step_sa_req_action: Szolgáltatásfiók ellenőrzése
-      step_sa_req_browser: N/A
-      step_sa_req_next: Folytatás
-      step_sa_req_purpose: A szolgáltatásfiók felhőalapú hozzáférési jogosultságainak
-        ellenőrzése
-      step_sa_req_source: Google API
-      step_sa_req_success: Szolgáltatásfiók sikeresen ellenőrizve
-      step_sa_req_title: 'Lépés: Szolgáltatásfiók (SA) ellenőrzése'
-      step_sa_status_action: Állapot ellenőrzése
-      step_sa_status_browser: N/A
-      step_sa_status_next: Folytatás
-      step_sa_status_purpose: A szolgáltatásfiók aktív és működőképes állapotának
-        biztosítása
-      step_sa_status_source: Google IAM
-      step_sa_status_success: Szolgáltatásfiók állapota ellenőrizve
-      step_sa_status_title: 'Lépés: Szolgáltatásfiók állapotának ellenőrzése'
-      step_setup_req_action: Beállítások ellenőrzése
-      step_setup_req_browser: N/A
-      step_setup_req_next: Folytatás
-      step_setup_req_purpose: A helyi konfigurációs fájlok épségének ellenőrzése
-      step_setup_req_source: Helyi fájlrendszer
-      step_setup_req_success: Beállítások sikeresen ellenőrizve
-      step_setup_req_title: 'Lépés: Beállítások ellenőrzése'
-      step_status_action: Állapot ellenőrzése
-      step_status_browser: N/A
-      step_status_next: Folytatás
-      step_status_purpose: Aktív hitelesítési munkamenet létezésének ellenőrzése
-      step_status_source: Token gyorsítótár
-      step_status_success: Hitelesítési állapot ellenőrizve
-      step_status_title: 'Lépés: Hitelesítési állapot ellenőrzése'
-      step_token_reset_action: Token alaphelyzetbe állítása
-      step_token_reset_browser: N/A
-      step_token_reset_next: Folytatás
-      step_token_reset_purpose: Újbóli hitelesítés kényszerítése a tárolt token törlésével
-      step_token_reset_source: Helyi gyorsítótár
-      step_token_reset_success: Token sikeresen alaphelyzetbe állítva
-      step_token_reset_title: 'Lépés: Google token alaphelyzetbe állítása'
-      terms:
-        default_provider: alapértelmezett szolgáltató
-        direct_push: közvetlen (push) értesítés
-        dni_fecha: DNI érvényességi dátuma
-        dni_nie: DNI/NIE
-        nie_soporte: NIE támogatási száma
-        qr_code: QR-kód
-      url_prompt: 'Ha a böngésző nem nyílt meg automatikusan, látogasson el erre az
-        URL-re:'
     list_providers:
       all_help: Az összes támogatott szolgáltató listázása, nem csak a konfiguráltaké
       configured_help: A konfigurált hitelesítési szolgáltatók listázása
@@ -249,23 +111,6 @@ cli:
       help: Részletes információk megjelenítése a jelenleg hitelesített alanyról
       json_help: Az alany információinak megjelenítése JSON formátumban
       provider_help: Ellenőrizendő hitelesítési szolgáltató (pl. certificate, clave_movil)
-  bootstrap:
-    errors:
-      already_bootstrapped: A környezet már inicializálva lett (bootstrapped)
-      destructive_warning: FIGYELEM! Ez a művelet destruktív lehet, és felülírhatja
-        a meglévő erőforrásokat
-      force_instruction: Használja a --force kapcsolót a folytatáshoz, ha biztos benne
-      missing_env: Az inicializáláshoz szükséges környezeti változók hiányoznak
-      missing_target: Nincs megadva az inicializálás célja (target)
-      target_instruction: Kérjük, adjon meg egy érvényes célt a --target kapcsolóval
-    labels:
-      active_env: Aktív környezet
-      active_target: Aktív cél
-      auth_method: Hitelesítési módszer
-      auth_path: Hitelesítési útvonal
-      mcp_status: MCP állapota
-    success:
-      complete: A környezet inicializálása sikeresen befejeződött
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -283,40 +128,6 @@ cli:
     list_help: Az összes elérhető eljárási kategória listázása
     show_help: Egy adott kategória részleteinek megjelenítése
     year_help: Adóév
-  cloud:
-    app_help: Felhőalapú funkciók kezelése (Google Cloud)
-    environment_col: Környezet
-    errors:
-      missing_project: A Google Cloud projekt azonosító nincs konfigurálva
-    functions_app_help: Google Cloud Functions kezelése
-    functions_describe_help: Egy adott felhőalapú funkció részleteinek megjelenítése
-    functions_describe_name_help: A leírandó funkció neve
-    functions_list_help: Az összes telepített felhőalapú funkció listázása
-    functions_list_title: Felhőalapú funkciók (Google Cloud Functions)
-    generation_col: Generáció
-    labels:
-      buckets_found: Talált bucketek
-      functions_found: Talált funkciók
-      objects_found: Talált objektumok
-      services_found: Talált szolgáltatások
-    location_col: Helyszín
-    name_col: Név
-    run_app_help: Google Cloud Run kezelése
-    run_describe_help: Egy adott Cloud Run szolgáltatás részleteinek megjelenítése
-    run_describe_name_help: A leírandó szolgáltatás neve
-    run_list_help: Az összes telepített Cloud Run szolgáltatás listázása
-    run_list_title: Cloud Run szolgáltatások (Google Cloud Run)
-    size_col: Méret
-    state_col: Állapot
-    storage_app_help: Google Cloud Storage kezelése
-    storage_buckets_help: Az összes elérhető tárolási bucket listázása
-    storage_buckets_title: Tárolási bucketek (Google Cloud Storage)
-    storage_class_col: Tárolási osztály
-    storage_ls_bucket_help: A listázandó bucket neve
-    storage_ls_help: Egy bucketben található objektumok listázása
-    storage_ls_prefix_help: Előtag (útvonal) az objektumok szűréséhez
-    update_time_col: Frissítés ideje
-    updated_col: Frissítve
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
@@ -410,199 +221,6 @@ cli:
     status_help: Bevallás aktuális állapotának megjelenítése
     validate_help: Hivatalos technikai ellenőrzések futtatása a bevalláson
     verify_help: Bevallás integritásának és következetességének ellenőrzése
-  docs:
-    app_help: AEAT kézikönyvek és szabályozások kezelése
-    append_doc_id_help: A dokumentum azonosítója, amelyhez tartalmat kell fűzni
-    append_help: Új szakasz vagy tartalom hozzáadása egy meglévő dokumentumhoz
-    append_text_help: A dokumentumhoz fűzendő szöveg
-    errors:
-      empty_text: A szöveg nem lehet üres
-    get_doc_id_help: A lekérdezni kívánt dokumentum azonosítója
-    get_help: Egy adott dokumentum tartalmának lekérdezése
-    get_plaintext_help: Tartalom megjelenítése egyszerű szöveges formátumban
-    new_help: Új dokumentáció létrehozása
-    new_title_help: Az új dokumentum címe
-    replace_doc_id_help: A dokumentum azonosítója, amelynek tartalmát le kell cserélni
-    replace_help: Egy meglévő dokumentum tartalmának teljes cseréje
-    replace_new_text_help: Új szöveg a dokumentumhoz
-    replace_old_help: Régi, lecserélendő szöveg
-    success:
-      appended: A tartalom sikeresen hozzáadva a dokumentumhoz
-      replaced: A dokumentum tartalma sikeresen lecserélve
-  doctor:
-    details:
-      adc_granted_scopes: ADC által biztosított hatókörök (scopes)
-      adc_missing_scopes: ADC-ből hiányzó hatókörök (scopes)
-      adc_no_scopes: Nincsenek hatókörök konfigurálva
-      adc_not_configured_advisory: Az ADC nincs konfigurálva. Futtassa a 'gcloud auth
-        application-default login' parancsot az aktiváláshoz.
-      adc_substep_json_not_configured: ADC JSON fájl nincs konfigurálva
-      api_call_failed: Az API hívás sikertelen
-      api_enabled: API engedélyezve
-      api_needs_billing: Az API-hoz számlázás engedélyezése szükséges
-      auth_path_active: Aktív hitelesítési útvonal
-      auth_path_adc: 'Hitelesítési útvonal: ADC (Application Default Credentials)'
-      auth_path_oauth_desktop: 'Hitelesítési útvonal: OAuth Desktop'
-      auth_path_service_account: 'Hitelesítési útvonal: Szolgáltatásfiók (Service
-        Account)'
-      auth_ready_both: A hitelesítés kész mind a Cloud, mind az AEAT számára
-      auth_ready_cli_only: Csak a CLI-alapú (Cloud) hitelesítés kész
-      auth_ready_mcp_only: Csak az MCP (AEAT) hitelesítés kész
-      auth_ready_none: Egyetlen hitelesítési rendszer sem áll készen
-      backend_active: Aktív háttérrendszer (backend)
-      buckets_visible: Látható tárolási bucketek
-      cert_health_detail: Tanúsítvány egészségi részletei
-      drive_scope_check_failed: Google Drive hatókör ellenőrzése sikertelen
-      functions_visible: Látható felhőalapú funkciók
-      gcloud_env_project_mismatch: Eltérés a gcloud projekt és a környezeti konfiguráció
-        között
-      gcloud_installed: Google Cloud SDK (gcloud) telepítve
-      gcloud_version_failed: A gcloud verziójának lekérdezése sikertelen
-      gcp_project_not_set: A Google Cloud projekt azonosító nincs beállítva
-      install_gcloud_advisory: A folytatáshoz kérjük, telepítse a Google Cloud SDK-t
-        (gcloud).
-      live_reads_enabled: Élő lekérdezések engedélyezve
-      live_reads_skipped: Élő lekérdezések kihagyva
-      live_tests_disabled: Élő tesztek letiltva
-      live_writes_forbidden: Élő írási műveletek tiltva
-      master_kdf_absent: Mester KDF hiányzik
-      master_kdf_argon2id: 'Mester KDF: Argon2id'
-      master_kdf_not_object: A mester KDF adatok érvénytelenek (nem objektum)
-      master_kdf_parse_failed: A mester KDF fájl feldolgozása sikertelen
-      master_kdf_unrecognised: Ismeretlen mester KDF algoritmus
-      master_kdf_unsupported: Nem támogatott mester KDF algoritmus
-      master_key_file_present: Mesterkulcs fájl jelen van
-      master_key_keychain_preferred: A kulcstartó (keychain) preferált a mesterkulcs
-        tárolásához
-      master_key_keyring: 'Mesterkulcs: Rendszer kulcstartó (Keyring)'
-      master_key_missing: Mesterkulcs hiányzik
-      master_key_partial: Mesterkulcs adatai hiányosak
-      master_key_unsecured: A mesterkulcs tárolása nem biztonságos
-      mcp_credentials_dir_prepared: MCP hitelesítő adatok könyvtára előkészítve
-      mcp_credentials_present: MCP hitelesítő adatok jelen vannak
-      no_active_auth_path: Nincs aktív hitelesítési útvonal
-      no_credentials_configured: Nincsenek hitelesítő adatok konfigurálva
-      no_scratch_doc: Piszkozat dokumentum nem található
-      no_scratch_sheet: Piszkozat táblázat nem található
-      no_stale_artifacts: Nem találhatók elavult fájlmaradványok (artifacts)
-      not_required_active_path: Az aktív útvonal nem szükséges
-      not_required_see_drift: 'Nem szükséges, lásd: eltérés (drift)'
-      oauth_config_missing: OAuth konfiguráció hiányzik
-      oauth_config_partial: Az OAuth konfiguráció hiányos
-      oauth_json_present: OAuth JSON fájl jelen van
-      oauth_token_issue: Probléma az OAuth tokennel
-      provider_not_configured: A szolgáltató nincs konfigurálva
-      provider_unavailable: A szolgáltató nem érhető el
-      pytest_current_test_present: Tesztkörnyezet észlelve (PYTEST_CURRENT_TEST jelen
-        van)
-      run_auth_init_mcp: Futtassa az 'aeat auth init-mcp' parancsot az AEAT hitelesítő
-        adatok konfigurálásához.
-      run_env_setup: Futtassa a környezeti beállítást a projekt inicializálásához.
-      run_gcloud_auth: Futtassa a 'gcloud auth login' parancsot a Google Cloud hitelesítéshez.
-      run_gcloud_config_set_project: Futtassa a 'gcloud config set project [PROJEKT_AZONOSÍTÓ]'
-        parancsot az aktív projekt beállításához.
-      run_gcloud_services_enable: Futtassa a 'gcloud services enable [SZOLGÁLTATÁS_NEVE]'
-        parancsot a szükséges API engedélyezéséhez.
-      sa_key_not_found: Szolgáltatásfiók kulcsfájlja nem található
-      sa_key_unparseable: A szolgáltatásfiók kulcsfájlja nem feldolgozható (érvénytelen
-        JSON)
-      sa_key_unset: A szolgáltatásfiók kulcsútvonala nincs beállítva
-      secret_store_dir_missing: A titkos tároló könyvtára nem található
-      secret_store_dir_not_writable: A titkos tároló könyvtára nem írható
-      select_auth_path_first: Kérjük, először válasszon egy hitelesítési útvonalat.
-      select_prepare_auth_path: A folytatáshoz válasszon és készítsen elő egy hitelesítési
-        útvonalat.
-      service_usage_failed: A szolgáltatáshasználat ellenőrzése sikertelen
-      services_visible: Látható engedélyezett szolgáltatások (APIs)
-      set_gcp_project: Állítsa be a Google Cloud projekt azonosítót a környezetében.
-      unsecured_requires_allow: A nem biztonságos tároláshoz kifejezett engedélyezés
-        szükséges (pl. --allow-unsecured)
-      unsecured_warning: 'FIGYELEM: Nem biztonságos kulcstárolási módszer van használatban.'
-    errors:
-      findings: Diagnosztikai eredmények
-    sections:
-      active_google_auth_path: Aktív Google hitelesítési útvonal
-      adc_file: ADC fájl
-      adc_scopes: ADC hatókörök (scopes)
-      aeat_auth_path: AEAT hitelesítési útvonal
-      aeat_certificate: AEAT tanúsítvány
-      api_enablement: API-k engedélyezése
-      api_service: API szolgáltatás
-      auth_path: Hitelesítési útvonal
-      cli_oauth_cache: CLI OAuth gyorsítótár
-      desktop_oauth_client_material: Asztali OAuth kliens adatok
-      docs_round_trip: Google Docs körutazás (round-trip) teszt
-      drive_round_trip: Google Drive körutazás (round-trip) teszt
-      env_file: Környezeti fájl (.env)
-      functions_list: Felhőalapú funkciók listája
-      gcloud_auth: gcloud hitelesítés
-      gcloud_binary: gcloud bináris
-      gcloud_project: gcloud projekt
-      google_auth_readiness: Google hitelesítés készenléte
-      google_cloud_project: Google Cloud projekt
-      inactive_path_drift: Inaktív útvonal eltérése (drift)
-      kdf_version: KDF verzió
-      live_access_gate: Élő hozzáférési kapu
-      live_tests: Élő tesztek
-      master_key_readiness: Mesterkulcs készenléte
-      mcp_credentials_cache: MCP hitelesítő adatok gyorsítótára
-      run_list: Cloud Run szolgáltatások listája
-      secret_store_backend: Titkos tároló háttérrendszere
-      secret_store_dir: Titkos tároló könyvtára
-      service_account_key_state: Szolgáltatásfiók kulcsának állapota
-      sheets_round_trip: Google Sheets körutazás (round-trip) teszt
-      storage_list: Cloud Storage listája
-    success:
-      all_clean: Minden tiszta. Nem találhatók problémák.
-    table:
-      detail: Részlet
-      'no': Nem
-      required: Szükséges
-      section: Szakasz
-      state: Állapot
-      title: Cím
-      'yes': Igen
-  drive:
-    app_help: Fájlok és mappák kezelése a Google Drive-ban
-    cat_export_mime_help: MIME-típus a fájl exportálásához (pl. Google Docs esetén)
-    cat_file_id_help: A megjelenítendő Google Drive fájl azonosítója
-    cat_help: Egy Google Drive fájl tartalmának megjelenítése a konzolon
-    errors:
-      already_exists: A fájl vagy mappa már létezik
-      local_not_found: A helyi fájl vagy útvonal nem található
-      multiple_matches: Több egyezés is található
-      not_found: A fájl nem található a Google Drive-on
-    fetch_help: Fájl letöltése Google Drive-ról a helyi rendszerre
-    fetch_name_help: A keresendő és letöltendő Google Drive fájl neve
-    fetch_out_help: Helyi célútvonal a letöltött fájl számára
-    fetch_overwrite_help: Helyi fájl felülírása, ha már létezik
-    find_help: Fájlok vagy mappák keresése a Google Drive-ban név szerint
-    find_query_help: Név vagy keresési minta a fájlok megtalálásához
-    find_table_title: Google Drive-on talált fájlok
-    ls_folder_help: A listázandó mappa azonosítója (alapértelmezés szerint a gyökérmappa)
-    ls_help: Fájlok és mappák listázása egy Google Drive helyen
-    ls_page_size_help: Oldalanként megjelenítendő elemek maximális száma
-    ls_table_title: Mappa tartalma a Google Drive-ban
-    mkdir_help: Új mappa létrehozása a Google Drive-ban
-    mkdir_name_help: Az új mappa neve
-    mkdir_parent_help: A szülőmappa azonosítója (alapértelmezés szerint a gyökérmappa)
-    put_folder_help: A célmappa azonosítója a Google Drive-ban
-    put_help: Helyi fájl feltöltése a Google Drive-ra
-    put_local_help: A feltöltendő helyi fájl útvonala
-    put_mime_help: MIME-típus a feltöltött fájlhoz (pl. Google Docs-szá történő konvertáláshoz)
-    put_name_help: A fájl neve a Google Drive-ban
-    rm_file_id_help: A törlendő Google Drive fájl vagy mappa azonosítója
-    rm_help: Fájl vagy mappa törlése a Google Drive-ról
-    rm_permanent_help: Végleges törlés (kukába helyezés kihagyása)
-    success:
-      deleted: A fájl vagy mappa sikeresen törölve a Google Drive-ról
-      fetched: A fájl sikeresen letöltve a Google Drive-ról
-      trashed: A fájl vagy mappa a Google Drive kukájába került
-    table_id: Fájl azonosító
-    table_mime: MIME-típus
-    table_modified: Módosítva
-    table_name: Név
-    table_size: Méret
   filing:
     amendment:
       delta_table_title: Módosító bevallás különbségei (delta)
@@ -999,22 +617,6 @@ cli:
       clean: Normatívák tisztítása befejeződött
       verification_results: Ellenőrzés eredményei
     verify_help: Szabályozások integritásának és érvényességének ellenőrzése
-  oauth:
-    app_help: OAuth 2.0 hitelesítés kezelése
-    errors:
-      invalid_json: 'Hiba: A hitelesítő adatok fájlja nem tartalmaz érvényes JSON-t'
-    init:
-      help: OAuth konfiguráció inicializálása fájlból
-      json_help: A Google Cloud hitelesítő adatok JSON-fájljának útvonala
-      success: Az OAuth konfiguráció sikeresen inicializálva lett
-    labels:
-      next_step: Következő lépés
-      open_url: Kérjük, nyissa meg a következő URL-t a böngészőjében az alkalmazás
-        engedélyezéséhez
-      run_gcloud_auth: Gcloud hitelesítés futtatása
-    success:
-      copied: Hitelesítő adatok a vágólapra másolva
-      written: Konfiguráció sikeresen kiírva
   overview:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
@@ -1270,7 +872,6 @@ setup:
   wizard:
     aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
     aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
-    aeat_live_tests_google_prompt: setup.wizard.aeat_live_tests_google_prompt
     aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
     aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
     bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
@@ -1287,7 +888,6 @@ setup:
     pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
     pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
     professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
-    provision_google_fixtures_prompt: setup.wizard.provision_google_fixtures_prompt
     tax_id_prompt: setup.wizard.tax_id_prompt
     tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
     third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
