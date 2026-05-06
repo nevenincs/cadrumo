@@ -1913,3 +1913,15 @@ applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
 review_status = "reviewed"
+
+[sources."lirpf-cuota-chain-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-05-06
+applies_from = 2007-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+review_status = "reviewed"
