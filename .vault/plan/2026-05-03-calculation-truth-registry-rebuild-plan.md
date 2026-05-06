@@ -4972,3 +4972,24 @@ Pending VAT-centric slices per the ADR sequencing:
 - [ ] Modelo 390 (IVA resumen anual) foundation.
 - [ ] Modelo 369 (IVA OSS / IOSS) registry slices, one per Esquema,
   consuming the substrate plus the binding.
+
+- [x] Teardown C: review-edit + country validator boundary tightening.
+  Closes V-3 (medium) and M-2 (medium) from the rate-shadow sweep.
+  `--set iva.rate=NN` now rejects values outside the closed substrate
+  slot percentages {0, 4, 10, 21}; `--set retention.rate=NN` is
+  bounded to [0, 100]. Adds `EU_MEMBER_STATE_CODES`,
+  `is_eu_member_state_code`, and `assert_eu_member_state_code`
+  helpers anchored to `aeat.domain.vat.EUMemberState`; the base
+  `validate_country_code` stays permissive for non-EU counterparties
+  while OSS / IOSS bindings consume the new EU-only helpers. Commit
+  `6964fb41`.
+- [x] Modelo 390 (IVA Declaracion-resumen anual) registry foundation.
+  Authority: Orden EHA/3111/2009 (BOE-A-2009-18472), articulos 1 and
+  8. January-30 deadline (treinta primeros dias naturales del mes de
+  enero siguiente) per art. 8. Foundation includes legal references,
+  AEAT 2025 record-design XLSX as workbook parity source, AEAT G412
+  procedure URL, and read-only live cross-references with all
+  writes / signing / payment forbidden. Modified by HAP/2373/2014
+  (BOE-A-2014-13180) which exempts quarterly filers in simplified
+  regime or urban real-estate rental — that subset gates on a
+  profile condition in a deepening slice. Commit `4f00a293`.
