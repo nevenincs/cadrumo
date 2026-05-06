@@ -48,6 +48,7 @@ __all__ = [
     "ParityVerdict",
     "build_planned_operations",
     "pre_flight_oracle_operations",
+    "resolve_cross_reference_oracle",
 ]
 
 ParityVerdict = Literal["match", "mismatch", "unverifiable", "blocked"]
@@ -330,3 +331,33 @@ def assert_oracle_operations_allowed(
             raise RegistryValidationError(
                 f"oracle {oracle.oracle_id!r} operation {index} blocked by policy {policy.id!r}: {exc}"
             ) from exc
+
+
+def resolve_cross_reference_oracle(
+    *,
+    cross_reference_id: str,
+    oracle_id: str | None,
+    catalogue: LiveParityCatalogue,
+    environment: OracleEnvironment = "production",
+) -> LiveParityOracle:
+    """Resolve a cross-reference's bound oracle through the catalogue.
+
+    Re-frames every catalogue lookup error so the message names the
+    cross-reference id alongside the oracle id. Callers consume the result
+    inside the calculation engine; the resolver does not perform any
+    network operation by itself.
+
+    The resolver requires the cross-reference to declare a binding. Cross-
+    references with no oracle are not resolved here; their absence is a
+    distinct case from "binding present but unresolvable" and the caller
+    handles it before delegating.
+    """
+
+    if oracle_id is None:
+        raise RegistryValidationError(f"cross-reference {cross_reference_id!r} has no oracle binding to resolve")
+    try:
+        return catalogue.lookup(oracle_id, environment=environment)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(
+            f"cross-reference {cross_reference_id!r} bound oracle {oracle_id!r}: {exc}"
+        ) from exc

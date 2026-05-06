@@ -37,6 +37,14 @@ from ._classification import (
 )
 from ._corpus import load_vat_rules_from_manual
 from ._lookup import cite, lookup_rate
+from ._oss import (
+    REGIME_PERIODICITY,
+    DeductionScope,
+    IossFilerRole,
+    OssIossRegime,
+    RegimePeriodicity,
+    regime_allows_deduction,
+)
 from ._rates import VAT_RATE_TABLE
 from ._schema import (
     EUMemberState,
@@ -61,13 +69,18 @@ from .errors import (
 )
 
 __all__ = [
+    "REGIME_PERIODICITY",
     "VAT_CATALOGUES_BY_YEAR",
     "VAT_RATE_TABLE",
     "CustomerResidency",
     "CustomerTaxStatus",
+    "DeductionScope",
     "EUMemberState",
     "InvoiceDirection",
+    "IossFilerRole",
     "IssuerResidency",
+    "OssIossRegime",
+    "RegimePeriodicity",
     "TransactionKind",
     "VATCatalogue",
     "VATCategory",
@@ -90,6 +103,7 @@ __all__ = [
     "classify_vat",
     "load_vat_rules_from_manual",
     "lookup_rate",
+    "regime_allows_deduction",
     "resolve_catalogue",
     "verify_catalogue",
 ]

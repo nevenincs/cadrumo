@@ -123,6 +123,33 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
+def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> None:
+    """iva_rate_percentage must derive its values from registry/aeat/vat/rates.toml.
+
+    Confirms the V-1 audit finding teardown: the helper no longer carries
+    a hardcoded ``RATE_21 -> 0.21`` literal. Every numeric slot is
+    resolved against :func:`aeat.domain.vat.lookup_rate` for Spain at
+    a given date.
+    """
+    from aeat.domain.invoices._enums import iva_rate_percentage
+    from aeat.domain.vat import EUMemberState, VATRateKind, lookup_rate
+
+    sample_date = date(2025, 6, 15)
+
+    assert iva_rate_percentage(IvaRate.RATE_0, on_date=sample_date) == Decimal("0")
+    assert iva_rate_percentage(IvaRate.EXEMPT, on_date=sample_date) is None
+    assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=sample_date) is None
+
+    for slot, kind in [
+        (IvaRate.RATE_4, VATRateKind.SUPER_REDUCED),
+        (IvaRate.RATE_10, VATRateKind.REDUCED),
+        (IvaRate.RATE_21, VATRateKind.GENERAL),
+    ]:
+        substrate_rate = lookup_rate(EUMemberState.ES, kind, sample_date)
+        expected = substrate_rate.pct / Decimal("100")
+        assert iva_rate_percentage(slot, on_date=sample_date) == expected
+
+
 def test_invoice_exempt_lines_require_zero_iva() -> None:
     """EXEMPT and NOT_SUBJECT lines must carry iva_amount == 0 exactly."""
     with pytest.raises(ValidationError):

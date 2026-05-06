@@ -8,12 +8,13 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryValidator, build_snapshot, load_registry_tree
+from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _load_modelo_184() -> tuple[object, object]:
+def _load_modelo_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(m for m in modelos if m.id == "184")
     return modelo, catalogues
@@ -62,9 +63,7 @@ def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
 
 def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
     modelo, catalogues = _load_modelo_184()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
 
     assert "orden-hap-2250-2015:art-1" in snapshot.legal
     assert "orden-hap-2250-2015:art-4" in snapshot.legal

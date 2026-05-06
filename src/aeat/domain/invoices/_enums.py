@@ -4,14 +4,22 @@ Defines :class:`InvoiceKind`, :class:`IvaRate`, and
 :class:`PaymentStatus` together with the
 :func:`iva_rate_percentage` helper that resolves the numeric Decimal
 percentage backing each :class:`IvaRate` member.
+
+The percentage helper queries the centralized VAT substrate at
+:mod:`aeat.domain.vat` rather than carrying its own rate literals.
+:class:`IvaRate` keeps its closed-taxonomy role for invoice records;
+the legal-grade percentage value lives in
+``registry/aeat/vat/rates.toml`` and is dated.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
+
+from ..vat import EUMemberState, VATRateKind, lookup_rate
+from ..vat.errors import VatRateNotFoundError
 
 
 class InvoiceKind(StrEnum):
@@ -27,17 +35,25 @@ class InvoiceKind(StrEnum):
 
 
 class IvaRate(StrEnum):
-    """Supported Spanish VAT rates and their non-numeric states.
+    """Closed taxonomy of Spanish VAT rate slots used on invoice lines.
 
-    ``RATE_5`` (a transient 2022-2024 rate) is intentionally omitted; if
-    a future workflow ingests pre-2025 data this enum will need to be
-    extended alongside :data:`_IVA_RATE_PERCENTAGES`.
+    The slot names map to substrate :class:`aeat.domain.vat.VATRateKind`
+    tiers and the percentage backing each slot is resolved against
+    :func:`aeat.domain.vat.lookup_rate` for Spain at a given date. This
+    module no longer stores rate percentages as Python literals; if the
+    legal rate changes, the substrate's TOML registry is the single
+    source of truth.
+
+    ``RATE_5`` (a transient 2022-2024 rate) is intentionally absent
+    from this slot taxonomy. If a future workflow ingests pre-2025
+    data this enum and the slot mapping below must be extended in
+    sync with a corresponding registry rate entry.
 
     Attributes:
         RATE_0: Zero-rated supply.
-        RATE_4: Super-reduced 4 % rate (LIVA art. 91).
-        RATE_10: Reduced 10 % rate (LIVA art. 91).
-        RATE_21: General 21 % rate (LIVA art. 90).
+        RATE_4: Super-reduced rate slot (LIVA art. 91 Dos).
+        RATE_10: Reduced rate slot (LIVA art. 91 Uno).
+        RATE_21: General rate slot (LIVA art. 90 Uno).
         EXEMPT: Exempt operation; no numeric percentage.
         NOT_SUBJECT: Operation outside the scope of IVA; no numeric
             percentage.
@@ -69,26 +85,54 @@ class PaymentStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-_IVA_RATE_PERCENTAGES: Mapping[IvaRate, Decimal | None] = MappingProxyType(
-    {
-        IvaRate.RATE_0: Decimal("0"),
-        IvaRate.RATE_4: Decimal("0.04"),
-        IvaRate.RATE_10: Decimal("0.10"),
-        IvaRate.RATE_21: Decimal("0.21"),
-        IvaRate.EXEMPT: None,
-        IvaRate.NOT_SUBJECT: None,
-    }
-)
+_IVA_RATE_TO_VAT_KIND: dict[IvaRate, VATRateKind] = {
+    IvaRate.RATE_4: VATRateKind.SUPER_REDUCED,
+    IvaRate.RATE_10: VATRateKind.REDUCED,
+    IvaRate.RATE_21: VATRateKind.GENERAL,
+}
 
 
-def iva_rate_percentage(rate: IvaRate) -> Decimal | None:
-    """Return the numeric percentage for ``rate``, or ``None`` for non-numeric rates.
+def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal | None:
+    """Return the fractional percentage backing ``rate`` at ``on_date``.
+
+    Slot membership in :class:`IvaRate` is structural; the actual
+    percentage is resolved against
+    :func:`aeat.domain.vat.lookup_rate` for Spain at ``on_date``. When
+    ``on_date`` is omitted the lookup uses today's date.
 
     Args:
-        rate: VAT rate enum member.
+        rate: VAT rate slot.
+        on_date: Date at which to resolve the rate percentage.
+            Defaults to ``date.today()``.
 
     Returns:
-        The Decimal percentage (e.g. ``Decimal("0.21")``) for numeric rates,
-        or ``None`` for ``EXEMPT`` / ``NOT_SUBJECT``.
+        ``Decimal("0")`` for :attr:`IvaRate.RATE_0`; the substrate's
+        rate as a fractional Decimal (``pct/100``) for the
+        ``RATE_4`` / ``RATE_10`` / ``RATE_21`` slots; ``None`` for
+        :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT`.
+
+    Raises:
+        VatRateNotFoundError: If the substrate has no rate for the
+            requested slot at ``on_date``. This indicates registry
+            drift (e.g. asking for a rate before its
+            ``effective_from`` window) and must be fixed by updating
+            the registry rather than by hardcoding a fallback here.
     """
-    return _IVA_RATE_PERCENTAGES[rate]
+    if rate is IvaRate.RATE_0:
+        return Decimal("0")
+    if rate in {IvaRate.EXEMPT, IvaRate.NOT_SUBJECT}:
+        return None
+
+    kind = _IVA_RATE_TO_VAT_KIND[rate]
+    effective_date = on_date or date.today()
+    rate_record = lookup_rate(EUMemberState.ES, kind, effective_date)
+    return rate_record.pct / Decimal("100")
+
+
+__all__ = [
+    "InvoiceKind",
+    "IvaRate",
+    "PaymentStatus",
+    "VatRateNotFoundError",
+    "iva_rate_percentage",
+]
