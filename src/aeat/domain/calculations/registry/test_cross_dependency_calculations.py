@@ -6,25 +6,23 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
-from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
+from . import calculate_registry_snapshot
+from ._authority import ValidatedRegistryAuthority
 from ._bindings import RegistryFilingObservation, resolve_previous_filing_binding_values
 from ._relations import (
     RegistryRelationSourceRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from ._schema import ModeloRevision
+from ._schema import ModeloRevision, RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
 
-
-def test_cross_model_relations_resolve_from_observations_for_revision_edge_years() -> None:
-    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
-
-    for modelo in modelos:
+def test_cross_model_relations_resolve_from_observations_for_revision_edge_years(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    for modelo in registry_authority.modelos:
         for revision in modelo.revisions.values():
             if not revision.relations:
                 continue
@@ -69,16 +67,9 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
 def test_modelo_180_cross_dependency_calculation_resolves_historical_current_and_future_revisions(
     filing_year: int,
     expected_revision: str,
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "180")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=filing_year,
-        period="0A",
-    )
+    snapshot = registry_snapshot("180", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
     observations = _observations_from_requirements(
         requirements,
@@ -112,16 +103,10 @@ def test_modelo_180_cross_dependency_calculation_resolves_historical_current_and
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 
 
-def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "190")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="0A",
-    )
+def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("190", 2026, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
     observations = _observations_from_requirements(
         requirements,
@@ -170,16 +155,10 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings() -> None:
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
 
 
-def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "193")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="0A",
-    )
+def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("193", 2026, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
     observations = _observations_from_requirements(
         requirements,
@@ -217,16 +196,10 @@ def test_modelo_193_calculation_resolves_current_modelo_123_quarterly_filings() 
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-193-rel-123-retenciones-anual",)
 
 
-def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "100")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2025,
-        period="0A",
-    )
+def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("100", 2025, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
 
@@ -300,16 +273,9 @@ def test_modelo_130_calculation_resolves_previous_year_modelo_100_filed_casillas
     expected_binding: Decimal,
     expected_minoracion: Decimal,
     expected_result: Decimal,
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "130")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=filing_year,
-        period="1T",
-    )
+    snapshot = registry_snapshot("130", filing_year, "1T")
 
     binding_values = resolve_previous_filing_binding_values(
         snapshot.revision,
@@ -338,16 +304,11 @@ def test_modelo_130_calculation_resolves_previous_year_modelo_100_filed_casillas
 
 
 @pytest.mark.parametrize("period", ["1P", "2P", "3P"])
-def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(period: str) -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "202")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period=period,
-    )
+def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
+    period: str,
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("202", 2026, period)
     revision = snapshot.revision
     assert revision.id == "2025-y-siguientes"
     assert len(revision.casillas) == 50
@@ -430,16 +391,9 @@ def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     filing_year: int,
     expected_revision: str,
     expected_casilla_count: int,
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "202")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=filing_year,
-        period="1P",
-    )
+    snapshot = registry_snapshot("202", filing_year, "1P")
     assert snapshot.revision.id == expected_revision
     assert len(snapshot.revision.casillas) == expected_casilla_count
 
@@ -455,16 +409,10 @@ def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     assert result.values["03"] == Decimal("3600.00")
 
 
-def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "202")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2024,
-        period="2P",
-    )
+def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("202", 2024, "2P")
     revision = snapshot.revision
     assert revision.id == "2023-2024"
     casilla_ids = {casilla.id for casilla in revision.casillas}
@@ -489,16 +437,10 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
     assert result.values["13"] == Decimal("51000.00")
 
 
-def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo_200 = next(item for item in modelos if item.id == "200")
-    snapshot = build_snapshot(
-        modelo_200,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2024,
-        period="0A",
-    )
+def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("200", 2024, "0A")
     revision = snapshot.revision
     assert revision.id == "2024-y-siguientes"
     relation_ids = {relation.id for relation in revision.relations}
