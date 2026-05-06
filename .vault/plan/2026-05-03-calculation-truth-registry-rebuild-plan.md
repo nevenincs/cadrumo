@@ -1572,6 +1572,9 @@ own ledger is checked.
   - [x] Ley 27/2014 art. 40 retained as legal authority covering the
     underlying pago fraccionado regime that produces the deductible
     instalments (already present in the catalogue for Modelo 202).
+  - [x] Ley 27/2014 art. 124 catalogued as the legal authority for Modelo
+    200 declaration timing: 25 natural days after the six months following
+    the end of the tax period.
 - [x] Modelo 200 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
@@ -1601,16 +1604,25 @@ own ledger is checked.
     ref plus the two Modelo 200 source refs (`aeat-dr-200-2025` layout
     authority and `aeat-modelo-200-manual-2024` official guidance) with
     sha256 + bytes integrity.
+  - [x] `registry/aeat/legal/is.toml` also carries `ley-27-2014:art-124`
+    and BOE source ref `boe-modelo-200-2025-form`, backed by local corpus
+    excerpts for the legal filing window, 2025 Modelo 200 form order, and
+    payment domiciliation cutoff.
 - [ ] Modelo 200 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/200.toml`.
   - [x] `[modelo]` block declares id 200, IS autoliquidacion anual, annual
-    cadence, jurisdiction ES-AEAT, with LIS art. 40 and art. 41 as legal
-    refs.
+    cadence, jurisdiction ES-AEAT, with LIS art. 40, art. 41, and art. 124
+    as legal refs.
   - [x] `[revisions."2024-y-siguientes"]` covers ejercicios 2024 onward with
     period 0A.
-  - [ ] Deadline windows and the complete application-link surface remain
-    open.
+  - [x] Deadline schedule for calendar-year 2024 declares annual period 0A,
+    filing window 2025-07-01 through 2025-07-25, and payment domiciliation
+    cutoff 2025-07-22 against BOE-A-2025-12818.
+  - [x] Application links cover portal, calculation, filing, verification,
+    deadline, review, approval, reconciliation, and workflow surfaces.
+  - [ ] Export application link remains open until a complete registry export
+    layout exists.
 - [ ] Modelo 200 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
@@ -1659,6 +1671,9 @@ own ledger is checked.
     construct. The export application link and full export layout
     transcription are deferred until a cross-platform .xls reader or AEAT
     .xlsx variant is available.
+  - [x] Review, approval, reconciliation, deadline, and workflow application
+    links now require the Modelo 200 registry snapshot and are included in
+    the foundation construct.
 - [ ] Modelo 200 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, relation to Modelo
   202, and any filed-data bindings are correct against official authority.
@@ -1667,6 +1682,9 @@ own ledger is checked.
     aggregated by the relation, and the final cuota a ingresar formula
     subtracts the aggregate from cuota liquida 00592. The trace references
     official casilla 00592 and the Modelo 202 relation id.
+  - [x] `test_modelo_200_calendar_year_2024_deadline_matches_boe_order`
+    proves the deadline window and payment cutoff against the committed BOE
+    Modelo 200 order corpus, not against inline test fixture metadata.
 - [ ] Modelo 200 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
