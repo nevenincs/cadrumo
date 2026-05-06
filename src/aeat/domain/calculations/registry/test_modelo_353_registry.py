@@ -82,3 +82,56 @@ def test_modelo_353_construct_links_workbook_parity() -> None:
     revision = modelo.revisions["2008-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-353-iva-grupo-agregado")
     assert "modelo-353-dr-2026" in construct.workbook_parity_refs
+
+
+def test_modelo_353_declares_iva_aggregation_bindings() -> None:
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    iva_binding_ids = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    }
+    assert iva_binding_ids == {
+        "modelo-353-iva-repercutido-general-cuota",
+        "modelo-353-iva-repercutido-reducido-cuota",
+        "modelo-353-iva-repercutido-super-reducido-cuota",
+        "modelo-353-iva-soportado-interiores-cuota",
+        "modelo-353-iva-autorepercutido-intracomunitaria-cuota",
+    }
+
+
+def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
+    from decimal import Decimal
+
+    from aeat.domain.calculations.registry._bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+
+    modelo, _ = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    observations = [
+        IvaLedgerObservation(
+            ledger_id="agg-rep-1",
+            transaction_date=date(2025, 6, 1),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("8000"),
+            iva_amount=Decimal("1680"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="agg-sop-1",
+            transaction_date=date(2025, 6, 5),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("3000"),
+            iva_amount=Decimal("630"),
+        ),
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result["modelo-353-iva-repercutido-general-cuota"] == Decimal("1680")
+    assert result["modelo-353-iva-soportado-interiores-cuota"] == Decimal("630")
