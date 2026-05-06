@@ -17,10 +17,9 @@ from ..calculations.registry import (
     DeadlineWindowDefinition,
     ModeloRevision,
     RegistryError,
-    RegistryValidator,
+    ValidatedRegistryAuthority,
     applicable_filing_schedules,
     evaluate_profile_conditions,
-    load_registry_tree,
 )
 from ._errors import ScheduleComputationError
 from ._models import (
@@ -93,7 +92,7 @@ class DeadlineEngine:
         self._source_root = source_root or PROJECT_ROOT
         root = registry_root or _DEFAULT_REGISTRY_ROOT
         try:
-            self._modelos, self._catalogues = load_registry_tree(root)
+            self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
         except RegistryError as exc:
             raise ScheduleComputationError(f"deadline registry load failed: {exc}") from exc
 
@@ -212,19 +211,10 @@ class DeadlineEngine:
         )
 
     def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
-        out: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
-        for modelo in self._modelos:
-            try:
-                RegistryValidator(self._catalogues, source_root=self._source_root).validate_modelo(modelo)
-            except RegistryError as exc:
-                message = f"deadline registry validation failed for modelo {modelo.id}: {exc}"
-                raise ScheduleComputationError(message) from exc
-            for revision in modelo.revisions.values():
-                for window in revision.deadline_windows:
-                    if window.filing_year == year:
-                        out.append((modelo.id, revision, window))
-        out.sort(key=lambda item: (item[2].closes_on, item[0], item[2].period))
-        return tuple(out)
+        try:
+            return self._registry.deadline_windows(year)
+        except RegistryError as exc:
+            raise ScheduleComputationError(f"deadline registry validation failed: {exc}") from exc
 
     def _has_deadline_windows(self, year: int) -> bool:
         return bool(self._deadline_windows(year))

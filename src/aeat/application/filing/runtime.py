@@ -37,12 +37,10 @@ from ...domain.calculations.registry import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    RegistryCatalogues,
     RegistrySnapshot,
     RegistrySnapshotError,
-    build_snapshot,
+    ValidatedRegistryAuthority,
     expression_casilla_refs,
-    load_registry_tree,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema
 from ...domain.filing._errors import FilingBuilderError
@@ -251,7 +249,8 @@ def _build_runtime_schema_provider_cached(
     selected_tuple: tuple[str, ...] | None,
     _fingerprint: tuple[tuple[str, int, int], ...],
 ) -> RegistrySchemaProvider:
-    loaded_modelos, catalogues = load_registry_tree(root)
+    authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
+    loaded_modelos = authority.modelos
     if not loaded_modelos:
         raise FilingBuilderError(f"registry root has no modelo definitions: {root}")
     if selected_tuple is not None:
@@ -265,9 +264,8 @@ def _build_runtime_schema_provider_cached(
     for modelo in loaded_modelos:
         try:
             snapshots[modelo.id] = _snapshot_for_provider(
+                authority,
                 modelo,
-                catalogues,
-                source_root=resolved_source_root,
                 filing_year=filing_year,
                 period=period,
             )
@@ -302,32 +300,23 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
 
 
 def _snapshot_for_provider(
+    authority: ValidatedRegistryAuthority,
     modelo: ModeloDefinition,
-    catalogues: RegistryCatalogues,
     *,
-    source_root: Path,
     filing_year: int | None,
     period: str | None,
 ) -> RegistrySnapshot:
     if (filing_year is None) != (period is None):
         raise FilingBuilderError("filing_year and period must be supplied together")
     if filing_year is not None and period is not None:
-        return build_snapshot(
-            modelo,
-            catalogues,
-            source_root=source_root,
-            filing_year=filing_year,
-            period=period,
-        )
+        return authority.snapshot(modelo.id, filing_year=filing_year, period=period)
     revision = _current_provider_revision(modelo)
     selector = revision.period_selector
     provider_year = selector.years[0] if selector.years else selector.year_from
     if provider_year is None:
         raise FilingBuilderError(f"modelo {modelo.id!r} revision {revision.id!r} has no provider year")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=source_root,
+    return authority.snapshot(
+        modelo.id,
         filing_year=provider_year,
         period=selector.periods[0],
         revision_id=revision.id,
