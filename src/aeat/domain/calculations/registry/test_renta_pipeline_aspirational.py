@@ -116,21 +116,19 @@ def test_phase_a_cuota_chain_articles_are_catalogued() -> None:
     assert not missing, f"cuota chain regression: missing IRPF articles {sorted(missing)}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "phase b: mínimo personal y familiar formulas. "
-        "Register formulas for casillas 0519-0524 in Modelo 100 ejercicio 2025."
-    ),
-)
 def test_phase_b_minimo_personal_y_familiar_formulas_present_2025() -> None:
-    """Formulas for parte estatal/autonómica mínimo personal y familiar are registered."""
+    """Formulas for parte estatal/autonómica mínimo personal y familiar are registered.
+
+    Phase B delivered: 6 formulas (0519, 0520, 0521, 0522, 0523, 0524) that
+    aggregate the mínimo del contribuyente, descendientes, ascendientes and
+    discapacidad rows into the parte estatal and autonómica totals, and split
+    those totals into the portions that fall under base liquidable general /
+    base liquidable del ahorro per the AEAT-form-prescribed min() rule.
+    """
     modelo, _ = _modelo_100()
     targets = _formula_target_casillas_for_revision(modelo, "2025")
     missing = _PHASE_B_REQUIRED_FORMULA_TARGETS - targets
-    assert not missing, (
-        f"phase b not yet delivered: missing mínimo personal y familiar formula targets {sorted(missing)}"
-    )
+    assert not missing, f"mínimo personal y familiar regression: missing formula targets {sorted(missing)}"
 
 
 @pytest.mark.xfail(

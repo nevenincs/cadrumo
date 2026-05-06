@@ -5067,6 +5067,106 @@ source_refs = ["boe-modelo-100-2025-form"]
 source_ref = "boe-modelo-100-2025-form"
 required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
 
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Mínimo del contribuyente", "Mínimo personal y familiar"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Mínimo del contribuyente", "Mínimo personal y familiar"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
