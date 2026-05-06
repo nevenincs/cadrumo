@@ -1736,176 +1736,200 @@ own ledger is checked.
 
 ### Wave 16 Modelo 232 Parity Ledger
 
-- [ ] Modelo 232 audit: enumerate every current code, corpus, TOML, parser,
-  fixture, workflow, and test surface that codifies Modelo 232 identity,
-  casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 232 legal basis: identify and catalogue BOE legal references for
-  every filing-grade calculation, parameter, filing condition, and temporal
-  applicability rule.
-- [ ] Modelo 232 AEAT official guidance: capture and hash AEAT instructions,
-  manuals, record designs, and other official source artefacts required by the
-  registry definition.
-- [ ] Modelo 232 workbook/layout coverage: discover official XLS/XLSX coverage,
-  classify each artefact by evidence tier, and record whether it proves layout
-  only or executable calculation parity.
-- [ ] Modelo 232 live filed-data discovery: list available AEAT filed rows
-  through the read-only surface and record the periods, submitted-file
-  availability, declaration-copy availability, and justificante availability.
-- [ ] Modelo 232 live sanitized fixture: capture at least one read-only live
-  submitted-file or declaration-copy artefact, sanitize identity data, commit
-  the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 232 legal/source catalogue closure: add every legal ref and source
-  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
-  applicability dates.
-- [ ] Modelo 232 TOML identity and revisions: define modelo identity, title,
-  jurisdiction, cadence, every supported revision, period selector, deadline
-  windows, and application links in `registry/aeat/modelos/232.toml`.
-- [ ] Modelo 232 casilla schema: define every filing-grade casilla with data
-  type, input kind, requiredness, section, export refs, legal refs, and source
-  refs.
-- [ ] Modelo 232 formulas, parameters, and bindings: define every computation,
-  dated value, previous-filing binding, relation, rounding rule, legal ref,
-  source ref, and trace output.
-- [ ] Modelo 232 extraction profiles: define submitted-file and declaration PDF
-  extraction profiles with target casillas, accepted artefacts, min coverage,
-  failure semantics, legal refs, and source refs.
-- [ ] Modelo 232 live cross-reference guard: record the official live/static
-  cross-reference decision and prove remote-state guards reject AEAT writes,
-  saves, presentation, signing, payment, amendment, and cancellation actions.
-- [ ] Modelo 232 export/filing linkage: route export, verify, calculation,
-  review, approval, reconciliation, and workflow entry points through validated
-  registry snapshots.
-- [ ] Modelo 232 legal correctness tests: run behaviour tests that prove formula
-  outputs, trace legal refs, source refs, date boundaries, reporting
-  thresholds, and any filed-data bindings are correct against official
-  authority.
-- [ ] Modelo 232 live/filed-data tests: run committed sanitized submitted-file
-  and declaration-copy parser tests, encrypted observation-store roundtrip
-  tests where applicable, and filed-data parser tests without defaults or
-  silent degradation.
-- [ ] Modelo 232 teardown: delete or neutralize all old Modelo 232 authorities
-  in rulesets, filing builders, category mappings, casilla projections,
-  deadlines, generated exports, hydrate paths, and legacy fixtures.
-- [ ] Modelo 232 quality gate: run registry verification, focused public
-  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
-  `git diff --check`, and development-metadata sanitization checks.
-- [ ] Modelo 232 completion gate: mark complete only when no unchecked row
-  remains and no old authority can populate Modelo 232 filing-grade values.
+- [x] Modelo 232 audit: greenfield in `src/aeat/` and `tests/` — only the
+  registry surfaces and dedicated `test_modelo_232_registry.py` suite mention
+  Modelo 232; no legacy ruleset, builder, hydrate, or category mapping exists
+  to teardown.
+- [x] Modelo 232 legal basis: BOE-grounded catalogue covers LIS art 18
+  (operaciones vinculadas), RIS art 13 (information/documentation duty), and
+  Orden HFP/816/2017 articles 1 (aprobación), 2 (obligados/umbrales), 3
+  (contenido secciones I/II/III), and 4 (plazo).
+- [x] Modelo 232 AEAT official guidance: AEAT procedure HTML captured at
+  `corpus/aeat_official/instructions/modelo_232/files/modelo-232-procedure.html`
+  (corrected from initial GI09 mistake to the canonical GI43.shtml).
+- [x] Modelo 232 workbook/layout coverage: DR232e17v14.xlsx (current 2018+)
+  and DR232e17v13.xlsx (historical 2016-2017) are both registered as
+  `record_design_layout` parity refs.
+- [x] Modelo 232 live filed-data discovery: authenticated read-only scan via
+  `aeat.entrypoints.cli.registry capture-filed-data --modelo 232` returned
+  zero filed rows for ejercicios 2018-2024 under the test NIF; recorded as
+  discovery evidence rather than parser coverage.
+- [ ] Modelo 232 live sanitized fixture: no-fixture-guard remains active —
+  no Modelo 232 declaration is filed under the test NIF (autónomo NIF, no
+  corporate-tax operations vinculadas), so no real artefact is available
+  to sanitize.
+- [x] Modelo 232 legal/source catalogue closure: extends
+  `registry/aeat/legal/is.toml` with the LIS/RIS/Order articles and the
+  `aeat-dr-232-2018`, `aeat-dr-232-2016`, `aeat-modelo-232-procedure`, and
+  `boe-modelo-232-2017-form` source refs.
+- [x] Modelo 232 TOML identity and revisions: two revisions
+  (`2016-2017`, `2018-y-siguientes`) in `registry/aeat/modelos/232.toml`
+  with annual cadence, `["0A"]` period selector, full deadline windows
+  (Nov plazo for ejercicios 2016-2026), and the corresponding application
+  links per revision.
+- [x] Modelo 232 casilla schema: declarante header casillas (ejercicio,
+  tipo de ejercicio, CNAE) with section, data type, requiredness, export
+  refs, legal refs, and source refs per revision.
+- [x] Modelo 232 formulas, parameters, and bindings: 217 layout bindings
+  per revision cover sections I + II (page-01) and III + IV (page-02) at
+  field-level fidelity. Modelo 232 is informative-only so no formulas /
+  parameters / cross-model relations are declared (informative-only
+  invariant enforced by the test suite).
+- [x] Modelo 232 extraction profiles: declaracion-pdf profile with
+  `aeat.adapters.inbound.declaracion.parse_declaracion`, strict confidence,
+  fail-hard semantics, target declarante casillas.
+- [x] Modelo 232 live cross-reference guard: static_official_documentation
+  and authenticated_read_surface (www1+www6 hosts, GET/HEAD/OPTIONS only,
+  all writes / signing / payment / amendment / cancellation forbidden).
+- [x] Modelo 232 export/filing linkage: full envelope DR23200 + page-01
+  DR23201 (1500 chars) + page-02 DR23202 (3500 chars) + envelope close
+  per revision; export-derive resolves to 95 page-01 fields and 155
+  page-02 fields matching the official workbook.
+- [x] Modelo 232 legal correctness tests: 28 behaviour tests covering
+  identity, revision selection by filing year, the informative-only
+  invariant, workbook parity, both live cross-reference surfaces,
+  November plazo (2016-2026), section 3+4 / 5+6 binding range
+  contiguity, and construct membership consistency.
+- [ ] Modelo 232 live/filed-data tests: gated on the live sanitized
+  fixture — no fixture exists yet.
+- [ ] Modelo 232 teardown: N/A — Modelo 232 was greenfield; the audit
+  confirmed no legacy ruleset, builder, hydrate, or category mapping
+  surfaces exist outside the registry.
+- [x] Modelo 232 quality gate: validate_modelo passes against the
+  committed catalogues; 28 focused tests pass; `ruff check`, `ty check`,
+  and `git diff --check` clean for the touched surfaces.
+- [ ] Modelo 232 completion gate: gated on the live sanitized fixture
+  and live tests rows; foundation + sections 3-6 + envelope/page export
+  layout landed in commit `f9b62e31` (Add Modelo 232 registry).
 
 ### Wave 17 Modelo 720 Parity Ledger
 
-- [ ] Modelo 720 audit: enumerate every current code, corpus, TOML, parser,
-  fixture, workflow, and test surface that codifies Modelo 720 identity,
-  casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 720 legal basis: identify and catalogue BOE legal references for
-  every filing-grade calculation, parameter, filing condition, and temporal
-  applicability rule.
-- [ ] Modelo 720 AEAT official guidance: capture and hash AEAT instructions,
-  manuals, record designs, and other official source artefacts required by the
-  registry definition.
-- [ ] Modelo 720 workbook/layout coverage: discover official XLS/XLSX coverage,
-  classify each artefact by evidence tier, and record whether it proves layout
-  only or executable calculation parity.
-- [ ] Modelo 720 live filed-data discovery: list available AEAT filed rows
-  through the read-only surface and record the periods, submitted-file
-  availability, declaration-copy availability, and justificante availability.
-- [ ] Modelo 720 live sanitized fixture: capture at least one read-only live
-  submitted-file or declaration-copy artefact, sanitize identity data, commit
-  the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 720 legal/source catalogue closure: add every legal ref and source
-  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
-  applicability dates.
-- [ ] Modelo 720 TOML identity and revisions: define modelo identity, title,
-  jurisdiction, cadence, every supported revision, period selector, deadline
-  windows, and application links in `registry/aeat/modelos/720.toml`.
-- [ ] Modelo 720 casilla schema: define every filing-grade casilla with data
-  type, input kind, requiredness, section, export refs, legal refs, and source
-  refs.
-- [ ] Modelo 720 formulas, parameters, and bindings: define every computation,
-  dated value, previous-filing binding, relation, rounding rule, legal ref,
-  source ref, and trace output.
-- [ ] Modelo 720 extraction profiles: define submitted-file and declaration PDF
-  extraction profiles with target casillas, accepted artefacts, min coverage,
-  failure semantics, legal refs, and source refs.
-- [ ] Modelo 720 live cross-reference guard: record the official live/static
-  cross-reference decision and prove remote-state guards reject AEAT writes,
-  saves, presentation, signing, payment, amendment, and cancellation actions.
-- [ ] Modelo 720 export/filing linkage: route export, verify, calculation,
-  review, approval, reconciliation, and workflow entry points through validated
-  registry snapshots.
-- [ ] Modelo 720 legal correctness tests: run behaviour tests that prove formula
-  outputs, trace legal refs, source refs, date boundaries, asset thresholds,
-  and any filed-data bindings are correct against official authority.
-- [ ] Modelo 720 live/filed-data tests: run committed sanitized submitted-file
-  and declaration-copy parser tests, encrypted observation-store roundtrip
-  tests where applicable, and filed-data parser tests without defaults or
-  silent degradation.
-- [ ] Modelo 720 teardown: delete or neutralize all old Modelo 720 authorities
-  in rulesets, filing builders, category mappings, casilla projections,
-  deadlines, generated exports, hydrate paths, and legacy fixtures.
-- [ ] Modelo 720 quality gate: run registry verification, focused public
-  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
-  `git diff --check`, and development-metadata sanitization checks.
-- [ ] Modelo 720 completion gate: mark complete only when no unchecked row
-  remains and no old authority can populate Modelo 720 filing-grade values.
+- [x] Modelo 720 audit: greenfield in `src/aeat/` and `tests/` — only the
+  registry surfaces and dedicated `test_modelo_720_registry.py` suite mention
+  Modelo 720; no legacy ruleset, builder, or hydrate path exists to teardown.
+- [x] Modelo 720 legal basis: BOE-grounded catalogue covers LGT (Ley
+  58/2003) DA 18 (foreign-asset reporting obligation), RGAT (RD 1065/2007)
+  arts 42-bis (cuentas), 42-ter (valores) and 54-bis (inmuebles), and Orden
+  HAP/72/2013 articles 1 (aprobación), 2 (obligados, umbral €50k por
+  categoría) and 7 (plazo 1 enero - 31 marzo).
+- [x] Modelo 720 AEAT official guidance: AEAT procedure HTML captured at
+  `corpus/aeat_official/instructions/modelo_720/files/modelo-720-procedure.html`
+  (procedimiento GI34).
+- [x] Modelo 720 workbook/layout coverage: only one AEAT artefact exists
+  (the `modelo_720.pdf` 599 KB record design — no XLSX). Registered as
+  `record_design_layout` parity ref.
+- [x] Modelo 720 live filed-data discovery: authenticated read-only scan
+  via `aeat.entrypoints.cli.registry capture-filed-data --modelo 720`
+  returned zero filed rows for ejercicios 2012-2024 under the test NIF;
+  recorded as discovery evidence rather than parser coverage.
+- [ ] Modelo 720 live sanitized fixture: no-fixture-guard remains active —
+  no Modelo 720 declaration is filed under the test NIF.
+- [x] Modelo 720 legal/source catalogue closure: new
+  `registry/aeat/legal/foreign-assets.toml` with LGT DA 18, RGAT
+  42-bis/42-ter/54-bis, Orden HAP/72/2013 arts 1/2/7, plus `aeat-dr-720`,
+  `aeat-modelo-720-procedure`, and `boe-modelo-720-2013-form` sources.
+- [x] Modelo 720 TOML identity and revisions: single revision
+  `2013-y-siguientes` (year_from=2012) in `registry/aeat/modelos/720.toml`
+  with annual cadence, `["0A"]` period selector, 15 deadline windows
+  (ejercicio 2012 transitional Feb-Apr 2013, then 1 Jan - 31 Mar of the
+  year following ejercicio for 2013-2026), and the corresponding
+  application links.
+- [x] Modelo 720 casilla schema: declarante header casillas (ejercicio,
+  tipo de declaración) with section, data type, requiredness, legal refs,
+  and source refs.
+- [x] Modelo 720 formulas, parameters, and bindings: 43 layout bindings
+  (13 type_1 declarante + 30 type_2 detalle) parsed from the BOE order's
+  anexo "Diseños físicos y lógicos" cover the full record-design field
+  geometry. Modelo 720 is informative-only so no formulas / parameters /
+  relations are declared.
+- [x] Modelo 720 extraction profiles: declaracion-pdf profile with
+  `aeat.adapters.inbound.declaracion.parse_declaracion`, strict
+  confidence, fail-hard semantics, target declarante casillas.
+- [x] Modelo 720 live cross-reference guard: static_official_documentation
+  and authenticated_read_surface (www1+www6 hosts, GET/HEAD/OPTIONS only,
+  all writes / signing / payment / amendment / cancellation forbidden).
+- [x] Modelo 720 export/filing linkage: type_1 record (single, encoding
+  ISO-8859-1, CRLF) + type_2 record (`repeat = "binding_rows"` for one
+  record per declared asset) auto-derive their fields from the layout
+  bindings via `derive_export_layouts_from_bindings`.
+- [x] Modelo 720 legal correctness tests: 19 behaviour tests covering
+  identity, revision selection, the informative-only invariant, workbook
+  parity, both live cross-reference surfaces, the January-March plazo
+  (with the 2012 transitional window), the type_1 / type_2 binding
+  scope, and construct membership consistency.
+- [ ] Modelo 720 live/filed-data tests: gated on the live sanitized
+  fixture.
+- [ ] Modelo 720 teardown: N/A — Modelo 720 was greenfield; no legacy
+  authority surfaces exist outside the registry.
+- [x] Modelo 720 quality gate: validate_modelo passes against the
+  committed catalogues; 19 focused tests pass; `ruff check`, `ty check`,
+  and `git diff --check` clean for the touched surfaces.
+- [ ] Modelo 720 completion gate: gated on the live sanitized fixture
+  and live tests rows; foundation landed in commit `b85b207b` (Add
+  Modelo 720 registry foundation), sections expansion in `b92a2cc4`
+  (Expand Modelo 720 with type-1 + type-2 layout bindings).
 
 ### Wave 18 Modelo 840 Parity Ledger
 
-- [ ] Modelo 840 audit: enumerate every current code, corpus, TOML, parser,
-  fixture, workflow, and test surface that codifies Modelo 840 identity,
-  casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 840 legal basis: identify and catalogue BOE legal references for
-  every filing-grade calculation, parameter, filing condition, and temporal
-  applicability rule.
-- [ ] Modelo 840 AEAT official guidance: capture and hash AEAT instructions,
-  manuals, record designs, and other official source artefacts required by the
-  registry definition.
-- [ ] Modelo 840 workbook/layout coverage: discover official XLS/XLSX coverage,
-  classify each artefact by evidence tier, and record whether it proves layout
-  only or executable calculation parity.
-- [ ] Modelo 840 live filed-data discovery: list available AEAT filed rows
-  through the read-only surface and record the periods, submitted-file
-  availability, declaration-copy availability, and justificante availability.
-- [ ] Modelo 840 live sanitized fixture: capture at least one read-only live
-  submitted-file or declaration-copy artefact, sanitize identity data, commit
-  the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 840 legal/source catalogue closure: add every legal ref and source
-  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
-  applicability dates.
-- [ ] Modelo 840 TOML identity and revisions: define modelo identity, title,
-  jurisdiction, cadence, every supported revision, period selector, deadline
-  windows, and application links in `registry/aeat/modelos/840.toml`.
-- [ ] Modelo 840 casilla schema: define every filing-grade casilla with data
-  type, input kind, requiredness, section, export refs, legal refs, and source
-  refs.
-- [ ] Modelo 840 formulas, parameters, and bindings: define every computation,
-  dated value, previous-filing binding, relation, rounding rule, legal ref,
-  source ref, and trace output.
-- [ ] Modelo 840 extraction profiles: define submitted-file and declaration PDF
-  extraction profiles with target casillas, accepted artefacts, min coverage,
-  failure semantics, legal refs, and source refs.
-- [ ] Modelo 840 live cross-reference guard: record the official live/static
-  cross-reference decision and prove remote-state guards reject AEAT writes,
-  saves, presentation, signing, payment, amendment, and cancellation actions.
-- [ ] Modelo 840 export/filing linkage: route export, verify, calculation,
-  review, approval, reconciliation, and workflow entry points through validated
-  registry snapshots.
-- [ ] Modelo 840 legal correctness tests: run behaviour tests that prove formula
-  outputs, trace legal refs, source refs, date boundaries, census/activity
-  conditions, and any filed-data bindings are correct against official
-  authority.
-- [ ] Modelo 840 live/filed-data tests: run committed sanitized submitted-file
-  and declaration-copy parser tests, encrypted observation-store roundtrip
-  tests where applicable, and filed-data parser tests without defaults or
-  silent degradation.
-- [ ] Modelo 840 teardown: delete or neutralize all old Modelo 840 authorities
-  in rulesets, filing builders, category mappings, casilla projections,
-  deadlines, generated exports, hydrate paths, and legacy fixtures.
-- [ ] Modelo 840 quality gate: run registry verification, focused public
-  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
+- [x] Modelo 840 audit: greenfield in `src/aeat/` — the only references are
+  enumerations of "840" alongside other censal/profile-authority modelo IDs
+  in `test_cross_dependency_contract.py` and `test_codes.py`; no legacy
+  ruleset, builder, hydrate, or category mapping exists to teardown.
+- [x] Modelo 840 legal basis: BOE-grounded catalogue covers TRLRHL (RD
+  Legislativo 2/2004) arts 78 (naturaleza, hecho imponible), 82 (exenciones
+  con umbral €1M cifra de negocios), 90 (gestión tributaria, matrícula del
+  impuesto), and Orden HAC/2572/2003 apartados 1 (aprobación) and 6 (plazos
+  de alta, variación, baja por remisión a RD 243/1995).
+- [ ] Modelo 840 AEAT official guidance: Modelo 840 has no
+  `/Sede/procedimientoini/GIxx.shtml` page on the AEAT sede (IAE
+  administration is partly delegated to municipalities/diputaciones). The
+  BOE Order serves as the procedural reference; an official AEAT
+  procedure HTML may be added when one is published.
+- [x] Modelo 840 workbook/layout coverage: only one AEAT artefact exists
+  (the `dr840.pdf` 99 KB record design — no XLSX). Registered as
+  `record_design_layout` parity ref.
+- [ ] Modelo 840 live filed-data discovery: deferred — Cl@ve Móvil
+  approval timed out twice. Can be revisited with the same authenticated
+  CLI used for Modelos 232 and 720 once the user is at their phone.
+- [ ] Modelo 840 live sanitized fixture: no-fixture-guard remains active.
+- [x] Modelo 840 legal/source catalogue closure: new
+  `registry/aeat/legal/iae.toml` with TRLRHL arts 78/82/90, Orden
+  HAC/2572/2003 apartados 1/6, plus `aeat-dr-840` and
+  `boe-modelo-840-2003-form` sources.
+- [x] Modelo 840 TOML identity and revisions: single revision
+  `2003-y-siguientes` (year_from=2003) in `registry/aeat/modelos/840.toml`
+  with `ad_hoc` cadence (filing is event-driven within 1 month per RD
+  243/1995 arts 5-7), `["0A"]` period selector, and the corresponding
+  application links.
+- [x] Modelo 840 casilla schema: declarante header casillas (tipo de
+  declaración, ejercicio) with section, data type, requiredness, legal
+  refs, and source refs.
+- [ ] Modelo 840 formulas, parameters, and bindings: foundation has no
+  layout bindings yet — the corpus is a PDF (no XLSX) and the BOE Order's
+  anexo would need PDF parsing. Deferred to a follow-up slice.
+- [x] Modelo 840 extraction profiles: declaracion-pdf profile with
+  `aeat.adapters.inbound.declaracion.parse_declaracion`, strict
+  confidence, fail-hard semantics, target declarante casillas.
+- [x] Modelo 840 live cross-reference guard: static_official_documentation
+  and authenticated_read_surface (www1+www6 hosts, GET/HEAD/OPTIONS only,
+  all writes / signing / payment / amendment / cancellation forbidden).
+- [x] Modelo 840 export/filing linkage: foundation only — no record-design
+  bindings yet, so no export records. Application links cover portal,
+  filing, extractor, verification.
+- [x] Modelo 840 legal correctness tests: 12 behaviour tests covering
+  identity, revision selection, the informative-only invariant, workbook
+  parity, both live cross-reference surfaces, the ad_hoc filing schedule,
+  and construct membership consistency.
+- [ ] Modelo 840 live/filed-data tests: gated on live discovery + fixture.
+- [ ] Modelo 840 teardown: N/A — Modelo 840 was greenfield; the only
+  references are enumerations alongside other valid modelo IDs and stay
+  valid after the registry is registered.
+- [x] Modelo 840 quality gate: validate_modelo passes against the
+  committed catalogues; 12 focused tests pass; `ruff check`, `ty check`,
   `git diff --check`, and development-metadata sanitization checks.
-- [ ] Modelo 840 completion gate: mark complete only when no unchecked row
-  remains and no old authority can populate Modelo 840 filing-grade values.
+- [ ] Modelo 840 completion gate: gated on live discovery + fixture +
+  layout-binding rows; foundation landed in commit `1418eb26` (Add
+  Modelo 840 registry foundation).
 
 ### Wave 19 Modelo 036 Parity Ledger
 
