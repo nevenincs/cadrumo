@@ -9,7 +9,7 @@ from pathlib import Path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import build_snapshot
+from ._snapshot import _build_validated_snapshot
 from ._validate import RegistryValidator
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
@@ -78,10 +78,9 @@ class ValidatedRegistryAuthority:
         if cached is not None:
             return cached
         modelo = self.validate_modelo(modelo_id)
-        snapshot = build_snapshot(
+        snapshot = _build_validated_snapshot(
             modelo,
             self.catalogues,
-            source_root=self.source_root,
             filing_year=filing_year,
             period=period,
             on=on,
