@@ -130,6 +130,23 @@ casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total
 formulas = ["modelo-180-total-perceptores", "modelo-180-base-total", "modelo-180-retenciones-total"]
 bindings = ["modelo-180-115-perceptores-anual", "modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"]
 relations = ["modelo-180-rel-115-perceptores-anual", "modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"]
+extraction_profiles = ["modelo-180-export-record"]
+live_cross_references = ["modelo-180-2014-static-official", "modelo-180-2014-filed-declarations-read"]
+workbook_parity_refs = ["modelo-180-dr-pdf-2014"]
+verification_expectations = ["modelo-180-annual-summary-verification"]
+application_links = [
+    "modelo-180-2014-portal-cross-reference",
+    "modelo-180-2014-filed-declarations-observation",
+    "modelo-180-2014-calculation",
+    "modelo-180-2014-filing",
+    "modelo-180-2014-export",
+    "modelo-180-2014-extractor",
+    "modelo-180-2014-verification",
+    "modelo-180-2014-review",
+    "modelo-180-2014-approval",
+    "modelo-180-2014-reconciliation",
+    "modelo-180-2014-workflow",
+]
 dependency_classifications = ["modelo-180-dep-115"]
 
 [[revisions."2019-2022".dependency_classifications]]
@@ -1285,6 +1302,38 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
 source_refs = ["aeat-dr-180-2014", "boe-modelo-180-2014-form"]
 
+[[revisions."2019-2022".application_links]]
+id = "modelo-180-2014-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".application_links]]
+id = "modelo-180-2014-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".application_links]]
+id = "modelo-180-2014-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form"]
+
+[[revisions."2019-2022".application_links]]
+id = "modelo-180-2014-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2"]
+source_refs = ["aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form"]
+
 [revisions."2023-y-siguientes"]
 id = "2023-y-siguientes"
 label = "Orden HAP/1732/2014 actualizada por Orden HFP/1284/2023"
@@ -1390,11 +1439,28 @@ source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 id = "modelo-180-annual-summary"
 title = "Modelo 180 annual summary from Modelo 115 quarterly filings"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
-source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-ayuda-presentacion", "aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
 casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 formulas = ["modelo-180-total-perceptores", "modelo-180-base-total", "modelo-180-retenciones-total"]
 bindings = ["modelo-180-115-perceptores-anual", "modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"]
 relations = ["modelo-180-rel-115-perceptores-anual", "modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"]
+extraction_profiles = ["modelo-180-export-record"]
+live_cross_references = ["modelo-180-static-official", "modelo-180-filed-declarations-read"]
+workbook_parity_refs = ["modelo-180-dr-pdf-2023"]
+verification_expectations = ["modelo-180-annual-summary-verification"]
+application_links = [
+    "modelo-180-portal-cross-reference",
+    "modelo-180-filed-declarations-observation",
+    "modelo-180-calculation",
+    "modelo-180-filing",
+    "modelo-180-export",
+    "modelo-180-extractor",
+    "modelo-180-verification",
+    "modelo-180-review",
+    "modelo-180-approval",
+    "modelo-180-reconciliation",
+    "modelo-180-workflow",
+]
 dependency_classifications = ["modelo-180-dep-115"]
 
 [[revisions."2023-y-siguientes".dependency_classifications]]
@@ -2549,3 +2615,35 @@ consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-dr-180-2023", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-180-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-180-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-180-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-180-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
