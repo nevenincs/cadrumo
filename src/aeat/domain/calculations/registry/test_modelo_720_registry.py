@@ -189,6 +189,50 @@ def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejer
     assert window.closes_on == expected_close
 
 
+def _layout_bindings_for(revision, record_name: str):
+    return tuple(
+        binding
+        for binding in revision.bindings
+        if isinstance(binding.selector.get("record"), str)
+        and binding.selector["record"] == record_name
+    )
+
+
+def test_committed_modelo_720_type_1_bindings_target_declarante_record() -> None:
+    modelo, _ = _load_modelo_720()
+    for revision in modelo.revisions.values():
+        bindings = _layout_bindings_for(revision, "type_1")
+        assert bindings, revision.id
+        # Type 1 starts at position 1 (TIPO DE REGISTRO constant) per Orden HAP/72/2013 anexo
+        first_offset = min(int(b.selector["offset"]) for b in bindings)
+        assert first_offset == 1, first_offset
+
+
+def test_committed_modelo_720_type_2_bindings_target_detalle_record() -> None:
+    modelo, _ = _load_modelo_720()
+    for revision in modelo.revisions.values():
+        bindings = _layout_bindings_for(revision, "type_2")
+        assert bindings, revision.id
+        first_offset = min(int(b.selector["offset"]) for b in bindings)
+        assert first_offset == 1, first_offset
+        # Type 2 closes at position 480 (PORCENTAJE DE PARTICIPACIÓN, last field of detalle record)
+        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        last_offset, last_length = ranges[-1]
+        assert last_offset + last_length - 1 == 480, last_offset + last_length - 1
+
+
+def test_committed_modelo_720_export_layout_uses_repeating_detalle_record() -> None:
+    modelo, _ = _load_modelo_720()
+    for revision in modelo.revisions.values():
+        layout = revision.export_layouts[0]
+        type_1 = next(r for r in layout.records if r.record_type == "type_1")
+        type_2 = next(r for r in layout.records if r.record_type == "type_2")
+        assert type_1.binding_record == "type_1"
+        assert type_1.repeat is None
+        assert type_2.binding_record == "type_2"
+        assert type_2.repeat == "binding_rows"
+
+
 def test_committed_modelo_720_construct_includes_revision_members() -> None:
     modelo, _ = _load_modelo_720()
     for revision in modelo.revisions.values():
@@ -200,5 +244,8 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)
         assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
+        revision_binding_ids = {binding.id for binding in revision.bindings}
+        assert revision_binding_ids <= set(construct.bindings)
+        assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
         link_surfaces = {link.surface for link in revision.application_links}
-        assert {"portal", "filing", "extractor", "verification", "deadline"} <= link_surfaces, revision.id
+        assert {"portal", "filing", "extractor", "verification", "deadline", "export"} <= link_surfaces, revision.id
