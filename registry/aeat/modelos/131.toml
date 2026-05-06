@@ -782,6 +782,53 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+[[revisions."2019-2023".constructs]]
+id = "modelo-131-2019-2023-objective-estimation-instalment"
+title = "Modelo 131 objective-estimation instalment filing for 2019 to 2023"
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+]
+source_refs = [
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+formulas = [
+    "modelo-131-2019-2023-pago-fraccionado-sin-datos-base",
+    "modelo-131-2019-2023-pago-fraccionado-agrario",
+    "modelo-131-2019-2023-suma-pagos-previos",
+    "modelo-131-2019-2023-diferencia",
+    "modelo-131-2019-2023-total",
+    "modelo-131-2019-2023-resultado",
+]
+parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+export_layouts = ["modelo-131-2019-2023-fichero-boe"]
+extraction_profiles = ["modelo-131-2019-2023-submitted-file"]
+live_cross_references = ["modelo-131-2019-2023-filed-declarations-read"]
+workbook_parity_refs = ["modelo-131-dr-xlsx-2019-2023"]
+verification_expectations = ["modelo-131-2019-2023-calculation-verification"]
+application_links = [
+    "modelo-131-2019-2023-calculation",
+    "modelo-131-2019-2023-filing",
+    "modelo-131-2019-2023-export",
+    "modelo-131-2019-2023-extractor",
+    "modelo-131-2019-2023-verification",
+    "modelo-131-2019-2023-review",
+    "modelo-131-2019-2023-approval",
+    "modelo-131-2019-2023-reconciliation",
+    "modelo-131-2019-2023-filed-declarations-observation",
+    "modelo-131-2019-2023-workflow",
+]
+
 [[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-calculation"
 surface = "calculation"
@@ -823,12 +870,44 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-131-2019-2023-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 
 [revisions."2024"]
 id = "2024"
@@ -2404,6 +2483,45 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+[[revisions."2024".constructs]]
+id = "modelo-131-2024-objective-estimation-instalment"
+title = "Modelo 131 objective-estimation instalment filing for 2024"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4"]
+source_refs = [
+    "aeat-dr-131-2024",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+formulas = [
+    "modelo-131-2024-pago-fraccionado-sin-datos-base",
+    "modelo-131-2024-pago-fraccionado-agrario",
+    "modelo-131-2024-suma-pagos-previos",
+    "modelo-131-2024-diferencia",
+    "modelo-131-2024-total",
+    "modelo-131-2024-resultado",
+]
+parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+export_layouts = ["modelo-131-2024-fichero-boe"]
+extraction_profiles = ["modelo-131-2024-submitted-file"]
+live_cross_references = ["modelo-131-2024-filed-declarations-read"]
+workbook_parity_refs = ["modelo-131-dr-xlsx-2024"]
+verification_expectations = ["modelo-131-2024-calculation-verification"]
+application_links = [
+    "modelo-131-2024-calculation",
+    "modelo-131-2024-filing",
+    "modelo-131-2024-export",
+    "modelo-131-2024-extractor",
+    "modelo-131-2024-verification",
+    "modelo-131-2024-review",
+    "modelo-131-2024-approval",
+    "modelo-131-2024-reconciliation",
+    "modelo-131-2024-filed-declarations-observation",
+    "modelo-131-2024-workflow",
+]
+
 [[revisions."2024".application_links]]
 id = "modelo-131-2024-calculation"
 surface = "calculation"
@@ -2445,12 +2563,44 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2024".application_links]]
+id = "modelo-131-2024-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+
+[[revisions."2024".application_links]]
 id = "modelo-131-2024-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 
 [revisions."2025"]
 id = "2025"
@@ -3963,6 +4113,45 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+[[revisions."2025".constructs]]
+id = "modelo-131-2025-objective-estimation-instalment"
+title = "Modelo 131 objective-estimation instalment filing for 2025"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1347-2024:art-4"]
+source_refs = [
+    "aeat-dr-131-2025",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+formulas = [
+    "modelo-131-2025-pago-fraccionado-sin-datos-base",
+    "modelo-131-2025-pago-fraccionado-agrario",
+    "modelo-131-2025-suma-pagos-previos",
+    "modelo-131-2025-diferencia",
+    "modelo-131-2025-total",
+    "modelo-131-2025-resultado",
+]
+parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+export_layouts = ["modelo-131-2025-fichero-boe"]
+extraction_profiles = ["modelo-131-2025-submitted-file"]
+live_cross_references = ["modelo-131-2025-filed-declarations-read"]
+workbook_parity_refs = ["modelo-131-dr-xlsx-2025"]
+verification_expectations = ["modelo-131-2025-calculation-verification"]
+application_links = [
+    "modelo-131-2025-calculation",
+    "modelo-131-2025-filing",
+    "modelo-131-2025-export",
+    "modelo-131-2025-extractor",
+    "modelo-131-2025-verification",
+    "modelo-131-2025-review",
+    "modelo-131-2025-approval",
+    "modelo-131-2025-reconciliation",
+    "modelo-131-2025-filed-declarations-observation",
+    "modelo-131-2025-workflow",
+]
+
 [[revisions."2025".application_links]]
 id = "modelo-131-2025-calculation"
 surface = "calculation"
@@ -4004,12 +4193,44 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2025".application_links]]
+id = "modelo-131-2025-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
+
+[[revisions."2025".application_links]]
 id = "modelo-131-2025-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
+[[revisions."2025".application_links]]
+id = "modelo-131-2025-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 
 [revisions."2026"]
 id = "2026"
@@ -5567,6 +5788,49 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
+[[revisions."2026".constructs]]
+id = "modelo-131-2026-objective-estimation-instalment"
+title = "Modelo 131 objective-estimation instalment filing for 2026"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hac-1425-2025:art-4"]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+formulas = [
+    "modelo-131-2026-pago-fraccionado-sin-datos-base",
+    "modelo-131-2026-pago-fraccionado-agrario",
+    "modelo-131-2026-suma-pagos-previos",
+    "modelo-131-2026-diferencia",
+    "modelo-131-2026-total",
+    "modelo-131-2026-resultado",
+]
+parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+export_layouts = ["modelo-131-fichero-boe"]
+extraction_profiles = ["modelo-131-declaracion-pdf", "modelo-131-submitted-file"]
+live_cross_references = ["modelo-131-static-official", "modelo-131-filed-declarations-read"]
+workbook_parity_refs = ["modelo-131-dr-xlsx-2026"]
+verification_expectations = ["modelo-131-2026-calculation-verification"]
+application_links = [
+    "modelo-131-calculation",
+    "modelo-131-filing",
+    "modelo-131-export",
+    "modelo-131-verification",
+    "modelo-131-review",
+    "modelo-131-approval",
+    "modelo-131-reconciliation",
+    "modelo-131-extractor",
+    "modelo-131-portal-cross-reference",
+    "modelo-131-filed-declarations-observation",
+    "modelo-131-deadline",
+    "modelo-131-workflow",
+]
+deadline_windows = ["modelo-131-2026-1t", "modelo-131-2026-2t", "modelo-131-2026-3t", "modelo-131-2026-4t"]
+
 [[revisions."2026".application_links]]
 id = "modelo-131-calculation"
 surface = "calculation"
@@ -5608,6 +5872,22 @@ legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]
 
 [[revisions."2026".application_links]]
+id = "modelo-131-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".application_links]]
 id = "modelo-131-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
@@ -5642,6 +5922,14 @@ consumer = "aeat.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-131-procedure"]
+
+[[revisions."2026".application_links]]
+id = "modelo-131-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
 
 [[revisions."2026".deadline_windows]]
 id = "modelo-131-2026-1t"
