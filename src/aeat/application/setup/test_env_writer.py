@@ -98,7 +98,6 @@ def _answers(tmp_path: Path) -> SetupAnswers:
         aeat_manuals_root=tmp_path / "manuals",
         default_profile_path=tmp_path / "profile.json",
         aeat_live_tests_enabled=True,
-        aeat_live_tests_google=False,
     )
 
 
@@ -156,7 +155,7 @@ def test_write_env_file_is_byte_equal_idempotent(tmp_path: Path) -> None:
 def test_write_env_file_preserves_unrelated_keys(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "# preface comment\nUNRELATED_KEY=keep-me\nGOOGLE_OAUTH_CLIENT_ID=abc123\n\n# trailing comment\n",
+        "# preface comment\nUNRELATED_KEY=keep-me\nOTHER_TOOL_KEY=abc123\n\n# trailing comment\n",
         encoding="utf-8",
     )
     answers = _answers(tmp_path)
@@ -165,7 +164,7 @@ def test_write_env_file_preserves_unrelated_keys(tmp_path: Path) -> None:
 
     parsed = read_env_file(env_file)
     assert parsed["UNRELATED_KEY"] == "keep-me"
-    assert parsed["GOOGLE_OAUTH_CLIENT_ID"] == "abc123"
+    assert parsed["OTHER_TOOL_KEY"] == "abc123"
 
     text = env_file.read_text(encoding="utf-8")
     assert "# preface comment" in text
