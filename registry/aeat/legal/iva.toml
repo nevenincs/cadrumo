@@ -1,3 +1,80 @@
+[legal."orden-hac-3625-2003:apartado-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-3625-2003-art-1.html"
+document_id = "BOE-A-2003-23809"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+published_at = 2003-12-30
+effective_from = 2003-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobacion del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
+required_text = [
+    "Aprobación del modelo 309",
+    "Declaración-liquidación no periódica",
+    "Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-hac-3625-2003:apartado-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-3625-2003-art-3.html"
+document_id = "BOE-A-2003-23809"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+published_at = 2003-12-30
+effective_from = 2003-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentacion del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmision; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
+required_text = [
+    "Plazo de presentación del modelo 309",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[sources."aeat-dr-309-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls"
+sha256 = "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"
+bytes = 192000
+retrieved_at = 2026-05-06
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr309e23.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-309-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_309/files/modelo-309-procedure.html"
+sha256 = "bf5aae1504a91c25698a92b69514c8b32b4d18f3d3b1534a3b534e86c4d6e8d5"
+bytes = 23970
+retrieved_at = 2026-05-06
+applies_from = 2003-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-309-2003-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-3625-2003.html"
+sha256 = "1f455ee5531caece0aaa227e1f4b9a8b407ab9723f9a810dfbaff9ce33d045b4"
+bytes = 84051
+retrieved_at = 2026-05-06
+published_at = 2003-12-30
+applies_from = 2003-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+review_status = "reviewed"
+
 [legal."orden-eha-3434-2007:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
