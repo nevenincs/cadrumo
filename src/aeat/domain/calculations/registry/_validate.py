@@ -74,8 +74,16 @@ class RegistryValidator:
         self._sources = catalogues.sources
         self._source_root = source_root
         self._source_text_cache: dict[str, str] = {}
+        self._catalogue_failures: tuple[str, ...] | None = None
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
+        failures = self._validate_modelo(modelo, validate_catalogues=True)
+        if failures:
+            raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+
+    def _validate_catalogues(self) -> tuple[str, ...]:
+        if self._catalogue_failures is not None:
+            return self._catalogue_failures
         failures: list[str] = []
         try:
             verify_legal_catalogue(self._legal, source_root=self._source_root)
@@ -86,29 +94,32 @@ class RegistryValidator:
                 verify_source_catalogue(self._source_root, self._sources)
             except RegistryValidationError as exc:
                 failures.append(str(exc))
+        self._catalogue_failures = tuple(failures)
+        return self._catalogue_failures
+
+    def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
+        failures: list[str] = []
+        if validate_catalogues:
+            failures.extend(self._validate_catalogues())
         failures.extend(self._missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
         failures.extend(self._missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_revision_windows(modelo))
-        if failures:
-            raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+        return failures
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
         """Validate every modelo and the cross-model relation graph."""
 
         modelo_tuple = tuple(modelos)
-        failures: list[str] = []
+        failures: list[str] = list(self._validate_catalogues())
         modelo_ids = [modelo.id for modelo in modelo_tuple]
         for duplicate in sorted(_duplicates(modelo_ids)):
             failures.append(f"registry: duplicate modelo id {duplicate!r}")
 
         modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
         for modelo in modelo_tuple:
-            try:
-                self.validate_modelo(modelo)
-            except RegistryValidationError as exc:
-                failures.append(str(exc))
+            failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
 
         if len(modelos_by_id) == len(modelo_tuple):
             failures.extend(self._validate_relation_closure(modelo_tuple, modelos_by_id))
