@@ -194,7 +194,7 @@ its valid period, or unsupported by legal/source evidence.
 | 131 | Periodic IRPF objective-estimation instalment child and Renta payment-on-account observation source. | [ ] Define Modelo 100 downstream payment-on-account bindings, objective-estimation activity context, module-year dependencies, and profile/schedule inputs. |
 | 180 | Annual informative summary parent for Modelo 115 and evidence source for Renta rental withholding facts. | [x] Define quarterly Modelo 115 source-period relation; [ ] define downstream Modelo 100 rental evidence bindings and perceptor/property consistency checks. |
 | 190 | Annual informative summary parent for Modelo 111 and evidence source for Renta withholding and income facts. | [x] Define quarterly Modelo 111 source-period relation; [ ] define monthly Modelo 111 source-period relation where profile evidence requires monthly cadence; [ ] define downstream Modelo 100 work/professional/agricultural withholding evidence bindings. |
-| 193 | Annual informative summary parent for Modelo 123 and evidence source for Renta capital-income facts. | [ ] Define Modelo 123 source-period relation; [ ] define downstream Modelo 100 capital-income and withholding evidence bindings. |
+| 193 | Annual informative summary parent for Modelo 123 and evidence source for Renta capital-income facts. | [x] Define quarterly Modelo 123 source-period relation; [ ] define downstream Modelo 100 capital-income and withholding evidence bindings. |
 | 200 | Corporate-tax final-settlement parent. | [ ] Define Modelo 202 instalment-payment bindings and Modelo 232 evidence-only or calculation-backed relation classification. |
 | 202 | Corporate-tax instalment child and source for Modelo 200. | [ ] Define Modelo 200 downstream payment-on-account bindings, method-specific base dependencies, and profile/period schedule rules. |
 | 232 | Corporate related-party/tax-haven informative evidence for Modelo 200. | [ ] Classify relation to Modelo 200 as evidence-only unless a specific legally grounded corporate-tax calculation binding is declared. |
@@ -1049,12 +1049,19 @@ own ledger is checked.
 - [ ] Modelo 193 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/193.toml`.
+  - [x] Current registry foundation validates the 2024-y-siguientes annual
+    revision and gates calculation, filing, verification, extractor, portal,
+    review, approval, reconciliation, and workflow application links through a
+    validated snapshot.
 - [ ] Modelo 193 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
 - [ ] Modelo 193 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
+  - [x] Quarterly Modelo 123 source observations resolve through registry
+    relations and aggregate via Modelo 193 calculation formulas for annual
+    perceptores, annual bases, and annual retentions.
 - [ ] Modelo 193 extraction profiles: define submitted-file and declaration PDF
   extraction profiles with target casillas, accepted artefacts, min coverage,
   failure semantics, legal refs, and source refs.
@@ -1064,9 +1071,15 @@ own ledger is checked.
 - [ ] Modelo 193 export/filing linkage: route export, verify, calculation,
   review, approval, reconciliation, and workflow entry points through validated
   registry snapshots.
+  - [x] Calculation, filing, verification, extractor, portal, review, approval,
+    reconciliation, and workflow links are construct-scoped and require a
+    validated registry snapshot.
 - [ ] Modelo 193 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, relation to Modelo
   123, and any filed-data bindings are correct against official authority.
+  - [x] Focused behavior tests validate snapshot construction, cross-registry
+    Modelo 123 relation consistency, and calculation aggregation through filed
+    observations without encoding migration state.
 - [ ] Modelo 193 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -3399,12 +3412,22 @@ application surface, and the old authority has been deleted.
   - [ ] Write `registry/aeat/modelos/193.toml` with every reviewed revision,
      casilla, formula or declaration validation rule, parameter, cross-model
      relation, legal reference, source reference, and export layout.
+     - [x] Current 2024-y-siguientes registry foundation validates and includes
+       annual application-link gates plus quarterly Modelo 123 relation-backed
+       aggregate formulas.
   - [ ] Link Modelo 193 to registry-backed relation resolution, trace, review,
      approval, filing draft, declaration parsing where relevant, and export
      workflows.
+     - [x] Review, approval, reconciliation, workflow, calculation, filing,
+       verification, extractor, and portal links are snapshot-gated in the
+       Modelo 193 construct; export layout and live filed-data parsing remain
+       open rows.
   - [ ] Verify Modelo 193 with real annual-summary examples, relation tests over
      Modelo 123 outputs, invalid inputs, legal-reference checks,
      source-integrity checks, export roundtrips, and registry failure cases.
+     - [x] Quarterly Modelo 123 relation behavior is covered through real
+       registry observation resolution and formula execution for the current
+       annual summary slice.
   - [ ] Delete Modelo 193 old authorities in annual summary code, declaration
      extractor truth, casilla projections, duplicated metadata, and generated
      export/layout paths.
