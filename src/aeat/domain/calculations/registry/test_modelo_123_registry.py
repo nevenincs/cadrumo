@@ -115,7 +115,7 @@ def test_modelo_123_current_revision_calculates_all_registry_totals() -> None:
     assert {entry.target for entry in result.entries} == {"03", "06", "09", "12", "14"}
 
 
-def test_modelo_123_historical_revision_calculates_legacy_layout_totals() -> None:
+def test_modelo_123_historical_revision_calculates_prior_layout_totals() -> None:
     modelo, catalogues = _load_modelo("123")
     snapshot = build_snapshot(
         modelo,
