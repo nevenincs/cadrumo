@@ -141,6 +141,117 @@ def test_modelo_303_construct_links_filing_extractor_verification() -> None:
     assert "modelo-303-dr-2025" in construct.workbook_parity_refs
 
 
+def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings() -> None:
+    """Modelo 303 must declare ledger_iva_aggregation bindings for the
+    three IVA flow directions so the runtime can resolve cuota
+    devengada / cuota deducible / autorepercutido cross-modelo."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+
+    iva_bindings = {
+        binding.id: binding
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    }
+    assert "modelo-303-iva-repercutido-general-cuota" in iva_bindings
+    assert "modelo-303-iva-repercutido-reducido-cuota" in iva_bindings
+    assert "modelo-303-iva-repercutido-super-reducido-cuota" in iva_bindings
+    assert "modelo-303-iva-soportado-interiores-cuota" in iva_bindings
+    assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in iva_bindings
+
+
+def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations() -> None:
+    """End-to-end: a small ledger of substrate-classified observations
+    aggregates to the expected per-binding totals via the
+    ledger_iva_aggregation runtime resolver."""
+    from decimal import Decimal
+
+    from aeat.domain.calculations.registry._bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.vat import (
+        IvaFlowDirection,
+        VATCategory,
+        VATRateKind,
+    )
+
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+
+    observations = [
+        IvaLedgerObservation(
+            ledger_id="rep-general-1",
+            transaction_date=date(2025, 6, 1),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("1000"),
+            iva_amount=Decimal("210"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="rep-reducido-1",
+            transaction_date=date(2025, 6, 3),
+            category=VATCategory.DOMESTIC_REDUCED_10,
+            rate_kind=VATRateKind.REDUCED,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("200"),
+            iva_amount=Decimal("20"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="rep-super-1",
+            transaction_date=date(2025, 6, 4),
+            category=VATCategory.DOMESTIC_SUPER_REDUCED_4,
+            rate_kind=VATRateKind.SUPER_REDUCED,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("100"),
+            iva_amount=Decimal("4"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="sop-interior-1",
+            transaction_date=date(2025, 6, 5),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("300"),
+            iva_amount=Decimal("63"),
+        ),
+        IvaLedgerObservation(
+            ledger_id="auto-ica-1",
+            transaction_date=date(2025, 6, 6),
+            category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
+            base_amount=Decimal("400"),
+            iva_amount=Decimal("84"),
+        ),
+    ]
+
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result == {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("20"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("4"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("84"),
+    }
+
+
+def test_modelo_303_construct_includes_iva_bindings() -> None:
+    """The Modelo 303 construct must list each ledger_iva_aggregation
+    binding so downstream consumers see a complete construct envelope."""
+    modelo, _ = _load_modelo_303()
+    revision = modelo.revisions["2009-y-siguientes"]
+    construct = next(
+        c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion"
+    )
+    assert "modelo-303-iva-repercutido-general-cuota" in construct.bindings
+    assert "modelo-303-iva-repercutido-reducido-cuota" in construct.bindings
+    assert "modelo-303-iva-repercutido-super-reducido-cuota" in construct.bindings
+    assert "modelo-303-iva-soportado-interiores-cuota" in construct.bindings
+    assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
+
+
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
