@@ -38,6 +38,83 @@ required_text = [
     "treinta primeros días naturales del mes de enero",
 ]
 
+[legal."orden-eha-3786-2008:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-2.html#a2"
+document_id = "BOE-A-2008-20953"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a2"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 2 de la Orden EHA/3786/2008: aprobacion del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolucion: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
+required_text = [
+    "Aprobación del modelo 308",
+    "solicitud de devolución",
+    "sujetos pasivos ocasionales",
+]
+
+[legal."orden-eha-3786-2008:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-11.html#a11"
+document_id = "BOE-A-2008-20953"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a11"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentacion del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisicion."
+required_text = [
+    "Plazos de presentación del modelo 308",
+    "treinta días naturales",
+    "20 días naturales del mes siguiente",
+]
+
+[sources."aeat-dr-308-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls"
+sha256 = "85eb926a84d309684db271e42a85dc3375e8265b6026d918400e647c76f15981"
+bytes = 182784
+retrieved_at = 2026-05-06
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr308e16v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-308-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_308/files/modelo-308-procedure.html"
+sha256 = "adea44c97c4f6a63d7422ee8d9e8d9719f88e8e933866cd9d2cbb4289331147f"
+bytes = 23429
+retrieved_at = 2026-05-06
+applies_from = 2009-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G403.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-308-2008-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
+sha256 = "98e3f84291807aac97bbfa6c65fae9c80f0ef78611c3c1121bd531764a688b44"
+bytes = 180738
+retrieved_at = 2026-05-06
+published_at = 2008-12-30
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
+review_status = "reviewed"
+
 [legal."orden-eha-3111-2009:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
