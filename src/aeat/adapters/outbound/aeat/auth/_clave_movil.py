@@ -656,12 +656,17 @@ class ClaveMovilAuthProvider:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
                 await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
+                current_url = getattr(page, "url", "") or ""
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
                     "Open the Cl@ve app on your phone and approve the login request, "
                     "then run `aeat setup auth login` again.",
                     failure_mode=ClaveMovilFailureMode.APPROVAL_TIMEOUT,
-                    context={"timeout_ms": timeout_ms},
+                    context={
+                        "timeout_ms": timeout_ms,
+                        "current_url": current_url,
+                        "target_path": target_path,
+                    },
                 ) from exc
 
             storage_state = await context.storage_state()
@@ -1023,6 +1028,7 @@ class ClaveMovilAuthProvider:
         deadline = time.perf_counter() + timeout_ms / 1000
         while time.perf_counter() < deadline:
             current = getattr(page, "url", "") or ""
+            await self._raise_if_pending_request_error(page)
             if target_path in current and "SelectorAccesos" not in current:
                 return
             # Only match DialogoRepresentacion when it is the URL PATH,

@@ -432,6 +432,25 @@ class TestPendingPetitionRefusal:
 
         asyncio.run(run())
 
+    def test_post_auth_wait_detects_pending_petition_refusal_during_poll(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
+
+        async def run() -> None:
+            with pytest.raises(ClaveMovilApprovalTimeoutError) as excinfo:
+                await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
+            assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
+            assert excinfo.value.context is not None
+            assert excinfo.value.context["reason"] == "aeat-refused-new-clave-movil-petition"
+
+        asyncio.run(run())
+
 
 # ── authenticate() — resume path ─────────────────────────────────────────────
 
