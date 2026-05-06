@@ -25,6 +25,7 @@ __all__ = [
     "DataBindingDefinition",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
+    "IvaLedgerObservation",
     "OssIossLedgerObservation",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
@@ -33,9 +34,11 @@ __all__ = [
     "resolve_bound_casilla_inputs",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "validate_invoice_binding_definition",
+    "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
 ]
 
@@ -941,6 +944,170 @@ def resolve_ledger_oss_aggregation_binding_values(
             and observation.rate_kind is selector.rate_kind
             and observation.invoice_direction is selector.invoice_direction
             and observation.transaction_kind in kinds
+        ]
+        if selector.fact == "iva_amount_sum":
+            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
+        else:
+            total = sum((observation.base_amount for observation in matched), Decimal("0"))
+        resolved[binding.id] = total
+    return resolved
+
+
+
+# ---------------------------------------------------------------------------
+# Ledger IVA aggregation source bindings (cross-modelo IVA roll-out).
+#
+# Generic counterpart to :func:`resolve_ledger_oss_aggregation_binding_values`
+# for the standard IVA modelos (303 autoliquidación trimestral, 322 grupos
+# individual, 353 grupos agregado, 309 no periódica, 390 resumen anual).
+# Aggregates ledger lines by the canonical IVA classification triple
+# (VATCategory + VATRateKind + IvaFlowDirection) introduced by the
+# IvaFlowDirection codification slice.
+#
+# OSS / IOSS bindings keep their dedicated source kind because they
+# additionally carry the regime + destination Member State axes; this
+# generic source covers domestic IVA, intra-community supplies /
+# acquisitions, exports, imports, recargo de equivalencia, and
+# domestic-reverse-charge operations.
+# ---------------------------------------------------------------------------
+
+
+from ...vat import VATCategory  # noqa: E402 — substrate-typed selector
+from ...vat._flow import IvaFlowDirection  # noqa: E402
+
+
+class IvaLedgerObservation(BaseModel):
+    """One factual ledger line tagged with the IVA classification triple.
+
+    Modelo 303 / 322 / 353 / 309 / 390 binding selectors filter these
+    observations by category, rate kind, and flow direction; the
+    runtime aggregates the matched lines through the binding's
+    aggregation operator.
+
+    Attributes:
+        ledger_id: Stable id of the source ledger line.
+        transaction_date: When the supply takes place.
+        category: Substrate :class:`VATCategory` resolved by the
+            classifier.
+        rate_kind: Substrate :class:`VATRateKind` rate tier.
+        flow_direction: Substrate :class:`IvaFlowDirection` (output /
+            input / self-assessed reverse charge).
+        base_amount: Taxable base in EUR.
+        iva_amount: VAT amount in EUR (cuota repercutida or soportada,
+            depending on flow direction).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    ledger_id: str = Field(min_length=1, max_length=128)
+    transaction_date: date
+    category: VATCategory
+    rate_kind: VATRateKind
+    flow_direction: IvaFlowDirection
+    base_amount: Decimal
+    iva_amount: Decimal
+
+
+class _IvaLedgerSelector(BaseModel):
+    """Validated form of a ledger_iva_aggregation binding selector."""
+
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+
+    categories: tuple[VATCategory, ...] = Field(min_length=1)
+    rate_kinds: tuple[VATRateKind, ...] = Field(min_length=1)
+    flow_direction: IvaFlowDirection
+    fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
+
+    @field_validator("categories", mode="after")
+    @classmethod
+    def _categories_unique(cls, value: tuple[VATCategory, ...]) -> tuple[VATCategory, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("categories entries must be unique")
+        return value
+
+    @field_validator("rate_kinds", mode="after")
+    @classmethod
+    def _rate_kinds_unique(cls, value: tuple[VATRateKind, ...]) -> tuple[VATRateKind, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("rate_kinds entries must be unique")
+        return value
+
+
+def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
+    """Validate and parse a binding selector into a typed IVA selector."""
+    try:
+        return _IvaLedgerSelector.model_validate(dict(binding.selector))
+    except (ValueError, TypeError) as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed ledger_iva_aggregation selector"
+        ) from exc
+
+
+def validate_ledger_iva_aggregation_binding_definition(
+    binding: DataBindingDefinition,
+) -> None:
+    """Validate a ``ledger_iva_aggregation`` binding's selector and aggregation.
+
+    Raises:
+        RegistryValidationError: If the selector is malformed (unknown
+            category / rate kind / flow direction / fact, empty
+            tuple), if the aggregation operator is not "sum", or if
+            the binding source is not "ledger_iva_aggregation".
+    """
+    if binding.source != "ledger_iva_aggregation":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not a ledger_iva_aggregation source"
+        )
+    selector = _iva_ledger_selector(binding)
+
+    if binding.aggregation is not None:
+        op = str(binding.aggregation.get("op", "sum"))
+        if op != "sum":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} ledger_iva_aggregation supports only "
+                f"aggregation op 'sum', got {op!r}"
+            )
+
+    if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_iva_aggregation supports only "
+            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}"
+        )
+
+
+def resolve_ledger_iva_aggregation_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+) -> dict[str, Decimal]:
+    """Resolve every ``ledger_iva_aggregation`` binding on ``revision``.
+
+    Filters observations by the three classification axes (category in
+    selector.categories, rate_kind in selector.rate_kinds, flow_direction
+    matches selector.flow_direction) and aggregates the matched lines'
+    iva_amount or base_amount per the declared fact.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings to resolve.
+        observations: Iterable of substrate-classified ledger lines.
+
+    Returns:
+        Mapping of binding id to the aggregated Decimal value. Empty
+        match sets resolve to ``Decimal("0")``.
+    """
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "ledger_iva_aggregation":
+            continue
+        selector = _iva_ledger_selector(binding)
+        cat_set = set(selector.categories)
+        kind_set = set(selector.rate_kinds)
+        matched = [
+            observation
+            for observation in available
+            if observation.category in cat_set
+            and observation.rate_kind in kind_set
+            and observation.flow_direction is selector.flow_direction
         ]
         if selector.fact == "iva_amount_sum":
             total = sum((observation.iva_amount for observation in matched), Decimal("0"))
