@@ -10,9 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ._errors import RegistryValidationError
-from ._loader import load_registry_tree
-from ._snapshot import build_snapshot
+from ._authority import ValidatedRegistryAuthority
+from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._workbook_parity import (
     SyntheticInputSet,
     WorkbookArtefactReport,
@@ -203,17 +202,15 @@ def _snapshot_for_scenario(
     registry_root: Path,
     source_root: Path,
 ):
-    modelos, catalogues = load_registry_tree(registry_root)
-    modelo = next((item for item in modelos if item.id == scenario.modelo), None)
-    if modelo is None:
-        raise RegistryValidationError(f"unknown modelo for parity scenario: {scenario.modelo!r}")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=source_root,
-        filing_year=scenario.filing_year,
-        period=scenario.period,
-    )
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    try:
+        return authority.snapshot(
+            scenario.modelo,
+            filing_year=scenario.filing_year,
+            period=scenario.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise RegistryValidationError(f"invalid registry snapshot for parity scenario {scenario.id!r}: {exc}") from exc
 
 
 def _stable_tape_dump(tape: ParityTape) -> dict[str, object]:

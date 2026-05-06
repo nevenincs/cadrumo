@@ -1,0 +1,67 @@
+"""Tests for the centralized validated registry authority."""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from . import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+
+
+def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context() -> None:
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+
+    first = authority.snapshot("130", filing_year=2026, period="1T")
+    second = authority.snapshot("130", filing_year=2026, period="1T")
+
+    assert first is second
+    assert first.revision.period_selector.includes_year(2026)
+    assert "1T" in first.revision.period_selector.periods
+
+
+def test_authority_snapshot_runs_real_modelo_calculation() -> None:
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "01": Decimal("10000.00"),
+            "02": Decimal("4000.00"),
+            "05": Decimal("100.00"),
+            "06": Decimal("50.00"),
+            "08": Decimal("5000.00"),
+            "10": Decimal("20.00"),
+            "15": Decimal("20.00"),
+            "16": Decimal("5.00"),
+            "18": Decimal("100.00"),
+        },
+        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("9500.00")},
+        date_context={"filing_period": date(2026, 4, 20)},
+    )
+
+    assert result.values["19"] == Decimal("930.00")
+
+
+def test_authority_rejects_unknown_modelo() -> None:
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+
+    with pytest.raises(RegistrySnapshotError, match="999"):
+        authority.snapshot("999", filing_year=2026, period="1T")
+
+
+def test_authority_deadline_windows_are_validated_and_sorted() -> None:
+    authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+
+    windows = authority.deadline_windows(2026, modelos=("130",))
+
+    assert [window.period for _, _, window in windows] == ["2026Q1", "2026Q2", "2026Q3", "2026Q4"]
+    assert [window.closes_on for _, _, window in windows] == sorted(window.closes_on for _, _, window in windows)

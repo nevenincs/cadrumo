@@ -57,33 +57,18 @@ def test_regime_periodicity_quarterly_for_exterior_and_union_monthly_for_ioss() 
 
 def test_regime_periodicity_mapping_is_immutable() -> None:
     with pytest.raises(TypeError):
-        REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # type: ignore[index]
+        REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # type: ignore[index]  # ty: ignore[invalid-assignment]
 
 
 def test_regime_allows_deduction_is_false_within_modelo_369_for_every_regime() -> None:
     for regime in OssIossRegime:
-        assert (
-            regime_allows_deduction(
-                regime, DeductionScope.WITHIN_MODELO_369_AUTOLIQUIDATION
-            )
-            is False
-        )
+        assert regime_allows_deduction(regime, DeductionScope.WITHIN_MODELO_369_AUTOLIQUIDATION) is False
 
 
 def test_regime_allows_deduction_is_true_for_recovery_scopes() -> None:
     for regime in OssIossRegime:
-        assert (
-            regime_allows_deduction(
-                regime, DeductionScope.ESTABLECIDO_REGULAR_VAT_RETURN
-            )
-            is True
-        )
-        assert (
-            regime_allows_deduction(
-                regime, DeductionScope.NON_ESTABLECIDO_DIRECTIVE_PROCEDURE
-            )
-            is True
-        )
+        assert regime_allows_deduction(regime, DeductionScope.ESTABLECIDO_REGULAR_VAT_RETURN) is True
+        assert regime_allows_deduction(regime, DeductionScope.NON_ESTABLECIDO_DIRECTIVE_PROCEDURE) is True
 
 
 def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:

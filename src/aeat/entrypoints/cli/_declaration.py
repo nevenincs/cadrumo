@@ -29,8 +29,6 @@ from ...application.user_cli import (
     state_repository,
     update_declaration_pointer,
 )
-from ...core.paths import PROJECT_ROOT
-from ...domain.calculations.registry import load_registry_tree
 from ._common import (
     _FORMAT_JSON,
     _FORMAT_TABLE,
@@ -63,9 +61,6 @@ def declaration_calculate(
 ) -> None:
     canonical_period = _canonical_period(period)
     canonical_modelo = modelo.strip()
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    if canonical_modelo not in {entry.id for entry in modelos}:
-        raise _bad(f"modelo {canonical_modelo!r} is not present in the calculation registry")
     state = _state()
     record = state.active_profile_record()
     if record is None:
@@ -77,9 +72,9 @@ def declaration_calculate(
         tax_id=tax_id,
         display_name=state.active_profile or "operator",
     )
-    schema_provider = build_runtime_schema_provider(modelos=(canonical_modelo,))
     inputs = _aggregate_filing_inputs(canonical_modelo, canonical_period, state)
     try:
+        schema_provider = build_runtime_schema_provider(modelos=(canonical_modelo,))
         draft = build_draft(
             modelo=canonical_modelo,
             period=canonical_period,

@@ -2,38 +2,27 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-
 from . import (
-    RegistryValidator,
-    build_snapshot,
     calculate_registry_snapshot,
-    load_registry_tree,
     parse_export_payload,
     resolve_export_layout,
     resolve_relation_values,
 )
+from ._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_committed_modelo_130_registry_snapshot_is_calculable() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "130")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
+def test_committed_modelo_130_registry_snapshot_is_calculable(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("130", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -65,18 +54,10 @@ def test_committed_modelo_130_registry_snapshot_is_calculable() -> None:
     assert "aeat-dr-130-2019-v12" in snapshot.sources
 
 
-def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_retentions() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "111")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
+def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_retentions(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("111", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -108,18 +89,10 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
     assert "aeat-modelo-111-instructions" in snapshot.sources
 
 
-def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "115")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
+def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("115", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -141,18 +114,10 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding() 
     assert entries["05"].source_refs == ("aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal")
 
 
-def test_committed_modelo_123_registry_snapshot_calculates_current_totals() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "123")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
+def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("123", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -182,18 +147,10 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals() -> N
     assert entries["14"].operand_refs == ("12", "13")
 
 
-def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "123")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2023,
-        period="4T",
-    )
+def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("123", 2023, "4T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -238,18 +195,9 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     filing_period: date,
     source_ref: str,
     legal_ref: str,
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "131")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=filing_year,
-        period="1T",
-    )
+    snapshot = registry_snapshot("131", filing_year, "1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -285,18 +233,10 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert legal_ref in snapshot.legal
 
 
-def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "180")
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="0A",
-    )
+def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("180", 2026, "0A")
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
@@ -336,16 +276,10 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 
 
-def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_records() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(modelo for modelo in modelos if modelo.id == "180")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="0A",
-    )
+def test_committed_modelo_180_record_design_parses_declarante_and_perceptor_records(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("180", 2026, "0A")
     layout = resolve_export_layout(snapshot).layout
     declarante = _fixed_width_record(
         500,

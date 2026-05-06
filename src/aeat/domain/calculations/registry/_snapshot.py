@@ -24,6 +24,27 @@ def build_snapshot(
     """Validate ``modelo`` and return the selected immutable snapshot."""
 
     RegistryValidator(catalogues, source_root=source_root).validate_modelo(modelo)
+    return _build_validated_snapshot(
+        modelo,
+        catalogues,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+        revision_id=revision_id,
+    )
+
+
+def _build_validated_snapshot(
+    modelo: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: str | None = None,
+) -> RegistrySnapshot:
+    """Return a selected snapshot after the caller has validated ``modelo``."""
+
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids = set(modelo.legal_refs).union(revision.legal_refs)

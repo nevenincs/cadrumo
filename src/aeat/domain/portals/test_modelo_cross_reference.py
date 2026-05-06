@@ -17,6 +17,21 @@ def test_modelo_portal_linkage_comes_from_registry() -> None:
     assert [entry.portal for entry in entries] == [Portal.PORTAL_M130_PAGO_FRACCIONADO_ED]
 
 
+@pytest.mark.parametrize(
+    ("modelo", "portal"),
+    [
+        ("190", Portal.PORTAL_M190_RESUMEN_TRABAJO),
+        ("193", Portal.PORTAL_M193_RESUMEN_CAPITAL),
+        ("200", Portal.PORTAL_M200_SOCIEDADES_ANUAL),
+        ("202", Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO),
+        ("349", Portal.PORTAL_M349_INTRACOMUNITARIAS),
+    ],
+)
+def test_modelo_public_enum_portal_links_resolve_from_registry(modelo: str, portal: Portal) -> None:
+    entries = portals_for_modelo(modelo)
+    assert portal in {entry.portal for entry in entries}
+
+
 def test_registry_linked_portals_are_filing_dispatch_entries() -> None:
     """Registry-backed lookup exposes only filing or borrador portals."""
     entries = portals_for_modelo("130")

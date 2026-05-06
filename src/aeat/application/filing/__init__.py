@@ -11,10 +11,10 @@ from functools import lru_cache
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     RegistrySnapshot,
+    RegistrySnapshotError,
     RegistryValidationError,
-    build_snapshot,
+    ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    load_registry_tree,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -203,19 +203,17 @@ def build_draft(
 @lru_cache(maxsize=128)
 def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    by_id = {definition.id: definition for definition in modelos}
     try:
-        definition = by_id[modelo]
-    except KeyError as exc:
-        raise FilingBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
-    return build_snapshot(
-        definition,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=filing_year,
-        period=registry_period,
-    )
+        authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+        return authority.snapshot(
+            modelo,
+            filing_year=filing_year,
+            period=registry_period,
+        )
+    except RegistrySnapshotError as exc:
+        raise FilingBuilderError(
+            f"registry snapshot is not available for modelo={modelo} period={period}: {exc}"
+        ) from exc
 
 
 _QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
