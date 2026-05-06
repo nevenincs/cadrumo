@@ -10,21 +10,20 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.paths import PROJECT_ROOT
+from aeat.domain.calculations.registry import load_registry_tree
 from aeat.domain.calculations.registry._bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
     validate_ledger_iva_aggregation_binding_definition,
 )
 from aeat.domain.calculations.registry._errors import RegistryValidationError
-from aeat.domain.calculations.registry._schema import (
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-)
+from aeat.domain.calculations.registry._schema import DataBindingDefinition, ModeloRevision
 from aeat.domain.vat import (
     IvaFlowDirection,
     VATCategory,
@@ -34,30 +33,23 @@ from aeat.domain.vat import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _binding(
-    *,
-    id: str = "modelo-303-iva-repercutido-general",
-    categories: tuple[str, ...] = ("domestic_general_21",),
-    rate_kinds: tuple[str, ...] = ("general",),
-    flow: str = "repercutido",
-    fact: str | None = None,
-    aggregation: dict[str, str] | None = None,
-) -> DataBindingDefinition:
-    selector: dict[str, str | int | Decimal | tuple[str, ...]] = {
-        "categories": categories,
-        "rate_kinds": rate_kinds,
-        "flow_direction": flow,
-    }
-    if fact is not None:
-        selector["fact"] = fact
-    return DataBindingDefinition(
-        id=id,
-        source="ledger_iva_aggregation",
-        selector=selector,
-        aggregation=aggregation if aggregation is not None else {"op": "sum"},
-        legal_refs=("ley-37-1992:art-88",),
-        source_refs=("boe-modelo-303-2008-form",),
-    )
+@lru_cache(maxsize=1)
+def _modelo_303_revision() -> ModeloRevision:
+    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(item for item in modelos if item.id == "303")
+    return modelo.revisions["2009-y-siguientes"]
+
+
+def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:
+    return next(item for item in _modelo_303_revision().bindings if item.id == binding_id)
+
+
+def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
+    return binding.model_copy(update={"selector": {**binding.selector, **updates}})
+
+
+def _with_aggregation(binding: DataBindingDefinition, op: str) -> DataBindingDefinition:
+    return binding.model_copy(update={"aggregation": {"op": op}})
 
 
 def _observation(
@@ -82,14 +74,7 @@ def _observation(
 
 
 def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
-    return ModeloRevision(
-        id="2009-y-siguientes",
-        valid_from=date(2009, 1, 1),
-        period_selector=PeriodSelector(year_from=2009, periods=("1T", "2T", "3T", "4T")),
-        legal_refs=("ley-37-1992:art-88",),
-        source_refs=("boe-modelo-303-2008-form",),
-        bindings=bindings,
-    )
+    return _modelo_303_revision().model_copy(update={"bindings": bindings})
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
@@ -98,47 +83,41 @@ def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
 
 def test_validate_rejects_unknown_category() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(categories=("bogus",)))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), categories=("bogus",)))
 
 
 def test_validate_rejects_unknown_rate_kind() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(rate_kinds=("medium",)))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), rate_kinds=("medium",)))
 
 
 def test_validate_rejects_unknown_flow_direction() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(flow="unknown"))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), flow_direction="unknown"))
 
 
 def test_validate_rejects_empty_categories() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(categories=()))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), categories=()))
 
 
 def test_validate_rejects_empty_rate_kinds() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(rate_kinds=()))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), rate_kinds=()))
 
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with pytest.raises(RegistryValidationError, match="aggregation op 'sum'"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(aggregation={"op": "max"}))
+        validate_ledger_iva_aggregation_binding_definition(_with_aggregation(_binding(), "max"))
 
 
 def test_validate_rejects_unknown_fact() -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_binding(fact="bogus"))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), fact="bogus"))
 
 
 def test_validate_rejects_wrong_source_kind() -> None:
-    binding = DataBindingDefinition(
-        id="x",
-        source="invoice",
-        selector={"categories": ("domestic_general_21",)},
-        legal_refs=("ley-37-1992:art-88",),
-        source_refs=("boe-modelo-303-2008-form",),
-    )
+    binding = _binding().model_copy(update={"source": "invoice"})
     with pytest.raises(RegistryValidationError, match="not a ledger_iva_aggregation"):
         validate_ledger_iva_aggregation_binding_definition(binding)
 
@@ -151,26 +130,21 @@ def test_resolve_filters_by_flow_direction_repercutido() -> None:
         _observation(flow=IvaFlowDirection.AUTOREPERCUTIDO, iva=Decimal("90")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general": Decimal("210")}
+    assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("210")}
 
 
 def test_resolve_filters_by_flow_direction_soportado() -> None:
-    revision = _revision_with_bindings(_binding(flow="soportado"))
+    revision = _revision_with_bindings(_binding("modelo-303-iva-soportado-interiores-cuota"))
     observations = [
         _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
         _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general": Decimal("105")}
+    assert result == {"modelo-303-iva-soportado-interiores-cuota": Decimal("105")}
 
 
 def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
-    revision = _revision_with_bindings(
-        _binding(
-            flow="autorepercutido",
-            categories=("intra_community_acquisition_reverse_charge",),
-        )
-    )
+    revision = _revision_with_bindings(_binding("modelo-303-iva-autorepercutido-intracomunitaria-cuota"))
     observations = [
         _observation(
             category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -184,64 +158,64 @@ def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general": Decimal("42")}
+    assert result == {"modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("42")}
 
 
 def test_resolve_filters_by_category_set() -> None:
     """The selector's categories tuple is interpreted as a SET match —
     observations whose category is in the tuple count, others don't."""
     observations = [
-        _observation(category=VATCategory.DOMESTIC_GENERAL_21, rate_kind=VATRateKind.GENERAL, iva=Decimal("210")),
+        _observation(
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow=IvaFlowDirection.SOPORTADO,
+            iva=Decimal("210"),
+        ),
         _observation(
             category=VATCategory.DOMESTIC_REDUCED_10,
             rate_kind=VATRateKind.REDUCED,
+            flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("100"),
         ),
-        _observation(category=VATCategory.RECARGO_EQUIVALENCIA, rate_kind=VATRateKind.GENERAL, iva=Decimal("999")),
+        _observation(
+            category=VATCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=VATRateKind.GENERAL,
+            flow=IvaFlowDirection.SOPORTADO,
+            iva=Decimal("999"),
+        ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(
         _revision_with_bindings(
             _binding(
-                categories=("domestic_general_21", "domestic_reduced_10"),
-                rate_kinds=("general", "reduced"),
+                "modelo-303-iva-soportado-interiores-cuota",
             )
         ),
         observations,
     )
-    assert result["modelo-303-iva-repercutido-general"] == Decimal("310")
+    assert result["modelo-303-iva-soportado-interiores-cuota"] == Decimal("310")
 
 
 def test_resolve_supports_base_amount_sum_fact() -> None:
-    revision = _revision_with_bindings(_binding(fact="base_amount_sum"))
+    revision = _revision_with_bindings(_with_selector(_binding(), fact="base_amount_sum"))
     observations = [
         _observation(base=Decimal("1000"), iva=Decimal("210")),
         _observation(base=Decimal("500"), iva=Decimal("105")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general": Decimal("1500")}
+    assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("1500")}
 
 
 def test_resolve_returns_zero_when_no_observation_matches() -> None:
     revision = _revision_with_bindings(_binding())
     observations = [_observation(category=VATCategory.RECARGO_EQUIVALENCIA, iva=Decimal("999"))]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general": Decimal("0")}
+    assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("0")}
 
 
 def test_resolve_handles_multiple_bindings_independently() -> None:
     revision = _revision_with_bindings(
-        _binding(
-            id="modelo-303-iva-repercutido-general",
-            categories=("domestic_general_21",),
-            rate_kinds=("general",),
-            flow="repercutido",
-        ),
-        _binding(
-            id="modelo-303-iva-soportado-general",
-            categories=("domestic_general_21",),
-            rate_kinds=("general",),
-            flow="soportado",
-        ),
+        _binding("modelo-303-iva-repercutido-general-cuota"),
+        _binding("modelo-303-iva-soportado-interiores-cuota"),
     )
     observations = [
         _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
@@ -249,8 +223,8 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {
-        "modelo-303-iva-repercutido-general": Decimal("210"),
-        "modelo-303-iva-soportado-general": Decimal("63"),
+        "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
     }
 
 
