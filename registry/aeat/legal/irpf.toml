@@ -1184,6 +1184,66 @@ required_text = [
     "rendimiento neto de la actividad económica",
 ]
 
+[legal."ley-35-2006:art-49"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-49"
+document_id = "BOE-A-2006-20764"
+article = "49"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la integracion y compensacion de rentas en la base imponible del ahorro en Modelo 100, casillas 0429-0460."
+required_text = [
+    "integración y compensación",
+    "base imponible del ahorro",
+    "saldos negativos",
+]
+
+[legal."ley-35-2006:art-56"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-56"
+document_id = "BOE-A-2006-20764"
+article = "56"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a56"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para el minimo personal y familiar en Modelo 100, casillas 0511-0524."
+required_text = [
+    "mínimo personal y familiar",
+    "base liquidable",
+    "necesidades básicas",
+]
+
+[legal."ley-35-2006:art-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-50"
+document_id = "BOE-A-2006-20764"
+article = "50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a50"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la composicion de la base liquidable general y de la base liquidable del ahorro en Modelo 100, casillas 0500 y 0510."
+required_text = [
+    "base liquidable general",
+    "base imponible general",
+    "base liquidable del ahorro",
+]
+
 [legal."orden-hac-277-2026:art-3"]
 evidence_tier = "legal_authority"
 authority = "boe"
