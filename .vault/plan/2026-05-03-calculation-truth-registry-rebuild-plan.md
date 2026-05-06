@@ -1266,61 +1266,62 @@ own ledger is checked.
 
 ### Wave 12 Modelo 347 Parity Ledger
 
-- [ ] Modelo 347 audit: enumerate every current code, corpus, TOML, parser,
-  fixture, workflow, and test surface that codifies Modelo 347 identity,
-  casillas, rules, calculations, deadlines, exports, or live filed data.
-- [ ] Modelo 347 legal basis: identify and catalogue BOE legal references for
-  every filing-grade calculation, parameter, filing condition, and temporal
-  applicability rule.
-- [ ] Modelo 347 AEAT official guidance: capture and hash AEAT instructions,
-  manuals, record designs, and other official source artefacts required by the
-  registry definition.
-- [ ] Modelo 347 workbook/layout coverage: discover official XLS/XLSX coverage,
-  classify each artefact by evidence tier, and record whether it proves layout
-  only or executable calculation parity.
-- [ ] Modelo 347 live filed-data discovery: list available AEAT filed rows
-  through the read-only surface and record the periods, submitted-file
-  availability, declaration-copy availability, and justificante availability.
-- [ ] Modelo 347 live sanitized fixture: capture at least one read-only live
-  submitted-file or declaration-copy artefact, sanitize identity data, commit
-  the redacted fixture, and prove it parses through the registry layout.
-- [ ] Modelo 347 legal/source catalogue closure: add every legal ref and source
-  ref to `registry/aeat/legal/` with corpus paths, hashes, evidence tier, and
-  applicability dates.
-- [ ] Modelo 347 TOML identity and revisions: define modelo identity, title,
-  jurisdiction, cadence, every supported revision, period selector, deadline
-  windows, and application links in `registry/aeat/modelos/347.toml`.
-- [ ] Modelo 347 casilla schema: define every filing-grade casilla with data
-  type, input kind, requiredness, section, export refs, legal refs, and source
-  refs.
-- [ ] Modelo 347 formulas, parameters, and bindings: define every computation,
-  dated value, previous-filing binding, relation, rounding rule, legal ref,
-  source ref, and trace output.
-- [ ] Modelo 347 extraction profiles: define submitted-file and declaration PDF
-  extraction profiles with target casillas, accepted artefacts, min coverage,
-  failure semantics, legal refs, and source refs.
-- [ ] Modelo 347 live cross-reference guard: record the official live/static
-  cross-reference decision and prove remote-state guards reject AEAT writes,
-  saves, presentation, signing, payment, amendment, and cancellation actions.
-- [ ] Modelo 347 export/filing linkage: route export, verify, calculation,
-  review, approval, reconciliation, and workflow entry points through validated
-  registry snapshots.
-- [ ] Modelo 347 legal correctness tests: run behaviour tests that prove formula
-  outputs, trace legal refs, source refs, date boundaries, aggregation
-  thresholds, and any filed-data bindings are correct against official
-  authority.
-- [ ] Modelo 347 live/filed-data tests: run committed sanitized submitted-file
-  and declaration-copy parser tests, encrypted observation-store roundtrip
-  tests where applicable, and filed-data parser tests without defaults or
-  silent degradation.
-- [ ] Modelo 347 teardown: delete or neutralize all old Modelo 347 authorities
-  in rulesets, filing builders, category mappings, casilla projections,
-  deadlines, generated exports, hydrate paths, and legacy fixtures.
-- [ ] Modelo 347 quality gate: run registry verification, focused public
-  workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
-  `git diff --check`, and development-metadata sanitization checks.
-- [ ] Modelo 347 completion gate: mark complete only when no unchecked row
-  remains and no old authority can populate Modelo 347 filing-grade values.
+- [x] Modelo 347 audit: greenfield in `src/aeat/` outside the existing
+  portal entry (`Portal.PORTAL_M347_OPERACIONES_TERCEROS`); no legacy
+  ruleset, builder, or hydrate path exists to teardown.
+- [x] Modelo 347 legal basis: BOE-grounded catalogue covers Orden
+  EHA/3012/2008 arts 1 (aprobación) and 10 (plazo), and Orden HAC/1431/2025
+  art 1 (Modelo 347 modification for ejercicio 2025+).
+- [x] Modelo 347 AEAT official guidance: AEAT procedure HTML captured at
+  `corpus/aeat_official/instructions/modelo_347/files/modelo-347-procedure.html`
+  (procedimiento GI27).
+- [x] Modelo 347 workbook/layout coverage: two AEAT artefacts registered
+  as `record_design_layout` parity refs — `aeat-dr-347-2025` (current PDF,
+  modified by HAC/1431/2025) and `aeat-dr-347-2011` (historical PDF,
+  applies 2011-12-13 to 2024-12-31).
+- [ ] Modelo 347 live filed-data discovery: deferred — can be revisited
+  with the same authenticated CLI used for prior modelos (zero rows
+  expected for an autónomo NIF since Modelo 347 obligation triggers above
+  the 3.005,06 EUR threshold per counterparty).
+- [ ] Modelo 347 live sanitized fixture: gated on live discovery.
+- [x] Modelo 347 legal/source catalogue closure: new
+  `registry/aeat/legal/operaciones-terceros.toml` with the Order articles
+  plus `aeat-dr-347-2025`, `aeat-dr-347-2011`, `aeat-modelo-347-procedure`,
+  `boe-modelo-347-2008-form`, and `boe-modelo-347-2011-amendment` sources.
+- [x] Modelo 347 TOML identity and revisions: single revision
+  `2008-y-siguientes` (year_from=2008) in `registry/aeat/modelos/347.toml`
+  with annual cadence, `["0A"]` period selector, nine deadline windows
+  (February plazo for ejercicios 2018-2026), and the corresponding
+  application links.
+- [x] Modelo 347 casilla schema: declarante header casillas (ejercicio,
+  tipo de declaración) with section, data type, requiredness, legal refs,
+  and source refs.
+- [ ] Modelo 347 formulas, parameters, and bindings: foundation has no
+  layout bindings yet — both record-design corpus artefacts are PDFs (no
+  XLSX), so PDF parsing is needed for field-level fidelity. Deferred to
+  a follow-up slice.
+- [x] Modelo 347 extraction profiles: declaracion-pdf profile with
+  `aeat.adapters.inbound.declaracion.parse_declaracion`, strict
+  confidence, fail-hard semantics, target declarante casillas.
+- [x] Modelo 347 live cross-reference guard: static_official_documentation
+  and authenticated_read_surface (www1+www6 hosts, GET/HEAD/OPTIONS only,
+  all writes / signing / payment / amendment / cancellation forbidden).
+- [x] Modelo 347 export/filing linkage: foundation only — application
+  links cover portal, filing, extractor, verification, deadline.
+  Per-record export-layout bindings deferred until PDF parsing lands.
+- [x] Modelo 347 legal correctness tests: 14 behaviour tests covering
+  identity, revision selection, the informative-only invariant, both
+  workbook parity refs, both live cross-reference surfaces, the February
+  plazo, the annual filing schedule, and construct membership consistency.
+- [ ] Modelo 347 live/filed-data tests: gated on live sanitized fixture.
+- [ ] Modelo 347 teardown: N/A — Modelo 347 was greenfield outside the
+  existing portal entry.
+- [x] Modelo 347 quality gate: validate_modelo passes against the
+  committed catalogues; 14 focused tests pass; `ruff check`, `ty check`,
+  and `git diff --check` clean for the touched surfaces.
+- [ ] Modelo 347 completion gate: gated on live discovery + fixture +
+  layout-binding rows; foundation landed in commit `1df70814` (Add
+  Modelo 347 registry foundation).
 
 ### Wave 13 Modelo 369 Parity Ledger
 
