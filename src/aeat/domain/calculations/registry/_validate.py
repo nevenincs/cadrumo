@@ -657,6 +657,7 @@ class RegistryValidator:
                     )
             failures.extend(self._validate_extraction_profile_artefacts(prefix, profile))
 
+        oracle_bindings: dict[str, str] = {}
         for cross_reference in revision.live_cross_references:
             failures.extend(
                 self._missing_refs(
@@ -680,6 +681,16 @@ class RegistryValidator:
                     cross_reference.evidence_tier,
                 )
             )
+            if cross_reference.oracle_id is not None:
+                prior = oracle_bindings.get(cross_reference.oracle_id)
+                if prior is not None:
+                    failures.append(
+                        f"{prefix}: cross-references {prior!r} and {cross_reference.id!r} "
+                        f"both bind oracle_id {cross_reference.oracle_id!r}; "
+                        f"each oracle id may be bound by at most one cross-reference per revision"
+                    )
+                else:
+                    oracle_bindings[cross_reference.oracle_id] = cross_reference.id
 
         for workbook in revision.workbook_parity_refs:
             failures.extend(
