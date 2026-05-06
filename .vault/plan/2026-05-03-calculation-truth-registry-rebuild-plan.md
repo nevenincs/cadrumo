@@ -1575,11 +1575,11 @@ own ledger is checked.
 - [x] Modelo 200 AEAT official guidance: capture and hash AEAT instructions,
   manuals, record designs, and other official source artefacts required by the
   registry definition.
-  - [x] Manual practico de sociedades 2024 source excerpt committed at
-    `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024-excerpt.txt`
-    as `kind = "instructions"` source ref `aeat-modelo-200-manual-2024`;
-    the large upstream PDF is referenced by source URL but is not committed
-    directly.
+  - [x] Manual practico de sociedades 2024 PDF (6,266,062 bytes) committed at
+    `corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf`
+    as `kind = "manual_pdf"` source ref `aeat-modelo-200-manual-2024`. The
+    validator extracts text via the registry PDF helper for source-citation
+    matching.
 - [x] Modelo 200 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
