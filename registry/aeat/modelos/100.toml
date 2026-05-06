@@ -5227,6 +5227,91 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Cuota íntegra autonómica", "base liquidable"]
 
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0544" }] },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuota líquida estatal", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+    { op = "negate", args = [{ casilla = "0584" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0568" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuota líquida", "incrementada"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0569" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuota líquida autonómica", "incrementada"]
+
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
