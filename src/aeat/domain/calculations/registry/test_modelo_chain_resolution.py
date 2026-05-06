@@ -1,15 +1,4 @@
-"""Period-filter contract tests for ``resolve_relation_values_from_observations``.
-
-The chain-resolution arithmetic tests previously in this file were
-deleted as tautological: their expected aggregate Decimals duplicated
-the registry's own declared ``sum`` and ``copy`` aggregation ops,
-providing no external authority. Only the two non-arithmetic
-period-filter contract tests remain.
-
-Re-grounding chain resolution against external truth (AEAT
-workbooks, AEAT-published worked examples, or live AEAT oracle
-parity) is the follow-up.
-"""
+"""Period-filter contract tests for ``resolve_relation_values_from_observations``."""
 
 from __future__ import annotations
 

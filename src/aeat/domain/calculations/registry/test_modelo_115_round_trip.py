@@ -1,12 +1,4 @@
-"""Error-path test for modelo 115's calculation runtime.
-
-The two arithmetic round-trip tests previously in this file were
-deleted as tautological: their expected Decimals duplicated the
-registry's own declared 19 % rate and subtraction formula, providing
-no external authority. Only the unknown-casilla error-path remains —
-that one tests the runtime's input-validation contract against the
-schema, not AEAT formula correctness.
-"""
+"""Input-validation contract test for modelo 115's calculation runtime."""
 
 from __future__ import annotations
 
