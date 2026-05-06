@@ -26,10 +26,6 @@ auth:
     clave_movil_description: Cl@ve-rendszerben regisztrált mobilon megjelenő push-jóváhagyásos
       hitelesítés. DNI/NIE, Cl@ve-regisztráció és párosított készülék szükséges.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Cl@ve Permanente felhasználónév + megerősített jelszó
-      + SMS-kód alapú hitelesítés. Ebben a telepítésben nem érhető el, ezért a ``configure``
-      és ``login`` parancsokat elutasítja.
-    clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
     display_label_851219: Megjelenítési címke 851219
@@ -73,44 +69,6 @@ cli:
       justificantes (nyugták) szűrése
     show_help: Egy justificante (nyugta) részleteinek és metaadatainak megjelenítése
     show_id_help: A megjelenítendő justificante (nyugta) azonosítója
-  auth:
-    app_help: Hitelesítés és hitelesítő adatok kezelése
-    configure:
-      dni_fecha_help: A DNI érvényességi vagy kiállítási dátuma (ÉÉÉÉ-HH-NN)
-      dni_nie_help: Az adózó DNI vagy NIE száma
-      help: Hitelesítési adatok és paraméterek helyi konfigurálása
-      nie_soporte_help: A NIE támogatási száma
-      non_interactive_help: A konfiguráció futtatása nem interaktív módban (megerősítés
-        kérése nélkül)
-      prefer_non_qr_help: A QR-kód nélküli módszer (DNI/NIE használata) előnyben részesítése
-        a Cl@ve Móvilhoz
-      provider_help: Hitelesítési szolgáltató (pl. certificate, clave_movil)
-      set_default_help: Ennek a szolgáltatónak a beállítása alapértelmezett hitelesítési
-        módszerként
-    list_providers:
-      all_help: Az összes támogatott szolgáltató listázása, nem csak a konfiguráltaké
-      configured_help: A konfigurált hitelesítési szolgáltatók listázása
-      help: Az elérhető hitelesítési szolgáltatók és állapotuk listázása
-      json_help: A szolgáltatók listájának megjelenítése JSON formátumban
-    login:
-      help: Bejelentkezés az AEAT E-Hivatalba (Sede Electrónica)
-      json_help: A bejelentkezés eredményének megjelenítése JSON formátumban
-      non_interactive_help: Bejelentkezési kísérlet emberi beavatkozás nélkül (konfigurált
-        tanúsítvány szükséges)
-      provider_help: Használandó hitelesítési szolgáltató (pl. certificate, clave_movil)
-    logout:
-      all_help: Az összes aktív munkamenet kijelentkeztetése
-      help: Az aktuális AEAT munkamenet kijelentkeztetése
-      json_output_help: A kijelentkezés eredményének megjelenítése JSON formátumban
-      provider_help: Kijelentkezendő hitelesítési szolgáltató (pl. certificate, clave_movil)
-    status:
-      help: Az aktuális AEAT hitelesítési állapot megjelenítése
-      json_help: A hitelesítési állapot megjelenítése JSON formátumban
-      provider_help: Ellenőrizendő hitelesítési szolgáltató (pl. certificate, clave_movil)
-    whoami:
-      help: Részletes információk megjelenítése a jelenleg hitelesített alanyról
-      json_help: Az alany információinak megjelenítése JSON formátumban
-      provider_help: Ellenőrizendő hitelesítési szolgáltató (pl. certificate, clave_movil)
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -328,7 +286,6 @@ cli:
       errors:
         not_found: Pénzügyi katalógus nem található
     ingest:
-      catalogue_dir_help: A könyvtár, ahol a pénzügyi katalógus található
       help: Pénzügyi adatok bevitele (pl. bankszámlakivonatok)
       output_json_help: Kimeneti JSON fájl a bevitt adatokhoz
       path_help: A pénzügyi adatokat tartalmazó fájl vagy könyvtár útvonala
@@ -648,16 +605,16 @@ cli:
       invalid_year_range: Érvénytelen évtartomány
       unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
     expediente_help: A rögzítendő AEAT ügyszám
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
-    list_filed_data_help: cli.registry.list_filed_data_help
-    list_filed_data_json_help: cli.registry.list_filed_data_json_help
-    modelo_help: cli.registry.modelo_help
+    from_year_help: Kezdő év a bejegyzések rögzítéséhez vagy felülvizsgálatához
+    inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
+    inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
+    json_help: Kimenet JSON formátumban
+    list_filed_data_help: Meglévő AEAT benyújtások listázása a megadott évtartományra
+    list_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
+    modelo_help: Opcionális szűrő adózási modell szerint (pl. 303, 130)
     observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
       manifeszt
-    output_root_help: cli.registry.output_root_help
+    output_root_help: A bejegyzések kimeneti gyökérkönyvtárának útvonala
     parity_app_help: Paritási forgatókönyvek és szalagok futtatása manuális ellenőrzésekhez
     parity_output_help: A generált paritási szalag cél JSON fájlja
     parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry
@@ -667,31 +624,31 @@ cli:
     parity_scenario_help: Paritási forgatókönyv JSON fájl elérési útja
     parity_store_root_help: A generált paritási szalagok tárolására használt gyökérkönyvtár
     parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
-    period_help: cli.registry.period_help
+    period_help: Opcionális szűrő adózási időszak szerint (pl. Q1, 01)
     source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
       titkosított forrásmegfigyelési manifeszt
-    to_year_help: cli.registry.to_year_help
+    to_year_help: Záró év a bejegyzések rögzítéséhez vagy felülvizsgálatához
     verify_filed_state_help: Helyi registry számítás összehasonlítása rögzített AEAT
       benyújtott állapottal
-    verify_help: cli.registry.verify_help
-    verify_source_root_help: cli.registry.verify_source_root_help
-    workbooks_app_help: cli.registry.workbooks_app_help
-    workbooks_limit_help: cli.registry.workbooks_limit_help
-    workbooks_output_help: cli.registry.workbooks_output_help
-    workbooks_resume_help: cli.registry.workbooks_resume_help
-    workbooks_root_help: cli.registry.workbooks_root_help
-    workbooks_timeout_help: cli.registry.workbooks_timeout_help
-    workbooks_verify_help: cli.registry.workbooks_verify_help
-    year_help: cli.registry.year_help
+    verify_help: A helyi nyilvántartás integritásának ellenőrzése
+    verify_source_root_help: A forráskönyvtár útvonala az ellenőrzéshez
+    workbooks_app_help: Nyilvántartási munkafüzetek kezelése
+    workbooks_limit_help: Lefordítandó munkafüzetek korlátja
+    workbooks_output_help: Kimeneti könyvtár a lefordított munkafüzetekhez
+    workbooks_resume_help: Munkafüzetek összeállításának folytatása az utolsó ponttól
+    workbooks_root_help: A munkafüzet-definíciókat tartalmazó gyökérkönyvtár
+    workbooks_timeout_help: A fordítás maximális időkorlátja (másodpercben)
+    workbooks_verify_help: A generált munkafüzetek integritásának ellenőrzése
+    year_help: Lekérdezendő vagy feldolgozandó adóév
   root:
     app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
     app_help: Spanyol adóbevallási segéd
     format_help: A parancseredmények kimeneti formátuma
   sanitize:
-    app_help: cli.sanitize.app_help
+    app_help: Adattisztítás és anonimizálás kezelése
     labels:
-      available: cli.sanitize.labels.available
-    status_help: cli.sanitize.status_help
+      available: Elérhető
+    status_help: A környezet tisztítási állapotának megjelenítése
   setup:
     app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
     auth:
@@ -720,7 +677,6 @@ cli:
       active: Aktív
       auth_provider: Hitelesítési szolgáltató
       authenticated_at: Hitelesítve
-      availability: Elérhetőség
       description: Leírás
       id: ID
       key: Kulcs
@@ -763,74 +719,77 @@ cli:
     status:
       help: Beállítási állapot és következő szükséges művelet megjelenítése
   txs:
-    app_help: cli.txs.app_help
+    app_help: Banki tranzakciók és egyeztetés kezelése
     build:
-      exists_err: cli.txs.build.exists_err
-      help: cli.txs.build.help
-      replace_help: cli.txs.build.replace_help
-      source_help: cli.txs.build.source_help
-      success: cli.txs.build.success
+      exists_err: A tranzakciós fájl már létezik
+      help: Új tranzakciós fájl létrehozása
+      replace_help: A tranzakciós fájl cseréje, ha már létezik
+      source_help: Forrás tranzakciós fájl (pl. Excel, CSV, PDF)
+      success: 'A tranzakciós fájl sikeresen létrehozva a következő helyen: {path}'
     classify:
-      as_help: cli.txs.classify.as_help
-      business_category_err: cli.txs.classify.business_category_err
-      category_help: cli.txs.classify.category_help
-      confidence_help: cli.txs.classify.confidence_help
-      confidence_range_err: cli.txs.classify.confidence_range_err
-      help: cli.txs.classify.help
-      id_help: cli.txs.classify.id_help
-      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
-      invalid_pct_err: cli.txs.classify.invalid_pct_err
-      mixed_pct_err: cli.txs.classify.mixed_pct_err
-      no_changes_err: cli.txs.classify.no_changes_err
-      outgoing_category_err: cli.txs.classify.outgoing_category_err
-      pct_help: cli.txs.classify.pct_help
-      reason_help: cli.txs.classify.reason_help
+      as_help: Kategória vagy típus a tranzakció osztályozásához
+      business_category_err: A(z) '{cat}' üzleti kategória nem érvényes
+      category_help: Üzleti kategória a tranzakció osztályozásához
+      confidence_help: Az osztályozás bizalmi szintje vagy bizonyossága
+      confidence_range_err: A bizalmi szintnek 0 és 1 között kell lennie
+      help: Tranzakció kézi osztályozása
+      id_help: Az osztályozandó tranzakció egyedi azonosítója
+      invalid_confidence_err: A(z) '{conf}' bizalmi szint nem érvényes szám
+      invalid_pct_err: A(z) '{pct}' levonható százalék nem érvényes szám
+      mixed_pct_err: Vegyes használat esetén a levonható százaléknak 0 és 100 között
+        kell lennie
+      no_changes_err: Nincsenek megadva módosítások az osztályozáshoz
+      outgoing_category_err: A(z) '{cat}' kiadási kategória nem érvényes
+      pct_help: Levonható százalék vegyes használatú tranzakciók esetén
+      reason_help: A kézi osztályozás indoka vagy igazolása
     classify_llm:
-      all_help: cli.txs.classify_llm.all_help
-      category_hint_help: cli.txs.classify_llm.category_hint_help
-      dry_run_help: cli.txs.classify_llm.dry_run_help
-      dry_run_label: cli.txs.classify_llm.dry_run_label
+      all_help: Minden függőben lévő tranzakció feldolgozása
+      category_hint_help: Kategória javaslat az MI modell irányításához
+      dry_run_help: Futtatás változtatások mentése nélkül (előnézet)
+      dry_run_label: TESZT ÜZEMMÓD (nincs változtatás)
       errors:
-        classification_failed: cli.txs.classify_llm.errors.classification_failed
-        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
-        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
-        missing_target: cli.txs.classify_llm.errors.missing_target
-        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
-        save_failed: cli.txs.classify_llm.errors.save_failed
-      help: cli.txs.classify_llm.help
-      id_help: cli.txs.classify_llm.id_help
+        classification_failed: A(z) '{id}' tranzakció osztályozása sikertelen
+        exclusive_all_id: Nem használható egyszerre az --all és egy tranzakcióazonosító
+        invalid_max_seconds: A maximális feldolgozási időnek pozitívnak kell lennie
+        missing_target: Meg kell adnia az --all kapcsolót vagy egy tranzakcióazonosítót
+        persistence_failed: A módosítások mentése a tranzakciós fájlba sikertelen
+        save_failed: Nem sikerült menteni a(z) '{id}' osztályozását
+      help: Tranzakciók automatikus osztályozása MI segítségével
+      id_help: A besorolandó konkrét tranzakció azonosítója
       labels:
-        no_targets: cli.txs.classify_llm.labels.no_targets
-      llm_suffix: cli.txs.classify_llm.llm_suffix
-      max_seconds_help: cli.txs.classify_llm.max_seconds_help
-      model_alias_help: cli.txs.classify_llm.model_alias_help
-      model_help: cli.txs.classify_llm.model_help
-      pct_override_help: cli.txs.classify_llm.pct_override_help
-      persisted_label: cli.txs.classify_llm.persisted_label
-      provider_help: cli.txs.classify_llm.provider_help
-      reason_help: cli.txs.classify_llm.reason_help
-      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
-      summary: cli.txs.classify_llm.summary
-      tier_help: cli.txs.classify_llm.tier_help
-      timeout: cli.txs.classify_llm.timeout
+        no_targets: Nem találhatók feldolgozandó tranzakciók
+      llm_suffix: (MI útján)
+      max_seconds_help: Az MI feldolgozás maximális ideje (másodpercben)
+      model_alias_help: A használandó MI modell aliasneve (pl. gemini-pro)
+      model_help: Az MI modell teljes neve (verzióval együtt)
+      pct_override_help: Egy konkrét levonható százalék kényszerítése
+      persisted_label: MENTVE
+      provider_help: MI szolgáltató (pl. google, openai, anthropic)
+      reason_help: Az MI osztályozás indoklása vagy érvelése
+      stopped_early_suffix: (időtúllépés miatt leállítva)
+      summary: 'MI osztályozási összefoglaló: {total} feldolgozva, {success} sikeres,
+        {failed} sikertelen'
+      tier_help: Modell szintje vagy képessége (pl. flash, pro, ultra)
+      timeout: IDŐTÚLLÉPÉS
     list:
-      confidence_below_help: cli.txs.list.confidence_below_help
-      header: cli.txs.list.header
-      help: cli.txs.list.help
-      no_matches_confidence: cli.txs.list.no_matches_confidence
-      no_transactions: cli.txs.list.no_transactions
-      state_help: cli.txs.list.state_help
+      confidence_below_help: Tranzakciók szűrése a küszöbérték alatti bizalmi szinttel
+      header: Tranzakciók listája
+      help: Tranzakciók listázása feltételek alapján szűrve
+      no_matches_confidence: Nem található tranzakció {threshold}% alatti bizalmi
+        szinttel
+      no_transactions: Nem találhatók tranzakciók
+      state_help: Szűrés tranzakció állapota szerint (pl. pending, classified)
     show:
-      help: cli.txs.show.help
-      id_help: cli.txs.show.id_help
-      not_found_err: cli.txs.show.not_found_err
+      help: Egy adott tranzakció részleteinek megjelenítése
+      id_help: A megjelenítendő tranzakció azonosítója
+      not_found_err: Nem található tranzakció a(z) '{id}' azonosítóval
 filing:
   validation:
-    deadline_missed: filing.validation.deadline_missed
-    formula_divergence: filing.validation.formula_divergence
-    out_of_range: filing.validation.out_of_range
-    required_missing: filing.validation.required_missing
-    schema_mismatch: filing.validation.schema_mismatch
+    deadline_missed: A benyújtási határidő lejárt
+    formula_divergence: Eltérés a képlet kiszámításában
+    out_of_range: Megengedett tartományon kívüli érték
+    required_missing: Hiányzó kötelező mező
+    schema_mismatch: Eltérés a várt sémától
 profile:
   test_keys:
     description_490119: x
@@ -838,9 +797,9 @@ review:
   adapters:
     t_135562: belső átutalás
     t_142007: üzleti
-    t_145612: review.adapters.t_145612
+    t_145612: Hivatalos ellenőrzési eredmény
     t_167733: lejart
-    t_189155: reason
+    t_189155: indok
     t_298389: fizetés függőben
     t_352338: érvénytelen
     t_352928: részben fizetve
@@ -855,50 +814,58 @@ review:
     t_968325: bevetel
 setup:
   verifier:
-    t_049382: setup.verifier.t_049382
-    t_104932: setup.verifier.t_104932
-    t_104938: setup.verifier.t_104938
-    t_193582: setup.verifier.t_193582
-    t_204938: setup.verifier.t_204938
-    t_293847: setup.verifier.t_293847
-    t_394821: setup.verifier.t_394821
-    t_394827: setup.verifier.t_394827
-    t_501723: setup.verifier.t_501723
-    t_649302: setup.verifier.t_649302
-    t_749321: setup.verifier.t_749321
-    t_837462: setup.verifier.t_837462
-    t_938472: setup.verifier.t_938472
-    t_938475: setup.verifier.t_938475
+    t_049382: A(z) '{path}' útvonal nem fájl
+    t_104932: A(z) '{var}' környezeti változó be van állítva
+    t_104938: Az egyéni vállalkozói profil a(z) '{path}' útvonalon érvényes
+    t_193582: Ellenőrizze, hogy a tanúsítvány elérési útja helyes-e, és a fájl létezik-e
+    t_204938: A(z) '{name}' könyvtár a(z) '{path}' útvonalon készen áll
+    t_293847: A telepítési konfiguráció önkonzisztens
+    t_394821: Adja meg a(z) '{var}' környezeti változót a tanúsítvány jelszavával
+    t_394827: Az egyéni vállalkozói profil a(z) '{path}' útvonalon nem létezik (az
+      alapértelmezett értékek lesznek használva)
+    t_501723: A tanúsítvány nem található a(z) '{path}' útvonalon
+    t_649302: 'Nem sikerült létrehozni a(z) ''{name}'' könyvtárat a(z) ''{path}''
+      útvonalon: {exc}'
+    t_749321: Tanúsítvány megtalálva a(z) '{path}' útvonalon
+    t_837462: 'Az egyéni vállalkozói profil a(z) ''{path}'' útvonalon érvénytelen:
+      {exc}'
+    t_938472: A tanúsítvány jelszavához tartozó '{var}' környezeti változó nincs beállítva
+    t_938475: 'A telepítési konfiguráció nem konzisztens: {exc}'
   wizard:
-    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
-    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
-    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
-    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
-    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
-    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
-    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
-    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
-    certificate_path_prompt: setup.wizard.certificate_path_prompt
-    default_language_prompt: setup.wizard.default_language_prompt
-    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
-    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
-    has_employees_prompt: setup.wizard.has_employees_prompt
-    iva_regime_prompt: setup.wizard.iva_regime_prompt
-    output_language_prompt: setup.wizard.output_language_prompt
-    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
-    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
-    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
-    tax_id_prompt: setup.wizard.tax_id_prompt
-    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
-    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
-    welcome: setup.wizard.welcome
+    aeat_drafts_dir_prompt: AEAT piszkozatok könyvtára
+    aeat_live_tests_enabled_prompt: Engedélyezi az AEAT élő teszteket?
+    aeat_manuals_root_prompt: AEAT kézikönyvek gyökérkönyvtára
+    aeat_submissions_dir_prompt: AEAT benyújtások könyvtára
+    bienes_extranjero_above_threshold_prompt: Rendelkezik külföldi vagyontárgyakkal
+      a küszöbérték felett (720-as modell)?
+    certificate_backend_prompt: Tanúsítványkezelő háttérrendszer
+    certificate_friendly_name_prompt: A tanúsítvány barátságos neve
+    certificate_password_secret_var_name_prompt: Környezeti változó neve a tanúsítvány
+      jelszavához
+    certificate_path_prompt: A tanúsítványfájl elérési útja (.p12, .pfx)
+    default_language_prompt: Alapértelmezett nyelv a felülethez
+    default_profile_path_prompt: Az egyéni vállalkozói profilfájl elérési útja (.json)
+    does_intracomunitario_prompt: Végez közösségen belüli műveleteket (ROI)?
+    has_employees_prompt: Vannak alkalmazottai?
+    iva_regime_prompt: ÁFA-rendszer
+    output_language_prompt: A generált jelentések és dokumentumok nyelve
+    pays_professionals_with_retencion_prompt: Fizet szakembereknek forrásadóval (111-es
+      modell)?
+    pays_rent_with_retencion_prompt: Fizet bérleti díjat forrásadóval (115-ös modell)?
+    professional_income_withholding_ge_70pct_prompt: Rendelkezik forrásadóval a szakmai
+      jövedelmének több mint 70%-ában?
+    tax_id_prompt: A tulajdonos adóazonosító jele (NIF/NIE)
+    tax_residence_ccaa_prompt: Adóilletékesség szerinti autonóm közösség
+    third_party_transactions_above_347_threshold_prompt: Végez harmadik felekkel 3005,06€
+      feletti műveleteket (347-es modell)?
+    welcome: Üdvözli az AEAT CLI telepítővarázslója
 transactions:
   import:
-    message_053465: transactions.import.message_053465
-    message_082074: transactions.import.message_082074
-    message_185962: transactions.import.message_185962
-    message_829073: transactions.import.message_829073
-    unreadable: transactions.import.unreadable
-    verified: transactions.import.verified
+    message_053465: Duplikált tranzakció észlelve az importált fájlban.
+    message_082074: Duplikált tranzakció már szerepel a főkönyvben.
+    message_185962: A forrásfájl nem tartalmaz érvényes tranzakciókat.
+    message_829073: 'Lehetséges hézag: több mint 35 nap telt el a tranzakciók között.'
+    unreadable: Olvashatatlan fájl vagy nem támogatott formátum
+    verified: Importálás sikeresen ellenőrizve
   test_diagnostics:
     message: A 2026-03 hónap hiányzik az importált fájlból.
