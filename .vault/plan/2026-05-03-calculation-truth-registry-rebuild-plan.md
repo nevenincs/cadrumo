@@ -5235,3 +5235,25 @@ candidates for subsequent foundation slices.
   IVA flow taxonomy and differ only on filing context. 2 new tests
   pass plus 9 existing 322 tests + 12 303 tests stay green.
   Commit `81264233`.
+
+- [x] Modelo 303 IVA bindings end-to-end. Wires 5 demonstrator
+  ledger_iva_aggregation bindings into Modelo 303 (autoliquidación
+  trimestral) showing the cross-modelo IVA substrate working: three
+  repercutido cuota tiers (general 21%, reducido 10%, super-reducido
+  4%) anchored to LIVA art 88 + EHA/3786/2008 art 1, one soportado
+  cuota across all three rate tiers anchored to LIVA art 92, and one
+  autorepercutido cuota for intra-community-acquisition reverse
+  charge anchored to LIVA art 84. Construct legal_refs extended with
+  arts 84/88/92. 3 new tests verify binding declaration, end-to-end
+  resolution against substrate-classified observations, and construct
+  binding linkage. Commit `22f09cfd`.
+- [x] Modelo 322 IVA bindings — replicates the Modelo 303 binding
+  pattern into Modelo 322 (IVA grupos individual mensual) scoped to
+  the individual group member's monthly autoliquidación. Same 5
+  bindings, same substrate-typed selectors, same source-citation
+  pattern. Cross-modelo repetition demonstrates that the
+  ledger_iva_aggregation binding source kind is genuinely
+  modelo-agnostic — modelos 303, 322, 353, 309, 390 share the same
+  IVA flow taxonomy and differ only on filing context. 2 new tests
+  pass plus 9 existing 322 tests + 12 303 tests stay green.
+  Commit `81264233`.
