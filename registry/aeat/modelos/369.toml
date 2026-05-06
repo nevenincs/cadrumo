@@ -1,0 +1,766 @@
+[modelo]
+id = "369"
+title = "IVA. Autoliquidacion regimenes especiales OSS / IOSS"
+official_name = "Modelo 369. Impuesto sobre el Valor Anadido. Autoliquidacion de los regimenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condicion de sujetos pasivos, que efectuen ventas a distancia de bienes y ciertas entregas interiores de bienes."
+tax_domain = "iva"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-quinvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Exterior — quarterly per HAC/610/2021 art 2(a) and LIVA 163 octiesdecies
+# -----------------------------------------------------------------------------
+
+[revisions."esquema-exterior"]
+label = "Modelo 369 - Esquema Exterior - regimen especial servicios prestados por sujetos pasivos no establecidos en la Comunidad (LIVA art 163 octiesdecies a vicies). Trimestral por HAC/610/2021 art 2(a)."
+valid_from = 2021-07-01
+period_selector = { year_from = 2021, periods = ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"] }
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+[[revisions."esquema-exterior".workbook_parity_refs]]
+id = "modelo-369-exterior-dr-2021"
+workbook_source = "aeat-dr-369-2021"
+fixture_id = "modelo-369-exterior-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-de-external-services-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "external_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["external_scheme_services"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la autoliquidacion"
+section = ["declarante"]
+data_type = "integer"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo trimestral del esquema exterior (EXT-1T / EXT-2T / EXT-3T / EXT-4T)"
+section = ["declarante"]
+data_type = "text"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".live_cross_references]]
+id = "modelo-369-exterior-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-369-exterior-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".live_cross_references]]
+id = "modelo-369-exterior-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-369-exterior-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-portal"
+surface = "portal"
+consumer = "portal_m369_iva_oss_exterior"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".filing_schedules]]
+id = "modelo-369-exterior-trimestral"
+period_kind = "quarterly"
+periods = ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-1t"
+filing_year = 2025
+period = "2025-EXT-1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-2t"
+filing_year = 2025
+period = "2025-EXT-2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-3t"
+filing_year = 2025
+period = "2025-EXT-3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-4t"
+filing_year = 2025
+period = "2025-EXT-4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2026-ext-1t"
+filing_year = 2026
+period = "2026-EXT-1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".constructs]]
+id = "modelo-369-esquema-exterior"
+title = "Modelo 369 - Esquema Exterior (regimen especial servicios prestados por no establecidos)"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casillas = ["decl.ejercicio", "decl.periodo"]
+bindings = ["modelo-369-exterior-de-external-services-21pct"]
+workbook_parity_refs = ["modelo-369-exterior-dr-2021"]
+live_cross_references = [
+    "modelo-369-exterior-static-documentation",
+    "modelo-369-exterior-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-exterior-portal",
+    "modelo-369-exterior-filing",
+    "modelo-369-exterior-extractor",
+    "modelo-369-exterior-verification",
+    "modelo-369-exterior-deadline",
+]
+filing_schedules = ["modelo-369-exterior-trimestral"]
+deadline_windows = [
+    "modelo-369-exterior-2025-ext-1t",
+    "modelo-369-exterior-2025-ext-2t",
+    "modelo-369-exterior-2025-ext-3t",
+    "modelo-369-exterior-2025-ext-4t",
+    "modelo-369-exterior-2026-ext-1t",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Union — quarterly per HAC/610/2021 art 2(b) and LIVA 163 unvicies
+# -----------------------------------------------------------------------------
+
+[revisions."esquema-union"]
+label = "Modelo 369 - Esquema Union - regimen especial ventas intracomunitarias a distancia, interfaces electronicas y servicios establecidos en la Comunidad (LIVA art 163 unvicies a quatervicies). Trimestral por HAC/610/2021 art 2(b)."
+valid_from = 2021-07-01
+period_selector = { year_from = 2021, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-unvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+[[revisions."esquema-union".workbook_parity_refs]]
+id = "modelo-369-union-dr-2021"
+workbook_source = "aeat-dr-369-2021"
+fixture_id = "modelo-369-union-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-de-services-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "union_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["oss_union_services"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-fr-services-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "union_scheme", destination_member_state = "fr", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["oss_union_services"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-union".bindings]]
+id = "modelo-369-union-de-goods-distance-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "union_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["oss_union_goods_distance_sale", "oss_union_goods_interface_facilitated"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-union".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la autoliquidacion"
+section = ["declarante"]
+data_type = "integer"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo trimestral (1T / 2T / 3T / 4T)"
+section = ["declarante"]
+data_type = "text"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".live_cross_references]]
+id = "modelo-369-union-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-369-union-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".live_cross_references]]
+id = "modelo-369-union-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-369-union-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-portal"
+surface = "portal"
+consumer = "portal_m369_iva_oss_union"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".filing_schedules]]
+id = "modelo-369-union-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2025-1t"
+filing_year = 2025
+period = "2025-1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2025-2t"
+filing_year = 2025
+period = "2025-2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2025-3t"
+filing_year = 2025
+period = "2025-3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2025-4t"
+filing_year = 2025
+period = "2025-4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".deadline_windows]]
+id = "modelo-369-union-2026-1t"
+filing_year = 2026
+period = "2026-1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".constructs]]
+id = "modelo-369-esquema-union"
+title = "Modelo 369 - Esquema Union (regimen especial OSS Union)"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-unvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casillas = ["decl.ejercicio", "decl.periodo"]
+bindings = [
+    "modelo-369-union-de-services-21pct",
+    "modelo-369-union-fr-services-21pct",
+    "modelo-369-union-de-goods-distance-21pct",
+]
+workbook_parity_refs = ["modelo-369-union-dr-2021"]
+live_cross_references = [
+    "modelo-369-union-static-documentation",
+    "modelo-369-union-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-union-portal",
+    "modelo-369-union-filing",
+    "modelo-369-union-extractor",
+    "modelo-369-union-verification",
+    "modelo-369-union-deadline",
+]
+filing_schedules = ["modelo-369-union-trimestral"]
+deadline_windows = [
+    "modelo-369-union-2025-1t",
+    "modelo-369-union-2025-2t",
+    "modelo-369-union-2025-3t",
+    "modelo-369-union-2025-4t",
+    "modelo-369-union-2026-1t",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Importacion (IOSS) — monthly per HAC/610/2021 art 2(c) and (d), LIVA 163 quinvicies
+# -----------------------------------------------------------------------------
+
+[revisions."esquema-importacion"]
+label = "Modelo 369 - Esquema Importacion (IOSS) - regimen especial ventas a distancia de bienes importados (LIVA art 163 quinvicies a octovicies). Mensual por HAC/610/2021 art 2(c)/(d)."
+valid_from = 2021-07-01
+period_selector = { year_from = 2021, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-quinvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+[[revisions."esquema-importacion".workbook_parity_refs]]
+id = "modelo-369-importacion-dr-2021"
+workbook_source = "aeat-dr-369-2021"
+fixture_id = "modelo-369-importacion-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-importacion".bindings]]
+id = "modelo-369-importacion-de-low-value-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "import_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["ioss_distance_sale_low_value"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-importacion".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la autoliquidacion"
+section = ["declarante"]
+data_type = "integer"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-importacion".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo mensual (01..12)"
+section = ["declarante"]
+data_type = "text"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-importacion".live_cross_references]]
+id = "modelo-369-importacion-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-369-importacion-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".live_cross_references]]
+id = "modelo-369-importacion-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-369-importacion-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-portal"
+surface = "portal"
+consumer = "portal_m369_iva_ioss"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".filing_schedules]]
+id = "modelo-369-importacion-mensual"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".deadline_windows]]
+id = "modelo-369-importacion-2025-01"
+filing_year = 2025
+period = "2025-01"
+period_kind = "monthly"
+opens_on = 2025-02-01
+closes_on = 2025-02-28
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".deadline_windows]]
+id = "modelo-369-importacion-2025-06"
+filing_year = 2025
+period = "2025-06"
+period_kind = "monthly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".deadline_windows]]
+id = "modelo-369-importacion-2025-12"
+filing_year = 2025
+period = "2025-12"
+period_kind = "monthly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".deadline_windows]]
+id = "modelo-369-importacion-2026-01"
+filing_year = 2026
+period = "2026-01"
+period_kind = "monthly"
+opens_on = 2026-02-01
+closes_on = 2026-02-28
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".constructs]]
+id = "modelo-369-esquema-importacion"
+title = "Modelo 369 - Esquema Importacion (regimen especial IOSS)"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-quinvicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casillas = ["decl.ejercicio", "decl.periodo"]
+bindings = ["modelo-369-importacion-de-low-value-21pct"]
+workbook_parity_refs = ["modelo-369-importacion-dr-2021"]
+live_cross_references = [
+    "modelo-369-importacion-static-documentation",
+    "modelo-369-importacion-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-importacion-portal",
+    "modelo-369-importacion-filing",
+    "modelo-369-importacion-extractor",
+    "modelo-369-importacion-verification",
+    "modelo-369-importacion-deadline",
+]
+filing_schedules = ["modelo-369-importacion-mensual"]
+deadline_windows = [
+    "modelo-369-importacion-2025-01",
+    "modelo-369-importacion-2025-06",
+    "modelo-369-importacion-2025-12",
+    "modelo-369-importacion-2026-01",
+]
