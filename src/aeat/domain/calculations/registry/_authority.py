@@ -26,6 +26,7 @@ class ValidatedRegistryAuthority:
     catalogues: RegistryCatalogues
     _modelos_by_id: dict[str, ModeloDefinition]
     _validator: RegistryValidator
+    _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
 
@@ -41,6 +42,7 @@ class ValidatedRegistryAuthority:
             catalogues=catalogues,
             _modelos_by_id={modelo.id: modelo for modelo in modelos},
             _validator=RegistryValidator(catalogues, source_root=source_root),
+            _registry_validated=False,
             _validated_modelos=set(),
             _snapshots={},
         )
@@ -57,10 +59,19 @@ class ValidatedRegistryAuthority:
         """Validate one modelo once and return its definition."""
 
         modelo = self.modelo(modelo_id)
-        if modelo_id not in self._validated_modelos:
+        if not self._registry_validated and modelo_id not in self._validated_modelos:
             self._validator.validate_modelo(modelo)
             self._validated_modelos.add(modelo_id)
         return modelo
+
+    def validate_registry(self) -> None:
+        """Validate the full registry tree once."""
+
+        if self._registry_validated:
+            return
+        self._validator.validate_registry(self.modelos)
+        self._registry_validated = True
+        self._validated_modelos.update(modelo.id for modelo in self.modelos)
 
     def snapshot(
         self,

@@ -27,13 +27,11 @@ from ...adapters.persistence.storage import MasterKeyProvider
 from ...application.auth import AuthSessionUnavailableError, CorruptAuthSessionError, require_verified_aeat_session
 from ...core.config import Settings, load_settings
 from ...domain.calculations.registry import (
-    RegistryValidator,
-    build_snapshot,
+    RegistrySnapshotError,
     calculate_registry_snapshot,
     generate_parity_tape_path,
     load_parity_scenario,
     load_parity_tape,
-    load_registry_tree,
     replay_parity_tape,
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
@@ -41,6 +39,7 @@ from ...domain.calculations.registry import (
     save_parity_tape,
     verify_workbook_backend,
 )
+from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry._filed_state import (
     RegistryFiledStateComparison,
     compare_calculation_to_filed_observation,
@@ -287,7 +286,9 @@ def _emit_metric(key: str, value: object) -> None:
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
     """Load the registry tree and return stable read-only inventory counts."""
 
-    modelos, catalogues = load_registry_tree(registry_root)
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=Path("."))
+    modelos = authority.modelos
+    catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
@@ -315,9 +316,10 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
     """Load and fail-fast validate every registry modelo against shared catalogues."""
 
-    modelos, catalogues = load_registry_tree(registry_root)
-    validator = RegistryValidator(catalogues, source_root=source_root)
-    validator.validate_registry(modelos)
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority.validate_registry()
+    modelos = authority.modelos
+    catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
@@ -515,17 +517,15 @@ async def capture_source_filed_data(
     """Capture filed observations required by a target filing's registry dependencies."""
 
     session, settings = await _active_verified_session()
-    modelos, catalogues = load_registry_tree(registry_root)
-    modelo_definition = next((item for item in modelos if item.id == modelo), None)
-    if modelo_definition is None:
-        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=modelo))
-    snapshot = build_snapshot(
-        modelo_definition,
-        catalogues,
-        source_root=source_root,
-        filing_year=year,
-        period=period,
-    )
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    try:
+        snapshot = authority.snapshot(
+            modelo,
+            filing_year=year,
+            period=period,
+        )
+    except RegistrySnapshotError as exc:
+        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=modelo)) from exc
     store = FiledDeclarationObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
@@ -600,17 +600,15 @@ def verify_filed_state(
     registry_source_observations = tuple(
         registry_observation_from_filed_declaration(observation) for observation in source_observations
     )
-    modelos, catalogues = load_registry_tree(registry_root)
-    modelo = next((item for item in modelos if item.id == filed_observation.modelo), None)
-    if modelo is None:
-        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=filed_observation.modelo))
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=source_root,
-        filing_year=filed_observation.ejercicio,
-        period=filed_observation.period,
-    )
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    try:
+        snapshot = authority.snapshot(
+            filed_observation.modelo,
+            filing_year=filed_observation.ejercicio,
+            period=filed_observation.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise typer.BadParameter(tr("cli.registry.errors.unknown_modelo", modelo=filed_observation.modelo)) from exc
     input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != "computed"}
     inputs: dict[str, Decimal] = {
         casilla_id: value
