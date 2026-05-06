@@ -139,6 +139,58 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
         ) from exc
 
 
+_INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset(
+    {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")}
+)
+"""Closed set of integer-percentage IVA rates the CLI accepts on
+``--set iva.rate``. The values map onto :class:`aeat.domain.invoices.IvaRate`
+slots (``RATE_0`` / ``RATE_4`` / ``RATE_10`` / ``RATE_21``); the underlying
+substrate at :func:`aeat.domain.vat.lookup_rate` is the authority for the
+fractional percentages those slots resolve to at a date.
+
+Rejecting non-canonical values at parse time closes the V-3 review-edit
+boundary leak surfaced by the rate-shadow sweep audit: free-form
+Decimal IVA rates can no longer flow through the edit spec into ledger
+records."""
+
+
+def _coerce_invoice_iva_rate(clause: EditClause) -> Decimal:
+    """Coerce ``--set iva.rate`` to a substrate-known IVA percentage.
+
+    The CLI uses integer percentages (``21`` / ``10`` / ``4`` / ``0``);
+    the spec stores them as a :class:`Decimal` so downstream review-state
+    code can compare against ``Decimal("21")`` etc. Rejects any
+    non-canonical value to anchor the review-edit boundary on the
+    closed substrate slot taxonomy.
+    """
+    value = _coerce_decimal(clause, scope="invoice-iva-rate")
+    if value not in _INVOICE_IVA_RATE_ALLOWED:
+        raise EditParseError(
+            f"--set {clause.key}={clause.raw_value}",
+            reason="unsupported-iva-rate",
+        )
+    return value
+
+
+def _coerce_invoice_retention_rate(clause: EditClause) -> Decimal:
+    """Coerce ``--set retention.rate`` and bound it to ``[0, 100]``.
+
+    IRPF retention rates are not yet centralised in a substrate; the
+    edit spec restricts the value to the legal percentage envelope
+    (``0`` through ``100`` inclusive) so review-state writes cannot
+    introduce nonsense values into ledger records. Tightens the V-3
+    boundary on the retention axis without committing to a closed
+    rate enum that the substrate does not yet expose.
+    """
+    value = _coerce_decimal(clause, scope="invoice-retention-rate")
+    if value < Decimal("0") or value > Decimal("100"):
+        raise EditParseError(
+            f"--set {clause.key}={clause.raw_value}",
+            reason="retention-rate-out-of-range",
+        )
+    return value
+
+
 def _coerce_share(clause: EditClause, *, scope: str) -> Decimal:
     """Coerce a clause value into a share Decimal in the inclusive 0..1 range."""
     value = _coerce_decimal(clause, scope=scope)
@@ -375,13 +427,13 @@ class InvoiceEditSpec(BaseModel):
             if clause.key == InvoiceEditKey.BASE:
                 base = _coerce_decimal(clause, scope="invoice-base")
             elif clause.key == InvoiceEditKey.IVA_RATE:
-                iva_rate = _coerce_decimal(clause, scope="invoice-iva-rate")
+                iva_rate = _coerce_invoice_iva_rate(clause)
             elif clause.key == InvoiceEditKey.IVA_AMOUNT:
                 iva_amount = _coerce_decimal(clause, scope="invoice-iva-amount")
             elif clause.key == InvoiceEditKey.IVA_CATEGORY:
                 iva_category = clause.raw_value
             elif clause.key == InvoiceEditKey.RETENTION_RATE:
-                retention_rate = _coerce_decimal(clause, scope="invoice-retention-rate")
+                retention_rate = _coerce_invoice_retention_rate(clause)
             elif clause.key == InvoiceEditKey.RETENTION_AMOUNT:
                 retention_amount = _coerce_decimal(clause, scope="invoice-retention-amount")
             elif clause.key == InvoiceEditKey.PAYMENT_ID:
