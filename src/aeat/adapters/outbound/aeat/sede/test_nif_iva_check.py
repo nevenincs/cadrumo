@@ -3,13 +3,10 @@
 Exercises the parts of the driver that are implementable without live
 browser access: the ``planned_operations`` enumeration, empty-input
 rejection, the ``Pydantic`` observation/result models, and the
-``extract_verdict_from_response_text`` fail-safe.
+``extract_verdict_from_response_text`` parser.
 
 Live navigation tests live behind ``@pytest.mark.live_read`` and require
-``AEAT_LIVE_TESTS_ENABLED=1`` plus a working AEAT browser session; they
-will fail loudly until the form-specific Playwright selectors are
-captured (the ``_open_nif_iva_form`` and ``_check_single_nif`` stubs in
-the driver raise ``NotImplementedError``).
+``AEAT_LIVE_TESTS_ENABLED=1`` plus a working AEAT browser session.
 """
 
 from __future__ import annotations
@@ -26,7 +23,7 @@ from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
     NifIvaCheckSedeDriver,
     extract_verdict_from_response_text,
 )
-from aeat.domain.calculations.registry._errors import RegistryValidationError
+from aeat.domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -106,9 +103,15 @@ def test_result_model_defaults_to_empty_observations() -> None:
     assert result.observations == ()
 
 
-def test_extract_verdict_returns_unknown_until_response_shape_captured() -> None:
-    """The fail-safe stub returns 'unknown' for every input until live response samples land."""
+def test_extract_verdict_parses_valid_response_text() -> None:
+    assert extract_verdict_from_response_text("Sí. Operador intracomunitario identificado") == "valid"
+    assert extract_verdict_from_response_text("NIF-IVA válido") == "valid"
 
-    assert extract_verdict_from_response_text("Sí. Operador identificado") == "unknown"
-    assert extract_verdict_from_response_text("No. Operador no identificado") == "unknown"
+
+def test_extract_verdict_parses_invalid_response_text_before_positive_tokens() -> None:
+    assert extract_verdict_from_response_text("No. Operador no identificado") == "invalid"
+    assert extract_verdict_from_response_text("NIF-IVA no válido") == "invalid"
+
+
+def test_extract_verdict_returns_unknown_for_unrecognized_response_text() -> None:
     assert extract_verdict_from_response_text("") == "unknown"
