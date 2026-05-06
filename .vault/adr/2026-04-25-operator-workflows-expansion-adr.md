@@ -1,14 +1,14 @@
 ---
 tags:
   - '#adr'
-  - '#kent-workflows-expansion'
+  - '#operator-workflows-expansion'
 date: '2026-04-25'
 related:
-  - "[[2026-04-25-kent-workflows-expansion-research]]"
-  - "[[2026-04-25-kent-workflows-expansion-plan]]"
+  - "[[2026-04-25-operator-workflows-expansion-research]]"
+  - "[[2026-04-25-operator-workflows-expansion-plan]]"
 ---
 
-# `kent-workflows-expansion` adr: cli-integration-coverage
+# `operator-workflows-expansion` adr: cli-integration-coverage
 
 Implementation ADR for wgergely/aeat#340 (child of EPIC #316). Documents
 the controlling decisions for adding ten Kent-CLI integration tests to
