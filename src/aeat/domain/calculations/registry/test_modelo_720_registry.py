@@ -74,8 +74,7 @@ def test_committed_modelo_720_is_informative_only() -> None:
             "Modelo 720 is informative-only and must not own filing-grade calculations"
         )
         assert revision.relations == (), (
-            f"revision {revision.id!r} declares cross-model relations; "
-            "Modelo 720 is informative-only"
+            f"revision {revision.id!r} declares cross-model relations; Modelo 720 is informative-only"
         )
         for casilla in revision.casillas:
             assert casilla.input_kind in {"informational", "manual"}, casilla.id
@@ -100,9 +99,7 @@ def test_committed_modelo_720_workbook_parity_resolves_to_corpus_artefact() -> N
 def test_committed_modelo_720_static_cross_reference_forbids_remote_writes() -> None:
     modelo, _ = _load_modelo_720()
     for revision in modelo.revisions.values():
-        decision = next(
-            ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation"
-        )
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
         assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
@@ -111,9 +108,7 @@ def test_committed_modelo_720_static_cross_reference_forbids_remote_writes() -> 
 def test_committed_modelo_720_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_720()
     for revision in modelo.revisions.values():
-        decision = next(
-            ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface"
-        )
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
         assert decision.requires_authentication is True
         assert decision.requires_aeat_authorization is True
         assert decision.synthetic_data_allowed is False
@@ -193,8 +188,7 @@ def _layout_bindings_for(revision, record_name: str):
     return tuple(
         binding
         for binding in revision.bindings
-        if isinstance(binding.selector.get("record"), str)
-        and binding.selector["record"] == record_name
+        if isinstance(binding.selector.get("record"), str) and binding.selector["record"] == record_name
     )
 
 
@@ -248,4 +242,28 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
         assert revision_binding_ids <= set(construct.bindings)
         assert construct.export_layouts == tuple(layout.id for layout in revision.export_layouts)
         link_surfaces = {link.surface for link in revision.application_links}
-        assert {"portal", "filing", "extractor", "verification", "deadline", "export"} <= link_surfaces, revision.id
+        assert {
+            "portal",
+            "filing",
+            "extractor",
+            "verification",
+            "deadline",
+            "export",
+            "review",
+            "approval",
+            "reconciliation",
+            "workflow",
+        } <= link_surfaces, revision.id
+
+
+def test_modelo_720_workflow_surfaces_are_snapshot_gated_and_construct_scoped() -> None:
+    modelo, _ = _load_modelo_720()
+    required_surfaces = {"review", "approval", "reconciliation", "workflow"}
+    for revision in modelo.revisions.values():
+        construct = revision.constructs[0]
+        linked_by_surface = {link.surface: link for link in revision.application_links}
+        assert required_surfaces <= set(linked_by_surface), revision.id
+        for surface in required_surfaces:
+            link = linked_by_surface[surface]
+            assert link.requires_snapshot is True
+            assert link.id in construct.application_links
