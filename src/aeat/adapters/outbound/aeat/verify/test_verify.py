@@ -2,8 +2,7 @@
 
 Exercises the borrowed-vs-self-owned browser-session lifecycle of
 :func:`verify_csv` using lightweight recording doubles that satisfy the
-:class:`aeat.adapters.outbound.aeat.verify.VerifyBrowserSessionLike` and
-:class:`aeat.adapters.outbound.aeat.verify.VerifyPlaywrightOwnerLike` shapes.
+:class:`aeat.adapters.outbound.aeat.verify.VerifyBrowserSessionLike` shape.
 """
 
 from __future__ import annotations
@@ -87,16 +86,6 @@ class _RecordingBrowserSession:
         self.close_calls += 1
 
 
-class _RecordingPlaywrightOwner:
-    """Recording double satisfying the ``VerifyPlaywrightOwnerLike`` lifecycle shape."""
-
-    def __init__(self) -> None:
-        self.stop_calls = 0
-
-    async def stop(self) -> None:
-        self.stop_calls += 1
-
-
 @pytest.mark.asyncio
 async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
     """Borrowed sessions remain caller-owned."""
@@ -113,14 +102,12 @@ async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
 
 @pytest.mark.asyncio
 async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
-    """Self-owned sessions must honor the new BrowserSession close contract."""
+    """Self-owned sessions must honor the central BrowserSession close contract."""
     session = _RecordingBrowserSession("<html>documento desconocido</html>")
-    playwright_owner = _RecordingPlaywrightOwner()
     session_like = cast(verify_module.VerifyBrowserSessionLike, session)
-    playwright_like = cast(verify_module.VerifyPlaywrightOwnerLike, playwright_owner)
 
-    async def _factory() -> tuple[verify_module.VerifyBrowserSessionLike, verify_module.VerifyPlaywrightOwnerLike]:
-        return session_like, playwright_like
+    async def _factory() -> verify_module.VerifyBrowserSessionLike:
+        return session_like
 
     original_factory = verify_module.DEFAULT_BROWSER_SESSION_FACTORY
     verify_module.DEFAULT_BROWSER_SESSION_FACTORY = cast(verify_module.VerifyBrowserSessionFactory, _factory)
@@ -133,7 +120,6 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     assert session.create_context_calls == 1
     assert session.context.close_calls == 1
     assert session.close_calls == 1
-    assert playwright_owner.stop_calls == 1
 
 
 def test_verify_csv_guard_rejects_non_read_method() -> None:

@@ -78,6 +78,14 @@ class ClaveMovilSessionDetail(BaseModel):
             "login; recorded for audit only. Not reused on resume."
         ),
     )
+    landing_url: str | None = Field(
+        default=None,
+        description=(
+            "Concrete authenticated AEAT URL observed after login. "
+            "Used by live verification and resume probes so the provider "
+            "does not re-enter the auth selector when a session is already live."
+        ),
+    )
 
 
 class CertificateLoginAssertionDetail(BaseModel):

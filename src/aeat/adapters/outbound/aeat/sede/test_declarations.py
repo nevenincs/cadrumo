@@ -19,11 +19,11 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from playwright.async_api import async_playwright
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.filing import (
     FilingDraftStatus,
@@ -32,6 +32,7 @@ from aeat.application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
+from aeat.core.config import Settings
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
@@ -372,26 +373,29 @@ class TestSearchOptionSelection:
     """Verify AEAT combobox selection failures do not select another offered value."""
 
     @pytest.mark.asyncio
-    async def test_unavailable_ejercicio_option_returns_false_without_selecting_another_year(self) -> None:
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True)
-            try:
-                page = await browser.new_page()
-                await page.set_content(
-                    """
-                    <main>
-                      <span>Ejercicio (*)</span>
-                      <a class="z-combobox-button" href="#">abrir</a>
-                      <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2024</div>
-                      <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2025</div>
-                    </main>
-                    """,
-                )
+    async def test_unavailable_ejercicio_option_returns_false_without_selecting_another_year(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        settings = Settings(aeat_token_dir=tmp_path)
+        profile = Profile(name="test-declarations", storage_state_path=tmp_path / "state.json")
+        async with (
+            shared_playwright_runtime() as playwright,
+            opened_browser_page(playwright, settings, profile) as (page, _context),
+        ):
+            await page.set_content(
+                """
+                <main>
+                  <span>Ejercicio (*)</span>
+                  <a class="z-combobox-button" href="#">abrir</a>
+                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2024</div>
+                  <div class="z-comboitem-text" onclick="window.selectedYear = this.textContent.trim()">2025</div>
+                </main>
+                """,
+            )
 
-                selected = await _select_combobox_value(page, label_text="Ejercicio (*)", option_match="2026")
-                selected_year = await page.evaluate("window.selectedYear ?? null")
-            finally:
-                await browser.close()
+            selected = await _select_combobox_value(page, label_text="Ejercicio (*)", option_match="2026")
+            selected_year = await page.evaluate("window.selectedYear ?? null")
 
         assert selected is False
         assert selected_year is None

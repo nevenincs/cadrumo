@@ -32,8 +32,22 @@ _RUNNER = CliRunner()
 
 
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from aeat.adapters.persistence.storage.sql import dispose_engine
+
+    dispose_engine()
+    for name in (
+        "AEAT_AUTH_PROVIDER",
+        "AEAT_CERTIFICATE_PATH",
+        "AEAT_CERTIFICATE_PASSWORD_SECRET",
+        "AEAT_CLAVE_MOVIL_DNI_NIE",
+        "AEAT_CLAVE_MOVIL_DNI_FECHA",
+        "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
+    ):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -280,13 +294,43 @@ def test_setup_auth_configure_clave_movil_round_trips(
     assert _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"]).exit_code == 0
     configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", "clave_movil"])
     assert configure.exit_code == 0
-    login = _invoke(["--format", "json", "setup", "auth", "login"])
-    assert login.exit_code == 0
     status = _invoke(["--format", "json", "setup", "auth", "status"])
     assert status.exit_code == 0
     payload = json.loads(status.output)
-    assert payload["ready"] is True
+    assert payload["auth"]["provider"] == "clave_movil"
+    assert payload["ready"] is False
     assert _invoke(["setup", "auth", "logout"]).exit_code == 0
+
+
+def test_setup_auth_clave_movil_status_and_logout_do_not_mark_login_without_verified_session(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Cl@ve Móvil status/logout do not create local readiness without a verified backend session."""
+    _isolate(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator"])
+    assert init.exit_code == 0, init.output
+
+    configure = _invoke(["--format", "json", "setup", "auth", "configure", "--provider", "clave_movil"])
+    assert configure.exit_code == 0, configure.output
+    configured = json.loads(configure.output)
+    assert configured["auth"]["provider"] == "clave_movil"
+    assert configured["auth"]["certificate_path"] is None
+    assert configured["next"] == "aeat setup auth login"
+
+    status = _invoke(["--format", "json", "setup", "auth", "status"])
+    assert status.exit_code == 0, status.output
+    ready = json.loads(status.output)
+    assert ready["ready"] is False
+    assert ready["auth"]["provider"] == "clave_movil"
+
+    logout = _invoke(["--format", "json", "setup", "auth", "logout"])
+    assert logout.exit_code == 0, logout.output
+    logged_out = json.loads(logout.output)
+    assert logged_out["auth"]["provider"] == "clave_movil"
+    assert logged_out["auth"]["authenticated_at"] is None
+    assert logged_out["auth"]["subject"] is None
 
 
 # ---------------------------------------------------------------------

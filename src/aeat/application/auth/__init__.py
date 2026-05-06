@@ -117,7 +117,7 @@ def select_provider(
 def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
     """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
 
-    Used by ``aeat auth list-providers`` to render a human-readable
+    Used by ``aeat setup auth providers`` to render a human-readable
     diagnostic. The string focuses on what the operator can and cannot
     do given the current provider configuration; never contains
     secrets.
