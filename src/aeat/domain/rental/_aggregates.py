@@ -36,18 +36,27 @@ from ._repository import (
 )
 from ._tier_resolver import TierResolution, resolve_reduccion
 
+from ._imputacion_parameters import LIRPF_ART_85_IMPUTACION
+
 _log = get_logger(__name__)
 _CENT = Decimal("0.01")
 
-IMPUTACION_RATE_RECENT_REVISION: Decimal = Decimal("0.011")
-"""LIRPF art. 85: 1,1 % when valor catastral was revised in the 10
-ejercicios prior to the period."""
+IMPUTACION_RATE_RECENT_REVISION: Decimal = LIRPF_ART_85_IMPUTACION.recent_revision_rate
+"""LIRPF art. 85: registry-backed reduced rate when valor catastral was
+revised in the lookback window. Sourced from
+``registry/aeat/legal/irpf.toml`` parameter
+``lirpf-art-85:imputacion-rate-recent-revision``."""
 
-IMPUTACION_RATE_OLD_OR_NO_REVISION: Decimal = Decimal("0.02")
-"""LIRPF art. 85: 2 % when no qualifying recent catastral revision."""
+IMPUTACION_RATE_OLD_OR_NO_REVISION: Decimal = LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate
+"""LIRPF art. 85: registry-backed default rate when no qualifying recent
+catastral revision applies. Sourced from
+``registry/aeat/legal/irpf.toml`` parameter
+``lirpf-art-85:imputacion-rate-old-or-no-revision``."""
 
-CATASTRAL_REVISION_LOOKBACK_YEARS: int = 10
-"""LIRPF art. 85: ``en los 10 períodos impositivos anteriores``."""
+CATASTRAL_REVISION_LOOKBACK_YEARS: int = LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years
+"""LIRPF art. 85: registry-backed lookback window in years. Sourced from
+``registry/aeat/legal/irpf.toml`` parameter
+``lirpf-art-85:catastral-revision-lookback-years``."""
 
 
 def _round_to_cents(value: Decimal) -> Decimal:

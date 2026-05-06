@@ -1,3 +1,57 @@
+[legal."ley-35-2006:art-85"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-85.html#a85"
+document_id = "BOE-A-2006-20764"
+article = "85"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a85"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: imputacion de rentas inmobiliarias. Tipo general 2 por ciento del valor catastral; tipo reducido 1,1 por ciento cuando los valores catastrales hayan sido revisados en el periodo impositivo o en los diez periodos impositivos anteriores."
+required_text = [
+    "Imputación de rentas inmobiliarias",
+    "2 por ciento al valor catastral",
+    "diez períodos impositivos anteriores",
+    "1,1 por ciento",
+]
+
+[parameters."lirpf-art-85:imputacion-rate-recent-revision"]
+evidence_tier = "legal_authority"
+value = "0.011"
+unit = "fraction"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: tipo reducido 1,1 por ciento aplicable cuando el valor catastral del inmueble fue revisado, modificado o determinado mediante procedimiento de valoracion colectiva en el periodo impositivo o en los diez periodos anteriores."
+
+[parameters."lirpf-art-85:imputacion-rate-old-or-no-revision"]
+evidence_tier = "legal_authority"
+value = "0.02"
+unit = "fraction"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: tipo general 2 por ciento aplicable cuando no concurre revision catastral reciente o el inmueble carece de revision en los diez periodos anteriores."
+
+[parameters."lirpf-art-85:catastral-revision-lookback-years"]
+evidence_tier = "legal_authority"
+value = "10"
+unit = "years"
+applies_to = "lirpf-imputacion-renta-inmobiliaria"
+legal_refs = ["ley-35-2006:art-85"]
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIRPF art 85: ventana 'en los diez periodos impositivos anteriores' que delimita la aplicacion del tipo reducido del 1,1 por ciento sobre el valor catastral revisado."
+
 [legal."rd-439-2007:art-110"]
 evidence_tier = "legal_authority"
 authority = "boe"
