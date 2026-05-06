@@ -3,16 +3,24 @@
 from __future__ import annotations
 
 import re
+import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
+from functools import lru_cache
 from io import BufferedReader, BytesIO
 from pathlib import Path
 
 import pdfplumber
+import pypdfium2 as pdfium
 from openpyxl import load_workbook
 from pydantic import ConfigDict
 
 from ._schema import RegistryModel
 from ._workbook_parity import converted_binary_xls_with_libreoffice
+
+_OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
+_OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
 
 
 class RecordDesignField(RegistryModel):
@@ -56,46 +64,108 @@ class _WorkbookHeader:
 def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows from a supported official record-design source."""
 
-    suffix = path.suffix.lower()
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"record-design source not found: {path}")
+    stat = resolved.stat()
+    return _extract_record_design_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_record_design_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> tuple[RecordDesignSheet, ...]:
+    del byte_count, modified_ns
+    source_path = Path(path)
+    suffix = source_path.suffix.lower()
     if suffix == ".pdf":
-        return extract_record_design_pdf(path)
+        return extract_record_design_pdf(source_path)
     if suffix in {".xlsx", ".xlsm"}:
-        return extract_record_design_workbook(path)
+        return extract_record_design_workbook(source_path)
     if suffix == ".xls":
-        with converted_binary_xls_with_libreoffice(path, root=path.parent) as converted_path:
+        with converted_binary_xls_with_libreoffice(source_path, root=source_path.parent) as converted_path:
             return extract_record_design_workbook(converted_path)
-    raise ValueError(f"unsupported record-design source extension: {path.suffix}")
+    raise ValueError(f"unsupported record-design source extension: {source_path.suffix}")
 
 
 def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return the official fixed-width field rows described by workbook ``path``."""
 
-    workbook = load_workbook(path, read_only=True, data_only=True)
-    try:
-        sheets: list[RecordDesignSheet] = []
-        skipped: list[str] = []
-        for worksheet in workbook.worksheets:
-            try:
-                sheets.append(_extract_sheet(worksheet))
-            except ValueError as exc:
-                if "has no record-design header" not in str(exc):
-                    raise
-                skipped.append(worksheet.title)
-        if not sheets:
-            skipped_sheets = ", ".join(skipped) if skipped else "none"
-            raise ValueError(f"{path}: no record-design sheets found; skipped sheets: {skipped_sheets}")
-        return tuple(sheets)
-    finally:
-        workbook.close()
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"record-design workbook not found: {path}")
+    stat = resolved.stat()
+    return _extract_record_design_workbook_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_record_design_workbook_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> tuple[RecordDesignSheet, ...]:
+    del byte_count, modified_ns
+    source_path = Path(path)
+    with _ignore_openpyxl_header_footer_metadata_warnings():
+        workbook = load_workbook(source_path, read_only=True, data_only=True)
+        try:
+            sheets: list[RecordDesignSheet] = []
+            skipped: list[str] = []
+            for worksheet in workbook.worksheets:
+                try:
+                    sheets.append(_extract_sheet(worksheet))
+                except ValueError as exc:
+                    if "has no record-design header" not in str(exc):
+                        raise
+                    skipped.append(worksheet.title)
+            if not sheets:
+                skipped_sheets = ", ".join(skipped) if skipped else "none"
+                raise ValueError(f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}")
+            return tuple(sheets)
+        finally:
+            workbook.close()
+
+
+@contextmanager
+def _ignore_openpyxl_header_footer_metadata_warnings() -> Iterator[None]:
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=_OPENPYXL_HEADER_FOOTER_WARNING,
+            category=UserWarning,
+            module=r"openpyxl\.worksheet\.header_footer",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            message=_OPENPYXL_PRINT_AREA_WARNING,
+            category=UserWarning,
+            module=r"openpyxl\.reader\.workbook",
+        )
+        yield
 
 
 def extract_record_design_pdf(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows extracted from an official AEAT PDF."""
 
-    if not path.is_file():
+    resolved = path.resolve()
+    if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
-    with path.open("rb") as pdf_file:
-        return _extract_record_design_pdf_stream(pdf_file, source_label=str(path))
+    stat = resolved.stat()
+    return _extract_record_design_pdf_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_record_design_pdf_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> tuple[RecordDesignSheet, ...]:
+    del byte_count, modified_ns
+    source_path = Path(path)
+    with source_path.open("rb") as pdf_file:
+        return _extract_record_design_pdf_stream(pdf_file, source_label=str(source_path))
 
 
 def extract_record_design_pdf_bytes(
@@ -113,19 +183,28 @@ def _extract_record_design_pdf_stream(
     *,
     source_label: str,
 ) -> tuple[RecordDesignSheet, ...]:
-    try:
-        with pdfplumber.open(stream) as pdf:
-            pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
-    except Exception as exc:  # pragma: no cover - defensive; pdfplumber surface
-        raise ValueError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
-    lines = tuple(line for page in pages for line in page.lines)
+    pdf_bytes = stream.read()
+    lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
+    if _uses_page_record_layout(lines):
+        lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
     if not any(line.strip() for line in lines):
         raise ValueError(f"no text extracted from record-design PDF {source_label}")
     try:
         return _extract_pdf_lines(lines, source_label=source_label)
-    except ValueError as exc:
-        if "did not contain parseable field rows" not in str(exc):
-            raise
+    except ValueError as pdfium_exc:
+        text_fallback_error = pdfium_exc
+        try:
+            fallback_lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
+            return _extract_pdf_lines(fallback_lines, source_label=source_label)
+        except ValueError as fallback_exc:
+            text_fallback_error = fallback_exc
+        if "did not contain parseable field rows" not in str(text_fallback_error):
+            raise text_fallback_error from pdfium_exc
+        try:
+            with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+                pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
+        except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
+            raise ValueError(f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}") from pdf_exc
         visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
             return visual_chart
@@ -430,10 +509,40 @@ class _VisualChartFragment:
     description: str
 
 
+def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    try:
+        document = pdfium.PdfDocument(pdf_bytes)
+    except Exception as exc:  # pragma: no cover - pdfium parser surface
+        raise ValueError(f"pypdfium2 could not open record-design PDF {source_label}: {exc}") from exc
+    try:
+        lines: list[str] = []
+        for page in document:
+            text_page = page.get_textpage()
+            try:
+                lines.extend(text_page.get_text_range().splitlines())
+            finally:
+                text_page.close()
+                page.close()
+        return tuple(lines)
+    finally:
+        document.close()
+
+
+def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    try:
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            return tuple(line for page in pdf.pages for line in _extract_pdf_page_lines(page))
+    except Exception as exc:  # pragma: no cover - defensive; pdfplumber surface
+        raise ValueError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
+
+
+def _uses_page_record_layout(lines: tuple[str, ...]) -> bool:
+    return any(_pdf_page_name(_clean_pdf_line(line)) is not None for line in lines)
+
+
 def _snapshot_pdf_page(page) -> _PdfPageSnapshot:  # type: ignore[no-untyped-def]
-    text = page.extract_text() or ""
     return _PdfPageSnapshot(
-        lines=tuple(text.splitlines()),
+        lines=_extract_pdf_page_lines(page),
         words=tuple(
             _PdfWord(
                 text=str(word["text"]),
@@ -457,6 +566,11 @@ def _snapshot_pdf_page(page) -> _PdfPageSnapshot:  # type: ignore[no-untyped-def
             for rect in page.rects
         ),
     )
+
+
+def _extract_pdf_page_lines(page) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+    text = page.extract_text() or ""
+    return tuple(text.splitlines())
 
 
 def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> tuple[RecordDesignSheet, ...]:

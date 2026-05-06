@@ -85,6 +85,18 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
     assert result.entries[0].legal_refs == ("rd-439-2007:art-110",)
 
 
+def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
+        calculate_registry_snapshot(
+            committed_modelo_130_snapshot,
+            inputs={"03": Decimal("6000")},
+            date_context={"filing_period": date(2026, 3, 31)},
+            binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+        )
+
+
 def test_registry_formula_runtime_preserves_signed_intermediate_results_from_official_instructions(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
