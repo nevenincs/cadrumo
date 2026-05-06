@@ -1,10 +1,9 @@
 """Modelo-agnostic tests for invoice-source binding resolution.
 
-Invoice-source bindings let any IVA-relevant modelo (303, 349, 369, 390 and
-follow-ups) aggregate facts from the user's invoice ledger without owning the
-ledger schema. The InvoiceObservation model is the wire-format every modelo
-shares; the resolver evaluates a revision's invoice bindings against a stream
-of observations.
+Invoice-source bindings let IVA-relevant modelos aggregate facts from the
+user's invoice ledger without owning the ledger schema. The InvoiceObservation
+model is the wire-format every modelo shares; the resolver evaluates a
+revision's invoice bindings against a stream of observations.
 """
 
 from __future__ import annotations

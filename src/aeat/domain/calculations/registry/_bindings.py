@@ -784,13 +784,12 @@ def _aggregate_invoice_binding(
 
 
 # ---------------------------------------------------------------------------
-# Ledger OSS / IOSS aggregation source bindings (Modelo 369 ADR Decision 8).
+# Ledger OSS / IOSS aggregation source bindings.
 #
 # These bindings aggregate ledger lines whose VAT classification matches a
 # regime + destination Member State + rate tier + invoice direction selector.
 # The classification axes come from :mod:`aeat.domain.vat`; the binding source
-# is the registry's first ledger-driven aggregation kind, established as the
-# precondition for the Modelo 369 registry slices per the centralization ADR.
+# is the registry's ledger-driven aggregation kind for Modelo 369.
 #
 # The selector keys are validated against the substrate's closed enums at
 # binding-definition time; the runtime resolver then consumes
