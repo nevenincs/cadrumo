@@ -195,6 +195,334 @@ source_refs = [
     "aeat-modelo-100-procedure",
 ]
 
+[[revisions."2020".application_links]]
+id = "modelo-100-2020-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-neto-rendimientos-base-imponible-general"
+target = "0432"
+expression = { op = "sum", args = [
+    { casilla = "0025" },
+    { casilla = "0060" },
+    { casilla = "0155" },
+    { casilla = "0156" },
+    { casilla = "0235" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "rendimientos"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-base-imponible-general"
+target = "0435"
+expression = { op = "sum", args = [
+    { casilla = "0432" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-base-imponible-del-ahorro"
+target = "0460"
+expression = { op = "sum", args = [
+    { casilla = "0429" },
+    { casilla = "0424" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "rendimientos"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-base-liquidable-general"
+target = "0500"
+expression = { op = "sum", args = [
+    { casilla = "0435" },
+    { op = "negate", args = [{ casilla = "0461" }] },
+    { op = "negate", args = [{ casilla = "0501" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-base-liquidable-del-ahorro"
+target = "0510"
+expression = { op = "sum", args = [
+    { casilla = "0460" },
+    { op = "negate", args = [{ casilla = "0506" }] },
+    { op = "negate", args = [{ casilla = "0507" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "remanente"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-base-liquidable-general-estatal"
+target = "0532"
+expression = { op = "subtract", args = [
+    { casilla = "0528" },
+    { casilla = "0530" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "escala general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-base-liquidable-general-autonomica"
+target = "0533"
+expression = { op = "subtract", args = [
+    { casilla = "0529" },
+    { casilla = "0531" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-integra-estatal"
+target = "0545"
+expression = { op = "sum", args = [
+    { casilla = "0532" },
+    { casilla = "0540" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "base liquidable general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-integra-autonomica"
+target = "0546"
+expression = { op = "sum", args = [
+    { casilla = "0533" },
+    { casilla = "0541" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "autonómica"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
 [revisions."2021"]
 id = "2021"
 label = "Ejercicio 2021"
@@ -373,6 +701,335 @@ source_refs = [
     "aeat-dr-100-2021-xsd",
     "aeat-modelo-100-procedure",
 ]
+
+[[revisions."2021".application_links]]
+id = "modelo-100-2021-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-neto-rendimientos-base-imponible-general"
+target = "0432"
+expression = { op = "sum", args = [
+    { casilla = "0025" },
+    { casilla = "0060" },
+    { casilla = "0155" },
+    { casilla = "0156" },
+    { casilla = "0235" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "rendimientos"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-base-imponible-general"
+target = "0435"
+expression = { op = "sum", args = [
+    { casilla = "0432" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-base-imponible-del-ahorro"
+target = "0460"
+expression = { op = "sum", args = [
+    { casilla = "0429" },
+    { casilla = "0424" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "rendimientos"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-base-liquidable-general"
+target = "0500"
+expression = { op = "sum", args = [
+    { casilla = "0435" },
+    { op = "negate", args = [{ casilla = "0461" }] },
+    { op = "negate", args = [{ casilla = "0501" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-base-liquidable-del-ahorro"
+target = "0510"
+expression = { op = "sum", args = [
+    { casilla = "0460" },
+    { op = "negate", args = [{ casilla = "0506" }] },
+    { op = "negate", args = [{ casilla = "0507" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "remanente"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-base-liquidable-general-estatal"
+target = "0532"
+expression = { op = "subtract", args = [
+    { casilla = "0528" },
+    { casilla = "0530" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "escala general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-base-liquidable-general-autonomica"
+target = "0533"
+expression = { op = "subtract", args = [
+    { casilla = "0529" },
+    { casilla = "0531" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-integra-estatal"
+target = "0545"
+expression = { op = "sum", args = [
+    { casilla = "0532" },
+    { casilla = "0540" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "base liquidable general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-integra-autonomica"
+target = "0546"
+expression = { op = "sum", args = [
+    { casilla = "0533" },
+    { casilla = "0541" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
 
 [revisions."2022"]
 id = "2022"
@@ -553,6 +1210,339 @@ source_refs = [
     "aeat-modelo-100-procedure",
 ]
 
+[[revisions."2022".application_links]]
+id = "modelo-100-2022-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-neto-rendimientos-base-imponible-general"
+target = "0432"
+expression = { op = "sum", args = [
+    { casilla = "0025" },
+    { casilla = "0060" },
+    { casilla = "0155" },
+    { casilla = "0156" },
+    { casilla = "0235" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "rendimientos"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-base-imponible-general"
+target = "0435"
+expression = { op = "sum", args = [
+    { casilla = "0432" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-base-imponible-del-ahorro"
+target = "0460"
+expression = { op = "sum", args = [
+    { casilla = "0429" },
+    { casilla = "0424" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "rendimientos"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-base-liquidable-general"
+target = "0500"
+expression = { op = "sum", args = [
+    { casilla = "0435" },
+    { op = "negate", args = [{ casilla = "0461" }] },
+    { op = "negate", args = [{ casilla = "0501" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-base-liquidable-del-ahorro"
+target = "0510"
+expression = { op = "sum", args = [
+    { casilla = "0460" },
+    { op = "negate", args = [{ casilla = "0506" }] },
+    { op = "negate", args = [{ casilla = "0507" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "remanente"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-base-liquidable-general-estatal"
+target = "0532"
+expression = { op = "subtract", args = [
+    { casilla = "0528" },
+    { casilla = "0530" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "escala general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-base-liquidable-general-autonomica"
+target = "0533"
+expression = { op = "subtract", args = [
+    { casilla = "0529" },
+    { casilla = "0531" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-integra-estatal"
+target = "0545"
+expression = { op = "sum", args = [
+    { casilla = "0532" },
+    { casilla = "0540" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "base liquidable general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-integra-autonomica"
+target = "0546"
+expression = { op = "sum", args = [
+    { casilla = "0533" },
+    { casilla = "0541" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0544" }] },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+    { op = "negate", args = [{ casilla = "0584" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0568" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0569" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
 [revisions."2023"]
 id = "2023"
 label = "Ejercicio 2023"
@@ -732,6 +1722,339 @@ source_refs = [
     "aeat-modelo-100-procedure",
 ]
 
+[[revisions."2023".application_links]]
+id = "modelo-100-2023-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-neto-rendimientos-base-imponible-general"
+target = "0432"
+expression = { op = "sum", args = [
+    { casilla = "0025" },
+    { casilla = "0060" },
+    { casilla = "0155" },
+    { casilla = "0156" },
+    { casilla = "0235" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "rendimientos"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-base-imponible-general"
+target = "0435"
+expression = { op = "sum", args = [
+    { casilla = "0432" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-base-imponible-del-ahorro"
+target = "0460"
+expression = { op = "sum", args = [
+    { casilla = "0429" },
+    { casilla = "0424" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "rendimientos"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-base-liquidable-general"
+target = "0500"
+expression = { op = "sum", args = [
+    { casilla = "0435" },
+    { op = "negate", args = [{ casilla = "0461" }] },
+    { op = "negate", args = [{ casilla = "0501" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-base-liquidable-del-ahorro"
+target = "0510"
+expression = { op = "sum", args = [
+    { casilla = "0460" },
+    { op = "negate", args = [{ casilla = "0506" }] },
+    { op = "negate", args = [{ casilla = "0507" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "remanente"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-base-liquidable-general-estatal"
+target = "0532"
+expression = { op = "subtract", args = [
+    { casilla = "0528" },
+    { casilla = "0530" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "escala general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-base-liquidable-general-autonomica"
+target = "0533"
+expression = { op = "subtract", args = [
+    { casilla = "0529" },
+    { casilla = "0531" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-integra-estatal"
+target = "0545"
+expression = { op = "sum", args = [
+    { casilla = "0532" },
+    { casilla = "0540" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "base liquidable general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-integra-autonomica"
+target = "0546"
+expression = { op = "sum", args = [
+    { casilla = "0533" },
+    { casilla = "0541" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0544" }] },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+    { op = "negate", args = [{ casilla = "0584" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0568" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0569" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
 [revisions."2024"]
 id = "2024"
 label = "Ejercicio 2024"
@@ -910,6 +2233,339 @@ source_refs = [
     "aeat-dr-100-2024-xsd",
     "aeat-modelo-100-procedure",
 ]
+
+[[revisions."2024".application_links]]
+id = "modelo-100-2024-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-y-familiar-estatal"
+target = "0519"
+expression = { op = "sum", args = [
+    { casilla = "0511" },
+    { casilla = "0513" },
+    { casilla = "0515" },
+    { casilla = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-y-familiar-autonomica"
+target = "0520"
+expression = { op = "sum", args = [
+    { casilla = "0512" },
+    { casilla = "0514" },
+    { casilla = "0516" },
+    { casilla = "0518" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-base-liquidable-general-estatal"
+target = "0521"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0519" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "Mínimo personal y familiar"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-base-liquidable-ahorro-estatal"
+target = "0522"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0519" },
+        { casilla = "0521" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "Mínimo personal y familiar"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-base-liquidable-general-autonomica"
+target = "0523"
+expression = { op = "min", args = [
+    { casilla = "0505" },
+    { casilla = "0520" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-personal-base-liquidable-ahorro-autonomica"
+target = "0524"
+expression = { op = "min", args = [
+    { op = "subtract", args = [
+        { casilla = "0520" },
+        { casilla = "0523" },
+    ] },
+    { casilla = "0510" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-66", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-neto-rendimientos-base-imponible-general"
+target = "0432"
+expression = { op = "sum", args = [
+    { casilla = "0025" },
+    { casilla = "0060" },
+    { casilla = "0155" },
+    { casilla = "0156" },
+    { casilla = "0235" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "rendimientos"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-base-imponible-general"
+target = "0435"
+expression = { op = "sum", args = [
+    { casilla = "0432" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-base-imponible-del-ahorro"
+target = "0460"
+expression = { op = "sum", args = [
+    { casilla = "0429" },
+    { casilla = "0424" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "rendimientos"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-base-liquidable-general"
+target = "0500"
+expression = { op = "sum", args = [
+    { casilla = "0435" },
+    { op = "negate", args = [{ casilla = "0461" }] },
+    { op = "negate", args = [{ casilla = "0501" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-base-liquidable-del-ahorro"
+target = "0510"
+expression = { op = "sum", args = [
+    { casilla = "0460" },
+    { op = "negate", args = [{ casilla = "0506" }] },
+    { op = "negate", args = [{ casilla = "0507" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "remanente"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-base-liquidable-general-estatal"
+target = "0532"
+expression = { op = "subtract", args = [
+    { casilla = "0528" },
+    { casilla = "0530" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "escala general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-base-liquidable-general-autonomica"
+target = "0533"
+expression = { op = "subtract", args = [
+    { casilla = "0529" },
+    { casilla = "0531" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-integra-estatal"
+target = "0545"
+expression = { op = "sum", args = [
+    { casilla = "0532" },
+    { casilla = "0540" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "base liquidable general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-integra-autonomica"
+target = "0546"
+expression = { op = "sum", args = [
+    { casilla = "0533" },
+    { casilla = "0541" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota íntegra", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-liquida-estatal"
+target = "0570"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { op = "negate", args = [{ casilla = "0544" }] },
+    { op = "negate", args = [{ casilla = "0547" }] },
+    { op = "negate", args = [{ casilla = "0549" }] },
+    { op = "negate", args = [{ casilla = "0550" }] },
+    { op = "negate", args = [{ casilla = "0552" }] },
+    { op = "negate", args = [{ casilla = "0554" }] },
+    { op = "negate", args = [{ casilla = "0556" }] },
+    { op = "negate", args = [{ casilla = "0558" }] },
+    { op = "negate", args = [{ casilla = "0560" }] },
+    { op = "negate", args = [{ casilla = "0562" }] },
+    { op = "negate", args = [{ casilla = "0565" }] },
+    { op = "negate", args = [{ casilla = "0567" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida estatal", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-liquida-autonomica"
+target = "0571"
+expression = { op = "sum", args = [
+    { casilla = "0546" },
+    { op = "negate", args = [{ casilla = "0548" }] },
+    { op = "negate", args = [{ casilla = "0551" }] },
+    { op = "negate", args = [{ casilla = "0553" }] },
+    { op = "negate", args = [{ casilla = "0555" }] },
+    { op = "negate", args = [{ casilla = "0557" }] },
+    { op = "negate", args = [{ casilla = "0559" }] },
+    { op = "negate", args = [{ casilla = "0561" }] },
+    { op = "negate", args = [{ casilla = "0563" }] },
+    { op = "negate", args = [{ casilla = "0564" }] },
+    { op = "negate", args = [{ casilla = "0566" }] },
+    { op = "negate", args = [{ casilla = "0584" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Cuota líquida autonómica", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-liquida-estatal-incrementada"
+target = "0585"
+expression = { op = "sum", args = [
+    { casilla = "0570" },
+    { casilla = "0568" },
+    { casilla = "0572" },
+    { casilla = "0574" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-liquida-autonomica-incrementada"
+target = "0586"
+expression = { op = "sum", args = [
+    { casilla = "0571" },
+    { casilla = "0569" },
+    { casilla = "0577" },
+    { casilla = "0579" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]
 
 [revisions."2025"]
 id = "2025"
