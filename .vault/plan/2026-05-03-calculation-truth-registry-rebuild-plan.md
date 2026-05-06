@@ -15,6 +15,7 @@ related:
   - '[[2026-05-04-live-filing-data-capture-research]]'
   - '[[2026-05-04-live-filing-data-capture-adr]]'
   - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
+  - '[[2026-05-06-live-parity-oracle-backend-adr]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -242,6 +243,113 @@ production-readiness definition above.
 | 19 | 036 | Censal declaration, identity/activity/tax-regime registration sections, official source layout, legal basis, filing linkage. | Censal hydrate tables, declaration extractor truth, modelo metadata duplicates. | Classify official live/static surface; authenticated census modification/presentation surfaces are forbidden unless AEAT publishes an official test mode with synthetic data. |
 | 20 | 037 | Simplified censal declaration if reviewed official evidence exists; otherwise explicit removal from filing-grade support. | Censal hydrate tables, declaration extractor truth, any implied support without official evidence. | Classify official live/static surface; if current filing-grade evidence is absent, remove app entry points and retain only evidence-backed historical records. |
 | 21 | 100 | Renta universe: source governance, summary, anexos, income types, reductions, minimos, bases, cuotas, CCAA rules, rental, amortization, deductions, borrador/declaration linkage, export or filing linkage. | All Renta rulesets, Renta helper modules, CCAA hardcoding, rental legal-calculation authority, borrador/extractor casilla truth. | Research Renta WEB Open as read-only cross-reference evidence; authenticated Renta WEB/borrador/data-fiscal flows are forbidden for synthetic calculation tests. |
+
+## Wave 0 Live Parity Oracle Backend Pre-Step
+
+This pre-step is a hard prerequisite for every modelo wave that claims live
+cross-reference evidence. It is governed by the live parity oracle backend
+ADR, which extends the parent calculation-truth-registry ADR by formalising
+the runtime contract every read-only AEAT verification adapter must satisfy.
+
+The pre-step establishes a single shared backend for live verification so
+that no modelo wave reinvents its own AEAT network adapter, no wave
+duplicates the remote-state guard wiring, and no wave deviates from the
+canonical parity-result shape. The backend is modelo-agnostic; each modelo
+binds to a registered oracle by id, and the registry runtime never
+instantiates network code by other means.
+
+A modelo wave is not allowed to declare a live conformance check passed
+unless the relevant oracle adapter is registered in the catalogue, has
+exercised the contract tests, has its planned-operation set pre-flighted
+through the existing remote-state guard, and produces a structured
+:literal:`ParityResult` with verdict in the closed enum
+:literal:`match | mismatch | unverifiable | blocked`.
+
+### Wave 0 Backend Foundation Ledger
+
+- [x] Wave 0 backend module: implement the modelo-agnostic
+  `LiveParityOracle` Protocol, the canonical `ParityResult` and
+  `ParityFieldComparison` records, and the `LiveParityCatalogue` keyed by
+  oracle id. The module sits one level above the existing remote-state
+  guard and never duplicates guard logic.
+- [x] Wave 0 contract pre-flight: implement
+  `pre_flight_oracle_operations` and the supporting helpers so every
+  planned operation is gated by `assert_remote_operation_allowed` before
+  any side-effecting code runs. Pre-flight refusal is a `blocked` verdict
+  recorded as audit evidence, not an exception swallowed by callers.
+- [x] Wave 0 contract tests: cover catalogue register/lookup/duplicate
+  rejection, pre-flight refusal of POST/PUT/DELETE methods, pre-flight
+  refusal of non-AEAT hosts, refusal of forbidden action tokens, refusal
+  of `static_official_only` policies that plan remote operations, and the
+  oracle-side guard call inside `verify_payload`.
+- [ ] Wave 0 production-or-test classification: every oracle adapter
+  declares an explicit environment classification at registration time.
+  Production-NIF-safe oracles are accepted in the production catalogue;
+  AEAT pre-production / test-NIF oracles are accepted only under an
+  explicit test-environment feature flag and are never registered against
+  the autonomo's real NIF.
+- [ ] Wave 0 forbidden surface enumeration: extend the existing
+  remote-state guard forbidden-token list with explicit denials of any
+  surface that creates server-side state at AEAT even before legal
+  presentation. TGVI online belongs to this category in production
+  classification because its `FINALIZED` state under the production NIF is
+  visible in declaration-history surfaces, can be configured to
+  substitute prior filings, and is logged as an upload attempt regardless
+  of whether it is later presented.
+
+### Wave 0 Adapter Roadmap
+
+- [ ] EU VIES VAT-ID checker adapter: pure-read public surface that
+  validates intra-community NIFs against the canonical EU VIES service
+  AEAT delegates to. No AEAT-side state, no production-NIF risk, accepted
+  for the production catalogue. First adapter to ship because it sets the
+  pattern other oracles follow with the lowest safety surface.
+- [ ] AEAT public open-simulator adapter family: synthetic-input
+  simulators (Renta WEB Open, Sociedades WEB Open, Pre303 and analogues)
+  that accept synthetic data against fixture NIFs and return computed
+  outputs. Accepted for the production catalogue with explicit
+  `synthetic_data_allowed = true` policy. Per-modelo adapter ADRs declare
+  allowed hosts, planned operations, and parity-field schema.
+- [ ] AEAT pre-production fixed-width validator adapter: TGVI online
+  against AEAT-issued test NIFs in AEAT's pre-production environment. The
+  adapter is registered only when the test-environment feature flag is
+  set and the active session NIF matches an AEAT test-NIF allowlist. The
+  adapter is hard-blocked from registering under the production NIF or
+  the production TGVI endpoint. The adapter ADR enumerates the test
+  endpoint URLs, the test-NIF allowlist mechanism, and the audit trail
+  for any FINALIZED state created during testing.
+- [ ] Wave 0 adapter ADRs: every concrete oracle adapter ships with a
+  follow-up ADR that identifies the AEAT surface, declares allowed hosts
+  and HTTP methods, declares its planned operations under a sample
+  policy, declares its environment classification, documents the
+  parity-field schema, and links to the parent live parity oracle backend
+  ADR.
+
+### Wave 0 Per-Modelo Wave Gate
+
+Every per-modelo parity ledger gains an explicit dependency on the Wave 0
+foundation:
+
+- A modelo wave may declare its `live cross-reference guard` row
+  satisfied for a given surface only when the relevant oracle adapter is
+  registered in the production-classified catalogue, has cleared its
+  contract tests, and has been bound to the modelo's cross-reference by
+  oracle id.
+- A modelo wave may not declare its `live/filed-data tests` row satisfied
+  for a verification surface unless the registered oracle returns either a
+  `match` verdict for at least one synthetic-input fixture or an explicit
+  `unverifiable` verdict whose narrative is recorded as evidence.
+- A modelo wave may not introduce any direct HTTP call to AEAT from
+  calculation, filing, review, export, CLI, or adapter code under
+  Wave 0. The oracle backend is the only path through which a calculation
+  engine reaches AEAT for live verification.
+
+Modelo waves whose live cross-reference is `static_official_documentation`
+do not require an oracle adapter and may close their wave under static
+evidence, provided the parity ledger explicitly records the absence of an
+applicable live oracle and the discovery walk against the authenticated
+read surface (where applicable) yields zero filed rows or recorded
+discovery evidence.
 
 ## Per-Modelo Parity Tracking Ledger
 
@@ -1532,10 +1640,20 @@ own ledger is checked.
     constants and liquidacion casillas [16]-[34], [40], [42], [47]-[52],
     [61]-[66]. All 50 casillas in the 2025-y-siguientes revision now
     carry `export_refs` pointing at their page export field.
-  - [ ] Modelo 202 export layout — historical revisions: mirror the envelope
-    + page record structure into the 2023-2024 and 2019-2022 revisions using
-    DR202e23.xlsx and DR202v52.xlsx as the layout authority for each
-    historical window.
+  - [x] Modelo 202 export layout — historical revisions: envelope + page-01
+    + page-02 records mirrored into the 2023-2024 revision (layout id
+    `modelo-202-2023-2024-fichero-boe`, 3 records / 108 fields, layout
+    authority DR202e23.xlsx) and the 2019-2022 revision (layout id
+    `modelo-202-2019-2022-fichero-boe`, 3 records / 108 fields, layout
+    authority DR202v52.xlsx). The two historical XLSXes share identical
+    casilla offsets and lengths (Orden HAC/941/2018 layout was stable from
+    2019 through 2024); the 2025+ layout shifted offsets to make room for
+    the IC corrections column [67] and the multi-rate brackets [61]-[66].
+    All 43 casillas in each historical revision now carry `export_refs`
+    pointing at their page export field; per-revision
+    `modelo-202-2023-2024-export` and `modelo-202-2019-2022-export`
+    application links and the construct `export_layouts` entries declare
+    the surfaces.
 - [x] Modelo 202 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, corporate instalment
   methods, and any filed-data bindings are correct against official authority.
@@ -1554,9 +1672,24 @@ own ledger is checked.
   silent degradation.
   - [ ] Row stays open until a sanitized live artefact exists; zero filed
     rows is recorded as discovery evidence rather than parser coverage.
-- [ ] Modelo 202 teardown: delete or neutralize all old Modelo 202 authorities
+- [x] Modelo 202 teardown: delete or neutralize all old Modelo 202 authorities
   in rulesets, filing builders, category mappings, casilla projections,
   deadlines, generated exports, hydrate paths, and legacy fixtures.
+  - [x] Codebase audit completed: no legacy Modelo 202 authority exists in
+    `src/aeat/domain/formulas/`, `src/aeat/domain/filing/`,
+    `src/aeat/domain/categories/`, `src/aeat/domain/deadlines/`,
+    `src/aeat/domain/modelos/`, `src/aeat/adapters/inbound/declaracion/`,
+    `src/aeat/adapters/outbound/aeat/export/`, or any other domain or
+    adapter directory. The only Modelo 202 surfaces in `src/aeat/` are
+    registry-backed: the portal entry
+    `aeat.domain.portals._entries.portal_m202_sociedades_fraccionado`
+    (registered through `Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO`), the
+    cross-dependency calculation tests, the dedicated
+    `test_modelo_202_registry.py` suite, and the workbook-parity coverage
+    test that iterates registered parity refs.
+  - [x] Fixture audit completed: no Modelo 202 fixture files in
+    `tests/fixtures/`. Pre-existing matches on `\b202\b` resolve to
+    incidental references in unrelated modelo fixtures.
 - [x] Modelo 202 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
@@ -1613,11 +1746,17 @@ own ledger is checked.
 - [x] Modelo 200 workbook/layout coverage: discover official XLS/XLSX coverage,
   classify each artefact by evidence tier, and record whether it proves layout
   only or executable calculation parity.
-  - [x] DR200e25.xls classified `unsupported_binary_xls`. The .xls binary
-    cannot be parsed by openpyxl, so workbook parity is recorded as a known
-    coverage gap pending a cross-platform .xls reader or AEAT publishing an
-    .xlsx variant. The workbook parity reference declares the gap explicitly
-    rather than silently skipping coverage.
+  - [x] DR200e25 layout authority converted from binary .xls (11 MB) to
+    .xlsx (2.3 MB) via LibreOffice headless and committed alongside the
+    original AEAT artefact. Catalogue source ref `aeat-dr-200-2025` now
+    points at the .xlsx; workbook parity ref reclassified from
+    `unsupported_binary_xls` to `record_design_layout`. The same horizontal
+    sweep converted 25 binary .xls files across modelos 100, 111, 115, 123,
+    130, and 200, updated 8 catalogue `corpus_path` entries plus 2
+    `formula_coverage` reclassifications (modelos 130 and 200), and
+    replaced 2 stale `-form-text` source refs with real text dumps
+    generated from the converted .xlsx workbooks. All 12 supported modelos
+    validate cleanly afterwards.
 - [ ] Modelo 200 live filed-data discovery: list available AEAT filed rows
   through the read-only surface and record the periods, submitted-file
   availability, declaration-copy availability, and justificante availability.
@@ -1648,15 +1787,28 @@ own ledger is checked.
     cutoff 2025-07-22 against BOE-A-2025-12818.
   - [x] Application links cover portal, calculation, filing, verification,
     deadline, review, approval, reconciliation, and workflow surfaces.
-  - [ ] Export application link remains open until a complete registry export
-    layout exists.
-- [ ] Modelo 200 casilla schema: define every filing-grade casilla with data
+  - [x] Export application link `modelo-200-2024-export` declared and the
+    full `modelo-200-fichero-boe` layout (77 records / 6,531 fields)
+    transcribed from DR200e25.xlsx covering the entire Modelo 200 fixed-
+    width submission file.
+- [x] Modelo 200 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, and source
   refs.
-  - [x] Settlement-chain foundation declares official casillas 00592
-    (cuota liquida) and 00599 (cuota del ejercicio a ingresar o a devolver).
-    The remaining Modelo 200 filing-grade casillas stay open until the
-    official layout is transcribed from a cross-platform readable source.
+  - [x] Full transcription from DR200e25.xlsx: **3,215 unique casillas**
+    declared across 77 sheets (DP200000-DP200054 plus DID), each with
+    real label from the XLSX description, section path encoding the
+    originating page (e.g., `["declaracion", "pagina_15b"]`), data_type
+    derived from the XLSX `Tipo` column (Num/N → money/decimal by length,
+    An → text), `input_kind = "manual"` default for all casillas not
+    already part of the cross-dependency settlement chain.
+  - [x] Existing computed casillas 00592 (cuota liquida) and 00599 (cuota
+    del ejercicio a ingresar o a devolver) preserved with their hand-
+    authored definitions and formulas; they are excluded from the
+    auto-generated set.
+  - [x] Every casilla carries `export_refs` pointing at its corresponding
+    export field in the `modelo-200-fichero-boe` layout records (some
+    casillas appear in multiple page records and carry multiple
+    `export_refs` accordingly).
 - [ ] Modelo 200 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
@@ -4114,6 +4266,15 @@ application surface, and the old authority has been deleted.
          the central Modelo 190 registry authority.
        - [ ] Add filing-grade work-income casillas, formulas, parameters,
          source citations, and observation profiles.
+        - [x] Work-income casilla/formula slice: Modelo 100 ejercicio 2025
+          now owns the registry-backed work-income chain for casillas 0003
+          through 0025, including in-kind work income, total computable work
+          income, net previous work income, net work income, reduced net work
+          income, Ley 35/2006 article 17 through 20 legal refs, official source
+          citations, construct ownership, and behaviour tests.
+        - [ ] Work-income observation profiles remain open before observed
+          Modelo 190/fiscal-data work-income values can be accepted as
+          filing-grade calculation input.
      - [ ] `renta-real-estate-capital`: rental income, deductible expenses,
        real-estate imputation, residential rental reductions, withheld rental
        amounts, and relation to Modelos 115 and 180.
@@ -4122,6 +4283,16 @@ application surface, and the old authority has been deleted.
          rental withholding evidence.
        - [ ] Add filing-grade real-estate income, deduction, imputation,
          reduction, rental-ledger, and amortization casillas/formulas.
+        - [x] Real-estate capital casilla/formula slice: Modelo 100 ejercicio
+          2025 now owns registry-backed capital inmobiliario casillas 0089,
+          0102, 0104, 0107, 0109 through 0117, 0131, 0132, 0146 through 0156,
+          and 0598, including net return, reduced net return, imputed-rent
+          total, reduced-return total, rental withholding total, Ley 35/2006
+          article 22 through 24 legal refs, official source citations,
+          construct ownership, and behaviour tests.
+        - [ ] Rental-ledger row aggregation, amortization-provider linkage,
+          article 23.2 reduction tier automation, and observed Modelo 115/180
+          reconciliation remain open.
      - [ ] `renta-movable-capital`: dividends, interest, insurance, other
        movable-capital income, retentions, and relation to Modelos 123 and 193.
        - [x] Initial ejercicio 2025 construct membership now classifies
@@ -4131,6 +4302,15 @@ application surface, and the old authority has been deleted.
          the central Modelo 193 registry authority.
        - [ ] Add filing-grade movable-capital casillas, formulas, parameters,
          source citations, and observation profiles.
+        - [x] Movable-capital casilla/formula slice: Modelo 100 ejercicio
+          2025 now owns the registry-backed capital mobiliario chain for
+          casillas 0027 through 0041 and 0046 through 0060, including saving
+          base/general base totals, net returns, reduced net returns, Ley
+          35/2006 article 25 and 26 legal refs, official source citations,
+          construct ownership, and behaviour tests.
+        - [ ] Movable-capital observation profiles remain open before
+          observed Modelo 123/193/fiscal-data values can be accepted as
+          filing-grade calculation input.
      - [ ] `renta-economic-activities`: estimacion directa normal, estimacion
        directa simplificada, estimacion objetiva, invoices, expenses, VAT-aware
        category evidence, payments on account, and relation to Modelos 130 and
@@ -4177,6 +4357,13 @@ application surface, and the old authority has been deleted.
      - [ ] `renta-final-settlement`: cuota diferencial, result to pay/refund,
        payment/refund structure, Modelo 102 linkage where relevant, and final
        declaration review trace.
+       - [x] Final settlement roll-up slice: Modelo 100 ejercicio 2025 now
+         owns casillas 0587, 0595, 0610, and 0670 as registry-backed formulas,
+         with required intermediate final-result casillas, Modelo 130/131
+         payments-on-account inputs through casilla 0609, official manual/BOE
+         source citations, construct ownership, and behaviour tests.
+       - [ ] Upstream cuota, tariff, deduction, payment/refund structure,
+         Modelo 102 linkage, and final declaration-review trace remain open.
      - [ ] `renta-observation-parsing`: borrador, declaracion, submitted-file,
        declaration PDF, justificante PDF, and Sede filed-data observations with
        registry extraction profiles and encrypted storage.
@@ -4349,6 +4536,10 @@ application surface, and the old authority has been deleted.
      revision source ledgers, legal ledgers, official source hashes, source
      tiers, live/static cross-reference decisions, workbook/layout decisions,
      and fatal source-gap rules.
+     - [x] Ejercicio 2025 source-foundation construct now owns the full
+       revision legal/source ledger, workbook parity refs, live cross
+       references, application-link workflow refs, and a regression assertion
+       that prevents future source/legal ledger drift.
   - [x] Implement `renta-dependent-modelos`: declare every supported dependency
      relation, relation selector, accepted observation artefact, value
      precedence rule, contradiction rule, required source/legal refs, and trace
@@ -4361,6 +4552,11 @@ application surface, and the old authority has been deleted.
      casillas, parameters, date-axis rules, legal references, source
      references, parser bindings, and trace output.
      - [ ] Personal identity and taxpayer role fields.
+       - [x] Initial 2025 identity/profile binding slice registers official
+         Modelo 100 dictionary/XSD fields `DPNIF_D`, `DP_APENOM_D`, `ZCCAD`,
+         and `TIPOTRIBUTACION` as bound casillas under `renta-personal-family`,
+         with profile selectors tied to `PROFILE_KEYS` and `TaxResidenceProfile`
+         schema ownership.
      - [ ] Family unit and individual/joint taxation selection.
      - [ ] Descendants, ascendants, disability, age, and dependency conditions.
      - [ ] Minimums and personal/family circumstance transfer into the base and

@@ -2,7 +2,6 @@
 tags:
   - '#reference'
   - '#calculation-truth-registry'
-  - '#modelo-100-renta'
 date: '2026-05-05'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
