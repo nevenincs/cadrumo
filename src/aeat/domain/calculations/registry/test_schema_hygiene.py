@@ -47,6 +47,19 @@ _FORBIDDEN_TEST_NARRATIVE = (
     "xfail",
 )
 
+_FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS = (
+    "ApplicationLinkDefinition",
+    "CasillaDefinition",
+    "DataBindingDefinition",
+    "FormulaDefinition",
+    "LegalReference",
+    "ModeloDefinition",
+    "ModeloRevision",
+    "ParameterDefinition",
+    "RegistryCatalogues",
+    "SourceReference",
+)
+
 
 def _all_modelos():
     modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
@@ -141,3 +154,18 @@ def test_registry_tests_describe_current_behaviour_not_removed_work() -> None:
             if phrase in text:
                 offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} contains {phrase!r}")
     assert not offences, "registry tests contain past-state narratives:\n  " + "\n  ".join(offences)
+
+
+def test_registry_tests_do_not_define_schema_authority_objects() -> None:
+    """Registry tests must derive modelo/casilla authority objects from committed registry data."""
+
+    offences: list[str] = []
+    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    for path in sorted(root.glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for constructor in _FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS:
+            if f"{constructor}(" in text:
+                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} constructs {constructor}")
+    assert not offences, "registry tests define schema authority objects:\n  " + "\n  ".join(offences)
