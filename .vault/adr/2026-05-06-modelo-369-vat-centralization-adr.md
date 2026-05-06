@@ -125,14 +125,22 @@ This ADR proposes the following decisions.
    stays deterministic.
 6. Add a per-regime deductibility predicate
    `regime_allows_deduction(regime: OssIossRegime, scope) -> bool`
-   that the substrate-extension slice will implement against the
-   LIVA deduction articles (art. 163 vicies for Exterior, art. 163
-   quatervicies for Unión, art. 163 octovicies for IOSS). The exact
-   predicate body is intentionally not specified by this ADR; the
-   substrate-extension slice will pull those three articles from BOE
-   into the corpus, derive the predicate from the article text, and
-   land both together. This ADR commits only to the signature and
-   the requirement that the predicate be registry-grounded.
+   anchored to the LIVA deduction articles (art. 163 vicies for
+   Exterior, art. 163 tervicies for Unión, art. 163 octovicies for
+   IOSS). All three articles share the same operative rule: the
+   sujeto pasivo "no podrá deducir en la declaración-liquidación...
+   cantidad alguna por las cuotas soportadas" inside the Modelo 369
+   autoliquidation itself; recovery of input VAT happens through
+   separate procedures (the regular IVA return for establecidos, the
+   Eighth/Thirteenth Directive procedures for non-establecidos). The
+   predicate therefore returns `False` for every regime when the
+   scope is "within the Modelo 369 autoliquidation"; broader scopes
+   route to the establecido / non-establecido distinction the LIVA
+   articles encode. The predicate body and its tests are part of the
+   substrate-extension slice; the corpus excerpts for the three
+   deduction articles are pulled and committed alongside this ADR
+   so the slice has the source-of-truth in the repository before
+   implementation begins.
 7. Extend per-destination rate windows in
    `registry/aeat/vat/rates.toml` rather than introducing a separate
    regime-scoped table. The existing 27-state coverage already
@@ -359,15 +367,24 @@ accompanies this ADR. No subsequent BOE amendment to HAC/610/2021
 was found in the consolidated text; the corpus is therefore complete
 as of this ADR's date.
 
-The substrate-extension slice will additionally need the deduction
-articles (LIVA art. 163 vicies for Exterior, LIVA art. 163
-quatervicies for Unión, LIVA art. 163 octovicies for IOSS) before
-the deductibility predicate from Decision 6 can be implemented; that
-corpus pull belongs to the substrate-extension slice itself rather
-than to this ADR's corpus prerequisite. Decision 6 therefore states
-the deductibility predicate's signature and intent without committing
-to specific behaviour until that corpus is captured and verified
-against BOE.
+The deduction articles (LIVA art. 163 vicies for Exterior, LIVA
+art. 163 tervicies for Unión, LIVA art. 163 octovicies for IOSS) are
+also pulled and committed alongside this ADR so Decision 6's
+deductibility predicate can be derived directly from BOE text during
+the substrate-extension slice:
+
+- `ley-37-1992-art-163-vicies.html` — LIVA OSS Exterior (Derecho a
+  la deducción).
+- `ley-37-1992-art-163-tervicies.html` — LIVA OSS Unión (Derecho a
+  la deducción).
+- `ley-37-1992-art-163-octovicies.html` — LIVA IOSS (Derecho a la
+  deducción).
+
+All three articles share the same operative rule that grounds
+Decision 6: deduction is forbidden inside the Modelo 369
+autoliquidation, with recovery routed through the regular IVA
+return for establecidos and the Eighth/Thirteenth Directive
+procedures for non-establecidos.
 
 ## Constraints
 
