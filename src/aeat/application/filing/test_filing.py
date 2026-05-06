@@ -341,7 +341,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
 
     approved = approve_draft(
         draft,
-        approved_by="kent",
+        approved_by="operator",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
     )
@@ -453,7 +453,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
     with pytest.raises(FilingDraftError, match="registry review surface"):
         approve_draft(
             draft,
-            approved_by="kent",
+            approved_by="operator",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
         )
@@ -470,7 +470,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
     with pytest.raises(FilingDraftError, match="registry review surface"):
         approve_draft(
             draft,
-            approved_by="kent",
+            approved_by="operator",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
         )
@@ -482,7 +482,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
         update={
             "status": FilingDraftStatus.SUBMITTED,
             "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
-            "approved_by": "kent",
+            "approved_by": "operator",
             "review_checksum": "a" * 64,
             "approval_basis": None,
         }

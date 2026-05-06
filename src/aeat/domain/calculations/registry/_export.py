@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Literal, cast
 
@@ -77,8 +77,9 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     bindings_by_record: dict[str, list[DataBindingDefinition]] = {}
     for binding in revision.bindings:
         record = binding.selector.get("record")
-        if isinstance(record, str):
-            bindings_by_record.setdefault(record, []).append(binding)
+        if not isinstance(record, str):
+            continue
+        bindings_by_record.setdefault(record, []).append(binding)
 
     resolved_layouts: list[ExportLayoutDefinition] = []
     for layout in revision.export_layouts:
@@ -88,15 +89,95 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
                 resolved_records.append(record)
                 continue
             derived = tuple(
-                _export_field_from_binding(record, binding)
-                for binding in sorted(
-                    bindings_by_record.get(record.binding_record, ()),
-                    key=lambda item: (int(item.selector["offset"]), item.id),
+                sorted(
+                    _export_fields_from_record_bindings(record, bindings_by_record.get(record.binding_record, [])),
+                    key=lambda field: (field.offset, field.id),
                 )
             )
-            resolved_records.append(record.model_copy(update={"fields": (*record.fields, *derived)}))
+            base_fields = tuple(
+                field
+                for field in record.fields
+                if not any(_export_fields_overlap(field, derived_field) for derived_field in derived)
+            )
+            resolved_records.append(record.model_copy(update={"fields": (*base_fields, *derived)}))
         resolved_layouts.append(layout.model_copy(update={"records": tuple(resolved_records)}))
     return tuple(resolved_layouts)
+
+
+def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
+    if left.offset is None or left.length is None or right.offset is None or right.length is None:
+        return False
+    left_end = left.offset + left.length - 1
+    right_end = right.offset + right.length - 1
+    return left.offset <= right_end and right.offset <= left_end
+
+
+def _export_fields_from_record_bindings(
+    record: ExportRecordDefinition,
+    bindings: Sequence[DataBindingDefinition],
+) -> tuple[ExportFieldDefinition, ...]:
+    fields: list[ExportFieldDefinition] = []
+    for binding in bindings:
+        if "offset" in binding.selector and "length" in binding.selector:
+            fields.append(_export_field_from_binding(record, binding))
+            continue
+        field = _export_field_from_row_binding(record, binding)
+        if field is not None:
+            fields.append(field)
+    return tuple(fields)
+
+
+_ROW_FIELD_CASILLA_BY_RECORD: dict[str, dict[str, str]] = {
+    "operador": {
+        "country_code": "op.codigo-pais",
+        "party_tax_id": "op.nif-comunitario",
+        "party_legal_name": "op.apellidos-razon-social",
+        "clave": "op.clave-operacion",
+        "base_imponible": "op.base-imponible",
+    },
+    "rectificacion": {
+        "country_code": "op.codigo-pais",
+        "party_tax_id": "op.nif-comunitario",
+        "party_legal_name": "op.apellidos-razon-social",
+        "clave": "op.clave-operacion",
+        "rectified_year": "rect.ejercicio-rectificado",
+        "rectified_period": "rect.periodo-rectificado",
+        "base_imponible": "rect.base-rectificada",
+        "rectified_base_previous": "rect.base-anterior",
+    },
+}
+
+
+def _export_field_from_row_binding(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+) -> ExportFieldDefinition | None:
+    if binding.aggregation is None or binding.aggregation.get("op") != "rows":
+        return None
+    if record.binding_record is None:
+        return None
+    row_field = binding.selector.get("row_field")
+    if not isinstance(row_field, str):
+        return None
+    casilla = _ROW_FIELD_CASILLA_BY_RECORD.get(record.binding_record, {}).get(row_field)
+    if casilla is None:
+        return None
+    template = next(
+        (field for field in record.fields if field.kind == "casilla" and field.casilla == casilla),
+        None,
+    )
+    if template is None:
+        return None
+    return template.model_copy(
+        update={
+            "id": f"{record.id}.{binding.id}",
+            "kind": "binding",
+            "casilla": None,
+            "binding": binding.id,
+            "legal_refs": binding.legal_refs,
+            "source_refs": binding.source_refs,
+        }
+    )
 
 
 def _export_field_from_binding(

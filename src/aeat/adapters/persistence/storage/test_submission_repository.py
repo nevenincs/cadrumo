@@ -30,6 +30,8 @@ from . import (
     override_secret_store,
 )
 from .errors import ClassificationError
+from .sql.engine import dispose_engine
+from .sql.secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -66,7 +68,9 @@ def store_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -84,6 +88,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -91,9 +100,9 @@ class TestEmptyState:
         repo = SubmissionRepository(store_dir=store_dir)
         assert repo.load("missing-id") is None
 
-    def test_envelope_path_is_under_store_dir(self, store_dir: Path) -> None:
+    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
         repo = SubmissionRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("abc123") == store_dir / "abc123.envelope.json"
+        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
 
     def test_list_submission_ids_empty(self, store_dir: Path) -> None:
         repo = SubmissionRepository(store_dir=store_dir)
@@ -141,7 +150,7 @@ class TestListAndIter:
 
 
 class TestDelete:
-    def test_delete_removes_envelope(self, store_dir: Path) -> None:
+    def test_delete_removes_object(self, store_dir: Path) -> None:
         repo = SubmissionRepository(store_dir=store_dir)
         filing = _make_filing()
         repo.save(filing)
@@ -154,18 +163,19 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_envelope_records_audit_class(self, store_dir: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
         repo = SubmissionRepository(store_dir=store_dir)
         filing = _make_filing()
         repo.save(filing)
-        envelope_text = repo.envelope_path_for(filing.submission_id).read_text(encoding="utf-8")
-        assert '"classification":"audit"' in envelope_text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert b"00000000T" not in raw
+        assert filing.submission_id.encode("utf-8") not in raw
+        assert repo.load(filing.submission_id) == filing
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from . import Envelope, SensitivityClass, save_encrypted_envelope
-        from .crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+        from . import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         filing = _make_filing()
         bad = Envelope[SubmittedFiling](
             schema_version=1,
@@ -174,11 +184,13 @@ class TestClassificationGate:
             payload=filing,
         )
         repo = SubmissionRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for(filing.submission_id),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
+        SecureObjectRepository().save(
+            namespace="aeat.domain.submission.records",
+            object_key=filing.submission_id,
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load(filing.submission_id)
@@ -201,5 +213,4 @@ class TestPerSubmissionLockIsolation:
         a = repo.lock_target_for("sub-a")
         b = repo.lock_target_for("sub-b")
         assert a != b
-        assert a.parent == store_dir
-        assert b.parent == store_dir
+        assert a.parent == b.parent

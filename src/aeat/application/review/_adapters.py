@@ -331,17 +331,15 @@ def drafts_pending(
 def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
     """Iterate every persisted draft via :class:`FilingDraftRepository`.
 
-    Drafts are ciphertext-at-rest only; the helper returns the canonical
-    envelope path alongside the typed payload so callers can echo the
-    on-disk location back to the operator without ever touching
-    plaintext.
+    Drafts are ciphertext-at-rest only. The helper returns the secure
+    backend's logical path marker alongside the typed payload so callers
+    can identify the draft without consulting a plaintext draft
+    directory.
     """
     from ...domain.filing import FilingDraftRepository
 
-    root = settings.aeat_drafts_dir.resolve()
-    if not root.exists():
-        return ()
-    repository = FilingDraftRepository(store_dir=root)
+    del settings
+    repository = FilingDraftRepository()
     out: list[tuple[Path, FilingDraft]] = []
     for draft in repository.iter_drafts():
         out.append((repository.envelope_path_for(draft.draft_id), draft))

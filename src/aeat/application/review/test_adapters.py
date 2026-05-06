@@ -7,12 +7,14 @@ and the severity-mapping invariants.
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.sql import dispose_engine
 from ...core.config import Settings
 from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.invoices import (
@@ -41,7 +43,6 @@ from ..filing import (
     FilingValidationFinding,
     FilingValue,
     FilingValueKind,
-    build_runtime_schema_provider,
 )
 from . import (
     FindingReviewItem,
@@ -57,6 +58,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 # ── shared helpers ────────────────────────────────────────────────
+
+
+@pytest.fixture(autouse=True)
+def _secure_object_backend(tmp_path: Path):
+    old_database_url = os.environ.get("AEAT_DATABASE_URL")
+    os.environ["AEAT_DATABASE_URL"] = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
+    dispose_engine()
+    try:
+        yield
+    finally:
+        if old_database_url is None:
+            os.environ.pop("AEAT_DATABASE_URL", None)
+        else:
+            os.environ["AEAT_DATABASE_URL"] = old_database_url
+        dispose_engine()
 
 
 def _build_settings(tmp_path: Path) -> Settings:
@@ -76,7 +92,7 @@ def _summary(text: str = "demo") -> tr:
 
 
 def _schema_version(modelo: str = "130") -> str:
-    return build_runtime_schema_provider(filing_year=2026, period="1T").get_subview(modelo).schema_version
+    return f"test-schema-{modelo}"
 
 
 # ── transactions adapter ──────────────────────────────────────────
@@ -131,7 +147,7 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         )
     )
-    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    TransactionCatalogueRepository().save(catalogue)
     items = transactions_pending(settings)
     assert len(items) == 1
     item = items[0]
@@ -156,7 +172,7 @@ def test_transactions_pending_severity_mapping(
 ) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
-    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    TransactionCatalogueRepository().save(catalogue)
     items = transactions_pending(settings)
     assert len(items) == 1
     assert items[0].severity is expected_severity
@@ -177,7 +193,7 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
             ),
         )
     )
-    TransactionCatalogueRepository(store_dir=settings.aeat_financial_txs_dir).save(catalogue)
+    TransactionCatalogueRepository().save(catalogue)
     assert transactions_pending(settings) == ()
 
 
@@ -245,7 +261,7 @@ def test_invoices_pending_severity_mapping(
     catalogue = InvoiceCatalogue.from_invoices(
         (_invoice(payment_status=payment_status, linked_transaction_ids=linked),)
     )
-    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    InvoiceCatalogueRepository().save(catalogue)
     items = invoices_pending(settings)
     assert len(items) == 1
     assert items[0].severity is expected_severity
@@ -267,14 +283,14 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
             ),
         )
     )
-    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    InvoiceCatalogueRepository().save(catalogue)
     assert invoices_pending(settings) == ()
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
-    InvoiceCatalogueRepository(store_dir=settings.aeat_invoices_dir).save(catalogue)
+    InvoiceCatalogueRepository().save(catalogue)
     items = invoices_pending(settings)
     assert len(items) == 1
     assert isinstance(items[0], InvoiceReviewItem)
@@ -317,8 +333,8 @@ def _write_draft(settings: Settings, draft: FilingDraft) -> Path:
     """Persist ``draft`` through the FilingDraftRepository (ciphertext-at-rest)."""
     from ...domain.filing import FilingDraftRepository
 
-    settings.aeat_drafts_dir.mkdir(parents=True, exist_ok=True)
-    repository = FilingDraftRepository(store_dir=settings.aeat_drafts_dir)
+    del settings
+    repository = FilingDraftRepository()
     repository.save(draft)
     return repository.envelope_path_for(draft.draft_id)
 

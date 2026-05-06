@@ -1,6 +1,150 @@
 {
   "articulos": [
     {
+      "numero": "17",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del treball com contraprestacions o utilitats derivades del treball personal o de la relació laboral o estatutària.",
+        "en": "Defines gross employment income as consideration or benefits derived from personal work or an employment or statutory relationship.",
+        "es": "Define los rendimientos integros del trabajo como contraprestaciones o utilidades derivadas del trabajo personal o de la relacion laboral o estatutaria.",
+        "hu": "Meghatározza a munkajövedelem bruttó összegét a személyes munkából vagy munkaviszonyból eredő juttatásokként."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del treball",
+        "en": "Gross employment income",
+        "es": "Rendimientos integros del trabajo",
+        "hu": "Bruttó munkajövedelem"
+      }
+    },
+    {
+      "numero": "18",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a18",
+      "summary": {
+        "ca": "Regula els percentatges de reducció aplicables a determinats rendiments del treball, inclosos els obtinguts amb període de generació superior a dos anys.",
+        "en": "Regulates reduction percentages for certain employment income, including income generated over more than two years.",
+        "es": "Regula las reducciones aplicables a determinados rendimientos del trabajo, incluidos los obtenidos con periodo de generacion superior a dos anos.",
+        "hu": "Szabályozza egyes munkajövedelmek csökkentéseit, ideértve a két évnél hosszabb időszak alatt keletkezett jövedelmeket."
+      },
+      "titulo": {
+        "ca": "Percentatges de reducció aplicables a determinats rendiments del treball",
+        "en": "Reduction percentages applicable to certain employment income",
+        "es": "Porcentajes de reduccion aplicables a determinados rendimientos del trabajo",
+        "hu": "Egyes munkajövedelmekre alkalmazható csökkentési százalékok"
+      }
+    },
+    {
+      "numero": "19",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a19",
+      "summary": {
+        "ca": "Estableix el rendiment net del treball com el resultat de disminuir el rendiment íntegre en les despeses deduïbles.",
+        "en": "Sets net employment income as gross employment income reduced by deductible expenses.",
+        "es": "Establece el rendimiento neto del trabajo como el resultado de disminuir el rendimiento integro en los gastos deducibles.",
+        "hu": "A nettó munkajövedelmet a bruttó munkajövedelem levonható költségekkel csökkentett összegeként határozza meg."
+      },
+      "titulo": {
+        "ca": "Rendiment net del treball",
+        "en": "Net employment income",
+        "es": "Rendimiento neto del trabajo",
+        "hu": "Nettó munkajövedelem"
+      }
+    },
+    {
+      "numero": "20",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a20",
+      "summary": {
+        "ca": "Regula la reducció per obtenció de rendiments del treball aplicable al rendiment net del treball quan concorren els requisits legals.",
+        "en": "Regulates the reduction for obtaining employment income applicable to net employment income when statutory requirements are met.",
+        "es": "Regula la reduccion por obtencion de rendimientos del trabajo aplicable al rendimiento neto del trabajo cuando concurren los requisitos legales.",
+        "hu": "Szabályozza a munkajövedelem megszerzéséhez kapcsolódó csökkentést a nettó munkajövedelemre."
+      },
+      "titulo": {
+        "ca": "Reducció per obtenció de rendiments del treball",
+        "en": "Reduction for employment income",
+        "es": "Reduccion por obtencion de rendimientos del trabajo",
+        "hu": "Munkajövedelem utáni csökkentés"
+      }
+    },
+    {
+      "numero": "22",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a22",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del capital immobiliari derivats d'immobles rústics o urbans no afectes a activitats econòmiques.",
+        "en": "Defines gross real-estate capital income from rural or urban real estate not used in economic activities.",
+        "es": "Define los rendimientos integros del capital inmobiliario derivados de bienes inmuebles rusticos o urbanos no afectos a actividades economicas.",
+        "hu": "Meghatározza a gazdasági tevékenységhez nem használt ingatlanokból származó bruttó ingatlantőke-jövedelmet."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del capital immobiliari",
+        "en": "Gross real-estate capital income",
+        "es": "Rendimientos integros del capital inmobiliario",
+        "hu": "Ingatlantőkéből származó bruttó jövedelem"
+      }
+    },
+    {
+      "numero": "23",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a23",
+      "summary": {
+        "ca": "Regula les despeses deduïbles i reduccions aplicables per determinar el rendiment net del capital immobiliari.",
+        "en": "Regulates deductible expenses and reductions for determining net real-estate capital income.",
+        "es": "Regula los gastos deducibles y reducciones aplicables para determinar el rendimiento neto del capital inmobiliario.",
+        "hu": "Szabályozza az ingatlantőke nettó jövedelmének meghatározásához alkalmazható levonható költségeket és csökkentéseket."
+      },
+      "titulo": {
+        "ca": "Despeses deduïbles i reduccions",
+        "en": "Deductible expenses and reductions",
+        "es": "Gastos deducibles y reducciones",
+        "hu": "Levonható költségek és csökkentések"
+      }
+    },
+    {
+      "numero": "24",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a24",
+      "summary": {
+        "ca": "Estableix el rendiment mínim computable en cas de parentiu per l'ús o arrendament d'immobles.",
+        "en": "Sets the minimum taxable return in kinship cases for real-estate use or leasing.",
+        "es": "Establece el rendimiento minimo computable en caso de parentesco por uso o arrendamiento de inmuebles.",
+        "hu": "Meghatározza a rokoni kapcsolatok esetén az ingatlanhasználatból vagy bérbeadásból származó minimálisan beszámítandó hozamot."
+      },
+      "titulo": {
+        "ca": "Rendiment en cas de parentiu",
+        "en": "Return in kinship cases",
+        "es": "Rendimiento en caso de parentesco",
+        "hu": "Rokoni kapcsolatok esetén számított hozam"
+      }
+    },
+    {
+      "numero": "25",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a25",
+      "summary": {
+        "ca": "Defineix els rendiments íntegres del capital mobiliari, inclosos dividends, interessos, rendes d'assegurances i altres rendiments de béns mobles.",
+        "en": "Defines gross movable-capital income, including dividends, interest, insurance income, and other returns from movable property.",
+        "es": "Define los rendimientos integros del capital mobiliario, incluidos dividendos, intereses, rentas de seguros y otros rendimientos de bienes muebles.",
+        "hu": "Meghatározza az ingó tőkéből származó bruttó jövedelmeket, ideértve az osztalékot, kamatot, biztosítási jövedelmet és egyéb hozamokat."
+      },
+      "titulo": {
+        "ca": "Rendiments íntegres del capital mobiliari",
+        "en": "Gross movable-capital income",
+        "es": "Rendimientos integros del capital mobiliario",
+        "hu": "Ingó tőkéből származó bruttó jövedelem"
+      }
+    },
+    {
+      "numero": "26",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a26",
+      "summary": {
+        "ca": "Estableix les despeses deduïbles i reduccions per determinar el rendiment net del capital mobiliari.",
+        "en": "Sets deductible expenses and reductions for determining net movable-capital income.",
+        "es": "Establece los gastos deducibles y reducciones para determinar el rendimiento neto del capital mobiliario.",
+        "hu": "Meghatározza az ingó tőke nettó jövedelmének megállapításához levonható költségeket és csökkentéseket."
+      },
+      "titulo": {
+        "ca": "Despeses deduïbles i reduccions",
+        "en": "Deductible expenses and reductions",
+        "es": "Gastos deducibles y reducciones",
+        "hu": "Levonható költségek és csökkentések"
+      }
+    },
+    {
       "notes": "Base de la calificación autónomo / trabajador por cuenta ajena.",
       "numero": "27",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a27",

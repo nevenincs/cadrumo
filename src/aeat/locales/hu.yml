@@ -1,13 +1,23 @@
 aggregation:
   models:
-    t_944805: Invalid period. Use YYYY-Qn
+    t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
+      formátumot.
 application:
   auth:
     provider_impact:
-      certificate_ready: application.auth.provider_impact.certificate_ready
-      generic_ready: application.auth.provider_impact.generic_ready
-      unavailable: application.auth.provider_impact.unavailable
-      unconfigured: application.auth.provider_impact.unconfigured
+      certificate_ready: A tanúsítványos hitelesítés kész. A kezelő ugyanazt a CLI
+        benyújtási folyamatot használja az AEAT által támogatott olvasásokhoz; minden
+        szolgáltató ugyanazt a parancsfolyamatot használja.
+      generic_ready: '%{label} készen áll. A kezelő ugyanazt a CLI benyújtási folyamatot
+        használja, miközben ez a szolgáltató csatlakozik a megosztott hitelesítési
+        protokollhoz.'
+      unavailable: '%{label} be van állítva, de még nem áll készen. A kezelő továbbra
+        is képes helyben előállítani, ellenőrizni és exportálni a benyújtásokat, de
+        az AEAT által támogatott olvasások mindaddig nem elérhetők, amíg a hitelesítési
+        hiba el nem hárul.'
+      unconfigured: A kezelő továbbra is képes helyben előállítani, ellenőrizni és
+        exportálni a benyújtásokat, de az AEAT által támogatott olvasások mindaddig
+        nem elérhetők, amíg a hitelesítési szolgáltató nincs beállítva.
 auth:
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
@@ -374,6 +384,7 @@ cli:
       mismatched: Eltérő
       modelo: Adóbevallási űrlap
       next: Következő
+      'no': Nem
       path: Útvonal
       period: Időszak
       sha256: SHA256
@@ -382,7 +393,6 @@ cli:
       verdict: Ítélet
       warnings: Figyelmeztetések
       'yes': Igen
-      'no': Nem
     opts:
       by: A bevallást ellenőrző személy
       draft_id: Helyi tervezet azonosítója
@@ -755,7 +765,8 @@ cli:
       set_ratio_key_help: 'Arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
       set_ratio_value_help: Arány értéke (pl. 0.5 az 50%-hoz)
       unset_ratio_help: Egy adott felosztási arány törlése
-      unset_ratio_key_help: 'A törlendő arány kulcsa vagy kategóriája. Családi aliasok: %{aliases}'
+      unset_ratio_key_help: 'A törlendő arány kulcsa vagy kategóriája. Családi aliasok:
+        %{aliases}'
     txs:
       app_help: Banki tranzakciók kezelése
   financial_invoices:
@@ -867,7 +878,8 @@ cli:
       ledger_help: Könyvelési napló azonosítója
       period_help: A párosítás adózási időszaka
     review:
-      filter_help: Számlák szűrése status=pending|reviewed|matched|paid vagy kind=issued|received szerint
+      filter_help: Számlák szűrése status=pending|reviewed|matched|paid vagy kind=issued|received
+        szerint
       help: Számlák interaktív felülvizsgálata és ellenőrzése
       id_help: A felülvizsgálandó adott számla azonosítója
       no_invoices: Nincsenek felülvizsgálatra váró számlák
@@ -885,9 +897,9 @@ cli:
       auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
       edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges
       filter_parse_error: A naplószűrő elemzése sikertelen
+      invalid_skip: Érvénytelen kihagyási mező
       invalid_source: 'A naplófájl nem importálható: {reason}'
       invalid_source_unknown: érvénytelen forrás
-      invalid_skip: Érvénytelen kihagyási mező
       invalid_split_format: Érvénytelen felosztási formátum
       invalid_split_value: Érvénytelen felosztási érték
       match_both_required: A párosításhoz mind a naplóbejegyzés, mind a tranzakció
@@ -910,6 +922,7 @@ cli:
       amount: Összeg
       date: Dátum
       description: Leírás
+      dialect: Felismert formátum
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
       fields: Mezők
       id: Azonosító
@@ -918,7 +931,6 @@ cli:
       rows: Sorok
       skipped: Kihagyva
       source: Forrás
-      dialect: Felismert formátum
       valid: Érvényes
       warnings: Figyelmeztetések
       'yes': Igen
@@ -1007,7 +1019,7 @@ cli:
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
-    header: Modell	Időszak	Állapot	Nyit	Zár
+    header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
     invoices: Számlák
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
@@ -1125,9 +1137,9 @@ cli:
       name_help: Helyi profil neve
       tax_id_help: Adózói NIF/NIE/CIF
     labels:
-      'no': 'nem'
+      'no': nem
       unset: nincs érték
-      'yes': 'igen'
+      'yes': igen
     profile:
       app_help: Adózói profiladatok kezelése
       get_help: Egy profilérték megjelenítése

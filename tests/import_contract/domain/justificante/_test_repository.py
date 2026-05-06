@@ -19,6 +19,8 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.domain.justificante._repository import JustificanteRepository
 from aeat.domain.justificante._schema import Justificante
 
@@ -51,7 +53,9 @@ def store_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -69,6 +73,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -76,9 +85,9 @@ class TestEmptyState:
         repo = JustificanteRepository(store_dir=store_dir)
         assert repo.load("DOESNOTEXIST") is None
 
-    def test_envelope_path_under_store_dir(self, store_dir: Path) -> None:
+    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
         repo = JustificanteRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("CSV1234") == store_dir / "CSV1234.envelope.json"
+        assert repo.envelope_path_for("CSV1234").as_posix().endswith("aeat.domain.justificante.metadata/CSV1234")
 
 
 class TestSaveLoad:
@@ -123,18 +132,19 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_envelope_records_audit_class(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
         repo = JustificanteRepository(store_dir=store_dir)
         record = _make_justificante(tmp_path)
         repo.save(record)
-        text = repo.envelope_path_for(record.csv).read_text(encoding="utf-8")
-        assert '"classification":"audit"' in text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert record.csv.encode("utf-8") not in raw
+        assert b"00000000T" not in raw
+        assert b"10.00" not in raw
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path, tmp_path: Path) -> None:
-        from aeat.adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from aeat.adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self, store_dir: Path, tmp_path: Path) -> None:
+        from aeat.adapters.persistence.storage import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         record = _make_justificante(tmp_path)
         bad = Envelope[Justificante](
             schema_version=1,
@@ -143,11 +153,13 @@ class TestClassificationGate:
             payload=record,
         )
         repo = JustificanteRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for(record.csv),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.domain.justificante.metadata.v1",
+        SecureObjectRepository().save(
+            namespace="aeat.domain.justificante.metadata",
+            object_key=record.csv,
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load(record.csv)

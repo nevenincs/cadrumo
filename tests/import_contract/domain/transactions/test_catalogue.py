@@ -409,7 +409,7 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
 def test_set_classification_accepts_llm_classifier_identity_shape() -> None:
     """`classified_by="llm:<model>"` must be accepted by the validator (#236 LLM path).
 
-    Discovered by a live Kent walkthrough: the pre-#236 validator only
+    Discovered by a live operator walkthrough: the pre-#236 validator only
     permitted ``auto`` / ``manual`` / ``rule:<id>``, which rejected LLM
     classifications outright. Without this shape, an LLM adapter could
     never record its confidence against a transaction.

@@ -6,6 +6,15 @@ tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
@@ -49,6 +58,15 @@ valid_from = 2020-01-01
 valid_to = 2020-12-31
 period_selector = { years = [2020], periods = ["0A"] }
 legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
@@ -882,6 +900,15 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 period_selector = { years = [2025], periods = ["0A"] }
 legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
@@ -935,6 +962,1003 @@ value = "2000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
+
+[[revisions."2025".casillas]]
+id = "DPNIF_D"
+number = "*01"
+label = "Primer declarante NIF"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-tax-id"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DP_APENOM_D"
+number = "*02"
+label = "Primer declarante apellidos y nombre"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-display-name"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "ZCCAD"
+number = "*70"
+label = "Comunidad autonoma de la declaracion"
+section = ["datos_economicos", "declaracion"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-tax-residence-ccaa"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "TIPOTRIBUTACION"
+number = "*68 *69"
+label = "Opcion de tributacion elegida"
+section = ["datos_economicos", "declaracion"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-declaration-type"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "SEXO_D"
+number = "*05"
+label = "Primer declarante sexo"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-taxpayer-sex"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "ECIVIL"
+number = "*06-09"
+label = "Primer declarante estado civil a 31/12/2025"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-marital-status"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DPFNAC_D"
+number = "*10"
+label = "Primer declarante fecha de nacimiento"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = true
+input_kind = "bound"
+binding = "renta-2025-profile-taxpayer-birth-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DPNIF_C"
+number = "*13"
+label = "Conyuge NIF"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-tax-id"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DP_APENOM_C"
+number = "*14"
+label = "Conyuge apellidos y nombre"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-display-name"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DPFNAC_C"
+number = "*60"
+label = "Conyuge fecha de nacimiento"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-birth-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "SEXO_C"
+number = "*59"
+label = "Conyuge sexo"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-sex"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0003"
+number = "0003"
+label = "Retribuciones dinerarias. Importe integro"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0004"
+number = "0004"
+label = "Rendimientos del trabajo en especie. Valoracion"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0005"
+number = "0005"
+label = "Rendimientos del trabajo en especie. Ingresos a cuenta"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0006"
+number = "0006"
+label = "Rendimientos del trabajo en especie. Ingresos a cuenta repercutidos"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0007"
+number = "0007"
+label = "Rendimientos del trabajo en especie. Importe integro"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-especie-importe-integro"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0008"
+number = "0008"
+label = "Contribuciones empresariales a planes de pensiones y prevision social"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0024"
+number = "0024"
+label = "Cantidades aportadas por la empresa a sistemas de prevision social por decision del trabajador"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0009"
+number = "0009"
+label = "Contribuciones empresariales a seguros colectivos de dependencia"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0010"
+number = "0010"
+label = "Aportaciones al patrimonio protegido de personas discapacitadas"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0011"
+number = "0011"
+label = "Reducciones de rendimientos del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-18"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0058"
+number = "0058"
+label = "Reduccion por rendimientos de actividades artisticas obtenidos de manera excepcional"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-18"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0012"
+number = "0012"
+label = "Total ingresos integros computables del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-total-ingresos-integros-computables"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0013"
+number = "0013"
+label = "Cotizaciones a la Seguridad Social o mutualidades obligatorias"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0014"
+number = "0014"
+label = "Cuotas satisfechas a sindicatos"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0015"
+number = "0015"
+label = "Cuotas satisfechas a colegios profesionales"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0016"
+number = "0016"
+label = "Gastos de defensa juridica derivados de litigios con el empleador"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0017"
+number = "0017"
+label = "Rendimiento neto previo del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-rendimiento-neto-previo"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0018"
+number = "0018"
+label = "Suma de rendimientos netos previos del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-suma-rendimientos-netos-previos"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0019"
+number = "0019"
+label = "Otros gastos deducibles del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0020"
+number = "0020"
+label = "Incremento para contribuyentes desempleados que acepten traslado de residencia"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0021"
+number = "0021"
+label = "Incremento para trabajadores activos con discapacidad"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0022"
+number = "0022"
+label = "Rendimiento neto del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-rendimiento-neto"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0057"
+number = "0057"
+label = "Reduccion de rendimientos acogidos al regimen fiscal del acontecimiento XXXVII Copa America Barcelona"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-18"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0023"
+number = "0023"
+label = "Cuantia aplicable con caracter general"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0025"
+number = "0025"
+label = "Rendimiento neto reducido del trabajo"
+section = ["rendimientos_trabajo"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-trabajo-rendimiento-neto-reducido"
+legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0027"
+number = "0027"
+label = "Intereses de cuentas, depositos y activos financieros en general"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0028"
+number = "0028"
+label = "Intereses de activos financieros con derecho a bonificacion"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0029"
+number = "0029"
+label = "Dividendos y rendimientos por participacion en fondos propios"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0030"
+number = "0030"
+label = "Rendimientos de transmision o amortizacion de Letras del Tesoro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0031"
+number = "0031"
+label = "Rendimientos de otros activos financieros"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0032"
+number = "0032"
+label = "Rendimientos de seguros de vida o invalidez y operaciones de capitalizacion"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0033"
+number = "0033"
+label = "Rentas por imposicion de capitales y otros rendimientos en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0034"
+number = "0034"
+label = "Rendimientos derivados de deuda subordinada o participaciones preferentes"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0035"
+number = "0035"
+label = "Rendimientos de Planes de Ahorro a Largo Plazo"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0036"
+number = "0036"
+label = "Total ingresos integros del capital mobiliario en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-ahorro-total-ingresos"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0037"
+number = "0037"
+label = "Gastos fiscalmente deducibles de capital mobiliario en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0038"
+number = "0038"
+label = "Rendimiento neto del capital mobiliario en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-ahorro-rendimiento-neto"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0039"
+number = "0039"
+label = "Reduccion aplicable a determinados contratos de seguro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0040"
+number = "0040"
+label = "Rendimiento neto reducido del capital mobiliario en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0041"
+number = "0041"
+label = "Suma de rendimientos reducidos del capital mobiliario en base del ahorro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0046"
+number = "0046"
+label = "Arrendamiento de bienes muebles, negocios o minas y subarrendamientos"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0047"
+number = "0047"
+label = "Prestacion de asistencia tecnica"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0048"
+number = "0048"
+label = "Propiedad intelectual cuando el contribuyente no sea autor"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0050"
+number = "0050"
+label = "Propiedad industrial no afecta a una actividad economica"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0051"
+number = "0051"
+label = "Otros rendimientos del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0052"
+number = "0052"
+label = "Total ingresos integros del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-general-total-ingresos"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0053"
+number = "0053"
+label = "Gastos fiscalmente deducibles de capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0054"
+number = "0054"
+label = "Rendimiento neto del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-general-rendimiento-neto"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0055"
+number = "0055"
+label = "Reducciones de rendimientos del capital mobiliario de base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0056"
+number = "0056"
+label = "Rendimiento neto reducido del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0060"
+number = "0060"
+label = "Suma de rendimientos reducidos del capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0089"
+number = "0089"
+label = "Renta inmobiliaria imputada"
+section = ["rendimientos_capital_inmobiliario", "imputacion_rentas_inmobiliarias"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0102"
+number = "0102"
+label = "Ingresos integros computables del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0104"
+number = "0104"
+label = "Gastos pendientes aplicados en esta declaracion"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0107"
+number = "0107"
+label = "Intereses y reparacion/conservacion aplicados en esta declaracion"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0109"
+number = "0109"
+label = "Gastos de comunidad"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0110"
+number = "0110"
+label = "Gastos de formalizacion del contrato"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0111"
+number = "0111"
+label = "Gastos de defensa juridica"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0112"
+number = "0112"
+label = "Otras cantidades devengadas por terceros por servicios personales"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0113"
+number = "0113"
+label = "Servicios y suministros"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0114"
+number = "0114"
+label = "Primas de contratos de seguro"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0115"
+number = "0115"
+label = "Tributos recargos y tasas"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0116"
+number = "0116"
+label = "Saldos de dudoso cobro"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0117"
+number = "0117"
+label = "Amortizacion de bienes muebles"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0131"
+number = "0131"
+label = "Amortizacion del inmueble y la mejora"
+section = ["rendimientos_capital_inmobiliario", "amortizacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0132"
+number = "0132"
+label = "Amortizacion en casos especiales"
+section = ["rendimientos_capital_inmobiliario", "amortizacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0146"
+number = "0146"
+label = "Amortizacion del inmueble accesorio y mejoras"
+section = ["rendimientos_capital_inmobiliario", "amortizacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0147"
+number = "0147"
+label = "Amortizacion en casos especiales del inmueble accesorio"
+section = ["rendimientos_capital_inmobiliario", "amortizacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0148"
+number = "0148"
+label = "Otros gastos fiscalmente deducibles"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0149"
+number = "0149"
+label = "Rendimiento neto del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-inmobiliario-rendimiento-neto"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0150"
+number = "0150"
+label = "Reduccion por arrendamiento de inmuebles destinados a vivienda"
+section = ["rendimientos_capital_inmobiliario", "reducciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0151"
+number = "0151"
+label = "Reduccion por rendimientos irregulares del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario", "reducciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0152"
+number = "0152"
+label = "Rendimiento minimo computable en caso de parentesco"
+section = ["rendimientos_capital_inmobiliario"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-24"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0153"
+number = "0153"
+label = "Retenciones e ingresos a cuenta de capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario", "retenciones"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0154"
+number = "0154"
+label = "Rendimiento neto reducido del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-inmobiliario-rendimiento-neto-reducido"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0155"
+number = "0155"
+label = "Suma de rentas inmobiliarias imputadas"
+section = ["rendimientos_capital_inmobiliario", "imputacion_rentas_inmobiliarias"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-inmobiliario-suma-rentas-imputadas"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".casillas]]
+id = "0156"
+number = "0156"
+label = "Suma de rendimientos netos reducidos del capital inmobiliario"
+section = ["rendimientos_capital_inmobiliario"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
 id = "0224"
@@ -1755,6 +2779,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-100-2025-dictionary",
     "boe-modelo-100-2025-form",
+    "aeat-renta-2025-manual-parte1",
 ]
 
 [[revisions."2025".application_links]]
@@ -1871,6 +2896,15 @@ source_refs = [
 id = "renta-source-foundation"
 title = "Modelo 100 source, layout, and simulator evidence"
 legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
     "ley-35-2006:art-30",
@@ -1884,6 +2918,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
     "aeat-dr-100-2025-input-dictionary",
     "aeat-dr-100-2025-xsd",
+    "aeat-renta-2025-manual-parte1",
+    "aeat-renta-2025-manual-deducciones-autonomicas",
     "boe-modelo-100-2025-form",
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
@@ -1910,6 +2946,113 @@ legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-modelo-100-procedure"]
 live_cross_references = ["modelo-100-filed-declarations-read"]
 application_links = ["modelo-100-filed-declarations-observation"]
+
+[[revisions."2025".constructs]]
+id = "renta-personal-family"
+title = "Modelo 100 personal and family profile inputs"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+]
+bindings = [
+    "renta-2025-profile-tax-id",
+    "renta-2025-profile-display-name",
+    "renta-2025-profile-tax-residence-ccaa",
+    "renta-2025-profile-declaration-type",
+    "renta-2025-profile-taxpayer-sex",
+    "renta-2025-profile-marital-status",
+    "renta-2025-profile-taxpayer-birth-date",
+    "renta-2025-profile-spouse-tax-id",
+    "renta-2025-profile-spouse-display-name",
+    "renta-2025-profile-spouse-birth-date",
+    "renta-2025-profile-spouse-sex",
+]
+casillas = [
+    "DPNIF_D",
+    "DP_APENOM_D",
+    "ZCCAD",
+    "TIPOTRIBUTACION",
+    "SEXO_D",
+    "ECIVIL",
+    "DPFNAC_D",
+    "DPNIF_C",
+    "DP_APENOM_C",
+    "DPFNAC_C",
+    "SEXO_C",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-final-settlement"
+title = "Modelo 100 final settlement result"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "boe-modelo-100-2025-form",
+    "aeat-renta-2025-manual-parte1",
+]
+casillas = [
+    "0585",
+    "0586",
+    "0587",
+    "0588",
+    "0414",
+    "0589",
+    "0590",
+    "0591",
+    "0595",
+    "0592",
+    "0593",
+    "0594",
+    "0596",
+    "0597",
+    "0598",
+    "0599",
+    "0600",
+    "0601",
+    "0602",
+    "0603",
+    "0604",
+    "0605",
+    "0606",
+    "0609",
+    "0610",
+    "0611",
+    "0612",
+    "0613",
+    "0623",
+    "0624",
+    "0636",
+    "0637",
+    "0248",
+    "0249",
+    "0660",
+    "0661",
+    "0662",
+    "0663",
+    "0664",
+    "0666",
+    "0669",
+    "0670",
+]
+formulas = [
+    "renta-2025-cuota-liquida-incrementada-total",
+    "renta-2025-cuota-resultante-autoliquidacion",
+    "renta-2025-retenciones-arrendamientos-urbanos",
+    "renta-2025-pagos-fraccionados-ingresados",
+    "renta-2025-total-pagos-a-cuenta",
+    "renta-2025-cuota-diferencial",
+    "renta-2025-resultado-declaracion",
+]
+relations = [
+    "renta-2025-rel-130-pagos-fraccionados",
+    "renta-2025-rel-131-pagos-fraccionados",
+]
 
 [[revisions."2025".constructs]]
 id = "renta-dependent-modelos"
@@ -1985,6 +3128,9 @@ id = "renta-payments-retentions"
 title = "Modelo 100 retentions and payments on account"
 legal_refs = [
     "ley-35-2006:art-99",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
     "ley-35-2006:art-30",
     "rd-439-2007:art-109",
     "orden-eha-3127-2009:art-1",
@@ -2008,6 +3154,17 @@ bindings = [
     "renta-2025-modelo-180-retenciones-anuales",
     "renta-2025-modelo-190-retenciones-anuales",
     "renta-2025-modelo-193-retenciones-anuales",
+]
+casillas = [
+    "0153",
+    "0598",
+    "0604",
+    "0609",
+]
+formulas = [
+    "renta-2025-retenciones-arrendamientos-urbanos",
+    "renta-2025-pagos-fraccionados-ingresados",
+    "renta-2025-total-pagos-a-cuenta",
 ]
 relations = [
     "renta-2025-rel-111-retenciones-trimestrales",
@@ -2035,6 +3192,10 @@ dependency_classifications = [
 id = "renta-work-income"
 title = "Modelo 100 work income dependency evidence"
 legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
     "orden-eha-3127-2009:art-1",
@@ -2046,6 +3207,41 @@ source_refs = [
     "boe-modelo-100-2025-form",
     "aeat-dr-100-2025-dictionary",
     "boe-modelo-190-2025-form",
+]
+casillas = [
+    "0003",
+    "0004",
+    "0005",
+    "0006",
+    "0007",
+    "0008",
+    "0024",
+    "0009",
+    "0010",
+    "0011",
+    "0058",
+    "0012",
+    "0013",
+    "0014",
+    "0015",
+    "0016",
+    "0017",
+    "0018",
+    "0019",
+    "0020",
+    "0021",
+    "0022",
+    "0057",
+    "0023",
+    "0025",
+]
+formulas = [
+    "renta-2025-trabajo-especie-importe-integro",
+    "renta-2025-trabajo-total-ingresos-integros-computables",
+    "renta-2025-trabajo-rendimiento-neto-previo",
+    "renta-2025-trabajo-suma-rendimientos-netos-previos",
+    "renta-2025-trabajo-rendimiento-neto",
+    "renta-2025-trabajo-rendimiento-neto-reducido",
 ]
 bindings = ["renta-2025-modelo-111-retenciones-periodicas", "renta-2025-modelo-190-retenciones-anuales"]
 relations = [
@@ -2059,6 +3255,9 @@ dependency_classifications = ["renta-2025-dep-111", "renta-2025-dep-190"]
 id = "renta-real-estate-capital"
 title = "Modelo 100 real-estate capital dependency evidence"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
@@ -2066,6 +3265,43 @@ legal_refs = [
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+casillas = [
+    "0089",
+    "0102",
+    "0104",
+    "0107",
+    "0109",
+    "0110",
+    "0111",
+    "0112",
+    "0113",
+    "0114",
+    "0115",
+    "0116",
+    "0117",
+    "0131",
+    "0132",
+    "0146",
+    "0147",
+    "0148",
+    "0149",
+    "0150",
+    "0151",
+    "0152",
+    "0153",
+    "0154",
+    "0155",
+    "0156",
+    "0598",
+]
+formulas = [
+    "renta-2025-capital-inmobiliario-rendimiento-neto",
+    "renta-2025-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2025-inmobiliario-suma-rentas-imputadas",
+    "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2025-retenciones-arrendamientos-urbanos",
 ]
 bindings = [
     "renta-2025-modelo-115-retenciones-periodicas",
@@ -2081,6 +3317,8 @@ dependency_classifications = ["renta-2025-dep-115", "renta-2025-dep-180"]
 id = "renta-movable-capital"
 title = "Modelo 100 movable-capital dependency evidence"
 legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
     "orden-eha-3377-2011:art-1",
@@ -2089,7 +3327,46 @@ legal_refs = [
 source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
     "boe-modelo-193-2011-form",
+]
+casillas = [
+    "0027",
+    "0028",
+    "0029",
+    "0030",
+    "0031",
+    "0032",
+    "0033",
+    "0034",
+    "0035",
+    "0036",
+    "0037",
+    "0038",
+    "0039",
+    "0040",
+    "0041",
+    "0046",
+    "0047",
+    "0048",
+    "0050",
+    "0051",
+    "0052",
+    "0053",
+    "0054",
+    "0055",
+    "0056",
+    "0060",
+]
+formulas = [
+    "renta-2025-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2025-capital-mobiliario-general-total-ingresos",
+    "renta-2025-capital-mobiliario-general-rendimiento-neto",
+    "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos",
 ]
 bindings = ["renta-2025-modelo-123-retenciones-periodicas", "renta-2025-modelo-193-retenciones-anuales"]
 relations = ["renta-2025-rel-123-retenciones-trimestrales", "renta-2025-rel-193-retenciones-anuales"]
@@ -2379,6 +3656,107 @@ legal_refs = ["ley-35-2006:art-27", "orden-hac-277-2026:art-3"]
 source_refs = ["boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
+id = "0585"
+number = "0585"
+label = "Cuota liquida estatal incrementada"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0586"
+number = "0586"
+label = "Cuota liquida autonomica incrementada"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0587"
+number = "0587"
+label = "Cuota liquida incrementada total"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-cuota-liquida-incrementada-total"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0588"
+number = "0588"
+label = "Deduccion por doble imposicion internacional"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0414"
+number = "0414"
+label = "Deduccion por obtencion de rendimientos del trabajo"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0589"
+number = "0589"
+label = "Deduccion por doble imposicion internacional en transparencia fiscal internacional"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0590"
+number = "0590"
+label = "Deduccion por doble imposicion por imputacion de rentas de derechos de imagen"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0591"
+number = "0591"
+label = "Retenciones no practicadas deducibles de la cuota"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0595"
+number = "0595"
+label = "Cuota resultante de la autoliquidacion"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-cuota-resultante-autoliquidacion"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
 id = "0592"
 number = "0592"
 label = "Por atribucion de retenciones de rendimientos del capital mobiliario"
@@ -2440,9 +3818,10 @@ label = "Por arrendamientos de inmuebles urbanos"
 section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "renta-2025-retenciones-arrendamientos-urbanos"
 legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
-source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
 id = "0599"
@@ -2544,6 +3923,608 @@ input_kind = "computed"
 formula = "renta-2025-total-pagos-a-cuenta"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0610"
+number = "0610"
+label = "Cuota diferencial"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-cuota-diferencial"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0611"
+number = "0611"
+label = "Deduccion por maternidad. Importe de la deduccion"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0612"
+number = "0612"
+label = "Deduccion por maternidad. Abono anticipado"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0613"
+number = "0613"
+label = "Incremento por gastos en guarderias"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0623"
+number = "0623"
+label = "Deduccion por descendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0624"
+number = "0624"
+label = "Abono anticipado por descendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0636"
+number = "0636"
+label = "Deduccion por ascendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0637"
+number = "0637"
+label = "Abono anticipado por ascendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0248"
+number = "0248"
+label = "Deduccion por conyuge con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0249"
+number = "0249"
+label = "Abono anticipado por conyuge con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0660"
+number = "0660"
+label = "Deduccion por familia numerosa"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0661"
+number = "0661"
+label = "Abono anticipado por familia numerosa"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0662"
+number = "0662"
+label = "Deduccion por ascendiente separado legalmente o sin vinculo matrimonial"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0663"
+number = "0663"
+label = "Abono anticipado por ascendiente separado legalmente o sin vinculo matrimonial"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0664"
+number = "0664"
+label = "Regularizacion de abono anticipado de descendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0666"
+number = "0666"
+label = "Regularizacion de abono anticipado de ascendiente con discapacidad"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0669"
+number = "0669"
+label = "Discrepancia de criterio administrativo"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "0670"
+number = "0670"
+label = "Resultado de la declaracion"
+section = ["resultado_declaracion"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "renta-2025-resultado-declaracion"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-incrementada-total"
+target = "0587"
+expression = { op = "sum", args = [
+    { casilla = "0585" },
+    { casilla = "0586" },
+] }
+rounding = "money-2"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuota resultante", "resultado de la declaracion"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-resultante-autoliquidacion"
+target = "0595"
+expression = { op = "sum", args = [
+    { casilla = "0587" },
+    { op = "negate", args = [{ casilla = "0588" }] },
+    { op = "negate", args = [{ casilla = "0414" }] },
+    { op = "negate", args = [{ casilla = "0589" }] },
+    { op = "negate", args = [{ casilla = "0590" }] },
+    { op = "negate", args = [{ casilla = "0591" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuota resultante", "cuota diferencial"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-diferencial"
+target = "0610"
+expression = { op = "subtract", args = [
+    { casilla = "0595" },
+    { casilla = "0609" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuota diferencial", "pagos a cuenta"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-resultado-declaracion"
+target = "0670"
+expression = { op = "sum", args = [
+    { casilla = "0610" },
+    { op = "negate", args = [{ casilla = "0611" }] },
+    { casilla = "0612" },
+    { op = "negate", args = [{ casilla = "0613" }] },
+    { op = "negate", args = [{ casilla = "0623" }] },
+    { casilla = "0624" },
+    { op = "negate", args = [{ casilla = "0636" }] },
+    { casilla = "0637" },
+    { op = "negate", args = [{ casilla = "0248" }] },
+    { casilla = "0249" },
+    { op = "negate", args = [{ casilla = "0660" }] },
+    { casilla = "0661" },
+    { op = "negate", args = [{ casilla = "0662" }] },
+    { casilla = "0663" },
+    { casilla = "0664" },
+    { casilla = "0666" },
+    { casilla = "0669" },
+] }
+rounding = "money-2"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["resultado de la declaracion", "cuota diferencial"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+    { op = "sum", args = [
+        { casilla = "0004" },
+        { casilla = "0005" },
+    ] },
+    { casilla = "0006" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimientos del trabajo en especie", "retribuciones dinerarias"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-total-ingresos-integros-computables"
+target = "0012"
+expression = { op = "sum", args = [
+    { casilla = "0003" },
+    { casilla = "0007" },
+    { casilla = "0008" },
+    { casilla = "0024" },
+    { casilla = "0009" },
+    { casilla = "0010" },
+    { op = "negate", args = [{ casilla = "0011" }] },
+    { op = "negate", args = [{ casilla = "0058" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Total ingresos computables", "rendimientos del trabajo"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+    { casilla = "0012" },
+    { op = "negate", args = [{ casilla = "0013" }] },
+    { op = "negate", args = [{ casilla = "0014" }] },
+    { op = "negate", args = [{ casilla = "0015" }] },
+    { op = "negate", args = [{ casilla = "0016" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimiento neto previo del trabajo", "Cotizaciones a la Seguridad Social"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [
+    { casilla = "0017" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rendimientos del trabajo", "Rendimiento neto previo"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+    { casilla = "0018" },
+    { op = "negate", args = [{ casilla = "0019" }] },
+    { op = "negate", args = [{ casilla = "0020" }] },
+    { op = "negate", args = [{ casilla = "0021" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Otros gastos deducibles", "Incremento para trabajadores activos con discapacidad"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-rendimiento-neto-reducido"
+target = "0025"
+expression = { op = "sum", args = [
+    { casilla = "0022" },
+    { op = "negate", args = [{ casilla = "0057" }] },
+    { op = "negate", args = [{ casilla = "0023" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["por obtencion de rendimientos", "Rendimiento neto reducido del trabajo"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+    { casilla = "0027" },
+    { casilla = "0028" },
+    { casilla = "0029" },
+    { casilla = "0030" },
+    { casilla = "0031" },
+    { casilla = "0032" },
+    { casilla = "0033" },
+    { casilla = "0034" },
+    { casilla = "0035" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimientos a integrar en la base imponible del ahorro", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+    { casilla = "0036" },
+    { casilla = "0037" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["gastos fiscalmente deducibles", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+    { casilla = "0038" },
+    { casilla = "0039" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimiento neto reducido", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [
+    { casilla = "0040" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base imponible del ahorro", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+    { casilla = "0046" },
+    { casilla = "0047" },
+    { casilla = "0048" },
+    { casilla = "0050" },
+    { casilla = "0051" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base imponible general", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+    { casilla = "0052" },
+    { casilla = "0053" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["gastos fiscalmente deducibles", "base imponible general"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+    { casilla = "0054" },
+    { casilla = "0055" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimiento neto reducido", "base imponible general"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [
+    { casilla = "0056" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["base imponible general", "rendimientos del capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+    { casilla = "0102" },
+    { op = "negate", args = [{ casilla = "0104" }] },
+    { op = "negate", args = [{ casilla = "0107" }] },
+    { op = "negate", args = [{ casilla = "0109" }] },
+    { op = "negate", args = [{ casilla = "0110" }] },
+    { op = "negate", args = [{ casilla = "0111" }] },
+    { op = "negate", args = [{ casilla = "0112" }] },
+    { op = "negate", args = [{ casilla = "0113" }] },
+    { op = "negate", args = [{ casilla = "0114" }] },
+    { op = "negate", args = [{ casilla = "0115" }] },
+    { op = "negate", args = [{ casilla = "0116" }] },
+    { op = "negate", args = [{ casilla = "0117" }] },
+    { op = "negate", args = [{ casilla = "0131" }] },
+    { op = "negate", args = [{ casilla = "0132" }] },
+    { op = "negate", args = [{ casilla = "0146" }] },
+    { op = "negate", args = [{ casilla = "0147" }] },
+    { op = "negate", args = [{ casilla = "0148" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rendimientos del capital inmobiliario", "gastos deducibles"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+    { op = "sum", args = [
+        { casilla = "0149" },
+        { op = "negate", args = [{ casilla = "0150" }] },
+        { op = "negate", args = [{ casilla = "0151" }] },
+    ] },
+    { casilla = "0152" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimiento minimo computable"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [
+    { casilla = "0089" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rentas inmobiliarias imputadas", "bienes inmuebles"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [
+    { casilla = "0154" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rendimiento neto reducido del capital inmobiliario", "rendimientos del capital inmobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-retenciones-arrendamientos-urbanos"
+target = "0598"
+expression = { op = "copy", args = [
+    { casilla = "0153" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["retenciones e ingresos a cuenta", "rendimientos del capital inmobiliario"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-estimacion-directa-ingresos-computables"
@@ -2813,6 +4794,138 @@ source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-tax-id"
+source = "profile"
+selector = { profile_key = "tax.id", xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D", dictionary_field = "DPNIF_D" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Comunidad Autónoma de régimen común", "residencia en el ejercicio 2025"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-display-name"
+source = "profile"
+selector = { profile_keys = ["surnames", "name"], format = "surnames_name", xsd_path = "/DatosIdentificativos/Declarante/DP_APENOM_D", dictionary_field = "DP_APENOM_D" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-tax-residence-ccaa"
+source = "profile"
+selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["número de identificación fiscal (NIF)"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-declaration-type"
+source = "profile"
+selector = { profile_key = "declaration.type", xsd_attribute = "TIPOTRIBUTACION", dictionary_field = "TIPOTRIBUTACION" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaración conjunta"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-taxpayer-sex"
+source = "profile"
+selector = { profile_key = "taxpayer.sex", xsd_path = "/DatosIdentificativos/Declarante/SEXO_D", dictionary_field = "SEXO_D" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-marital-status"
+source = "profile"
+selector = { profile_key = "taxpayer.marital_status", xsd_path = "/DatosIdentificativos/Declarante/ECIVIL", dictionary_field = "ECIVIL", valid_at = "2025-12-31" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-taxpayer-birth-date"
+source = "profile"
+selector = { profile_key = "taxpayer.birth_date", xsd_path = "/DatosIdentificativos/Declarante/DPFNAC_D", dictionary_field = "DPFNAC_D", format = "date" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-tax-id"
+source = "profile"
+selector = { profile_key = "spouse.tax.id", xsd_path = "/DatosIdentificativos/Conyuge/DPNIF_C", dictionary_field = "DPNIF_C", required_when_profile_key = "declaration.type", required_when_value = "2" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas", "número de identificación fiscal (NIF) del cónyuge"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-display-name"
+source = "profile"
+selector = { profile_keys = ["spouse.surnames", "spouse.name"], format = "surnames_name", xsd_path = "/DatosIdentificativos/Conyuge/DP_APENOM_C", dictionary_field = "DP_APENOM_C", required_when_profile_key = "declaration.type", required_when_value = "2" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-birth-date"
+source = "profile"
+selector = { profile_key = "spouse.birth_date", xsd_path = "/DatosIdentificativos/Conyuge/DPFNAC_C", dictionary_field = "DPFNAC_C", format = "date", required_when_profile_key = "declaration.type", required_when_value = "2" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-sex"
+source = "profile"
+selector = { profile_key = "spouse.sex", xsd_path = "/DatosIdentificativos/Conyuge/SEXO_C", dictionary_field = "SEXO_C", required_when_profile_key = "declaration.type", required_when_value = "2" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas"]
 
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-111-retenciones-periodicas"

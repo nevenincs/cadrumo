@@ -12,7 +12,6 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
-import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -25,6 +24,9 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
+from .....core.classification import SensitivityClass
+from ....persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....persistence.storage.sql import SecureObjectRepository, dispose_engine
 from . import (
     AEAT_SESSION_IDLE_TTL,
     CERTIFICATE_CONTEXT_MARKER,
@@ -43,6 +45,7 @@ from . import (
     ClaveMovilSessionDetail,
     HandshakeResult,
     LoadedCertificate,
+    _session_store,
     extract_nif_from_subject,
     load_certificate,
     select_provider,
@@ -56,6 +59,18 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
+
+
+@pytest.fixture(autouse=True)
+def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 def _serialise_pkcs12(
@@ -323,10 +338,13 @@ class _RecordingBrowserSession:
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
+        storage_state: dict[str, object] | None = None,
     ) -> _RecordingBrowserContext:
         assert provisioner is not None
         cert = self._resolve_cert(provisioner)
         self.storage_state_paths.append(storage_state_path)
+        if storage_state is not None:
+            self._storage_state = storage_state
         ctx = _RecordingBrowserContext(
             cert,
             recognised=self._cert_ok,
@@ -417,6 +435,7 @@ def _settings_for(
     monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", CertificateBackend.HTTPX_FALLBACK.value)
     monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", verify_url)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(path.parent / ".tokens"))
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(path.parent / 'aeat.db').as_posix()}")
     return Settings()
 
 
@@ -487,10 +506,14 @@ async def test_capture_storage_state_writes_storage_and_metadata(
     captured_path = await auth.capture_storage_state(session)
 
     assert captured_path == storage_state_path
-    assert json.loads(storage_state_path.read_text(encoding="utf-8"))["cookies"][0]["name"] == "AEATSESSID"
-    metadata = json.loads(storage_state_path.with_suffix(".meta.json").read_text(encoding="utf-8"))
+    assert not storage_state_path.exists()
+    assert not storage_state_path.with_suffix(".meta.json").exists()
+    persisted = _session_store.load(storage_state_path)
+    assert persisted is not None
+    assert persisted.storage_state["cookies"][0]["name"] == "AEATSESSID"
+    metadata = persisted.metadata
     assert metadata["certificate_thumbprint"] == cert.sha256_thumbprint
-    assert metadata["storage_state_sha256"]
+    assert metadata["storage_state_sha256"] == persisted.storage_state_sha256
 
 
 @pytest.mark.asyncio
@@ -512,70 +535,110 @@ async def test_resume_from_storage_state_reuses_persisted_session_without_handsh
     assert resumed.certificate_thumbprint == cert.sha256_thumbprint
     assert resumed.storage_state_path == storage_state_path
     assert verifier.calls == 0
-    assert browser_session.storage_state_paths == [storage_state_path]
+    assert browser_session.storage_state_paths == [None]
 
 
 def _invalidate_by_missing_storage(path: Path, _cert: LoadedCertificate) -> None:
-    path.unlink()
+    _session_store.delete(path)
 
 
 def _invalidate_by_invalid_storage_json(path: Path, _cert: LoadedCertificate) -> None:
-    path.write_text("{not-json", encoding="utf-8")
+    _store_raw_session_payload(path, b"{not-json")
 
 
 def _invalidate_by_storage_root_list(path: Path, _cert: LoadedCertificate) -> None:
-    path.write_text("[]", encoding="utf-8")
+    persisted = _load_test_session(path)
+    payload = {
+        "schema_version": 1,
+        "storage_state": [],
+        "metadata": persisted.metadata,
+        "written_at": datetime.now(UTC).isoformat(),
+    }
+    _store_raw_session_payload(path, json.dumps(payload).encode("utf-8"))
 
 
 def _invalidate_by_missing_cookies(path: Path, _cert: LoadedCertificate) -> None:
-    path.write_text('{"origins":[]}', encoding="utf-8")
+    _store_test_session(path, storage_state={"origins": []})
 
 
 def _invalidate_by_missing_origins(path: Path, _cert: LoadedCertificate) -> None:
-    path.write_text('{"cookies":[]}', encoding="utf-8")
+    _store_test_session(path, storage_state={"cookies": []})
 
 
 def _invalidate_by_missing_metadata(path: Path, _cert: LoadedCertificate) -> None:
-    path.with_suffix(".meta.json").unlink()
+    _store_test_session(path, metadata={})
 
 
 def _invalidate_by_malformed_metadata(path: Path, _cert: LoadedCertificate) -> None:
-    path.with_suffix(".meta.json").write_text("{bad-json", encoding="utf-8")
+    persisted = _load_test_session(path)
+    payload = {
+        "schema_version": 1,
+        "storage_state": persisted.storage_state,
+        "metadata": [],
+        "written_at": datetime.now(UTC).isoformat(),
+    }
+    _store_raw_session_payload(path, json.dumps(payload).encode("utf-8"))
 
 
 def _invalidate_by_schema_mismatch(path: Path, _cert: LoadedCertificate) -> None:
-    metadata_path = path.with_suffix(".meta.json")
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata = dict(_load_test_session(path).metadata)
     metadata["schema_version"] = 999
-    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _store_test_session(path, metadata=metadata)
 
 
 def _invalidate_by_hash_mismatch(path: Path, _cert: LoadedCertificate) -> None:
-    metadata_path = path.with_suffix(".meta.json")
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata = dict(_load_test_session(path).metadata)
     metadata["storage_state_sha256"] = "0" * 64
-    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _store_test_session(path, metadata=metadata)
 
 
 def _invalidate_by_expired_idle_deadline(path: Path, _cert: LoadedCertificate) -> None:
-    metadata_path = path.with_suffix(".meta.json")
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata = dict(_load_test_session(path).metadata)
     metadata["idle_deadline"] = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
-    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _store_test_session(path, metadata=metadata)
 
 
 def _invalidate_by_thumbprint_mismatch(path: Path, _cert: LoadedCertificate) -> None:
-    metadata_path = path.with_suffix(".meta.json")
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata = dict(_load_test_session(path).metadata)
     metadata["certificate_thumbprint"] = "f" * 64
-    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _store_test_session(path, metadata=metadata)
 
 
 def _invalidate_by_subject_mismatch(path: Path, _cert: LoadedCertificate) -> None:
-    metadata_path = path.with_suffix(".meta.json")
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata = dict(_load_test_session(path).metadata)
     metadata["certificate_subject"] = "CN=DIFFERENT"
-    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    _store_test_session(path, metadata=metadata)
+
+
+def _load_test_session(path: Path) -> _session_store.PersistedBrowserSession:
+    persisted = _session_store.load(path)
+    assert persisted is not None
+    return persisted
+
+
+def _store_test_session(
+    path: Path,
+    *,
+    storage_state: dict[str, object] | None = None,
+    metadata: dict[str, object] | None = None,
+) -> None:
+    persisted = _load_test_session(path)
+    _session_store.save(
+        path,
+        storage_state=storage_state if storage_state is not None else persisted.storage_state,
+        metadata=metadata if metadata is not None else persisted.metadata,
+    )
+
+
+def _store_raw_session_payload(path: Path, payload: bytes) -> None:
+    SecureObjectRepository().save(
+        namespace=_session_store._SESSION_NAMESPACE,
+        object_key=path.as_posix(),
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=payload,
+    )
 
 
 @pytest.mark.asyncio
@@ -628,6 +691,7 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
             browser_session=cast(BrowserSessionLike, browser_session),
         )
 
+    assert not _session_store.exists(storage_state_path), case_id
     assert not storage_state_path.exists(), case_id
     assert not storage_state_path.with_suffix(".meta.json").exists(), case_id
 
@@ -648,6 +712,7 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
             browser_session=cast(BrowserSessionLike, browser_session),
         )
 
+    assert not _session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
     assert not storage_state_path.with_suffix(".meta.json").exists()
 
@@ -660,23 +725,20 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
     storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
-    storage_state_path.parent.mkdir(parents=True, exist_ok=True)
-    storage_state_path.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
-    stale_metadata_path = storage_state_path.with_suffix(".meta.json")
-    stale_metadata_path.write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "certificate_thumbprint": "stale-thumbprint",
-                "certificate_subject": "CN=STALE",
-                "certificate_nif": "12345678Z",
-                "authenticated_at": datetime.now(UTC).isoformat(),
-                "idle_deadline": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
-                "storage_state_sha256": "0" * 64,
-                "handshake": _successful_handshake().model_dump(mode="json"),
-            }
-        ),
-        encoding="utf-8",
+    stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
+    _session_store.save(
+        storage_state_path,
+        storage_state=stale_storage_state,
+        metadata={
+            "schema_version": 1,
+            "certificate_thumbprint": "stale-thumbprint",
+            "certificate_subject": "CN=STALE",
+            "certificate_nif": "12345678Z",
+            "authenticated_at": datetime.now(UTC).isoformat(),
+            "idle_deadline": (datetime.now(UTC) - timedelta(minutes=1)).isoformat(),
+            "storage_state_sha256": _session_store.storage_state_sha256(stale_storage_state),
+            "handshake": _successful_handshake().model_dump(mode="json"),
+        },
     )
 
     verifier = _HandshakeVerifier()
@@ -688,33 +750,13 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
     assert verifier.calls == 1
     assert session.storage_state_path == storage_state_path
     assert browser_session.storage_state_paths == [None]
-    assert json.loads(storage_state_path.read_text(encoding="utf-8"))["cookies"] == []
-    metadata = json.loads(stale_metadata_path.read_text(encoding="utf-8"))
+    assert not storage_state_path.exists()
+    assert not storage_state_path.with_suffix(".meta.json").exists()
+    persisted = _session_store.load(storage_state_path)
+    assert persisted is not None
+    assert persisted.storage_state["cookies"] == []
+    metadata = persisted.metadata
     assert metadata["certificate_thumbprint"] == auth.load_certificate().sha256_thumbprint
-
-
-def test_restrict_file_permissions_best_effort(tmp_path: Path) -> None:
-    import getpass
-    import subprocess
-
-    path = tmp_path / "permissions.json"
-    path.write_text("{}", encoding="utf-8")
-
-    AeatAuthenticator._restrict_file_permissions(path)
-
-    if os.name == "nt":
-        icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
-        result = subprocess.run(  # noqa: S603 - local ACL inspection against a temp file
-            [str(icacls_path), str(path)],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        assert result.returncode == 0
-        assert getpass.getuser().lower() in result.stdout.lower()
-        return
-
-    assert path.exists()
 
 
 @pytest.mark.asyncio
@@ -769,7 +811,7 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "Kent cert")
+    monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "operator cert")
     settings = _settings_for(bundle_path, monkeypatch)
 
     captured: dict[str, object] = {}
@@ -809,7 +851,7 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     assert captured["path"] == bundle_path
     assert captured["password_env_var"] == "AEAT_CERTIFICATE_PASSWORD_SECRET"
     assert captured["backend"] == CertificateBackend.HTTPX_FALLBACK
-    assert captured["friendly_name"] == "Kent cert"
+    assert captured["friendly_name"] == "operator cert"
 
 
 @pytest.mark.asyncio

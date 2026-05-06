@@ -11,6 +11,9 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 from typer.testing import CliRunner
 
+from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine
 from ....application.auth import (
     AuthProviderKind,
     CorruptAuthSessionError,
@@ -18,6 +21,7 @@ from ....application.auth import (
     load_persisted_session,
     storage_state_paths,
 )
+from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from . import _registry, app
 from ._render import render_status_line
@@ -66,6 +70,7 @@ def isolated_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     # Re-apply English output after the wholesale delenv above so the
     # autouse conftest fixture's intent survives this isolation step.
     monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
@@ -77,8 +82,23 @@ def isolated_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             env_ignore_empty=True,
         )
 
-    monkeypatch.setattr("aeat.entrypoints.cli.auth.Settings", _IsolatedSettings)
+    dispose_engine()
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    monkeypatch.setattr(
+        "aeat.entrypoints.cli.auth.Settings",
+        _IsolatedSettings,
+    )
     return tmp_path
+
+
+@pytest.fixture(autouse=True)
+def _reset_secure_backend():
+    dispose_engine()
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 def _seed_persisted_session(
@@ -89,11 +109,9 @@ def _seed_persisted_session(
     identity_nif: str = "12345678Z",
     provider_kind: AuthProviderKind | None = AuthProviderKind.CERTIFICATE,
 ) -> Path:
-    """Write a concrete storage-state + metadata pair matching the authenticator layout."""
+    """Write an encrypted storage-state + metadata pair matching the authenticator layout."""
     storage = tmp_path / "default-storage.json"
-    storage.write_text(json.dumps({"cookies": [], "origins": []}), encoding="utf-8")
-
-    meta = tmp_path / "default-storage.meta.json"
+    storage_state: dict[str, object] = {"cookies": [], "origins": []}
     payload: dict[str, Any] = {
         "schema_version": 1,
         "certificate_nif": identity_nif,
@@ -118,8 +136,19 @@ def _seed_persisted_session(
             "target_url": "https://sede.agenciatributaria.gob.es/",
             "error_message": None,
         }
-    meta.write_text(json.dumps(payload), encoding="utf-8")
-    return meta
+    _session_store.save(storage, storage_state=storage_state, metadata=payload)
+    return storage
+
+
+def _store_raw_session_payload(path: Path, payload: bytes) -> None:
+    SecureObjectRepository().save(
+        namespace=_session_store._SESSION_NAMESPACE,
+        object_key=path.as_posix(),
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=payload,
+    )
 
 
 # ── list-providers ───────────────────────────────────────────────────────────
@@ -292,7 +321,7 @@ class TestStatus:
         result = _runner.invoke(app, ["status"])
         assert result.exit_code == 0, result.output
         # Status line now renders the registry label (e.g. "Certificate (FNMT)")
-        # rather than the raw enum value so Kent sees the same name the
+        # rather than the raw enum value so operator sees the same name the
         # list-providers table used.
         assert "Active provider: Certificate (FNMT)" in result.output
         assert "12345678Z" in result.output
@@ -340,7 +369,7 @@ class TestStatus:
 
 
 class TestLogout:
-    """`aeat auth logout` deletes storage + metadata and supports --all."""
+    """`aeat auth logout` deletes encrypted session state and supports --all."""
 
     def test_logout_without_session_is_noop(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -356,13 +385,13 @@ class TestLogout:
         )
         settings = _isolated_settings()
         paths = storage_state_paths(settings)
-        assert paths.storage_state.exists()
-        assert paths.metadata.exists()
+        assert _session_store.exists(paths.storage_state)
+        assert not paths.storage_state.exists()
 
         result = _runner.invoke(app, ["logout"])
         assert result.exit_code == 0, result.output
+        assert not _session_store.exists(paths.storage_state)
         assert not paths.storage_state.exists()
-        assert not paths.metadata.exists()
 
     def test_logout_all_iterates_every_registered_kind(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
@@ -376,8 +405,8 @@ class TestLogout:
 
         result = _runner.invoke(app, ["logout", "--all"])
         assert result.exit_code == 0, result.output
+        assert not _session_store.exists(paths.storage_state)
         assert not paths.storage_state.exists()
-        assert not paths.metadata.exists()
 
     def test_logout_json_reports_removed_paths(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
@@ -389,7 +418,7 @@ class TestLogout:
         result = _runner.invoke(app, ["logout", "--json"])
         assert result.exit_code == 0, result.output
         payload = _unwrap_result(result.output)
-        assert len(payload["removed_paths"]) == 2
+        assert len(payload["removed_paths"]) == 1
 
     def test_logout_unsupported_provider_preserves_session(self, isolated_token_dir: Path) -> None:
         now = datetime.now(UTC)
@@ -405,8 +434,8 @@ class TestLogout:
         assert result.exit_code == 2, result.output
         assert "certificate" in result.output
         assert "clave_movil" in result.output
-        assert paths.storage_state.exists()
-        assert paths.metadata.exists()
+        assert _session_store.exists(paths.storage_state)
+        assert not paths.storage_state.exists()
 
     def test_logout_rejects_provider_and_all_together(self, isolated_token_dir: Path) -> None:
         del isolated_token_dir
@@ -415,20 +444,18 @@ class TestLogout:
         assert result.exit_code != 0
         assert "--all" in result.output or "both" in result.output
 
-    def test_logout_provider_with_corrupt_sidecar_still_clears_files(self, isolated_token_dir: Path) -> None:
-        # Write garbage directly at the cert sidecar path — any prior
+    def test_logout_provider_with_corrupt_sidecar_still_clears_session(self, isolated_token_dir: Path) -> None:
+        # Write garbage directly at the encrypted session object — any prior
         # CorruptAuthSessionError during load() must not prevent the
         # deletion; logout is an explicit cleanup command.
         settings = _isolated_settings()
         paths = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
-        paths.storage_state.parent.mkdir(parents=True, exist_ok=True)
-        paths.storage_state.write_text("{}", encoding="utf-8")
-        paths.metadata.write_text("{not valid json", encoding="utf-8")
+        _store_raw_session_payload(paths.storage_state, b"{not valid json")
 
         result = _runner.invoke(app, ["logout", "--provider", "certificate"])
         assert result.exit_code == 0, result.output
+        assert not _session_store.exists(paths.storage_state)
         assert not paths.storage_state.exists()
-        assert not paths.metadata.exists()
 
 
 # ── render ────────────────────────────────────────────────────────────────────
@@ -455,12 +482,12 @@ class TestRender:
 
 
 class TestSessionLoad:
-    """Persisted session loading fails closed when the sidecar is broken."""
+    """Persisted session loading fails closed when encrypted metadata is broken."""
 
     def test_corrupt_metadata_raises(self, isolated_token_dir: Path) -> None:
-        (isolated_token_dir / "default-storage.json").write_text("{}", encoding="utf-8")
-        (isolated_token_dir / "default-storage.meta.json").write_text("not json", encoding="utf-8")
         settings = _isolated_settings()
+        paths = storage_state_paths(settings)
+        _store_raw_session_payload(paths.storage_state, b"not json")
         with pytest.raises(CorruptAuthSessionError):
             load_persisted_session(settings)
 

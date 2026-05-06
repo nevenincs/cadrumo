@@ -87,7 +87,7 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
     assert "ingest error" in result.output.lower()
 
 
-def test_financial_ingest_persist_kent_moment(tmp_path: Path) -> None:
+def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
     """``aeat financial ingest --persist`` writes to the encrypted catalogue and is idempotent."""
 
     from ....adapters.persistence.storage import (

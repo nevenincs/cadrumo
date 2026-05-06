@@ -15,22 +15,37 @@ approval; the live handshake is covered by gated probes elsewhere.
 from __future__ import annotations
 
 import asyncio
-import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from .....core.config import Settings
+from ....persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....persistence.storage.sql.engine import dispose_engine
+from . import _session_store
 from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
     _classify_identity,
-    _ClaveMovilSidecar,
+    _ClaveMovilSessionMetadata,
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 # ── Browser-session stand-ins ────────────────────────────────────────────────
@@ -167,11 +182,12 @@ class _RecordingBrowserSession:
         *,
         provisioner: Any | None = None,
         storage_state_path: Path | None = None,
+        storage_state: dict[str, object] | None = None,
     ) -> _RecordingContext:
         del provisioner
         # Resume paths construct contexts with a storage-state path; those
         # get the authenticated simulation. Fresh-login contexts don't.
-        authenticated = storage_state_path is not None
+        authenticated = storage_state_path is not None or storage_state is not None
         context = _RecordingContext(
             target_path=self._target_path,
             verification_code=self._verification_code,
@@ -190,6 +206,7 @@ def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     for key, value in env.items():
         monkeypatch.setenv(key, value)
 
@@ -255,7 +272,7 @@ class TestDescribe:
 
 
 class TestAuthenticateFresh:
-    def test_qr_flow_writes_sidecar_and_storage_state(
+    def test_qr_flow_writes_encrypted_metadata_and_storage_state(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -274,16 +291,15 @@ class TestAuthenticateFresh:
             assert session.provider_kind == AuthProviderKind.CLAVE_MOVIL
             assert session.identity_nif == "12345678Z"
             assert session.storage_state_path is not None
-            assert session.storage_state_path.exists()
-            sidecar_path = session.storage_state_path.with_suffix(".meta.json")
-            assert sidecar_path.exists()
-            sidecar = _ClaveMovilSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
-            assert sidecar.identity_nif == "12345678Z"
-            assert sidecar.used_non_qr_fallback is False
-            assert sidecar.verification_code == "YLL"
-            # Storage-state sha256 agrees with the actual bytes on disk.
-            digest = hashlib.sha256(session.storage_state_path.read_bytes()).hexdigest()
-            assert sidecar.storage_state_sha256 == digest
+            assert not session.storage_state_path.exists()
+            assert not session.storage_state_path.with_suffix(".meta.json").exists()
+            persisted = _session_store.load(session.storage_state_path)
+            assert persisted is not None
+            metadata = _ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
+            assert metadata.identity_nif == "12345678Z"
+            assert metadata.used_non_qr_fallback is False
+            assert metadata.verification_code == "YLL"
+            assert metadata.storage_state_sha256 == persisted.storage_state_sha256
             # Page observed the expected click sequence.
             assert browser_session.contexts, "a context must have been created"
             page = browser_session.contexts[0].pages[0]
@@ -390,7 +406,7 @@ class TestPostAuthLanding:
 class TestProbePersistedSession:
     """:meth:`ClaveMovilAuthProvider.probe_persisted_session` never touches the fresh-login path."""
 
-    def test_probe_without_sidecar_raises(
+    def test_probe_without_persisted_session_raises(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -407,7 +423,7 @@ class TestProbePersistedSession:
 
         asyncio.run(run())
 
-    def test_probe_uses_existing_sidecar_without_invalidating_on_failure(
+    def test_probe_uses_existing_encrypted_session_without_invalidating_on_failure(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -425,10 +441,11 @@ class TestProbePersistedSession:
         asyncio.run(seed())
 
         storage_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-clave-movil-storage.json"
-        sidecar_path = storage_path.with_suffix(".meta.json")
-        assert storage_path.exists() and sidecar_path.exists()
+        assert _session_store.exists(storage_path)
+        assert not storage_path.exists()
+        assert not storage_path.with_suffix(".meta.json").exists()
 
-        # Probe against a fresh provider instance; session files must survive.
+        # Probe against a fresh provider instance; encrypted session must survive.
         probe_provider = ClaveMovilAuthProvider(settings)
         browser_session_probe = _RecordingBrowserSession(target_path=target_path)
 
@@ -439,13 +456,13 @@ class TestProbePersistedSession:
             await probe_provider.close()
 
         asyncio.run(probe())
-        # Files must still exist after a successful probe.
-        assert storage_path.exists()
-        assert sidecar_path.exists()
+        assert _session_store.exists(storage_path)
+        assert not storage_path.exists()
+        assert not storage_path.with_suffix(".meta.json").exists()
 
 
 class TestResume:
-    def test_resume_from_fresh_sidecar(
+    def test_resume_from_fresh_encrypted_session(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,

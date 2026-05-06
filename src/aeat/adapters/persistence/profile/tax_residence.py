@@ -1,30 +1,31 @@
-"""JSON persistence adapter for the operator tax-residence profile.
+"""Secure persistence adapter for the operator tax-residence profile.
 
-Persists :class:`aeat.domain.profile.KentTaxResidence` as schema-versioned
-UTF-8 JSON under an OS-appropriate config directory, with atomic write
-semantics via :func:`tempfile.mkstemp` and :func:`os.replace`. The default
-location honours :envvar:`AEAT_TAX_RESIDENCE_PROFILE_PATH`,
-:envvar:`APPDATA` (Windows), and :envvar:`XDG_CONFIG_HOME` (POSIX) in that
-order, falling back to ``~/.config/aeat/tax-residence.json``.
+Persists :class:`aeat.domain.profile.TaxResidenceProfile` as IDENTITY-class
+secure objects in the primary database. The path APIs remain as logical
+profile identifiers for callers that choose alternate profile names.
 """
 
 from __future__ import annotations
 
 import contextlib
+import json
 import os
-import tempfile
 from collections.abc import Mapping
-from contextlib import suppress
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from ....domain.profile import KentTaxResidence
+from ....domain.profile import TaxResidenceProfile
 from ....domain.profile._errors import ProfileNotConfiguredError, TaxResidenceProfileError
+from ..storage import SensitivityClass
+from ..storage.sql import SecureObjectRepository
 
 _PROFILE_FILENAME = "tax-residence.json"
 _PROFILE_DIRNAME = "aeat"
 _SCHEMA_VERSION = "1"
+_SECURE_OBJECT_VERSION = 1
+_TAX_RESIDENCE_NAMESPACE = "aeat.persistence.profile.tax_residence"
 
 
 def default_path() -> Path:
@@ -52,7 +53,7 @@ def default_path() -> Path:
 
 
 def load_json(path: Path | None = None) -> dict[str, object] | None:
-    """Load raw profile JSON from ``path``.
+    """Load raw profile JSON from the secure object backend.
 
     Args:
         path: Override for the profile file path; defaults to
@@ -67,15 +68,17 @@ def load_json(path: Path | None = None) -> dict[str, object] | None:
             carries an unsupported schema version.
     """
 
-    target = path or default_path()
-    if not target.exists():
-        return None
+    target = _logical_path(path)
     try:
-        import json
-
-        payload = json.loads(target.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise TaxResidenceProfileError(f"could not read tax-residence profile: {target}") from exc
+        record = SecureObjectRepository().load(
+            _TAX_RESIDENCE_NAMESPACE,
+            _object_key(target),
+            expected_class=SensitivityClass.IDENTITY,
+            max_supported_version=_SECURE_OBJECT_VERSION,
+        )
+        if record is None:
+            return None
+        payload = json.loads(record.payload.decode("utf-8"))
     except ValueError as exc:
         raise TaxResidenceProfileError(f"invalid tax-residence profile JSON: {target}") from exc
     if not isinstance(payload, dict):
@@ -89,11 +92,7 @@ def load_json(path: Path | None = None) -> dict[str, object] | None:
 
 
 def save_json(payload: Mapping[str, object], path: Path | None = None) -> None:
-    """Atomically persist ``payload`` as pretty-printed UTF-8 JSON.
-
-    Writes through a sibling tempfile + :func:`os.replace` so a partial
-    write never leaves a corrupt profile file in place. The temp file is
-    cleaned up on serialization failure.
+    """Persist ``payload`` as an IDENTITY-class secure object.
 
     Args:
         payload: Mapping to serialize.
@@ -105,38 +104,23 @@ def save_json(payload: Mapping[str, object], path: Path | None = None) -> None:
             payload cannot be serialized or the file cannot be written.
     """
 
-    target = path or default_path()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    fd = -1
-    raw_temp_path: str | None = None
+    target = _logical_path(path)
     try:
-        import json
-
-        fd, raw_temp_path = tempfile.mkstemp(
-            prefix=f".{target.name}.",
-            suffix=".tmp",
-            dir=target.parent,
-            text=True,
+        data = json.dumps(dict(payload), ensure_ascii=False, sort_keys=True).encode("utf-8")
+        SecureObjectRepository().save(
+            namespace=_TAX_RESIDENCE_NAMESPACE,
+            object_key=_object_key(target),
+            classification=SensitivityClass.IDENTITY,
+            schema_version=_SECURE_OBJECT_VERSION,
+            written_at=datetime.now(UTC),
+            payload=data,
         )
-        temp_path = Path(raw_temp_path)
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            fd = -1
-            json.dump(dict(payload), handle, ensure_ascii=False, indent=2, sort_keys=True)
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp_path, target)
     except (OSError, TypeError, ValueError, ValidationError) as exc:
-        if fd >= 0:
-            os.close(fd)
-        if raw_temp_path is not None:
-            with suppress(OSError):
-                os.unlink(raw_temp_path)
         raise TaxResidenceProfileError(f"could not write tax-residence profile: {target}") from exc
 
 
 def clear_json(path: Path | None = None) -> None:
-    """Remove the tax-residence profile file when present.
+    """Remove the tax-residence profile object when present.
 
     Args:
         path: Override for the profile file path; defaults to
@@ -147,14 +131,14 @@ def clear_json(path: Path | None = None) -> None:
             file exists but cannot be removed.
     """
 
-    target = path or default_path()
+    target = _logical_path(path)
     try:
-        target.unlink(missing_ok=True)
+        SecureObjectRepository().delete(_TAX_RESIDENCE_NAMESPACE, _object_key(target))
     except OSError as exc:
         raise TaxResidenceProfileError(f"could not remove tax-residence profile: {target}") from exc
 
 
-def load_tax_residence(path: object | None = None) -> KentTaxResidence | None:
+def load_tax_residence(path: object | None = None) -> TaxResidenceProfile | None:
     """Load the operator's tax-residence profile.
 
     Args:
@@ -162,7 +146,7 @@ def load_tax_residence(path: object | None = None) -> KentTaxResidence | None:
             :func:`_coerce_path`.
 
     Returns:
-        Validated :class:`aeat.domain.profile.KentTaxResidence`, or ``None``
+        Validated :class:`aeat.domain.profile.TaxResidenceProfile`, or ``None``
         when no profile file exists.
 
     Raises:
@@ -174,19 +158,19 @@ def load_tax_residence(path: object | None = None) -> KentTaxResidence | None:
     if payload is None:
         return None
     try:
-        return KentTaxResidence.model_validate(payload)
+        return TaxResidenceProfile.model_validate(payload)
     except ValidationError as exc:
         raise TaxResidenceProfileError("invalid tax-residence profile content") from exc
 
 
-def require_tax_residence(path: object | None = None) -> KentTaxResidence:
+def require_tax_residence(path: object | None = None) -> TaxResidenceProfile:
     """Load the operator's tax-residence profile or raise a REFUSED error.
 
     Args:
         path: Override for the profile file path.
 
     Returns:
-        Validated :class:`aeat.domain.profile.KentTaxResidence`.
+        Validated :class:`aeat.domain.profile.TaxResidenceProfile`.
 
     Raises:
         :exc:`aeat.domain.profile._errors.ProfileNotConfiguredError`: When
@@ -201,7 +185,7 @@ def require_tax_residence(path: object | None = None) -> KentTaxResidence:
     return residence
 
 
-def save_tax_residence(residence: KentTaxResidence, path: object | None = None) -> None:
+def save_tax_residence(residence: TaxResidenceProfile, path: object | None = None) -> None:
     """Persist ``residence`` as schema-versioned JSON.
 
     Args:
@@ -235,6 +219,14 @@ def _coerce_path(path: object | None):
     if isinstance(path, str):
         return Path(path)
     return path
+
+
+def _logical_path(path: Path | None) -> Path:
+    return path or default_path()
+
+
+def _object_key(path: Path) -> str:
+    return Path(path).expanduser().as_posix()
 
 
 def _default_path(environ: Mapping[str, str], os_name: str) -> Path:

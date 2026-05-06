@@ -8,12 +8,15 @@ would otherwise hit Google APIs.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 from pydantic_settings import SettingsConfigDict
 
+from ....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ....adapters.persistence.storage.sql import dispose_engine
 from ....core.config import Settings
 from . import (
     ADC_LOGIN_SCOPE_CSV,
@@ -27,6 +30,7 @@ from . import (
     SHEETS_SCOPE,
     USERINFO_EMAIL_SCOPE,
     GoogleAuthPath,
+    _write_oauth_token_cache,
     assert_credentials_have_scopes,
     inspect_google_auth,
     inspect_oauth_token_cache,
@@ -35,6 +39,18 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _OAUTH_CLIENT_SECRET = "client-secret"  # noqa: S105 - test-only placeholder
+
+
+@pytest.fixture(autouse=True)
+def _secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 @dataclass
@@ -182,14 +198,14 @@ class TestInspectOauthTokenCache:
 
     def test_missing_required_scope_is_reported(self, tmp_path: Path) -> None:
         token_path = tmp_path / "google_oauth_token.json"
-        token_path.write_text(
+        _write_oauth_token_cache(
+            token_path,
             (
                 '{"refresh_token": "refresh", "scopes": ['
                 '"https://www.googleapis.com/auth/drive",'
                 '"https://www.googleapis.com/auth/spreadsheets"'
                 "]}"
             ),
-            encoding="utf-8",
         )
 
         issue = inspect_oauth_token_cache(token_path)

@@ -86,7 +86,7 @@ class ModelProfile:
 # observable failure mode at ``LOW`` is schema drift (the model returns
 # prose instead of JSON, or picks a classification outside the allow-list)
 # on more than a handful of transactions per batch, which defeats the
-# confidence filter Kent relies on downstream.
+# confidence filter operator relies on downstream.
 MINIMUM_CLASSIFICATION_TIER: ModelTier = ModelTier.MEDIUM
 """Minimum :class:`ModelTier` permitted for the classification pipeline.
 
@@ -99,7 +99,7 @@ on."""
 
 # Per-provider catalogue of known models. Keep the list tight and prefer
 # the current default over exhaustive historical IDs — this is a floor
-# for Kent's choices, not an archive.
+# for operator's choices, not an archive.
 #
 # Tier placement rationale (2026-04):
 # - claude-haiku, gemini-flash, gpt-4o-mini: fast/cheap, ~LOW.

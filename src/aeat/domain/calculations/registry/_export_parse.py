@@ -262,6 +262,18 @@ def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes,
         raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
         if _parse_field_value(field, raw) != field.literal:
             return False
+    if record.discriminator is not None:
+        slice_start = record.discriminator.offset - 1
+        slice_end = slice_start + record.discriminator.length
+        discriminator_bytes = record_text[slice_start:slice_end]
+        if len(discriminator_bytes) != record.discriminator.length:
+            return False
+        is_blank = all(char == " " for char in discriminator_bytes)
+        if record.discriminator.requires == "blank" and not is_blank:
+            return False
+        # A discriminator is itself a record-identifying signal even when no
+        # literal prefix is present.
+        return not (record.discriminator.requires == "non_blank" and is_blank)
     return matched_literal
 
 

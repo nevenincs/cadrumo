@@ -57,7 +57,7 @@ def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, 
         if revision_to is None:
             revision_to = 2999
         return revision_from <= year_to and year_from <= revision_to
-    return False
+    return isinstance(selector.get("filing_year_delta"), int)
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:

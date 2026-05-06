@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr  # noqa: N813
 
@@ -42,6 +42,8 @@ class ProfileKey(BaseModel):
     key: str = Field(min_length=1, max_length=128)
     requirement: ProfileKeyRequirement
     description: tr
+    required_when_key: str | None = None
+    required_when_value: str | None = None
 
     @field_validator("key")
     @classmethod
@@ -54,6 +56,33 @@ class ProfileKey(BaseModel):
             raise ValueError("key must not be padded with whitespace")
         return trimmed
 
+    @field_validator("description")
+    @classmethod
+    def _validate_description_key(cls, value: tr) -> tr:
+        """Require profile-owned translation keys for authoritative descriptions."""
+        if not value.strip():
+            raise ValueError("description must not be empty")
+        if not str(value).startswith("profile."):
+            raise ValueError("description must use a profile translation key")
+        return value
+
+    @field_validator("required_when_key", "required_when_value")
+    @classmethod
+    def _validate_conditional_requirement(cls, value: str | None) -> str | None:
+        if value is not None and value.strip() != value:
+            raise ValueError("conditional requirement fields must not be padded")
+        if value == "":
+            raise ValueError("conditional requirement fields must not be empty")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_conditional_requirement_pair(self) -> ProfileKey:
+        has_key = self.required_when_key is not None
+        has_value = self.required_when_value is not None
+        if has_key != has_value:
+            raise ValueError("required_when_key and required_when_value must be set together")
+        return self
+
 
 def _key(
     *,
@@ -63,12 +92,16 @@ def _key(
     en: str,
     ca: str,
     hu: str,
+    required_when_key: str | None = None,
+    required_when_value: str | None = None,
 ) -> ProfileKey:
     """Construct a :class:`ProfileKey` with a multilingual description."""
     return ProfileKey(
         key=key,
         requirement=requirement,
         description=tr(f"profile.key.{key}"),
+        required_when_key=required_when_key,
+        required_when_value=required_when_value,
     )
 
 
@@ -120,6 +153,80 @@ PROFILE_KEYS: tuple[ProfileKey, ...] = (
         en="Declaration type for export headers.",
         ca="Tipus de declaració per a les capçaleres d'exportació.",
         hu="Bevallás-típus az exportfejlécekhez.",
+    ),
+    _key(
+        key="taxpayer.sex",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Sexo del primer declarante según el diseño oficial del Modelo 100.",
+        en="First taxpayer sex according to the official Modelo 100 design.",
+        ca="Sexe del primer declarant segons el disseny oficial del Modelo 100.",
+        hu="Az első adózó neme a hivatalos Modelo 100 szerkezet szerint.",
+    ),
+    _key(
+        key="taxpayer.marital_status",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Estado civil del primer declarante a 31 de diciembre del ejercicio.",
+        en="First taxpayer marital status on 31 December of the tax year.",
+        ca="Estat civil del primer declarant a 31 de desembre de l'exercici.",
+        hu="Az első adózó családi állapota az adóév december 31-én.",
+    ),
+    _key(
+        key="taxpayer.birth_date",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Fecha de nacimiento del primer declarante para Modelo 100.",
+        en="First taxpayer birth date for Modelo 100.",
+        ca="Data de naixement del primer declarant per al Modelo 100.",
+        hu="Az első adózó születési dátuma a Modelo 100-hoz.",
+    ),
+    _key(
+        key="spouse.tax.id",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="NIF/NIE del cónyuge cuando la declaración conjunta lo requiere.",
+        en="Spouse NIF/NIE when joint taxation requires it.",
+        ca="NIF/NIE del cònjuge quan la declaració conjunta ho requereix.",
+        hu="A házastárs NIF/NIE azonosítója, ha a közös bevallás megköveteli.",
+        required_when_key="declaration.type",
+        required_when_value="2",
+    ),
+    _key(
+        key="spouse.name",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Nombre del cónyuge para los datos identificativos de Modelo 100.",
+        en="Spouse given name for Modelo 100 identity data.",
+        ca="Nom del cònjuge per a les dades identificatives del Modelo 100.",
+        hu="A házastárs keresztneve a Modelo 100 azonosító adataihoz.",
+        required_when_key="declaration.type",
+        required_when_value="2",
+    ),
+    _key(
+        key="spouse.surnames",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Apellidos del cónyuge para los datos identificativos de Modelo 100.",
+        en="Spouse surnames for Modelo 100 identity data.",
+        ca="Cognoms del cònjuge per a les dades identificatives del Modelo 100.",
+        hu="A házastárs vezetéknevei a Modelo 100 azonosító adataihoz.",
+        required_when_key="declaration.type",
+        required_when_value="2",
+    ),
+    _key(
+        key="spouse.birth_date",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Fecha de nacimiento del cónyuge para Modelo 100.",
+        en="Spouse birth date for Modelo 100.",
+        ca="Data de naixement del cònjuge per al Modelo 100.",
+        hu="A házastárs születési dátuma a Modelo 100-hoz.",
+        required_when_key="declaration.type",
+        required_when_value="2",
+    ),
+    _key(
+        key="spouse.sex",
+        requirement=ProfileKeyRequirement.OPTIONAL,
+        es="Sexo del cónyuge según el diseño oficial del Modelo 100.",
+        en="Spouse sex according to the official Modelo 100 design.",
+        ca="Sexe del cònjuge segons el disseny oficial del Modelo 100.",
+        hu="A házastárs neme a hivatalos Modelo 100 szerkezet szerint.",
+        required_when_key="declaration.type",
+        required_when_value="2",
     ),
 )
 """Closed registry of editable taxpayer-profile keys."""

@@ -134,7 +134,7 @@ def _modelo_100_renta_parity_scenario() -> ParityScenario:
                 _input("0594", 3, "A15"),
                 _input("0596", 4, "A16"),
                 _input("0597", 5, "A17"),
-                _input("0598", 6, "A18"),
+                _input("0153", 6, "A18"),
                 _input("0599", 7, "A19"),
                 _input("0600", 8, "A20"),
                 _input("0601", 9, "A21"),

@@ -21,6 +21,8 @@ from ...adapters.persistence.storage import (
     override_secret_store,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain._identifiers import ModeloIdentifier
 from ._history_models import FilingHistory, FilingHistoryEntry
 from ._history_repository import FilingHistoryRepository
@@ -48,7 +50,9 @@ def store_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -66,6 +70,11 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -73,9 +82,9 @@ class TestEmptyState:
         repo = FilingHistoryRepository(store_dir=store_dir)
         assert repo.load("130") is None
 
-    def test_envelope_path_under_store_dir(self, store_dir: Path) -> None:
+    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
         repo = FilingHistoryRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("130") == store_dir / "130.envelope.json"
+        assert repo.envelope_path_for("130").as_posix().endswith("aeat.application.filing.history/130")
 
 
 class TestSaveLoad:
@@ -124,17 +133,18 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_envelope_records_audit_class(self, store_dir: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
         repo = FilingHistoryRepository(store_dir=store_dir)
         repo.save("130", _make_history(modelo="130"))
-        text = repo.envelope_path_for("130").read_text(encoding="utf-8")
-        assert '"classification":"audit"' in text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert b"2026Q1" not in raw
+        assert b"ACCEPTED" not in raw
+        assert b"130" not in raw
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from ...adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         history = _make_history(modelo="130")
         bad = Envelope[FilingHistory](
             schema_version=1,
@@ -143,11 +153,13 @@ class TestClassificationGate:
             payload=history,
         )
         repo = FilingHistoryRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for("130"),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.application.filing.history.v1",
+        SecureObjectRepository().save(
+            namespace="aeat.application.filing.history",
+            object_key="130",
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load("130")
