@@ -40,10 +40,10 @@ legal_refs = ["orden-eha-3434-2007:art-1"]
 source_refs = ["aeat-dr-322-2026"]
 
 # -----------------------------------------------------------------------------
-# Demonstrator ledger_iva_aggregation bindings — same pattern as Modelo 303
-# applied to Modelo 322 (IVA grupos individual mensual). Each binding selects
-# substrate-classified ledger lines for the IVA flow (repercutido / soportado /
-# autorepercutido) for the individual group member's cuota.
+# Ledger IVA aggregation bindings for the individual monthly group-entity
+# settlement. Each binding selects substrate-classified ledger lines for the
+# IVA flow (repercutido / soportado / autorepercutido) for the individual group
+# member's cuota.
 # -----------------------------------------------------------------------------
 
 [[revisions."2008-y-siguientes".bindings]]

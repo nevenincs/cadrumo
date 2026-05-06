@@ -39,9 +39,9 @@ tolerance = "0.00"
 legal_refs = ["orden-eha-3434-2007:art-2"]
 source_refs = ["aeat-dr-353-2026"]
 
-# Demonstrator ledger_iva_aggregation bindings for the aggregated group
-# declaration. The dominant entity files Modelo 353 with the consolidated
-# IVA totals across all member entities; same flow taxonomy as 303/322.
+# Ledger IVA aggregation bindings for the aggregated group declaration. The
+# dominant entity files Modelo 353 with the consolidated IVA totals across all
+# member entities.
 
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-353-iva-repercutido-general-cuota"
