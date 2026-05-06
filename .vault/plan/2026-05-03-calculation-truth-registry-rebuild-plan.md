@@ -5301,3 +5301,22 @@ classification (VATCategory + VATRateKind + IvaFlowDirection +
 fact) flows through five different modelos with five different
 filing contexts and resolves correctly against the same
 IvaLedgerObservation record shape.
+
+- [x] Modelo 303 result-casillas + Modelo 390 cross-modelo
+  previous_filing dependency. Closes the 390 <- 303 reconciliation
+  chain: 5 bound casillas exposing the IVA aggregation bindings as
+  casilla values, 3 computed result-casillas via formulas
+  (iva.cuota-devengada-total = sum of 3 repercutido +
+  autorepercutido; iva.cuota-deducible-total = soportado +
+  autorepercutido; iva.resultado-regimen-general = devengada -
+  deducible) all anchored to LIVA arts 88/92/84 + EHA/3786/2008.
+  Modelo 390 declares 3 previous_filing bindings with
+  source_periods=[1T,2T,3T,4T] aggregating each 303 result-casilla
+  across the four quarters via op=sum — the first cross-modelo
+  previous_filing dependency in the IVA registry. End-to-end
+  smoke verified: 1T snapshot with substrate-classified
+  IvaLedgerObservation inputs flows through bindings -> bound
+  casillas -> formulas -> 348/147/201 result triple. New
+  modelo-303-calculation application link added so the validator's
+  "formulas require a calculation application link" gate fires.
+  Commit `fae6c6b2`.
