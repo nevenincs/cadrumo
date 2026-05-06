@@ -9,6 +9,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...vat import (
+    EUMemberState,
+    InvoiceDirection,
+    OssIossRegime,
+    TransactionKind,
+    VATRateKind,
+)
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -18,6 +25,7 @@ __all__ = [
     "DataBindingDefinition",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
+    "OssIossLedgerObservation",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
     "invoice_binding_requirements",
@@ -25,8 +33,10 @@ __all__ = [
     "resolve_bound_casilla_inputs",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_ledger_oss_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "validate_invoice_binding_definition",
+    "validate_ledger_oss_aggregation_binding_definition",
 ]
 
 _InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
@@ -767,3 +777,174 @@ def _aggregate_invoice_binding(
             total += observation.base_amount - previous
         return total
     raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+
+
+
+# ---------------------------------------------------------------------------
+# Ledger OSS / IOSS aggregation source bindings (Modelo 369 ADR Decision 8).
+#
+# These bindings aggregate ledger lines whose VAT classification matches a
+# regime + destination Member State + rate tier + invoice direction selector.
+# The classification axes come from :mod:`aeat.domain.vat`; the binding source
+# is the registry's first ledger-driven aggregation kind, established as the
+# precondition for the Modelo 369 registry slices per the centralization ADR.
+#
+# The selector keys are validated against the substrate's closed enums at
+# binding-definition time; the runtime resolver then consumes
+# :class:`OssIossLedgerObservation` instances (per-line ledger facts already
+# tagged with the substrate classification) and returns the aggregated value.
+# ---------------------------------------------------------------------------
+
+
+class OssIossLedgerObservation(BaseModel):
+    """One factual ledger line tagged with substrate-grounded classification.
+
+    Modelo 369 binding selectors filter these observations by the four
+    classification axes (regime, destination Member State, rate tier,
+    invoice direction) plus the optional transaction kind set; the
+    runtime aggregates the matched lines through the binding's
+    aggregation operator.
+
+    Attributes:
+        ledger_id: Stable id of the source ledger line.
+        transaction_date: When the supply takes place.
+        regime: OSS / IOSS Esquema the line is filed under.
+        destination_member_state: Member State of consumption (the
+            destination MS for the supply, which determines the
+            applicable VAT rate per the OSS / IOSS rules).
+        rate_kind: Substrate rate tier (general / reduced / etc.).
+        invoice_direction: Whether the autónomo issued or received
+            the invoice.
+        transaction_kind: Substrate :class:`aeat.domain.vat.TransactionKind`
+            the line resolves to.
+        base_amount: Taxable base in EUR.
+        iva_amount: VAT amount in EUR (already applied at the
+            destination MS rate per OSS / IOSS rules).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    ledger_id: str = Field(min_length=1, max_length=128)
+    transaction_date: date
+    regime: OssIossRegime
+    destination_member_state: EUMemberState
+    rate_kind: VATRateKind
+    invoice_direction: InvoiceDirection
+    transaction_kind: TransactionKind
+    base_amount: Decimal
+    iva_amount: Decimal
+
+
+class _OssIossLedgerSelector(BaseModel):
+    """Validated form of a ledger_oss_aggregation binding selector.
+
+    The selector is expressed in TOML as a mapping of string-valued
+    keys (the registry binding selector contract); this record coerces
+    those strings into substrate enum members at validation time so
+    downstream consumers see typed values.
+    """
+
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+
+    regime: OssIossRegime
+    destination_member_state: EUMemberState
+    rate_kind: VATRateKind
+    invoice_direction: InvoiceDirection
+    transaction_kinds: tuple[TransactionKind, ...] = Field(min_length=1)
+    fact: Literal["iva_amount_sum", "base_amount_sum"] = "iva_amount_sum"
+
+    @field_validator("transaction_kinds", mode="after")
+    @classmethod
+    def _kinds_unique(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("transaction_kinds entries must be unique")
+        return value
+
+
+def _ledger_oss_selector(binding: DataBindingDefinition) -> _OssIossLedgerSelector:
+    """Validate and parse a binding selector into a typed OSS / IOSS selector."""
+    try:
+        return _OssIossLedgerSelector.model_validate(dict(binding.selector))
+    except (ValueError, TypeError) as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed ledger_oss_aggregation selector"
+        ) from exc
+
+
+def validate_ledger_oss_aggregation_binding_definition(
+    binding: DataBindingDefinition,
+) -> None:
+    """Validate a ``ledger_oss_aggregation`` binding's selector and aggregation.
+
+    Raises:
+        RegistryValidationError: If the selector is malformed (unknown
+            regime / member state / rate kind / invoice direction /
+            transaction kind), or if the aggregation operator is
+            inconsistent with the declared fact.
+    """
+    if binding.source != "ledger_oss_aggregation":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not a ledger_oss_aggregation source"
+        )
+    selector = _ledger_oss_selector(binding)
+
+    if binding.aggregation is not None:
+        op = str(binding.aggregation.get("op", "sum"))
+        if op != "sum":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} ledger_oss_aggregation supports only "
+                f"aggregation op 'sum', got {op!r}"
+            )
+
+    if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_oss_aggregation supports only "
+            f"facts {{iva_amount_sum, base_amount_sum}}, got {selector.fact!r}"
+        )
+
+
+def resolve_ledger_oss_aggregation_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[OssIossLedgerObservation],
+) -> dict[str, Decimal]:
+    """Resolve every ``ledger_oss_aggregation`` binding on ``revision``.
+
+    For each binding, observations are filtered by the four
+    classification axes plus the transaction-kind set; matched
+    observations are aggregated through the binding's declared fact
+    (``iva_amount_sum`` defaults; ``base_amount_sum`` selects the base).
+    The resolver is deterministic and side-effect-free.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings to resolve.
+        observations: Iterable of substrate-classified ledger lines.
+
+    Returns:
+        Mapping of binding id to the aggregated Decimal value. Empty
+        match sets resolve to ``Decimal("0")``.
+
+    Raises:
+        RegistryValidationError: If any selector is malformed.
+    """
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "ledger_oss_aggregation":
+            continue
+        selector = _ledger_oss_selector(binding)
+        kinds = set(selector.transaction_kinds)
+        matched = [
+            observation
+            for observation in available
+            if observation.regime is selector.regime
+            and observation.destination_member_state is selector.destination_member_state
+            and observation.rate_kind is selector.rate_kind
+            and observation.invoice_direction is selector.invoice_direction
+            and observation.transaction_kind in kinds
+        ]
+        if selector.fact == "iva_amount_sum":
+            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
+        else:
+            total = sum((observation.base_amount for observation in matched), Decimal("0"))
+        resolved[binding.id] = total
+    return resolved

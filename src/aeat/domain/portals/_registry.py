@@ -11,6 +11,7 @@ import.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import cache
 from types import MappingProxyType
 
 from ...core.logging import get_logger
@@ -195,6 +196,11 @@ def _finalise_registry(
 PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
 
 
+@cache
+def _registry_authority() -> ValidatedRegistryAuthority:
+    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+
+
 def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
     """Resolve registry application consumers that identify portal dispatch entries."""
 
@@ -250,9 +256,8 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
     """Return portal ids bound to ``code`` by validated registry data."""
 
     try:
-        authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
         try:
-            modelo = authority.validate_modelo(str(code))
+            modelo = _registry_authority().validate_modelo(str(code))
         except RegistrySnapshotError:
             return frozenset()
         bound: set[Portal] = set()

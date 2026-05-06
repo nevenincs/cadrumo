@@ -41,11 +41,13 @@ from ._errors import (
 from ._models import (
     AutonomoProfile,
     FilingEnrollment,
+    FilingIVAProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
 )
+from ._profiles import autonomo_profile_from_mapping
 from ._protocols import ModeloIdentifier
 
 __all__ = [
@@ -53,6 +55,7 @@ __all__ = [
     "DeadlineEngine",
     "DeadlineError",
     "FilingEnrollment",
+    "FilingIVAProfile",
     "FilingObligation",
     "IVARegime",
     "ModeloIdentifier",
@@ -61,6 +64,7 @@ __all__ = [
     "Schedule",
     "ScheduleComputationError",
     "applies_to",
+    "autonomo_profile_from_mapping",
     "explain",
     "next_deadline",
 ]

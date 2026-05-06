@@ -75,6 +75,14 @@ class FilingEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
+class FilingIVAProfile(BaseModel):
+    """IVA facts used by registry filing schedules."""
+
+    model_config = _STRICT_FROZEN
+
+    intracommunity_operations_exceed_50000_eur: bool = False
+
+
 class AutonomoProfile(BaseModel):
     """The profile of a Spanish autónomo for filing-deadline computation.
 
@@ -101,6 +109,7 @@ class AutonomoProfile(BaseModel):
             threshold during the prior year.
         bienes_extranjero_above_threshold: Whether the autónomo holds
             bienes en el extranjero above the legal threshold.
+        iva: IVA-specific filing facts that can change filing cadence.
         enrollment: AEAT enrollment facts that can change filing cadence.
         notes: Free-form notes for the user. Never consumed by the
             engine.
@@ -119,6 +128,7 @@ class AutonomoProfile(BaseModel):
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
+    iva: FilingIVAProfile = Field(default_factory=FilingIVAProfile)
     enrollment: FilingEnrollment = Field(default_factory=FilingEnrollment)
     notes: str = ""
 

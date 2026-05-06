@@ -13,7 +13,7 @@ import typer
 
 from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
-from ...domain.deadlines import AutonomoProfile, IVARegime
+from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
@@ -141,11 +141,7 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
 
 def _profile_to_autonomo(state: UserCliState) -> AutonomoProfile:
     record = state.active_profile_record()
-    tax_id = record.values.get("tax.id", "00000000T") if record else "00000000T"
-    return AutonomoProfile(
-        tax_id=tax_id or "00000000T",
-        iva_regime=IVARegime.GENERAL,
-    )
+    return autonomo_profile_from_mapping(record.values if record else {}, tax_id_default="00000000T")
 
 
 # ---------------------------------------------------------------------

@@ -25,10 +25,6 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
-    clave_permanente_description: Autenticación con usuario, contraseña reforzada
-      y código SMS de Cl@ve Permanente. No está disponible en esta instalación; ``configure``
-      y ``login`` se rechazan.
-    clave_permanente_label: Cl@ve Permanente
 categories:
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
@@ -66,61 +62,6 @@ cli:
       o factura)
     show_help: Mostrar los detalles y metadatos de un justificante
     show_id_help: Identificador del justificante a mostrar
-  auth:
-    app_help: Gestión de autenticación y credenciales
-    configure:
-      dni_fecha_help: Fecha de validez o expedición del DNI (YYYY-MM-DD)
-      dni_nie_help: Número de DNI o NIE del contribuyente
-      help: Configurar las credenciales y parámetros de autenticación localmente
-      nie_soporte_help: Número de soporte del NIE
-      non_interactive_help: Ejecutar la configuración en modo no interactivo (sin
-        pedir confirmación)
-      prefer_non_qr_help: Preferir el método sin código QR (usando DNI/NIE) para Cl@ve
-        Móvil
-      provider_help: Proveedor de autenticación (ej. certificado, clave_movil)
-      set_default_help: Establecer este proveedor como el método de autenticación
-        por defecto
-    list_providers:
-      all_help: Listar todos los proveedores compatibles, no solo los configurados
-      configured_help: Listar los proveedores de autenticación configurados
-      help: Listar los proveedores de autenticación disponibles y su estado
-      json_help: Mostrar la lista de proveedores en formato JSON
-    login:
-      help: Iniciar sesión en la Sede Electrónica de la AEAT
-      json_help: Mostrar el resultado del inicio de sesión en formato JSON
-      non_interactive_help: Intentar el inicio de sesión sin intervención humana (requiere
-        certificado configurado)
-      provider_help: Proveedor de autenticación a utilizar (ej. certificado, clave_movil)
-    logout:
-      all_help: Cerrar todas las sesiones activas
-      help: Cerrar la sesión actual en la AEAT
-      json_output_help: Mostrar el resultado del cierre de sesión en formato JSON
-      provider_help: Proveedor de autenticación a cerrar (ej. certificado, clave_movil)
-    status:
-      help: Mostrar el estado actual de la autenticación en la AEAT
-      json_help: Mostrar el estado de la autenticación en formato JSON
-      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
-    whoami:
-      help: Mostrar información detallada del sujeto autenticado actualmente
-      json_help: Mostrar la información del sujeto en formato JSON
-      provider_help: Proveedor de autenticación a consultar (ej. certificado, clave_movil)
-  bootstrap:
-    errors:
-      already_bootstrapped: El entorno ya ha sido inicializado (bootstrapped)
-      destructive_warning: ¡ADVERTENCIA! Esta operación puede ser destructiva y sobrescribir
-        recursos existentes
-      force_instruction: Use el flag --force para proceder si está seguro
-      missing_env: Faltan variables de entorno requeridas para la inicialización
-      missing_target: No se ha especificado el objetivo (target) para la inicialización
-      target_instruction: Por favor, especifique un objetivo válido usando --target
-    labels:
-      active_env: Entorno activo
-      active_target: Objetivo activo
-      auth_method: Método de autenticación
-      auth_path: Ruta de autenticación
-      mcp_status: Estado de MCP
-    success:
-      complete: Inicialización del entorno completada correctamente
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
     health:
@@ -336,7 +277,6 @@ cli:
       errors:
         not_found: Catálogo financiero no encontrado
     ingest:
-      catalogue_dir_help: Directorio donde se encuentra el catálogo financiero
       help: Ingestar datos financieros (p. ej., extractos bancarios)
       output_json_help: Archivo JSON de salida para los datos ingestados
       path_help: Ruta al archivo o directorio con los datos financieros
@@ -656,16 +596,17 @@ cli:
       invalid_year_range: Rango de años no válido
       unknown_modelo: El registro no contiene una definición del modelo {modelo}
     expediente_help: Número de expediente de la AEAT a capturar
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
-    list_filed_data_help: cli.registry.list_filed_data_help
-    list_filed_data_json_help: cli.registry.list_filed_data_json_help
-    modelo_help: cli.registry.modelo_help
+    from_year_help: Año inicial para capturar o revisar registros
+    inspect_help: Inspeccionar el estado del registro y las referencias
+    inspect_registry_root_help: Ruta al directorio raíz del registro
+    json_help: Salida en formato JSON
+    list_filed_data_help: Listar presentaciones existentes en la AEAT para el rango
+      de años especificado
+    list_filed_data_json_help: Salida en formato JSON para herramientas de automatización
+    modelo_help: Filtro opcional por modelo fiscal (ej. 303, 130)
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
-    output_root_help: cli.registry.output_root_help
+    output_root_help: Ruta al directorio raíz de salida para los registros
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
     parity_output_help: Archivo JSON de destino para la cinta de paridad generada
     parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
@@ -676,31 +617,31 @@ cli:
     parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
       generadas
     parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
-    period_help: cli.registry.period_help
+    period_help: Filtro opcional por periodo fiscal (ej. Q1, 01)
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
-    to_year_help: cli.registry.to_year_help
+    to_year_help: Año final para capturar o revisar registros
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
-    verify_help: cli.registry.verify_help
-    verify_source_root_help: cli.registry.verify_source_root_help
-    workbooks_app_help: cli.registry.workbooks_app_help
-    workbooks_limit_help: cli.registry.workbooks_limit_help
-    workbooks_output_help: cli.registry.workbooks_output_help
-    workbooks_resume_help: cli.registry.workbooks_resume_help
-    workbooks_root_help: cli.registry.workbooks_root_help
-    workbooks_timeout_help: cli.registry.workbooks_timeout_help
-    workbooks_verify_help: cli.registry.workbooks_verify_help
-    year_help: cli.registry.year_help
+    verify_help: Verificar la integridad del registro local
+    verify_source_root_help: Ruta al directorio de origen para verificar
+    workbooks_app_help: Gestión de libros de trabajo del registro
+    workbooks_limit_help: Límite de libros a compilar
+    workbooks_output_help: Directorio de salida para los libros compilados
+    workbooks_resume_help: Reanudar la compilación de libros desde el último punto
+    workbooks_root_help: Directorio raíz que contiene las definiciones de los libros
+    workbooks_timeout_help: Tiempo de espera máximo (en segundos) para la compilación
+    workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
+    year_help: Ejercicio fiscal a consultar o procesar
   root:
     app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
     app_help: Asistente para preparar declaraciones tributarias españolas
     format_help: Formato de salida para los resultados del comando
   sanitize:
-    app_help: cli.sanitize.app_help
+    app_help: Gestión de la sanitización y anonimización de datos
     labels:
-      available: cli.sanitize.labels.available
-    status_help: cli.sanitize.status_help
+      available: Disponible
+    status_help: Mostrar el estado de la sanitización del entorno
   setup:
     app_help: Preparar el perfil local y la autenticación necesarios para usar la
       aplicación
@@ -730,7 +671,6 @@ cli:
       active: Activo
       auth_provider: Proveedor de autenticación
       authenticated_at: Autenticado el
-      availability: Disponibilidad
       description: Descripción
       id: ID
       key: Clave
@@ -773,74 +713,76 @@ cli:
     status:
       help: Mostrar la preparación del entorno y la siguiente acción requerida
   txs:
-    app_help: cli.txs.app_help
+    app_help: Gestión de transacciones bancarias y conciliación
     build:
-      exists_err: cli.txs.build.exists_err
-      help: cli.txs.build.help
-      replace_help: cli.txs.build.replace_help
-      source_help: cli.txs.build.source_help
-      success: cli.txs.build.success
+      exists_err: El archivo de transacciones ya existe
+      help: Generar un nuevo archivo de transacciones
+      replace_help: Reemplazar el archivo de transacciones si ya existe
+      source_help: Archivo fuente de transacciones (ej. Excel, CSV, PDF)
+      success: Archivo de transacciones generado con éxito en {path}
     classify:
-      as_help: cli.txs.classify.as_help
-      business_category_err: cli.txs.classify.business_category_err
-      category_help: cli.txs.classify.category_help
-      confidence_help: cli.txs.classify.confidence_help
-      confidence_range_err: cli.txs.classify.confidence_range_err
-      help: cli.txs.classify.help
-      id_help: cli.txs.classify.id_help
-      invalid_confidence_err: cli.txs.classify.invalid_confidence_err
-      invalid_pct_err: cli.txs.classify.invalid_pct_err
-      mixed_pct_err: cli.txs.classify.mixed_pct_err
-      no_changes_err: cli.txs.classify.no_changes_err
-      outgoing_category_err: cli.txs.classify.outgoing_category_err
-      pct_help: cli.txs.classify.pct_help
-      reason_help: cli.txs.classify.reason_help
+      as_help: Categoría o tipo para clasificar la transacción
+      business_category_err: La categoría de negocio '{cat}' no es válida
+      category_help: Categoría de negocio para clasificar la transacción
+      confidence_help: Nivel de confianza o certidumbre de la clasificación
+      confidence_range_err: El nivel de confianza debe estar entre 0 y 1
+      help: Clasificar manualmente una transacción
+      id_help: Identificador único de la transacción a clasificar
+      invalid_confidence_err: El nivel de confianza '{conf}' no es un número válido
+      invalid_pct_err: El porcentaje deducible '{pct}' no es un número válido
+      mixed_pct_err: El porcentaje deducible para uso mixto debe estar entre 0 y 100
+      no_changes_err: No se han proporcionado cambios para la clasificación
+      outgoing_category_err: La categoría de gasto '{cat}' no es válida
+      pct_help: Porcentaje deducible para transacciones de uso mixto
+      reason_help: Motivo o justificación de la clasificación manual
     classify_llm:
-      all_help: cli.txs.classify_llm.all_help
-      category_hint_help: cli.txs.classify_llm.category_hint_help
-      dry_run_help: cli.txs.classify_llm.dry_run_help
-      dry_run_label: cli.txs.classify_llm.dry_run_label
+      all_help: Procesar todas las transacciones pendientes
+      category_hint_help: Sugerencia de categoría para guiar al modelo de IA
+      dry_run_help: Ejecutar sin guardar cambios (previsualizar)
+      dry_run_label: MODO PRUEBA (sin cambios)
       errors:
-        classification_failed: cli.txs.classify_llm.errors.classification_failed
-        exclusive_all_id: cli.txs.classify_llm.errors.exclusive_all_id
-        invalid_max_seconds: cli.txs.classify_llm.errors.invalid_max_seconds
-        missing_target: cli.txs.classify_llm.errors.missing_target
-        persistence_failed: cli.txs.classify_llm.errors.persistence_failed
-        save_failed: cli.txs.classify_llm.errors.save_failed
-      help: cli.txs.classify_llm.help
-      id_help: cli.txs.classify_llm.id_help
+        classification_failed: Fallo al clasificar la transacción '{id}'
+        exclusive_all_id: No se puede usar --all y un ID de transacción al mismo tiempo
+        invalid_max_seconds: El tiempo máximo de procesamiento debe ser positivo
+        missing_target: Debe especificar --all o un ID de transacción
+        persistence_failed: Fallo al guardar los cambios en el archivo de transacciones
+        save_failed: No se pudo guardar la clasificación para '{id}'
+      help: Clasificar transacciones automáticamente usando IA
+      id_help: Identificador de la transacción específica a clasificar
       labels:
-        no_targets: cli.txs.classify_llm.labels.no_targets
-      llm_suffix: cli.txs.classify_llm.llm_suffix
-      max_seconds_help: cli.txs.classify_llm.max_seconds_help
-      model_alias_help: cli.txs.classify_llm.model_alias_help
-      model_help: cli.txs.classify_llm.model_help
-      pct_override_help: cli.txs.classify_llm.pct_override_help
-      persisted_label: cli.txs.classify_llm.persisted_label
-      provider_help: cli.txs.classify_llm.provider_help
-      reason_help: cli.txs.classify_llm.reason_help
-      stopped_early_suffix: cli.txs.classify_llm.stopped_early_suffix
-      summary: cli.txs.classify_llm.summary
-      tier_help: cli.txs.classify_llm.tier_help
-      timeout: cli.txs.classify_llm.timeout
+        no_targets: No se encontraron transacciones para procesar
+      llm_suffix: (vía IA)
+      max_seconds_help: Tiempo máximo (en segundos) para el procesamiento por IA
+      model_alias_help: Alias del modelo de IA a utilizar (ej. gemini-pro)
+      model_help: Nombre completo del modelo de IA (incluyendo versión)
+      pct_override_help: Forzar un porcentaje deducible específico
+      persisted_label: PERSISTIDO
+      provider_help: Proveedor de IA (ej. google, openai, anthropic)
+      reason_help: Justificación o razonamiento de la clasificación por IA
+      stopped_early_suffix: (detenido por tiempo)
+      summary: 'Resumen de clasificación IA: {total} procesadas, {success} éxitos,
+        {failed} fallos'
+      tier_help: Nivel o capacidad del modelo (ej. flash, pro, ultra)
+      timeout: TIEMPO AGOTADO
     list:
-      confidence_below_help: cli.txs.list.confidence_below_help
-      header: cli.txs.list.header
-      help: cli.txs.list.help
-      no_matches_confidence: cli.txs.list.no_matches_confidence
-      no_transactions: cli.txs.list.no_transactions
-      state_help: cli.txs.list.state_help
+      confidence_below_help: Filtrar transacciones con confianza inferior al umbral
+      header: Listado de Transacciones
+      help: Listar transacciones filtradas por criterios
+      no_matches_confidence: No se encontraron transacciones con confianza inferior
+        al {threshold}%
+      no_transactions: No se encontraron transacciones
+      state_help: Filtrar por estado de la transacción (ej. pending, classified)
     show:
-      help: cli.txs.show.help
-      id_help: cli.txs.show.id_help
-      not_found_err: cli.txs.show.not_found_err
+      help: Mostrar detalles de una transacción específica
+      id_help: Identificador de la transacción a mostrar
+      not_found_err: No se encontró la transacción con ID '{id}'
 filing:
   validation:
-    deadline_missed: filing.validation.deadline_missed
-    formula_divergence: filing.validation.formula_divergence
-    out_of_range: filing.validation.out_of_range
-    required_missing: filing.validation.required_missing
-    schema_mismatch: filing.validation.schema_mismatch
+    deadline_missed: Plazo de presentación vencido
+    formula_divergence: Divergencia en el cálculo de la fórmula
+    out_of_range: Valor fuera de rango permitido
+    required_missing: Falta campo obligatorio
+    schema_mismatch: Discrepancia con el esquema esperado
 profile:
   test_keys:
     description_490119: x
@@ -848,9 +790,9 @@ review:
   adapters:
     t_135562: traspaso interno
     t_142007: negocio
-    t_145612: review.adapters.t_145612
+    t_145612: Resultado de la validación oficial
     t_167733: vencida
-    t_189155: reason
+    t_189155: motivo
     t_298389: pago pendiente
     t_352338: validación fallida
     t_352928: parcialmente pagada
@@ -865,50 +807,58 @@ review:
     t_968325: ingreso
 setup:
   verifier:
-    t_049382: setup.verifier.t_049382
-    t_104932: setup.verifier.t_104932
-    t_104938: setup.verifier.t_104938
-    t_193582: setup.verifier.t_193582
-    t_204938: setup.verifier.t_204938
-    t_293847: setup.verifier.t_293847
-    t_394821: setup.verifier.t_394821
-    t_394827: setup.verifier.t_394827
-    t_501723: setup.verifier.t_501723
-    t_649302: setup.verifier.t_649302
-    t_749321: setup.verifier.t_749321
-    t_837462: setup.verifier.t_837462
-    t_938472: setup.verifier.t_938472
-    t_938475: setup.verifier.t_938475
+    t_049382: La ruta '{path}' no es un archivo
+    t_104932: La variable de entorno '{var}' está configurada
+    t_104938: El perfil de autónomo en '{path}' es válido
+    t_193582: Asegúrese de que la ruta a su certificado sea correcta y el archivo
+      exista
+    t_204938: El directorio '{name}' en '{path}' está listo
+    t_293847: La configuración de inicio es coherente
+    t_394821: Defina la variable de entorno '{var}' con la contraseña de su certificado
+    t_394827: El perfil de autónomo en '{path}' no existe (se usarán los valores por
+      defecto)
+    t_501723: Certificado no encontrado en '{path}'
+    t_649302: 'No se pudo crear el directorio ''{name}'' en ''{path}'': {exc}'
+    t_749321: Certificado encontrado en '{path}'
+    t_837462: 'El perfil de autónomo en ''{path}'' no es válido: {exc}'
+    t_938472: La variable de entorno '{var}' para la contraseña del certificado no
+      está configurada
+    t_938475: 'La configuración de inicio es incoherente: {exc}'
   wizard:
-    aeat_drafts_dir_prompt: setup.wizard.aeat_drafts_dir_prompt
-    aeat_live_tests_enabled_prompt: setup.wizard.aeat_live_tests_enabled_prompt
-    aeat_manuals_root_prompt: setup.wizard.aeat_manuals_root_prompt
-    aeat_submissions_dir_prompt: setup.wizard.aeat_submissions_dir_prompt
-    bienes_extranjero_above_threshold_prompt: setup.wizard.bienes_extranjero_above_threshold_prompt
-    certificate_backend_prompt: setup.wizard.certificate_backend_prompt
-    certificate_friendly_name_prompt: setup.wizard.certificate_friendly_name_prompt
-    certificate_password_secret_var_name_prompt: setup.wizard.certificate_password_secret_var_name_prompt
-    certificate_path_prompt: setup.wizard.certificate_path_prompt
-    default_language_prompt: setup.wizard.default_language_prompt
-    default_profile_path_prompt: setup.wizard.default_profile_path_prompt
-    does_intracomunitario_prompt: setup.wizard.does_intracomunitario_prompt
-    has_employees_prompt: setup.wizard.has_employees_prompt
-    iva_regime_prompt: setup.wizard.iva_regime_prompt
-    output_language_prompt: setup.wizard.output_language_prompt
-    pays_professionals_with_retencion_prompt: setup.wizard.pays_professionals_with_retencion_prompt
-    pays_rent_with_retencion_prompt: setup.wizard.pays_rent_with_retencion_prompt
-    professional_income_withholding_ge_70pct_prompt: setup.wizard.professional_income_withholding_ge_70pct_prompt
-    tax_id_prompt: setup.wizard.tax_id_prompt
-    tax_residence_ccaa_prompt: setup.wizard.tax_residence_ccaa_prompt
-    third_party_transactions_above_347_threshold_prompt: setup.wizard.third_party_transactions_above_347_threshold_prompt
-    welcome: setup.wizard.welcome
+    aeat_drafts_dir_prompt: Directorio para borradores de la AEAT
+    aeat_live_tests_enabled_prompt: ¿Habilitar pruebas en vivo de la AEAT?
+    aeat_manuals_root_prompt: Directorio raíz para manuales de la AEAT
+    aeat_submissions_dir_prompt: Directorio para presentaciones de la AEAT
+    bienes_extranjero_above_threshold_prompt: ¿Posee bienes en el extranjero por encima
+      del umbral (Modelo 720)?
+    certificate_backend_prompt: Motor de gestión de certificados
+    certificate_friendly_name_prompt: Nombre descriptivo del certificado
+    certificate_password_secret_var_name_prompt: Nombre de la variable de entorno
+      para la contraseña del certificado
+    certificate_path_prompt: Ruta al archivo del certificado (.p12, .pfx)
+    default_language_prompt: Idioma por defecto para la interfaz
+    default_profile_path_prompt: Ruta al archivo de perfil de autónomo (.json)
+    does_intracomunitario_prompt: ¿Realiza operaciones intracomunitarias (ROI)?
+    has_employees_prompt: ¿Tiene empleados contratados?
+    iva_regime_prompt: Régimen de IVA
+    output_language_prompt: Idioma para informes y documentos generados
+    pays_professionals_with_retencion_prompt: ¿Paga a profesionales con retención
+      (Modelo 111)?
+    pays_rent_with_retencion_prompt: ¿Paga alquiler con retención (Modelo 115)?
+    professional_income_withholding_ge_70pct_prompt: ¿Tiene retenciones en más del
+      70% de sus ingresos profesionales?
+    tax_id_prompt: NIF/NIE del titular
+    tax_residence_ccaa_prompt: Comunidad Autónoma de residencia fiscal
+    third_party_transactions_above_347_threshold_prompt: ¿Realiza operaciones con
+      terceros por encima de 3005,06€ (Modelo 347)?
+    welcome: Bienvenido al asistente de configuración de AEAT CLI
 transactions:
   import:
     message_053465: Transacción duplicada detectada dentro del archivo importado.
     message_082074: Transacción duplicada ya presente en el libro mayor.
     message_185962: El archivo de origen no contiene transacciones válidas.
     message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
-    unreadable: transactions.import.unreadable
-    verified: transactions.import.verified
+    unreadable: Archivo ilegible o formato no soportado
+    verified: Importación verificada con éxito
   test_diagnostics:
     message: Falta el mes 2026-03 en el archivo importado.

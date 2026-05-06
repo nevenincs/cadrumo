@@ -8,7 +8,10 @@ from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
 
-from ._bindings import validate_invoice_binding_definition
+from ._bindings import (
+    validate_invoice_binding_definition,
+    validate_ledger_oss_aggregation_binding_definition,
+)
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
@@ -375,6 +378,11 @@ class RegistryValidator:
             if binding.source == "invoice":
                 try:
                     validate_invoice_binding_definition(binding)
+                except RegistryValidationError as exc:
+                    failures.append(f"{prefix}: {exc}")
+            if binding.source == "ledger_oss_aggregation":
+                try:
+                    validate_ledger_oss_aggregation_binding_definition(binding)
                 except RegistryValidationError as exc:
                     failures.append(f"{prefix}: {exc}")
 

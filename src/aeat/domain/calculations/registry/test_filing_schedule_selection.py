@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
@@ -11,19 +13,17 @@ from . import (
     RegistryValidationError,
     RegistryValidator,
     applicable_filing_schedules,
-    build_snapshot,
-    load_registry_tree,
 )
+from ._authority import ValidatedRegistryAuthority
+from ._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
 
-
-def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "111")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="01")
+def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("111", 2026, "01")
 
     schedules = applicable_filing_schedules(
         snapshot.revision,
@@ -35,10 +35,10 @@ def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts() -> 
     assert schedules[0].period_kind == "monthly"
 
 
-def test_modelo_111_selects_monthly_schedule_from_profile_object() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "111")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="01")
+def test_modelo_111_selects_monthly_schedule_from_profile_object(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("111", 2026, "01")
     profile = AutonomoProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -50,10 +50,10 @@ def test_modelo_111_selects_monthly_schedule_from_profile_object() -> None:
     assert [schedule.id for schedule in schedules] == ["modelo-111-mensual"]
 
 
-def test_modelo_111_selects_quarterly_schedule_from_profile_enrollment_facts() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "111")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+def test_modelo_111_selects_quarterly_schedule_from_profile_enrollment_facts(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    snapshot = registry_snapshot("111", 2026, "1T")
 
     schedules = applicable_filing_schedules(
         snapshot.revision,
@@ -65,15 +65,14 @@ def test_modelo_111_selects_quarterly_schedule_from_profile_enrollment_facts() -
     assert schedules[0].period_kind == "quarterly"
 
 
-def test_validator_rejects_schedule_periods_outside_revision_selector() -> None:
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(item for item in modelos if item.id == "111")
+def test_validator_rejects_schedule_periods_outside_revision_selector(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    modelo = registry_authority.modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = revision.filing_schedules[0].model_copy(update={"periods": ("1T", "99")})
-    mutated_revision = revision.model_copy(
-        update={"filing_schedules": (schedule, *revision.filing_schedules[1:])}
-    )
+    mutated_revision = revision.model_copy(update={"filing_schedules": (schedule, *revision.filing_schedules[1:])})
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="declares periods outside revision selector"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(registry_authority.catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)

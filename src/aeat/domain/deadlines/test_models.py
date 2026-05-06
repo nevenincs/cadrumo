@@ -17,10 +17,13 @@ from pydantic import ValidationError
 
 from . import (
     AutonomoProfile,
+    FilingEnrollment,
+    FilingIVAProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
     Schedule,
+    autonomo_profile_from_mapping,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -96,6 +99,36 @@ class TestAutonomoProfile:
                     "third_party_transactions_above_347_threshold": False,
                     "bienes_extranjero_above_threshold": False,
                 }
+            )
+
+    def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:
+        profile = autonomo_profile_from_mapping(
+            {
+                "tax.id": "12345678Z",
+                "iva.regime": "SIMPLIFICADO",
+                "has.employees": "true",
+                "pays.rent.with.retencion": "yes",
+                "does.intracomunitario": "1",
+                "iva.intracommunity_operations_exceed_50000_eur": "true",
+                "enrollment.large_company": "true",
+                "enrollment.public_administration_budget_gt_6000000": "false",
+            },
+            tax_id_default="00000000T",
+        )
+
+        assert profile.tax_id == "12345678Z"
+        assert profile.iva_regime is IVARegime.SIMPLIFICADO
+        assert profile.has_employees is True
+        assert profile.pays_rent_with_retencion is True
+        assert profile.does_intracomunitario is True
+        assert profile.iva == FilingIVAProfile(intracommunity_operations_exceed_50000_eur=True)
+        assert profile.enrollment == FilingEnrollment(large_company=True)
+
+    def test_mapping_projection_rejects_unknown_boolean_tokens(self) -> None:
+        with pytest.raises(ValueError, match="must be a boolean token"):
+            autonomo_profile_from_mapping(
+                {"tax.id": "12345678Z", "has.employees": "sometimes"},
+                tax_id_default="00000000T",
             )
 
 

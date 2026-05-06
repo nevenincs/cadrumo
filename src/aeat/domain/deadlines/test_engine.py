@@ -10,6 +10,7 @@ from . import (
     AutonomoProfile,
     DeadlineEngine,
     FilingEnrollment,
+    FilingIVAProfile,
     FilingObligation,
     IVARegime,
     ObligationStatus,
@@ -98,6 +99,42 @@ class TestCompute:
         withholding_periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "111"]
 
         assert withholding_periods == [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+        ]
+
+    def test_intracommunity_profile_selects_quarterly_modelo_349_when_threshold_is_not_exceeded(self) -> None:
+        schedule = _engine().compute(
+            _profile(does_intracomunitario=True),
+            2026,
+            today=date(2026, 1, 1),
+        )
+        periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
+
+        assert periods == ["2026-1T", "2026-2T", "2026-3T", "2026-4T"]
+
+    def test_intracommunity_threshold_selects_monthly_modelo_349(self) -> None:
+        schedule = _engine().compute(
+            _profile(
+                does_intracomunitario=True,
+                iva=FilingIVAProfile(intracommunity_operations_exceed_50000_eur=True),
+            ),
+            2026,
+            today=date(2026, 1, 1),
+        )
+        periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
+
+        assert periods == [
             "2026-01",
             "2026-02",
             "2026-03",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+from functools import lru_cache
 from pathlib import Path
 
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -34,18 +35,7 @@ class ValidatedRegistryAuthority:
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable authority instance."""
 
-        modelos, catalogues = load_registry_tree(root)
-        return cls(
-            root=root,
-            source_root=source_root,
-            modelos=modelos,
-            catalogues=catalogues,
-            _modelos_by_id={modelo.id: modelo for modelo in modelos},
-            _validator=RegistryValidator(catalogues, source_root=source_root),
-            _registry_validated=False,
-            _validated_modelos=set(),
-            _snapshots={},
-        )
+        return _load_authority(root.expanduser().resolve(), source_root.expanduser().resolve())
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id."""
@@ -131,3 +121,19 @@ class ValidatedRegistryAuthority:
         if modelos is None:
             return self.modelos
         return tuple(self.modelo(modelo_id) for modelo_id in modelos)
+
+
+@lru_cache(maxsize=16)
+def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority:
+    modelos, catalogues = load_registry_tree(root)
+    return ValidatedRegistryAuthority(
+        root=root,
+        source_root=source_root,
+        modelos=modelos,
+        catalogues=catalogues,
+        _modelos_by_id={modelo.id: modelo for modelo in modelos},
+        _validator=RegistryValidator(catalogues, source_root=source_root),
+        _registry_validated=False,
+        _validated_modelos=set(),
+        _snapshots={},
+    )
