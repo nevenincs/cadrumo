@@ -9,6 +9,9 @@ trap the whole AEAT integration surface with a single
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from enum import StrEnum
+
 from .....core.errors import AeatError
 
 
@@ -18,6 +21,40 @@ class SedeError(AeatError):
     Extends :exc:`aeat.core.errors.AeatError` so callers tracking
     cross-package errors can catch the whole AEAT surface uniformly.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        failure_mode: SedeFailureMode | str | None = None,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str | None = None,
+    ) -> None:
+        """Construct a Sede error with optional stable failure-mode context."""
+
+        enriched_context = dict(context) if context is not None else {}
+        if failure_mode is not None:
+            failure_mode_value = failure_mode.value if isinstance(failure_mode, SedeFailureMode) else str(failure_mode)
+            enriched_context["failure_mode"] = failure_mode_value
+            self.failure_mode: str | None = failure_mode_value
+        else:
+            self.failure_mode = None
+        super().__init__(
+            message,
+            context=enriched_context or None,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
+
+
+class SedeFailureMode(StrEnum):
+    """Closed post-auth Sede failure modes surfaced by live browser adapters."""
+
+    LIVE_NAVIGATION_FAILED = "live_navigation_failed"
+    SITE_HEALTH_FAILED = "site_health_failed"
+    BROWSER_BACKEND_FAILED = "browser_backend_failed"
+    EXTERNAL_SHAPE_CHANGED = "external_shape_changed"
 
 
 class SedeNavigationError(SedeError):
@@ -40,6 +77,7 @@ __all__ = [
     "ExpedienteNotFoundError",
     "JustificanteFetchError",
     "SedeError",
+    "SedeFailureMode",
     "SedeNavigationError",
     "SedeParseError",
 ]

@@ -1,9 +1,8 @@
 """Unit tests for :mod:`aeat.adapters.outbound.aeat.auth.certificate`.
 
 Every test generates a real self-signed PKCS#12 bundle at runtime via
-:mod:`cryptography` — no mocks, no fakes, no checked-in fixtures. Tests
-assert both functional correctness and SecretStr / PrivateAttr
-non-leakage.
+:mod:`cryptography`. Tests assert both functional correctness and
+SecretStr / PrivateAttr non-leakage.
 """
 
 from __future__ import annotations
@@ -288,8 +287,7 @@ def test_verify_handshake_returns_failure_on_tls_error(
     )
     loaded = load_certificate(bundle)
     # Closed local port: connection refused, fails the handshake in milliseconds.
-    # The legacy TEST-NET-1 address (192.0.2.1) routed into a 20-second connect
-    # timeout on most networks.
+    # TEST-NET addresses can route into a long connect timeout on some networks.
     result = verify_handshake(loaded, "https://127.0.0.1:1/")
     assert isinstance(result, HandshakeResult)
     assert result.success is False

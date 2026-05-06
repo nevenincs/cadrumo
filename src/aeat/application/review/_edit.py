@@ -148,10 +148,8 @@ slots (``RATE_0`` / ``RATE_4`` / ``RATE_10`` / ``RATE_21``); the underlying
 substrate at :func:`aeat.domain.vat.lookup_rate` is the authority for the
 fractional percentages those slots resolve to at a date.
 
-Rejecting non-canonical values at parse time closes the V-3 review-edit
-boundary leak surfaced by the rate-shadow sweep audit: free-form
-Decimal IVA rates can no longer flow through the edit spec into ledger
-records."""
+Rejecting non-canonical values at parse time keeps free-form Decimal IVA
+rates from flowing through the edit spec into ledger records."""
 
 
 def _coerce_invoice_iva_rate(clause: EditClause) -> Decimal:

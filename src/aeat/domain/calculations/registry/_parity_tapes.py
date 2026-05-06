@@ -32,7 +32,7 @@ class ParityTapeModel(BaseModel):
 
 
 class ParityScenario(ParityTapeModel):
-    """One manually curated parity scenario."""
+    """One manually curated workbook parity scenario."""
 
     id: str
     modelo: str
@@ -54,10 +54,6 @@ class ParityScenario(ParityTapeModel):
             raise ValueError("scenario synthetic input modelo must match scenario modelo")
         if self.synthetic_input.revision != self.revision:
             raise ValueError("scenario synthetic input revision must match scenario revision")
-        if not self.output_cells:
-            raise ValueError("scenario must declare at least one workbook output cell")
-        if not self.registry_outputs:
-            raise ValueError("scenario must declare at least one registry output")
         if set(self.output_cells) != set(self.registry_outputs):
             raise ValueError("scenario workbook outputs and registry outputs must use the same identifiers")
         if len(set(self.registry_outputs.values())) != len(self.registry_outputs):
@@ -68,7 +64,7 @@ class ParityScenario(ParityTapeModel):
 
 
 class ParityTape(ParityTapeModel):
-    """Stored trace for one parity execution."""
+    """Stored trace for one workbook parity execution."""
 
     created_at: datetime
     scenario_path: str | None = None

@@ -14,6 +14,13 @@ from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.logging import get_logger
 from . import AuthProviderKind, select_provider
+from ._acquisition_lock import (
+    AuthAcquisitionLockRecord,
+    AuthAcquisitionLockStatus,
+    acquire_auth_acquisition_lock,
+    auth_lock_ttl_seconds,
+    clear_auth_acquisition_lock,
+)
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import AeatSession
@@ -36,6 +43,21 @@ class CorruptAuthSessionError(AeatError):
 
 class AuthSessionUnavailableError(AeatError):
     """Raised when no verified active AEAT session can be supplied."""
+
+
+class AuthenticatedAeatSessionResult(BaseModel):
+    """Outcome of ensuring an authenticated AEAT session."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=True)
+
+    provider_kind: AuthProviderKind
+    session: Any
+    assertion: Any
+    reused_persisted_session: bool
+    acquired_lock: AuthAcquisitionLockRecord | None = None
+    reset_lock: AuthAcquisitionLockStatus | None = None
+    removed_sessions: tuple[Path, ...] = ()
+    fresh: bool = False
 
 
 class PersistedAuthSession(BaseModel):
@@ -116,13 +138,17 @@ async def require_verified_aeat_session(
 
     persisted = load_persisted_session(settings, kind)
     if persisted is None:
-        raise AuthSessionUnavailableError("No active AEAT session; run `aeat auth login` before reading AEAT data")
+        raise AuthSessionUnavailableError(
+            "No active AEAT session; run `aeat setup auth login` before reading AEAT data"
+        )
     if persisted.is_expired(datetime.now(UTC)):
-        raise AuthSessionUnavailableError("AEAT session is expired; run `aeat auth login` before reading AEAT data")
+        raise AuthSessionUnavailableError(
+            "AEAT session is expired; run `aeat setup auth login` before reading AEAT data"
+        )
     paths = storage_state_paths(settings, persisted.provider_kind)
     if not _session_store.exists(paths.storage_state):
         raise AuthSessionUnavailableError(
-            "AEAT session state is missing; run `aeat auth login` before reading AEAT data"
+            "AEAT session state is missing; run `aeat setup auth login` before reading AEAT data"
         )
 
     from ...adapters.outbound.aeat.browser import default_browser_session_factory
@@ -138,16 +164,121 @@ async def require_verified_aeat_session(
         raise
     except Exception as exc:
         raise AuthSessionUnavailableError(
-            "AEAT session could not be verified; run `aeat auth login` before reading AEAT data"
+            "AEAT session could not be verified; run `aeat setup auth login` before reading AEAT data"
         ) from exc
     finally:
         await _close_provider(provider)
 
     if not bool(getattr(assertion, "is_valid", False)):
         raise AuthSessionUnavailableError(
-            "AEAT session is not accepted by the AEAT Sede; run `aeat auth login` before reading AEAT data"
+            "AEAT session is not accepted by the AEAT Sede; run `aeat setup auth login` before reading AEAT data"
         )
     return refreshed_session
+
+
+async def ensure_authenticated_aeat_session(
+    settings: Settings,
+    *,
+    kind: AuthProviderKind | None = None,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    operation: str = "auth-ensure-session",
+    browser_session_factory: Any | None = None,
+    provider_factory: Any | None = None,
+) -> AuthenticatedAeatSessionResult:
+    """Return a verified AEAT session, authenticating only when required.
+
+    This is the central live-auth orchestration surface. Callers should
+    not hand-roll provider probing, lock handling, or session deletion.
+    The sequence is:
+
+    1. optionally reset an acquisition lock requested by the operator;
+    2. probe persisted session state when not forcing fresh auth;
+    3. acquire the profile/provider auth lock;
+    4. probe persisted state again to avoid races;
+    5. optionally delete persisted session state for ``fresh``;
+    6. authenticate and verify through the selected provider.
+    """
+
+    provider_kind = _resolve_provider_kind(settings, kind)
+    reset_status = (
+        clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
+        if reset_lock
+        else None
+    )
+    if not fresh:
+        reused = await _try_probe_verified_session(
+            settings,
+            provider_kind,
+            browser_session_factory=browser_session_factory,
+            provider_factory=provider_factory,
+        )
+        if reused is not None:
+            session, assertion = reused
+            return AuthenticatedAeatSessionResult(
+                provider_kind=provider_kind,
+                session=session,
+                assertion=assertion,
+                reused_persisted_session=True,
+                reset_lock=reset_status,
+            )
+
+    removed_sessions: list[Path] = []
+    with acquire_auth_acquisition_lock(
+        settings,
+        provider_kind,
+        ttl_seconds=auth_lock_ttl_seconds(settings, provider_kind),
+        operation=operation,
+    ) as lock_record:
+        if not fresh:
+            reused = await _try_probe_verified_session(
+                settings,
+                provider_kind,
+                browser_session_factory=browser_session_factory,
+                provider_factory=provider_factory,
+            )
+            if reused is not None:
+                session, assertion = reused
+                return AuthenticatedAeatSessionResult(
+                    provider_kind=provider_kind,
+                    session=session,
+                    assertion=assertion,
+                    reused_persisted_session=True,
+                    acquired_lock=lock_record,
+                    reset_lock=reset_status,
+                )
+        if fresh:
+            removed_sessions = delete_persisted_session(settings, kind=provider_kind)
+
+        provider = _build_provider(
+            settings,
+            provider_kind,
+            browser_session_factory=browser_session_factory,
+            provider_factory=provider_factory,
+        )
+        try:
+            session = await provider.authenticate()
+            assertion = await provider.verify(session)
+        finally:
+            await _close_provider(provider)
+        if not bool(getattr(assertion, "is_valid", False)):
+            from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
+
+            raise AeatLoginAssertionError(
+                "AEAT authentication completed but live verification failed: "
+                f"status={getattr(assertion, 'status_code', None)} "
+                f"error={getattr(assertion, 'error_message', None)!r}"
+            )
+        return AuthenticatedAeatSessionResult(
+            provider_kind=provider_kind,
+            session=session,
+            assertion=assertion,
+            reused_persisted_session=False,
+            acquired_lock=lock_record,
+            reset_lock=reset_status,
+            removed_sessions=tuple(removed_sessions),
+            fresh=fresh,
+        )
 
 
 def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession | None:
@@ -155,7 +286,7 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         persisted = _session_store.load(storage_state_path)
     except (ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
         ) from exc
     if persisted is None:
         return None
@@ -164,19 +295,19 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         raw = json.loads(json.dumps(persisted.metadata, default=str))
     except (TypeError, ValueError) as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
         ) from exc
 
     if not isinstance(raw, dict):
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
         )
 
     try:
         session = PersistedAuthSession.model_validate(raw)
     except ValidationError as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
         ) from exc
     if session.provider_kind is not kind_hint:
         _logger.debug(
@@ -186,9 +317,62 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
             session.provider_kind.value,
         )
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
         )
     return session
+
+
+def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
+    if kind is not None:
+        return kind
+    if settings.aeat_auth_provider is not None:
+        return AuthProviderKind(settings.aeat_auth_provider.value)
+    return AuthProviderKind.CERTIFICATE
+
+
+async def _try_probe_verified_session(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    browser_session_factory: Any | None,
+    provider_factory: Any | None,
+) -> tuple[AeatSession, Any] | None:
+    provider = _build_provider(
+        settings,
+        kind,
+        browser_session_factory=browser_session_factory,
+        provider_factory=provider_factory,
+    )
+    try:
+        session, assertion = await _probe_existing_session(provider)
+    except Exception as exc:
+        _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc)
+        return None
+    finally:
+        await _close_provider(provider)
+    if bool(getattr(assertion, "is_valid", False)):
+        return session, assertion
+    return None
+
+
+def _build_provider(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    browser_session_factory: Any | None,
+    provider_factory: Any | None,
+) -> Any:
+    if provider_factory is not None:
+        return provider_factory(kind, settings, browser_session_factory)
+    if browser_session_factory is None:
+        from ...adapters.outbound.aeat.browser import default_browser_session_factory
+
+        browser_session_factory = default_browser_session_factory
+    return select_provider(
+        kind,
+        settings=settings,
+        browser_session_factory=browser_session_factory,
+    )
 
 
 async def _probe_existing_session(provider: Any) -> tuple[AeatSession, Any]:

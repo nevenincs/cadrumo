@@ -3,15 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
+from ._errors import RegistryValidationError
 from ._loader import load_registry_tree
 from ._relations import relation_source_requirements
 from ._runtime_graph import expression_relation_refs
-from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ._schema import (
+    DependencyClassificationDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RelationDefinition,
+)
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -22,6 +30,13 @@ _CALCULATION_ROLES = {"direct_calculation", "instalment_to_final_settlement", "p
 
 def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     return load_registry_tree(_REGISTRY_ROOT)
+
+
+@lru_cache(maxsize=1)
+def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    modelos, catalogues = _registry_tree()
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    return modelos, catalogues
 
 
 def _formula_relation_refs(revision: ModeloRevision) -> set[str]:
@@ -61,9 +76,7 @@ def _revision_matches_selector(revision: ModeloRevision, selector: Mapping[str, 
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -88,9 +101,7 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
 
 
 def test_cross_dependency_source_requirements_are_derivable_for_target_periods() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -120,9 +131,7 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
 
 
 def test_formula_bearing_revisions_consume_calculation_relations() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -136,9 +145,7 @@ def test_formula_bearing_revisions_consume_calculation_relations() -> None:
 
 
 def test_formula_relation_dependencies_are_attached_to_computed_casillas() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -155,9 +162,7 @@ def test_formula_relation_dependencies_are_attached_to_computed_casillas() -> No
 
 
 def test_relation_target_bindings_mirror_source_contract() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -182,9 +187,7 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
 
 
 def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
-    modelos, catalogues = _registry_tree()
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    modelos, _catalogues = _validated_registry_tree()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -198,10 +201,8 @@ def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
 
 
 def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
-    modelos, catalogues = _registry_tree()
+    modelos, _catalogues = _validated_registry_tree()
     modelos_by_id = {modelo.id: modelo for modelo in modelos}
-
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -226,3 +227,73 @@ def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
                         )
                     else:
                         assert relation.source_output in algorithm_outputs, f"{modelo.id}/{revision.id}/{relation.id}"
+
+
+def test_dependency_classifications_preserve_relation_authority_basis() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, revision, classification, _relation = _first_classified_relation(modelos)
+    stripped = classification.model_copy(update={"source_refs": ()})
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                stripped if item.id == classification.id else item for item in revision.dependency_classifications
+            )
+        }
+    )
+    mutated_modelo = _replace_revision(modelo, mutated_revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dependency classification .* does not include relation source refs",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def test_relation_target_bindings_preserve_relation_authority_basis() -> None:
+    modelos, catalogues = _registry_tree()
+    modelo, revision, relation = _first_relation(modelos)
+    binding = next(item for item in revision.bindings if item.id == relation.target_binding)
+    stripped = binding.model_copy(update={"legal_refs": ()})
+    mutated_revision = revision.model_copy(
+        update={"bindings": tuple(stripped if item.id == binding.id else item for item in revision.bindings)}
+    )
+    mutated_modelo = _replace_revision(modelo, mutated_revision)
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"relation .* target binding .* does not include relation legal refs",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+
+
+def _first_relation(
+    modelos: tuple[ModeloDefinition, ...],
+) -> tuple[ModeloDefinition, ModeloRevision, RelationDefinition]:
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            if revision.relations:
+                return modelo, revision, revision.relations[0]
+    raise AssertionError("committed registry has no relations")
+
+
+def _first_classified_relation(
+    modelos: tuple[ModeloDefinition, ...],
+) -> tuple[ModeloDefinition, ModeloRevision, DependencyClassificationDefinition, RelationDefinition]:
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            relations = {relation.id: relation for relation in revision.relations}
+            for classification in revision.dependency_classifications:
+                if classification.relation_refs:
+                    return modelo, revision, classification, relations[classification.relation_refs[0]]
+    raise AssertionError("committed registry has no classified relations")
+
+
+def _replace_revision(modelo: ModeloDefinition, revision: ModeloRevision) -> ModeloDefinition:
+    return modelo.model_copy(
+        update={
+            "revisions": {
+                revision_id: revision if revision_id == revision.id else item
+                for revision_id, item in modelo.revisions.items()
+            }
+        }
+    )

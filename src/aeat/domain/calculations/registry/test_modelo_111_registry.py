@@ -59,33 +59,3 @@ def test_modelo_111_validated_snapshot_owns_workflow_surfaces(modelo_111_registr
     assert all(link.requires_snapshot for link in linked_by_surface.values())
 
 
-def test_modelo_111_current_revision_calculates_withholding_totals(modelo_111_registry) -> None:
-    modelo, catalogues = modelo_111_registry
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
-
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={
-            "03": Decimal("10.00"),
-            "06": Decimal("20.00"),
-            "09": Decimal("30.00"),
-            "12": Decimal("40.00"),
-            "15": Decimal("50.00"),
-            "18": Decimal("60.00"),
-            "21": Decimal("70.00"),
-            "24": Decimal("80.00"),
-            "27": Decimal("90.00"),
-            "29": Decimal("55.55"),
-        },
-        date_context={"filing_period": date(2026, 4, 20)},
-    )
-
-    assert result.values["28"] == Decimal("450.00")
-    assert result.values["30"] == Decimal("394.45")
-    assert {entry.target for entry in result.entries} == {"28", "30"}

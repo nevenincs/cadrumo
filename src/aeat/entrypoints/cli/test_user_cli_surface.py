@@ -39,9 +39,19 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
+    for name in (
+        "AEAT_AUTH_PROVIDER",
+        "AEAT_CERTIFICATE_PATH",
+        "AEAT_CERTIFICATE_PASSWORD_SECRET",
+        "AEAT_CLAVE_MOVIL_DNI_NIE",
+        "AEAT_CLAVE_MOVIL_DNI_FECHA",
+        "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
+    ):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
@@ -104,7 +114,6 @@ def test_removed_developer_commands_are_not_registered() -> None:
         ["bootstrap", "--help"],
         ["doctor", "--help"],
         ["auth", "--help"],
-        ["app", "registry", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
@@ -121,10 +130,18 @@ def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "invoice", "declaration"):
+    for command in ("overview", "ledger", "invoice", "declaration", "registry"):
         assert command in result.output
     for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
         assert removed_command not in result.output
+
+
+def test_registry_verification_gate_is_registered_under_app_surface() -> None:
+    result = _invoke(["app", "registry", "verify", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "--registry-root" in result.output
+    assert "--source-root" in result.output
 
 
 def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
@@ -656,7 +673,6 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     commands = [
         ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         ["setup", "auth", "configure", "--provider", "clave_movil"],
-        ["setup", "auth", "login"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--period", period, "--verify"],
     ]

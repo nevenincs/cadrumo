@@ -1,7 +1,6 @@
 """Registry-backed loader for LIRPF art. 85 imputación parameters.
 
-Closes the V-2 high-severity finding from the rate-shadow sweep:
-the LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
+The LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
 catastral-revision lookback window are no longer Python literals on
 :mod:`aeat.domain.rental._aggregates`. They live in
 ``registry/aeat/legal/irpf.toml`` under ``[parameters."lirpf-art-85:*"]``

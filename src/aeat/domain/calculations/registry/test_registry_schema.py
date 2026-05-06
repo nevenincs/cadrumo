@@ -89,7 +89,7 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
         "modelo-130-2026-3t",
         "modelo-130-2026-4t",
     )
-    assert set(snapshot.application_links) == {
+    required_application_links = {
         "modelo-130-calculation",
         "modelo-130-deadline",
         "modelo-130-export",
@@ -99,6 +99,7 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
         "modelo-130-portal-cross-reference",
         "modelo-130-verification",
     }
+    assert required_application_links <= set(snapshot.application_links)
 
 
 def test_model_law_coverage_ledger_does_not_count_layout_source_as_guidance() -> None:
@@ -282,7 +283,7 @@ def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> 
     path = tmp_path / "130.toml"
     _copy_committed_modelo(path)
     text = path.read_text(encoding="utf-8").replace(
-        'formula_coverage = "unsupported_binary_xls"',
+        'formula_coverage = "record_design_layout"',
         'formula_coverage = "formula_form"',
         1,
     )

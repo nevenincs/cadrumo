@@ -1,0 +1,309 @@
+"""Crash-recoverable auth acquisition locks.
+
+The lock protects live auth flows that can create external state,
+especially Cl@ve Movil push petitions. It is intentionally
+filesystem-backed so separate CLI processes share the same guard.
+"""
+
+from __future__ import annotations
+
+import os
+import socket
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
+from enum import StrEnum
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from ...core.errors import AeatError
+from . import AuthProviderKind
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
+
+
+class AuthAcquisitionLockState(StrEnum):
+    """Observable states for the auth acquisition lock file."""
+
+    ABSENT = "absent"
+    HELD = "held"
+    STALE = "stale"
+    CORRUPT = "corrupt"
+
+
+class AuthAcquisitionLockRecord(BaseModel):
+    """Metadata written into an auth acquisition lock file."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    provider_kind: AuthProviderKind
+    profile_name: str = Field(min_length=1)
+    pid: int = Field(gt=0)
+    hostname: str = Field(min_length=1)
+    created_at: datetime
+    expires_at: datetime
+    operation: str = Field(min_length=1)
+
+
+class AuthAcquisitionLockStatus(BaseModel):
+    """Safe health/status view of an auth acquisition lock."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    state: AuthAcquisitionLockState
+    path: Path
+    record: AuthAcquisitionLockRecord | None = None
+    reason: str | None = None
+    recoverable: bool = False
+
+    @property
+    def locked(self) -> bool:
+        """Return True when another live process should block auth acquisition."""
+
+        return self.state is AuthAcquisitionLockState.HELD
+
+
+class AuthAcquisitionLockedError(AeatError):
+    """Raised when another process is already acquiring AEAT auth."""
+
+
+def auth_acquisition_lock_path(settings: Settings, kind: AuthProviderKind) -> Path:
+    """Return the profile/provider-scoped lock path."""
+
+    return settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-{kind.value}-auth.lock"
+
+
+def inspect_auth_acquisition_lock(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    now: datetime | None = None,
+) -> AuthAcquisitionLockStatus:
+    """Return the current acquisition-lock health without mutating it."""
+
+    path = auth_acquisition_lock_path(settings, kind)
+    reference = _utc(now)
+    if not path.exists():
+        return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
+    try:
+        record = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    except (OSError, ValidationError, ValueError) as exc:
+        return AuthAcquisitionLockStatus(
+            state=AuthAcquisitionLockState.CORRUPT,
+            path=path,
+            reason=f"invalid lock metadata: {type(exc).__name__}",
+            recoverable=True,
+        )
+
+    if record.expires_at <= reference:
+        return AuthAcquisitionLockStatus(
+            state=AuthAcquisitionLockState.STALE,
+            path=path,
+            record=record,
+            reason="lock expired",
+            recoverable=True,
+        )
+    if _same_host(record.hostname) and not _pid_is_running(record.pid):
+        return AuthAcquisitionLockStatus(
+            state=AuthAcquisitionLockState.STALE,
+            path=path,
+            record=record,
+            reason="lock owner process is not running",
+            recoverable=True,
+        )
+    return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.HELD, path=path, record=record)
+
+
+def clear_auth_acquisition_lock(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    reason: str = "operator-reset",
+) -> AuthAcquisitionLockStatus:
+    """Remove the acquisition lock and return the pre-reset status."""
+
+    status = inspect_auth_acquisition_lock(settings, kind)
+    if status.state is not AuthAcquisitionLockState.ABSENT:
+        _remove_lock_file(status.path)
+        return status.model_copy(
+            update={
+                "reason": reason if status.reason is None else f"{status.reason}; reset={reason}",
+                "recoverable": True,
+            }
+        )
+    return status
+
+
+@contextmanager
+def acquire_auth_acquisition_lock(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    ttl_seconds: int,
+    operation: str = "auth-login",
+) -> Iterator[AuthAcquisitionLockRecord]:
+    """Acquire a crash-recoverable auth lock or raise a typed conflict.
+
+    Stale/corrupt locks are removed automatically before a second
+    atomic-create attempt. A live lock is never waited on or retried:
+    callers fail early so they do not issue a duplicate Cl@ve petition.
+    """
+
+    path = auth_acquisition_lock_path(settings, kind)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    now = datetime.now(UTC)
+    record = AuthAcquisitionLockRecord(
+        provider_kind=kind,
+        profile_name=settings.aeat_default_profile_name,
+        pid=os.getpid(),
+        hostname=socket.gethostname(),
+        created_at=now,
+        expires_at=now + timedelta(seconds=max(1, ttl_seconds)),
+        operation=operation,
+    )
+
+    acquired = False
+    for _attempt in range(2):
+        try:
+            fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            status = inspect_auth_acquisition_lock(settings, kind)
+            if status.recoverable:
+                _remove_lock_file(path)
+                continue
+            raise AuthAcquisitionLockedError(
+                "Another AEAT auth operation is already in progress for this profile. "
+                "Do not start a second Cl@ve request; wait for the running process to finish "
+                "or let the lock expire if that process crashed.",
+                context=_status_context(status),
+                suggestion="Run `aeat setup auth status --format json` to inspect the active auth lock.",
+            ) from None
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as file:
+                file.write(record.model_dump_json(indent=2))
+                file.write("\n")
+        except Exception:
+            _remove_lock_file(path)
+            raise
+        acquired = True
+        break
+    if not acquired:
+        status = inspect_auth_acquisition_lock(settings, kind)
+        raise AuthAcquisitionLockedError(
+            "AEAT auth lock could not be acquired after stale-lock recovery.",
+            context=_status_context(status),
+        )
+
+    try:
+        yield record
+    finally:
+        _release_if_owner(path, record)
+
+
+def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
+    """Return the acquisition-lock TTL for a provider."""
+
+    if kind is AuthProviderKind.CLAVE_MOVIL:
+        return int(settings.aeat_clave_movil_timeout_ms / 1000) + 90
+    return 180
+
+
+def _status_context(status: AuthAcquisitionLockStatus) -> dict[str, object]:
+    context: dict[str, object] = {
+        "state": status.state.value,
+        "path": str(status.path),
+        "recoverable": status.recoverable,
+    }
+    if status.reason is not None:
+        context["reason"] = status.reason
+    if status.record is not None:
+        context.update(
+            {
+                "provider_kind": status.record.provider_kind.value,
+                "profile_name": status.record.profile_name,
+                "pid": status.record.pid,
+                "hostname": status.record.hostname,
+                "created_at": status.record.created_at.isoformat(),
+                "expires_at": status.record.expires_at.isoformat(),
+                "operation": status.record.operation,
+            }
+        )
+    return context
+
+
+def _release_if_owner(path: Path, expected: AuthAcquisitionLockRecord) -> None:
+    try:
+        observed = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    except (OSError, ValidationError, ValueError):
+        return
+    if observed == expected:
+        _remove_lock_file(path)
+
+
+def _remove_lock_file(path: Path) -> None:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return
+
+
+def _utc(value: datetime | None) -> datetime:
+    if value is None:
+        return datetime.now(UTC)
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+def _same_host(hostname: str) -> bool:
+    return hostname.lower() == socket.gethostname().lower()
+
+
+def _pid_is_running(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if pid == os.getpid():
+        return True
+    if os.name == "nt":
+        return _pid_is_running_windows(pid)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _pid_is_running_windows(pid: int) -> bool:
+    import ctypes
+
+    process_query_limited_information = 0x1000
+    still_active = 259
+    kernel32 = ctypes.windll.kernel32
+    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+    if not handle:
+        return False
+    try:
+        exit_code = ctypes.c_ulong()
+        if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+            return True
+        return exit_code.value == still_active
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+__all__ = [
+    "AuthAcquisitionLockRecord",
+    "AuthAcquisitionLockState",
+    "AuthAcquisitionLockStatus",
+    "AuthAcquisitionLockedError",
+    "acquire_auth_acquisition_lock",
+    "auth_acquisition_lock_path",
+    "auth_lock_ttl_seconds",
+    "clear_auth_acquisition_lock",
+    "inspect_auth_acquisition_lock",
+]

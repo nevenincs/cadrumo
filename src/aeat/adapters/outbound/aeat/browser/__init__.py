@@ -1,31 +1,14 @@
-"""Browser automation subpackage for the AEAT client.
-
-Provides the `BrowserSession` factory to manage Playwright contexts with
-anti-bot evasion strategies and persistent profiles.
-
-Example:
-    ```python
-    from pathlib import Path
-    from playwright.async_api import async_playwright
-    from .....core.config import load_settings
-    from . import BrowserSession, Profile
-
-    async def main():
-        settings = load_settings()
-        profile = Profile(name="test", storage_state_path=Path(".tokens/state.json"))
-
-        async with async_playwright() as p:
-            session = BrowserSession(playwright=p, settings=settings, profile=profile)
-            context = await session.create_context()
-            page = await context.new_page()
-            await page.goto("https://sede.agenciatributaria.gob.es")
-            await context.close()
-    ```
-"""
+"""Central browser automation surface for AEAT outbound adapters."""
 
 from __future__ import annotations
 
-from ._factory import DefaultBrowserSession, default_browser_session_factory
+from ._factory import (
+    DefaultBrowserSession,
+    create_browser_session,
+    default_browser_session_factory,
+    opened_browser_page,
+    shared_playwright_runtime,
+)
 from ._site_health import (
     SiteHealthEvidence,
     SiteHealthState,
@@ -40,11 +23,12 @@ from ._site_health_parsers import (
 from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
-from .session import BrowserError, BrowserSession
+from .session import BrowserError, BrowserFailureMode, BrowserSession
 
 __all__ = [
     "BrowserError",
     "BrowserEvasionError",
+    "BrowserFailureMode",
     "BrowserSession",
     "DefaultBrowserSession",
     "EvasionStrategy",
@@ -53,10 +37,13 @@ __all__ = [
     "SiteHealthEvidence",
     "SiteHealthState",
     "SiteHealthStatus",
+    "create_browser_session",
     "default_browser_session_factory",
     "evaluate_response",
+    "opened_browser_page",
     "parse_mantenimiento_banner",
     "parse_rate_limit_response",
     "parse_waf_challenge",
     "run_health_check",
+    "shared_playwright_runtime",
 ]

@@ -1,8 +1,7 @@
 """Unit tests for the certificate pre-expiry health evaluator.
 
 Every test generates a real self-signed PKCS#12 bundle at runtime via
-:mod:`cryptography` — no mocks, no fakes, no checked-in fixtures. The
-evaluator is exercised through both the in-memory
+:mod:`cryptography`. The evaluator is exercised through both the in-memory
 :func:`evaluate_loaded_certificate_health` entry point and the
 disk-reading :func:`health` entry point.
 """

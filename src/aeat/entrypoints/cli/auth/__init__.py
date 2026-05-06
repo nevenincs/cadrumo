@@ -1,1 +1,1 @@
-"""``aeat auth`` CLI sub-app."""
+"""Compatibility package for ``aeat setup auth`` registry helpers."""

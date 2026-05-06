@@ -235,7 +235,7 @@ class TestMultipleOccurrences:
 
 
 class TestLongestMatchPriority:
-    """Longer cleartext values match first, so a shorter prefix doesn't shadow."""
+    """Longer cleartext values match first, before any shorter prefix."""
 
     def test_longer_real_matches_before_shorter(self) -> None:
         # If "Y4113523X" replaced first with "X", a later "Y4113523" → "Y" rule

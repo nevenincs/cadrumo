@@ -8,9 +8,9 @@ surfaces — not concrete classes — for two reasons:
    hard import dependency at the engine layer; adapters in
    :mod:`aeat.application.workflow._adapters` translate the richer real surfaces
    onto these narrow Protocols.
-2. **No-mocks testing.** The project forbids mocks/patches/fakes/stubs
-   in its test suite. Protocols let us substitute hand-rolled
-   Protocol-conforming classes in tests instead, one per scenario.
+2. **Protocol-shaped tests.** Tests can supply narrow
+   Protocol-conforming classes per scenario without importing the
+   production adapters at the workflow layer.
 
 Every Protocol here describes **only** the attributes the workflow
 engine actually reads.

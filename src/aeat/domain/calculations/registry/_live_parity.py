@@ -70,8 +70,8 @@ OracleEnvironment = Literal["production", "test_environment", "both"]
 # pairs. Bindings whose pair is not listed here are flagged by the boot-time
 # audit. ``static_official_documentation`` is intentionally absent: static-doc
 # surfaces have no verifiable response and cannot be the target of any oracle.
-# Adding a new oracle surface_kind or a new cross-reference surface in a
-# follow-up must extend this set in the same commit.
+# Any new oracle surface_kind or cross-reference surface must extend this set
+# in the same change that introduces it.
 _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
@@ -397,18 +397,14 @@ def audit_oracle_bindings(
     catalogue or is registered under an incompatible environment. Cross-
     references with no binding are skipped silently.
 
-    The audit short-circuits to an empty tuple when the catalogue has no
-    registered oracles. This keeps the audit silent during the staged
-    rollout where a modelo TOML may declare a binding before the adapter
-    that satisfies it has been registered (e.g., adapters gated on a
-    Playwright driver follow-up commit).
+    A declared binding must resolve through the supplied catalogue. An
+    empty catalogue is valid only when no cross-reference declares an
+    oracle binding.
 
     The function never raises and never performs any network operation.
     Failure aggregation is the caller's job.
     """
 
-    if not catalogue.ids():
-        return ()
     failures: list[str] = []
     for revision in modelo.revisions.values():
         for cross_reference in revision.live_cross_references:
@@ -446,8 +442,6 @@ def audit_registry_oracle_bindings(
     of the input iterable so the report is deterministic.
     """
 
-    if not catalogue.ids():
-        return ()
     failures: list[str] = []
     for modelo in modelos:
         failures.extend(audit_oracle_bindings(modelo, catalogue, environment=environment))

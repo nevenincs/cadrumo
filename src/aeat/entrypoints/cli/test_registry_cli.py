@@ -386,7 +386,7 @@ def test_capture_source_filed_data_cli_help_resolves_locale_keys() -> None:
     assert "--source-root" in result.output
 
 
-def test_list_filed_data_cli_refuses_expired_session_before_remote_read(tmp_path: Path) -> None:
+def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(
         tmp_path,
@@ -416,10 +416,10 @@ def test_list_filed_data_cli_refuses_expired_session_before_remote_read(tmp_path
     )
 
     assert result.exit_code != 0
-    assert "AEAT session is expired" in result.output
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
 
 
-def test_capture_filed_data_cli_refuses_expired_session_before_local_writes(tmp_path: Path) -> None:
+def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(
         tmp_path,
@@ -454,11 +454,11 @@ def test_capture_filed_data_cli_refuses_expired_session_before_local_writes(tmp_
     )
 
     assert result.exit_code != 0
-    assert "AEAT session is expired" in result.output
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
     assert not output_root.exists()
 
 
-def test_capture_source_filed_data_refuses_expired_session_before_local_writes(tmp_path: Path) -> None:
+def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     _seed_session(
         tmp_path,
@@ -468,7 +468,7 @@ def test_capture_source_filed_data_refuses_expired_session_before_local_writes(t
     )
     output_root = tmp_path / "captured-sources"
 
-    with pytest.raises(typer.BadParameter, match="AEAT session is expired"):
+    with pytest.raises(typer.BadParameter, match="live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1"):
         asyncio.run(
             capture_source_filed_data(
                 modelo="180",

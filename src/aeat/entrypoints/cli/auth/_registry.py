@@ -1,4 +1,4 @@
-"""Provider registry for the ``aeat auth`` CLI.
+"""Provider registry for the ``aeat setup auth`` CLI.
 
 The registry is the single source of truth for provider ordering,
 default resolution, and user-facing rendering. Only provider kinds that
@@ -45,7 +45,7 @@ class ProviderRegistryEntry(BaseModel):
     Attributes:
         kind: The :class:`aeat.application.auth.AuthProviderKind` enum
             member this row covers.
-        label: User-facing label rendered by ``aeat auth`` listings.
+        label: User-facing label rendered by ``aeat setup auth`` listings.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -206,7 +206,7 @@ def default_kind(settings: Settings) -> AuthProviderKind:
         if description.configured:
             return entry.kind
     raise NoConfiguredProviderError(
-        "No AEAT auth provider is configured yet. Run `aeat auth configure` "
+        "No AEAT auth provider is configured yet. Run `aeat setup auth configure` "
         "to set up Cl@ve Móvil, or pass `--provider certificate` once your "
         "FNMT certificate is installed."
     )

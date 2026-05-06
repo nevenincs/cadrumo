@@ -41,6 +41,14 @@ from ._parity_tapes import (
     save_parity_scenario,
     save_parity_tape,
 )
+from ._record_design import (
+    RecordDesignField,
+    RecordDesignSheet,
+    extract_record_design,
+    extract_record_design_pdf,
+    extract_record_design_pdf_bytes,
+    extract_record_design_workbook,
+)
 from ._relations import (
     relation_source_requirements,
     resolve_relation_values,
@@ -53,6 +61,18 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
+)
+from ._renta_web_open_oracle import (
+    RENTA_WEB_OPEN_APP_URL,
+    RENTA_WEB_OPEN_LANDING_URL,
+    RentaWebOpenDriver,
+    RentaWebOpenLivePayload,
+    RentaWebOpenObservation,
+    RentaWebOpenOracle,
+    RentaWebOpenReplayDriver,
+    RentaWebOpenSyntheticProfile,
+    equivalent_renta_web_open_value,
+    parse_renta_web_open_live_payload,
 )
 from ._runtime_graph import expression_casilla_refs
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
@@ -104,6 +124,7 @@ from ._workbook_parity import (
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,
+    converted_binary_xls_with_libreoffice,
     detect_workbook_runner,
     discover_workbooks,
     inventory_workbook_coverage,
@@ -116,6 +137,8 @@ from ._workbook_parity import (
 )
 
 __all__ = [
+    "RENTA_WEB_OPEN_APP_URL",
+    "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicationLinkDefinition",
     "CasillaDefinition",
     "ConstructDefinition",
@@ -146,6 +169,8 @@ __all__ = [
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "ProfilePredicateDefinition",
+    "RecordDesignField",
+    "RecordDesignSheet",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCatalogues",
@@ -160,6 +185,12 @@ __all__ = [
     "RemoteOperation",
     "RemoteStateGuardPolicy",
     "RemoteStateGuardResult",
+    "RentaWebOpenDriver",
+    "RentaWebOpenLivePayload",
+    "RentaWebOpenObservation",
+    "RentaWebOpenOracle",
+    "RentaWebOpenReplayDriver",
+    "RentaWebOpenSyntheticProfile",
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
@@ -188,13 +219,19 @@ __all__ = [
     "calculate_registry_snapshot",
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
+    "converted_binary_xls_with_libreoffice",
     "derive_export_layouts_from_bindings",
     "detect_workbook_runner",
     "discover_workbooks",
+    "equivalent_renta_web_open_value",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
     "expression_casilla_refs",
+    "extract_record_design",
+    "extract_record_design_pdf",
+    "extract_record_design_pdf_bytes",
+    "extract_record_design_workbook",
     "generate_parity_tape_path",
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
@@ -204,6 +241,7 @@ __all__ = [
     "load_parity_tape",
     "load_registry_tree",
     "parse_export_payload",
+    "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
     "profile_condition_matches",

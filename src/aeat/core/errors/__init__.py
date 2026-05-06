@@ -106,7 +106,17 @@ class SiteHealthError(AeatError):
 
         state = status.state
         state_value = getattr(state, "value", state)
-        super().__init__(str(state_value), context={"state": str(state_value)})
+        evidence = status.evidence
+        context: dict[str, object] = {
+            "state": str(state_value),
+            "url": str(evidence.url),
+            "http_status": evidence.http_status,
+            "detected_markers": tuple(evidence.detected_markers),
+            "observed_at": status.observed_at.isoformat(),
+        }
+        if status.retry_after_seconds is not None:
+            context["retry_after_seconds"] = status.retry_after_seconds
+        super().__init__(str(state_value), context=context)
         self.status: Any = status
 
 

@@ -37,6 +37,7 @@ from ._classification import (
 )
 from ._corpus import load_vat_rules_from_manual
 from ._lookup import cite, lookup_rate
+from ._flow import IvaFlowDirection, derive_flow_for_classification
 from ._oss import (
     REGIME_PERIODICITY,
     DeductionScope,
@@ -44,6 +45,11 @@ from ._oss import (
     OssIossRegime,
     RegimePeriodicity,
     regime_allows_deduction,
+)
+from ._recargo_equivalencia import (
+    LIVA_ART_161_RECARGO,
+    LivaArt161RecargoRates,
+    recargo_rate_for,
 )
 from ._rates import VAT_RATE_TABLE
 from ._schema import (
@@ -79,6 +85,9 @@ __all__ = [
     "InvoiceDirection",
     "IossFilerRole",
     "IssuerResidency",
+    "IvaFlowDirection",
+    "LIVA_ART_161_RECARGO",
+    "LivaArt161RecargoRates",
     "OssIossRegime",
     "RegimePeriodicity",
     "TransactionKind",
@@ -101,8 +110,10 @@ __all__ = [
     "VatVerificationReport",
     "cite",
     "classify_vat",
+    "derive_flow_for_classification",
     "load_vat_rules_from_manual",
     "lookup_rate",
+    "recargo_rate_for",
     "regime_allows_deduction",
     "resolve_catalogue",
     "verify_catalogue",

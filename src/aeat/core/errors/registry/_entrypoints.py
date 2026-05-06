@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_CLI_AUTH_SESSION_UNAVAILABLE",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_cli_auth_session_unavailable",
-            default_suggestion="aeat auth login",
+            default_suggestion="aeat setup auth login",
             retryable=True,
             runbook_id=None,
         ),

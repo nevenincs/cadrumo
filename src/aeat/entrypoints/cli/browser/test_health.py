@@ -78,7 +78,7 @@ def test_health_ok_exits_zero() -> None:
     with override_probe_factory(_probe_factory(_HealthyProbe)):
         result = _RUNNER.invoke(app, [])
     assert result.exit_code == 0
-    assert "state=ok" in result.stdout
+    assert "State=ok" in result.stdout
 
 
 def test_health_ok_json_exits_zero() -> None:
@@ -123,17 +123,7 @@ def test_health_exit_code_table(
     with override_probe_factory(_probe_factory(_builder)):
         result = _RUNNER.invoke(app, [])
     assert result.exit_code == expected_exit
-    assert f"state={expected_state.value}" in result.stdout
-
-
-class _StubPlaywright:
-    """Concrete recorder: counts stop() invocations."""
-
-    def __init__(self) -> None:
-        self.stop_calls = 0
-
-    async def stop(self) -> None:
-        self.stop_calls += 1
+    assert f"State={expected_state.value}" in result.stdout
 
 
 class _StubContext:
@@ -195,28 +185,24 @@ class _RaisingNewPageContext(_StubContext):
 
 
 class TestRealProbeCleanup:
-    """``_RealProbe`` must always release Playwright even on early errors."""
+    """``_RealProbe`` must always release the central browser session on early errors."""
 
-    def test_playwright_stop_runs_when_create_context_raises(self) -> None:
+    def test_session_close_runs_when_create_context_raises(self) -> None:
         session = _RaisingCreateContextSession()
-        playwright = _StubPlaywright()
-        probe = _RealProbe(session=session, playwright=playwright)
+        probe = _RealProbe(session=session)
         with pytest.raises(RuntimeError, match="boom from create_context"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert session.create_context_calls == 1
         assert session.close_calls == 1
-        assert playwright.stop_calls == 1
 
-    def test_playwright_stop_and_context_close_run_when_new_page_raises(self) -> None:
+    def test_session_and_context_close_run_when_new_page_raises(self) -> None:
         context = _RaisingNewPageContext()
         session = _RaisingNewPageSession(context=context)
-        playwright = _StubPlaywright()
-        probe = _RealProbe(session=session, playwright=playwright)
+        probe = _RealProbe(session=session)
         with pytest.raises(RuntimeError, match="boom from new_page"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert context.close_calls == 1
         assert session.close_calls == 1
-        assert playwright.stop_calls == 1
 
 
 def test_health_json_emits_parseable_payload() -> None:

@@ -7,10 +7,8 @@ and that
 :meth:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
 returns ``is_valid=True`` against the configured verify URL.
 
-The module carries zero mocks, patches, fakes, or monkey-patched
-attributes — both the global ``TID251`` ruff ban and the extended
-live-test banned-import set in ``tests/conftest.py`` forbid them.
-The test skips cleanly when the cert env is not fully configured.
+The test uses the configured certificate and live verification URL directly.
+It skips cleanly when the cert env is not fully configured.
 """
 
 from __future__ import annotations
@@ -96,35 +94,26 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     from typing import Any, cast
 
-    from playwright.async_api import async_playwright
-
-    from ..browser.profile import Profile
-    from ..browser.session import BrowserSession
+    from ..browser import Profile, create_browser_session
     from . import BrowserSessionFactory
 
-    async with async_playwright() as playwright:
-        profile = Profile(
-            name="live-auth-gate",
-            storage_state_path=settings.aeat_token_dir / "live_auth_gate_state.json",
-        )
-        session = BrowserSession(
-            playwright=playwright,
-            settings=settings,
-            profile=profile,
-        )
+    profile = Profile(
+        name="live-auth-gate",
+        storage_state_path=settings.aeat_token_dir / "live_auth_gate_state.json",
+    )
 
-        async def factory(_settings: Any) -> Any:
-            return session
+    async def factory(_settings: Any) -> Any:
+        return await create_browser_session(settings, profile)
 
-        typed_factory = cast(BrowserSessionFactory, factory)
-        async with AeatAuthenticator(settings, browser_session_factory=typed_factory) as auth:
-            aeat_session = await auth.authenticate()
-            assert isinstance(aeat_session, AeatSession)
-            assert aeat_session.is_stale() is False
-            assert aeat_session.identity_nif
-            assertion = await auth.verify_login(aeat_session)
-            assert isinstance(assertion, AeatLoginAssertion)
-            assert assertion.is_valid is True, (
-                f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
-            )
-            assert assertion.parsed_nif == aeat_session.identity_nif
+    typed_factory = cast(BrowserSessionFactory, factory)
+    async with AeatAuthenticator(settings, browser_session_factory=typed_factory) as auth:
+        aeat_session = await auth.authenticate()
+        assert isinstance(aeat_session, AeatSession)
+        assert aeat_session.is_stale() is False
+        assert aeat_session.identity_nif
+        assertion = await auth.verify_login(aeat_session)
+        assert isinstance(assertion, AeatLoginAssertion)
+        assert assertion.is_valid is True, (
+            f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
+        )
+        assert assertion.parsed_nif == aeat_session.identity_nif

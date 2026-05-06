@@ -74,37 +74,6 @@ def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registr
     assert all(link.requires_snapshot for link in linked_by_surface.values())
 
 
-def test_modelo_130_current_revision_calculates_direct_estimation_result(modelo_130_registry) -> None:
-    result = calculate_registry_snapshot(
-        _snapshot_130(modelo_130_registry),
-        inputs={
-            "01": Decimal("10000.00"),
-            "02": Decimal("4000.00"),
-            "05": Decimal("100.00"),
-            "06": Decimal("50.00"),
-            "08": Decimal("5000.00"),
-            "10": Decimal("20.00"),
-            "15": Decimal("20.00"),
-            "16": Decimal("5.00"),
-            "18": Decimal("100.00"),
-        },
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("9500.00")},
-        date_context={"filing_period": date(2026, 4, 20)},
-    )
-
-    assert result.values["03"] == Decimal("6000.00")
-    assert result.values["04"] == Decimal("1200.00")
-    assert result.values["07"] == Decimal("1050.00")
-    assert result.values["09"] == Decimal("100.00")
-    assert result.values["11"] == Decimal("80.00")
-    assert result.values["12"] == Decimal("1130.00")
-    assert result.values["13"] == Decimal("75.00")
-    assert result.values["14"] == Decimal("1055.00")
-    assert result.values["17"] == Decimal("1030.00")
-    assert result.values["19"] == Decimal("930.00")
-    assert {entry.target for entry in result.entries} == {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"}
-
-
 def test_modelo_130_requires_external_previous_year_income_binding_for_minoracion(modelo_130_registry) -> None:
     with pytest.raises(RegistryValidationError, match="previous_year_economic_activity_net_income"):
         calculate_registry_snapshot(

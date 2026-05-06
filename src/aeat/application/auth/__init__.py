@@ -117,7 +117,7 @@ def select_provider(
 def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
     """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
 
-    Used by ``aeat auth list-providers`` to render a human-readable
+    Used by ``aeat setup auth providers`` to render a human-readable
     diagnostic. The string focuses on what the operator can and cannot
     do given the current provider configuration; never contains
     secrets.
@@ -133,12 +133,25 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
 
 
+from ._acquisition_lock import (  # noqa: E402
+    AuthAcquisitionLockedError,
+    AuthAcquisitionLockRecord,
+    AuthAcquisitionLockState,
+    AuthAcquisitionLockStatus,
+    acquire_auth_acquisition_lock,
+    auth_acquisition_lock_path,
+    auth_lock_ttl_seconds,
+    clear_auth_acquisition_lock,
+    inspect_auth_acquisition_lock,
+)
 from ._sessions import (  # noqa: E402
+    AuthenticatedAeatSessionResult,
     AuthSessionUnavailableError,
     CorruptAuthSessionError,
     PersistedAuthSession,
     StorageStatePaths,
     delete_persisted_session,
+    ensure_authenticated_aeat_session,
     load_persisted_session,
     require_verified_aeat_session,
     storage_state_paths,
@@ -146,17 +159,28 @@ from ._sessions import (  # noqa: E402
 
 __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
+    "AuthAcquisitionLockRecord",
+    "AuthAcquisitionLockState",
+    "AuthAcquisitionLockStatus",
+    "AuthAcquisitionLockedError",
     "AuthProvider",
     "AuthProviderDescription",
     "AuthProviderKind",
     "AuthProviderListing",
     "AuthSessionUnavailableError",
+    "AuthenticatedAeatSessionResult",
     "CorruptAuthSessionError",
     "PersistedAuthSession",
     "StorageStatePaths",
+    "acquire_auth_acquisition_lock",
+    "auth_acquisition_lock_path",
+    "auth_lock_ttl_seconds",
+    "clear_auth_acquisition_lock",
     "delete_persisted_session",
     "describe_provider_operator_impact",
+    "ensure_authenticated_aeat_session",
     "get_auth_provider",
+    "inspect_auth_acquisition_lock",
     "list_auth_providers",
     "load_persisted_session",
     "require_verified_aeat_session",

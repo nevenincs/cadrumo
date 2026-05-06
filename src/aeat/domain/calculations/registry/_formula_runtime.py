@@ -120,6 +120,14 @@ def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> 
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError(f"unknown registry input casilla ids: {unknown!r}")
+    formula_targets = {formula.target for formula in revision.formulas}
+    computed = sorted(
+        casilla_id
+        for casilla_id in inputs
+        if casillas[casilla_id].input_kind == "computed" or casilla_id in formula_targets
+    )
+    if computed:
+        raise RegistryValidationError(f"computed registry casillas cannot be supplied as inputs: {computed!r}")
     values: dict[str, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind == "computed":

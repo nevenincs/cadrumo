@@ -97,6 +97,11 @@ from ._notifications import (
 )
 from ._observation_store import FiledDeclarationObservationStore
 from ._parse import parse_expediente_detail, parse_resumen_tree
+from ._renta_web_open import (
+    RentaWebOpenSedeDriver,
+    collect_renta_web_open_observation,
+    extract_renta_web_open_summary_value,
+)
 from ._schema import (
     Expediente,
     FiledDeclarationArtefact,
@@ -125,6 +130,7 @@ __all__ = [
     "NotificationsSnapshot",
     "ObservedCasillaValue",
     "RemoteNotification",
+    "RentaWebOpenSedeDriver",
     "SedeCapture",
     "SedeError",
     "SedeNavigationError",
@@ -134,6 +140,8 @@ __all__ = [
     "capture_justificante",
     "capture_previous_filing_observations",
     "capture_relation_source_observations",
+    "collect_renta_web_open_observation",
+    "extract_renta_web_open_summary_value",
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "find_expediente",

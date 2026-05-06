@@ -40,10 +40,10 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast, runtime_checkable
 
-from playwright.async_api import Error as PlaywrightError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.logging import get_logger
+from .._playwright import PlaywrightError
 from . import _session_store
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,

@@ -1,10 +1,10 @@
 """Unit tests for BrowserSession factory."""
 
 from pathlib import Path
-from typing import cast
+from typing import ClassVar, cast
 
 import pytest
-from playwright.async_api import BrowserContext, Playwright
+from playwright.async_api import BrowserContext, Page, Playwright
 
 from .....core.config import PROJECT_ROOT, Settings
 from .....core.errors import SiteHealthError
@@ -12,7 +12,7 @@ from ._site_health import SiteHealthState
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy
 from .profile import Profile
-from .session import BrowserError, BrowserSession
+from .session import BrowserError, BrowserFailureMode, BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -98,6 +98,23 @@ class RecordingPlaywright:
         self.chromium = RecordingChromium()
 
 
+class FailingLaunchChromium(RecordingChromium):
+    """Chromium adapter that fails before a browser exists."""
+
+    async def launch(self, **kwargs) -> RecordingBrowser:
+        """Raise from the launch boundary."""
+        del kwargs
+        self.launch_calls += 1
+        raise RuntimeError("boom from launch")
+
+
+class FailingLaunchPlaywright(RecordingPlaywright):
+    """Playwright adapter whose launch path fails."""
+
+    def __init__(self) -> None:
+        self.chromium = FailingLaunchChromium()
+
+
 class FailingNewContextBrowser(RecordingBrowser):
     """Browser whose ``new_context`` path fails after launch."""
 
@@ -133,6 +150,35 @@ class FailingClosePlaywright(RecordingPlaywright):
         self.chromium.next_close_failures = 1
 
 
+class FailingEvasion(EvasionStrategy):
+    """Evasion strategy that fails after context creation."""
+
+    async def apply(self, context: BrowserContext) -> None:
+        """Raise from the evasion boundary."""
+        del context
+        raise RuntimeError("boom from evasion")
+
+
+class ContentFailingResponse:
+    """Concrete response shape needed by BrowserSession.navigate."""
+
+    status = 200
+    headers: ClassVar[dict[str, str]] = {}
+
+
+class ContentFailingPage:
+    """Concrete page adapter whose content read fails after navigation."""
+
+    async def goto(self, url: str) -> ContentFailingResponse:
+        """Return a response so the content-read stage is reached."""
+        del url
+        return ContentFailingResponse()
+
+    async def content(self) -> str:
+        """Raise from the page content boundary."""
+        raise RuntimeError("boom from content")
+
+
 @pytest.mark.asyncio
 async def test_browser_session_creation(tmp_path: Path) -> None:
     """Test creating a browser context with a concrete Playwright adapter."""
@@ -154,6 +200,30 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
     assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
     assert "storage_state" not in context.kwargs  # type: ignore
     assert not hasattr(context, "_aeat_certificate_thumbprint")
+
+
+@pytest.mark.asyncio
+async def test_browser_session_launch_failure_reports_failure_mode(tmp_path: Path) -> None:
+    """Launch failures should carry the central failure-mode context."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    playwright_adapter = FailingLaunchPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, playwright_adapter),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    with pytest.raises(BrowserError, match="boom from launch") as excinfo:
+        await session.create_context()
+
+    assert excinfo.value.failure_mode == BrowserFailureMode.BROWSER_LAUNCH_FAILED
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.BROWSER_LAUNCH_FAILED
+    assert excinfo.value.context["profile"] == "test"
+    assert playwright_adapter.chromium.launch_calls == 1
+    assert playwright_adapter.chromium.live_browser_count == 0
 
 
 @pytest.mark.asyncio
@@ -315,8 +385,12 @@ async def test_browser_session_rejects_second_live_context_until_close(tmp_path:
 
     context = await session.create_context()
     await context.close()
-    with pytest.raises(BrowserError, match="call close\\(\\) before create_context\\(\\) again"):
+    with pytest.raises(BrowserError, match="call close\\(\\) before create_context\\(\\) again") as excinfo:
         await session.create_context()
+
+    assert excinfo.value.failure_mode == BrowserFailureMode.SESSION_BUSY
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.SESSION_BUSY
 
     await session.close()
     context2 = await session.create_context()
@@ -340,10 +414,36 @@ async def test_browser_session_closes_browser_when_new_context_fails(tmp_path: P
         evasion_strategy=DummyEvasion(),
     )
 
-    with pytest.raises(BrowserError, match="boom from new_context"):
+    with pytest.raises(BrowserError, match="boom from new_context") as excinfo:
         await session.create_context()
 
+    assert excinfo.value.failure_mode == BrowserFailureMode.CONTEXT_CREATE_FAILED
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.CONTEXT_CREATE_FAILED
     assert playwright_adapter.chromium.launch_calls == 1
+    assert playwright_adapter.chromium.live_browser_count == 0
+    assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_browser_session_closes_browser_when_evasion_fails(tmp_path: Path) -> None:
+    """Evasion failures should be explicit and should not leak a browser."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    playwright_adapter = RecordingPlaywright()
+    session = BrowserSession(
+        playwright=cast(Playwright, playwright_adapter),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=FailingEvasion(),
+    )
+
+    with pytest.raises(BrowserError, match="boom from evasion") as excinfo:
+        await session.create_context()
+
+    assert excinfo.value.failure_mode == BrowserFailureMode.EVASION_FAILED
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.EVASION_FAILED
     assert playwright_adapter.chromium.live_browser_count == 0
     assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
 
@@ -363,9 +463,12 @@ async def test_browser_session_close_failure_surfaces_and_allows_retry(tmp_path:
 
     context = await session.create_context()
     await context.close()
-    with pytest.raises(BrowserError, match="Failed to close retained browser"):
+    with pytest.raises(BrowserError, match="Failed to close retained browser") as excinfo:
         await session.close()
 
+    assert excinfo.value.failure_mode == BrowserFailureMode.BROWSER_CLOSE_FAILED
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.BROWSER_CLOSE_FAILED
     assert playwright_adapter.chromium.live_browser_count == 1
     assert playwright_adapter.chromium.launched_browsers[0].close_calls == 1
 
@@ -432,6 +535,31 @@ def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     with pytest.raises(SiteHealthError) as excinfo:
         _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
     assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["url"] == _PROBE_URL
+    assert excinfo.value.context["http_status"] == 200
+    assert "detected_markers" in excinfo.value.context
+
+
+@pytest.mark.asyncio
+async def test_browser_session_navigate_content_failure_reports_failure_mode(tmp_path: Path) -> None:
+    """Content-read failures after navigation should not collapse into a generic exception."""
+    settings = Settings()
+    profile = Profile(name="test", storage_state_path=tmp_path / "state.json")
+    session = BrowserSession(
+        playwright=cast(Playwright, RecordingPlaywright()),
+        settings=settings,
+        profile=profile,
+        evasion_strategy=DummyEvasion(),
+    )
+
+    with pytest.raises(BrowserError, match="boom from content") as excinfo:
+        await session.navigate(cast(Page, ContentFailingPage()), _PROBE_URL)
+
+    assert excinfo.value.failure_mode == BrowserFailureMode.PAGE_CONTENT_FAILED
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["failure_mode"] == BrowserFailureMode.PAGE_CONTENT_FAILED
+    assert excinfo.value.context["http_status"] == 200
 
 
 def test_navigate_probe_raises_on_waf_fixture() -> None:

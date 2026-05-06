@@ -1,10 +1,8 @@
 """Unit tests for :mod:`aeat.adapters.outbound.aeat.auth._authenticator`.
 
-Zero mocks / patches / fakes (global ban) — we exercise the
-authenticator with a real ``LoadedCertificate`` (generated at
-runtime via :mod:`cryptography`) and a stand-in browser session
-factory that honours the ``_aeat_certificate_thumbprint`` marker
-contract.
+The authenticator is exercised with a real ``LoadedCertificate`` generated at
+runtime via :mod:`cryptography` and a browser-session class that honours the
+``_aeat_certificate_thumbprint`` marker contract.
 """
 
 from __future__ import annotations

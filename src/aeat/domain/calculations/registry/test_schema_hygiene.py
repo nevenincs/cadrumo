@@ -1,9 +1,7 @@
 """Cross-modelo schema hygiene tests.
 
-These guards catch generator regressions that bulk-emit casillas from AEAT
-data dictionaries or workbook layouts. They run against every committed
-registry/aeat/modelos/*.toml so a future deepening pass cannot introduce
-duplicate casilla declarations, drop section structure, or leave XML-root
+These guards run against every committed registry/aeat/modelos/*.toml to
+prevent duplicate casilla declarations, missing section structure, or XML-root
 container names like ``DatosEconomicos`` leaking through into the section
 taxonomy.
 """
@@ -12,6 +10,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -30,6 +29,33 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
         "rootnode",
         "root_node",
     }
+)
+
+_FORBIDDEN_TEST_NARRATIVE = (
+    "aspirational",
+    "deleted as tautological",
+    "fails by design",
+    "not yet delivered",
+    "previously in this file",
+    "past-state",
+    "migration state",
+    "phase ",
+    "wave ",
+    "compatibility shim",
+    "xfail",
+)
+
+_FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS = (
+    "ApplicationLinkDefinition",
+    "CasillaDefinition",
+    "DataBindingDefinition",
+    "FormulaDefinition",
+    "LegalReference",
+    "ModeloDefinition",
+    "ModeloRevision",
+    "ParameterDefinition",
+    "RegistryCatalogues",
+    "SourceReference",
 )
 
 
@@ -111,3 +137,33 @@ def test_section_paths_do_not_leak_xml_root_containers() -> None:
                         f"has XML root container {casilla.section[0]!r} as section[0]"
                     )
     assert not offences, "XML root containers leaked into section paths:\n  " + "\n  ".join(offences)
+
+
+def test_registry_tests_describe_current_behaviour_not_removed_work() -> None:
+    """Calculation-registry tests must describe executable behaviour, not old development states."""
+
+    offences: list[str] = []
+    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    for path in sorted(root.glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for phrase in _FORBIDDEN_TEST_NARRATIVE:
+            if phrase in text:
+                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} contains {phrase!r}")
+    assert not offences, "registry tests contain past-state narratives:\n  " + "\n  ".join(offences)
+
+
+def test_registry_tests_do_not_define_schema_authority_objects() -> None:
+    """Registry tests must derive modelo/casilla authority objects from committed registry data."""
+
+    offences: list[str] = []
+    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
+    for path in sorted(root.glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for constructor in _FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS:
+            if f"{constructor}(" in text:
+                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} constructs {constructor}")
+    assert not offences, "registry tests define schema authority objects:\n  " + "\n  ".join(offences)
