@@ -667,6 +667,7 @@ class DataBindingDefinition(RegistryModel):
         "previous_filing",
         "manual_input",
         "ledger_oss_aggregation",
+        "ledger_iva_aggregation",
     ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None

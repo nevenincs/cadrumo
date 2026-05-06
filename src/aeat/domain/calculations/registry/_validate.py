@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ._bindings import (
     validate_invoice_binding_definition,
+    validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
 )
 from ._errors import RegistryValidationError
@@ -383,6 +384,11 @@ class RegistryValidator:
             if binding.source == "ledger_oss_aggregation":
                 try:
                     validate_ledger_oss_aggregation_binding_definition(binding)
+                except RegistryValidationError as exc:
+                    failures.append(f"{prefix}: {exc}")
+            if binding.source == "ledger_iva_aggregation":
+                try:
+                    validate_ledger_iva_aggregation_binding_definition(binding)
                 except RegistryValidationError as exc:
                     failures.append(f"{prefix}: {exc}")
 
