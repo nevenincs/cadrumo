@@ -104,6 +104,149 @@ source_ref = "boe-modelo-353-2007-form"
 required_text = ["modelo 353"]
 
 [[revisions."2008-y-siguientes".casillas]]
+id = "iva.repercutido.general"
+number = "iva.repercutido.general"
+label = "Cuota IVA repercutido al tipo general (21%) - agregado del grupo"
+section = ["iva", "regimen-general", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.repercutido.reducido"
+number = "iva.repercutido.reducido"
+label = "Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo"
+section = ["iva", "regimen-general", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.repercutido.super-reducido"
+number = "iva.repercutido.super-reducido"
+label = "Cuota IVA repercutido al tipo super-reducido (4%) - agregado del grupo"
+section = ["iva", "regimen-general", "devengado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.soportado.interiores"
+number = "iva.soportado.interiores"
+label = "Cuota IVA soportado en operaciones interiores corrientes - agregado del grupo"
+section = ["iva", "regimen-general", "deducible"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo"
+section = ["iva", "regimen-general", "autorepercutido"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.cuota-devengada-total"
+number = "iva.cuota-devengada-total"
+label = "Total cuota IVA devengada (agregado del grupo)"
+section = ["iva", "regimen-general", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-iva-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.cuota-deducible-total"
+number = "iva.cuota-deducible-total"
+label = "Total cuota IVA deducible (agregado del grupo)"
+section = ["iva", "regimen-general", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-iva-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "iva.resultado-regimen-general"
+number = "iva.resultado-regimen-general"
+label = "Resultado del grupo (cuota devengada agregada - cuota deducible agregada)"
+section = ["iva", "regimen-general", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-iva-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2008-y-siguientes".formulas]]
+id = "modelo-353-iva-cuota-devengada-total"
+target = "iva.cuota-devengada-total"
+expression = { op = "add", args = [
+    { casilla = "iva.repercutido.general" },
+    { casilla = "iva.repercutido.reducido" },
+    { casilla = "iva.repercutido.super-reducido" },
+    { casilla = "iva.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
+
+[[revisions."2008-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-353-2007-form"
+required_text = ["modelo 353"]
+
+[[revisions."2008-y-siguientes".formulas]]
+id = "modelo-353-iva-cuota-deducible-total"
+target = "iva.cuota-deducible-total"
+expression = { op = "add", args = [
+    { casilla = "iva.soportado.interiores" },
+    { casilla = "iva.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
+
+[[revisions."2008-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-353-2007-form"
+required_text = ["modelo 353"]
+
+[[revisions."2008-y-siguientes".formulas]]
+id = "modelo-353-iva-resultado-regimen-general"
+target = "iva.resultado-regimen-general"
+expression = { op = "subtract", args = [
+    { casilla = "iva.cuota-devengada-total" },
+    { casilla = "iva.cuota-deducible-total" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
+
+[[revisions."2008-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-353-2007-form"
+required_text = ["modelo 353"]
+
+[[revisions."2008-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 label = "Ejercicio al que se refiere la autoliquidacion"
@@ -209,6 +352,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["boe-modelo-353-2007-form"]
 
+[[revisions."2008-y-siguientes".application_links]]
+id = "modelo-353-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
+
 [[revisions."2008-y-siguientes".filing_schedules]]
 id = "modelo-353-mensual"
 period_kind = "monthly"
@@ -272,7 +423,23 @@ source_refs = [
     "aeat-modelo-353-procedure",
     "boe-modelo-353-2007-form",
 ]
-casillas = ["decl.ejercicio", "decl.periodo"]
+casillas = [
+    "iva.repercutido.general",
+    "iva.repercutido.reducido",
+    "iva.repercutido.super-reducido",
+    "iva.soportado.interiores",
+    "iva.autorepercutido.intracomunitaria",
+    "iva.cuota-devengada-total",
+    "iva.cuota-deducible-total",
+    "iva.resultado-regimen-general",
+    "decl.ejercicio",
+    "decl.periodo",
+]
+formulas = [
+    "modelo-353-iva-cuota-devengada-total",
+    "modelo-353-iva-cuota-deducible-total",
+    "modelo-353-iva-resultado-regimen-general",
+]
 bindings = [
     "modelo-353-iva-repercutido-general-cuota",
     "modelo-353-iva-repercutido-reducido-cuota",
