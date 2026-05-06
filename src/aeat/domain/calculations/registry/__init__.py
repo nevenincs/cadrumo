@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     InvoiceObservation,
     InvoiceObservationRequirement,
@@ -166,6 +167,7 @@ __all__ = [
     "SupportRemovalDecisionDefinition",
     "SyntheticInputSet",
     "SyntheticInputValue",
+    "ValidatedRegistryAuthority",
     "VerificationExpectationDefinition",
     "WorkbookArtefactReport",
     "WorkbookBackendVerificationReport",
