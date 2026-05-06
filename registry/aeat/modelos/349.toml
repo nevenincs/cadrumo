@@ -342,6 +342,14 @@ legal_refs = ["orden-eha-769-2010:art-2"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
+legal_refs = ["orden-eha-769-2010:art-1"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
 field = "iva.intracommunity_operations_exceed_50000_eur"
 op = "equals"
 value = false
@@ -355,6 +363,14 @@ period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "all"
 legal_refs = ["orden-eha-769-2010:art-2"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+[[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
+legal_refs = ["orden-eha-769-2010:art-1"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
