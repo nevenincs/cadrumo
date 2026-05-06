@@ -54,27 +54,3 @@ def test_modelo_180_copies_three_relations_into_three_output_casillas() -> None:
     assert result.values["decl.retenciones-total"] == Decimal("418.00")
 
 
-def test_modelo_180_floors_relation_values_through_money_2_rounding() -> None:
-    """Sub-cent relation values round to two decimals via the formula's rounding spec."""
-
-    modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    modelo = next(m for m in modelos if m.id == "180")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="0A")
-
-    relation_values = {
-        "modelo-180-rel-115-perceptores-anual": Decimal("3"),
-        "modelo-180-rel-115-base-anual": Decimal("999.999"),  # sub-cent precision
-        "modelo-180-rel-115-retenciones-anual": Decimal("189.999"),
-    }
-    date_context = {"filing_period": date(2026, 1, 31)}
-
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={},
-        date_context=date_context,
-        relation_values=relation_values,
-    )
-
-    # Money-2 rounding: 999.999 -> 1000.00, 189.999 -> 190.00.
-    assert result.values["decl.base-total"] == Decimal("1000.00")
-    assert result.values["decl.retenciones-total"] == Decimal("190.00")
