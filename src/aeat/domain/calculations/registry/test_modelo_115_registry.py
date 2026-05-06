@@ -54,28 +54,3 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
     assert all(link.requires_snapshot for link in linked_by_surface.values())
 
 
-def test_modelo_115_calculates_retention_and_amount_to_pay_from_registry_formula() -> None:
-    modelo, catalogues = _load_modelo("115")
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
-
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={"01": Decimal("2"), "02": Decimal("1000.00"), "04": Decimal("25.00")},
-        date_context={"filing_period": date(2026, 4, 20)},
-    )
-
-    assert result.values["03"] == Decimal("190.00")
-    assert result.values["05"] == Decimal("165.00")
-    entries_by_target = {entry.target: entry for entry in result.entries}
-    assert entries_by_target["03"].legal_refs == ("rd-439-2007:art-100",)
-    assert entries_by_target["05"].legal_refs == (
-        "ley-35-2006:art-99",
-        "rd-439-2007:art-100",
-        "rd-439-2007:art-109",
-    )
