@@ -133,13 +133,6 @@ class SetupWizard:
             else:
                 completed.append(step)
 
-        # FIXTURE_PROVISIONING captures the operator's opt-in only; the
-        # wizard never invokes the external provisioning script itself.
-        if SetupStep.FIXTURE_PROVISIONING in answers.steps_to_skip:
-            skipped.append(SetupStep.FIXTURE_PROVISIONING)
-        else:
-            completed.append(SetupStep.FIXTURE_PROVISIONING)
-
         # Side effects: write profile JSON first (so the verifier can
         # re-validate it), then the env file.
         write_profile_file(answers, answers.default_profile_path)
@@ -317,16 +310,6 @@ class SetupWizard:
             prompt=tr("setup.wizard.aeat_live_tests_enabled_prompt"),
             default=defaults.aeat_live_tests_enabled if defaults else False,
         )
-        live_tests_google = prompter.prompt_bool(
-            key="aeat_live_tests_google",
-            prompt=tr("setup.wizard.aeat_live_tests_google_prompt"),
-            default=defaults.aeat_live_tests_google if defaults else False,
-        )
-        provision_fixtures = prompter.prompt_bool(
-            key="provision_google_fixtures",
-            prompt=tr("setup.wizard.provision_google_fixtures_prompt"),
-            default=defaults.provision_google_fixtures if defaults else False,
-        )
 
         return SetupAnswers(
             tax_id=tax_id,
@@ -350,8 +333,6 @@ class SetupWizard:
             aeat_manuals_root=manuals_root,
             default_profile_path=profile_path,
             aeat_live_tests_enabled=live_tests,
-            aeat_live_tests_google=live_tests_google,
-            provision_google_fixtures=provision_fixtures,
             steps_to_skip=defaults.steps_to_skip if defaults else frozenset(),
             notes=defaults.notes if defaults else "",
         )

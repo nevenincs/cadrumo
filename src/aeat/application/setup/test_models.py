@@ -90,7 +90,7 @@ def test_verify_finding_roundtrip() -> None:
 
 
 def test_setup_step_catalogue_is_closed() -> None:
-    """The ten-step :class:`SetupStep` catalogue is fixed and closed."""
+    """The :class:`SetupStep` catalogue is fixed and closed."""
     assert {step.value for step in SetupStep} == {
         "WELCOME",
         "PROFILE",
@@ -98,7 +98,6 @@ def test_setup_step_catalogue_is_closed() -> None:
         "LANGUAGE",
         "OUTPUT_DIRS",
         "LIVE_TESTS_OPT_IN",
-        "FIXTURE_PROVISIONING",
         "VERIFY",
         "FIRST_RUN",
         "DONE",

@@ -151,7 +151,6 @@ class TestStatusDetailUrlTemplate:
                     "AEAT_DEFAULT_PROFILE_PATH=",
                     "AEAT_CERTIFICATE_PATH=",
                     "AEAT_CERTIFICATE_PASSWORD_SECRET=",
-                    "GOOGLE_OAUTH_REDIRECT_URI=",
                 )
             )
             + "\n",
@@ -171,7 +170,6 @@ class TestStatusDetailUrlTemplate:
         assert settings.aeat_default_profile_path is None
         assert settings.aeat_certificate_path is None
         assert settings.aeat_certificate_password_secret is None
-        assert settings.google_oauth_redirect_uri == "http://localhost:8080"
 
     def test_relative_env_paths_resolve_from_project_root(
         self,
@@ -184,14 +182,7 @@ class TestStatusDetailUrlTemplate:
 
         env_path = tmp_path / ".env"
         env_path.write_text(
-            "\n".join(
-                (
-                    "AEAT_DEFAULT_PROFILE_PATH=env/profiles/dev.json",
-                    "GOOGLE_APPLICATION_CREDENTIALS=env/google-service-account.json",
-                    "GOOGLE_OAUTH_CLIENT_JSON=env/google-oauth-client.json",
-                )
-            )
-            + "\n",
+            "AEAT_DEFAULT_PROFILE_PATH=env/profiles/dev.json\n",
             encoding="utf-8",
         )
 
@@ -206,8 +197,6 @@ class TestStatusDetailUrlTemplate:
 
         settings = RelativeEnvSettings()
         assert settings.aeat_default_profile_path == PROJECT_ROOT / "env" / "profiles" / "dev.json"
-        assert settings.google_application_credentials == str(PROJECT_ROOT / "env" / "google-service-account.json")
-        assert settings.google_oauth_client_json == str(PROJECT_ROOT / "env" / "google-oauth-client.json")
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(
         self,
@@ -253,14 +242,6 @@ class TestRepoRelativePathNormalisationCoverage:
 
     _PATH_FIELD_SUFFIXES: tuple[str, ...] = ("_dir", "_path", "_root")
     """Suffixes that mark a settings field as a repo-relative path."""
-
-    _STRING_PATH_FIELDS: frozenset[str] = frozenset(
-        {
-            "google_oauth_client_json",
-            "google_application_credentials",
-        }
-    )
-    """String-typed path fields routed through the string-mode normaliser."""
 
     _EXEMPT_PATH_FIELDS: frozenset[str] = frozenset()
     """Path-typed `_dir`/`_path`/`_root` fields legitimately exempt from normalisation.
@@ -310,15 +291,6 @@ class TestRepoRelativePathNormalisationCoverage:
                 "_normalize_repo_relative_paths but is still not in the validator. "
                 "Re-add it to the field tuple in src/aeat/config.py."
             )
-
-    def test_string_path_normaliser_covers_known_fields(self) -> None:
-        """String-typed path fields must remain on the string-mode validator."""
-        string_validator = self._validator_field_set("_normalize_repo_relative_path_strings")
-        assert string_validator == set(self._STRING_PATH_FIELDS), (
-            "_normalize_repo_relative_path_strings must cover exactly: "
-            f"{sorted(self._STRING_PATH_FIELDS)}; live validator covers: "
-            f"{sorted(string_validator)}."
-        )
 
     def test_relative_audit_flagged_paths_resolve_under_project_root(
         self,
