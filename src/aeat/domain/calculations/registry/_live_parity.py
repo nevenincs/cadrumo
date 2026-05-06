@@ -41,6 +41,8 @@ from ._remote_state_guard import (
 __all__ = [
     "LiveParityCatalogue",
     "LiveParityOracle",
+    "OracleEnvironment",
+    "OracleSurfaceKind",
     "ParityFieldComparison",
     "ParityResult",
     "ParityVerdict",
@@ -56,6 +58,7 @@ OracleSurfaceKind = Literal[
     "pre_filing_validator",
     "integration_test_service",
 ]
+OracleEnvironment = Literal["production", "test_environment", "both"]
 
 
 class _ParityModel(BaseModel):
@@ -147,13 +150,28 @@ class LiveParityCatalogue:
     ``oracle_id`` in its registry cross-reference; the runtime looks the
     oracle up here. Catalogue registration is process-wide so adapters
     can self-register at import time.
+
+    Every registration declares an explicit environment classification so
+    that adapters targeting AEAT pre-production / test-NIF surfaces cannot
+    leak into production code paths. The :func:`lookup` call requires an
+    environment context; oracles registered as ``"production"`` only are
+    invisible to test-environment lookups and vice versa. ``"both"`` is
+    reserved for adapters whose surface is provably safe under either
+    classification (e.g., pure read-only public services that never touch
+    AEAT NIF state under any environment).
     """
 
     def __init__(self) -> None:
         self._oracles: dict[str, LiveParityOracle] = {}
+        self._environments: dict[str, OracleEnvironment] = {}
 
-    def register(self, oracle: LiveParityOracle) -> None:
-        """Register an oracle. Raises if the id is already taken."""
+    def register(
+        self,
+        oracle: LiveParityOracle,
+        *,
+        environment: OracleEnvironment,
+    ) -> None:
+        """Register an oracle under an explicit environment classification."""
 
         oracle_id = oracle.oracle_id
         if not oracle_id:
@@ -161,20 +179,60 @@ class LiveParityCatalogue:
         if oracle_id in self._oracles:
             raise RegistryValidationError(f"oracle_id {oracle_id!r} already registered")
         self._oracles[oracle_id] = oracle
+        self._environments[oracle_id] = environment
 
-    def lookup(self, oracle_id: str) -> LiveParityOracle:
-        """Return the registered oracle or raise."""
+    def lookup(
+        self,
+        oracle_id: str,
+        *,
+        environment: OracleEnvironment = "production",
+    ) -> LiveParityOracle:
+        """Return the registered oracle for the requested environment.
+
+        Raises when the oracle is unknown, or when its declared environment
+        does not include the requested context. Production lookups never
+        return test-environment-only oracles; test-environment lookups never
+        return production-only oracles.
+        """
 
         try:
-            return self._oracles[oracle_id]
+            oracle = self._oracles[oracle_id]
+        except KeyError as exc:
+            raise RegistryValidationError(f"unknown oracle_id {oracle_id!r}") from exc
+        declared = self._environments[oracle_id]
+        if declared == "both":
+            return oracle
+        if environment == "both":
+            raise RegistryValidationError(
+                f"oracle_id {oracle_id!r} declared environment {declared!r}; "
+                f"caller asked for unrestricted 'both' which the catalogue does not vend"
+            )
+        if declared != environment:
+            raise RegistryValidationError(
+                f"oracle_id {oracle_id!r} declared environment {declared!r} is not available "
+                f"under requested environment {environment!r}"
+            )
+        return oracle
+
+    def environment_of(self, oracle_id: str) -> OracleEnvironment:
+        """Return the declared environment of a registered oracle."""
+
+        try:
+            return self._environments[oracle_id]
         except KeyError as exc:
             raise RegistryValidationError(f"unknown oracle_id {oracle_id!r}") from exc
 
     def is_registered(self, oracle_id: str) -> bool:
         return oracle_id in self._oracles
 
-    def ids(self) -> tuple[str, ...]:
-        return tuple(sorted(self._oracles))
+    def ids(self, *, environment: OracleEnvironment | None = None) -> tuple[str, ...]:
+        """Return oracle ids, optionally filtered to those visible under ``environment``."""
+
+        if environment is None:
+            return tuple(sorted(self._oracles))
+        return tuple(
+            sorted(oracle_id for oracle_id, declared in self._environments.items() if declared in {"both", environment})
+        )
 
 
 def build_planned_operations(

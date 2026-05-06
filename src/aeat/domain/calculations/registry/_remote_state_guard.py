@@ -52,6 +52,19 @@ _FORBIDDEN_TOKENS = (
     "subsanar",
     "borrador",
     "predeclaracion",
+    # AEAT verification surfaces that stage uploaded files in server-side
+    # state under the authenticated NIF even before legal presentation.
+    # TGVI online (Transmisión y Gestión de Volúmenes de Información) creates
+    # a FINALIZED state visible in declaration-history surfaces, configurable
+    # for substitutive replacement of prior filings, and logged as an upload
+    # attempt regardless of presentation. Per the live-parity-oracle ADR
+    # decision D13a, these surfaces are forbidden under the production-NIF
+    # classification; oracle adapters that target them must run only under
+    # AEAT pre-production with test NIFs and declare the test environment
+    # explicitly in their catalogue registration.
+    "tgvi",
+    "transmision",
+    "transmitir",
 )
 
 

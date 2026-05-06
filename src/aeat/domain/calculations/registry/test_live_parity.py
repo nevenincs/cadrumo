@@ -110,6 +110,33 @@ def _post(url: str) -> RemoteOperation:
     return RemoteOperation(kind="http", method="POST", url=AnyUrl(url))
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www6.agenciatributaria.gob.es/wlpl/TGVI/online",
+        "https://www6.agenciatributaria.gob.es/wlpl/PRET/tgvionline/upload",
+        "https://www6.agenciatributaria.gob.es/wlpl/PRET/transmision-fichero",
+        "https://www6.agenciatributaria.gob.es/wlpl/PRET/transmitir",
+    ],
+)
+def test_pre_flight_blocks_oracle_targeting_state_creating_aeat_surface(url: str) -> None:
+    oracle = _FakeOracle(
+        oracle_id="state-creator",
+        surface_kind="file_validator",
+        operations=(_read_only_get(url),),
+        verdict=ParityResult(
+            oracle_id="state-creator",
+            cross_reference_id="test-policy",
+            verdict="match",
+            narrative="x",
+        ),
+    )
+    policy = _read_only_policy()
+
+    with pytest.raises(RegistryValidationError, match="forbidden"):
+        pre_flight_oracle_operations(oracle, policy, payload=b"", expected={})
+
+
 def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
     with pytest.raises(ValueError, match="duplicate parity field"):
         ParityResult(
@@ -127,22 +154,23 @@ def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
 def test_catalogue_register_and_lookup_round_trip() -> None:
     catalogue = LiveParityCatalogue()
     oracle = _FakeOracle(
-        oracle_id="aeat-tgvi-online",
-        surface_kind="file_validator",
+        oracle_id="aeat-public-vies",
+        surface_kind="vat_id_check",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/PRET/check"),),
         verdict=ParityResult(
-            oracle_id="aeat-tgvi-online",
+            oracle_id="aeat-public-vies",
             cross_reference_id="test-policy",
             verdict="match",
             narrative="canned",
         ),
     )
 
-    catalogue.register(oracle)
+    catalogue.register(oracle, environment="production")
 
-    assert catalogue.is_registered("aeat-tgvi-online")
-    assert catalogue.ids() == ("aeat-tgvi-online",)
-    assert catalogue.lookup("aeat-tgvi-online") is oracle
+    assert catalogue.is_registered("aeat-public-vies")
+    assert catalogue.ids() == ("aeat-public-vies",)
+    assert catalogue.lookup("aeat-public-vies") is oracle
+    assert catalogue.environment_of("aeat-public-vies") == "production"
 
 
 def test_catalogue_rejects_duplicate_oracle_id() -> None:
@@ -153,10 +181,10 @@ def test_catalogue_rejects_duplicate_oracle_id() -> None:
         operations=(),
         verdict=ParityResult(oracle_id="dup", cross_reference_id="c", verdict="match", narrative="x"),
     )
-    catalogue.register(oracle)
+    catalogue.register(oracle, environment="production")
 
     with pytest.raises(RegistryValidationError, match="already registered"):
-        catalogue.register(oracle)
+        catalogue.register(oracle, environment="production")
 
 
 def test_catalogue_lookup_unknown_id_raises() -> None:
@@ -164,6 +192,95 @@ def test_catalogue_lookup_unknown_id_raises() -> None:
 
     with pytest.raises(RegistryValidationError, match="unknown oracle_id"):
         catalogue.lookup("missing")
+
+
+def test_catalogue_test_environment_oracle_not_visible_to_production_lookup() -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _FakeOracle(
+        oracle_id="aeat-tgvi-preproduccion",
+        surface_kind="file_validator",
+        operations=(),
+        verdict=ParityResult(
+            oracle_id="aeat-tgvi-preproduccion",
+            cross_reference_id="test-policy",
+            verdict="match",
+            narrative="canned",
+        ),
+    )
+    catalogue.register(oracle, environment="test_environment")
+
+    with pytest.raises(RegistryValidationError, match="not available under requested environment"):
+        catalogue.lookup("aeat-tgvi-preproduccion", environment="production")
+
+    # Test-environment lookup succeeds.
+    assert catalogue.lookup("aeat-tgvi-preproduccion", environment="test_environment") is oracle
+
+
+def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _FakeOracle(
+        oracle_id="aeat-vies-public",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(
+            oracle_id="aeat-vies-public",
+            cross_reference_id="test-policy",
+            verdict="match",
+            narrative="canned",
+        ),
+    )
+    catalogue.register(oracle, environment="production")
+
+    with pytest.raises(RegistryValidationError, match="not available under requested environment"):
+        catalogue.lookup("aeat-vies-public", environment="test_environment")
+
+
+def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _FakeOracle(
+        oracle_id="aeat-static-doc",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(
+            oracle_id="aeat-static-doc",
+            cross_reference_id="test-policy",
+            verdict="match",
+            narrative="canned",
+        ),
+    )
+    catalogue.register(oracle, environment="both")
+
+    assert catalogue.lookup("aeat-static-doc", environment="production") is oracle
+    assert catalogue.lookup("aeat-static-doc", environment="test_environment") is oracle
+
+
+def test_catalogue_ids_filter_by_environment() -> None:
+    catalogue = LiveParityCatalogue()
+    prod_oracle = _FakeOracle(
+        oracle_id="prod",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(oracle_id="prod", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    test_oracle = _FakeOracle(
+        oracle_id="test",
+        surface_kind="file_validator",
+        operations=(),
+        verdict=ParityResult(oracle_id="test", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    both_oracle = _FakeOracle(
+        oracle_id="both",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(oracle_id="both", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    catalogue.register(prod_oracle, environment="production")
+    catalogue.register(test_oracle, environment="test_environment")
+    catalogue.register(both_oracle, environment="both")
+
+    assert catalogue.ids() == ("both", "prod", "test")
+    assert catalogue.ids(environment="production") == ("both", "prod")
+    assert catalogue.ids(environment="test_environment") == ("both", "test")
 
 
 def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:

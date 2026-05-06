@@ -22,6 +22,7 @@ from ._keys import (
     optional_profile_keys,
     required_profile_keys,
 )
+from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 
 class CCAA(StrEnum):
@@ -150,6 +151,9 @@ __all__ = [
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileNotConfiguredError",
+    "RentaAscendantProfile",
+    "RentaDescendantProfile",
+    "RentaFamilyProfile",
     "ResidenceChange",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",

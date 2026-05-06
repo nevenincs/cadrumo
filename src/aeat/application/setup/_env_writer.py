@@ -55,7 +55,6 @@ def owned_env_keys() -> tuple[str, ...]:
         "AEAT_SUBMISSIONS_DIR",
         "AEAT_MANUALS_ROOT",
         "AEAT_LIVE_TESTS_ENABLED",
-        "AEAT_LIVE_TESTS_GOOGLE",
     )
 
 
@@ -77,7 +76,6 @@ def _answers_to_env_mapping(answers: SetupAnswers) -> dict[str, str]:
         "AEAT_SUBMISSIONS_DIR": _posix(answers.aeat_submissions_dir),
         "AEAT_MANUALS_ROOT": _posix(answers.aeat_manuals_root),
         "AEAT_LIVE_TESTS_ENABLED": "true" if answers.aeat_live_tests_enabled else "false",
-        "AEAT_LIVE_TESTS_GOOGLE": "true" if answers.aeat_live_tests_google else "false",
     }
 
 

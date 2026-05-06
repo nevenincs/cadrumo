@@ -93,3 +93,22 @@ def test_spouse_profile_keys_are_conditionally_required_for_joint_taxation() -> 
         assert entry.requirement is ProfileKeyRequirement.OPTIONAL
         assert entry.required_when_key == "declaration.type"
         assert entry.required_when_value == "2"
+
+
+def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
+    expected = {
+        "taxpayer.disability_grade",
+        "taxpayer.death_date",
+        "spouse.disability_grade",
+        "spouse.non_resident_irpf",
+        "spouse.eu_eea_resident",
+        "spouse.eu_eea_country",
+        "family.descendants_eu_eea_deduction",
+        "family.minor_children_in_unit",
+    }
+
+    assert expected.issubset({entry.key for entry in optional_profile_keys()})
+    assert get_profile_key("spouse.eu_eea_resident").required_when_key == "spouse.non_resident_irpf"
+    assert get_profile_key("spouse.eu_eea_resident").required_when_value == "true"
+    assert get_profile_key("spouse.eu_eea_country").required_when_key == "spouse.eu_eea_resident"
+    assert get_profile_key("spouse.eu_eea_country").required_when_value == "true"

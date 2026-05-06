@@ -121,10 +121,6 @@ autodoc_mock_imports = [
     "argon2",
     "argon2.low_level",
     "keyring",
-    "google",
-    "googleapiclient",
-    "gspread",
-    "google_auth_oauthlib",
     "anthropic",
 ]
 

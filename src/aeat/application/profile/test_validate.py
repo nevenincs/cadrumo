@@ -107,6 +107,25 @@ def test_joint_taxation_spouse_profile_fields_clear_conditional_requirement() ->
     assert result.missing_required == ()
 
 
+def test_spouse_non_resident_status_requires_eu_eea_detail_when_set() -> None:
+    values = _all_required_filled()
+    values["spouse.non_resident_irpf"] = "true"
+
+    missing_eu_flag = validate_profile(values)
+    assert missing_eu_flag.valid is False
+    assert missing_eu_flag.missing_required == ("spouse.eu_eea_resident",)
+
+    values["spouse.eu_eea_resident"] = "true"
+    missing_country = validate_profile(values)
+    assert missing_country.valid is False
+    assert missing_country.missing_required == ("spouse.eu_eea_country",)
+
+    values["spouse.eu_eea_country"] = "FR"
+    complete = validate_profile(values)
+    assert complete.valid is True
+    assert complete.missing_required == ()
+
+
 def test_unknown_keys_do_not_block_validation_but_are_surfaced() -> None:
     values = _all_required_filled()
     values["bogus.key"] = "set"
