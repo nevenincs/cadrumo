@@ -5340,3 +5340,29 @@ IvaLedgerObservation record shape.
   resultado-regimen-general) is now uniform across the four
   ledger-aggregating IVA modelos. Both validate with 10 casillas + 3
   formulas + 5 bindings each. Commit `adc40d9d`.
+
+- [x] Modelo 309 result-casillas + total formula. Completes the
+  result-casilla shape across all five standard IVA modelos. Modelo
+  309 (no periodica) gets 2 bound casillas (autorepercutido-
+  intracomunitaria, soportado-recargo-equivalencia) + 1 computed
+  iva.cuota-no-periodica-total formula summing both. End-to-end
+  smoke verified with a vehicle acquisition (5250 cuota
+  autorepercutida) + recargo soportado (21 cuota) = 5271 total.
+  Commit `586e83b9`.
+
+### Result-Casilla Shape Now Uniform Across All 5 Standard IVA Modelos
+
+| Modelo | Cadence | Casillas | Formulas | Bindings |
+|--------|---------|----------|----------|----------|
+| 303    | quarterly | 10 (5 bound + 3 computed + 2 informational) | 3 | 5 |
+| 322    | monthly | 10 (5 bound + 3 computed + 2 informational) | 3 | 5 |
+| 353    | monthly | 10 (5 bound + 3 computed + 2 informational) | 3 | 5 |
+| 309    | ad_hoc | 5 (2 bound + 1 computed + 2 informational) | 1 | 2 |
+| 390    | annual | 13 (8 bound + 3 computed + 2 informational) | 3 | 8 |
+
+Total IVA registry surface: 48 casillas + 11 formulas + 25 bindings
+spanning quarterly, monthly, ad-hoc, and annual filings, all
+backed by the same VATCategory + VATRateKind + IvaFlowDirection
+substrate triple. The cross-modelo previous_filing dependency from
+390 across the four 303 quarters demonstrates that the canonical
+resumen-anual reconciliation pattern works end-to-end.
