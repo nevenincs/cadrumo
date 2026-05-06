@@ -1,3 +1,80 @@
+[legal."orden-eha-3786-2008:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-1.html#a1"
+document_id = "BOE-A-2008-20953"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a1"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden EHA/3786/2008: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion. Ingreso del Impuesto sobre el Valor Anadido a la importacion liquidado por la Aduana'."
+required_text = [
+    "Aprobación del modelo 303",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación",
+]
+
+[legal."orden-eha-3786-2008:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-7.html#a7"
+document_id = "BOE-A-2008-20953"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a7"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Articulo 7 de la Orden EHA/3786/2008: plazo de presentacion del Modelo 303. Periodos mensuales y trimestrales: primeros 20 dias naturales del mes siguiente al final del periodo. El ultimo periodo del ano se presenta durante los primeros 30 dias naturales del mes de enero siguiente."
+required_text = [
+    "Plazo de presentación del modelo 303",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[sources."aeat-dr-303-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx"
+sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
+bytes = 386694
+retrieved_at = 2026-05-06
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-303-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_303/files/modelo-303-procedure.html"
+sha256 = "6fa9e069c86485ac3ff2e55bb3ca603ba280c3f3b18a781013fbbf6a65b4e8c5"
+bytes = 24562
+retrieved_at = 2026-05-06
+applies_from = 2009-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-303-2008-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
+sha256 = "98e3f84291807aac97bbfa6c65fae9c80f0ef78611c3c1121bd531764a688b44"
+bytes = 180738
+retrieved_at = 2026-05-06
+published_at = 2008-12-30
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
+review_status = "reviewed"
+
 [legal."orden-eha-769-2010:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
