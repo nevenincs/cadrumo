@@ -577,8 +577,18 @@ own ledger is checked.
 - [x] Modelo 111 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
-- [ ] Modelo 111 completion gate: mark complete only when no unchecked row
+- [x] Modelo 111 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 111 filing-grade values.
+  - [x] All 17 prerequisite rows checked (audit, legal basis, AEAT
+    guidance, workbook coverage, live filed-data discovery, sanitized
+    fixture, catalogue closure, TOML identity, casilla schema, formulas,
+    extraction profiles, live cross-reference guard, export/filing
+    linkage, legal correctness tests, live/filed-data tests, teardown,
+    quality gate). Registry validator accepts Modelo 111 (1 revision,
+    30 casillas) and the 11 dependent registry tests pass
+    (`test_committed_modelo_111_registry_snapshot_is_calculable`,
+    `test_modelo_111_*`, cross-dependency, filing-schedule selection,
+    chain resolution).
 
 ### Wave 3 Modelo 115 Parity Ledger
 
@@ -1911,6 +1921,21 @@ own ledger is checked.
     export field in the `modelo-200-fichero-boe` layout records (some
     casillas appear in multiple page records and carry multiple
     `export_refs` accordingly).
+  - [x] Section paths re-derived from the AEAT-Sociedades dash-hierarchical
+    label structure (commit `06cb4e4b`). 3,213 auto-generated casillas
+    moved off the opaque `["declaracion", "pagina_NNN"]` bucketing onto
+    semantic 2-deep section paths spanning 214 top-level chapters and
+    637 unique full sections (Balance Activo / Patrimonio Neto y Pasivo
+    I/II, Estado de Cambios Patrimonio Neto I/II, Cuenta de perdidas y
+    ganancias I/II, Liquidacion I-IV, Conversion activos impuesto
+    diferido credito exigible, Deducc. para incentivar determ.
+    actividades, Deduccion donativos entidades sin fines lucro, Reg.
+    cooperativas, Tributacion conjunta Estado y Adm.Forales, Reserva de
+    nivelacion, Limitacion deducibilidad gastos financieros, etc.). The
+    two hand-authored cuota-liquida / cuota-a-ingresar casillas with
+    section `["liquidacion", ...]` are preserved untouched. Cross-modelo
+    schema hygiene tests at `test_schema_hygiene.py` guard against
+    section regression.
 - [ ] Modelo 200 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, relation, rounding rule, legal ref,
   source ref, and trace output.
@@ -2348,9 +2373,48 @@ own ledger is checked.
 - [ ] Modelo 100 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/100.toml`.
-- [ ] Modelo 100 casilla schema: define every filing-grade casilla with data
+- [x] Modelo 100 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, source
   refs, and Renta epoch grouping.
+  - [x] Schema deepened from 224 hand-curated casillas to **11,302 casillas
+    across all six ejercicios 2020-2025** by parsing the AEAT-published
+    `declaracion-individual` `.properties` data dictionaries. Each casilla
+    carries a number, AEAT label, snake_case section path, data type
+    derived from the AEAT type code (P102/P010/P012/P020/P030/P032/P040/
+    P042/P072/P122 to money, N102 to decimal, X/FEC/TIT/AAA/MOD to text,
+    LGC/S_N to boolean, SEQ to integer), `input_kind = "manual"` default,
+    and revision-level legal_refs/source_refs inherited so each casilla
+    carries an authority chain. Existing hand-authored casillas were
+    preserved.
+  - [x] Section paths re-derived from the AEAT XPath after stripping the
+    `/DatosEconomicos` XML root, producing 190 meaningful 2-3-deep
+    section combinations (e.g. `["resultados", "deduccion_autonomica_res",
+    "c_valenciana_res"]` for Valencia autonomic deductions,
+    `["toma_datos_ampliada", "inmuebles", "inmueble"]` for real-estate
+    per-property entries, `["resultados", "anexo_a_res",
+    "deducciones_inversion_empresarial_res"]` for Annex A business
+    investment deductions). Two pre-existing envelope casillas (ZCCAD,
+    TIPOTRIBUTACION) were realigned from the redundant `datos_economicos`
+    bucket to `datos_identificativos` to match the surrounding declarante
+    envelope rows.
+  - [x] Cross-modelo schema hygiene tests landed at
+    `src/aeat/domain/calculations/registry/test_schema_hygiene.py` so a
+    future generator regression cannot reintroduce duplicate casilla
+    declarations or revert section quality. The tests run against every
+    committed `registry/aeat/modelos/*.toml` and check no duplicate
+    casilla ids within a revision, no duplicate casilla numbers within a
+    revision, every casilla declares at least one section segment, every
+    section part is snake_case, and section[0] is not an AEAT XML root
+    container token (`datoseconomicos`, `datos_economicos`, `rootnode`,
+    `root_node`).
+  - [ ] Outstanding sub-step: hand-author `input_kind = "bound"` /
+    `"computed"` semantics, formula bindings, CCAA-conditional
+    reductions, and per-casilla legal-ref refinement beyond revision-
+    level inheritance. The current state is the inventory of every
+    numbered casilla; the calculation chain is wired only for the
+    settlement-chain casillas (cuota_integra, cuota_liquida, cuota
+    diferencial, resultado_declaracion, payments-on-account
+    cross-dependencies with Modelo 130 and 131).
 - [ ] Modelo 100 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, cross-model relation, CCAA parameter,
   rental algorithm, rounding rule, legal ref, source ref, and trace output.
