@@ -1,14 +1,14 @@
 ---
 tags:
   - '#exec'
-  - '#kent-workflows-expansion'
+  - '#operator-workflows-expansion'
 date: '2026-04-25'
 related:
-  - "[[2026-04-25-kent-workflows-expansion-plan]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
+  - "[[2026-04-25-operator-workflows-expansion-plan]]"
+  - "[[2026-04-25-operator-workflows-expansion-adr]]"
 ---
 
-# `kent-workflows-expansion` exec phase1 step1: implementation
+# `operator-workflows-expansion` exec phase1 step1: implementation
 
 Implementation step record for issue wgergely/aeat#340.
 

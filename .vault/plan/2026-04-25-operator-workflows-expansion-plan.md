@@ -1,14 +1,14 @@
 ---
 tags:
   - '#plan'
-  - '#kent-workflows-expansion'
+  - '#operator-workflows-expansion'
 date: '2026-04-25'
 related:
-  - "[[2026-04-25-kent-workflows-expansion-research]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
+  - "[[2026-04-25-operator-workflows-expansion-research]]"
+  - "[[2026-04-25-operator-workflows-expansion-adr]]"
 ---
 
-# `kent-workflows-expansion` plan: cli-integration-coverage
+# `operator-workflows-expansion` plan: cli-integration-coverage
 
 Implementation plan for wgergely/aeat#340. Drives the ten new test
 classes documented in the ADR.
@@ -88,9 +88,9 @@ If any gate fails, fix at root and re-run. No skips.
 
 For each meaningful chunk of work (research, ADR, plan, implementation,
 test-suite green, docs), persist a step record under
-`.vault/exec/2026-04-25-kent-workflows-expansion/` and a final phase
+`.vault/exec/2026-04-25-operator-workflows-expansion/` and a final phase
 summary at
-`.vault/exec/2026-04-25-kent-workflows-expansion/2026-04-25-kent-workflows-expansion-phase1-summary.md`.
+`.vault/exec/2026-04-25-operator-workflows-expansion/2026-04-25-operator-workflows-expansion-phase1-summary.md`.
 
 ## Phase 5 — code review
 

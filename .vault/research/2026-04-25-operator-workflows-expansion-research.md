@@ -1,14 +1,14 @@
 ---
 tags:
   - '#research'
-  - '#kent-workflows-expansion'
+  - '#operator-workflows-expansion'
 date: '2026-04-25'
 related:
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
-  - "[[2026-04-25-kent-workflows-expansion-plan]]"
+  - "[[2026-04-25-operator-workflows-expansion-adr]]"
+  - "[[2026-04-25-operator-workflows-expansion-plan]]"
 ---
 
-# `kent-workflows-expansion` research: cli-integration-coverage
+# `operator-workflows-expansion` research: cli-integration-coverage
 
 Research backing the implementation of issue wgergely/aeat#340, child of
 EPIC #316. Goal: extend `tests/integration/test_kent_workflows.py` so that

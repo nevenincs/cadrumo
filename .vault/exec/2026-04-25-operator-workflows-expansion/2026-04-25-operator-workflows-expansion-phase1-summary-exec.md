@@ -1,15 +1,15 @@
 ---
 tags:
   - '#exec'
-  - '#kent-workflows-expansion'
+  - '#operator-workflows-expansion'
 date: '2026-04-25'
 related:
-  - "[[2026-04-25-kent-workflows-expansion-research]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
-  - "[[2026-04-25-kent-workflows-expansion-plan]]"
+  - "[[2026-04-25-operator-workflows-expansion-research]]"
+  - "[[2026-04-25-operator-workflows-expansion-adr]]"
+  - "[[2026-04-25-operator-workflows-expansion-plan]]"
 ---
 
-# `kent-workflows-expansion` exec phase1 summary
+# `operator-workflows-expansion` exec phase1 summary
 
 Implementation summary for wgergely/aeat#340. Closes the audit-finding
 gap surfaced in EPIC #316: Tier-L modelo CLI integration coverage.
