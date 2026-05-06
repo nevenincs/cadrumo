@@ -186,6 +186,146 @@ def test_chain_resolution_obeys_target_period_under_non_annual_call() -> None:
     assert values == {}
 
 
+def test_modelo_100_aggregates_full_irpf_chain_into_annual_settlement() -> None:
+    """Modelo 100 receives from five periodic feeders plus three annual rollups.
+
+    The renta 2025 revision declares nine relations:
+    - 130 / 131 quarterly pagos fraccionados (instalment_to_final_settlement)
+    - 111 quarterly retenciones (factual_evidence) and 111 monthly retenciones
+      (factual_evidence — same target binding; the taxpayer files quarterly OR
+      monthly, never both)
+    - 115 / 123 quarterly retenciones (factual_evidence)
+    - 180 / 190 / 193 annual retenciones rollup (copy from period 0A)
+
+    To resolve the full set every relation's source period must be observed.
+    The test provides quarterly observations for all quarterly feeders, twelve
+    monthly observations for 111 (zeroed — the taxpayer is on the quarterly
+    rhythm), and one annual observation per annual rollup.
+    """
+
+    revision = _revision("100", "2025")
+    observations: list[RegistryFilingObservation] = []
+    # 100 revision 2025's source_revision_selector pins source observations to
+    # tax year 2025; modelo 100 itself is filed in calendar year 2026 for that
+    # tax year. Source filings carry filing_year=2025; the resolution call
+    # passes filing_year=2026.
+    source_year = 2025
+
+    # 130 quarterly pagos fraccionados (estimacion directa): casilla 19.
+    for period, value in zip(
+        ("1T", "2T", "3T", "4T"),
+        (Decimal("800.00"), Decimal("800.00"), Decimal("800.00"), Decimal("800.00")),
+        strict=True,
+    ):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="130", filing_year=source_year, period=period, casilla_values={"19": value}
+            )
+        )
+
+    # 131 quarterly pagos fraccionados (estimacion objetiva): casilla 15.
+    for period, value in zip(
+        ("1T", "2T", "3T", "4T"),
+        (Decimal("500.00"), Decimal("500.00"), Decimal("500.00"), Decimal("500.00")),
+        strict=True,
+    ):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="131", filing_year=source_year, period=period, casilla_values={"15": value}
+            )
+        )
+
+    # 111 quarterly retenciones: casilla 28.
+    for period, value in zip(
+        ("1T", "2T", "3T", "4T"),
+        (Decimal("3000.00"), Decimal("3000.00"), Decimal("3000.00"), Decimal("3000.00")),
+        strict=True,
+    ):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="111", filing_year=source_year, period=period, casilla_values={"28": value}
+            )
+        )
+
+    # 111 monthly retenciones: zeroed, since the taxpayer is on the quarterly rhythm.
+    for month in (f"{n:02d}" for n in range(1, 13)):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="111", filing_year=source_year, period=month, casilla_values={"28": Decimal("0")}
+            )
+        )
+
+    # 115 quarterly retenciones (rental): casilla 03.
+    for period, value in zip(
+        ("1T", "2T", "3T", "4T"),
+        (Decimal("100.00"), Decimal("100.00"), Decimal("100.00"), Decimal("100.00")),
+        strict=True,
+    ):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="115", filing_year=source_year, period=period, casilla_values={"03": value}
+            )
+        )
+
+    # 123 quarterly retenciones (capital mobiliario): casilla 09.
+    for period, value in zip(
+        ("1T", "2T", "3T", "4T"),
+        (Decimal("50.00"), Decimal("50.00"), Decimal("50.00"), Decimal("50.00")),
+        strict=True,
+    ):
+        observations.append(
+            RegistryFilingObservation(
+                modelo="123", filing_year=source_year, period=period, casilla_values={"09": value}
+            )
+        )
+
+    # 180 / 190 / 193 annual retenciones rollups: each provides one 0A observation
+    # of decl.retenciones-total under the 2025 source year.
+    observations.append(
+        RegistryFilingObservation(
+            modelo="180",
+            filing_year=source_year,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("400.00")},
+        )
+    )
+    observations.append(
+        RegistryFilingObservation(
+            modelo="190",
+            filing_year=source_year,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("12000.00")},
+        )
+    )
+    observations.append(
+        RegistryFilingObservation(
+            modelo="193",
+            filing_year=source_year,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("200.00")},
+        )
+    )
+
+    values = resolve_relation_values_from_observations(revision, tuple(observations), filing_year=2026, period="0A")
+
+    # Pagos fraccionados sum across four quarters.
+    assert values["renta-2025-rel-130-pagos-fraccionados"] == Decimal("3200.00")
+    assert values["renta-2025-rel-131-pagos-fraccionados"] == Decimal("2000.00")
+
+    # Quarterly retenciones sums.
+    assert values["renta-2025-rel-111-retenciones-trimestrales"] == Decimal("12000.00")
+    assert values["renta-2025-rel-115-retenciones-trimestrales"] == Decimal("400.00")
+    assert values["renta-2025-rel-123-retenciones-trimestrales"] == Decimal("200.00")
+
+    # Monthly retenciones path is zeroed because the taxpayer files quarterly.
+    assert values["renta-2025-rel-111-retenciones-mensuales"] == Decimal("0")
+
+    # Annual rollups copy the source casilla directly.
+    assert values["renta-2025-rel-180-retenciones-anuales"] == Decimal("400.00")
+    assert values["renta-2025-rel-190-retenciones-anuales"] == Decimal("12000.00")
+    assert values["renta-2025-rel-193-retenciones-anuales"] == Decimal("200.00")
+
+
 def test_modelo_200_aggregates_modelo_202_pagos_fraccionados_into_annual_settlement() -> None:
     """200's instalment_to_final_settlement relation sums 202's three pagos fraccionados.
 
