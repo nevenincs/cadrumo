@@ -26,7 +26,7 @@ abstraction stays free of network code.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -38,6 +38,9 @@ from ._remote_state_guard import (
     evaluate_remote_operation,
 )
 
+if TYPE_CHECKING:
+    from ._schema import ModeloDefinition
+
 __all__ = [
     "LiveParityCatalogue",
     "LiveParityOracle",
@@ -46,6 +49,8 @@ __all__ = [
     "ParityFieldComparison",
     "ParityResult",
     "ParityVerdict",
+    "audit_oracle_bindings",
+    "audit_registry_oracle_bindings",
     "build_planned_operations",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
@@ -361,3 +366,66 @@ def resolve_cross_reference_oracle(
         raise RegistryValidationError(
             f"cross-reference {cross_reference_id!r} bound oracle {oracle_id!r}: {exc}"
         ) from exc
+
+
+def audit_oracle_bindings(
+    modelo: ModeloDefinition,
+    catalogue: LiveParityCatalogue,
+    *,
+    environment: OracleEnvironment = "production",
+) -> tuple[str, ...]:
+    """Inspect every cross-reference binding in a modelo against the catalogue.
+
+    Returns a tuple of human-readable failure strings, one per cross-
+    reference whose bound oracle id either is not registered in the
+    catalogue or is registered under an incompatible environment. Cross-
+    references with no binding are skipped silently.
+
+    The audit short-circuits to an empty tuple when the catalogue has no
+    registered oracles. This keeps the audit silent during the staged
+    rollout where a modelo TOML may declare a binding before the adapter
+    that satisfies it has been registered (e.g., adapters gated on a
+    Playwright driver follow-up commit).
+
+    The function never raises and never performs any network operation.
+    Failure aggregation is the caller's job.
+    """
+
+    if not catalogue.ids():
+        return ()
+    failures: list[str] = []
+    for revision in modelo.revisions.values():
+        for cross_reference in revision.live_cross_references:
+            oracle_id = cross_reference.oracle_id
+            if oracle_id is None:
+                continue
+            try:
+                catalogue.lookup(oracle_id, environment=environment)
+            except RegistryValidationError as exc:
+                failures.append(
+                    f"modelo {modelo.id} revision {revision.id} cross-reference "
+                    f"{cross_reference.id} bound oracle {oracle_id!r}: {exc}"
+                )
+    return tuple(failures)
+
+
+def audit_registry_oracle_bindings(
+    modelos: Iterable[ModeloDefinition],
+    catalogue: LiveParityCatalogue,
+    *,
+    environment: OracleEnvironment = "production",
+) -> tuple[str, ...]:
+    """Aggregate ``audit_oracle_bindings`` over an iterable of modelos.
+
+    Application bootstrap calls this once per startup to surface every
+    binding-vs-catalogue mismatch in a single report alongside the
+    registry-validator's own failures. The function preserves the order
+    of the input iterable so the report is deterministic.
+    """
+
+    if not catalogue.ids():
+        return ()
+    failures: list[str] = []
+    for modelo in modelos:
+        failures.extend(audit_oracle_bindings(modelo, catalogue, environment=environment))
+    return tuple(failures)
