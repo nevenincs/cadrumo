@@ -87,6 +87,21 @@ _PHASE_E_REQUIRED_FORMULA_TARGETS: frozenset[str] = frozenset(
 
 _PHASE_F_TARGETED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024")
 
+# Phase F is decomposed into a substrate prerequisite (F0) and the formula
+# replication itself (F1). The registry validator requires every formula to
+# cite at least one ``official_source_guidance`` source; for prior years the
+# AEAT manual and BOE form orden have to be catalogued first or the formulas
+# cannot pass validation. The data dictionary that already exists for prior
+# years carries ``layout_authority`` evidence which the validator rejects for
+# formula citations.
+_PHASE_F0_REQUIRED_SUBSTRATE: tuple[tuple[str, ...], ...] = tuple(
+    (
+        f"aeat-renta-{year}-manual-parte1",
+        f"boe-modelo-100-{year}-form",
+    )
+    for year in _PHASE_F_TARGETED_REVISIONS
+)
+
 
 def _modelo_100():
     modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
@@ -191,8 +206,36 @@ def test_phase_e_cuota_liquida_formulas_present_2025() -> None:
 @pytest.mark.xfail(
     strict=True,
     reason=(
-        "phase f: multi-year backport. "
-        "Replicate phases B-E formulas across ejercicios 2020-2024 with year-scoped parameters."
+        "phase f0: prior-year substrate. "
+        "Each ejercicio 2020-2024 needs aeat-renta-{year}-manual-parte1 and "
+        "boe-modelo-100-{year}-form catalogued as official_source_guidance "
+        "before phase f1 formula backport can pass validation."
+    ),
+)
+def test_phase_f0_prior_year_substrate_is_catalogued() -> None:
+    """Each prior-year ejercicio carries an AEAT manual + BOE form orden source.
+
+    The registry validator requires every formula to cite at least one source
+    of evidence_tier=official_source_guidance. The 2025 chain currently uses
+    aeat-renta-2025-manual-parte1 and boe-modelo-100-2025-form. Replicating
+    this for each prior year is the substrate prerequisite for phase F1.
+    """
+    _modelo, catalogues = _modelo_100()
+    catalogued_sources = set(catalogues.sources.keys())
+    gaps: dict[str, list[str]] = {}
+    for year, required in zip(_PHASE_F_TARGETED_REVISIONS, _PHASE_F0_REQUIRED_SUBSTRATE):
+        missing = [src for src in required if src not in catalogued_sources]
+        if missing:
+            gaps[year] = missing
+    assert not gaps, f"phase f0 not yet delivered: prior-year substrate sources missing {gaps}"
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "phase f1: multi-year formula backport. "
+        "Replicate phases B-E formulas across ejercicios 2020-2024 with year-scoped "
+        "official_source_guidance citations. Blocked on phase f0 substrate."
     ),
 )
 def test_phase_f_cuota_chain_present_in_all_prior_revisions_2020_through_2024() -> None:

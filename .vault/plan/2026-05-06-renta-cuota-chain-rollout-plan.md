@@ -200,16 +200,35 @@ the formula registration into the same commit.
      0570 + 0572 + 0574 (deducciones perdidas, intereses, etc.).
   1. Add formula renta-2025-cuota-liquida-autonomica-incrementada: 0586
      = 0571 + 0577 + 0579 + 0584 (autonomic counterparts).
-- `Phase F: Multi-year backport (2020-2024 revisions)`
-  1. Backport Phase A substrate references for prior-year orden de
-     declaración and prior LIRPF revisions (article wording and
-     thresholds change yearly).
+- `Phase F0: Prior-year substrate prerequisite`
+  1. Add aeat-renta-{year}-manual-parte1 source for each ejercicio 2020,
+     2021, 2022, 2023, 2024. Each entry needs the AEAT-published Renta
+     manual PDF committed to corpus, sha256 + bytes integrity, and
+     evidence_tier = official_source_guidance.
+  1. Add boe-modelo-100-{year}-form source for each ejercicio. Each
+     entry needs the BOE orden HTML committed to corpus and
+     evidence_tier = official_source_guidance.
+  1. Add the corresponding orden-hac-{XXX}-{year+1}:art-{N} legal_refs
+     for each year's form orden so the formula legal_refs can carry
+     them.
+  - Phase F0 is the prerequisite for Phase F1. The registry validator
+    requires every formula to cite at least one source of
+    evidence_tier=official_source_guidance. The data dictionaries that
+    already exist for prior years carry layout_authority evidence and
+    are rejected for formula citations. An attempt to backport without
+    F0 was made on 2026-05-06 and reverted: the 95-formula injection
+    failed validation with 95+ "requires official_source_guidance source
+    evidence" errors.
+- `Phase F1: Multi-year formula backport (2020-2024 revisions)`
   1. Backport Phase B formulas to 2024, 2023, 2022, 2021, 2020 with
      year-scoped parameter values where the law differs.
   1. Backport Phase C formulas. Year-scoped saldos de pérdidas
      compensables differ per year.
   1. Backport Phase D and E formulas. Escala general / autonómica
      parameters differ per year and per CCAA.
+  1. Drop input-casilla references that do not exist in older
+     revisions (2020 lacks 0568, 0569, 0544, 0567, 0584; 2021 lacks
+     0568, 0569, 0544, 0584).
 - `Phase G: Multi-year full-chain parity tests`
   1. Convert the aspirational full-chain xfail-strict test into a green
      parameterised test once every phase is delivered for at least one
