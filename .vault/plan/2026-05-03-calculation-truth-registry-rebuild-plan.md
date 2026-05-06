@@ -5186,3 +5186,30 @@ candidates for subsequent foundation slices.
   LIVA_ART_161_RECARGO and recargo_rate_for(rate_kind). The
   substrate is now the canonical authority for recargo rates
   across the codebase. 12 focused tests. Commit `517b00df`.
+
+- [x] IvaFlowDirection codification — repercutido / soportado /
+  autorepercutido as a closed substrate enum anchored to LIVA arts
+  84 (sujetos pasivos / inversion del sujeto pasivo), 88 (repercusion
+  del impuesto), and 92 (cuotas tributarias deducibles). Adds
+  derive_flow_for_classification helper mapping (VATCategory,
+  InvoiceDirection) -> IvaFlowDirection. Reverse-charge categories
+  (DOMESTIC_REVERSE_CHARGE, INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
+  always route to AUTOREPERCUTIDO regardless of invoice direction.
+  The substrate now exposes the complete IVA classification triple
+  (VATCategory + VATRateKind + IvaFlowDirection) the ledger and
+  modelo registries need. 23 focused tests pass. BOE corpus excerpts
+  for arts 84, 88, 92 pulled and registered with required_text gates.
+  Commit `515154bd`.
+- [x] ledger_iva_aggregation binding source kind — cross-modelo
+  generic counterpart to ledger_oss_aggregation that aggregates
+  ledger lines by the canonical IVA classification triple. Selector
+  declares categories: tuple[VATCategory, ...], rate_kinds:
+  tuple[VATRateKind, ...], flow_direction: IvaFlowDirection, fact:
+  iva_amount_sum | base_amount_sum. Used by the standard IVA modelos
+  (303, 322, 353, 309, 390) to wire their casilla / formula chains.
+  IvaLedgerObservation pydantic-strict record carries the triple +
+  base/iva amounts. Validator rejects unknown enum values, empty
+  tuples, non-sum aggregations, unknown facts, wrong source kind.
+  Resolver filters by category-in-set, rate-kind-in-set, exact
+  flow_direction match; deterministic, side-effect-free.
+  17 focused tests pass. Commit `a393fd12`.
