@@ -717,6 +717,38 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-190-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-190-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-190-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form"]
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-190-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
+
 [[revisions."2025-y-siguientes".constructs]]
 id = "modelo-190-annual-summary"
 title = "Modelo 190 annual summary from Modelo 111 quarterly filings"
@@ -776,6 +808,10 @@ application_links = [
     "modelo-190-filing",
     "modelo-190-verification",
     "modelo-190-extractor",
+    "modelo-190-review",
+    "modelo-190-approval",
+    "modelo-190-reconciliation",
+    "modelo-190-workflow",
 ]
 dependency_classifications = ["modelo-190-dep-111"]
 
