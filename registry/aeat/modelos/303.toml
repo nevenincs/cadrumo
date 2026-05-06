@@ -39,6 +39,73 @@ tolerance = "0.00"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
+# -----------------------------------------------------------------------------
+# Demonstrator ledger_iva_aggregation bindings showing the cross-modelo IVA
+# substrate (VATCategory + VATRateKind + IvaFlowDirection) end-to-end.
+# Casilla deepening (mapping these to AEAT-numbered casillas 01, 03, 04, 06,
+# 07, 09, 28, 29 etc.) follows in a subsequent slice.
+# -----------------------------------------------------------------------------
+
+[[revisions."2009-y-siguientes".bindings]]
+id = "modelo-303-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".bindings]]
+id = "modelo-303-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".bindings]]
+id = "modelo-303-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".bindings]]
+id = "modelo-303-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions."2009-y-siguientes".bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
 [[revisions."2009-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
@@ -239,6 +306,9 @@ title = "Modelo 303 IVA quarterly autoliquidacion"
 legal_refs = [
     "orden-eha-3786-2008:art-1",
     "orden-eha-3786-2008:art-7",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-92",
 ]
 source_refs = [
     "aeat-dr-303-2025",
@@ -246,6 +316,13 @@ source_refs = [
     "boe-modelo-303-2008-form",
 ]
 casillas = ["decl.ejercicio", "decl.periodo"]
+bindings = [
+    "modelo-303-iva-repercutido-general-cuota",
+    "modelo-303-iva-repercutido-reducido-cuota",
+    "modelo-303-iva-repercutido-super-reducido-cuota",
+    "modelo-303-iva-soportado-interiores-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+]
 workbook_parity_refs = ["modelo-303-dr-2025"]
 live_cross_references = [
     "modelo-303-static-documentation",
