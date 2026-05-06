@@ -5069,3 +5069,21 @@ Pending VAT-centric slices per the ADR sequencing:
   cross-references with all writes / signing / payment forbidden.
   Operator-type plazo pattern refinement (profile-conditional
   deadline windows) deferred to a deepening slice. Commit `dc3b4d0c`.
+
+- [x] ledger_oss_aggregation registry binding source kind. Implements
+  ADR Decision 8 — the structural backend slice that unblocks the
+  Modelo 369 per-Esquema registry slices. Extends
+  `DataBindingDefinition.source` Literal additively with
+  `ledger_oss_aggregation`; introduces `OssIossLedgerObservation`
+  for substrate-classified ledger lines; declares
+  `_OssIossLedgerSelector` parsing selector dicts into typed
+  OssIossRegime / EUMemberState / VATRateKind / InvoiceDirection /
+  TransactionKind enum values plus a `iva_amount_sum` /
+  `base_amount_sum` fact selector; adds
+  `validate_ledger_oss_aggregation_binding_definition` rejecting
+  unknown axis values, non-sum aggregations, and wrong-source
+  bindings; adds `resolve_ledger_oss_aggregation_binding_values`
+  filtering observations by the five classification axes and
+  returning the aggregated Decimal. Wired into the modelo validator
+  alongside the existing invoice-binding check. 21 focused tests +
+  80 modelo registry regression tests all pass. Commit `283abb4f`.
