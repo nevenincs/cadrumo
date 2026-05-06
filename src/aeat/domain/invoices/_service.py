@@ -8,12 +8,11 @@ Exposes pure-function service operations over an
 (:func:`verify_link_consistency`), and the persistence-level
 bidirectional linker :func:`link_transaction_bidirectional` that
 coordinates writes across the invoice and
-:mod:`aeat.domain.transactions` catalogues with rollback semantics.
+:mod:`aeat.domain.transactions` catalogues.
 """
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
@@ -32,7 +31,6 @@ from ..transactions import (
 from ._enums import InvoiceKind
 from ._errors import (
     InvoiceLinkError,
-    InvoiceLinkInconsistencyError,
     InvoiceNotFoundError,
 )
 from ._models import Invoice, InvoiceCatalogue
@@ -284,11 +282,6 @@ def verify_link_consistency(
     return tuple(inconsistencies)
 
 
-def _write_bytes(path: Path, payload: bytes) -> None:
-    """Default rollback writer: write ``payload`` to ``path`` verbatim."""
-    path.write_bytes(payload)
-
-
 def link_transaction_bidirectional(
     invoices_dir: Path,
     transactions_dir: Path,
@@ -302,15 +295,14 @@ def link_transaction_bidirectional(
     Loads both catalogues via their respective repositories, computes
     both updates in memory, then writes the invoice catalogue followed
     by the transaction catalogue. Both writes go through the
-    encrypted-envelope substrate at FINANCIAL class. If the second
-    write fails, the invoice envelope is rolled back to its prior
-    byte-level ciphertext content; if the rollback itself fails, an
-    :class:`InvoiceLinkInconsistencyError` is raised carrying both
-    paths so an operator can repair the drift.
+    secure storage backend at FINANCIAL class. The path arguments are
+    accepted only to preserve the service boundary shape used by older
+    callers; catalogue storage no longer depends on caller-selected
+    directories.
 
     Args:
-        invoices_dir: Directory containing the invoice envelope file.
-        transactions_dir: Directory containing the transaction envelope file.
+        invoices_dir: Ignored; invoice data is loaded from the secure backend.
+        transactions_dir: Ignored; transaction data is loaded from the secure backend.
         invoice_id: Invoice identifier to update.
         transaction_id: Transaction identifier to update.
 
@@ -321,22 +313,17 @@ def link_transaction_bidirectional(
         :exc:`InvoiceNotFoundError`: If ``invoice_id`` is missing.
         :exc:`InvoiceLinkError`: If linking fails on either side for a
             typed reason.
-        :exc:`InvoiceLinkInconsistencyError`: If both the transaction
-            write and the invoice rollback fail; the two files are left
-            in drifted state for manual repair.
     """
     from ..transactions._repository import TransactionCatalogueRepository
     from ._repository import InvoiceCatalogueRepository
 
+    del invoices_dir, transactions_dir, rollback_temp_writer
     _LOGGER.debug("bidirectional link: invoice=%s transaction=%s", invoice_id, transaction_id)
-    invoice_repo = InvoiceCatalogueRepository(store_dir=invoices_dir)
-    transaction_repo = TransactionCatalogueRepository(store_dir=transactions_dir)
-    invoices_path = invoice_repo.envelope_path
-    transactions_path = transaction_repo.envelope_path
+    invoice_repo = InvoiceCatalogueRepository()
+    transaction_repo = TransactionCatalogueRepository()
 
     invoice_catalogue = invoice_repo.load()
     transaction_catalogue = transaction_repo.load()
-    prior_invoice_bytes = invoices_path.read_bytes() if invoices_path.exists() else None
 
     updated_invoices = link_transaction(invoice_catalogue, invoice_id, transaction_id)
 
@@ -352,63 +339,8 @@ def link_transaction_bidirectional(
     try:
         transaction_repo.save(updated_transactions)
     except TransactionError as exc:
-        _rollback_invoice_file(
-            invoices_path=invoices_path,
-            transactions_path=transactions_path,
-            invoice_id=invoice_id,
-            transaction_id=transaction_id,
-            prior_bytes=prior_invoice_bytes,
-            cause=exc,
-            rollback_temp_writer=rollback_temp_writer,
-        )
-        raise InvoiceLinkError(f"transaction save failed for {transaction_id}; invoice file restored") from exc
+        raise InvoiceLinkError(f"transaction save failed for {transaction_id}") from exc
     return updated_invoices, updated_transactions
-
-
-def _rollback_invoice_file(
-    *,
-    invoices_path: Path,
-    transactions_path: Path,
-    invoice_id: str,
-    transaction_id: str,
-    prior_bytes: bytes | None,
-    cause: BaseException,
-    rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
-) -> None:
-    """Best-effort restore the invoice catalogue after a transaction-write failure."""
-    try:
-        if prior_bytes is None:
-            invoices_path.unlink(missing_ok=True)
-        else:
-            tmp = invoices_path.with_suffix(invoices_path.suffix + ".rollback.tmp")
-            writer = rollback_temp_writer or _write_bytes
-            writer(tmp, prior_bytes)
-            os.replace(tmp, invoices_path)
-            from ...core.locks import fsync_parent_dir
-
-            fsync_parent_dir(invoices_path)
-    except OSError as restore_exc:
-        _LOGGER.error(
-            "rollback failed invoice=%s transaction=%s; original transaction save error follows",
-            invoice_id,
-            transaction_id,
-            exc_info=cause,
-        )
-        raise InvoiceLinkInconsistencyError(
-            invoice_path=invoices_path,
-            transactions_path=transactions_path,
-            invoice_id=invoice_id,
-            transaction_id=transaction_id,
-            message=(
-                "transaction save failed and invoice rollback also failed; "
-                "catalogues are inconsistent and require manual repair"
-            ),
-        ) from restore_exc
-    _LOGGER.error(
-        "rolled back invoice catalogue %s after transaction save failure",
-        invoices_path,
-        exc_info=cause,
-    )
 
 
 def _match_transaction_id(catalogue: TransactionCatalogue, transaction_id: str) -> str:

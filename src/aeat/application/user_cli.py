@@ -4,8 +4,8 @@ The command-line interface needs a small amount of workflow state that is
 not owned by a single domain catalogue: the active setup profile, selected
 auth method, ledger review annotations, invoice review annotations, and the
 last declaration draft chosen for a modelo/period. This module keeps that
-state behind an encrypted-envelope repository so command handlers remain a
-thin transport layer.
+state behind the encrypted SQL byte-object backend so command handlers
+remain a thin transport layer.
 """
 
 from __future__ import annotations
@@ -13,28 +13,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ..adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
-from ..adapters.persistence.storage.envelope._envelope import (
-    Envelope,
-    load_encrypted_envelope,
-    save_encrypted_envelope,
-)
+from ..adapters.persistence.storage.envelope._envelope import Envelope
+from ..adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ..adapters.persistence.storage.sql import SecureObjectRepository
 from ..core.classification import SensitivityClass
-from ..core.config import Settings, load_settings
-from ..core.locks import exclusive_file_lock
+from ..core.config import Settings
 from ..core.logging import get_logger
 
 _logger = get_logger(__name__)
 
 _STATE_VERSION = 1
-_STATE_HKDF_CONTEXT = b"aeat.application.user_cli.state.v1"
-_STATE_FILE_NAME = "user-cli-state.envelope.json"
-_STATE_LOCK_NAME = "user-cli-state.lock"
+_STATE_NAMESPACE = "aeat.application.user_cli"
+_STATE_OBJECT_KEY = "state"
 
 
 def utc_now() -> datetime:
@@ -199,57 +193,57 @@ class UserCliState(BaseModel):
 
 
 class UserCliStateRepository:
-    """Encrypted-envelope repository for :class:`UserCliState`."""
+    """Encrypted SQL object repository for :class:`UserCliState`."""
 
-    def __init__(self, *, state_dir: Path) -> None:
-        self._state_dir = Path(state_dir)
+    def __init__(self) -> None:
+        self._objects = SecureObjectRepository()
 
     @classmethod
     def from_settings(cls, settings: Settings | None = None) -> Self:
-        resolved = settings or load_settings()
-        return cls(state_dir=Path(resolved.aeat_runs_dir) / "cli")
-
-    @property
-    def envelope_path(self) -> Path:
-        return self._state_dir / _STATE_FILE_NAME
-
-    @property
-    def lock_target(self) -> Path:
-        return self._state_dir / _STATE_LOCK_NAME
+        del settings
+        return cls()
 
     def load(self) -> UserCliState:
         """Load state or return an empty payload when absent."""
 
-        if not self.envelope_path.exists():
-            return UserCliState()
-        envelope = load_encrypted_envelope(
-            self.envelope_path,
-            Envelope[UserCliState],
+        record = self._objects.load(
+            _STATE_NAMESPACE,
+            _STATE_OBJECT_KEY,
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_STATE_HKDF_CONTEXT,
             max_supported_version=_STATE_VERSION,
         )
+        if record is None:
+            return UserCliState()
+        envelope = Envelope[UserCliState].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            raise ClassificationError(
+                f"user CLI state has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.FINANCIAL}",
+            )
+        if envelope.schema_version > _STATE_VERSION:
+            raise EnvelopeVersionError(
+                f"user CLI state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
+            )
         return envelope.payload
 
     def save(self, state: UserCliState) -> None:
-        """Persist state atomically under an exclusive lock."""
+        """Persist state in the encrypted database object store."""
 
-        self._state_dir.mkdir(parents=True, exist_ok=True)
-        with exclusive_file_lock(self.lock_target):
-            envelope = Envelope[UserCliState](
-                schema_version=_STATE_VERSION,
-                written_at=utc_now(),
-                classification=SensitivityClass.FINANCIAL,
-                payload=state.model_copy(update={"updated_at": utc_now()}),
-            )
-            save_encrypted_envelope(
-                envelope,
-                self.envelope_path,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_STATE_HKDF_CONTEXT,
-            )
-        _logger.debug("persisted user-cli state to %s", self.envelope_path)
+        envelope = Envelope[UserCliState](
+            schema_version=_STATE_VERSION,
+            written_at=utc_now(),
+            classification=SensitivityClass.FINANCIAL,
+            payload=state.model_copy(update={"updated_at": utc_now()}),
+        )
+        self._objects.save(
+            namespace=_STATE_NAMESPACE,
+            object_key=_STATE_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_STATE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        _logger.debug("persisted user-cli state to secure backend")
 
     def update(self, fn: Callable[[UserCliState], UserCliState]) -> UserCliState:
         """Load, transform, save, and return the updated state."""

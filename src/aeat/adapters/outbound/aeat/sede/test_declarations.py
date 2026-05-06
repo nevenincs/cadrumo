@@ -1108,6 +1108,8 @@ class TestFiledObservationRelations:
         assert resolved["renta-2025-rel-130-pagos-fraccionados"] == Decimal("140")
         assert resolved["renta-2025-rel-131-pagos-fraccionados"] == Decimal("220")
         assert resolved["renta-2025-rel-180-retenciones-anuales"] == Decimal("90")
+        assert resolved["renta-2025-rel-190-retenciones-anuales"] == Decimal("178")
+        assert resolved["renta-2025-rel-193-retenciones-anuales"] == Decimal("60")
 
     def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
@@ -1346,6 +1348,22 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclarationObservation, ..
             ejercicio=2025,
             period="0A",
             casilla_values={"decl.retenciones-total": Decimal("90")},
+        )
+    )
+    observations.append(
+        _filed_observation(
+            modelo="190",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("178")},
+        )
+    )
+    observations.append(
+        _filed_observation(
+            modelo="193",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={"decl.retenciones-total": Decimal("60")},
         )
     )
     return tuple(observations)

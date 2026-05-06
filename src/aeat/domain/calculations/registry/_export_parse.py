@@ -76,6 +76,11 @@ def parse_export_payload(
                 record_values, cursor = _read_record(layout.id, record, payload, cursor)
                 parsed.extend(record_values)
             continue
+        if not _matches_record_start(record, payload, cursor):
+            if record.required:
+                record_values, cursor = _read_record(layout.id, record, payload, cursor)
+                parsed.extend(record_values)
+            continue
         record_values, cursor = _read_record(layout.id, record, payload, cursor)
         parsed.extend(record_values)
     trailing = payload[cursor:]

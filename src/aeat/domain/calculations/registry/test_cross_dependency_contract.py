@@ -94,6 +94,9 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
+            classifications_by_source = {
+                classification.source_modelo: classification for classification in revision.dependency_classifications
+            }
             for target_period in revision.period_selector.periods:
                 requirements = relation_source_requirements(
                     revision,
@@ -109,6 +112,11 @@ def test_cross_dependency_source_requirements_are_derivable_for_target_periods()
                     relation_id for requirement in requirements for relation_id in requirement.relation_ids
                 }
                 assert resolved_relation_ids == expected_relation_ids
+                for requirement in requirements:
+                    assert (
+                        requirement.dependency_treatment
+                        == classifications_by_source[requirement.source_modelo].treatment
+                    )
 
 
 def test_formula_bearing_revisions_consume_calculation_relations() -> None:

@@ -26,9 +26,13 @@ _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
 _MODELO_130_FILE = _REGISTRY_ROOT / "modelos" / "130.toml"
 
 
-def _committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
+def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return next(modelo for modelo in modelos if modelo.id == "130"), catalogues
+    return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues
+
+
+def _committed_registry() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    return _committed_modelo("130")
 
 
 def _revision(modelo: ModeloDefinition) -> ModeloRevision:
@@ -59,6 +63,8 @@ def test_modelo_file_loads_and_snapshot_selects_committed_revision() -> None:
 
     assert snapshot.modelo.id == "130"
     assert snapshot.revision.id == "2019-y-siguientes"
+    assert snapshot.filing_year == 2024
+    assert snapshot.period == "3T"
     assert "rd-439-2007:art-110" in snapshot.legal
     assert "aeat-dr-130-2019-v12" in snapshot.sources
     assert snapshot.legal["rd-439-2007:art-110"].evidence_tier == "legal_authority"
@@ -353,6 +359,79 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="malformed invoice selector"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"fact": "operator_count", "claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="requires aggregation op 'count_distinct'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="requires rectification_scope 'only_rectifications'"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "invoice",
+            "selector": {
+                "fact": "row_field",
+                "row_field": "base_imponible",
+                "grouping": "operator_clave_period",
+                "claves": ("E",),
+            },
+            "aggregation": {"op": "rows"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="grouping 'operator_clave_period' requires"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_export_fields_can_reference_structured_bindings() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -485,6 +564,16 @@ def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> Non
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_extraction_profile_parser_that_does_not_resolve() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    profile = revision.extraction_profiles[0].model_copy(update={"parser": "aeat.missing_registry_parser"})
+    mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
+
+    with pytest.raises(RegistryValidationError, match="does not resolve attribute"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_requires_application_link_for_extraction_profile() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
@@ -502,6 +591,83 @@ def test_validator_requires_application_link_for_formulas() -> None:
     mutated = revision.model_copy(update={"application_links": links})
 
     with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_casilla_export_ref_without_export_field() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    target = next(casilla for casilla in revision.casillas if casilla.export_refs)
+    casillas = tuple(
+        casilla.model_copy(update={"export_refs": (*casilla.export_refs, "missing-export-field")})
+        if casilla.id == target.id
+        else casilla
+        for casilla in revision.casillas
+    )
+    mutated = revision.model_copy(update={"casillas": casillas})
+
+    with pytest.raises(RegistryValidationError, match="references unknown export field"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    exported = next(
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.casilla is not None
+    )
+    casillas = tuple(
+        casilla.model_copy(update={"export_refs": tuple(ref for ref in casilla.export_refs if ref != exported.id)})
+        if casilla.id == exported.casilla
+        else casilla
+        for casilla in revision.casillas
+    )
+    mutated = revision.model_copy(update={"casillas": casillas})
+
+    with pytest.raises(RegistryValidationError, match="is not declared by casilla"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> None:
+    modelo, catalogues = _committed_modelo("131")
+    revision = modelo.revisions["2026"]
+    profile = next(item for item in revision.extraction_profiles if item.surface == "export_record")
+    target = profile.target_casillas[0]
+    removed_export_fields = {
+        field.id
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.casilla == target
+    }
+    export_layouts = tuple(
+        layout.model_copy(
+            update={
+                "records": tuple(
+                    record.model_copy(
+                        update={"fields": tuple(field for field in record.fields if field.casilla != target)}
+                    )
+                    for record in layout.records
+                )
+            }
+        )
+        for layout in revision.export_layouts
+    )
+    casillas = tuple(
+        casilla.model_copy(
+            update={"export_refs": tuple(ref for ref in casilla.export_refs if ref not in removed_export_fields)}
+        )
+        if casilla.id == target
+        else casilla
+        for casilla in revision.casillas
+    )
+    mutated = revision.model_copy(update={"casillas": casillas, "export_layouts": export_layouts})
+
+    with pytest.raises(RegistryValidationError, match="targets casillas without export fields"):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 

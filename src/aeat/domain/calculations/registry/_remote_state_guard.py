@@ -71,6 +71,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     synthetic_data_allowed: bool
     requires_authentication: bool
     requires_aeat_authorization: bool
+    forbidden_actions: tuple[str, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _validate_policy(self) -> RemoteStateGuardPolicy:
@@ -170,6 +171,7 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
         synthetic_data_allowed=decision.synthetic_data_allowed,
         requires_authentication=decision.requires_authentication,
         requires_aeat_authorization=decision.requires_aeat_authorization,
+        forbidden_actions=decision.forbidden_actions,
     )
 
 
@@ -210,6 +212,9 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     if host is None or host.lower() not in policy.allowed_hosts:
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
     text = f"{operation.url} {operation.action or ''}".lower()
+    action = _first_declared_forbidden_action(policy, text)
+    if action is not None:
+        return _blocked(policy, f"AEAT forbidden action {action!r} is blocked")
     token = _first_forbidden_token(text)
     if token is not None:
         return _blocked(policy, f"AEAT remote state token {token!r} is forbidden")
@@ -218,7 +223,11 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
 
 def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
     text = operation.action or ""
-    token = _first_forbidden_token(text.lower())
+    normalized = text.lower()
+    action = _first_declared_forbidden_action(policy, normalized)
+    if action is not None:
+        return _blocked(policy, f"AEAT forbidden action {action!r} is blocked")
+    token = _first_forbidden_token(normalized)
     if token is not None:
         return _blocked(policy, f"AEAT browser action token {token!r} is forbidden")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
@@ -232,6 +241,13 @@ def _first_forbidden_token(value: str) -> str | None:
     for token in _FORBIDDEN_TOKENS:
         if token in value:
             return token
+    return None
+
+
+def _first_declared_forbidden_action(policy: RemoteStateGuardPolicy, value: str) -> str | None:
+    for action in policy.forbidden_actions:
+        if action.lower() in value:
+            return action
     return None
 
 

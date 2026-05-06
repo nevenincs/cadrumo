@@ -368,6 +368,8 @@ class ApplicationLinkDefinition(RegistryModel):
         "filing",
         "review",
         "verification",
+        "approval",
+        "reconciliation",
         "export",
         "deadline",
         "portal",
@@ -505,7 +507,7 @@ class DependencyClassificationDefinition(RegistryModel):
             return self
         if not self.target_constructs:
             raise ValueError(f"dependency classification {self.id!r} must declare target_constructs")
-        if not self.relation_refs:
+        if self.treatment == "direct_annual_settlement" and not self.relation_refs:
             raise ValueError(f"dependency classification {self.id!r} must declare relation_refs")
         return self
 
@@ -779,8 +781,10 @@ class ExportRecordDefinition(RegistryModel):
     order: int = Field(ge=0)
     encoding: str
     line_ending: Literal["crlf", "lf", "none"]
+    required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
+    requires_positive_casilla: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
 
     @field_validator("binding_record")
@@ -872,6 +876,8 @@ class RegistryCatalogues(RegistryModel):
 class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]

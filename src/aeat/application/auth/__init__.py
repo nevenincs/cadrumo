@@ -10,12 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
-    AuthProviderAvailability,
     AuthProviderListing,
-    available_auth_providers,
     get_auth_provider,
     list_auth_providers,
-    unavailable_auth_providers,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -150,7 +147,6 @@ from ._sessions import (  # noqa: E402
 __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
     "AuthProvider",
-    "AuthProviderAvailability",
     "AuthProviderDescription",
     "AuthProviderKind",
     "AuthProviderListing",
@@ -158,7 +154,6 @@ __all__ = [
     "CorruptAuthSessionError",
     "PersistedAuthSession",
     "StorageStatePaths",
-    "available_auth_providers",
     "delete_persisted_session",
     "describe_provider_operator_impact",
     "get_auth_provider",
@@ -167,5 +162,4 @@ __all__ = [
     "require_verified_aeat_session",
     "select_provider",
     "storage_state_paths",
-    "unavailable_auth_providers",
 ]

@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
+from importlib import import_module
 from pathlib import Path
 
+from ._bindings import validate_invoice_binding_definition
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
@@ -206,6 +208,7 @@ class RegistryValidator:
         deadline_window_by_id = {window.id: window for window in revision.deadline_windows}
         filing_schedule_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
         support_removal_decision_by_id = {decision.id: decision for decision in revision.support_removal_decisions}
+        construct_by_id = {construct.id: construct for construct in revision.constructs}
         dependency_classification_by_id = {
             classification.id: classification for classification in revision.dependency_classifications
         }
@@ -217,6 +220,16 @@ class RegistryValidator:
         parameters = set(parameter_by_id)
         providers = set(provider_by_id)
         resolvable_values = casillas | bindings | relations | parameters
+        export_field_ids = {
+            field.id for layout in revision.export_layouts for record in layout.records for field in record.fields
+        }
+        exported_casillas = {
+            field.casilla
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.casilla is not None
+        }
 
         for casilla in revision.casillas:
             failures.extend(
@@ -238,6 +251,9 @@ class RegistryValidator:
                 )
             if casilla.binding is not None and casilla.binding not in bindings:
                 failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
+            for export_ref in casilla.export_refs:
+                if export_ref not in export_field_ids:
+                    failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
 
         for formula in revision.formulas:
             failures.extend(
@@ -345,6 +361,11 @@ class RegistryValidator:
                         "official_source_guidance",
                     )
                 )
+            if binding.source == "invoice":
+                try:
+                    validate_invoice_binding_definition(binding)
+                except RegistryValidationError as exc:
+                    failures.append(f"{prefix}: {exc}")
 
         for relation in revision.relations:
             failures.extend(
@@ -384,10 +405,17 @@ class RegistryValidator:
                 )
             )
             for construct_id in classification.target_constructs:
-                if construct_id not in construct_ids:
+                construct = construct_by_id.get(construct_id)
+                if construct is None:
                     failures.append(
                         f"{prefix}: dependency classification {classification.id!r} references unknown construct "
                         f"{construct_id!r}"
+                    )
+                    continue
+                if classification.id not in construct.dependency_classifications:
+                    failures.append(
+                        f"{prefix}: dependency classification {classification.id!r} targets construct "
+                        f"{construct_id!r} but the construct does not list it"
                     )
             for relation_id in classification.relation_refs:
                 relation = relation_by_id.get(relation_id)
@@ -403,6 +431,31 @@ class RegistryValidator:
                         f"{classification.source_modelo!r} does not match relation {relation_id!r} source_modelo "
                         f"{relation.source_modelo!r}"
                     )
+
+        for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
+            failures.append(f"{prefix}: duplicate dependency classification source modelo {duplicate!r}")
+        classifications_by_source = {
+            classification.source_modelo: classification for classification in revision.dependency_classifications
+        }
+        relation_ids_by_source: dict[str, set[str]] = {}
+        for relation in revision.relations:
+            relation_ids_by_source.setdefault(relation.source_modelo, set()).add(relation.id)
+        for source_modelo, relation_ids_for_source in sorted(relation_ids_by_source.items()):
+            classification = classifications_by_source.get(source_modelo)
+            if classification is None:
+                failures.append(f"{prefix}: relation source modelo {source_modelo!r} has no dependency classification")
+                continue
+            if classification.treatment == "non_dependency":
+                failures.append(
+                    f"{prefix}: relation source modelo {source_modelo!r} cannot be classified as non_dependency"
+                )
+                continue
+            missing_relation_refs = sorted(relation_ids_for_source.difference(classification.relation_refs))
+            if missing_relation_refs:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} does not cover relation refs "
+                    f"{missing_relation_refs!r}"
+                )
 
         selector_periods = set(revision.period_selector.periods)
         for schedule in revision.filing_schedules:
@@ -529,9 +582,7 @@ class RegistryValidator:
                         )
                     for binding in matching_bindings:
                         missing_selector_keys = sorted(
-                            key
-                            for key in ("offset", "length", "data_type")
-                            if key not in binding.selector
+                            key for key in ("offset", "length", "data_type") if key not in binding.selector
                         )
                         if missing_selector_keys:
                             failures.append(
@@ -546,6 +597,11 @@ class RegistryValidator:
                     failures.append(
                         f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
                     )
+                if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
+                    failures.append(
+                        f"{prefix}: export record {record.id!r} requires unknown positive casilla "
+                        f"{record.requires_positive_casilla!r}"
+                    )
                 for field in record.fields:
                     failures.extend(
                         self._missing_refs(prefix, f"export field {field.id}", field.legal_refs, self._legal, "legal")
@@ -558,6 +614,14 @@ class RegistryValidator:
                     if field.casilla is not None and field.casilla not in casillas:
                         failures.append(
                             f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}"
+                        )
+                    if (
+                        field.casilla is not None
+                        and field.casilla in casilla_by_id
+                        and field.id not in casilla_by_id[field.casilla].export_refs
+                    ):
+                        failures.append(
+                            f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}"
                         )
                     if field.binding is not None and field.binding not in bindings:
                         failures.append(
@@ -573,10 +637,18 @@ class RegistryValidator:
                     prefix, f"extraction profile {profile.id}", profile.source_refs, self._sources, "source"
                 )
             )
+            failures.extend(self._validate_dotted_callable(prefix, f"extraction profile {profile.id}", profile.parser))
             for casilla_id in profile.target_casillas:
                 if casilla_id not in casillas:
                     failures.append(
                         f"{prefix}: extraction profile {profile.id!r} references unknown casilla {casilla_id!r}"
+                    )
+            if profile.surface == "export_record" or "submitted_file" in profile.accepted_artefact_kinds:
+                missing_exported_casillas = sorted(set(profile.target_casillas).difference(exported_casillas))
+                if missing_exported_casillas:
+                    failures.append(
+                        f"{prefix}: export_record extraction profile {profile.id!r} targets casillas without "
+                        f"export fields {missing_exported_casillas!r}"
                     )
             failures.extend(self._validate_extraction_profile_artefacts(prefix, profile))
 
@@ -1165,6 +1237,7 @@ class RegistryValidator:
             "deadline window": "deadline_windows",
             "filing schedule": "filing_schedules",
             "support removal decision": "support_removal_decisions",
+            "dependency classification": "dependency_classifications",
         }
 
         for construct in revision.constructs:
@@ -1334,6 +1407,23 @@ class RegistryValidator:
         if profile.surface == "justificante_pdf" and profile.target_casillas:
             failures.append(f"{scope}: extraction profile {profile.id!r} cannot use justificante PDFs as casilla data")
         return failures
+
+    @staticmethod
+    def _validate_dotted_callable(scope: str, owner: str, dotted_path: str) -> list[str]:
+        module_name, separator, attribute = dotted_path.rpartition(".")
+        if not separator or not module_name or not attribute:
+            return [f"{scope}: {owner} parser {dotted_path!r} must be a dotted callable path"]
+        try:
+            module = import_module(module_name)
+        except Exception as exc:
+            return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
+        try:
+            resolved = getattr(module, attribute)
+        except AttributeError:
+            return [f"{scope}: {owner} parser {dotted_path!r} does not resolve attribute {attribute!r}"]
+        if not callable(resolved):
+            return [f"{scope}: {owner} parser {dotted_path!r} is not callable"]
+        return []
 
     def _source_text(self, source: SourceReference) -> str:
         cached = self._source_text_cache.get(source.id)

@@ -87,11 +87,6 @@ def ingest_cmd(
         "--persist/--no-persist",
         help=tr("cli.financial.ingest.persist_help"),
     ),
-    catalogue_dir: Path | None = typer.Option(
-        None,
-        "--catalogue-dir",
-        help=tr("cli.financial.ingest.catalogue_dir_help"),
-    ),
 ) -> None:
     """Validate a source file and emit strict raw transaction records.
 
@@ -116,10 +111,6 @@ def ingest_cmd(
         persist: Tri-state persistence toggle. ``None`` means default
             (ON when stdout is a TTY, OFF when piped) so the legacy
             stdout-only pipe workflow keeps working without a flag.
-        catalogue_dir: Optional override for the catalogue directory.
-            Defaults to ``AEAT_FINANCIAL_TXS_DIR`` when persistence
-            is enabled.
-
     Raises:
         :exc:`typer.Exit`: With exit code ``2`` when no provider can
             handle ``path``, when validation fails, or when the
@@ -184,7 +175,7 @@ def ingest_cmd(
     summary: ImportSummary | None = None
     if persist_resolved:
         _logger.debug("financial ingest: persisting %d transaction(s) to catalogue", len(transactions))
-        summary = _persist_transactions(transactions, catalogue_dir=catalogue_dir)
+        summary = _persist_transactions(transactions)
         _logger.info(
             "financial ingest: catalogue updated (imported=%d skipped=%d)",
             summary.imported,
@@ -222,8 +213,6 @@ def ingest_cmd(
 
 def _persist_transactions(
     transactions: tuple[RawTransaction, ...],
-    *,
-    catalogue_dir: Path | None,
 ) -> ImportSummary:
     """Merge ``transactions`` through the governed repository.
 
@@ -234,16 +223,11 @@ def _persist_transactions(
 
     Args:
         transactions: Raw provider rows produced by the ingest stage.
-        catalogue_dir: Optional override for the catalogue directory.
-            When ``None``, falls back to
-            :attr:`aeat.core.config.Settings.aeat_financial_txs_dir`.
-
     Returns:
         :class:`aeat.domain.transactions.ImportSummary` describing how
         many rows were imported, skipped, and the on-disk catalogue
         location.
     """
-    from ....core.config import load_settings
     from ....domain.transactions import TransactionCatalogueRepository, TransactionDirection
 
     def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
@@ -256,10 +240,7 @@ def _persist_transactions(
             return TransactionDirection.OUTGOING
         return TransactionDirection.INTERNAL_TRANSFER
 
-    if catalogue_dir is None:
-        settings = load_settings()
-        catalogue_dir = Path(settings.aeat_financial_txs_dir)
-    repository = TransactionCatalogueRepository(store_dir=catalogue_dir)
+    repository = TransactionCatalogueRepository()
     return repository.merge_raw_transactions(
         transactions,
         direction_resolver=_direction_from_amount,

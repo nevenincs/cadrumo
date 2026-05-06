@@ -53,12 +53,24 @@ def calculate_registry_snapshot(
     """Evaluate all computed formulas in a validated registry snapshot."""
 
     _reject_non_decimal(inputs, "input")
+    resolved_date_context = dict(date_context)
+    resolved_date_context.setdefault("filing_period", date(snapshot.filing_year, 12, 31))
     resolved_bindings = binding_values or {}
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
 
     revision = snapshot.revision
+    _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
+    _reject_unknown_external_values(
+        resolved_relations,
+        {
+            relation.id
+            for relation in revision.relations
+            if not relation.target_periods or snapshot.period in relation.target_periods
+        },
+        "relation",
+    )
     values = _initial_values(revision, inputs)
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
@@ -75,7 +87,7 @@ def calculate_registry_snapshot(
                 values=values,
                 binding_values=resolved_bindings,
                 parameters=parameters,
-                date_context=date_context,
+                date_context=resolved_date_context,
                 relation_values=resolved_relations,
                 operand_refs=operand_refs,
                 operand_values=operand_values,
@@ -285,6 +297,12 @@ def _reject_non_decimal(values: Mapping[str, Decimal], label: str) -> None:
     for key, value in values.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
+
+
+def _reject_unknown_external_values(values: Mapping[str, Decimal], known_ids: set[str], label: str) -> None:
+    unknown = sorted(set(values).difference(known_ids))
+    if unknown:
+        raise RegistryValidationError(f"unknown registry {label} ids: {unknown!r}")
 
 
 def _require_arg_count(op: str, args: list[Decimal], count: int) -> None:

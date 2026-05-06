@@ -10,11 +10,8 @@ plaintext transaction rows never land on disk.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 
-from ....core.config import load_settings
 from ....core.logging import get_logger
 from ....domain.transactions import (
     TransactionCatalogue,
@@ -25,25 +22,11 @@ from .._i18n import tr
 _logger = get_logger(__name__)
 
 
-def catalogue_dir() -> Path:
-    """Return the configured transaction catalogue store directory.
-
-    Returns:
-        The resolved value of ``Settings.aeat_financial_txs_dir``.
-    """
-    return load_settings().aeat_financial_txs_dir.resolve()
-
-
 def catalogue_repository():
-    """Return a :class:`aeat.domain.transactions.TransactionCatalogueRepository` bound to the configured store dir."""
+    """Return the transaction catalogue repository bound to the secure backend."""
     from ....domain.transactions import TransactionCatalogueRepository
 
-    return TransactionCatalogueRepository(store_dir=catalogue_dir())
-
-
-def catalogue_envelope_path() -> Path:
-    """Return the canonical envelope file path under the configured store dir."""
-    return catalogue_repository().envelope_path
+    return TransactionCatalogueRepository()
 
 
 def load_catalogue_or_empty() -> TransactionCatalogue:
@@ -51,17 +34,16 @@ def load_catalogue_or_empty() -> TransactionCatalogue:
 
     Returns:
         The loaded :class:`aeat.domain.transactions.TransactionCatalogue`,
-        which may be empty if no envelope has been written yet.
+        which may be empty if no catalogue has been written yet.
 
     Raises:
-        typer.Exit: Exit code ``2`` when the envelope exists but cannot
-            be parsed.
+        typer.Exit: Exit code ``2`` when the secure object cannot be parsed.
     """
     repo = catalogue_repository()
     try:
         return repo.load()
     except TransactionError as exc:
-        _logger.warning("load_catalogue_or_empty: catalogue load failed at %s", repo.envelope_path, exc_info=True)
+        _logger.warning("load_catalogue_or_empty: catalogue load failed", exc_info=True)
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
@@ -80,10 +62,10 @@ def load_catalogue_required() -> TransactionCatalogue:
     try:
         catalogue = repo.load()
     except TransactionError as exc:
-        _logger.warning("load_catalogue_required: catalogue load failed at %s", repo.envelope_path, exc_info=True)
+        _logger.warning("load_catalogue_required: catalogue load failed", exc_info=True)
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
-    if len(catalogue) == 0 and not repo.envelope_path.exists():
+    if len(catalogue) == 0 and not repo.exists():
         typer.echo(
             tr("cli.financial.catalogue.errors.not_found"),
             err=True,

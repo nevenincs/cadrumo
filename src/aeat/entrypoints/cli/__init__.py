@@ -1,9 +1,8 @@
 """User-facing ``aeat`` CLI.
 
-The command tree exposes three top-level namespaces:
+The command tree exposes two top-level namespaces:
 
-- ``aeat setup`` — local prerequisites: profile, auth, status.
-- ``aeat auth`` — live AEAT authentication and session inspection.
+- ``aeat setup`` — local prerequisites: profile, authentication, status.
 - ``aeat app`` — operational tax work: overview, ledger, invoice,
   declaration.
 
@@ -20,8 +19,6 @@ from __future__ import annotations
 import typer
 
 from . import _declaration, _invoice, _ledger, _overview, _setup
-from . import auth as auth_module
-from . import registry as registry_module
 from ._common import _FORMAT_TEXT
 from ._i18n import tr
 
@@ -67,7 +64,6 @@ app_app.add_typer(_overview.app, name="overview")
 app_app.add_typer(_ledger.app, name="ledger")
 app_app.add_typer(_invoice.app, name="invoice")
 app_app.add_typer(_declaration.app, name="declaration")
-app_app.add_typer(registry_module.app, name="registry")
 
 
 # ---------------------------------------------------------------------
@@ -76,7 +72,6 @@ app_app.add_typer(registry_module.app, name="registry")
 
 
 app.add_typer(_setup.app, name="setup")
-app.add_typer(auth_module.app, name="auth")
 app.add_typer(app_app, name="app")
 
 

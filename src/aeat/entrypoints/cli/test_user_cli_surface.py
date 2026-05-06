@@ -9,6 +9,9 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from aeat.domain.invoices import InvoiceCatalogueRepository
+from aeat.domain.transactions import TransactionCatalogueRepository
+
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -41,14 +44,51 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
 
 
-def test_root_surface_contains_setup_auth_and_app() -> None:
+@pytest.fixture
+def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+    from aeat.adapters.persistence.storage.sql import dispose_engine
+
+    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
+    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
+    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
+    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    try:
+        yield tmp_path
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
+
+
+def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
+    db_path = tmp_path / "aeat.db"
+    assert db_path.exists()
+    on_disk = db_path.read_bytes()
+    assert b"secure_objects" in on_disk
+    for canary in plaintext_canaries:
+        assert canary.encode("utf-8") not in on_disk
+
+
+def test_root_surface_contains_setup_and_app_only() -> None:
     result = _invoke(["--help"])
 
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
-    assert "auth" in result.output
     assert "app" in result.output
-    for removed_command in ("financial", "filing", "bootstrap", "doctor", "declarations", "workspaces", "audits"):
+    for removed_command in (
+        "auth",
+        "financial",
+        "filing",
+        "bootstrap",
+        "doctor",
+        "declarations",
+        "workspaces",
+        "audits",
+    ):
         assert removed_command not in result.output
 
 
@@ -58,6 +98,8 @@ def test_removed_developer_commands_are_not_registered() -> None:
         ["filing", "--help"],
         ["bootstrap", "--help"],
         ["doctor", "--help"],
+        ["auth", "--help"],
+        ["app", "registry", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
@@ -80,6 +122,30 @@ def test_app_surface_uses_singular_user_domains() -> None:
         assert removed_command not in result.output
 
 
+def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
+    commands = [
+        ["--help"],
+        ["setup", "--help"],
+        ["setup", "auth", "--help"],
+        ["setup", "auth", "status", "--help"],
+        ["setup", "auth", "configure", "--help"],
+        ["setup", "profile", "--help"],
+        ["setup", "profile", "set", "--help"],
+        ["setup", "profile", "validate", "--help"],
+        ["app", "--help"],
+        ["app", "overview", "--help"],
+        ["app", "overview", "status", "--help"],
+        ["app", "ledger", "--help"],
+        ["app", "invoice", "--help"],
+        ["app", "declaration", "--help"],
+    ]
+
+    for command in commands:
+        result = _invoke(command)
+        assert result.exit_code == 0, command
+        assert "cli." not in result.output, command
+
+
 def test_ledger_split_is_nested_inside_edit() -> None:
     ledger = _invoke(["app", "ledger", "--help"])
     edit = _invoke(["app", "ledger", "edit", "--help"])
@@ -87,7 +153,8 @@ def test_ledger_split_is_nested_inside_edit() -> None:
     assert ledger.exit_code == 0, ledger.output
     assert edit.exit_code == 0, edit.output
     assert "--split" in edit.output
-    assert "Edit one ledger row" in edit.output
+    assert "--skip" in edit.output
+    assert "--reason" in edit.output
 
 
 def test_invoice_and_ledger_share_review_wording() -> None:
@@ -101,35 +168,50 @@ def test_invoice_and_ledger_share_review_wording() -> None:
     assert "show" not in invoice.output
 
 
+def test_review_filter_help_lists_supported_filter_keys() -> None:
+    ledger = _invoke(["app", "ledger", "review", "--help"])
+    invoice = _invoke(["app", "invoice", "review", "--help"])
+
+    assert ledger.exit_code == 0, ledger.output
+    assert invoice.exit_code == 0, invoice.output
+    for token in ("status", "period", "issue", "import"):
+        assert token in ledger.output
+    compact_invoice_help = " ".join(invoice.output.split())
+    for token in ("status=pending", "kind=issued|received"):
+        assert token in compact_invoice_help
+    assert "period" not in invoice.output
+
+
 def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
     edit = _invoke(["app", "invoice", "edit", "--help"])
     match = _invoke(["app", "invoice", "match", "--help"])
 
     assert edit.exit_code == 0, edit.output
     assert match.exit_code == 0, match.output
-    for field in ("base", "iva.rate", "iva.amount", "payment.id", "document.path"):
+    for field in ("base", "iva.rate", "iva.amount", "iva.category", "retention.rate", "payment.id", "document.path"):
         assert field in edit.output
     assert "--period" in match.output
     assert "--invoice" in match.output
     assert "--ledger" in match.output
 
 
-def test_auth_configure_supports_user_provider_aliases(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
 
     providers = _invoke(["setup", "auth", "providers"])
     configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    unavailable = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
+    unsupported_spelling = _invoke(["setup", "auth", "configure", "--provider", "clave-movil"])
+    unsupported = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
 
     assert providers.exit_code == 0, providers.output
-    assert "clave-permanente" in providers.output
-    assert "unavailable" in providers.output
+    assert "clave_permanente" not in providers.output
+    assert "unavailable" not in providers.output
     assert configure.exit_code == 0, configure.output
-    assert "clave-movil" in configure.output
-    assert unavailable.exit_code != 0
-    assert "unavailable-provider" in unavailable.output
+    assert "clave_movil" in configure.output
+    assert unsupported_spelling.exit_code != 0
+    assert unsupported.exit_code != 0
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -162,12 +244,164 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
     assert json.loads(_json_output(overview))["transactions"] == 0
 
 
+def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
+    tmp_path = encrypted_user_cli
+    canary = "CLI_ENCRYPTED_LEDGER_CANARY_5A2F"
+    transaction_ref = "n26-secure-row-001"
+    statement = tmp_path / "n26-secure.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                f"2026-01-05,{canary},Invoice 2026-SEC,121.00,EUR,{transaction_ref}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "n26"])
+
+    assert imported.exit_code == 0, imported.output
+    assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
+    _assert_secure_database_payload(tmp_path, canary, transaction_ref)
+    catalogue = TransactionCatalogueRepository().load()
+    [stored] = list(catalogue.transactions.values())
+    assert stored.raw.counterparty == canary
+    assert stored.raw.transaction_id == transaction_ref
+
+
+def test_ledger_import_verify_source_records_original_file_digest(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import hashlib
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    statement = tmp_path / "n26-q1.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    source = tmp_path / "n26-q1.pdf"
+    source_bytes = b"original downloaded bank statement"
+    source.write_bytes(source_bytes)
+
+    imported = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "n26",
+            "--dry-run",
+            "--verify",
+            "--source",
+            str(source),
+            "--verbose",
+        ]
+    )
+
+    assert imported.exit_code == 0, imported.output
+    payload = json.loads(_json_output(imported))
+    assert payload["dry_run"] is True
+    assert payload["validation"]["valid"] is True
+    assert payload["source"]["requested"] is True
+    assert payload["source"]["path"] == str(source.resolve())
+    assert payload["source"]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
+
+
+def test_ledger_import_verify_source_rejects_missing_original_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    statement = tmp_path / "n26-q1.csv"
+    statement.write_text(
+        "\n".join(
+            [
+                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
+                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    missing_source = Path("missing.pdf")
+
+    imported = _invoke(
+        [
+            "app",
+            "ledger",
+            "import",
+            str(statement),
+            "--provider",
+            "n26",
+            "--dry-run",
+            "--verify",
+            "--source",
+            str(missing_source),
+        ]
+    )
+
+    assert imported.exit_code != 0
+    assert "missing.pdf" in imported.output
+
+
 def test_declaration_verify_accepts_file_not_export_option() -> None:
     result = _invoke(["app", "declaration", "verify", "--help"])
 
     assert result.exit_code == 0, result.output
     assert "--file" in result.output
     assert "--export" not in result.output
+
+
+def test_declaration_validate_uses_root_format_option() -> None:
+    root = _invoke(["--help"])
+    validate = _invoke(["app", "declaration", "validate", "--help"])
+
+    assert root.exit_code == 0, root.output
+    assert validate.exit_code == 0, validate.output
+    assert "--format" in root.output
+    assert "--format" not in validate.output
+    assert "--output" in validate.output
+
+
+def test_declaration_gate_options_use_user_workflow_descriptions() -> None:
+    approve = _invoke(["app", "declaration", "approve", "--help"])
+    status = _invoke(["app", "declaration", "status", "--help"])
+    validate = _invoke(["app", "declaration", "validate", "--help"])
+    verify = _invoke(["app", "declaration", "verify", "--help"])
+
+    assert approve.exit_code == 0, approve.output
+    assert status.exit_code == 0, status.output
+    assert validate.exit_code == 0, validate.output
+    assert verify.exit_code == 0, verify.output
+    assert "Persona que revisó la declaración" in approve.output
+    assert "Motivo auditado" in approve.output
+    assert "status=pending" in status.output
+    assert "approved" in status.output
+    assert "stale" in status.output
+    assert "Ruta del informe" in validate.output
+    assert "Archivo local exportado" in verify.output
+
+
+def test_declaration_help_uses_local_export_not_live_submission_wording() -> None:
+    declaration = _invoke(["app", "declaration", "--help"])
+    approve = _invoke(["app", "declaration", "approve", "--help"])
+    combined = f"{declaration.output}\n{approve.output}".lower()
+
+    assert declaration.exit_code == 0, declaration.output
+    assert approve.exit_code == 0, approve.output
+    assert "exportación local" in combined
+    assert "archivo local" in combined
+    assert "presentación" not in combined
+    assert "submission" not in combined
 
 
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -237,6 +471,39 @@ def test_invoice_import_edit_review_round_trip(monkeypatch: pytest.MonkeyPatch, 
     assert row["payment.id"] == payment_id
 
 
+def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
+    tmp_path = encrypted_user_cli
+    canary = "CLI_ENCRYPTED_INVOICE_CANARY_7B1D"
+    invoice_number = "INV-SEC-001"
+    invoice_path = tmp_path / "invoice-secure.json"
+    invoice_path.write_text(
+        json.dumps(
+            {
+                "kind": "issued",
+                "invoice_number": invoice_number,
+                "issued_at": "2026-04-01",
+                "counterparty_name": canary,
+                "counterparty_tax_id": "B12345674",
+                "base_total": "100.00",
+                "iva_total": "21.00",
+                "grand_total": "121.00",
+                "iva_rate": "21",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    imported = _invoke(["app", "invoice", "import", str(invoice_path), "--kind", "issued"])
+
+    assert imported.exit_code == 0, imported.output
+    assert not (tmp_path / "invoices" / "invoices.envelope.json").exists()
+    _assert_secure_database_payload(tmp_path, canary, invoice_number)
+    catalogue = InvoiceCatalogueRepository().load()
+    [stored] = list(catalogue.values())
+    assert stored.counterparty_name == canary
+    assert stored.invoice_number == invoice_number
+
+
 def test_profile_validate_no_active_profile_blocks(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
 
@@ -246,6 +513,26 @@ def test_profile_validate_no_active_profile_blocks(monkeypatch: pytest.MonkeyPat
     payload = json.loads(_json_output(result))
     assert payload["valid"] is False
     assert payload["missing"] == ["profile"]
+
+
+def test_profile_set_requires_active_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    result = _invoke(["setup", "profile", "set", "tax.id", "12345678Z"])
+
+    assert result.exit_code == 2, result.output
+    assert "no-active-profile" in result.output
+    assert "aeat setup init --name NAME" in result.output
+
+
+def test_profile_keys_match_domain_registry_names() -> None:
+    result = _invoke(["setup", "profile", "list-keys"])
+
+    assert result.exit_code == 0, result.output
+    for key in ("tax.id", "activity", "name", "surnames", "address.postcode", "declaration.type"):
+        assert key in result.output
+    for retired_key in ("tax.name", "activity.label", "activity.code"):
+        assert retired_key not in result.output
 
 
 def test_profile_validate_routes_through_application_layer(
@@ -397,5 +684,5 @@ def test_kent_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
     assert calculated.exit_code != 0
-    assert "not present in the calculation registry" in str(calculated.exception)
+    assert "not present in the calculation registry" in calculated.output
     assert not export_path.exists()

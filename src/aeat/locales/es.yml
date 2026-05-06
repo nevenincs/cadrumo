@@ -341,8 +341,8 @@ cli:
       year_help: Ejercicio fiscal a consultar
     next_help: Mostrar el próximo plazo tributario relevante
   declaration:
-    app_help: Gestión y presentación de declaraciones tributarias
-    approve_help: Aprobar una declaración para su presentación
+    app_help: Preparación y exportación local de declaraciones tributarias
+    approve_help: Aprobar una declaración para exportación local
     calculate_help: Calcular los importes de una declaración
     edit_help: Editar manualmente una declaración existente
     errors:
@@ -355,7 +355,7 @@ cli:
       not_approved_for_export: La declaración debe ser aprobada antes de ser exportada
       profile_tax_id_required: El perfil activo requiere un NIF/CIF configurado
       set_parse_error: Error al procesar la asignación del campo
-    export_help: Exportar una declaración aprobada al formato oficial de la AEAT
+    export_help: Exportar una declaración aprobada a un archivo local en formato AEAT
     format_help: Formato de salida (ej. json, text, table)
     labels:
       blockers: Bloqueos
@@ -364,6 +364,7 @@ cli:
       draft_id: ID del borrador
       edits: Ediciones
       findings: Hallazgos
+      matches_filter: Coincide con el filtro
       mismatched: No coincide
       modelo: Modelo
       next: Siguiente
@@ -374,15 +375,17 @@ cli:
       values: Valores
       verdict: Veredicto
       warnings: Advertencias
+      'yes': Sí
+      'no': 'No'
     opts:
-      by: Por
-      draft_id: ID del borrador
-      file: Archivo
-      filter: Filtro
+      by: Persona que revisó la declaración
+      draft_id: ID del borrador local
+      file: Archivo local exportado a verificar
+      filter: Filtrar por status=pending|approved|stale|submitted|acknowledged
       modelo: Modelo
-      output: Salida
+      output: Ruta del informe o archivo local de salida
       period: Periodo
-      reason: Motivo
+      reason: Motivo auditado del cambio o aprobación
       set: Asignar (SET)
     preview_help: Previsualizar el contenido de una declaración
     review_help: Revisar las validaciones y errores de una declaración
@@ -733,25 +736,25 @@ cli:
     profile:
       app_help: Gestión de perfiles financieros
       errors:
-        at_least_one: Se requiere al menos un campo o perfil
+        category_not_eligible: cli.financial.profile.errors.category_not_eligible
         did_you_mean: ¿Quiso decir...?
         eligible_categories: Categorías elegibles
         family_aliases: Alias familiares
         invalid_ratio: Ratio o porcentaje no válido
+        must_be_finite: cli.financial.profile.errors.must_be_finite
+        out_of_range: cli.financial.profile.errors.out_of_range
         unknown_key: Clave o propiedad desconocida en el perfil
       headers:
         ratios: Ratios / Repartos
       labels:
         no_active: No hay un perfil activo seleccionado
-        profile_not_found: Perfil financiero no encontrado
-        switched: Perfil financiero cambiado correctamente
       ratios_help: Definir ratios de reparto para el perfil financiero
       ratios_list_help: Listar los ratios de reparto definidos en el perfil
       set_ratio_help: Establecer un ratio de reparto específico
-      set_ratio_key_help: Clave o categoría del ratio
+      set_ratio_key_help: 'Clave o categoría del ratio. Alias de familia: %{aliases}'
       set_ratio_value_help: Valor del ratio (p. ej., 0.5 para 50%)
       unset_ratio_help: Eliminar un ratio de reparto específico
-      unset_ratio_key_help: Clave o categoría del ratio a eliminar
+      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia: %{aliases}'
     txs:
       app_help: Gestión de transacciones bancarias
   financial_invoices:
@@ -826,7 +829,8 @@ cli:
       help: Editar manualmente los datos de una factura
       id_help: Identificador de la factura a editar
       reason_help: Motivo de la edición o corrección
-      set_help: Establecer valores de campos específicos (campo=valor)
+      set_help: Establecer campos de factura (base, iva.rate, iva.amount, iva.category,
+        retention.rate, retention.amount, payment.id, document.path)
     errors:
       at_least_one_edit: Se requiere al menos una modificación de campo
       file_not_found: Archivo de factura no encontrado
@@ -863,8 +867,7 @@ cli:
       ledger_help: Identificador del libro contable
       period_help: Periodo fiscal para el emparejamiento
     review:
-      filter_help: Filtrar facturas a revisar (p. ej., por fecha o importe)
-      header: SESIÓN DE REVISIÓN DE FACTURAS
+      filter_help: Filtrar facturas por status=pending|reviewed|matched|paid o kind=issued|received
       help: Revisión interactiva y validación de facturas
       id_help: Identificador de la factura específica a revisar
       no_invoices: No hay facturas pendientes de revisión
@@ -876,12 +879,14 @@ cli:
       id_help: Identificador de la entrada del libro a editar
       reason_help: Motivo de la edición o corrección de la entrada
       set_help: Establecer valores de campos del libro (campo=valor)
-      skip_help: Omitir la edición de campos específicos
-      split_help: Dividir la entrada en múltiples líneas
+      skip_help: Marcar la fila como excluida o volver a incluirla en la revisión
+      split_help: Dividir la fila en porcentajes de uso profesional y personal
     errors:
       auto_detect_failed: Fallo en la detección automática del formato del libro
       edit_requires_one: Se requiere al menos una modificación de campo para editar
       filter_parse_error: Fallo al analizar el filtro del libro
+      invalid_source: 'El archivo del libro no se puede importar: {reason}'
+      invalid_source_unknown: origen no válido
       invalid_skip: Campo de omisión no válido
       invalid_split_format: Formato de división no válido
       invalid_split_value: Valor de división no válido
@@ -890,6 +895,7 @@ cli:
       n26_auto_detect_failed: Fallo en la detección automática del formato de N26
       row_not_found: Fila del libro no encontrada
       set_parse_error: Fallo al analizar la asignación del campo (campo=valor)
+      source_not_found: 'No se ha encontrado el archivo de origen: {source}'
       unknown_provider: Proveedor de libro contable desconocido
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
@@ -897,7 +903,7 @@ cli:
       path_help: Ruta al archivo del extracto bancario o directorio
       period_help: Periodo fiscal para la importación
       provider_help: Proveedor del formato del extracto (p. ej., N26, Revolut)
-      source_help: Fuente de los datos (p. ej., archivo, api)
+      source_help: Archivo original para verificar las filas importadas
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
     labels:
@@ -911,10 +917,13 @@ cli:
       'no': 'No'
       rows: Filas
       skipped: Omitidos
-      status: Estado
+      source: Origen
+      dialect: Formato detectado
+      valid: Válido
+      warnings: Avisos
       'yes': Sí
     review:
-      filter_help: Filtrar entradas del libro a revisar (p. ej., por fecha o importe)
+      filter_help: Filtrar filas por status, period, issue o import
       header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
       help: Revisión interactiva y validación de entradas del libro
       id_help: Identificador de la entrada específica a revisar
@@ -993,20 +1002,20 @@ cli:
       copied: cli.oauth.success.copied
       written: cli.oauth.success.written
   overview:
-    app_help: cli.overview.app_help
-    calendar_help: cli.overview.calendar_help
-    calendar_requires_dates: cli.overview.calendar_requires_dates
-    drafts: cli.overview.drafts
-    from_help: cli.overview.from_help
-    header: cli.overview.header
-    invoices: cli.overview.invoices
-    period: cli.overview.period
-    period_help: cli.overview.period_help
-    profile: cli.overview.profile
-    status_help: cli.overview.status_help
-    to_help: cli.overview.to_help
-    transactions: cli.overview.transactions
-    verbose_help: cli.overview.verbose_help
+    app_help: Revisar el estado actual del espacio de trabajo fiscal
+    calendar_help: Mostrar calendario de obligaciones para un rango de fechas
+    calendar_requires_dates: Use --from y --to al consultar el calendario
+    drafts: Borradores
+    from_help: Fecha inicial del calendario (AAAA-MM-DD)
+    header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
+    invoices: Facturas
+    period: Periodo
+    period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
+    profile: Perfil
+    status_help: Mostrar el estado del perfil, libro, facturas y declaraciones
+    to_help: Fecha final del calendario (AAAA-MM-DD)
+    transactions: Movimientos
+    verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: cli.registry.app_help
     capture_filed_data_help: cli.registry.capture_filed_data_help
@@ -1032,6 +1041,16 @@ cli:
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     output_root_help: cli.registry.output_root_help
+    parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
+    parity_output_help: Archivo JSON de destino para la cinta de paridad generada
+    parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
+      actual del registro
+    parity_run_help: Ejecutar un escenario de paridad guardado y archivar la cinta
+      resultante
+    parity_scenario_help: Ruta a un archivo JSON de escenario de paridad
+    parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
+      generadas
+    parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     period_help: cli.registry.period_help
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
@@ -1049,84 +1068,84 @@ cli:
     workbooks_verify_help: cli.registry.workbooks_verify_help
     year_help: cli.registry.year_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    format_help: cli.root.format_help
+    app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
+    app_help: Asistente para preparar declaraciones tributarias españolas
+    format_help: Formato de salida para los resultados del comando
   sanitize:
     app_help: cli.sanitize.app_help
     labels:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: cli.setup.app_help
+    app_help: Preparar el perfil local y la autenticación necesarios para usar la aplicación
     auth:
-      app_help: cli.setup.auth.app_help
+      app_help: Configurar y comprobar la autenticación de AEAT
       configure:
-        file_help: cli.setup.auth.configure.file_help
-        help: cli.setup.auth.configure.help
-        provider_help: cli.setup.auth.configure.provider_help
+        file_help: Ruta del certificado cuando el proveedor lo requiera
+        help: Configurar el proveedor de autenticación
+        provider_help: Proveedor de autenticación a usar
       login:
-        help: cli.setup.auth.login.help
+        help: Iniciar la sesión local de autenticación configurada
       logout:
-        help: cli.setup.auth.logout.help
+        help: Cerrar la sesión local de autenticación
       providers:
-        help: cli.setup.auth.providers.help
+        help: Listar proveedores de autenticación disponibles
       status:
-        help: cli.setup.auth.status.help
+        help: Mostrar el proveedor configurado y el estado de sesión
       whoami:
-        help: cli.setup.auth.whoami.help
+        help: Mostrar la identidad asociada a la sesión actual
     errors:
-      certificate_file_required: cli.setup.errors.certificate_file_required
-      file_not_found: cli.setup.errors.file_not_found
-      not_configured: cli.setup.errors.not_configured
-      unknown_profile_key: cli.setup.errors.unknown_profile_key
-      unknown_provider: cli.setup.errors.unknown_provider
+      certificate_file_required: El proveedor certificate requiere --file
+      file_not_found: No se ha encontrado el archivo {file}
+      not_configured: Configure un proveedor antes de iniciar sesión
+      unknown_profile_key: "Clave de perfil desconocida: {key}"
+      unknown_provider: "Proveedor de autenticación desconocido: {provider}"
     headers:
-      active: cli.setup.headers.active
-      auth_provider: cli.setup.headers.auth_provider
-      authenticated_at: cli.setup.headers.authenticated_at
-      availability: cli.setup.headers.availability
-      description: cli.setup.headers.description
-      id: cli.setup.headers.id
-      key: cli.setup.headers.key
-      login_ready: cli.setup.headers.login_ready
-      logout: cli.setup.headers.logout
-      missing: cli.setup.headers.missing
-      next: cli.setup.headers.next
-      profile: cli.setup.headers.profile
-      profile_ready: cli.setup.headers.profile_ready
-      provider: cli.setup.headers.provider
-      ready: cli.setup.headers.ready
-      requirement: cli.setup.headers.requirement
-      subject: cli.setup.headers.subject
-      unknown: cli.setup.headers.unknown
-      valid: cli.setup.headers.valid
+      active: Activo
+      auth_provider: Proveedor de autenticación
+      authenticated_at: Autenticado el
+      availability: Disponibilidad
+      description: Descripción
+      id: ID
+      key: Clave
+      login_ready: Sesión lista
+      logout: Cierre de sesión
+      missing: Falta
+      next: Siguiente
+      profile: Perfil
+      profile_ready: Perfil listo
+      provider: Proveedor
+      ready: Listo
+      requirement: Requisito
+      subject: Identidad
+      unknown: Desconocido
+      valid: Válido
     init:
-      activity_help: cli.setup.init.activity_help
-      help: cli.setup.init.help
-      name_help: cli.setup.init.name_help
-      tax_id_help: cli.setup.init.tax_id_help
+      activity_help: Actividad económica principal
+      help: Crear o activar un perfil de contribuyente
+      name_help: Nombre del perfil local
+      tax_id_help: NIF/NIE/CIF del contribuyente
     labels:
-      'no': cli.setup.labels.no
-      unset: cli.setup.labels.unset
-      'yes': cli.setup.labels.yes
+      'no': 'no'
+      unset: sin valor
+      'yes': 'sí'
     profile:
-      app_help: cli.setup.profile.app_help
-      get_help: cli.setup.profile.get_help
-      get_key_help: cli.setup.profile.get_key_help
-      list_help: cli.setup.profile.list_help
-      list_keys_help: cli.setup.profile.list_keys_help
-      set_help: cli.setup.profile.set_help
-      set_key_help: cli.setup.profile.set_key_help
-      set_value_help: cli.setup.profile.set_value_help
-      show_help: cli.setup.profile.show_help
-      unset_help: cli.setup.profile.unset_help
-      unset_key_help: cli.setup.profile.unset_key_help
-      use_help: cli.setup.profile.use_help
-      use_name_help: cli.setup.profile.use_name_help
-      validate_help: cli.setup.profile.validate_help
+      app_help: Gestionar los datos del perfil de contribuyente
+      get_help: Mostrar el valor de una clave de perfil
+      get_key_help: Clave de perfil a consultar
+      list_help: Listar perfiles locales
+      list_keys_help: Listar claves editables del perfil
+      set_help: Establecer un valor del perfil
+      set_key_help: Clave de perfil a modificar
+      set_value_help: Valor que se guardará
+      show_help: Mostrar los datos del perfil activo
+      unset_help: Borrar un valor del perfil
+      unset_key_help: Clave de perfil a borrar
+      use_help: Activar un perfil local
+      use_name_help: Nombre del perfil
+      validate_help: Validar si el perfil activo está completo
     status:
-      help: cli.setup.status.help
+      help: Mostrar la preparación del entorno y la siguiente acción requerida
   txs:
     app_help: cli.txs.app_help
     build:
