@@ -198,15 +198,15 @@ PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
 def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
     """Resolve registry application consumers that identify portal dispatch entries."""
 
-    enum_prefix = f"{Portal.__module__}.{Portal.__qualname__}."
-    if consumer.startswith(enum_prefix):
-        member_name = consumer.removeprefix(enum_prefix)
-        try:
-            return Portal[member_name]
-        except KeyError as exc:
-            raise PortalIntegrityError(
-                f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}"
-            ) from exc
+    for enum_prefix in (f"{Portal.__module__}.{Portal.__qualname__}.", "aeat.domain.portals.Portal."):
+        if consumer.startswith(enum_prefix):
+            member_name = consumer.removeprefix(enum_prefix)
+            try:
+                return Portal[member_name]
+            except KeyError as exc:
+                raise PortalIntegrityError(
+                    f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}"
+                ) from exc
     if consumer.startswith("portal_"):
         try:
             return Portal(consumer)
