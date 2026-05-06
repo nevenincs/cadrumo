@@ -5106,3 +5106,24 @@ Pending VAT-centric slices per the ADR sequencing:
   declares OSS bindings, end-to-end Unión + IOSS binding resolution,
   construct binding linkage). Closes ADR Decisions D1-D8; casilla /
   formula / numeric-result deepening follows. Commit `a78d221f`.
+
+- [x] Modelo 322 (IVA grupos individual mensual) registry foundation.
+  Authority: Orden EHA/3434/2007 (BOE-A-2007-20484), articulos 1
+  (aprobación) + 8 (plazo). Filed by individual entities within a
+  VAT group regime (LIVA art 163 quinquies). Plazo art 8: 30
+  natural days of the following month, with the January period
+  closing on the last day of February. Foundation lands legal
+  references, AEAT 2026 record-design XLSX (758 KB) as workbook
+  parity source, AEAT G407 procedure URL, monthly deadline windows
+  for 2025 (Jan/Jun/Dec) and 2026-01 with the Feb-28 January
+  special-case, and read-only live cross-references with all
+  writes forbidden. 9 focused tests pass. Commit `f963708a`.
+- [x] Modelo 353 (IVA grupos agregado mensual) registry foundation.
+  Aggregated counterpart to Modelo 322 — filed by the dominant
+  entity of the VAT group. Same Orden EHA/3434/2007 authority
+  chain (art 2 aprobación, art 8 plazo shared with 322), monthly
+  cadence with January-Feb-28 special case. Foundation lands
+  legal art 2 reference, AEAT 2026 record-design XLSX (130 KB),
+  AEAT G408 procedure URL, monthly deadline windows, and
+  read-only live cross-references with all writes forbidden.
+  8 focused tests pass. Commit `ffdb19ad`.
