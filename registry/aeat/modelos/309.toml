@@ -70,6 +70,57 @@ source_ref = "boe-modelo-309-2003-form"
 required_text = ["modelo 309"]
 
 [[revisions."2004-y-siguientes".casillas]]
+id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (medios de transporte nuevos, etc.)"
+section = ["iva", "no-periodica", "autorepercutido"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2004-y-siguientes".casillas]]
+id = "iva.soportado.recargo-equivalencia"
+number = "iva.soportado.recargo-equivalencia"
+label = "Cuota IVA soportado por minoristas en recargo de equivalencia (devolución a viajeros)"
+section = ["iva", "no-periodica", "soportado"]
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
+legal_refs = ["ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2004-y-siguientes".casillas]]
+id = "iva.cuota-no-periodica-total"
+number = "iva.cuota-no-periodica-total"
+label = "Total cuota IVA no periodica (autorepercutido + soportado-recargo)"
+section = ["iva", "no-periodica", "totales"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-309-iva-cuota-no-periodica-total"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2004-y-siguientes".formulas]]
+id = "modelo-309-iva-cuota-no-periodica-total"
+target = "iva.cuota-no-periodica-total"
+expression = { op = "add", args = [
+    { casilla = "iva.autorepercutido.intracomunitaria" },
+    { casilla = "iva.soportado.recargo-equivalencia" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2023", "boe-modelo-309-2003-form"]
+
+[[revisions."2004-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-309-2003-form"
+required_text = ["modelo 309"]
+
+[[revisions."2004-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 label = "Ejercicio al que se refiere la declaracion"
@@ -175,6 +226,14 @@ requires_snapshot = true
 legal_refs = ["orden-hac-3625-2003:apartado-3"]
 source_refs = ["boe-modelo-309-2003-form"]
 
+[[revisions."2004-y-siguientes".application_links]]
+id = "modelo-309-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92"]
+source_refs = ["aeat-dr-309-2023", "boe-modelo-309-2003-form"]
+
 [[revisions."2004-y-siguientes".filing_schedules]]
 id = "modelo-309-ad-hoc"
 period_kind = "ad_hoc"
@@ -197,7 +256,14 @@ source_refs = [
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]
-casillas = ["decl.ejercicio", "decl.tipo-trigger"]
+casillas = [
+    "iva.autorepercutido.intracomunitaria",
+    "iva.soportado.recargo-equivalencia",
+    "iva.cuota-no-periodica-total",
+    "decl.ejercicio",
+    "decl.tipo-trigger",
+]
+formulas = ["modelo-309-iva-cuota-no-periodica-total"]
 bindings = [
     "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
     "modelo-309-iva-soportado-recargo-equivalencia-cuota",
@@ -213,6 +279,7 @@ application_links = [
     "modelo-309-extractor",
     "modelo-309-verification",
     "modelo-309-deadline",
+    "modelo-309-calculation",
 ]
 filing_schedules = ["modelo-309-ad-hoc"]
 deadline_windows = []
