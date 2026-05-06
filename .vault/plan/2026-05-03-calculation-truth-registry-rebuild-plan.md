@@ -5257,3 +5257,47 @@ candidates for subsequent foundation slices.
   IVA flow taxonomy and differ only on filing context. 2 new tests
   pass plus 9 existing 322 tests + 12 303 tests stay green.
   Commit `81264233`.
+
+- [x] Modelo 353 IVA bindings (grupos agregado mensual). Same 5-binding
+  pattern as 322, scoped to the dominant entity's aggregated declaration
+  consolidating member 322 totals. LIVA arts 84/88/92 + Orden
+  EHA/3434/2007 art 2. 3 new tests pass. Commit `42330477`.
+- [x] Modelo 309 IVA bindings (declaración-liquidación no periódica). Two
+  bindings matching the modelo's narrower trigger surface:
+  autorepercutido for intra-community acquisition reverse charges (medios
+  de transporte nuevos, the canonical 309 trigger per LIVA art 84) and
+  soportado for recargo-de-equivalencia retailers' devolución on traveler
+  exports (LIVA art 92). Other 309 trigger types (régimen agrícola
+  exits, ejecuciones forzosas) await deepening slices. 2 new tests pass.
+  Commit `42330477`.
+- [x] Modelo 390 IVA bindings (resumen anual). Same 5-binding pattern as
+  Modelo 303 but aggregating over the full ejercicio rather than per
+  quarter. LIVA arts 84/88/92 + Orden EHA/3111/2009 art 1. The annual
+  resumen recomputes from the ledger directly; a complementary
+  previous_filing dependency on 303 follows once 303 declares
+  result-casillas. 2 new tests verify annual aggregation across
+  simulated quarterly observations summing to the expected annual
+  total. Commit `5ff04552`.
+
+### IVA Cross-Modelo Roll-Out Complete (5 of 5 standard IVA modelos)
+
+The ledger_iva_aggregation binding source kind (commit a393fd12) is
+now wired into all five standard IVA modelos using the same
+substrate-typed selector contract (categories + rate_kinds +
+flow_direction + fact):
+
+| Modelo | Cadence | IVA Bindings | Authority |
+|--------|---------|---------------|-----------|
+| 303    | quarterly | 5 | Orden EHA/3786/2008 |
+| 322    | monthly | 5 | Orden EHA/3434/2007 art 1 |
+| 353    | monthly | 5 | Orden EHA/3434/2007 art 2 |
+| 309    | ad_hoc | 2 | Orden HAC/3625/2003 |
+| 390    | annual | 5 | Orden EHA/3111/2009 |
+
+Each modelo's bindings are anchored to the relevant LIVA flow
+articles (84/88/92) plus its establishing Orden Ministerial. The
+substrate is now demonstrably modelo-agnostic — the same five-axis
+classification (VATCategory + VATRateKind + IvaFlowDirection +
+fact) flows through five different modelos with five different
+filing contexts and resolves correctly against the same
+IvaLedgerObservation record shape.
