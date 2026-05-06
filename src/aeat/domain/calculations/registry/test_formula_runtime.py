@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from typing import cast
@@ -10,6 +11,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
+from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     RegistryFilingObservation,
     previous_filing_observation_requirements,
@@ -17,7 +19,6 @@ from ._bindings import (
 )
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
-from ._loader import load_registry_tree
 from ._schema import DataBindingDefinition, RegistrySnapshot
 from ._snapshot import build_snapshot
 
@@ -26,51 +27,42 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
 
 
-def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(item for item in modelos if item.id == "130")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="1T",
-    )
+@pytest.fixture
+def committed_modelo_130_snapshot(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> RegistrySnapshot:
+    return registry_snapshot("130", 2026, "1T")
 
 
-def _committed_modelo_180_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(item for item in modelos if item.id == "180")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=PROJECT_ROOT,
-        filing_year=2026,
-        period="0A",
-    )
+@pytest.fixture
+def committed_modelo_180_snapshot(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> RegistrySnapshot:
+    return registry_snapshot("180", 2026, "0A")
 
 
-def _modelo_180_snapshot_with_inactive_relation_period() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    modelo = next(item for item in modelos if item.id == "180")
+def _modelo_180_snapshot_with_inactive_relation_period(
+    registry_authority: ValidatedRegistryAuthority,
+) -> RegistrySnapshot:
+    modelo = registry_authority.modelo("180")
     revision = modelo.revisions["2023-y-siguientes"]
     selector = revision.period_selector.model_copy(update={"periods": ("0A", "1T")})
     widened_revision = revision.model_copy(update={"period_selector": selector})
     widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: widened_revision}})
     return build_snapshot(
         widened_modelo,
-        catalogues,
+        registry_authority.catalogues,
         source_root=PROJECT_ROOT,
         filing_year=2026,
         period="1T",
     )
 
 
-def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     result = calculate_registry_snapshot(
-        snapshot,
+        committed_modelo_130_snapshot,
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
@@ -93,11 +85,11 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
     assert result.entries[0].legal_refs == ("rd-439-2007:art-110",)
 
 
-def test_registry_formula_runtime_preserves_signed_intermediate_results_from_official_instructions() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_preserves_signed_intermediate_results_from_official_instructions(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     result = calculate_registry_snapshot(
-        snapshot,
+        committed_modelo_130_snapshot,
         inputs={
             "01": Decimal("1000"),
             "02": Decimal("0"),
@@ -118,11 +110,11 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
     assert result.values["12"] == Decimal("0.00")
 
 
-def test_registry_formula_runtime_calculates_income_reduction_from_previous_year_binding() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_calculates_income_reduction_from_previous_year_binding(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     result = calculate_registry_snapshot(
-        snapshot,
+        committed_modelo_130_snapshot,
         inputs={
             "01": Decimal("10000"),
             "02": Decimal("4000"),
@@ -142,16 +134,17 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
     assert result.values["19"] == Decimal("805.00")
 
 
-def test_previous_filing_binding_resolves_from_observed_irpf_casillas() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-    binding = _previous_year_net_income_binding(snapshot)
+def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
     selector = binding.selector
     source_casillas = selector["source_casillas"]
     assert isinstance(source_casillas, tuple)
     observed_values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
 
     result = resolve_previous_filing_binding_values(
-        snapshot.revision,
+        committed_modelo_130_snapshot.revision,
         (
             RegistryFilingObservation(
                 modelo=str(selector["source_modelo"]),
@@ -167,12 +160,17 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas() -> None:
     assert result == {_PREVIOUS_YEAR_NET_INCOME_BINDING: sum(observed_values.values(), Decimal("0"))}
 
 
-def test_previous_filing_requirements_are_declared_from_registry_binding_selector() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-    binding = _previous_year_net_income_binding(snapshot)
+def test_previous_filing_requirements_are_declared_from_registry_binding_selector(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
     selector = binding.selector
 
-    requirements = previous_filing_observation_requirements(snapshot.revision, filing_year=2026, period="1T")
+    requirements = previous_filing_observation_requirements(
+        committed_modelo_130_snapshot.revision,
+        filing_year=2026,
+        period="1T",
+    )
 
     assert len(requirements) == 1
     requirement = requirements[0]
@@ -185,10 +183,14 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
     assert requirement.source_casillas == tuple(sorted(source_casillas))
 
 
-def test_previous_filing_requirements_cover_all_source_periods_for_annual_summary() -> None:
-    snapshot = _committed_modelo_180_snapshot()
-
-    requirements = previous_filing_observation_requirements(snapshot.revision, filing_year=2026, period="0A")
+def test_previous_filing_requirements_cover_all_source_periods_for_annual_summary(
+    committed_modelo_180_snapshot: RegistrySnapshot,
+) -> None:
+    requirements = previous_filing_observation_requirements(
+        committed_modelo_180_snapshot.revision,
+        filing_year=2026,
+        period="0A",
+    )
 
     assert [requirement.period for requirement in requirements] == ["1T", "2T", "3T", "4T"]
     assert {requirement.modelo for requirement in requirements} == {"115"}
@@ -203,8 +205,9 @@ def test_previous_filing_requirements_cover_all_source_periods_for_annual_summar
     assert {requirement.source_casillas for requirement in requirements} == {("01", "02", "03")}
 
 
-def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods() -> None:
-    snapshot = _committed_modelo_180_snapshot()
+def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods(
+    committed_modelo_180_snapshot: RegistrySnapshot,
+) -> None:
     observations = tuple(
         RegistryFilingObservation(
             modelo="115",
@@ -225,7 +228,7 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
     )
 
     result = resolve_previous_filing_binding_values(
-        snapshot.revision,
+        committed_modelo_180_snapshot.revision,
         observations,
         filing_year=2026,
         period="0A",
@@ -238,16 +241,17 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
     }
 
 
-def test_previous_filing_binding_requires_complete_observed_casillas() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-    binding = _previous_year_net_income_binding(snapshot)
+def test_previous_filing_binding_requires_complete_observed_casillas(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
     selector = binding.selector
     source_casillas = selector["source_casillas"]
     assert isinstance(source_casillas, tuple)
 
     with pytest.raises(RegistryValidationError, match="requires observed casilla"):
         resolve_previous_filing_binding_values(
-            snapshot.revision,
+            committed_modelo_130_snapshot.revision,
             (
                 RegistryFilingObservation(
                     modelo=str(selector["source_modelo"]),
@@ -261,23 +265,23 @@ def test_previous_filing_binding_requires_complete_observed_casillas() -> None:
         )
 
 
-def test_registry_formula_runtime_rejects_non_decimal_input() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_rejects_non_decimal_input(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     with pytest.raises(Exception, match="must be a Decimal"):
         calculate_registry_snapshot(
-            snapshot,
+            committed_modelo_130_snapshot,
             inputs=cast("dict[str, Decimal]", {"01": 100}),
             date_context={"filing_period": date(2026, 3, 31)},
         )
 
 
-def test_registry_formula_runtime_rejects_unknown_binding_values() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_rejects_unknown_binding_values(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     with pytest.raises(RegistryValidationError, match="unknown registry binding ids"):
         calculate_registry_snapshot(
-            snapshot,
+            committed_modelo_130_snapshot,
             inputs={},
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values={
@@ -287,12 +291,12 @@ def test_registry_formula_runtime_rejects_unknown_binding_values() -> None:
         )
 
 
-def test_registry_formula_runtime_rejects_unknown_relation_values() -> None:
-    snapshot = _committed_modelo_180_snapshot()
-
+def test_registry_formula_runtime_rejects_unknown_relation_values(
+    committed_modelo_180_snapshot: RegistrySnapshot,
+) -> None:
     with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
         calculate_registry_snapshot(
-            snapshot,
+            committed_modelo_180_snapshot,
             inputs={},
             date_context={"filing_period": date(2026, 12, 31)},
             relation_values={
@@ -304,8 +308,10 @@ def test_registry_formula_runtime_rejects_unknown_relation_values() -> None:
         )
 
 
-def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_period() -> None:
-    snapshot = _modelo_180_snapshot_with_inactive_relation_period()
+def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_period(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    snapshot = _modelo_180_snapshot_with_inactive_relation_period(registry_authority)
 
     with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
         calculate_registry_snapshot(
@@ -316,11 +322,11 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
         )
 
 
-def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-
+def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
     result = calculate_registry_snapshot(
-        snapshot,
+        committed_modelo_130_snapshot,
         inputs={
             "01": Decimal("100"),
             "02": Decimal("0"),
@@ -339,16 +345,17 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot() ->
     assert result.values["04"] == Decimal("20.00")
 
 
-def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis() -> None:
-    snapshot = _committed_modelo_130_snapshot()
-    target = snapshot.revision.parameters[0]
+def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    target = committed_modelo_130_snapshot.revision.parameters[0]
     values = tuple(value.model_copy(update={"date_axis": "devengo_date"}) for value in target.values)
     parameters = (
         target.model_copy(update={"values": values}),
-        *snapshot.revision.parameters[1:],
+        *committed_modelo_130_snapshot.revision.parameters[1:],
     )
-    mutated_revision = snapshot.revision.model_copy(update={"parameters": parameters})
-    mutated_snapshot = snapshot.model_copy(update={"revision": mutated_revision})
+    mutated_revision = committed_modelo_130_snapshot.revision.model_copy(update={"parameters": parameters})
+    mutated_snapshot = committed_modelo_130_snapshot.model_copy(update={"revision": mutated_revision})
 
     with pytest.raises(Exception, match="requires date axis 'devengo_date'"):
         calculate_registry_snapshot(
