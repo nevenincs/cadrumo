@@ -268,18 +268,17 @@ def test_committed_modelo_349_filing_schedules_split_monthly_and_quarterly_by_th
     assert quarterly.period_kind == "quarterly"
     assert quarterly.periods == ("1T", "2T", "3T", "4T")
     assert quarterly.profile_condition_mode == "all"
-    assert len(quarterly.profile_conditions) == 1
-    quarterly_predicate = quarterly.profile_conditions[0]
-    assert quarterly_predicate.field == "iva.intracommunity_operations_exceed_50000_eur"
-    assert quarterly_predicate.op == "equals"
-    assert quarterly_predicate.value is False
+    quarterly_predicates = {condition.field: condition for condition in quarterly.profile_conditions}
+    assert quarterly_predicates["does_intracomunitario"].value is True
+    assert quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"].op == "equals"
+    assert quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"].value is False
 
     monthly = schedules_by_id["modelo-349-mensual"]
     assert monthly.period_kind == "monthly"
     assert monthly.periods == ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
-    monthly_predicate = monthly.profile_conditions[0]
-    assert monthly_predicate.field == "iva.intracommunity_operations_exceed_50000_eur"
-    assert monthly_predicate.value is True
+    monthly_predicates = {condition.field: condition for condition in monthly.profile_conditions}
+    assert monthly_predicates["does_intracomunitario"].value is True
+    assert monthly_predicates["iva.intracommunity_operations_exceed_50000_eur"].value is True
 
 
 def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_year() -> None:
