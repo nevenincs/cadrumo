@@ -640,9 +640,16 @@ own ledger is checked.
   - [x] Modelo 123 reconciliation boundary: `reconcile` projects the
     justificante payable total from the registry-declared verification
     expectation instead of Python-side modelo branching.
+  - [x] Modelo 123 construct workflow closure: current and 2019-2023 revisions
+    declare construct ownership for casillas, formulas, layouts, extraction,
+    live/static evidence, workbook refs, verification expectations, and
+    snapshot-gated workflow application links.
 - [x] Modelo 123 legal correctness tests: run behaviour tests that prove formula
   outputs, trace legal refs, source refs, date boundaries, and any filed-data
   bindings are correct against official authority.
+  - [x] Modelo 123 focused formula behaviour: current and historical revisions
+    calculate their registry-declared totals from real snapshot selection and
+    reject drift through formula target coverage.
 - [ ] Modelo 123 live/filed-data tests: run committed sanitized submitted-file
   and declaration-copy parser tests, encrypted observation-store roundtrip
   tests where applicable, and filed-data parser tests without defaults or
@@ -653,6 +660,8 @@ own ledger is checked.
 - [x] Modelo 123 quality gate: run registry verification, focused public
   workflow tests, source-integrity checks, remote-state checks, `ruff`, `ty`,
   `git diff --check`, and development-metadata sanitization checks.
+  - [x] Modelo 123 construct-focused gate: `ruff`, `ty`, and focused pytest pass
+    for current and historical construct ownership plus formula behaviour.
 - [ ] Modelo 123 completion gate: mark complete only when no unchecked row
   remains and no old authority can populate Modelo 123 filing-grade values.
 
