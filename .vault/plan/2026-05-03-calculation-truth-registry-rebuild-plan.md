@@ -5320,3 +5320,23 @@ IvaLedgerObservation record shape.
   modelo-303-calculation application link added so the validator's
   "formulas require a calculation application link" gate fires.
   Commit `fae6c6b2`.
+
+- [x] Modelo 390 result-casillas + 303-reconciliation. Mirrors the
+  303 result-casilla shape at the annual level: 5 bound casillas
+  surfacing the annual ledger_iva_aggregation bindings + 3
+  reconciliation casillas pulling from the four 303 quarters via
+  previous_filing + 3 computed annual totals via formulas. Dual
+  visibility on the annual figures: COMPUTED from substrate ledger
+  observations vs RECONCILED from filed 303 trimestrales.
+  End-to-end smoke verified — 4 quarters of (1 repercutido 21% + 1
+  soportado 21%) produce devengada=840 / deducible=252 / resultado=588
+  via BOTH the formula chain AND the previous_filing reconciliation
+  matching as expected. Commit `3a12bb35`.
+- [x] Modelo 322 + 353 result-casillas + formulas. Replicates the
+  303 result-casilla pattern into both group-of-entities IVA modelos
+  (322 individual mensual, 353 agregado mensual). Same shape: 5
+  bound casillas + 3 computed casillas with formulas. The IVA result
+  triple (cuota-devengada-total / cuota-deducible-total /
+  resultado-regimen-general) is now uniform across the four
+  ledger-aggregating IVA modelos. Both validate with 10 casillas + 3
+  formulas + 5 bindings each. Commit `adc40d9d`.
