@@ -1224,6 +1224,26 @@ required_text = [
     "necesidades básicas",
 ]
 
+[legal."ley-35-2006:art-62"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-62"
+document_id = "BOE-A-2006-20764"
+article = "62"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a62"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota integra estatal y autonomica en Modelo 100, casillas 0545 y 0546."
+required_text = [
+    "cuota íntegra",
+    "base liquidable general",
+    "base liquidable del ahorro",
+]
+
 [legal."ley-35-2006:art-63"]
 evidence_tier = "legal_authority"
 authority = "boe"

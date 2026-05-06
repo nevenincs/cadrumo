@@ -274,6 +274,22 @@
       }
     },
     {
+      "numero": "62",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a62",
+      "summary": {
+        "ca": "Defineix la quota íntegra com la suma dels resultats d'aplicar les escales i tipus de gravamen a les bases liquidables general i de l'estalvi, i precisa que la quota íntegra estatal és la corresponent al part estatal i la quota íntegra autonòmica la corresponent al part autonòmica.",
+        "en": "Defines the gross tax liability (cuota íntegra) as the sum of the amounts resulting from applying the scales and tax rates to the general and savings taxable bases, and specifies that the state gross tax liability is the one matching the state share and the autonomic gross tax liability the one matching the autonomic share.",
+        "es": "Define la cuota íntegra como la suma de los resultados de aplicar las escalas y los tipos de gravamen a las bases liquidables general y del ahorro, precisando que la cuota íntegra estatal es la correspondiente a la parte estatal y la cuota íntegra autonómica la correspondiente a la parte autonómica.",
+        "hu": "Meghatározza a bruttó adókötelezettséget (cuota íntegra) az általános és megtakarítási adóalapra alkalmazott skálák és adókulcsok eredményeinek összegeként, és pontosítja, hogy az állami bruttó adókötelezettség az állami résznek, az autonóm közösségi bruttó adókötelezettség pedig az autonóm közösségi résznek felel meg."
+      },
+      "titulo": {
+        "ca": "Quota íntegra",
+        "en": "Gross tax liability",
+        "es": "Cuota íntegra",
+        "hu": "Bruttó adókötelezettség"
+      }
+    },
+    {
       "numero": "63",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63",
       "summary": {

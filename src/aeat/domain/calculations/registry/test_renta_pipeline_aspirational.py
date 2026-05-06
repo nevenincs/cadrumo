@@ -148,19 +148,20 @@ def test_phase_c_base_imponible_liquidable_formulas_present_2025() -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "phase d: cuota íntegra split. "
-        "Register formulas for casillas 0532, 0533, 0545, 0546 in Modelo 100 ejercicio 2025."
-    ),
-)
 def test_phase_d_cuota_integra_formulas_present_2025() -> None:
-    """Cuota íntegra estatal and autonómica aggregator formulas registered."""
+    """Cuota íntegra estatal and autonómica aggregator formulas registered.
+
+    Phase D delivered: 4 formulas (0532, 0533, 0545, 0546). 0532/0533 split
+    the cuota base liquidable general into estatal/autonómica via the
+    AEAT-form-prescribed subtraction (cuota at base liquidable general -
+    cuota at mínimo personal y familiar). 0545/0546 sum those with the cuota
+    base liquidable del ahorro (0540/0541) to produce cuota íntegra estatal
+    and autonómica per LIRPF art. 62.
+    """
     modelo, _ = _modelo_100()
     targets = _formula_target_casillas_for_revision(modelo, "2025")
     missing = _PHASE_D_REQUIRED_FORMULA_TARGETS - targets
-    assert not missing, f"phase d not yet delivered: missing cuota íntegra formula targets {sorted(missing)}"
+    assert not missing, f"cuota íntegra regression: missing formula targets {sorted(missing)}"
 
 
 @pytest.mark.xfail(
