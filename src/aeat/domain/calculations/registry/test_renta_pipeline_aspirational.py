@@ -164,19 +164,22 @@ def test_phase_d_cuota_integra_formulas_present_2025() -> None:
     assert not missing, f"cuota íntegra regression: missing formula targets {sorted(missing)}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "phase e: cuota líquida composition. "
-        "Register formulas for casillas 0570, 0571, 0585, 0586 in Modelo 100 ejercicio 2025."
-    ),
-)
 def test_phase_e_cuota_liquida_formulas_present_2025() -> None:
-    """Cuota líquida estatal/autonómica and incrementada counterparts registered."""
+    """Cuota líquida estatal/autonómica and incrementada counterparts registered.
+
+    Phase E delivered: 4 formulas (0570, 0571, 0585, 0586). 0570/0571 subtract
+    the state-side / autonomic-side deduction columns (vivienda habitual,
+    nueva creación, donativos, inversión empresarial, Reserva Canarias,
+    Ceuta/Melilla, alquiler vivienda transitorio, energy efficiency, La
+    Palma residence) from the cuota íntegra. 0585/0586 add the incremento
+    por pérdida del derecho al incentivo (0568/0569) and the regularised
+    deductions perdidas (0572/0574/0577/0579) to produce the cuota líquida
+    incrementada estatal and autonómica that feed casilla 0587.
+    """
     modelo, _ = _modelo_100()
     targets = _formula_target_casillas_for_revision(modelo, "2025")
     missing = _PHASE_E_REQUIRED_FORMULA_TARGETS - targets
-    assert not missing, f"phase e not yet delivered: missing cuota líquida formula targets {sorted(missing)}"
+    assert not missing, f"cuota líquida regression: missing formula targets {sorted(missing)}"
 
 
 @pytest.mark.xfail(
