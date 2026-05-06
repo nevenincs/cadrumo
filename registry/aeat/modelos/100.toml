@@ -1096,6 +1096,234 @@ legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
+id = "DPGMIN_D"
+number = "*11"
+label = "Primer declarante grado de discapacidad"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-taxpayer-disability-grade"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DECFAL"
+number = "*67"
+label = "Primer declarante fecha de fallecimiento"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-taxpayer-death-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DPGMIN_C"
+number = "*61"
+label = "Conyuge grado de discapacidad"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-disability-grade"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "NORESIDENTE"
+number = "*62"
+label = "Conyuge no residente y no contribuyente IRPF"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-non-resident-irpf"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "RESIDENTEUE"
+number = "*64"
+label = "Conyuge residente UE o EEE"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-eu-eea-resident"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "ZRUE2"
+number = "*43"
+label = "Conyuge pais de residencia UE o EEE"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-spouse-eu-eea-country"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "HIJOSUE"
+number = "*88"
+label = "Hijos o descendientes UE o EEE"
+section = ["datos_identificativos", "hijos"]
+data_type = "boolean"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-family-descendants-eu-eea-deduction"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "PH18"
+number = "###"
+label = "Hijos menores en unidad familiar"
+section = ["datos_identificativos", "hijos"]
+data_type = "boolean"
+required = false
+input_kind = "bound"
+binding = "renta-2025-profile-family-minor-children-in-unit"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "NIFDLG"
+number = "*75"
+label = "Hijo o descendiente NIF"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-descendant-tax-id"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "APENOMDLG"
+number = "*76"
+label = "Hijo o descendiente apellidos y nombre"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-descendant-display-name"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "FNACDLG"
+number = "*77"
+label = "Hijo o descendiente fecha de nacimiento"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-descendant-birth-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "MINUSDLG"
+number = "*79"
+label = "Hijo o descendiente clave discapacidad"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-descendant-disability-grade"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "FALLDLG"
+number = "*84"
+label = "Hijo o descendiente fecha de fallecimiento"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-descendant-death-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "DNIASDLG"
+number = "*90"
+label = "Ascendiente NIF"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-tax-id"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "APENOMDLG_ASC"
+number = "*91"
+label = "Ascendiente apellidos y nombre"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-display-name"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "ANOASDLG"
+number = "*92"
+label = "Ascendiente fecha de nacimiento"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-birth-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "PCTMINASDLG"
+number = "*93"
+label = "Ascendiente clave discapacidad"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-disability-grade"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "CONVASDLG"
+number = "*95"
+label = "Ascendiente descendientes convivientes"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "integer"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-cohabiting-descendant-count"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
+id = "FALLASDLG"
+number = "*97"
+label = "Ascendiente fecha de fallecimiento"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+required = false
+input_kind = "bound"
+binding = "renta-2025-family-ascendant-death-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".casillas]]
 id = "0003"
 number = "0003"
 label = "Retribuciones dinerarias. Importe integro"
@@ -2968,6 +3196,25 @@ bindings = [
     "renta-2025-profile-spouse-display-name",
     "renta-2025-profile-spouse-birth-date",
     "renta-2025-profile-spouse-sex",
+    "renta-2025-profile-taxpayer-disability-grade",
+    "renta-2025-profile-taxpayer-death-date",
+    "renta-2025-profile-spouse-disability-grade",
+    "renta-2025-profile-spouse-non-resident-irpf",
+    "renta-2025-profile-spouse-eu-eea-resident",
+    "renta-2025-profile-spouse-eu-eea-country",
+    "renta-2025-profile-family-descendants-eu-eea-deduction",
+    "renta-2025-profile-family-minor-children-in-unit",
+    "renta-2025-family-descendant-tax-id",
+    "renta-2025-family-descendant-display-name",
+    "renta-2025-family-descendant-birth-date",
+    "renta-2025-family-descendant-disability-grade",
+    "renta-2025-family-descendant-death-date",
+    "renta-2025-family-ascendant-tax-id",
+    "renta-2025-family-ascendant-display-name",
+    "renta-2025-family-ascendant-birth-date",
+    "renta-2025-family-ascendant-disability-grade",
+    "renta-2025-family-ascendant-cohabiting-descendant-count",
+    "renta-2025-family-ascendant-death-date",
 ]
 casillas = [
     "DPNIF_D",
@@ -2981,6 +3228,25 @@ casillas = [
     "DP_APENOM_C",
     "DPFNAC_C",
     "SEXO_C",
+    "DPGMIN_D",
+    "DECFAL",
+    "DPGMIN_C",
+    "NORESIDENTE",
+    "RESIDENTEUE",
+    "ZRUE2",
+    "HIJOSUE",
+    "PH18",
+    "NIFDLG",
+    "APENOMDLG",
+    "FNACDLG",
+    "MINUSDLG",
+    "FALLDLG",
+    "DNIASDLG",
+    "APENOMDLG_ASC",
+    "ANOASDLG",
+    "PCTMINASDLG",
+    "CONVASDLG",
+    "FALLASDLG",
 ]
 
 [[revisions."2025".constructs]]
@@ -4926,6 +5192,234 @@ source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-model
 [[revisions."2025".bindings.source_citations]]
 source_ref = "boe-modelo-100-2025-form"
 required_text = ["declaraciones conjuntas"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-taxpayer-disability-grade"
+source = "profile"
+selector = { profile_key = "taxpayer.disability_grade", xsd_path = "/DatosIdentificativos/Declarante/DPGMIN_D", dictionary_field = "DPGMIN_D" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["personas con discapacidad"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-taxpayer-death-date"
+source = "profile"
+selector = { profile_key = "taxpayer.death_date", xsd_path = "/DatosIdentificativos/Declarante/DECFAL", dictionary_field = "DECFAL", format = "date" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["contribuyentes"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-disability-grade"
+source = "profile"
+selector = { profile_key = "spouse.disability_grade", xsd_path = "/DatosIdentificativos/Conyuge/DPGMIN_C", dictionary_field = "DPGMIN_C" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas", "personas con discapacidad"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-non-resident-irpf"
+source = "profile"
+selector = { profile_key = "spouse.non_resident_irpf", xsd_path = "/DatosIdentificativos/Conyuge/@NORESIDENTE", dictionary_field = "NORESIDENTE" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["declaraciones conjuntas"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-eu-eea-resident"
+source = "profile"
+selector = { profile_key = "spouse.eu_eea_resident", xsd_path = "/DatosIdentificativos/Conyuge/RESIDENTEUE", dictionary_field = "RESIDENTEUE", required_when_profile_key = "spouse.non_resident_irpf", required_when_value = "true" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Estados miembros de la Unión Europea", "Espacio Económico Europeo"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-spouse-eu-eea-country"
+source = "profile"
+selector = { profile_key = "spouse.eu_eea_country", xsd_path = "/DatosIdentificativos/Conyuge/ZRUE2", dictionary_field = "ZRUE2", required_when_profile_key = "spouse.eu_eea_resident", required_when_value = "true" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Estados miembros de la Unión Europea", "Espacio Económico Europeo"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-family-descendants-eu-eea-deduction"
+source = "profile"
+selector = { profile_key = "family.descendants_eu_eea_deduction", xsd_path = "/DatosIdentificativos/Hijos/HIJOSUE", dictionary_field = "HIJOSUE" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidades familiares formadas por residentes fiscales", "Espacio Económico Europeo"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-family-minor-children-in-unit"
+source = "profile"
+selector = { profile_key = "family.minor_children_in_unit", xsd_path = "/DatosIdentificativos/Hijos/PH18", dictionary_field = "PH18" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-descendant-tax-id"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "tax_id", xsd_path = "/DatosIdentificativos/Hijos/Hijo/NIFDLG", dictionary_field = "NIFDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["número de identificación fiscal (NIF)"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-descendant-display-name"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "display_name", xsd_path = "/DatosIdentificativos/Hijos/Hijo/APENOMDLG", dictionary_field = "APENOMDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-descendant-birth-date"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "birth_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true, format = "date" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-descendant-disability-grade"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "disability_grade", xsd_path = "/DatosIdentificativos/Hijos/Hijo/MINUSDLG", dictionary_field = "MINUSDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["personas con discapacidad"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-descendant-death-date"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "death_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FALLDLG", dictionary_field = "FALLDLG", repeating = true, format = "date" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-tax-id"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "tax_id", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/DNIASDLG", dictionary_field = "DNIASDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["número de identificación fiscal (NIF)"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-display-name"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "display_name", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/APENOMDLG_ASC", dictionary_field = "APENOMDLG_ASC", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["datos identificativos"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-birth-date"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "birth_date", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG", dictionary_field = "ANOASDLG", repeating = true, format = "date" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-disability-grade"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "disability_grade", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/PCTMINASDLG", dictionary_field = "PCTMINASDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["personas con discapacidad"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-cohabiting-descendant-count"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "cohabiting_descendant_count", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/CONVASDLG", dictionary_field = "CONVASDLG", repeating = true }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
+
+[[revisions."2025".bindings]]
+id = "renta-2025-family-ascendant-death-date"
+source = "profile"
+selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "death_date", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/FALLASDLG", dictionary_field = "FALLASDLG", repeating = true, format = "date" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["unidad familiar"]
 
 [[revisions."2025".bindings]]
 id = "renta-2025-modelo-111-retenciones-periodicas"

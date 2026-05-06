@@ -1,11 +1,11 @@
 ---
-title: calculation-truth-registry modelo 123 construct workflow closure execution
-type: execution
-date: 2026-05-06
 tags:
-  - calculation-truth-registry
-  - modelo-123
-  - registry
+  - '#exec'
+  - '#calculation-truth-registry'
+date: '2026-05-06'
+related:
+  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review]]'
 ---
 
 # Calculation Truth Registry Modelo 123 Construct Workflow Closure Execution

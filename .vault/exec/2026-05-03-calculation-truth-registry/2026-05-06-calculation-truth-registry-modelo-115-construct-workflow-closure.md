@@ -1,11 +1,11 @@
 ---
-title: calculation-truth-registry modelo 115 construct workflow closure execution
-type: execution
-date: 2026-05-06
 tags:
-  - calculation-truth-registry
-  - modelo-115
-  - registry
+  - '#exec'
+  - '#calculation-truth-registry'
+date: '2026-05-06'
+related:
+  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-review]]'
 ---
 
 # Calculation Truth Registry Modelo 115 Construct Workflow Closure Execution

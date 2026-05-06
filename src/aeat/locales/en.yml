@@ -919,68 +919,68 @@ cli:
     errors:
       invalid_input: Invalid LLM input
       missing_variable: A required variable is missing in the prompt template
-    from_help: cli.llm.from_help
-    input_help: cli.llm.input_help
+    from_help: Source language for translation or processing
+    input_help: Input text to process with the LLM
     labels:
-      removed_cache_files: cli.llm.labels.removed_cache_files
-    language_help: cli.llm.language_help
-    prompt_id_help: cli.llm.prompt_id_help
-    since_help: cli.llm.since_help
-    text_help: cli.llm.text_help
-    to_help: cli.llm.to_help
-    translate_help: cli.llm.translate_help
-    until_help: cli.llm.until_help
-    usage_help: cli.llm.usage_help
+      removed_cache_files: Removed cache files
+    language_help: Target or primary language for the output
+    prompt_id_help: Identifier of the prompt to use
+    since_help: Start date for filtering or querying (YYYY-MM-DD)
+    text_help: Text to be analyzed or processed by the LLM
+    to_help: Target language for translation
+    translate_help: Translate a text from one language to another using LLM
+    until_help: End date for filtering or querying (YYYY-MM-DD)
+    usage_help: Show LLM token usage and costs
   normatives:
-    app_help: cli.normatives.app_help
+    app_help: Query tax regulations and obligations
     errors:
-      load_failed: cli.normatives.errors.load_failed
+      load_failed: Failed to load normative database
     headers:
-      citation: cli.normatives.headers.citation
-      code: cli.normatives.headers.code
-      level: cli.normatives.headers.level
-      message: cli.normatives.headers.message
-      numero: cli.normatives.headers.numero
-      reference_id: cli.normatives.headers.reference_id
-      titulo: cli.normatives.headers.titulo
+      citation: Legal citation
+      code: Code
+      level: Level
+      message: Message
+      numero: Number
+      reference_id: Reference ID
+      titulo: Title
     labels:
-      articles: cli.normatives.labels.articles
-      articulos: cli.normatives.labels.articulos
-      boe_id: cli.normatives.labels.boe_id
-      boe_url: cli.normatives.labels.boe_url
-      found: cli.normatives.labels.found
-      id: cli.normatives.labels.id
-      kind: cli.normatives.labels.kind
-      last_reviewed_at: cli.normatives.labels.last_reviewed_at
-      no_articulos: cli.normatives.labels.no_articulos
-      number: cli.normatives.labels.number
-      published_at: cli.normatives.labels.published_at
-      reviewed_by: cli.normatives.labels.reviewed_by
-      short_title: cli.normatives.labels.short_title
-      tags: cli.normatives.labels.tags
-    list_help: cli.normatives.list_help
-    list_tag_help: cli.normatives.list_tag_help
-    show_help: cli.normatives.show_help
-    show_ref_id_help: cli.normatives.show_ref_id_help
+      articles: Articles
+      articulos: Articles
+      boe_id: BOE ID
+      boe_url: BOE URL
+      found: Found
+      id: ID
+      kind: Type
+      last_reviewed_at: Last reviewed at
+      no_articulos: No articles available
+      number: Number
+      published_at: Published at
+      reviewed_by: Reviewed by
+      short_title: Short title
+      tags: Tags
+    list_help: List and filter tax regulations
+    list_tag_help: Filter regulations by tag (e.g., iva, irpf)
+    show_help: Show details of a specific regulation
+    show_ref_id_help: Reference ID of the regulation to show
     success:
-      clean: cli.normatives.success.clean
-      verification_results: cli.normatives.success.verification_results
-    verify_help: cli.normatives.verify_help
+      clean: Normative cleanup completed
+      verification_results: Verification results
+    verify_help: Verify integrity and validity of regulations
   oauth:
-    app_help: cli.oauth.app_help
+    app_help: OAuth 2.0 authentication management
     errors:
-      invalid_json: cli.oauth.errors.invalid_json
+      invalid_json: 'Error: The credentials file does not contain valid JSON'
     init:
-      help: cli.oauth.init.help
-      json_help: cli.oauth.init.json_help
-      success: cli.oauth.init.success
+      help: Initialize OAuth configuration from a file
+      json_help: Path to the Google Cloud credentials JSON file
+      success: OAuth configuration successfully initialized
     labels:
-      next_step: cli.oauth.labels.next_step
-      open_url: cli.oauth.labels.open_url
-      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+      next_step: Next step
+      open_url: Please open the following URL in your browser to authorize the application
+      run_gcloud_auth: Run gcloud authentication
     success:
-      copied: cli.oauth.success.copied
-      written: cli.oauth.success.written
+      copied: Credentials copied to clipboard
+      written: Configuration written successfully
   overview:
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
@@ -997,19 +997,20 @@ cli:
     transactions: Transactions
     verbose_help: Show details and next action when available
   registry:
-    app_help: cli.registry.app_help
-    capture_filed_data_help: cli.registry.capture_filed_data_help
-    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
-    capture_limit_help: cli.registry.capture_limit_help
+    app_help: Tax models registry management
+    capture_filed_data_help: Capture data already filed with AEAT and update the local
+      registry
+    capture_filed_data_json_help: Output in JSON format for automation tools
+    capture_limit_help: Limit of records to process
     capture_source_filed_data_help: Capture filed source observations required by
       a target modelo calculation
     capture_source_filed_data_json_help: Emit source filed-data capture report as
       JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     errors:
-      invalid_year_range: cli.registry.errors.invalid_year_range
+      invalid_year_range: Invalid year range
       unknown_modelo: Registry has no modelo definition for {modelo}
-    expediente_help: cli.registry.expediente_help
+    expediente_help: AEAT file number to capture
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
     inspect_registry_root_help: cli.registry.inspect_registry_root_help

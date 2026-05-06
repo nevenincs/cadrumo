@@ -4,10 +4,19 @@ aggregation:
 application:
   auth:
     provider_impact:
-      certificate_ready: application.auth.provider_impact.certificate_ready
-      generic_ready: application.auth.provider_impact.generic_ready
-      unavailable: application.auth.provider_impact.unavailable
-      unconfigured: application.auth.provider_impact.unconfigured
+      certificate_ready: La autenticación con certificado está lista. El operador
+        mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
+        por la AEAT; todos los proveedores utilizan el mismo flujo de comandos.
+      generic_ready: '%{label} está listo. El operador mantiene el mismo flujo de
+        presentación en la CLI mientras este proveedor se conecta al protocolo de
+        autenticación compartido.'
+      unavailable: '%{label} está configurado pero aún no está listo. El operador
+        todavía puede generar, verificar y exportar presentaciones localmente, pero
+        las lecturas respaldadas por la AEAT permanecerán no disponibles hasta que
+        se solucione la autenticación.'
+      unconfigured: El operador todavía puede generar, verificar y exportar presentaciones
+        localmente, pero las lecturas respaldadas por la AEAT permanecerán no disponibles
+        hasta que se configure un proveedor de autenticación.
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
@@ -368,6 +377,7 @@ cli:
       mismatched: No coincide
       modelo: Modelo
       next: Siguiente
+      'no': 'No'
       path: Ruta
       period: Periodo
       sha256: SHA256
@@ -376,7 +386,6 @@ cli:
       verdict: Veredicto
       warnings: Advertencias
       'yes': Sí
-      'no': 'No'
     opts:
       by: Persona que revisó la declaración
       draft_id: ID del borrador local
@@ -736,13 +745,14 @@ cli:
     profile:
       app_help: Gestión de perfiles financieros
       errors:
-        category_not_eligible: cli.financial.profile.errors.category_not_eligible
+        category_not_eligible: la categoría %{category} no acepta un porcentaje de
+          uso
         did_you_mean: ¿Quiso decir...?
         eligible_categories: Categorías elegibles
         family_aliases: Alias familiares
         invalid_ratio: Ratio o porcentaje no válido
-        must_be_finite: cli.financial.profile.errors.must_be_finite
-        out_of_range: cli.financial.profile.errors.out_of_range
+        must_be_finite: la proporción debe ser finita (se recibió %{raw})
+        out_of_range: 'proporción fuera de rango: %{raw} no está en [0, 1]'
         unknown_key: Clave o propiedad desconocida en el perfil
       headers:
         ratios: Ratios / Repartos
@@ -754,7 +764,8 @@ cli:
       set_ratio_key_help: 'Clave o categoría del ratio. Alias de familia: %{aliases}'
       set_ratio_value_help: Valor del ratio (p. ej., 0.5 para 50%)
       unset_ratio_help: Eliminar un ratio de reparto específico
-      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia: %{aliases}'
+      unset_ratio_key_help: 'Clave o categoría del ratio a eliminar. Alias de familia:
+        %{aliases}'
     txs:
       app_help: Gestión de transacciones bancarias
   financial_invoices:
@@ -885,9 +896,9 @@ cli:
       auto_detect_failed: Fallo en la detección automática del formato del libro
       edit_requires_one: Se requiere al menos una modificación de campo para editar
       filter_parse_error: Fallo al analizar el filtro del libro
+      invalid_skip: Campo de omisión no válido
       invalid_source: 'El archivo del libro no se puede importar: {reason}'
       invalid_source_unknown: origen no válido
-      invalid_skip: Campo de omisión no válido
       invalid_split_format: Formato de división no válido
       invalid_split_value: Valor de división no válido
       match_both_required: Se requiere tanto la entrada del libro como la transacción
@@ -910,6 +921,7 @@ cli:
       amount: Importe
       date: Fecha
       description: Descripción
+      dialect: Formato detectado
       dry_run: MODO DE PRUEBA (DRY RUN)
       fields: Campos
       id: ID
@@ -918,7 +930,6 @@ cli:
       rows: Filas
       skipped: Omitidos
       source: Origen
-      dialect: Formato detectado
       valid: Válido
       warnings: Avisos
       'yes': Sí
@@ -939,68 +950,69 @@ cli:
     errors:
       invalid_input: Entrada para el LLM no válida
       missing_variable: Falta una variable requerida en la plantilla del prompt
-    from_help: cli.llm.from_help
-    input_help: cli.llm.input_help
+    from_help: Idioma de origen para la traducción o el procesamiento
+    input_help: Texto de entrada para procesar con el LLM
     labels:
-      removed_cache_files: cli.llm.labels.removed_cache_files
-    language_help: cli.llm.language_help
-    prompt_id_help: cli.llm.prompt_id_help
-    since_help: cli.llm.since_help
-    text_help: cli.llm.text_help
-    to_help: cli.llm.to_help
-    translate_help: cli.llm.translate_help
-    until_help: cli.llm.until_help
-    usage_help: cli.llm.usage_help
+      removed_cache_files: Archivos de caché eliminados
+    language_help: Idioma destino o principal para la salida
+    prompt_id_help: Identificador del prompt a utilizar
+    since_help: Fecha de inicio para filtrar o consultar (AAAA-MM-DD)
+    text_help: Texto a analizar o procesar por el LLM
+    to_help: Idioma de destino para la traducción
+    translate_help: Traducir un texto de un idioma a otro usando LLM
+    until_help: Fecha de fin para filtrar o consultar (AAAA-MM-DD)
+    usage_help: Mostrar el uso de tokens y costes de LLM
   normatives:
-    app_help: cli.normatives.app_help
+    app_help: Consultar normativa y obligaciones fiscales
     errors:
-      load_failed: cli.normatives.errors.load_failed
+      load_failed: Fallo al cargar la base de datos normativa
     headers:
-      citation: cli.normatives.headers.citation
-      code: cli.normatives.headers.code
-      level: cli.normatives.headers.level
-      message: cli.normatives.headers.message
-      numero: cli.normatives.headers.numero
-      reference_id: cli.normatives.headers.reference_id
-      titulo: cli.normatives.headers.titulo
+      citation: Cita legal
+      code: Código
+      level: Nivel
+      message: Mensaje
+      numero: Número
+      reference_id: ID de referencia
+      titulo: Título
     labels:
-      articles: cli.normatives.labels.articles
-      articulos: cli.normatives.labels.articulos
-      boe_id: cli.normatives.labels.boe_id
-      boe_url: cli.normatives.labels.boe_url
-      found: cli.normatives.labels.found
-      id: cli.normatives.labels.id
-      kind: cli.normatives.labels.kind
-      last_reviewed_at: cli.normatives.labels.last_reviewed_at
-      no_articulos: cli.normatives.labels.no_articulos
-      number: cli.normatives.labels.number
-      published_at: cli.normatives.labels.published_at
-      reviewed_by: cli.normatives.labels.reviewed_by
-      short_title: cli.normatives.labels.short_title
-      tags: cli.normatives.labels.tags
-    list_help: cli.normatives.list_help
-    list_tag_help: cli.normatives.list_tag_help
-    show_help: cli.normatives.show_help
-    show_ref_id_help: cli.normatives.show_ref_id_help
+      articles: Artículos
+      articulos: Artículos
+      boe_id: ID BOE
+      boe_url: URL del BOE
+      found: Encontrado
+      id: ID
+      kind: Tipo
+      last_reviewed_at: Última revisión
+      no_articulos: No hay artículos disponibles
+      number: Número
+      published_at: Publicado el
+      reviewed_by: Revisado por
+      short_title: Título corto
+      tags: Etiquetas
+    list_help: Listar y filtrar normativas fiscales
+    list_tag_help: Filtrar normativas por etiqueta (ej. iva, irpf)
+    show_help: Mostrar detalles de una normativa específica
+    show_ref_id_help: ID de referencia de la normativa a mostrar
     success:
-      clean: cli.normatives.success.clean
-      verification_results: cli.normatives.success.verification_results
-    verify_help: cli.normatives.verify_help
+      clean: Limpieza de normativas completada
+      verification_results: Resultados de verificación
+    verify_help: Verificar integridad y validez de normativas
   oauth:
-    app_help: cli.oauth.app_help
+    app_help: Gestión de autenticación OAuth 2.0
     errors:
-      invalid_json: cli.oauth.errors.invalid_json
+      invalid_json: 'Error: El archivo de credenciales no contiene JSON válido'
     init:
-      help: cli.oauth.init.help
-      json_help: cli.oauth.init.json_help
-      success: cli.oauth.init.success
+      help: Inicializar configuración de OAuth desde un archivo
+      json_help: Ruta al archivo JSON de credenciales de Google Cloud
+      success: Configuración OAuth inicializada con éxito
     labels:
-      next_step: cli.oauth.labels.next_step
-      open_url: cli.oauth.labels.open_url
-      run_gcloud_auth: cli.oauth.labels.run_gcloud_auth
+      next_step: Siguiente paso
+      open_url: Por favor, abre la siguiente URL en tu navegador para autorizar la
+        aplicación
+      run_gcloud_auth: Ejecutar la autenticación de gcloud
     success:
-      copied: cli.oauth.success.copied
-      written: cli.oauth.success.written
+      copied: Credenciales copiadas al portapapeles
+      written: Configuración escrita con éxito
   overview:
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
@@ -1017,10 +1029,11 @@ cli:
     transactions: Movimientos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
-    app_help: cli.registry.app_help
-    capture_filed_data_help: cli.registry.capture_filed_data_help
-    capture_filed_data_json_help: cli.registry.capture_filed_data_json_help
-    capture_limit_help: cli.registry.capture_limit_help
+    app_help: Gestión del registro de modelos fiscales
+    capture_filed_data_help: Capturar datos ya presentados en la AEAT y actualizar
+      el registro local
+    capture_filed_data_json_help: Salida en formato JSON para herramientas de automatización
+    capture_limit_help: Límite de registros a procesar
     capture_source_filed_data_help: Capturar observaciones fuente presentadas requeridas
       por el cálculo de un modelo objetivo
     capture_source_filed_data_json_help: Emitir el informe de captura de datos fuente
@@ -1028,9 +1041,9 @@ cli:
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
       por defecto
     errors:
-      invalid_year_range: cli.registry.errors.invalid_year_range
+      invalid_year_range: Rango de años no válido
       unknown_modelo: El registro no contiene una definición del modelo {modelo}
-    expediente_help: cli.registry.expediente_help
+    expediente_help: Número de expediente de la AEAT a capturar
     from_year_help: cli.registry.from_year_help
     inspect_help: cli.registry.inspect_help
     inspect_registry_root_help: cli.registry.inspect_registry_root_help
@@ -1077,7 +1090,8 @@ cli:
       available: cli.sanitize.labels.available
     status_help: cli.sanitize.status_help
   setup:
-    app_help: Preparar el perfil local y la autenticación necesarios para usar la aplicación
+    app_help: Preparar el perfil local y la autenticación necesarios para usar la
+      aplicación
     auth:
       app_help: Configurar y comprobar la autenticación de AEAT
       configure:
@@ -1098,8 +1112,8 @@ cli:
       certificate_file_required: El proveedor certificate requiere --file
       file_not_found: No se ha encontrado el archivo {file}
       not_configured: Configure un proveedor antes de iniciar sesión
-      unknown_profile_key: "Clave de perfil desconocida: {key}"
-      unknown_provider: "Proveedor de autenticación desconocido: {provider}"
+      unknown_profile_key: 'Clave de perfil desconocida: {key}'
+      unknown_provider: 'Proveedor de autenticación desconocido: {provider}'
     headers:
       active: Activo
       auth_provider: Proveedor de autenticación
@@ -1128,7 +1142,7 @@ cli:
     labels:
       'no': 'no'
       unset: sin valor
-      'yes': 'sí'
+      'yes': sí
     profile:
       app_help: Gestionar los datos del perfil de contribuyente
       get_help: Mostrar el valor de una clave de perfil

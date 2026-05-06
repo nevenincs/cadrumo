@@ -541,11 +541,19 @@ def test_profile_keys_match_domain_registry_names() -> None:
         "taxpayer.sex",
         "taxpayer.marital_status",
         "taxpayer.birth_date",
+        "taxpayer.disability_grade",
+        "taxpayer.death_date",
         "spouse.tax.id",
         "spouse.name",
         "spouse.surnames",
         "spouse.birth_date",
         "spouse.sex",
+        "spouse.disability_grade",
+        "spouse.non_resident_irpf",
+        "spouse.eu_eea_resident",
+        "spouse.eu_eea_country",
+        "family.descendants_eu_eea_deduction",
+        "family.minor_children_in_unit",
     ):
         assert key in result.output
     for retired_key in ("tax.name", "activity.label", "activity.code"):

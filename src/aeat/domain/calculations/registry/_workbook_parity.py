@@ -34,7 +34,7 @@ WorkbookKind = Literal[
 ]
 WorkbookScanStatus = Literal["scanned", "unsupported", "timeout", "failed"]
 WorkbookConversionStatus = Literal["converted", "failed"]
-WorkbookRunnerStatus = Literal["available", "unavailable"]
+WorkbookRunnerStatus = Literal["available"]
 WorkbookRunnerEngine = Literal["libreoffice-headless", "excel-com"]
 ParityStatus = Literal["match", "mismatch", "not_run"]
 EvidenceTier = Literal[
@@ -362,19 +362,17 @@ def inventory_workbook_coverage(
 
 
 def detect_workbook_runner() -> WorkbookRunnerAvailability:
-    """Detect the local sanctioned spreadsheet recalculation runner."""
+    """Resolve the local sanctioned spreadsheet recalculation runner.
+
+    LibreOffice headless (or, on Windows, Excel COM) is required infrastructure
+    for the workbook parity backend. This resolver does not attempt a graceful
+    fallback: if no runner is locatable, it raises so the caller surfaces the
+    missing dependency instead of silently downgrading evidence quality.
+    """
 
     configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
     if configured:
-        try:
-            runner = _resolve_libreoffice_runner(configured)
-        except RegistryValidationError as exc:
-            return WorkbookRunnerAvailability(
-                status="unavailable",
-                engine=None,
-                executable=configured,
-                detail=str(exc),
-            )
+        runner = _resolve_libreoffice_runner(configured)
         return WorkbookRunnerAvailability(
             status="available",
             engine="libreoffice-headless",
@@ -398,11 +396,9 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
             executable=excel_clsid,
             detail="Excel COM automation is registered for local read-only workbook recalculation",
         )
-    return WorkbookRunnerAvailability(
-        status="unavailable",
-        engine=None,
-        executable=None,
-        detail="No LibreOffice/soffice executable or Excel COM automation found; workbook execution is unavailable",
+    raise RegistryValidationError(
+        "No LibreOffice/soffice executable or Excel COM automation found on this host. "
+        f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV} to a valid soffice executable."
     )
 
 
@@ -416,8 +412,6 @@ def run_workbook_with_libreoffice(
     """Run a local XLSX workbook with LibreOffice headless and return outputs."""
 
     runner = _resolve_libreoffice_runner(executable)
-    if runner is None:
-        raise RegistryValidationError("LibreOffice or soffice executable is not available")
     resolved = workbook_path.resolve()
     if not resolved.is_file():
         raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
@@ -487,8 +481,6 @@ def convert_binary_xls_with_libreoffice(
 
     started = time.monotonic()
     runner = _resolve_libreoffice_runner(executable)
-    if runner is None:
-        raise RegistryValidationError("LibreOffice or soffice executable is not available")
     resolved_root = root.resolve()
     resolved_path = workbook_path.resolve()
     if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
@@ -672,11 +664,18 @@ def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> 
     return WorkbookCellRef(sheet=sheet, coordinate=match.group("coordinate").replace("$", ""))
 
 
-def _resolve_libreoffice_runner(executable: str | None) -> Path | None:
+def _resolve_libreoffice_runner(executable: str | None) -> Path:
+    """Locate a LibreOffice executable, raising explicitly when none is available."""
+
     if executable is None:
         configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
         found = configured or shutil.which("soffice") or shutil.which("libreoffice")
-        return Path(found).resolve() if found else None
+        if not found:
+            raise RegistryValidationError(
+                "LibreOffice or soffice executable is not available on PATH. "
+                f"Install LibreOffice or set {_LIBREOFFICE_EXECUTABLE_ENV}."
+            )
+        return Path(found).resolve()
     candidate = Path(executable).resolve()
     if not candidate.is_file():
         raise RegistryValidationError(f"LibreOffice executable does not exist: {executable}")
@@ -689,8 +688,6 @@ def _execution_runner_availability(executable: str | None) -> WorkbookRunnerAvai
     if executable is None:
         return detect_workbook_runner()
     runner = _resolve_libreoffice_runner(executable)
-    if runner is None:
-        raise RegistryValidationError("LibreOffice or soffice executable is not available")
     return WorkbookRunnerAvailability(
         status="available",
         engine="libreoffice-headless",
@@ -838,9 +835,19 @@ def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> Non
 
 
 def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationReport) -> None:
-    """Raise when formula-bearing workbooks need execution but no runner exists."""
+    """Sanity gate: confirm the verification report carries an available runner.
 
-    if report.formula_workbook_count > 0 and report.runner.status != "available":
+    `detect_workbook_runner()` raises explicitly when no LibreOffice or Excel COM
+    runner can be located, so by the time a `WorkbookBackendVerificationReport`
+    exists its `runner.status` must already be `"available"`. This helper is
+    retained as a documentation surface and a defensive guard against future
+    schema drift; it never fails on a freshly produced report.
+    """
+
+    # `WorkbookRunnerStatus` is a single-value literal, so the only way this can
+    # fail is if a caller hand-builds a report with a hand-mutated runner; that
+    # is intentionally left as an explicit error path rather than silent.
+    if report.runner.status != "available":  # pragma: no cover — defensive
         raise RegistryValidationError(
             "formula-bearing official workbooks require a local recalculation runner; "
             f"runner status is {report.runner.status!r}: {report.runner.detail}"

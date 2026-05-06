@@ -279,6 +279,7 @@ cache/
 # Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
 # agent workspaces). Same role as scratch/ — ephemeral, never in git.
 /.tmp/
+/.tmp_*/
 
 
 # >>> vaultspec-managed (do not edit this block) >>>

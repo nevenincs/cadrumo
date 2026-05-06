@@ -151,6 +151,76 @@ If a wave cannot prove that its official workbook parity surface has been
 discovered, classified, and either executed or recorded as a coverage gap, the
 wave is not done.
 
+## AEAT Calculation-Parity Reality
+
+A 2026-05-06 verification sweep confirmed that AEAT publishes **no executable
+formula workbook for any supported modelo**. Every official artefact in the
+public corpus falls into one of three buckets, none of which is a downloadable
+calculation oracle:
+
+- **Record-design XLSX/XLS** under `disenos_registro/` carries field positions,
+  lengths, types, and prose descriptions only. The full inventory of 97
+  workbooks shows zero formula-bearing cells across the entire corpus.
+- **PDF help and manual artefacts** under `static_files/Sede/Biblioteca/Manual/`
+  and `static_files/Sede/Biblioteca/Manual/Tecnicos/` carry worked numeric
+  examples in Spanish prose only. The Manual practico de sociedades 2024 PDF
+  and the Manual de ayuda tecnica Renta Web 2024 PDF are the canonical user
+  guides; neither contains executable formulas.
+- **Web-only simulators** like Renta WEB Open (anonymous, classified as the
+  Modelo 100 read-only executable parity surface), Sociedades WEB
+  (authenticated), and Renta WEB (authenticated) hold AEAT's calculation logic
+  server-side. They cannot be downloaded as workbooks. The XSDs published for
+  developer integration declare field types and value ranges only; they
+  contain no `<xs:assert>` calculation rules.
+
+Standalone "Programa de ayuda" downloads were retired in 2017 ("desaparecen
+las plataformas informativas y los programas de ayuda"); the only durable
+session artefact AEAT publishes is the proprietary `.ses` partial-declaration
+container, which is not a calculation oracle.
+
+The registry rebuild therefore must treat formula-form workbook parity as a
+genuinely **unavailable** evidence surface for almost every modelo, not as a
+deferred-but-eventually-reachable target. Each modelo wave must classify its
+calculation-parity strategy explicitly under one of these tiers:
+
+- **Web-driven simulator parity** (preferred when the simulator is anonymous
+  and AEAT has classified it as a read-only parity surface). Modelo 100 falls
+  here through Renta WEB Open. The registry must drive the simulator headlessly
+  with synthetic inputs, scrape the rendered cuota outputs, and compare to
+  registry-computed values via the `_workbook_parity` and `_parity_tapes`
+  harness. AEAT-authoritative every run; auto-detects AEAT changes; brittle
+  to UI changes.
+- **Authenticated WEB drive** (Sociedades WEB, authenticated Renta WEB).
+  Available only with the bound taxpayer's session; protected by the
+  remote-state guards declared on every revision; must remain read-only and
+  must never trigger save, sign, present, pay, domicile, amend, cancel, or
+  submit actions.
+- **Justificante reverse-validation** (post-filing). When a real declaration
+  has been filed, the AEAT-issued justificante PDF echoes computed totals.
+  The committed sanitized fixture flow plus the registry's calculation must
+  match the justificante's totals; AEAT is the authority and the registry is
+  validated against it.
+- **Manual practico worked-example fixtures**. The AEAT manuals contain
+  numeric worked examples in Spanish prose. Each example becomes a synthetic
+  test fixture with explicit AEAT-prose source citation so that any
+  registry-vs-prose drift fails the test loud. This is the lowest-friction
+  fallback when no live surface is safe to drive but is bounded by how many
+  worked examples AEAT publishes.
+
+Every modelo wave must declare which of these tiers covers its calculation
+parity, must execute that tier's evidence at least once per supported
+revision, and must record any gap explicitly. Hand-rolled XLSX parity oracles
+not derived from one of the four tiers above are forbidden — they regress
+silently every time AEAT updates its rules and cannot be defended as an
+authority.
+
+The workbook parity backend assumes the LibreOffice headless runner is
+present. The host must provision LibreOffice (or the Excel COM runner on
+Windows) as a base dependency; `detect_workbook_runner()` and the underlying
+resolvers raise explicitly when no runner is locatable rather than degrading
+silently to "skip parity". Tests and fixtures may not branch on runner
+availability.
+
 ## Modelo Cross-Dependency and Hierarchy Ledger
 
 Every modelo wave must classify its upstream and downstream relations before it
@@ -282,20 +352,25 @@ through the existing remote-state guard, and produces a structured
   refusal of non-AEAT hosts, refusal of forbidden action tokens, refusal
   of `static_official_only` policies that plan remote operations, and the
   oracle-side guard call inside `verify_payload`.
-- [ ] Wave 0 production-or-test classification: every oracle adapter
+- [x] Wave 0 production-or-test classification: every oracle adapter
   declares an explicit environment classification at registration time.
   Production-NIF-safe oracles are accepted in the production catalogue;
   AEAT pre-production / test-NIF oracles are accepted only under an
   explicit test-environment feature flag and are never registered against
-  the autonomo's real NIF.
-- [ ] Wave 0 forbidden surface enumeration: extend the existing
+  the autonomo's real NIF. The `LiveParityCatalogue` enforces this with a
+  required `environment` keyword on registration and an environment-aware
+  `lookup`; cross-environment lookups raise.
+- [x] Wave 0 forbidden surface enumeration: extend the existing
   remote-state guard forbidden-token list with explicit denials of any
   surface that creates server-side state at AEAT even before legal
   presentation. TGVI online belongs to this category in production
   classification because its `FINALIZED` state under the production NIF is
   visible in declaration-history surfaces, can be configured to
   substitute prior filings, and is logged as an upload attempt regardless
-  of whether it is later presented.
+  of whether it is later presented. The guard's `_FORBIDDEN_TOKENS` now
+  includes `tgvi`, `transmision`, and `transmitir` so any URL or browser
+  action containing those substrings fails pre-flight under any policy
+  classification.
 
 ### Wave 0 Adapter Roadmap
 
