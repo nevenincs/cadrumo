@@ -86,3 +86,52 @@ Verification:
   slices timed out at 244 seconds before completion; no failure was observed
   before timeout.
 - Focused Modelo 123 cleanup checks passed with `ruff`, `ty`, and pytest.
+
+## Standardization Addendum
+
+Topic: formula-modelo construct ownership, workflow-surface parity, and pytest
+duration profiling for the standardized registry substrate.
+
+Audit surface: `registry/aeat/modelos/111.toml`,
+`registry/aeat/modelos/130.toml`, `registry/aeat/modelos/131.toml`,
+`registry/aeat/modelos/202.toml`, and the formula-modelo registry tests under
+`src/aeat/domain/calculations/registry`.
+
+Rewrite scope: registry ownership entries, application-link parity, real
+runtime tests, generalized parity guard, and test-runtime profiling notes.
+
+CTR-PARITY-001 and CTR-PARITY-002 status: addressed for Modelos 111, 130, and
+131. The registry now declares construct ownership for their casillas,
+formulas, parameters and bindings where applicable, layouts, extraction
+profiles, live/static evidence references, workbook parity references,
+verification expectations, deadline windows where present, and workflow
+application links.
+
+CTR-PARITY-006 status: addressed for Modelo 202 in the audited scope. The
+formula-bearing 202 revisions now expose review, approval, reconciliation, and
+workflow snapshot links through the same construct-owned workflow surface
+policy used by the standardized formula modelos.
+
+CTR-PARITY-008 | MEDIUM | Registry parity tests are correct but still expose
+registry loading and validation as the dominant runtime cost
+ The targeted formula-modelo suite now reuses module-scoped real registry loads
+ for model-specific tests and avoids duplicate explicit validation before
+ `build_snapshot`. Serial runtime improved from 15 passed in 45.91 seconds to
+ 15 passed in 37.30 seconds. The remaining hot path is the generalized formula
+ parity test, which validates all loaded formula-bearing modelos and takes
+ about 20-21 seconds. This is not a hang, but future optimization should focus
+ on a shared validated-registry cache or validator-level reuse that preserves
+ fail-fast behavior and does not replace real registry parsing with fakes.
+
+Additional verification:
+
+- `uv run python -c "...validate_modelo(...)"` passed for Modelos 111, 130,
+  131, and 202.
+- `uv run ruff check ...` passed for modified registry TOML and new tests.
+- `uv run ty check ...` passed for new registry tests.
+- `uv run pytest ... --durations=20` passed: 15 passed in 37.30 seconds after
+  test-load reuse.
+- `uv run pytest ... -n auto --dist loadfile --durations=20` passed: 15 passed
+  in 24.17 seconds.
+- `uv run pytest test_modelo_202_registry.py test_formula_modelo_registry_parity.py
+  --durations=15` passed: 5 passed in 31.94 seconds.
