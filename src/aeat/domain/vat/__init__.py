@@ -45,6 +45,11 @@ from ._oss import (
     RegimePeriodicity,
     regime_allows_deduction,
 )
+from ._recargo_equivalencia import (
+    LIVA_ART_161_RECARGO,
+    LivaArt161RecargoRates,
+    recargo_rate_for,
+)
 from ._rates import VAT_RATE_TABLE
 from ._schema import (
     EUMemberState,
@@ -79,6 +84,8 @@ __all__ = [
     "InvoiceDirection",
     "IossFilerRole",
     "IssuerResidency",
+    "LIVA_ART_161_RECARGO",
+    "LivaArt161RecargoRates",
     "OssIossRegime",
     "RegimePeriodicity",
     "TransactionKind",
@@ -103,6 +110,7 @@ __all__ = [
     "classify_vat",
     "load_vat_rules_from_manual",
     "lookup_rate",
+    "recargo_rate_for",
     "regime_allows_deduction",
     "resolve_catalogue",
     "verify_catalogue",
