@@ -1,0 +1,58 @@
+[legal."ley-37-1992:art-84"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-84.html#a84"
+document_id = "BOE-A-1992-28740"
+article = "84"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a84"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
+required_text = [
+    "Sujetos pasivos",
+    "Los empresarios o profesionales para quienes se realicen las operaciones",
+]
+
+[legal."ley-37-1992:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-88.html#a88"
+document_id = "BOE-A-1992-28740"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a88"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 88: repercusion del impuesto. Establece la obligacion del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
+required_text = [
+    "Repercusión del impuesto",
+    "deberán repercutir íntegramente el importe del impuesto",
+    "obligado a soportarlo",
+]
+
+[legal."ley-37-1992:art-92"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-92.html#a92"
+document_id = "BOE-A-1992-28740"
+article = "92"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a92"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusion directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorepercusion). Es la base legal del flujo IVA soportado y deducible."
+required_text = [
+    "Cuotas tributarias deducibles",
+    "podrán deducir",
+    "soportado por repercusión directa",
+]
