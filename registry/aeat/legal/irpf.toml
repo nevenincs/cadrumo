@@ -1224,6 +1224,86 @@ required_text = [
     "necesidades básicas",
 ]
 
+[legal."ley-35-2006:art-63"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-63"
+document_id = "BOE-A-2006-20764"
+article = "63"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la escala general progresiva estatal del IRPF aplicable a la base liquidable general en Modelo 100, casillas 0528-0531."
+required_text = [
+    "escala general",
+    "base liquidable general",
+    "cuota íntegra estatal",
+]
+
+[legal."ley-35-2006:art-66"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-66"
+document_id = "BOE-A-2006-20764"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a66"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para los tipos de gravamen estatales aplicables a la base liquidable del ahorro en Modelo 100, casillas 0540-0543."
+required_text = [
+    "tipos de gravamen",
+    "base liquidable del ahorro",
+    "estatal",
+]
+
+[legal."ley-35-2006:art-67"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-67"
+document_id = "BOE-A-2006-20764"
+article = "67"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a67"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para la cuota liquida estatal en Modelo 100, casilla 0570 y 0585 (cuota liquida estatal incrementada)."
+required_text = [
+    "cuota líquida estatal",
+    "cuota íntegra estatal",
+    "deducción",
+]
+
+[legal."ley-35-2006:art-68"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-68"
+document_id = "BOE-A-2006-20764"
+article = "68"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Base legal para las deducciones de la cuota integra estatal aplicables en Modelo 100, casillas 0547-0567."
+required_text = [
+    "deducciones",
+    "cuota íntegra estatal",
+    "inversión",
+]
+
 [legal."ley-35-2006:art-50"]
 evidence_tier = "legal_authority"
 authority = "boe"
