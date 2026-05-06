@@ -66,6 +66,22 @@ OracleSurfaceKind = Literal[
 ]
 OracleEnvironment = Literal["production", "test_environment", "both"]
 
+# Allow-list of compatible (cross-reference surface, oracle surface_kind)
+# pairs. Bindings whose pair is not listed here are flagged by the boot-time
+# audit. ``static_official_documentation`` is intentionally absent: static-doc
+# surfaces have no verifiable response and cannot be the target of any oracle.
+# Adding a new oracle surface_kind or a new cross-reference surface in a
+# follow-up must extend this set in the same commit.
+_COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("open_simulator", "open_simulator"),
+        ("integration_test_service", "integration_test_service"),
+        ("public_read_surface", "vat_id_check"),
+        ("public_read_surface", "file_validator"),
+        ("authenticated_read_surface", "pre_filing_validator"),
+    }
+)
+
 
 class _ParityModel(BaseModel):
     """Strict frozen base for parity records."""
@@ -400,11 +416,18 @@ def audit_oracle_bindings(
             if oracle_id is None:
                 continue
             try:
-                catalogue.lookup(oracle_id, environment=environment)
+                oracle = catalogue.lookup(oracle_id, environment=environment)
             except RegistryValidationError as exc:
                 failures.append(
                     f"modelo {modelo.id} revision {revision.id} cross-reference "
                     f"{cross_reference.id} bound oracle {oracle_id!r}: {exc}"
+                )
+                continue
+            if (cross_reference.surface, oracle.surface_kind) not in _COMPATIBLE_SURFACE_PAIRS:
+                failures.append(
+                    f"modelo {modelo.id} revision {revision.id} cross-reference "
+                    f"{cross_reference.id} surface {cross_reference.surface!r} is not "
+                    f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}"
                 )
     return tuple(failures)
 
