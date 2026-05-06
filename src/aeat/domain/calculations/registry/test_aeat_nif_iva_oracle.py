@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ._aeat_nif_iva_oracle import (
+    AEAT_NIF_IVA_ENTRY_URL,
     AEAT_NIF_IVA_VERIFICATION_URL,
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
@@ -22,7 +23,13 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         id="aeat-nif-iva-public",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        # The form servlet lives on www1.agenciatributaria.gob.es; the sede
+        # entry point that the live driver visits first lives on
+        # sede.agenciatributaria.gob.es. Both must be in the allow-list.
+        allowed_hosts=(
+            "sede.agenciatributaria.gob.es",
+            "www1.agenciatributaria.gob.es",
+        ),
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -48,13 +55,19 @@ def test_adapter_satisfies_live_parity_oracle_protocol() -> None:
     assert oracle.surface_kind == "vat_id_check"
 
 
-def test_adapter_targets_public_aeat_sede_host() -> None:
-    """Confirms the adapter URL stays inside the AEAT host-pinning policy."""
+def test_adapter_urls_stay_inside_aeat_host_pinning_suffix() -> None:
+    """Both the entry point and the form servlet are on AEAT-controlled subdomains.
 
-    assert str(AEAT_NIF_IVA_VERIFICATION_URL).startswith("https://sede.agenciatributaria.gob.es/")
+    The remote-state guard's host-pinning policy keys off the
+    ``agenciatributaria.gob.es`` suffix; the entry URL is on the sede
+    subdomain and the form URL is on the www1 subdomain. Both match.
+    """
+
+    assert str(AEAT_NIF_IVA_ENTRY_URL).startswith("https://sede.agenciatributaria.gob.es/")
+    assert str(AEAT_NIF_IVA_VERIFICATION_URL).startswith("https://www1.agenciatributaria.gob.es/")
 
 
-def test_planned_operations_returns_landing_then_form_then_per_nif_then_discard() -> None:
+def test_planned_operations_returns_entry_then_form_then_per_nif_then_discard() -> None:
     oracle = AeatNifIvaCheckerOracle()
 
     operations = oracle.planned_operations(
@@ -62,19 +75,23 @@ def test_planned_operations_returns_landing_then_form_then_per_nif_then_discard(
         expected={"FR12345678901": "valid", "DE111222333": "valid"},
     )
 
-    # Expected sequence: GET, open-form, check DE111..., check FR123..., discard.
-    assert len(operations) == 5
+    # Expected sequence: GET sede entry, GET form servlet, open-form,
+    # check DE111..., check FR123..., discard.
+    assert len(operations) == 6
     assert operations[0].kind == "http"
     assert operations[0].method == "GET"
-    assert operations[0].url == AEAT_NIF_IVA_VERIFICATION_URL
-    assert operations[1].kind == "browser_action"
-    assert operations[1].action == "open-nif-iva-form"
+    assert operations[0].url == AEAT_NIF_IVA_ENTRY_URL
+    assert operations[1].kind == "http"
+    assert operations[1].method == "GET"
+    assert operations[1].url == AEAT_NIF_IVA_VERIFICATION_URL
     assert operations[2].kind == "browser_action"
-    assert operations[2].action == "check-nif-DE111222333"
+    assert operations[2].action == "open-nif-iva-form"
     assert operations[3].kind == "browser_action"
-    assert operations[3].action == "check-nif-FR12345678901"
+    assert operations[3].action == "check-nif-DE111222333"
     assert operations[4].kind == "browser_action"
-    assert operations[4].action == "discard-session"
+    assert operations[4].action == "check-nif-FR12345678901"
+    assert operations[5].kind == "browser_action"
+    assert operations[5].action == "discard-session"
 
 
 def test_planned_operations_rejects_empty_expected() -> None:

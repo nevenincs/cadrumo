@@ -1,17 +1,18 @@
 """AEAT NIF-IVA other-EU-countries verification oracle.
 
-AEAT publishes a public verification page at sede.agenciatributaria.gob.es
-that confirms the validity of an EU VAT identifier issued by another
-member state. The page accepts the country code + VAT number, relays the
-query to the European Commission's VIES service, and renders the response.
-The page is anonymous (no clave-móvil session, no NIF-history written for
-the calling autonomo) and creates no AEAT-side state under the autonomo's
-account.
+AEAT publishes a public verification servlet under the
+agenciatributaria.gob.es domain that confirms the validity of an EU VAT
+identifier issued by another member state. The form accepts the country
+code + VAT number, relays the query to the European Commission's VIES
+service, and renders the response. The form is anonymous (no clave-móvil
+session, no NIF-history written for the calling autonomo) and creates no
+AEAT-side state under the autonomo's account.
 
-This adapter targets that public AEAT page so it stays inside the
-existing remote-state-guard host-pinning allow-list (sede AEAT host) and
-does not require a host-list expansion. Same verdict authority as direct
-EU VIES because AEAT delegates to VIES under the hood.
+This adapter targets that AEAT-hosted form (``www1.agenciatributaria.gob.es``)
+so it stays inside the existing remote-state-guard host-pinning allow-list
+(matched by the ``agenciatributaria.gob.es`` suffix) and does not require
+a host-list expansion. Same verdict authority as direct EU VIES because
+AEAT delegates to VIES under the hood.
 
 The Playwright-driven execution layer is intentionally not implemented in
 this slice; ``verify_payload`` raises ``NotImplementedError`` after the
@@ -38,9 +39,15 @@ from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 ORACLE_ID = "aeat-nif-iva-checker"
 
-AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl(
+AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl("https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios")
+# AEAT's public sede entry point for the verification flow. The form servlet
+# above redirects to a sede error page when reached cold; the live Playwright
+# driver must navigate to the entry point first to acquire the session
+# cookies the servlet requires. The sede gestiones page lists the form among
+# the VIES management actions.
+AEAT_NIF_IVA_ENTRY_URL = AnyUrl(
     "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/"
-    "comprobacion-nif-iva-otros-paises-ue.html"
+    "identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
 )
 
 
@@ -74,6 +81,9 @@ class AeatNifIvaCheckerOracle:
                 "AeatNifIvaCheckerOracle.planned_operations requires at least one expected NIF"
             )
         operations: list[RemoteOperation] = [
+            # Navigate to the sede entry point first so the session cookies the
+            # servlet requires are acquired; then GET the form servlet itself.
+            RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_ENTRY_URL),
             RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_VERIFICATION_URL),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
         ]
@@ -128,6 +138,7 @@ def register_default(
 
 
 __all__ = [
+    "AEAT_NIF_IVA_ENTRY_URL",
     "AEAT_NIF_IVA_VERIFICATION_URL",
     "ORACLE_ID",
     "AeatNifIvaCheckerOracle",
