@@ -1,12 +1,11 @@
-"""End-to-end synthetic-profile parity verification for the Modelo 100 2025 cuota chain.
+"""Synthetic-profile parity verification for the Modelo 100 2025 cuota chain.
 
 Exercises the registry calculator on a curated employee profile and asserts
 the full cuota-chain output: from trabajo neto reducido (0025) and the
 manually provided escala applications through mínimo personal y familiar,
 base imponible / liquidable, cuota íntegra, cuota líquida, cuota líquida
 incrementada, and finally cuota líquida total (0587). The scenario uses
-only the registry's public load + validate + calculate pathway. No mocks,
-no stubs, no fakes.
+only the registry's public load + validate + calculate pathway.
 """
 
 from __future__ import annotations

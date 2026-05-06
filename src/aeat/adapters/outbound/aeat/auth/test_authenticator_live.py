@@ -7,10 +7,8 @@ and that
 :meth:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
 returns ``is_valid=True`` against the configured verify URL.
 
-The module carries zero mocks, patches, fakes, or monkey-patched
-attributes — both the global ``TID251`` ruff ban and the extended
-live-test banned-import set in ``tests/conftest.py`` forbid them.
-The test skips cleanly when the cert env is not fully configured.
+The test uses the configured certificate and live verification URL directly.
+It skips cleanly when the cert env is not fully configured.
 """
 
 from __future__ import annotations

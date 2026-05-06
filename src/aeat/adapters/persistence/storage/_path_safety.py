@@ -79,7 +79,7 @@ def safe_repository_id(token: str, *, context: str) -> str:
     Repositories store records as ``<store_dir>/<token>.envelope.json``.
     A token containing a path separator, a dot-prefix, or one of the
     relative-path tokens (``"."`` / ``".."``) would either escape the
-    store dir or shadow a hidden file. This helper is the early-rejection
+    store dir or collide with a hidden file. This helper is the early-rejection
     layer at the public-method boundary; the substrate's
     :func:`safe_record_path` enforces containment downstream.
 

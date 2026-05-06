@@ -4,7 +4,7 @@ This test is **opt-in**: it is skipped unless
 ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the environment. It spins up a
 real Playwright browser session against
 AEAT's Sede electrónica and round-trips one CSV. Per the project rule,
-this file MUST NOT contain mocks, patches, fakes, or stubs.
+this file uses the real outbound verification surface.
 
 When the live browser surface is unavailable, this test raises
 :class:`JustificanteVerificationError` from the browser constructor.
