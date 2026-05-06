@@ -21,13 +21,12 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SetupStep(StrEnum):
-    """Closed catalogue of the wizard's ten linear steps.
+    """Closed catalogue of the wizard's linear steps.
 
     ``WELCOME`` greets the user. ``PROFILE`` through ``LIVE_TESTS_OPT_IN``
-    capture typed answers. ``FIXTURE_PROVISIONING`` records the Google
-    Workspace fixture opt-in. ``VERIFY`` runs the pure verifier.
-    ``FIRST_RUN`` optionally hands off to the workflow-engine runner
-    (Protocol-backed). ``DONE`` is terminal.
+    capture typed answers. ``VERIFY`` runs the pure verifier. ``FIRST_RUN``
+    optionally hands off to the workflow-engine runner (Protocol-backed).
+    ``DONE`` is terminal.
     """
 
     WELCOME = "WELCOME"
@@ -36,7 +35,6 @@ class SetupStep(StrEnum):
     LANGUAGE = "LANGUAGE"
     OUTPUT_DIRS = "OUTPUT_DIRS"
     LIVE_TESTS_OPT_IN = "LIVE_TESTS_OPT_IN"
-    FIXTURE_PROVISIONING = "FIXTURE_PROVISIONING"
     VERIFY = "VERIFY"
     FIRST_RUN = "FIRST_RUN"
     DONE = "DONE"
@@ -130,8 +128,6 @@ class SetupAnswers(BaseModel):
 
     # ── opt-ins ──────────────────────────────────────────────────────────
     aeat_live_tests_enabled: bool = False
-    aeat_live_tests_google: bool = False
-    provision_google_fixtures: bool = False
 
     # ── control ──────────────────────────────────────────────────────────
     steps_to_skip: frozenset[SetupStep] = frozenset()
