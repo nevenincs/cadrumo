@@ -303,3 +303,13 @@ response artefact?
 Should every oracle adapter be required to declare a
 read-only-replay-fixture path so contract tests can run offline against a
 captured AEAT response without ever reaching the network?
+
+## Implementation Review Notes
+
+The Renta WEB Open adapter now uses the backend result contract for blocked,
+unverifiable, replay, and live paths. Replay evidence remains offline contract
+evidence only. The live calculation checker now drives the anonymous AEAT
+Renta WEB Open 2025 simulator on `www2.agenciatributaria.gob.es`, fills a valid
+synthetic personal profile, scrapes summary calculation outputs, and returns the
+same `ParityResult` shape. The 2026-05-06 opt-in `live_read` run matched the
+baseline result, state/autonomic minimums, and cuota diferencial against AEAT.

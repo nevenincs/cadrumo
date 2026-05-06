@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 
 from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import async_playwright
 
 from .....core.config import load_settings
 from .....core.logging import get_logger
+from ._factory import default_browser_session_factory
 from .session import BrowserError
 
 logger = get_logger(__name__)
@@ -24,27 +24,21 @@ async def run_health_check() -> None:
     logger.info("browser health check starting")
 
     try:
-        async with async_playwright() as p:
-            logger.debug(
-                "launching browser channel=%s headless=%s",
-                settings.aeat_browser_channel,
-                settings.aeat_browser_headless,
-            )
-            browser = await p.chromium.launch(
-                channel=settings.aeat_browser_channel,
-                headless=settings.aeat_browser_headless,
-            )
-            context = await browser.new_context()
+        browser_session = await default_browser_session_factory(settings)
+        try:
+            context = await browser_session.create_context()
             page = await context.new_page()
 
             logger.debug("navigating to https://example.com for smoke test")
-            response = await page.goto("https://example.com", wait_until="domcontentloaded")
+            response = await browser_session.navigate(page, "https://example.com")
 
             if not response or not response.ok:
                 raise BrowserError(f"Smoke test failed. Status: {response.status if response else 'Unknown'}")
 
             logger.info("browser health check passed title=%s", await page.title())
-            await browser.close()
+            await context.close()
+        finally:
+            await browser_session.close()
     except BrowserError:
         raise
     except PlaywrightError as e:

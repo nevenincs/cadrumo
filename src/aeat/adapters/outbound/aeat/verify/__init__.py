@@ -2,7 +2,7 @@
 
 The :func:`verify_csv` helper is opt-in: it only runs when the
 caller supplies or constructs a
-:class:`aeat.adapters.outbound.aeat.browser.BrowserSession`, and it
+:class:`aeat.adapters.outbound.aeat.browser.DefaultBrowserSession`, and it
 never mutates AEAT-side state. The contract is:
 
 * open the Sede verification page,
@@ -17,7 +17,7 @@ constructed and surfaces the underlying error to the caller via
 Public surface: :func:`verify_csv` plus the Playwright protocol
 types (:class:`VerifyBrowserKeyboardLike`, :class:`VerifyBrowserPageLike`,
 :class:`VerifyBrowserContextLike`, :class:`VerifyBrowserSessionLike`,
-:class:`VerifyPlaywrightOwnerLike`) that let the helper be unit-tested
+:class:`VerifyBrowserSessionFactory`) that let the helper be unit-tested
 without spinning up a real browser.
 """
 
@@ -83,40 +83,23 @@ class VerifyBrowserSessionLike(Protocol):
     async def close(self) -> None: ...
 
 
-class VerifyPlaywrightOwnerLike(Protocol):
-    """Subset of the Playwright async owner used to tear down a self-owned session."""
-
-    async def stop(self) -> None: ...
+VerifyBrowserSessionFactory = Callable[[], Awaitable[VerifyBrowserSessionLike]]
+"""Callable that builds a self-owned browser session."""
 
 
-VerifyBrowserSessionFactory = Callable[[], Awaitable[tuple[VerifyBrowserSessionLike, VerifyPlaywrightOwnerLike]]]
-"""Callable that builds a (session, playwright owner) pair for the self-owned browser path."""
-
-
-async def _build_default_browser_session() -> tuple[VerifyBrowserSessionLike, VerifyPlaywrightOwnerLike]:
-    """Construct the default :class:`VerifyBrowserSessionLike` and its Playwright owner.
+async def _build_default_browser_session() -> VerifyBrowserSessionLike:
+    """Construct the default :class:`VerifyBrowserSessionLike`.
 
     Loads :func:`aeat.core.config.load_settings`, materialises the
-    default :class:`aeat.adapters.outbound.aeat.browser.profile.Profile`,
-    starts the async Playwright runtime, and wraps both into a session
-    pair the caller is responsible for closing.
+    central :func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`,
+    and returns a session the caller is responsible for closing.
     """
-    from playwright.async_api import async_playwright
 
     from .....core.config import load_settings
-    from ..browser import BrowserSession
-    from ..browser.profile import Profile
+    from ..browser import default_browser_session_factory
 
     settings = load_settings()
-    storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=storage_state_path,
-    )
-    profile.ensure_storage_dir()
-    playwright = await async_playwright().start()
-    session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
-    return cast(VerifyBrowserSessionLike, session), cast(VerifyPlaywrightOwnerLike, playwright)
+    return cast(VerifyBrowserSessionLike, await default_browser_session_factory(settings))
 
 
 DEFAULT_BROWSER_SESSION_FACTORY: VerifyBrowserSessionFactory = _build_default_browser_session
@@ -149,10 +132,9 @@ async def verify_csv(
 
     own_browser = False
     session = browser
-    playwright_owner: VerifyPlaywrightOwnerLike | None = None
     if session is None:
         try:
-            session, playwright_owner = await DEFAULT_BROWSER_SESSION_FACTORY()
+            session = await DEFAULT_BROWSER_SESSION_FACTORY()
             own_browser = True
         except (PlaywrightError, AeatError) as exc:
             raise JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
@@ -189,11 +171,6 @@ async def verify_csv(
                 await session.close()
             except Exception as exc:  # pragma: no cover - defensive
                 _logger.debug("browser session close failed: %s", exc)
-            if playwright_owner is not None:
-                try:
-                    await playwright_owner.stop()
-                except Exception as exc:  # pragma: no cover - defensive
-                    _logger.debug("playwright stop failed: %s", exc)
 
 
 def _assert_verify_http(method: str, url: str) -> None:
@@ -217,6 +194,5 @@ __all__ = [
     "VerifyBrowserPageLike",
     "VerifyBrowserSessionFactory",
     "VerifyBrowserSessionLike",
-    "VerifyPlaywrightOwnerLike",
     "verify_csv",
 ]

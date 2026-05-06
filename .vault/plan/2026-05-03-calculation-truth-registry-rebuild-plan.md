@@ -385,6 +385,15 @@ through the existing remote-state guard, and produces a structured
   outputs. Accepted for the production catalogue with explicit
   `synthetic_data_allowed = true` policy. Per-modelo adapter ADRs declare
   allowed hosts, planned operations, and parity-field schema.
+  - [x] Renta WEB Open adapter now has a guarded result path: blocked
+    policy decisions, missing live-driver state, local replay matches,
+    replay mismatches, and invalid replay payloads all return structured
+    `ParityResult` data instead of a hard `NotImplementedError`.
+  - [x] Renta WEB Open live calculation checker now drives the current
+    anonymous 2025 Open simulator on `www2.agenciatributaria.gob.es`, fills a
+    valid synthetic personal profile, scrapes summary calculation outputs, and
+    compares them through `ParityResult`. The opt-in `live_read` check matched
+    the baseline profile against AEAT on 2026-05-06.
 - [ ] AEAT pre-production fixed-width validator adapter: TGVI online
   against AEAT-issued test NIFs in AEAT's pre-production environment. The
   adapter is registered only when the test-environment feature flag is
@@ -2348,9 +2357,19 @@ own ledger is checked.
 - [ ] Modelo 100 TOML identity and revisions: define modelo identity, title,
   jurisdiction, cadence, every supported revision, period selector, deadline
   windows, and application links in `registry/aeat/modelos/100.toml`.
-- [ ] Modelo 100 casilla schema: define every filing-grade casilla with data
+- [~] Modelo 100 casilla schema: define every filing-grade casilla with data
   type, input kind, requiredness, section, export refs, legal refs, source
-  refs, and Renta epoch grouping.
+  refs, and Renta epoch grouping. (2026-05-06: deepened to 11,302 casillas
+  across all 6 ejercicios 2020-2025 by parsing AEAT-published
+  declaracion-individual .properties dictionaries; section paths derived from
+  XPath, data types mapped from AEAT type codes (P102/P010/P012/P020/P030/
+  P032/P040/P042/P072/P122 -> money, N102 -> decimal, X/FEC/TIT/AAA/MOD ->
+  text, LGC/S_N -> boolean, SEQ -> integer); legal_refs/source_refs inherited
+  from each revision; rev 2020 received the missing modelo-100-filing
+  application_link to satisfy filing-grade casilla coverage validation;
+  remaining work: hand-author input_kind="bound"/"computed" semantics, formula
+  bindings, CCAA-conditional reductions, and per-casilla legal-ref refinement
+  beyond revision-level inheritance.)
 - [ ] Modelo 100 formulas, parameters, and bindings: define every computation,
   dated value, previous-filing binding, cross-model relation, CCAA parameter,
   rental algorithm, rounding rule, legal ref, source ref, and trace output.
@@ -4715,12 +4734,17 @@ application surface, and the old authority has been deleted.
        - [x] The direct-estimation reduction chain now includes registry-backed
          mode selection, reduction application, and reduced-total propagation
          for the 2025 slice.
-       - [x] Statutory cap calculation for difficult-justification expenses is
+      - [x] Statutory cap calculation for difficult-justification expenses is
          registry-backed for ejercicio 2025. Casilla 0222 is computed from the
          5 percent Reglamento IRPF article 30 parameter, clamps negative bases
          to zero, applies the EUR 2,000 annual cap, feeds casilla 0223, and is
          covered by trace/legal-ref behaviour tests. Simplified-estimation final
          selection remains open.
+      - [x] Local registry scenario verification now covers normal direct
+        estimation, simplified-estimation cap behaviour, negative simplified
+        bases, real-estate capital rollups, final settlement rollups, and
+        payments-on-account outputs for ejercicio 2025 with expected casilla
+        values and trace/evidence contracts.
      - [ ] Objective estimation: activity modules, signs, indices, reductions,
        annual module orders, and relation to Modelo 131.
        - [x] Objective-estimation record-design outputs 1479, 1553, and 1577
@@ -4787,6 +4811,24 @@ application surface, and the old authority has been deleted.
      linkage checks, encrypted observation-store checks, export/import checks,
      cross-model relation checks, invalid-input checks, date-axis boundaries,
      CCAA variation, rental/amortization cases, and registry failure cases.
+     - [x] Added a registry-native local scenario harness so curated Renta
+       assumptions can be executed through the validated snapshot calculator
+       and checked against exact expected outputs, operand traces, legal refs,
+       source refs, and declared modelo revision without depending on a
+       live/workbook oracle.
+     - [x] Expanded the local scenario matrix to cover real-estate capital
+       net/reduced-return rollups, imputed rent passthrough, rental
+       withholding propagation, cuota diferencial, and result-of-declaration
+       rollup for Modelo 100 ejercicio 2025.
+     - [x] Renta WEB Open oracle adapter now returns structured blocked,
+       unverifiable, match, and mismatch verdicts through the live-parity
+       result contract. The completed path is local replay/result plumbing;
+       the live calculation path now also has a Playwright-backed baseline
+       profile checker that matched AEAT Renta WEB Open 2025 summary outputs
+       for result, state/autonomic minimums, and cuota diferencial.
+     - [ ] Expand scenario coverage across official/manual examples, Renta WEB
+       Open driver results, CCAA variation, rental/amortization, objective
+       estimation modules, final settlement, and workflow linkage.
   - [ ] Delete or reduce every Modelo 100 old authority after registry-backed
      replacement: formula/ruleset-era surfaces, Renta helper authority, CCAA
      hardcoding, rental legal-calculation ownership, borrador extractor casilla
@@ -4896,100 +4938,3 @@ Residual risk must be recorded per modelo. A modelo with missing reviewed
 official evidence, incomplete legal basis, incomplete calculations, or
 incomplete export linkage is not partially supported; it is absent from
 filing-grade registry snapshots until fixed.
-
-
-## VAT Centralization Roll-Out Ledger (added 2026-05-06)
-
-This section records the VAT-centric slices implemented per the
-Modelo 369 VAT centralization ADR. Each entry references its commit
-SHA and the audit finding it closes.
-
-- [x] Substrate-extension slice. Adds `aeat.domain.vat._oss` with
-  `OssIossRegime` (Exterior / Unión / Importación), `IossFilerRole`
-  (DIRECT / INTERMEDIARIO splitting HAC/610/2021 art. 2 letters c
-  and d), `DeductionScope`, `RegimePeriodicity`, `REGIME_PERIODICITY`
-  mapping, and the `regime_allows_deduction` predicate anchored to
-  LIVA art. 163 vicies / tervicies / octovicies. Extends
-  `TransactionKind` with five new markers and registers classifier
-  rules R16-R19 plus R23. Pure additive; no existing rate values,
-  classifier rules, or `TransactionKind` members modified. Commit
-  `aac0f655`.
-- [x] LIVA deduction-article corpus pull. Adds `ley-37-1992-art-163-vicies.html`
-  (Exterior), `ley-37-1992-art-163-tervicies.html` (Unión), and
-  `ley-37-1992-art-163-octovicies.html` (IOSS) plus the full
-  `ley-37-1992.html` consolidated text. Fixes the ADR's prior
-  citation error (Unión deduction is art. 163 tervicies, not
-  quatervicies). Commit `0e694abd`.
-- [x] Teardown A: route `IvaRate` percentages through the substrate.
-  Closes V-1 (high) from the rate-shadow sweep. Removes the
-  `_IVA_RATE_PERCENTAGES` Python literal mapping; `iva_rate_percentage`
-  becomes a wrapper around `aeat.domain.vat.lookup_rate` for Spain at
-  a date. Slot ↔ `VATRateKind` mapping (RATE_4 → SUPER_REDUCED,
-  RATE_10 → REDUCED, RATE_21 → GENERAL) is structural and stays in
-  Python; the actual percentages live in
-  `registry/aeat/vat/rates.toml`. Commit `badff1aa`.
-- [x] Teardown B: route LIRPF art. 85 imputación rates through the
-  registry. Closes V-2 (high) from the rate-shadow sweep. Removes
-  the `IMPUTACION_RATE_RECENT_REVISION` /
-  `IMPUTACION_RATE_OLD_OR_NO_REVISION` /
-  `CATASTRAL_REVISION_LOOKBACK_YEARS` literals from
-  `aeat.domain.rental._aggregates`; the values now live in
-  `registry/aeat/legal/irpf.toml` under
-  `[parameters."lirpf-art-85:..."]` entries with explicit BOE
-  citations and review metadata. A small loader at
-  `aeat.domain.rental._imputacion_parameters` reads the TOML at
-  module import and exposes `LIRPF_ART_85_IMPUTACION` as the
-  canonical accessor. Pulls LIRPF art. 85 BOE corpus
-  (`ley-35-2006-art-85.html`). Commit `aba43d37`.
-- [x] Modelo 303 (IVA autoliquidación trimestral) registry foundation.
-  Establishes the legal authority chain (Orden EHA/3786/2008 articles
-  1 and 7), declares quarterly cadence with the four-quarter period
-  selector, registers the AEAT 2025 record-design XLSX as the
-  workbook parity source, and lands deadline windows for filing
-  years 2025 and 2026 with the special 4T-30 January closure per
-  art. 7. Read-only `static_official_documentation` and
-  `authenticated_read_surface` live cross-references with all
-  writes / signing / payment / amendment forbidden. Foundation only;
-  the casilla / formula / binding chain follows in subsequent
-  slices once the substrate teardowns finish and the
-  `ledger_oss_aggregation` source kind is implemented. Commit
-  `333fa559`.
-
-Pending VAT-centric slices per the ADR sequencing:
-
-- [ ] Teardown C: review-edit + country-validator boundary tightening
-  (V-3 medium / M-2 medium). Constrain
-  `aeat.application.review._edit.iva_rate` and `retention_rate` to
-  the registry-backed enum; narrow
-  `aeat.domain.invoices._validators.validate_country_code` to the
-  closed `EUMemberState | OtherCountry` taxonomy.
-- [ ] `ledger_oss_aggregation` registry binding source. New
-  `DataBindingDefinition.source` value with a runtime resolver that
-  filters ledger lines by classification and aggregates per
-  destination Member State / regime / rate kind / direction.
-- [ ] Modelo 303 deepening. 80+ casillas, formulas, deductions,
-  devoluciones, monthly cadence (REDEME / SII filers).
-- [ ] Modelo 390 (IVA resumen anual) foundation.
-- [ ] Modelo 369 (IVA OSS / IOSS) registry slices, one per Esquema,
-  consuming the substrate plus the binding.
-
-- [x] Teardown C: review-edit + country validator boundary tightening.
-  Closes V-3 (medium) and M-2 (medium) from the rate-shadow sweep.
-  `--set iva.rate=NN` now rejects values outside the closed substrate
-  slot percentages {0, 4, 10, 21}; `--set retention.rate=NN` is
-  bounded to [0, 100]. Adds `EU_MEMBER_STATE_CODES`,
-  `is_eu_member_state_code`, and `assert_eu_member_state_code`
-  helpers anchored to `aeat.domain.vat.EUMemberState`; the base
-  `validate_country_code` stays permissive for non-EU counterparties
-  while OSS / IOSS bindings consume the new EU-only helpers. Commit
-  `6964fb41`.
-- [x] Modelo 390 (IVA Declaracion-resumen anual) registry foundation.
-  Authority: Orden EHA/3111/2009 (BOE-A-2009-18472), articulos 1 and
-  8. January-30 deadline (treinta primeros dias naturales del mes de
-  enero siguiente) per art. 8. Foundation includes legal references,
-  AEAT 2025 record-design XLSX as workbook parity source, AEAT G412
-  procedure URL, and read-only live cross-references with all
-  writes / signing / payment forbidden. Modified by HAP/2373/2014
-  (BOE-A-2014-13180) which exempts quarterly filers in simplified
-  regime or urban real-estate rental — that subset gates on a
-  profile condition in a deepening slice. Commit `4f00a293`.

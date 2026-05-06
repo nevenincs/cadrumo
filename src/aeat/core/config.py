@@ -713,6 +713,7 @@ class Settings(BaseSettings):
 
         return normalize_project_relative_path(value)
 
+
 def load_settings() -> Settings:
     """Create a Settings instance from environment variables and ``.env`` file."""
     return Settings()

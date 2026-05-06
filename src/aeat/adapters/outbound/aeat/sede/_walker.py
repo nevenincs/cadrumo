@@ -23,12 +23,10 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from playwright.async_api import Error as PlaywrightError
-from playwright.async_api import async_playwright
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from ..browser import Profile
-from ..browser.session import BrowserSession
+from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._errors import (
     ExpedienteNotFoundError,
@@ -86,15 +84,9 @@ async def walk_expedientes_tree(
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=storage_state_path,
-    )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state=storage_state,
-        )
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
         try:
             page = await context.new_page()
             try:
@@ -118,7 +110,8 @@ async def walk_expedientes_tree(
                 await context.close()
             except Exception as _exc:
                 log.debug("walk_expedientes_tree: context.close suppressed: %s", _exc)
-            await browser_session.close()
+    finally:
+        await browser_session.close()
 
 
 async def resolve_justificante_ref(
@@ -149,16 +142,10 @@ async def resolve_justificante_ref(
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=storage_state_path,
-    )
     detail_url = str(expediente.detail_url)
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state=storage_state,
-        )
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
         try:
             # Warm the session on ResumenVlt so AEAT's redirect chain
             # sees the origin cookie; navigating straight to the
@@ -190,7 +177,8 @@ async def resolve_justificante_ref(
                 await context.close()
             except Exception as _exc:
                 log.debug("resolve_justificante_ref: context.close suppressed: %s", _exc)
-            await browser_session.close()
+    finally:
+        await browser_session.close()
 
 
 async def capture_justificante(
@@ -224,16 +212,10 @@ async def capture_justificante(
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat auth login` first")
 
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=storage_state_path,
-    )
     detail_url = str(expediente.detail_url)
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state=storage_state,
-        )
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
         try:
             page = await context.new_page()
             try:
@@ -280,7 +262,8 @@ async def capture_justificante(
                 await context.close()
             except Exception as _exc:
                 log.debug("capture_justificante: context.close suppressed: %s", _exc)
-            await browser_session.close()
+    finally:
+        await browser_session.close()
 
 
 async def find_expediente(

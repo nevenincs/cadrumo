@@ -74,21 +74,20 @@ class HealthProbeLike(Protocol):
 
 
 class _RealProbe:
-    """Navigation probe that always releases Playwright on exit.
+    """Navigation probe that always releases the central browser session on exit.
 
-    Extracted to module scope so the cleanup contract (``playwright.stop()``
+    Extracted to module scope so the cleanup contract (``session.close()``
     always runs; ``context.close()`` runs when a context was acquired)
     can be exercised by concrete unit tests without a real Playwright
     driver. The ``session`` argument only needs to satisfy the two
     methods used below: ``create_context`` and ``navigate``.
     """
 
-    def __init__(self, session: Any, playwright: Any) -> None:
+    def __init__(self, session: Any) -> None:
         self._session = session
-        self._playwright = playwright
 
     async def probe(self, url: str) -> None:
-        """Navigate to ``url`` and tear the Playwright context down on exit."""
+        """Navigate to ``url`` and tear the browser context down on exit."""
         context: Any = None
         try:
             context = await self._session.create_context()
@@ -104,10 +103,6 @@ class _RealProbe:
                 await self._session.close()
             except Exception:  # BrowserSession.close() may surface Playwright errors; teardown must not abort
                 logger.warning("browser_health: session.close() failed", exc_info=True)
-            try:
-                await self._playwright.stop()
-            except Exception:  # Playwright stop() exception surface is undocumented; teardown must not abort
-                logger.warning("browser_health: playwright.stop() failed", exc_info=True)
 
 
 async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
@@ -116,22 +111,11 @@ async def _default_probe_factory(settings: Settings) -> HealthProbeLike:
     Imported lazily so test doubles can replace :data:`PROBE_FACTORY`
     without paying the cost of a Playwright import.
     """
-    from playwright.async_api import async_playwright
 
-    from ....adapters.outbound.aeat.browser.profile import Profile
-    from ....adapters.outbound.aeat.browser.session import BrowserSession
+    from ....adapters.outbound.aeat.browser import default_browser_session_factory
 
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json",
-    )
-    playwright = await async_playwright().start()
-    session = BrowserSession(
-        playwright=playwright,
-        settings=settings,
-        profile=profile,
-    )
-    return _RealProbe(session=session, playwright=playwright)
+    session = await default_browser_session_factory(settings)
+    return _RealProbe(session=session)
 
 
 PROBE_FACTORY = _default_probe_factory

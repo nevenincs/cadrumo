@@ -647,10 +647,10 @@ cli:
       invalid_year_range: Invalid year range
       unknown_modelo: Registry has no modelo definition for {modelo}
     expediente_help: AEAT file number to capture
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
+    from_year_help: Start year to capture or review records
+    inspect_help: Inspect registry status and references
+    inspect_registry_root_help: Path to the registry root directory
+    json_help: JSON format output
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
     modelo_help: cli.registry.modelo_help

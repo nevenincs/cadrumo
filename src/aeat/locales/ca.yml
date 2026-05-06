@@ -653,10 +653,10 @@ cli:
       invalid_year_range: Rang d'anys no vàlid
       unknown_modelo: El registre no conté cap definició del model {modelo}
     expediente_help: Número d'expedient de l'AEAT a capturar
-    from_year_help: cli.registry.from_year_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    json_help: cli.registry.json_help
+    from_year_help: Any inicial per capturar o revisar registres
+    inspect_help: Inspeccionar l'estat del registre i les referències
+    inspect_registry_root_help: Ruta al directori arrel del registre
+    json_help: Sortida en format JSON
     list_filed_data_help: cli.registry.list_filed_data_help
     list_filed_data_json_help: cli.registry.list_filed_data_json_help
     modelo_help: cli.registry.modelo_help
