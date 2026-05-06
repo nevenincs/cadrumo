@@ -115,3 +115,54 @@ def test_modelo_390_construct_links_filing_workbook_parity() -> None:
     assert "modelo-390-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-390-anual",)
     assert "modelo-390-dr-2025" in construct.workbook_parity_refs
+
+
+def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> None:
+    """Modelo 390 declares the same IVA flow-direction binding pattern as
+    Modelo 303 — the annual resumen aggregates the same flows over the
+    full ejercicio rather than per quarter."""
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    iva_binding_ids = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == "ledger_iva_aggregation"
+    }
+    assert iva_binding_ids == {
+        "modelo-390-iva-repercutido-general-cuota",
+        "modelo-390-iva-repercutido-reducido-cuota",
+        "modelo-390-iva-repercutido-super-reducido-cuota",
+        "modelo-390-iva-soportado-interiores-cuota",
+        "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+    }
+
+
+def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
+    from decimal import Decimal
+
+    from aeat.domain.calculations.registry._bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.vat import IvaFlowDirection, VATCategory, VATRateKind
+
+    modelo, _ = _load_modelo_390()
+    revision = modelo.revisions["2010-y-siguientes"]
+    # Simulate annual aggregation across four quarters
+    quarterly_iva_amounts = [Decimal("210"), Decimal("315"), Decimal("420"), Decimal("525")]
+    observations = [
+        IvaLedgerObservation(
+            ledger_id=f"q{idx}-rep",
+            transaction_date=date(2025, idx * 3, 15),
+            category=VATCategory.DOMESTIC_GENERAL_21,
+            rate_kind=VATRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("1000") * idx,
+            iva_amount=amount,
+        )
+        for idx, amount in enumerate(quarterly_iva_amounts, start=1)
+    ]
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result["modelo-390-iva-repercutido-general-cuota"] == sum(
+        quarterly_iva_amounts, Decimal("0")
+    )

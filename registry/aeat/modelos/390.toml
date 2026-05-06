@@ -39,6 +39,72 @@ tolerance = "0.00"
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
+# Demonstrator ledger_iva_aggregation bindings — annual resumen aggregating
+# the same flow categories as Modelo 303 over the full ejercicio. The
+# substrate's IVA classification triple lets 390 recompute from the ledger
+# directly; a complementary previous_filing dependency on 303 follows in
+# a subsequent slice once 303 declares result-casillas.
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
@@ -229,6 +295,9 @@ title = "Modelo 390 IVA annual summary declaration"
 legal_refs = [
     "orden-eha-3111-2009:art-1",
     "orden-eha-3111-2009:art-8",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-92",
 ]
 source_refs = [
     "aeat-dr-390-2025",
@@ -236,6 +305,13 @@ source_refs = [
     "boe-modelo-390-2009-form",
 ]
 casillas = ["decl.ejercicio", "decl.tipo-declaracion"]
+bindings = [
+    "modelo-390-iva-repercutido-general-cuota",
+    "modelo-390-iva-repercutido-reducido-cuota",
+    "modelo-390-iva-repercutido-super-reducido-cuota",
+    "modelo-390-iva-soportado-interiores-cuota",
+    "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+]
 workbook_parity_refs = ["modelo-390-dr-2025"]
 live_cross_references = [
     "modelo-390-static-documentation",
