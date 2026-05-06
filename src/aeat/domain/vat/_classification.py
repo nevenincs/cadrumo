@@ -157,6 +157,22 @@ class TransactionKind(StrEnum):
         CONSTRUCTION_REVERSE_CHARGE: Art. 84.Uno.2º.f construction works.
         WASTE_REVERSE_CHARGE: Art. 84.Uno.2º.c waste / recovery materials.
         ELECTRONICS_REVERSE_CHARGE: Art. 84.Uno.2º.g B2B consumer electronics.
+        EXTERNAL_SCHEME_SERVICES: Services from a non-EU taxable person to
+            an EU-resident consumer routed through Esquema Exterior. LIVA
+            art. 163 octiesdecies.
+        OSS_UNION_GOODS_DISTANCE_SALE: Intra-community distance sale of
+            goods routed through Esquema Unión. LIVA art. 163 unvicies.
+        OSS_UNION_GOODS_INTERFACE_FACILITATED: Interior supply of goods
+            facilitated by an electronic interface, routed through Esquema
+            Unión. LIVA art. 163 unvicies.
+        OSS_UNION_SERVICES: Services from an EU-established taxable person
+            to a consumer in another Member State routed through Esquema
+            Unión. LIVA art. 163 unvicies. Distinct from
+            :attr:`SERVICES_DIGITAL_B2C_OSS`, which the existing classifier
+            uses for the legacy R14 digital-services-only rule.
+        IOSS_DISTANCE_SALE_LOW_VALUE: Distance sale of imported goods with
+            intrinsic value at or below 150 EUR routed through Esquema de
+            Importación (IOSS). LIVA art. 163 quinvicies.
     """
 
     GOODS = "goods"
@@ -170,6 +186,11 @@ class TransactionKind(StrEnum):
     CONSTRUCTION_REVERSE_CHARGE = "construction_reverse_charge"
     WASTE_REVERSE_CHARGE = "waste_reverse_charge"
     ELECTRONICS_REVERSE_CHARGE = "electronics_reverse_charge"
+    EXTERNAL_SCHEME_SERVICES = "external_scheme_services"
+    OSS_UNION_GOODS_DISTANCE_SALE = "oss_union_goods_distance_sale"
+    OSS_UNION_GOODS_INTERFACE_FACILITATED = "oss_union_goods_interface_facilitated"
+    OSS_UNION_SERVICES = "oss_union_services"
+    IOSS_DISTANCE_SALE_LOW_VALUE = "ioss_distance_sale_low_value"
 
 
 class InvoiceDirection(StrEnum):
@@ -443,6 +464,50 @@ def _r15_distance_sales_b2c_outbound(criteria: VATClassificationCriteria) -> boo
     )
 
 
+def _r16_external_scheme_services(criteria: VATClassificationCriteria) -> bool:
+    """Match a THIRD_COUNTRY to EU_MEMBER B2C service routed through Esquema Exterior (LIVA art. 163 octiesdecies)."""
+    return (
+        criteria.issuer_residency is IssuerResidency.THIRD_COUNTRY
+        and criteria.customer_residency is CustomerResidency.EU_MEMBER
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.EXTERNAL_SCHEME_SERVICES
+        and criteria.direction is InvoiceDirection.ISSUED
+    )
+
+
+def _r17_oss_union_goods_distance_sale(criteria: VATClassificationCriteria) -> bool:
+    """Match an ES to EU_MEMBER B2C OSS-Unión goods distance sale (LIVA art. 163 unvicies)."""
+    return (
+        criteria.issuer_residency is IssuerResidency.ES_MAINLAND
+        and criteria.customer_residency is CustomerResidency.EU_MEMBER
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE
+        and criteria.direction is InvoiceDirection.ISSUED
+    )
+
+
+def _r18_oss_union_goods_interface_facilitated(criteria: VATClassificationCriteria) -> bool:
+    """Match an ES to EU_MEMBER B2C OSS-Unión interior supply facilitated by an electronic interface (LIVA art. 163 unvicies)."""
+    return (
+        criteria.issuer_residency is IssuerResidency.ES_MAINLAND
+        and criteria.customer_residency is CustomerResidency.EU_MEMBER
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.OSS_UNION_GOODS_INTERFACE_FACILITATED
+        and criteria.direction is InvoiceDirection.ISSUED
+    )
+
+
+def _r19_oss_union_services(criteria: VATClassificationCriteria) -> bool:
+    """Match an ES to EU_MEMBER B2C OSS-Unión services supply (LIVA art. 163 unvicies)."""
+    return (
+        criteria.issuer_residency is IssuerResidency.ES_MAINLAND
+        and criteria.customer_residency is CustomerResidency.EU_MEMBER
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.OSS_UNION_SERVICES
+        and criteria.direction is InvoiceDirection.ISSUED
+    )
+
+
 def _r20_export_goods(criteria: VATClassificationCriteria) -> bool:
     """Match an ES to THIRD_COUNTRY goods export (Art. 21, exención plena)."""
     return (
@@ -469,6 +534,16 @@ def _r22_services_outbound_third_country(criteria: VATClassificationCriteria) ->
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.THIRD_COUNTRY
         and criteria.kind is TransactionKind.SERVICES_GENERAL
+        and criteria.direction is InvoiceDirection.ISSUED
+    )
+
+
+def _r23_ioss_distance_sale_low_value(criteria: VATClassificationCriteria) -> bool:
+    """Match a low-value imported-goods distance sale routed through IOSS (LIVA art. 163 quinvicies)."""
+    return (
+        criteria.customer_residency is CustomerResidency.EU_MEMBER
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE
         and criteria.direction is InvoiceDirection.ISSUED
     )
 
@@ -583,6 +658,30 @@ _CLASSIFICATION_RULES: tuple[_VatClassificationRule, ...] = (
         VATCategory.DOMESTIC_NOT_SUBJECT,
     ),
     _VatClassificationRule(
+        "R16_external_scheme_services",
+        "3rd-country to EU_MEMBER B2C services routed through Esquema Exterior",
+        _r16_external_scheme_services,
+        VATCategory.OPERACION_NO_SUJETA,
+    ),
+    _VatClassificationRule(
+        "R17_oss_union_goods_distance_sale",
+        "ES to EU_MEMBER B2C OSS-Union goods distance sale",
+        _r17_oss_union_goods_distance_sale,
+        VATCategory.DOMESTIC_NOT_SUBJECT,
+    ),
+    _VatClassificationRule(
+        "R18_oss_union_goods_interface_facilitated",
+        "ES to EU_MEMBER B2C OSS-Union interface-facilitated supply",
+        _r18_oss_union_goods_interface_facilitated,
+        VATCategory.DOMESTIC_NOT_SUBJECT,
+    ),
+    _VatClassificationRule(
+        "R19_oss_union_services",
+        "ES to EU_MEMBER B2C OSS-Union services",
+        _r19_oss_union_services,
+        VATCategory.DOMESTIC_NOT_SUBJECT,
+    ),
+    _VatClassificationRule(
         "R20_export_goods",
         "ES to 3rd-country goods export",
         _r20_export_goods,
@@ -598,6 +697,12 @@ _CLASSIFICATION_RULES: tuple[_VatClassificationRule, ...] = (
         "R22_services_outbound_third_country",
         "ES to 3rd-country services",
         _r22_services_outbound_third_country,
+        VATCategory.OPERACION_NO_SUJETA,
+    ),
+    _VatClassificationRule(
+        "R23_ioss_distance_sale_low_value",
+        "Low-value imported-goods distance sale routed through IOSS",
+        _r23_ioss_distance_sale_low_value,
         VATCategory.OPERACION_NO_SUJETA,
     ),
     _VatClassificationRule(
