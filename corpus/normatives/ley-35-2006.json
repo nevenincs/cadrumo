@@ -274,6 +274,70 @@
       }
     },
     {
+      "numero": "63",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a63",
+      "summary": {
+        "ca": "Estableix l'escala general progressiva del Impost sobre la Renda de les Persones Físiques aplicable a la part estatal de la base liquidable general per determinar la quota íntegra estatal, amb trams de bases liquidables i tipus marginals creixents.",
+        "en": "Establishes the progressive general scale of Personal Income Tax applicable to the state share of the general taxable base in order to compute the state gross tax liability, with rising taxable-base brackets and marginal rates.",
+        "es": "Establece la escala general progresiva del Impuesto sobre la Renta de las Personas Físicas aplicable a la parte estatal de la base liquidable general para determinar la cuota íntegra estatal, con tramos de bases liquidables y tipos marginales crecientes.",
+        "hu": "Megállapítja a Személyi Jövedelemadó általános, progresszív állami skáláját, amely az általános adóalap állami részére alkalmazandó az állami bruttó adókötelezettség kiszámításához, növekvő adóalap-sávokkal és határadókulcsokkal."
+      },
+      "titulo": {
+        "ca": "Escala general de l'Impost",
+        "en": "General scale of the Tax",
+        "es": "Escala general del Impuesto",
+        "hu": "Az adó általános skálája"
+      }
+    },
+    {
+      "numero": "66",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a66",
+      "summary": {
+        "ca": "Fixa els tipus de gravamen aplicables a la base liquidable de l'estalvi en la part estatal de l'Impost, amb una escala progressiva pròpia diferenciada de la general.",
+        "en": "Sets the tax rates applicable to the savings taxable base in the state share of the Tax, using a progressive scale specific to savings income and distinct from the general scale.",
+        "es": "Fija los tipos de gravamen aplicables a la base liquidable del ahorro en la parte estatal del Impuesto, con una escala progresiva propia diferenciada de la general.",
+        "hu": "Meghatározza a megtakarítási adóalapra alkalmazandó adókulcsokat az adó állami részében, az általánostól különböző, saját progresszív skála szerint."
+      },
+      "titulo": {
+        "ca": "Tipus de gravamen de l'estalvi",
+        "en": "Savings tax rates",
+        "es": "Tipos de gravamen del ahorro",
+        "hu": "A megtakarítás adókulcsai"
+      }
+    },
+    {
+      "numero": "67",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a67",
+      "summary": {
+        "ca": "Defineix la quota líquida estatal com el resultat de minorar la quota íntegra estatal en la deducció per inversió en empresa de nova o recent creació i en el 50 per cent de l'import total de les deduccions previstes als apartats 2, 3, 4 i 5 de l'article 68 d'aquesta Llei.",
+        "en": "Defines the state net tax liability (cuota líquida estatal) as the result of reducing the state gross tax liability by the deduction for investment in newly created enterprises and by 50 per cent of the total amount of the deductions in sections 2, 3, 4 and 5 of article 68 of this Law.",
+        "es": "Define la cuota líquida estatal como el resultado de minorar la cuota íntegra estatal en la deducción por inversión en empresa de nueva o reciente creación y en el 50 por ciento del importe total de las deducciones previstas en los apartados 2, 3, 4 y 5 del artículo 68 de esta Ley.",
+        "hu": "Meghatározza az állami nettó adókötelezettséget (cuota líquida estatal) az állami bruttó adókötelezettség azon csökkentett összegeként, amelyet az újonnan létrehozott vállalkozásokba történő befektetés utáni levonás és a törvény 68. cikke (2), (3), (4) és (5) bekezdésében meghatározott levonások teljes összegének 50 százaléka után kapunk."
+      },
+      "titulo": {
+        "ca": "Quota líquida estatal",
+        "en": "State net tax liability",
+        "es": "Cuota líquida estatal",
+        "hu": "Állami nettó adókötelezettség"
+      }
+    },
+    {
+      "numero": "68",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68",
+      "summary": {
+        "ca": "Regula el catàleg de deduccions de la quota íntegra estatal: deducció per inversió en empresa de nova o recent creació, deduccions per activitats econòmiques, deduccions per donatius, deduccions per rendes obtingudes a Ceuta i Melilla, deducció per actuacions de protecció i difusió del patrimoni històric espanyol i deducció per lloguer de l'habitatge habitual en règim transitori.",
+        "en": "Regulates the catalogue of deductions from the state gross tax liability: investment in newly created enterprises, economic-activity deductions, charitable donations, income obtained in Ceuta and Melilla, protection and outreach of Spanish historical heritage, and the transitional habitual-dwelling rental deduction.",
+        "es": "Regula el catálogo de deducciones de la cuota íntegra estatal: deducción por inversión en empresa de nueva o reciente creación, deducciones por actividades económicas, deducciones por donativos, deducciones por rentas obtenidas en Ceuta y Melilla, deducción por actuaciones de protección y difusión del patrimonio histórico español y deducción por alquiler de la vivienda habitual en régimen transitorio.",
+        "hu": "Szabályozza az állami bruttó adókötelezettségből történő levonások katalógusát: újonnan létrehozott vállalkozásokba történő befektetés, gazdasági tevékenységek levonásai, jótékonysági adományok, Ceutában és Melillában szerzett jövedelmek, spanyol történelmi örökség védelme és terjesztése, valamint a szokásos lakóhely bérlésének átmeneti levonása."
+      },
+      "titulo": {
+        "ca": "Deduccions",
+        "en": "Deductions",
+        "es": "Deducciones",
+        "hu": "Levonások"
+      }
+    },
+    {
       "numero": "99",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99",
       "summary": {
