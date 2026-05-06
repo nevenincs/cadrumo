@@ -963,6 +963,45 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
+[[revisions."2024-y-siguientes".constructs]]
+id = "modelo-123-current-capital-withholding"
+title = "Modelo 123 current quarterly capital-income withholding filing"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
+formulas = [
+    "modelo-123-total-rentas",
+    "modelo-123-total-base",
+    "modelo-123-total-retenciones",
+    "modelo-123-total-liquidacion",
+    "modelo-123-resultado-ingresar",
+]
+export_layouts = ["modelo-123-fichero-boe"]
+extraction_profiles = ["modelo-123-export-record", "modelo-123-declaracion-pdf"]
+live_cross_references = ["modelo-123-static-official", "modelo-123-filed-declarations-read"]
+workbook_parity_refs = ["modelo-123-dr-xls-2024"]
+verification_expectations = ["modelo-123-calculation-verification"]
+application_links = [
+    "modelo-123-calculation",
+    "modelo-123-filing",
+    "modelo-123-export",
+    "modelo-123-verification",
+    "modelo-123-review",
+    "modelo-123-approval",
+    "modelo-123-reconciliation",
+    "modelo-123-extractor",
+    "modelo-123-portal-cross-reference",
+    "modelo-123-filed-declarations-observation",
+    "modelo-123-workflow",
+    "modelo-123-deadline",
+]
+deadline_windows = ["modelo-123-2026-1t", "modelo-123-2026-2t", "modelo-123-2026-3t", "modelo-123-2026-4t"]
+
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-calculation"
 surface = "calculation"
@@ -999,6 +1038,22 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 id = "modelo-123-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+
+[[revisions."2024-y-siguientes".application_links]]
+id = "modelo-123-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-hac-56-2024:art-1"]
 source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
@@ -1906,6 +1961,37 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
+[[revisions."2019-2023".constructs]]
+id = "modelo-123-2019-capital-withholding"
+title = "Modelo 123 historical quarterly capital-income withholding filing"
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = [
+    "aeat-dr-123-2019-2023-v13",
+    "aeat-dr-123-2019-2023-v13-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2007-form",
+]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08"]
+formulas = ["modelo-123-2019-total-liquidacion", "modelo-123-2019-resultado-ingresar"]
+export_layouts = ["modelo-123-2019-fichero-boe"]
+extraction_profiles = ["modelo-123-2019-export-record", "modelo-123-2019-declaracion-pdf"]
+live_cross_references = ["modelo-123-2019-static-official", "modelo-123-2019-filed-declarations-read"]
+workbook_parity_refs = ["modelo-123-dr-xls-2019"]
+verification_expectations = ["modelo-123-2019-calculation-verification"]
+application_links = [
+    "modelo-123-2019-calculation",
+    "modelo-123-2019-filing",
+    "modelo-123-2019-export",
+    "modelo-123-2019-verification",
+    "modelo-123-2019-review",
+    "modelo-123-2019-approval",
+    "modelo-123-2019-reconciliation",
+    "modelo-123-2019-extractor",
+    "modelo-123-2019-portal-cross-reference",
+    "modelo-123-2019-filed-declarations-observation",
+    "modelo-123-2019-workflow",
+]
+
 [[revisions."2019-2023".application_links]]
 id = "modelo-123-2019-calculation"
 surface = "calculation"
@@ -1939,6 +2025,30 @@ legal_refs = ["orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 
 [[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".application_links]]
 id = "modelo-123-2019-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
@@ -1961,3 +2071,11 @@ consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observati
 requires_snapshot = true
 legal_refs = ["orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-modelo-123-procedure"]
+
+[[revisions."2019-2023".application_links]]
+id = "modelo-123-2019-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
