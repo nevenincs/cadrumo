@@ -184,3 +184,30 @@ def test_chain_resolution_obeys_target_period_under_non_annual_call() -> None:
     values = resolve_relation_values_from_observations(revision, observations, filing_year=2026, period="1T")
 
     assert values == {}
+
+
+def test_modelo_200_aggregates_modelo_202_pagos_fraccionados_into_annual_settlement() -> None:
+    """200's instalment_to_final_settlement relation sums 202's three pagos fraccionados.
+
+    IS pago fraccionado uses period codes ``1P`` / ``2P`` / ``3P``
+    (April, October, December) rather than the quarterly ``1T``-``4T``
+    codes used by IRPF / IVA / withholdings. The receiver's relation
+    declares those three explicitly.
+    """
+
+    revision = _revision("200", "2024-y-siguientes")
+    pagos_periods = ("1P", "2P", "3P")
+    pagos_values = (Decimal("1500.00"), Decimal("2000.00"), Decimal("2500.50"))
+    observations = tuple(
+        RegistryFilingObservation(
+            modelo="202",
+            filing_year=2026,
+            period=period,
+            casilla_values={"34": value},
+        )
+        for period, value in zip(pagos_periods, pagos_values, strict=True)
+    )
+
+    values = resolve_relation_values_from_observations(revision, observations, filing_year=2026, period="0A")
+
+    assert values["modelo-200-2024-rel-202-pagos-fraccionados"] == Decimal("6000.50")
