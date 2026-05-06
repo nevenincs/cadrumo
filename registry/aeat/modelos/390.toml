@@ -105,6 +105,49 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "boe-modelo-390-2009-form"
 required_text = ["modelo 390"]
 
+# -----------------------------------------------------------------------------
+# Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# autoliquidaciones into the annual resumen totals. Implements the canonical
+# 390 <- 303 dependency where the resumen anual reconciles against the four
+# trimestrales filed during the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-cuota-devengada-total"
+source = "previous_filing"
+selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-devengada-total"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-cuota-deducible-total"
+source = "previous_filing"
+selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-deducible-total"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-resultado-regimen-general"
+source = "previous_filing"
+selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.resultado-regimen-general"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
@@ -311,6 +354,9 @@ bindings = [
     "modelo-390-iva-repercutido-super-reducido-cuota",
     "modelo-390-iva-soportado-interiores-cuota",
     "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+    "modelo-390-prev-303-cuota-devengada-total",
+    "modelo-390-prev-303-cuota-deducible-total",
+    "modelo-390-prev-303-resultado-regimen-general",
 ]
 workbook_parity_refs = ["modelo-390-dr-2025"]
 live_cross_references = [
