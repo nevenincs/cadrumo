@@ -1207,6 +1207,7 @@ id = "renta-2020-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
 
@@ -3788,6 +3789,7 @@ id = "renta-2021-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2021-dictionary", "lirpf-cuota-chain-authority"]
 
@@ -6467,6 +6469,7 @@ id = "renta-2022-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2022-dictionary", "lirpf-cuota-chain-authority"]
 
@@ -9336,6 +9339,7 @@ id = "renta-2023-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2023-dictionary", "lirpf-cuota-chain-authority"]
 
@@ -12184,6 +12188,7 @@ id = "renta-2024-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2024-dictionary", "lirpf-cuota-chain-authority"]
 
@@ -19882,6 +19887,7 @@ id = "renta-2025-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
@@ -19918,6 +19924,7 @@ id = "renta-2025-profile-tax-residence-ccaa"
 source = "profile"
 selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
 aggregation = { op = "copy" }
+typed_enum = "RentaCCAA"
 legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
 
