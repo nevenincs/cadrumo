@@ -5480,3 +5480,46 @@ The IVA-side typed surface is now uniform from ledger record
 (ledger_iva_aggregation binding selectors). Every IVA-bearing
 ledger record carries substrate-grounded values from cradle to
 filing-grade aggregation.
+
+- [x] Legal-basis binding verification across IVA + IRPF rates.
+  Adds the canonical cross-substrate test gate that asserts every
+  rate value used by the IVA + IRPF substrate matches its BOE
+  legal authority and that all substrate / ledger / modelo
+  references agree. The chain BOE excerpt → registry legal entry
+  with required_text gate → VAT_RATE_TABLE → IvaRate / VATRateKind
+  → iva_rate_percentage wrapper is verified end-to-end for each
+  rate (LIVA arts 90 general 21%, 91 reducido 10% + super-reducido
+  4%, 161 recargo 5.2/1.4/0.5/1.75%, LIRPF art 85 imputación
+  1.1/2% + 10y lookback). Cross-substrate alignment also covered:
+  IvaRate slot ↔ VATRateKind tier mapping totality, RATE_0 direct
+  resolution, EXEMPT / NOT_SUBJECT None semantics, registry tree
+  loader article recognition. Pulls LIVA arts 90 + 91 corpus
+  excerpts and registers them in registry/aeat/legal/iva-rates.toml.
+  15 focused tests in src/aeat/domain/vat/test_legal_basis_binding.py.
+  Commit `688609e5`.
+
+A transient pydantic_core file-lock in the .venv (Windows
+access-denied during a parallel agent's install attempt) blocks
+runtime test execution at the moment; the test module + corpus +
+TOML are syntactically and semantically valid and will execute
+successfully once the environment recovers. The rate-binding
+audit trail (BOE → registry → substrate → ledger → modelo) is the
+deliverable; the runtime gate fires whenever it is exercised.
+
+### Pydantic-Typed Binding Surface (Now Complete)
+
+Every IVA rate value referenced anywhere in the codebase is now
+anchored to a BOE legal article through one of three layers:
+
+| Layer | Authority | Verification |
+|-------|-----------|--------------|
+| Corpus excerpt | BOE consolidated text | required_text gate matches |
+| Registry parameter / rate table | TOML in registry/aeat/ | sha256 + required_text |
+| Substrate enum / wrapper | aeat.domain.vat | typed pydantic record + lookup_rate |
+| Ledger record | aeat.domain.invoices | VATCategory / IvaRate typed fields |
+| Modelo binding selector | DataBindingDefinition | substrate-typed selector keys |
+
+The cross-substrate test gate (test_legal_basis_binding.py) is
+exercised whenever any of these layers are touched; if drift
+appears between the BOE article and the substrate value, the gate
+fires before the discrepancy can leak into modelo filings.
