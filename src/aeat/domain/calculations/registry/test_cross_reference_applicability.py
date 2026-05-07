@@ -254,6 +254,37 @@ def test_oss_369_cross_reference_declares_iva_oss_enrolled_predicate() -> None:
     assert "iva.oss_enrolled" in fields
 
 
+def test_ixvi_349_binding_evaluates_under_does_intracomunitario_predicate() -> None:
+    """The Modelo 349 IXVI foreign-counterparty binding mirrors the GROI
+    binding: applicable iff the taxpayer conducts intracom operations,
+    bound to the aeat-nif-iva-checker oracle, surface=
+    authenticated_simulator. Resolves the prior orphan reported by
+    audit-oracles by giving the NIF-IVA checker a real binding.
+    """
+
+    binding = _load_binding(
+        "349", "2020-y-siguientes", "modelo-349-ixvi-foreign-counterparty-check"
+    )
+    assert binding.oracle_id == "aeat-nif-iva-checker"
+    assert binding.surface == "authenticated_simulator"
+    assert binding.applicability_predicates, "IXVI binding must declare an applicability gate"
+    fields = {predicate.field for predicate in binding.applicability_predicates}
+    assert "does_intracomunitario" in fields
+
+    not_applicable = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"does_intracomunitario": False},
+    )
+    assert not_applicable.applicable is False
+    assert not_applicable.unmet_predicate_fields == ("does_intracomunitario",)
+
+    applicable = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"does_intracomunitario": True},
+    )
+    assert applicable.applicable is True
+
+
 def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     """Predicate fields must resolve in the user_profile schema.
 

@@ -636,7 +636,7 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
 review_status = "reviewed"
 
-[sources."aeat-groi-spanish-roi-procedure"]
+[sources."aeat-vies-gestiones-procedure"]
 evidence_tier = "executable_parity_evidence"
 authority = "aeat"
 kind = "instructions"

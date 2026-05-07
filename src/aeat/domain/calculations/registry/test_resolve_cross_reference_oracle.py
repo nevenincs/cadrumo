@@ -195,31 +195,31 @@ def test_resolver_ignores_applicability_gate_when_decision_or_profile_omitted() 
 def test_orphan_oracle_collector_flags_unbound_catalogue_entries() -> None:
     """Catalogue entries with no cross-reference binding surface as orphans.
 
-    GROI is bound by the Modelo 349 cross-reference; NIF-IVA is
-    registered but unbound today. The collector returns NIF-IVA as
-    the sole orphan, alphabetically sorted.
+    Test against an empty modelo list so every registered oracle is
+    by definition unbound. This isolates the collector's set-difference
+    logic from whichever oracle happens to be bound today; today both
+    NIF-IVA and GROI are bound by Modelo 349.
     """
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     catalogue = LiveParityCatalogue()
     catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
     catalogue.register(GroiOracle(), environment="production")
 
-    orphans = collect_orphan_oracle_ids(modelos, catalogue)
+    orphans = collect_orphan_oracle_ids([], catalogue)
 
-    assert ORACLE_ID in orphans
-    assert GROI_ORACLE_ID not in orphans
+    assert set(orphans) == {ORACLE_ID, GROI_ORACLE_ID}
+    assert orphans == tuple(sorted(orphans)), "orphans must be alphabetically sorted"
 
 
 def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> None:
     """When every catalogue oracle is referenced by some cross-reference,
-    the collector returns an empty tuple."""
+    the collector returns an empty tuple. Today the production registry
+    binds both NIF-IVA (Modelo 349 IXVI) and GROI (Modelo 349 GROI), so
+    a catalogue containing both produces no orphans."""
 
     modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     catalogue = LiveParityCatalogue()
-    # Register only GROI — bound on Modelo 349. NIF-IVA stays unregistered
-    # and therefore can't be flagged as orphan because it isn't in the
-    # catalogue.
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
     catalogue.register(GroiOracle(), environment="production")
 
     orphans = collect_orphan_oracle_ids(modelos, catalogue)

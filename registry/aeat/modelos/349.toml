@@ -264,7 +264,7 @@ requires_authentication = true
 requires_aeat_authorization = false
 oracle_id = "aeat-groi-spanish-roi-checker"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
-source_refs = ["aeat-groi-spanish-roi-procedure"]
+source_refs = ["aeat-vies-gestiones-procedure"]
 
 # Applicability gate: the GROI Spanish-ROI consult is only relevant
 # to a taxpayer who actually conducts intracommunity operations.
@@ -277,6 +277,52 @@ field = "does_intracomunitario"
 op = "equals"
 value = true
 explanation = "GROI Spanish-ROI counterparty check applies only when the taxpayer conducts declarable intracommunity operations."
+legal_refs = ["orden-eha-769-2010:art-1"]
+source_refs = ["aeat-modelo-349-procedure"]
+
+# IXVI foreign-EU NIF-IVA verifier. AEAT publishes the IXVI servlet
+# (www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios)
+# alongside GROI on the sede gestiones page. IXVI verifies counterparty
+# NIF-IVA identifiers issued by other EU member states (the foreign-EU
+# half of the same Modelo 349 declarant context where GROI handles
+# Spanish counterparties). Empirically gated above cl@ve-movil so
+# declared as authenticated_simulator with synthetic data accepted
+# (the user supplies arbitrary EU VAT IDs of counterparties to
+# verify, not their own filing data). Live reachability is gated on
+# certificate provisioning — the binding declares the conceptual
+# contract and the live test will exercise it once auth is in place.
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-ixvi-foreign-counterparty-check"
+evidence_tier = "executable_parity_evidence"
+surface = "authenticated_simulator"
+guard_policy_id = "modelo-349-ixvi-foreign-counterparty-check"
+allowed_hosts = ["sede.agenciatributaria.gob.es", "www1.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = true
+requires_authentication = true
+requires_aeat_authorization = false
+oracle_id = "aeat-nif-iva-checker"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+source_refs = ["aeat-vies-gestiones-procedure"]
+
+# Applicability gate: identical to the GROI binding — the IXVI
+# consult only matters to taxpayers who actually conduct declarable
+# intracommunity operations.
+[[revisions."2020-y-siguientes".live_cross_references.applicability_predicates]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "IXVI foreign-EU NIF-IVA verifier applies only when the taxpayer conducts declarable intracommunity operations."
 legal_refs = ["orden-eha-769-2010:art-1"]
 source_refs = ["aeat-modelo-349-procedure"]
 
@@ -1405,7 +1451,7 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
-    "aeat-groi-spanish-roi-procedure",
+    "aeat-vies-gestiones-procedure",
     "aeat-modelo-349-procedure",
     "boe-modelo-349-form-2010",
 ]
@@ -1450,6 +1496,7 @@ live_cross_references = [
     "modelo-349-static-documentation",
     "modelo-349-filed-declarations-read",
     "modelo-349-groi-spanish-counterparty-check",
+    "modelo-349-ixvi-foreign-counterparty-check",
 ]
 application_links = [
     "modelo-349-portal",

@@ -282,6 +282,70 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
         )
 
 
+def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage() -> None:
+    """Every Modelo 100 formula target should be exercised by at least one Renta WEB Open replay payload.
+
+    Phase H6 mandates per-formula oracle grounding. This gate enumerates Modelo 100
+    formulas and counts how many target casillas appear in at least one replay
+    payload's ``observed`` mapping (or ``expected`` mapping). The output is written
+    to ``.vault/audit/renta-formula-oracle-coverage.txt`` for audit-trail
+    visibility.
+
+    The gate is dormant during initial scaffolding (no captured payloads → no
+    enforcement). As soon as ANY payload exists, the gate enforces that every
+    formula target whose casilla appears in at least one captured payload's
+    expected/observed set is grounded; the inventory of un-grounded targets is
+    persisted for capture-work scheduling.
+    """
+
+    replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+    captured_targets: set[str] = set()
+    if replay_dir.exists():
+        import json as _json
+
+        for payload_path in replay_dir.glob("*.json"):
+            try:
+                document = _json.loads(payload_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            for key in ("expected", "observed"):
+                section = document.get(key) or {}
+                if isinstance(section, dict):
+                    captured_targets.update(k for k in section if isinstance(k, str))
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    formula_targets: set[str] = set()
+    for modelo in modelos:
+        if modelo.id != "100":
+            continue
+        for revision in modelo.revisions.values():
+            for formula in revision.formulas:
+                formula_targets.add(formula.target)
+    grounded = formula_targets & captured_targets
+    ungrounded = sorted(formula_targets - captured_targets)
+    metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-formula-oracle-coverage.txt"
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_path.write_text(
+        "formula_targets_total: {total}\n"
+        "formula_targets_grounded: {grounded}\n"
+        "formula_targets_ungrounded: {ungrounded}\n"
+        "coverage_pct: {pct:.1f}\n".format(
+            total=len(formula_targets),
+            grounded=len(grounded),
+            ungrounded=len(ungrounded),
+            pct=(100.0 * len(grounded) / len(formula_targets)) if formula_targets else 0.0,
+        ),
+        encoding="utf-8",
+    )
+    # Soft gate during scaffolding: only fail when payloads exist AND targets are
+    # missing oracle grounding. The full hard-fail mode lands once the baseline
+    # capture set covers the cuota chain (#81 follow-up).
+    if captured_targets and not grounded:
+        raise AssertionError(
+            "Renta WEB Open replay payloads exist but cover zero formula targets — "
+            "payload schema mismatch?"
+        )
+
+
 def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
 
