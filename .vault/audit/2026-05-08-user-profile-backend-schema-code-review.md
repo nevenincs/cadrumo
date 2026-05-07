@@ -62,3 +62,25 @@ Result: 12 passed.
 Focused Ruff check passed:
 
 `uv run --no-sync ruff check src\aeat\domain\user_profile`
+
+USER-PROFILE-004 | HIGH | Validator integration introduced an import-order cycle.
+
+The first validator-integration attempt imported user-profile contract symbols
+from `src/aeat/domain/calculations/registry/_validate.py` at module import time,
+while `src/aeat/domain/user_profile/_registry_contract.py` imported registry
+schema types at runtime. Importing `aeat.domain.user_profile` before the
+registry package could hit a partially initialized module.
+
+Resolution: fixed. Registry schema types in `_registry_contract.py` are now
+type-checking only, and `_validate.py` imports the user-profile loader and
+contract validator lazily inside `_validate_user_profile_contract`. A subprocess
+test proves `aeat.domain.user_profile` can import before
+`aeat.domain.calculations.registry`.
+
+Follow-up verification passed:
+
+`uv run --no-sync pytest src\aeat\domain\user_profile src\aeat\domain\calculations\registry\test_registry_schema.py::test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema -q`
+
+Result: 14 passed.
+
+Focused Ruff and ty checks passed on the touched paths.

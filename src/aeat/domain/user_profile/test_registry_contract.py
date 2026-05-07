@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
 from ...core.config import PROJECT_ROOT
@@ -47,3 +50,21 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
         "colegio_concertado",
         "datos_adicionales_declaraci-n-complementaria-6",
     }
+
+
+def test_user_profile_imports_before_registry_barrel() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import aeat.domain.user_profile as u; "
+            "import aeat.domain.calculations.registry as r; "
+            "assert hasattr(u, 'validate_user_profile_registry_contract'); "
+            "assert hasattr(r, 'RegistryValidator')",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr

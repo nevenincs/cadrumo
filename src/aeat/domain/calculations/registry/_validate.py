@@ -7,6 +7,7 @@ from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ._bindings import (
     validate_invoice_binding_definition,
@@ -31,6 +32,9 @@ from ._schema import (
 )
 from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
+
+if TYPE_CHECKING:
+    from ...user_profile._schema import ProfileSchemaDefinition
 
 
 def _duplicates(values: Iterable[str]) -> set[str]:
@@ -73,10 +77,17 @@ def _extract_pdf_text(path: Path) -> str:
 class RegistryValidator:
     """Validate legal/source closure and calculability for modelos."""
 
-    def __init__(self, catalogues: RegistryCatalogues, *, source_root: Path | None = None) -> None:
+    def __init__(
+        self,
+        catalogues: RegistryCatalogues,
+        *,
+        source_root: Path | None = None,
+        user_profile_schema: ProfileSchemaDefinition | None = None,
+    ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._source_root = source_root
+        self._user_profile_schema = user_profile_schema
         self._source_text_cache: dict[str, str] = {}
         self._catalogue_failures: tuple[str, ...] | None = None
 
@@ -109,6 +120,7 @@ class RegistryValidator:
         failures.extend(self._missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         for revision in modelo.revisions.values():
             failures.extend(self._validate_revision(modelo, revision))
+        failures.extend(self._validate_user_profile_contract((modelo,)))
         failures.extend(self._validate_revision_windows(modelo))
         return failures
 
@@ -131,6 +143,18 @@ class RegistryValidator:
 
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+
+    def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
+        from ...user_profile._loader import load_user_profile_schema
+        from ...user_profile._registry_contract import validate_user_profile_registry_contract
+
+        schema = self._user_profile_schema or load_user_profile_schema()
+        report = validate_user_profile_registry_contract(modelos, schema)
+        return tuple(
+            f"modelo {issue.modelo_id} revision {issue.revision_id}: user-profile schema {schema.id} "
+            f"{issue.surface} {issue.construct_id!r} selector {issue.selector!r}: {issue.message}"
+            for issue in report.errors
+        )
 
     def _validate_revision(self, modelo: ModeloDefinition, revision: ModeloRevision) -> list[str]:
         failures: list[str] = []

@@ -377,6 +377,22 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
+    modelo, catalogues = _committed_modelo("100")
+    revision = modelo.revisions["2025"]
+    binding = next(item for item in revision.bindings if item.source == "profile")
+    mutated_binding = binding.model_copy(update={"selector": {**binding.selector, "profile_key": "unknown.profile"}})
+    mutated = revision.model_copy(
+        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)}
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"user-profile schema .* selector 'unknown\.profile'",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
