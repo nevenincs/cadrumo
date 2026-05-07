@@ -643,7 +643,10 @@ cli:
     year_help: Lekérdezendő vagy feldolgozandó adóév
   root:
     app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
-    app_help: Spanyol adóbevallási segéd
+    app_help: |-
+      Spanyol adóbevallási segéd
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
     format_help: A parancseredmények kimeneti formátuma
     version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése

@@ -118,6 +118,16 @@ def test_root_no_args_renders_help_successfully() -> None:
     assert "setup" in result.output
     assert "app" in result.output
     assert "--version" in result.output
+    assert "Quickstart: aeat setup init --name NAME --tax-id NIF" in result.output
+
+
+def test_setup_help_lists_commands_in_workflow_order() -> None:
+    result = _invoke(["setup", "--help"])
+
+    assert result.exit_code == 0, result.output
+    workflow = ("init", "status", "auth", "profile")
+    positions = [result.output.index(command) for command in workflow]
+    assert positions == sorted(positions)
 
 
 def test_removed_developer_commands_are_not_registered() -> None:

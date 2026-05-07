@@ -636,7 +636,10 @@ cli:
     year_help: Ejercicio fiscal a consultar o procesar
   root:
     app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
-    app_help: Asistente para preparar declaraciones tributarias españolas
+    app_help: |-
+      Asistente para preparar declaraciones tributarias españolas
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
     format_help: Formato de salida para los resultados del comando
     version_command_help: Mostrar la versión del paquete y el resumen del registro
     version_help: Mostrar la versión del paquete y el resumen del registro

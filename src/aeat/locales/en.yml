@@ -624,7 +624,10 @@ cli:
     year_help: Fiscal year to query or process
   root:
     app_app_help: Tax workspaces for ledgers, invoices, and declarations
-    app_help: Spanish tax filing assistant
+    app_help: |-
+      Spanish tax filing assistant
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
     format_help: Output format for command results
     version_command_help: Show package version and registry summary
     version_help: Show package version and registry summary
