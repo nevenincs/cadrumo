@@ -13,11 +13,11 @@ from pathlib import Path
 
 import pdfplumber
 import pypdfium2 as pdfium
+import xlrd
 from openpyxl import load_workbook
 from pydantic import ConfigDict
 
 from ._schema import RegistryModel
-from ._workbook_parity import converted_binary_xls_with_libreoffice
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
@@ -85,8 +85,7 @@ def _extract_record_design_cached(
     if suffix in {".xlsx", ".xlsm"}:
         return extract_record_design_workbook(source_path)
     if suffix == ".xls":
-        with converted_binary_xls_with_libreoffice(source_path, root=source_path.parent) as converted_path:
-            return extract_record_design_workbook(converted_path)
+        return extract_record_design_xls_workbook(source_path)
     raise ValueError(f"unsupported record-design source extension: {source_path.suffix}")
 
 
@@ -98,6 +97,16 @@ def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
         raise FileNotFoundError(f"record-design workbook not found: {path}")
     stat = resolved.stat()
     return _extract_record_design_workbook_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
+    """Return official fixed-width field rows from a legacy binary XLS workbook."""
+
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"record-design XLS workbook not found: {path}")
+    stat = resolved.stat()
+    return _extract_record_design_xls_workbook_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=256)
@@ -126,6 +135,34 @@ def _extract_record_design_workbook_cached(
             return tuple(sheets)
         finally:
             workbook.close()
+
+
+@lru_cache(maxsize=128)
+def _extract_record_design_xls_workbook_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> tuple[RecordDesignSheet, ...]:
+    del byte_count, modified_ns
+    source_path = Path(path)
+    workbook = xlrd.open_workbook(str(source_path), on_demand=True)
+    try:
+        sheets: list[RecordDesignSheet] = []
+        skipped: list[str] = []
+        for sheet_name in workbook.sheet_names():
+            worksheet = workbook.sheet_by_name(sheet_name)
+            try:
+                sheets.append(_extract_xls_sheet(worksheet))
+            except ValueError as exc:
+                if "has no record-design header" not in str(exc):
+                    raise
+                skipped.append(sheet_name)
+        if not sheets:
+            skipped_sheets = ", ".join(skipped) if skipped else "none"
+            raise ValueError(f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}")
+        return tuple(sheets)
+    finally:
+        workbook.release_resources()
 
 
 @contextmanager
@@ -213,13 +250,42 @@ def _extract_record_design_pdf_stream(
 
 def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-def]
     header = _find_header(worksheet)
+    return _extract_sheet_rows(
+        worksheet.title,
+        header,
+        enumerate(
+            worksheet.iter_rows(min_row=header.row_number + 1, values_only=True),
+            start=header.row_number + 1,
+        ),
+    )
+
+
+def _extract_xls_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-def]
+    header = _find_xls_header(worksheet)
+    return _extract_sheet_rows(
+        worksheet.name,
+        header,
+        ((rowx + 1, tuple(worksheet.row_values(rowx))) for rowx in range(header.row_number, worksheet.nrows)),
+    )
+
+
+def _extract_sheet_rows(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    rows: Iterator[tuple[int, tuple[object, ...]]],
+) -> RecordDesignSheet:
     fields: list[RecordDesignField] = []
     total_positions: int | None = None
-    for row_number, row in enumerate(
-        worksheet.iter_rows(min_row=header.row_number + 1, values_only=True),
-        start=header.row_number + 1,
-    ):
+    trailing_blank_rows = 0
+    for row_number, row in rows:
         values = tuple(row)
+        if _is_blank_row(values):
+            if fields:
+                trailing_blank_rows += 1
+                if trailing_blank_rows >= 25:
+                    break
+            continue
+        trailing_blank_rows = 0
         row_total = _total_positions_from_row(values)
         if row_total is not None:
             total_positions = row_total
@@ -229,7 +295,7 @@ def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-d
         length = _int_or_none(_cell(values, header.length_index))
         if ordinal is None or offset is None or length is None:
             continue
-        type_code = _required_text(_cell(values, header.type_index), worksheet.title, row_number, "type")
+        type_code = _required_text(_cell(values, header.type_index), sheet_name, row_number, "type")
         complementary = _optional_header_text(values, header.complementary_index)
         validation = _optional_header_text(values, header.validation_index)
         content = _optional_header_text(values, header.content_index)
@@ -237,12 +303,12 @@ def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-d
             values,
             header=header,
             content=content,
-            sheet=worksheet.title,
+            sheet=sheet_name,
             row=row_number,
         )
         fields.append(
             RecordDesignField(
-                sheet=worksheet.title,
+                sheet=sheet_name,
                 row=row_number,
                 ordinal=ordinal,
                 offset=offset,
@@ -254,7 +320,11 @@ def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-d
                 content=content,
             )
         )
-    return RecordDesignSheet(name=worksheet.title, fields=tuple(fields), total_positions=total_positions)
+    return RecordDesignSheet(name=sheet_name, fields=tuple(fields), total_positions=total_positions)
+
+
+def _is_blank_row(values: tuple[object, ...]) -> bool:
+    return all(value is None or str(value).strip() == "" for value in values)
 
 
 def _find_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
@@ -281,6 +351,32 @@ def _find_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
             content_index=_optional_header_index(values, "contenido"),
         )
     raise ValueError(f"{worksheet.title!r} has no record-design header")
+
+
+def _find_xls_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
+    for rowx in range(min(10, worksheet.nrows)):
+        values = tuple(worksheet.row_values(rowx))
+        if _normalise_header_cell(_cell(values, 0)) not in {"no", "n"}:
+            continue
+        try:
+            offset_index = _required_header_index(values, "posic.")
+            length_index = _required_header_index(values, "lon")
+            type_index = _required_header_index(values, "tipo")
+            description_index = _required_header_index(values, "descripcion")
+        except ValueError:
+            continue
+        return _WorkbookHeader(
+            row_number=rowx + 1,
+            ordinal_index=0,
+            offset_index=offset_index,
+            length_index=length_index,
+            type_index=type_index,
+            complementary_index=_optional_header_index(values, "com", "comp"),
+            description_index=description_index,
+            validation_index=_optional_header_index(values, "validacion", "oblig."),
+            content_index=_optional_header_index(values, "contenido"),
+        )
+    raise ValueError(f"{worksheet.name!r} has no record-design header")
 
 
 def _cell(values: tuple[object, ...], index: int) -> object | None:
