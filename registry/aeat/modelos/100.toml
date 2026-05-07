@@ -364,6 +364,7 @@ formulas = [
 id = "renta-2020-mini-model-base-y-cuota"
 title = "Modelo 100 2020 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -386,6 +387,7 @@ formulas = [
     "renta-2020-deduccion-unidad-familiar-clamp-positiva",
     "renta-2020-resto-a-ingresar-positivo",
     "renta-2020-deduccion-doble-imposicion-internacional-suma",
+    "renta-2020-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2020".constructs]]
@@ -491,6 +493,9 @@ formulas = [
     "renta-2020-ganancia-reducida-base-general",
     "renta-2020-ganancia-reducida-no-exenta-base-general",
     "renta-2020-perdida-no-exenta-negativa-base-general",
+    "renta-2020-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2020-saldo-negativo-pendiente-base-ahorro",
+    "renta-2020-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2020".constructs]]
@@ -545,6 +550,71 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-deduccion-doble-imposicion-internacional-suma"
@@ -2813,6 +2883,7 @@ formulas = [
 id = "renta-2021-mini-model-base-y-cuota"
 title = "Modelo 100 2021 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -2835,6 +2906,8 @@ formulas = [
     "renta-2021-deduccion-unidad-familiar-clamp-positiva",
     "renta-2021-resto-a-ingresar-positivo",
     "renta-2021-deduccion-doble-imposicion-internacional-suma",
+    "renta-2021-anualidades-alimentos-hijos-suma",
+    "renta-2021-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2021".constructs]]
@@ -2940,6 +3013,9 @@ formulas = [
     "renta-2021-ganancia-reducida-base-general",
     "renta-2021-ganancia-reducida-no-exenta-base-general",
     "renta-2021-perdida-no-exenta-negativa-base-general",
+    "renta-2021-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2021-saldo-negativo-pendiente-base-ahorro",
+    "renta-2021-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2021".constructs]]
@@ -2994,6 +3070,91 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0426" },
+    { casilla = "0427" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-anualidades-alimentos-hijos-suma"
+target = "0527"
+expression = { op = "sum", args = [
+    { casilla = "1741" },
+    { casilla = "1744" },
+    { casilla = "1749" },
+    { casilla = "1754" },
+    { casilla = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-deduccion-doble-imposicion-internacional-suma"
@@ -5263,6 +5424,7 @@ formulas = [
 id = "renta-2022-mini-model-base-y-cuota"
 title = "Modelo 100 2022 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -5285,6 +5447,8 @@ formulas = [
     "renta-2022-deduccion-unidad-familiar-clamp-positiva",
     "renta-2022-resto-a-ingresar-positivo",
     "renta-2022-deduccion-doble-imposicion-internacional-suma",
+    "renta-2022-anualidades-alimentos-hijos-suma",
+    "renta-2022-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2022".constructs]]
@@ -5316,6 +5480,7 @@ formulas = [
     "renta-2022-inmuebles-valor-transmision",
     "renta-2022-inmuebles-ganancia-no-exenta-base-general",
     "renta-2022-inmuebles-perdida-no-exenta-base-general",
+    "renta-2022-inmuebles-ganancia-no-exenta-reducida",
 ]
 
 [[revisions."2022".constructs]]
@@ -5406,6 +5571,9 @@ formulas = [
     "renta-2022-ganancia-reducida-base-general",
     "renta-2022-ganancia-reducida-no-exenta-base-general",
     "renta-2022-perdida-no-exenta-negativa-base-general",
+    "renta-2022-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2022-saldo-negativo-pendiente-base-ahorro",
+    "renta-2022-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2022".constructs]]
@@ -5460,6 +5628,111 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0438" },
+    { casilla = "0426" },
+    { casilla = "0427" },
+    { casilla = "0499" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-anualidades-alimentos-hijos-suma"
+target = "0527"
+expression = { op = "sum", args = [
+    { casilla = "1741" },
+    { casilla = "1744" },
+    { casilla = "1749" },
+    { casilla = "1754" },
+    { casilla = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-inmuebles-ganancia-no-exenta-reducida"
+target = "1836"
+expression = { op = "sum", args = [
+    { casilla = "1826" },
+    { op = "negate", args = [{ casilla = "1830" }] },
+    { op = "negate", args = [{ casilla = "1641" }] },
+    { op = "negate", args = [{ casilla = "1834" }] },
+    { op = "negate", args = [{ casilla = "1835" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-deduccion-doble-imposicion-internacional-suma"
@@ -7929,6 +8202,7 @@ formulas = [
 id = "renta-2023-mini-model-base-y-cuota"
 title = "Modelo 100 2023 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -7951,6 +8225,8 @@ formulas = [
     "renta-2023-deduccion-unidad-familiar-clamp-positiva",
     "renta-2023-resto-a-ingresar-positivo",
     "renta-2023-deduccion-doble-imposicion-internacional-suma",
+    "renta-2023-anualidades-alimentos-hijos-suma",
+    "renta-2023-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2023".constructs]]
@@ -7982,6 +8258,7 @@ formulas = [
     "renta-2023-inmuebles-valor-transmision",
     "renta-2023-inmuebles-ganancia-no-exenta-base-general",
     "renta-2023-inmuebles-perdida-no-exenta-base-general",
+    "renta-2023-inmuebles-ganancia-no-exenta-reducida",
 ]
 
 [[revisions."2023".constructs]]
@@ -8073,6 +8350,9 @@ formulas = [
     "renta-2023-ganancia-reducida-no-exenta-base-general",
     "renta-2023-perdida-no-exenta-negativa-base-general",
     "renta-2023-vehiculo-valor-adquisicion-suma",
+    "renta-2023-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2023-saldo-negativo-pendiente-base-ahorro",
+    "renta-2023-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2023".constructs]]
@@ -8127,6 +8407,111 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0438" },
+    { casilla = "0426" },
+    { casilla = "0427" },
+    { casilla = "0499" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-anualidades-alimentos-hijos-suma"
+target = "0527"
+expression = { op = "sum", args = [
+    { casilla = "1741" },
+    { casilla = "1744" },
+    { casilla = "1749" },
+    { casilla = "1754" },
+    { casilla = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-inmuebles-ganancia-no-exenta-reducida"
+target = "1836"
+expression = { op = "sum", args = [
+    { casilla = "1826" },
+    { op = "negate", args = [{ casilla = "1830" }] },
+    { op = "negate", args = [{ casilla = "1641" }] },
+    { op = "negate", args = [{ casilla = "1834" }] },
+    { op = "negate", args = [{ casilla = "1835" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-deduccion-doble-imposicion-internacional-suma"
@@ -10624,6 +11009,7 @@ formulas = [
 id = "renta-2024-mini-model-base-y-cuota"
 title = "Modelo 100 2024 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -10646,6 +11032,8 @@ formulas = [
     "renta-2024-deduccion-unidad-familiar-clamp-positiva",
     "renta-2024-resto-a-ingresar-positivo",
     "renta-2024-deduccion-doble-imposicion-internacional-suma",
+    "renta-2024-anualidades-alimentos-hijos-suma",
+    "renta-2024-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2024".constructs]]
@@ -10677,6 +11065,7 @@ formulas = [
     "renta-2024-inmuebles-valor-transmision",
     "renta-2024-inmuebles-ganancia-no-exenta-base-general",
     "renta-2024-inmuebles-perdida-no-exenta-base-general",
+    "renta-2024-inmuebles-ganancia-no-exenta-reducida",
 ]
 
 [[revisions."2024".constructs]]
@@ -10768,6 +11157,9 @@ formulas = [
     "renta-2024-ganancia-reducida-no-exenta-base-general",
     "renta-2024-perdida-no-exenta-negativa-base-general",
     "renta-2024-vehiculo-valor-adquisicion-suma",
+    "renta-2024-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2024-saldo-negativo-pendiente-base-ahorro",
+    "renta-2024-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2024".constructs]]
@@ -10822,6 +11214,111 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0438" },
+    { casilla = "0426" },
+    { casilla = "0427" },
+    { casilla = "0499" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-anualidades-alimentos-hijos-suma"
+target = "0527"
+expression = { op = "sum", args = [
+    { casilla = "1741" },
+    { casilla = "1744" },
+    { casilla = "1749" },
+    { casilla = "1754" },
+    { casilla = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-inmuebles-ganancia-no-exenta-reducida"
+target = "1836"
+expression = { op = "sum", args = [
+    { casilla = "1826" },
+    { op = "negate", args = [{ casilla = "1830" }] },
+    { op = "negate", args = [{ casilla = "1641" }] },
+    { op = "negate", args = [{ casilla = "1834" }] },
+    { op = "negate", args = [{ casilla = "1835" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-deduccion-doble-imposicion-internacional-suma"
@@ -16557,6 +17054,7 @@ formulas = [
 id = "renta-2025-mini-model-base-y-cuota"
 title = "Modelo 100 2025 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
@@ -16579,6 +17077,8 @@ formulas = [
     "renta-2025-deduccion-unidad-familiar-clamp-positiva",
     "renta-2025-resto-a-ingresar-positivo",
     "renta-2025-deduccion-doble-imposicion-internacional-suma",
+    "renta-2025-anualidades-alimentos-hijos-suma",
+    "renta-2025-importe-derecho-reduccion-pension-suma",
 ]
 
 [[revisions."2025".constructs]]
@@ -16605,6 +17105,7 @@ formulas = [
     "renta-2025-inmuebles-valor-transmision",
     "renta-2025-inmuebles-ganancia-no-exenta-base-general",
     "renta-2025-inmuebles-perdida-no-exenta-base-general",
+    "renta-2025-inmuebles-ganancia-no-exenta-reducida",
 ]
 
 [[revisions."2025".constructs]]
@@ -16690,6 +17191,9 @@ formulas = [
     "renta-2025-ganancia-reducida-no-exenta-base-general",
     "renta-2025-perdida-no-exenta-negativa-base-general",
     "renta-2025-vehiculo-valor-adquisicion-suma",
+    "renta-2025-acciones-no-negociadas-ganancia-reducida-no-exenta",
+    "renta-2025-saldo-negativo-pendiente-base-ahorro",
+    "renta-2025-saldo-negativo-pendiente-base-general",
 ]
 
 [[revisions."2025".constructs]]
@@ -16722,6 +17226,111 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-importe-derecho-reduccion-pension-suma"
+target = "0467"
+expression = { op = "sum", args = [
+    { casilla = "0463" },
+    { casilla = "0464" },
+    { casilla = "0465" },
+    { casilla = "0438" },
+    { casilla = "0426" },
+    { casilla = "0427" },
+    { casilla = "0499" },
+    { casilla = "0466" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-anualidades-alimentos-hijos-suma"
+target = "0527"
+expression = { op = "sum", args = [
+    { casilla = "1741" },
+    { casilla = "1744" },
+    { casilla = "1749" },
+    { casilla = "1754" },
+    { casilla = "1759" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-saldo-negativo-pendiente-base-general"
+target = "1257"
+expression = { op = "subtract", args = [
+    { casilla = "0421" },
+    { casilla = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "compensación"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-saldo-negativo-pendiente-base-ahorro"
+target = "1270"
+expression = { op = "subtract", args = [
+    { casilla = "0425" },
+    { casilla = "0446" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-acciones-no-negociadas-ganancia-reducida-no-exenta"
+target = "1594"
+expression = { op = "sum", args = [
+    { casilla = "1586" },
+    { op = "negate", args = [{ casilla = "1589" }] },
+    { op = "negate", args = [{ casilla = "1590" }] },
+    { op = "negate", args = [{ casilla = "1591" }] },
+    { op = "negate", args = [{ casilla = "1593" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-inmuebles-ganancia-no-exenta-reducida"
+target = "1836"
+expression = { op = "sum", args = [
+    { casilla = "1826" },
+    { op = "negate", args = [{ casilla = "1830" }] },
+    { op = "negate", args = [{ casilla = "1641" }] },
+    { op = "negate", args = [{ casilla = "1834" }] },
+    { op = "negate", args = [{ casilla = "1835" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-deduccion-doble-imposicion-internacional-suma"
