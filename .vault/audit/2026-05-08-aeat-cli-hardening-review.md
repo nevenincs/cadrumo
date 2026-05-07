@@ -38,3 +38,24 @@ Review notes:
   returns.
 - No business logic was added to CLI handlers; the change is restricted to
   existing command metadata and tests.
+
+## Review Pass 2: `A3` Version Surface
+
+Scope reviewed: `src/aeat/application/diagnostics.py`,
+`src/aeat/entrypoints/cli/__init__.py`,
+`src/aeat/entrypoints/cli/test_user_cli_surface.py`, and the locale files for
+Spanish, English, Catalan, and Hungarian.
+
+No CRITICAL, HIGH, MEDIUM, or LOW findings were identified in this slice.
+
+Review notes:
+
+- Registry summary construction lives in the application layer, not the root
+  command handler.
+- The CLI renders a typed backend report and does not count registry TOMLs.
+- `--version`, `-V`, `version`, and `--format json version` are all covered by
+  real Typer invocation.
+- The first implementation failed for `--version` and `-V` because Typer did
+  not invoke the callback without a command. The final implementation sets the
+  root group to invoke the callback without a command while preserving
+  no-argument help behavior.

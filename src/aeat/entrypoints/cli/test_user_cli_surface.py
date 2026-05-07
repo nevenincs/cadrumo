@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from aeat.application.diagnostics import build_cli_version_report
 from aeat.domain.invoices import InvoiceCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository
 
@@ -94,6 +95,9 @@ def test_root_surface_contains_setup_and_app_only() -> None:
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
     assert "app" in result.output
+    assert "--version" in result.output
+    assert "-V" in result.output
+    assert "version" in result.output
     for removed_command in (
         "auth",
         "financial",
@@ -105,6 +109,15 @@ def test_root_surface_contains_setup_and_app_only() -> None:
         "audits",
     ):
         assert removed_command not in result.output
+
+
+def test_root_no_args_renders_help_successfully() -> None:
+    result = _invoke([])
+
+    assert result.exit_code == 0, result.output
+    assert "setup" in result.output
+    assert "app" in result.output
+    assert "--version" in result.output
 
 
 def test_removed_developer_commands_are_not_registered() -> None:
@@ -124,6 +137,33 @@ def test_removed_developer_commands_are_not_registered() -> None:
     for command in removed_commands:
         result = _invoke(command)
         assert result.exit_code != 0, command
+
+
+def test_version_surfaces_render_backend_registry_summary() -> None:
+    report = build_cli_version_report()
+    assert report.registry.available
+
+    for command in (["--version"], ["-V"], ["version"]):
+        result = _invoke(command)
+
+        assert result.exit_code == 0, result.output
+        assert f"aeat {report.package_version}" in result.output
+        assert f"{report.registry.modelo_count} modelos" in result.output
+        assert f"{report.registry.casilla_count} casillas" in result.output
+        assert f"{report.registry.formula_count} formulas" in result.output
+
+
+def test_version_command_can_emit_typed_json_report() -> None:
+    expected = build_cli_version_report()
+
+    result = _invoke(["--format", "json", "version"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(_json_output(result))
+    assert payload["package_name"] == "aeat"
+    assert payload["package_version"] == expected.package_version
+    assert payload["registry"]["available"] is True
+    assert payload["registry"]["modelo_count"] == expected.registry.modelo_count
 
 
 def test_app_surface_uses_singular_user_domains() -> None:
