@@ -45,12 +45,15 @@ from __future__ import annotations
 import pytest
 
 from aeat.adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
+from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
     GROI_ORACLE_ID,
     GroiOracle,
     LiveParityCatalogue,
     RemoteStateGuardPolicy,
+    evaluate_cross_reference_applicability,
+    load_registry_tree,
     resolve_cross_reference_oracle,
 )
 from aeat.entrypoints.cli._live import requires_live_enabled
@@ -231,3 +234,39 @@ def test_dependency_chain_blocks_when_policy_pins_disallowed_host() -> None:
     # Critically, no Playwright code ran. The guard rejected before
     # any browser action could leave the process toward AEAT.
     assert result.fields == ()
+
+
+def test_dependency_chain_skips_groi_when_profile_says_not_intracomunitario() -> None:
+    """When the profile is not intracomunitario the chain skips before any HTTP.
+
+    The applicability gate is the structural guarantee that the GROI
+    surface is never reached for taxpayers who don't conduct
+    intracommunity operations. The test loads the committed binding,
+    feeds a profile with does_intracomunitario=False, and asserts the
+    typed CrossReferenceApplicability surfaces applicable=False with
+    the unmet predicate field. No oracle resolution and no network
+    operation runs in the not-applicable branch.
+
+    Marked live_read for collocation with the rest of the GROI
+    dependency-chain suite, but the assertion path performs no
+    network operation regardless of AEAT_LIVE_TESTS_ENABLED state.
+    """
+
+    requires_live_enabled()
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    binding = next(
+        decision
+        for decision in modelo.revisions["2020-y-siguientes"].live_cross_references
+        if decision.id == "modelo-349-groi-spanish-counterparty-check"
+    )
+
+    not_applicable = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"does_intracomunitario": False},
+    )
+    # The gate is the only contract the dependency chain needs at
+    # this layer; downstream invocation is unreachable when the
+    # decision says not applicable.
+    assert not_applicable.applicable is False
+    assert "does_intracomunitario" in not_applicable.unmet_predicate_fields

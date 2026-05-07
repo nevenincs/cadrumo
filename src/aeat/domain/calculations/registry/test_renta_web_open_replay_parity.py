@@ -24,7 +24,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from ._remote_state_guard import remote_state_policy_from_cross_reference
+from ._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from ._renta_web_open_oracle import (
     RentaWebOpenOracle,
     RentaWebOpenReplayDriver,
@@ -42,7 +42,7 @@ def _discovered_payloads() -> list[Path]:
     return sorted(p for p in _REPLAY_DIR.glob("*.json"))
 
 
-def _open_simulator_policy() -> object:
+def _open_simulator_policy() -> RemoteStateGuardPolicy:
     decision = LiveCrossReferenceDecision(
         id="modelo-100-renta-web-open",
         evidence_tier="executable_parity_evidence",
@@ -83,9 +83,7 @@ def _load_expected(payload_path: Path) -> Mapping[str, Decimal]:
     expected: dict[str, Decimal] = {}
     for casilla_id, value in document["expected"].items():
         if not isinstance(casilla_id, str) or not isinstance(value, str):
-            raise AssertionError(
-                f"replay payload {payload_path.name!r} expected entries must be string keyed strings"
-            )
+            raise AssertionError(f"replay payload {payload_path.name!r} expected entries must be string keyed strings")
         expected[casilla_id] = Decimal(value)
     return expected
 

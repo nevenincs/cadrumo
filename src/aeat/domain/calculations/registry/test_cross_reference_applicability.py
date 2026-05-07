@@ -126,6 +126,46 @@ def test_schema_rejects_any_mode_with_empty_predicates() -> None:
         _decision(applicability_predicates=(), applicability_condition_mode="any")
 
 
+def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario() -> None:
+    """The committed GROI binding evaluates to applicable=False under a
+    profile that doesn't conduct intracom operations.
+
+    Asserts the typed result shape: live tests + the resolver consume
+    `unmet_predicate_fields` to emit precise skip diagnostics. Non-
+    tautological: the predicate's truth comes from the profile fact;
+    the test asserts the evaluator's gate semantics, not the formula
+    arithmetic.
+    """
+
+    from aeat.core.paths import PROJECT_ROOT
+
+    from . import load_registry_tree
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    binding = next(
+        decision
+        for decision in modelo.revisions["2020-y-siguientes"].live_cross_references
+        if decision.id == "modelo-349-groi-spanish-counterparty-check"
+    )
+
+    not_applicable = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"does_intracomunitario": False},
+    )
+    assert not_applicable.applicable is False
+    assert not_applicable.unmet_predicate_fields == ("does_intracomunitario",)
+    assert not_applicable.matched_explanations == ()
+
+    applicable = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"does_intracomunitario": True},
+    )
+    assert applicable.applicable is True
+    assert applicable.unmet_predicate_fields == ()
+    assert len(applicable.matched_explanations) == 1
+
+
 def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> None:
     """The committed modelo-349-groi-spanish-counterparty-check binding must
     carry an applicability gate so non-intracom subjects skip the consult.

@@ -648,6 +648,18 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
 review_status = "reviewed"
 
+[sources."aeat-modelo-036-roi-enrollment-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/aeat-modelo-036-procedure.html"
+sha256 = "fd5264e1a8c371eb2bad45347a0defa5cc79882051cd6e90d9980a70722f53bd"
+bytes = 36079
+retrieved_at = 2026-05-08
+applies_from = 2008-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
+review_status = "reviewed"
+
 [legal."orden-hac-610-2021:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

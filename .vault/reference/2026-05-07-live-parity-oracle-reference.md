@@ -9,6 +9,7 @@ related:
   - "[[2026-05-07-live-parity-oracle-adr]]"
   - "[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]"
   - "[[2026-05-07-live-parity-oracle-plan]]"
+  - "[[2026-05-08-live-parity-oracle-adr]]"
 ---
 
 # `live-parity-oracle` reference: `binding-an-oracle-to-a-cross-reference`
@@ -76,6 +77,45 @@ table with these required fields:
   cross-reference's existence
 - `source_refs` — at least one entry from the legal/source
   catalogues; see Step 5 if you need to add a new source
+
+## Step 3.5: declare applicability predicates for optional bindings
+
+Not every cross-reference applies to every taxpayer. Bindings whose
+relevance depends on profile state (ROI enrollment, OSS enrollment,
+recargo de equivalencia regime, etc.) declare
+`applicability_predicates` so the resolver, audit, and live tests
+can skip them cleanly when the profile says off.
+
+Decide whether your binding is:
+- **Universal** — every taxpayer who files the parent modelo needs
+  it. Leave `applicability_predicates` empty (the default); the
+  binding is unconditionally applicable.
+- **Optional** — only some subjects need it. Declare a tuple of
+  `ProfilePredicateDefinition`s that gate it.
+
+To declare predicates, add a `[[live_cross_references.
+applicability_predicates]]` array-of-tables block under your
+cross-reference with each entry providing `field`, `op`
+(`equals` / `not_equals`), `value`, `explanation`, `legal_refs`,
+and `source_refs`. The aggregation mode defaults to `all` (every
+predicate must match); flip to `any` only when independent
+sufficient conditions exist.
+
+Worked example: the GROI Spanish-ROI counterparty consult on
+Modelo 349 is gated on `iva.does_intracomunitario == true`. A
+taxpayer who doesn't conduct intracom operations files no Modelo
+349 at all and never invokes the GROI surface. A future binding
+that requires the user themselves to be ROI-registered would also
+declare `iva.roi_enrolled == true` (the field exists in the
+profile schema and is independent of the operational fact).
+
+The applicability evaluation lives in
+`evaluate_cross_reference_applicability(decision, profile_facts)`
+and returns a typed `CrossReferenceApplicability` carrying
+`applicable: bool`, `matched_explanations`, and
+`unmet_predicate_fields`. Always consume the typed shape — the
+unmet-fields list is the diagnostic future agents need when
+something silently no-ops.
 
 ## Step 4: link the cross-reference to its construct
 

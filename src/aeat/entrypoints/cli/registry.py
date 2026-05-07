@@ -790,6 +790,7 @@ def audit_oracles_cmd(
         LiveParityCatalogue,
         OracleEnvironment,
         audit_registry_oracle_bindings,
+        collect_applicability_declarations,
     )
     from ...domain.calculations.registry._loader import load_registry_tree
 
@@ -808,6 +809,7 @@ def audit_oracles_cmd(
         oracle_catalogue,
         environment=_cast(OracleEnvironment, environment),
     )
+    applicability_declarations = collect_applicability_declarations(modelos)
 
     if json_output:
         typer.echo(
@@ -817,6 +819,9 @@ def audit_oracles_cmd(
                     "registered_oracle_ids": sorted(oracle_catalogue.ids()),
                     "failure_count": len(failures),
                     "failures": list(failures),
+                    "applicability_declarations": [
+                        declaration.model_dump() for declaration in applicability_declarations
+                    ],
                 },
                 indent=2,
             )
@@ -825,8 +830,16 @@ def audit_oracles_cmd(
         _emit_metric("environment", environment)
         _emit_metric("registered_oracle_ids", ",".join(sorted(oracle_catalogue.ids())))
         _emit_metric("failure_count", len(failures))
+        _emit_metric("applicability_declaration_count", len(applicability_declarations))
         for index, failure in enumerate(failures):
             _emit_metric(f"failure[{index}]", failure)
+        for index, declaration in enumerate(applicability_declarations):
+            _emit_metric(
+                f"applicability[{index}]",
+                f"{declaration.modelo_id}:{declaration.cross_reference_id} "
+                f"mode={declaration.applicability_condition_mode} "
+                f"fields={','.join(declaration.predicate_fields)}",
+            )
     if failures:
         raise typer.Exit(code=1)
 

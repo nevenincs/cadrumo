@@ -7,6 +7,7 @@ related:
   - "[[2026-05-07-live-parity-oracle-plan]]"
   - "[[2026-05-07-live-parity-oracle-adr]]"
   - "[[2026-05-07-live-parity-oracle-reference]]"
+  - "[[2026-05-08-live-parity-oracle-adr]]"
 ---
 
 # `live-parity-oracle` execution summary (phases 2 — 5)
@@ -111,3 +112,102 @@ trailing-whitespace drift) is captured in commit `ecd02bb9`'s
 message; resolution requires re-fetching the corpus or amending the
 registered hash, neither of which is in scope for this execution
 window.
+
+## Cross-reference applicability gate (slices 1 — 12, 2026-05-08)
+
+Second execution window adds the cross-reference applicability gate
+authored under ADR `2026-05-08-live-parity-oracle-adr.md`. The gate
+makes optional bindings (GROI for ROI / intracom subjects, OSS-369
+for OSS-enrolled subjects) skip cleanly when the profile says off.
+
+### Schema (commit `73302e4c`)
+
+`LiveCrossReferenceDecision` gains
+`applicability_predicates: tuple[ProfilePredicateDefinition, ...]`
+and `applicability_condition_mode: Literal["all", "any"] = "all"`.
+The validator mirrors `FilingScheduleDefinition`'s any-mode + empty
+rejection. Both fields default to empty / `"all"` so every binding
+declared before the gate landed remains unconditionally applicable.
+
+### Evaluator + typed result (commit `73302e4c`)
+
+`evaluate_cross_reference_applicability(decision, profile_facts)`
+returns a strict frozen `CrossReferenceApplicability` with
+`applicable`, `matched_explanations`, and `unmet_predicate_fields`.
+Reuses `profile_condition_matches` from `_schedules.py` rather than
+duplicating the predicate resolver.
+
+### Profile fields (commits `73302e4c` + Slice 10)
+
+Two new boolean fields under `iva`:
+- `iva.roi_enrolled` — Modelo 036/037 ROI census state
+- `iva.oss_enrolled` — OSS / IOSS one-stop-shop enrollment
+
+Both are required=false (defaults to enrolled=false) and
+effective_dated=true so historical state stays accurate as the
+taxpayer enrolls or de-enrolls over time.
+
+### Bindings
+
+- `modelo-349-groi-spanish-counterparty-check` (commit `73302e4c`):
+  `does_intracomunitario == true` predicate.
+- `modelo-369-exterior-filed-declarations-read` (Slice 10):
+  `iva.oss_enrolled == true` predicate. Subjects outside the OSS
+  regime never invoke the read surface.
+
+### Audit (Slice 8)
+
+`aeat app registry audit-oracles --json` gains a new
+`applicability_declarations` array surfacing each gated binding's
+`modelo_id`, `revision_id`, `cross_reference_id`,
+`applicability_condition_mode`, and `predicate_fields`. Backed by
+`CrossReferenceApplicabilityDeclaration` (pydantic v2 strict
+frozen). The audit reads declared state only — never re-evaluates
+predicates.
+
+Today's count: 2 declarations (GROI + OSS-369). Future bindings
+that warrant the gate self-register here.
+
+### Corpus (Slice 7)
+
+`corpus/aeat_official/instructions/modelo_036/aeat-modelo-036-procedure.html`
+captured from the AEAT G322 procedure page (36079 bytes,
+sha256 `fd5264e1...`). Registered as
+`aeat-modelo-036-roi-enrollment-procedure` source under
+`registry/aeat/legal/iva.toml` for use as the legal grounding of
+ROI enrollment claims.
+
+### Tests (Slices 5 + 6)
+
+`test_cross_reference_applicability.py` — 6 tests cover
+backwards-compat, all-mode, any-mode, schema rejection of any-mode
++ empty, the registry-loaded GROI binding's predicate presence, and
+the typed not-applicable evaluation against a non-intracom profile.
+
+`test_groi_dependency_chain_live.py` gains a profile-gated test
+that loads the binding and asserts the typed
+`CrossReferenceApplicability` returns applicable=False for a
+non-intracom profile, verifying the dependency-chain entry-point
+short-circuits before any oracle resolution.
+
+### How-to (Slice 9)
+
+`.vault/reference/2026-05-07-live-parity-oracle-reference.md` gains
+"Step 3.5 — declare applicability predicates for optional bindings"
+documenting the universal vs. optional decision, predicate
+declaration syntax, and the typed return shape future agents
+should consume.
+
+### Gates achieved
+
+- `ruff` / `ty` clean across every touched source file.
+- `aeat app registry verify --json` reports `verified: true`.
+- `aeat app registry audit-oracles --json` reports
+  `failure_count: 0` with 2 applicability declarations surfaced.
+- 96 / 96 tests pass on the touched-surface sweep
+  (test_cross_reference_applicability +
+  test_authenticated_simulator_surface +
+  test_resolve_cross_reference_oracle +
+  test_audit_oracle_surface_compatibility +
+  test_public_api_boundaries + test_registry_schema +
+  test_schema_hygiene + user_profile/).
