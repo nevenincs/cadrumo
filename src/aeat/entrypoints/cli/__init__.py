@@ -21,6 +21,7 @@ import typer
 from ...application.diagnostics import build_cli_version_report, render_cli_version_text
 from . import _declaration, _invoice, _ledger, _overview, _setup, registry
 from ._common import _FORMAT_TEXT
+from ._errors import decorate_typer_app
 from ._i18n import tr
 
 # ---------------------------------------------------------------------
@@ -101,6 +102,7 @@ app_app.add_typer(registry.app, name="registry")
 
 app.add_typer(_setup.app, name="setup")
 app.add_typer(app_app, name="app")
+decorate_typer_app(app)
 
 
 __all__ = ["app"]
