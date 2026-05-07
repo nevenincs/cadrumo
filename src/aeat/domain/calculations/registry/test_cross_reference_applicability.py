@@ -1,0 +1,153 @@
+"""Tests for cross-reference applicability predicates.
+
+Cross-reference decisions may declare profile predicates so surfaces such as
+GROI for ROI-enrolled subjects or OSS for OSS-enrolled subjects are selected
+only when the filing profile satisfies their official conditions.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+import pytest
+from pydantic import ValidationError
+
+from ._live_parity import (
+    CrossReferenceApplicability,
+    evaluate_cross_reference_applicability,
+)
+from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_ROI_PREDICATE = ProfilePredicateDefinition(
+    field="iva.roi_enrolled",
+    op="equals",
+    value=True,
+    explanation="GROI consult requires ROI enrollment.",
+    legal_refs=("orden-hac-174-2020:art-1",),
+    source_refs=("aeat-modelo-349-procedure",),
+)
+_INTRACOM_PREDICATE = ProfilePredicateDefinition(
+    field="does_intracomunitario",
+    op="equals",
+    value=True,
+    explanation="GROI consult requires intracom operations.",
+    legal_refs=("orden-eha-769-2010:art-1",),
+    source_refs=("aeat-modelo-349-procedure",),
+)
+
+
+def _decision(
+    *,
+    applicability_predicates: tuple[ProfilePredicateDefinition, ...] = (),
+    applicability_condition_mode: Literal["all", "any"] = "all",
+) -> LiveCrossReferenceDecision:
+    return LiveCrossReferenceDecision(
+        id="probe-applicability",
+        evidence_tier="executable_parity_evidence",
+        surface="authenticated_simulator",
+        guard_policy_id="probe-policy",
+        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        allowed_methods=("GET", "POST"),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+        synthetic_data_allowed=True,
+        requires_authentication=True,
+        requires_aeat_authorization=False,
+        legal_refs=("orden-hac-174-2020:art-1",),
+        source_refs=("aeat-modelo-349-procedure",),
+        applicability_predicates=applicability_predicates,
+        applicability_condition_mode=applicability_condition_mode,
+    )
+
+
+def test_decision_with_no_predicates_is_unconditionally_applicable() -> None:
+    """A decision without predicates is unconditionally applicable."""
+
+    result = evaluate_cross_reference_applicability(_decision(), profile_facts={})
+
+    assert isinstance(result, CrossReferenceApplicability)
+    assert result.applicable is True
+    assert result.matched_explanations == ()
+    assert result.unmet_predicate_fields == ()
+
+
+def test_decision_with_all_mode_predicates_requires_every_match() -> None:
+    """all-mode (the default) requires every predicate to be satisfied."""
+
+    decision = _decision(applicability_predicates=(_ROI_PREDICATE, _INTRACOM_PREDICATE))
+
+    fully_applicable = evaluate_cross_reference_applicability(
+        decision,
+        profile_facts={"iva": {"roi_enrolled": True}, "does_intracomunitario": True},
+    )
+    assert fully_applicable.applicable is True
+    assert len(fully_applicable.matched_explanations) == 2
+    assert fully_applicable.unmet_predicate_fields == ()
+
+    partially_applicable = evaluate_cross_reference_applicability(
+        decision,
+        profile_facts={"iva": {"roi_enrolled": False}, "does_intracomunitario": True},
+    )
+    assert partially_applicable.applicable is False
+    assert partially_applicable.unmet_predicate_fields == ("iva.roi_enrolled",)
+
+
+def test_decision_with_any_mode_predicates_requires_at_least_one_match() -> None:
+    """any-mode requires at least one predicate to be satisfied."""
+
+    decision = _decision(
+        applicability_predicates=(_ROI_PREDICATE, _INTRACOM_PREDICATE),
+        applicability_condition_mode="any",
+    )
+
+    one_match = evaluate_cross_reference_applicability(
+        decision,
+        profile_facts={"iva": {"roi_enrolled": False}, "does_intracomunitario": True},
+    )
+    assert one_match.applicable is True
+    assert one_match.matched_explanations == (_INTRACOM_PREDICATE.explanation,)
+    assert one_match.unmet_predicate_fields == ("iva.roi_enrolled",)
+
+    none_match = evaluate_cross_reference_applicability(
+        decision,
+        profile_facts={"iva": {"roi_enrolled": False}, "does_intracomunitario": False},
+    )
+    assert none_match.applicable is False
+    assert none_match.matched_explanations == ()
+    assert set(none_match.unmet_predicate_fields) == {"iva.roi_enrolled", "does_intracomunitario"}
+
+
+def test_schema_rejects_any_mode_with_empty_predicates() -> None:
+    """The any-mode + empty-predicates shape is meaningless; validator must reject."""
+
+    with pytest.raises(ValidationError, match="any-mode requires applicability predicates"):
+        _decision(applicability_predicates=(), applicability_condition_mode="any")
+
+
+def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> None:
+    """The committed modelo-349-groi-spanish-counterparty-check binding must
+    carry an applicability gate so non-intracom subjects skip the consult.
+
+    The test reads the loaded registry rather than the TOML directly so a
+    schema-side regression (predicate dropped on serialisation, mode flipped)
+    fails alongside any TOML edit.
+    """
+
+    from aeat.core.paths import PROJECT_ROOT
+
+    from . import load_registry_tree
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == "349")
+    revision = modelo.revisions["2020-y-siguientes"]
+    binding = next(
+        decision
+        for decision in revision.live_cross_references
+        if decision.id == "modelo-349-groi-spanish-counterparty-check"
+    )
+    assert binding.applicability_predicates, "GROI binding must declare an applicability gate"
+    assert binding.applicability_condition_mode == "all"
+    fields = {predicate.field for predicate in binding.applicability_predicates}
+    assert "does_intracomunitario" in fields

@@ -49,6 +49,7 @@ from ._groi_oracle import (
 )
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._live_parity import (
+    CrossReferenceApplicability,
     LiveParityCatalogue,
     LiveParityOracle,
     OracleEnvironment,
@@ -56,6 +57,7 @@ from ._live_parity import (
     ParityFieldComparison,
     ParityResult,
     ParityVerdict,
+    evaluate_cross_reference_applicability,
     resolve_cross_reference_oracle,
 )
 from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
@@ -176,6 +178,7 @@ __all__ = [
     "ApplicationLinkDefinition",
     "CasillaDefinition",
     "ConstructDefinition",
+    "CrossReferenceApplicability",
     "DataBindingDefinition",
     "DeadlineApplicabilityCondition",
     "DeadlineWindowDefinition",
@@ -273,6 +276,7 @@ __all__ = [
     "detect_workbook_runner",
     "discover_workbooks",
     "equivalent_renta_web_open_value",
+    "evaluate_cross_reference_applicability",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",

@@ -292,6 +292,16 @@ description = "Modelo 349 cadence threshold."
 model_selectors = ["iva.intracommunity_operations_exceed_50000_eur"]
 schedule_predicates = ["iva.intracommunity_operations_exceed_50000_eur"]
 
+[[sections.fields]]
+key = "roi_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered on AEAT's Registro de Operadores Intracomunitarios (ROI / VIES). Distinct from does_intracomunitario: ROI enrollment is the legal census state, opted into via Modelo 036/037 checkbox 582. Live cross-references that consult ROI-only AEAT surfaces (GROI, IXVI) gate applicability on this field."
+model_selectors = ["iva.roi_enrolled"]
+schedule_predicates = ["iva.roi_enrolled"]
+
 [[sections]]
 key = "filing_export"
 title = "Filing and export context"
