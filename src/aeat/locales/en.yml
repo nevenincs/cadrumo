@@ -416,7 +416,7 @@ cli:
     import:
       dry_run_help: Run in dry-run mode (without saving changes)
       help: Import invoices from external sources (e.g., PDF, Excel)
-      kind_help: Type of invoices to import (emitted or received)
+      kind_help: Type of invoices to import. Accepted values issued or received
       path_help: Path to the file or directory containing invoices
     labels:
       base: Taxable Base
@@ -645,6 +645,11 @@ cli:
         help: End the local authentication session
       providers:
         help: List available authentication providers
+      reset:
+        all_help: Remove both persisted session state and the acquisition lock
+        help: Reset persisted authentication sessions or acquisition locks
+        locks_help: Remove the provider acquisition lock
+        sessions_help: Remove persisted session state for the provider
       status:
         help: Show the configured provider and session state
       whoami:
@@ -653,6 +658,8 @@ cli:
       certificate_file_required: The certificate provider requires --file
       file_not_found: 'File not found: {file}'
       not_configured: Configure a provider before logging in
+      reset_scope_required: 'Choose at least one reset scope: --sessions, --locks,
+        or --all.'
       unknown_profile_key: 'Unknown profile key: {key}'
       unknown_provider: 'Unknown authentication provider: {provider}'
     headers:

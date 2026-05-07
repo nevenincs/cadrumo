@@ -422,7 +422,8 @@ cli:
     import:
       dry_run_help: Ejecutar en modo de prueba (sin guardar cambios)
       help: Importar facturas desde fuentes externas (p. ej., PDF, Excel)
-      kind_help: Tipo de facturas a importar (emitidas o recibidas)
+      kind_help: Tipo de facturas a importar. Valores aceptados issued (emitidas)
+        o received (recibidas)
       path_help: Ruta al archivo o directorio con las facturas
     labels:
       base: Base Imponible
@@ -657,6 +658,13 @@ cli:
         help: Cerrar la sesión local de autenticación
       providers:
         help: Listar proveedores de autenticación disponibles
+      reset:
+        all_help: Eliminar tanto el estado de sesión persistido como el bloqueo
+          de adquisición
+        help: Restablecer sesiones de autenticación persistidas o bloqueos de
+          adquisición
+        locks_help: Eliminar el bloqueo de adquisición del proveedor
+        sessions_help: Eliminar el estado de sesión persistido del proveedor
       status:
         help: Mostrar el proveedor configurado y el estado de sesión
       whoami:
@@ -665,6 +673,8 @@ cli:
       certificate_file_required: El proveedor certificate requiere --file
       file_not_found: No se ha encontrado el archivo {file}
       not_configured: Configure un proveedor antes de iniciar sesión
+      reset_scope_required: 'Elija al menos un alcance de restablecimiento: --sessions,
+        --locks o --all.'
       unknown_profile_key: 'Clave de perfil desconocida: {key}'
       unknown_provider: 'Proveedor de autenticación desconocido: {provider}'
     headers:
