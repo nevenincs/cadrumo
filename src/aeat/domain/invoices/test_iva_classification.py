@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
+from decimal import Decimal
+from typing import cast
 
+import pytest
+from pydantic import ValidationError
+
+from aeat.domain.calculations.registry import IvaLedgerObservation
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate
 from aeat.domain.invoices._iva_classification import (
     IvaInvoiceClassification,
@@ -32,9 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido(
     iva_rate: IvaRate, expected_category: VATCategory, expected_kind: VATRateKind
 ) -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED
-    )
+    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.ISSUED)
     assert classification.category is expected_category
     assert classification.rate_kind is expected_kind
     assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO
@@ -46,9 +49,7 @@ def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido(
     [IvaRate.RATE_0, IvaRate.RATE_4, IvaRate.RATE_10, IvaRate.RATE_21, IvaRate.EXEMPT],
 )
 def test_classify_received_invoice_resolves_to_soportado(iva_rate: IvaRate) -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED
-    )
+    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=InvoiceKind.RECEIVED)
     assert classification.flow_direction is IvaFlowDirection.SOPORTADO
     assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE})
 
@@ -58,24 +59,18 @@ def test_classify_invoice_rejects_not_subject_rate() -> None:
     helper rejects them so callers explicitly handle them via
     VATCategory.OPERACION_NO_SUJETA."""
     with pytest.raises(ValueError, match="NOT_SUBJECT"):
-        classify_invoice_line_for_iva(
-            iva_rate=IvaRate.NOT_SUBJECT, invoice_kind=InvoiceKind.ISSUED
-        )
+        classify_invoice_line_for_iva(iva_rate=IvaRate.NOT_SUBJECT, invoice_kind=InvoiceKind.ISSUED)
 
 
 def test_classification_record_contributes_to_devengada_for_repercutido() -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED
-    )
+    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED)
     assert classification.contributes_to_devengada is True
     assert classification.contributes_to_deducible is False
     assert classification.is_reverse_charge is False
 
 
 def test_classification_record_contributes_to_deducible_for_soportado() -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.RECEIVED
-    )
+    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.RECEIVED)
     assert classification.contributes_to_devengada is False
     assert classification.contributes_to_deducible is True
     assert classification.is_reverse_charge is False
@@ -89,9 +84,7 @@ def test_classification_record_contributes_to_both_sides_for_autorepercutido() -
         category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         rate_kind=VATRateKind.GENERAL,
         flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
-        settlement_sides=frozenset(
-            {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}
-        ),
+        settlement_sides=frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
     )
     assert classification.contributes_to_devengada is True
     assert classification.contributes_to_deducible is True
@@ -114,10 +107,8 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
 
 
 def test_classification_record_is_frozen() -> None:
-    classification = classify_invoice_line_for_iva(
-        iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED
-    )
-    with pytest.raises(Exception):  # noqa: PT011 — pydantic frozen-mutation error
+    classification = classify_invoice_line_for_iva(iva_rate=IvaRate.RATE_21, invoice_kind=InvoiceKind.ISSUED)
+    with pytest.raises(ValidationError):
         classification.flow_direction = IvaFlowDirection.SOPORTADO  # type: ignore[misc]
 
 
@@ -153,6 +144,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
         base_amount=Decimal("1000"),
         iva_amount=Decimal("210"),
     )
+    assert isinstance(obs, IvaLedgerObservation)
     assert obs.ledger_id == "inv-001"
     assert obs.transaction_date == date(2025, 6, 15)
     assert obs.category is VATCategory.DOMESTIC_GENERAL_21
@@ -179,6 +171,22 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
     assert obs.flow_direction is IvaFlowDirection.SOPORTADO
     assert obs.category is VATCategory.DOMESTIC_REDUCED_10
     assert obs.rate_kind is VATRateKind.REDUCED
+
+
+def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
+    from datetime import date
+
+    from aeat.domain.invoices import invoice_line_to_iva_observation
+
+    with pytest.raises(ValidationError):
+        invoice_line_to_iva_observation(
+            invoice_id="inv-bad",
+            issued_at=date(2025, 6, 15),
+            invoice_kind=InvoiceKind.ISSUED,
+            iva_rate=IvaRate.RATE_21,
+            base_amount=cast(Decimal, "1000"),
+            iva_amount=cast(Decimal, "210"),
+        )
 
 
 def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end() -> None:

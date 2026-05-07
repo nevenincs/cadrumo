@@ -18,15 +18,17 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.identity import validate_spanish_tax_id
 from ..vat import EUMemberState, VATCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
+
+if TYPE_CHECKING:
+    from ._iva_classification import IvaInvoiceClassification
 from ._validators import (
-    EU_MEMBER_STATE_CODES,
     is_eu_member_state_code,
     validate_country_code,
     validate_vat_number,
@@ -386,7 +388,7 @@ class Invoice(BaseModel):
         """
         return self.counterparty_eu_member_state is not None
 
-    def iva_classification_for_line(self, line: "InvoiceLine") -> "IvaInvoiceClassification":
+    def iva_classification_for_line(self, line: InvoiceLine) -> IvaInvoiceClassification:
         """Build the canonical IVA classification record for ``line``.
 
         Routes through the standard-case helper for the most common
