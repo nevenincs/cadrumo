@@ -471,6 +471,10 @@ formulas = [
     "renta-2020-perdidas-patrimoniales-base-general-suma",
     "renta-2020-premios-ganancias-suma",
     "renta-2020-premios-importe-computable",
+    "renta-2020-ganancia-no-exenta-positiva-base-general",
+    "renta-2020-ganancia-reducida-base-general",
+    "renta-2020-ganancia-reducida-no-exenta-base-general",
+    "renta-2020-perdida-no-exenta-negativa-base-general",
 ]
 
 [[revisions."2020".constructs]]
@@ -525,6 +529,66 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-trabajo-especie-importe-integro"
@@ -2696,6 +2760,10 @@ formulas = [
     "renta-2021-perdidas-patrimoniales-base-general-suma",
     "renta-2021-premios-ganancias-suma",
     "renta-2021-premios-importe-computable",
+    "renta-2021-ganancia-no-exenta-positiva-base-general",
+    "renta-2021-ganancia-reducida-base-general",
+    "renta-2021-ganancia-reducida-no-exenta-base-general",
+    "renta-2021-perdida-no-exenta-negativa-base-general",
 ]
 
 [[revisions."2021".constructs]]
@@ -2750,6 +2818,66 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-trabajo-especie-importe-integro"
@@ -4934,6 +5062,12 @@ formulas = [
     "renta-2022-perdidas-patrimoniales-base-general-suma",
     "renta-2022-premios-ganancias-suma",
     "renta-2022-premios-importe-computable",
+    "renta-2022-criptomonedas-ganancia-positiva",
+    "renta-2022-criptomonedas-perdida-negativa",
+    "renta-2022-ganancia-no-exenta-positiva-base-general",
+    "renta-2022-ganancia-reducida-base-general",
+    "renta-2022-ganancia-reducida-no-exenta-base-general",
+    "renta-2022-perdida-no-exenta-negativa-base-general",
 ]
 
 [[revisions."2022".constructs]]
@@ -4988,6 +5122,96 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-criptomonedas-ganancia-positiva"
+target = "1809"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-criptomonedas-perdida-negativa"
+target = "1807"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-trabajo-especie-importe-integro"
@@ -7312,6 +7536,13 @@ formulas = [
     "renta-2023-perdidas-patrimoniales-base-general-suma",
     "renta-2023-premios-ganancias-suma",
     "renta-2023-premios-importe-computable",
+    "renta-2023-criptomonedas-ganancia-positiva",
+    "renta-2023-criptomonedas-perdida-negativa",
+    "renta-2023-ganancia-no-exenta-positiva-base-general",
+    "renta-2023-ganancia-reducida-base-general",
+    "renta-2023-ganancia-reducida-no-exenta-base-general",
+    "renta-2023-perdida-no-exenta-negativa-base-general",
+    "renta-2023-vehiculo-valor-adquisicion-suma",
 ]
 
 [[revisions."2023".constructs]]
@@ -7366,6 +7597,111 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-vehiculo-valor-adquisicion-suma"
+target = "1919"
+expression = { op = "sum", args = [
+    { casilla = "1920" },
+    { casilla = "1921" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de adquisición"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-criptomonedas-ganancia-positiva"
+target = "1809"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-criptomonedas-perdida-negativa"
+target = "1807"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-trabajo-especie-importe-integro"
@@ -9703,6 +10039,13 @@ formulas = [
     "renta-2024-perdidas-patrimoniales-base-general-suma",
     "renta-2024-premios-ganancias-suma",
     "renta-2024-premios-importe-computable",
+    "renta-2024-criptomonedas-ganancia-positiva",
+    "renta-2024-criptomonedas-perdida-negativa",
+    "renta-2024-ganancia-no-exenta-positiva-base-general",
+    "renta-2024-ganancia-reducida-base-general",
+    "renta-2024-ganancia-reducida-no-exenta-base-general",
+    "renta-2024-perdida-no-exenta-negativa-base-general",
+    "renta-2024-vehiculo-valor-adquisicion-suma",
 ]
 
 [[revisions."2024".constructs]]
@@ -9757,6 +10100,111 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-vehiculo-valor-adquisicion-suma"
+target = "1919"
+expression = { op = "sum", args = [
+    { casilla = "1920" },
+    { casilla = "1921" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de adquisición"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-criptomonedas-ganancia-positiva"
+target = "1809"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-criptomonedas-perdida-negativa"
+target = "1807"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-trabajo-especie-importe-integro"
@@ -15319,6 +15767,15 @@ formulas = [
     "renta-2025-perdidas-patrimoniales-base-general-suma",
     "renta-2025-premios-ganancias-suma",
     "renta-2025-premios-importe-computable",
+    "renta-2025-atencion-percibida-importe-total",
+    "renta-2025-criptomonedas-ganancia-positiva",
+    "renta-2025-criptomonedas-ganancia-reducida-no-exenta",
+    "renta-2025-criptomonedas-perdida-negativa",
+    "renta-2025-ganancia-no-exenta-positiva-base-general",
+    "renta-2025-ganancia-reducida-base-general",
+    "renta-2025-ganancia-reducida-no-exenta-base-general",
+    "renta-2025-perdida-no-exenta-negativa-base-general",
+    "renta-2025-vehiculo-valor-adquisicion-suma",
 ]
 
 [[revisions."2025".constructs]]
@@ -15351,6 +15808,141 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-ganancia-reducida-no-exenta-base-general"
+target = "1649"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1648" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-ganancia-reducida-base-general"
+target = "1653"
+expression = { op = "subtract", args = [
+    { casilla = "1645" },
+    { casilla = "1652" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-criptomonedas-ganancia-reducida-no-exenta"
+target = "2232"
+expression = { op = "subtract", args = [
+    { casilla = "2230" },
+    { casilla = "2231" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "reducción"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-vehiculo-valor-adquisicion-suma"
+target = "1919"
+expression = { op = "sum", args = [
+    { casilla = "1920" },
+    { casilla = "1921" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de adquisición"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atencion-percibida-importe-total"
+target = "2211"
+expression = { op = "sum", args = [
+    { casilla = "2207" },
+    { casilla = "2210" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-ganancia-no-exenta-positiva-base-general"
+target = "1640"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-perdida-no-exenta-negativa-base-general"
+target = "1638"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-criptomonedas-ganancia-positiva"
+target = "1809"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-criptomonedas-perdida-negativa"
+target = "1807"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1804" }, { casilla = "1806" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-cuota-liquida-incrementada-total"

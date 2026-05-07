@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 103,
-      "casillas_consumed_by_formulas": 294,
-      "casillas_declared_but_never_read": 1215,
+      "computed_targets": 107,
+      "casillas_consumed_by_formulas": 299,
+      "casillas_declared_but_never_read": 1208,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 103,
-      "casillas_consumed_by_formulas": 295,
-      "casillas_declared_but_never_read": 1376,
+      "computed_targets": 107,
+      "casillas_consumed_by_formulas": 300,
+      "casillas_declared_but_never_read": 1369,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 112,
-      "casillas_consumed_by_formulas": 318,
-      "casillas_declared_but_never_read": 1508,
+      "computed_targets": 118,
+      "casillas_consumed_by_formulas": 323,
+      "casillas_declared_but_never_read": 1499,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 112,
-      "casillas_consumed_by_formulas": 321,
-      "casillas_declared_but_never_read": 1582,
+      "computed_targets": 119,
+      "casillas_consumed_by_formulas": 328,
+      "casillas_declared_but_never_read": 1570,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 112,
-      "casillas_consumed_by_formulas": 321,
-      "casillas_declared_but_never_read": 1715,
+      "computed_targets": 119,
+      "casillas_consumed_by_formulas": 328,
+      "casillas_declared_but_never_read": 1703,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 119,
-      "casillas_consumed_by_formulas": 369,
-      "casillas_declared_but_never_read": 1841,
+      "computed_targets": 128,
+      "casillas_consumed_by_formulas": 380,
+      "casillas_declared_but_never_read": 1823,
       "bindings_consumed_count": 1
     }
   },
@@ -130,10 +130,10 @@
     "ganancias_capital_mobiliario_ahorro": {
       "label": "G/P y capital mobiliario en base ahorro",
       "total_casillas": 219,
-      "computed": 10,
+      "computed": 17,
       "bound": 0,
       "manual": 219,
-      "coverage_pct": 4.6
+      "coverage_pct": 7.8
     },
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
@@ -178,10 +178,10 @@
     "regimenes_atribucion": {
       "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
       "total_casillas": 312,
-      "computed": 0,
+      "computed": 2,
       "bound": 0,
       "manual": 312,
-      "coverage_pct": 0.0
+      "coverage_pct": 0.6
     },
     "uncategorised": {
       "label": "Uncategorised (section[0] not anchor-mapped)",
@@ -199,15 +199,15 @@
     "top_cited": [
       [
         "ley-35-2006:art-33",
-        240
+        277
       ],
       [
         "ley-35-2006:art-34",
-        240
+        277
       ],
       [
         "ley-35-2006:art-37",
-        240
+        277
       ],
       [
         "orden-hac-277-2026:art-3",
