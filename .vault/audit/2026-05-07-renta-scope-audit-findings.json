@@ -1,0 +1,341 @@
+{
+  "audit_date": "2026-05-07",
+  "modelo": "100",
+  "layer1": {
+    "2020": {
+      "total_casillas": 1531,
+      "input_kind": {
+        "manual": 1531
+      },
+      "computed_targets": 51,
+      "casillas_consumed_by_formulas": 186,
+      "casillas_declared_but_never_read": 1335,
+      "bindings_consumed_count": 1
+    },
+    "2021": {
+      "total_casillas": 1693,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1689
+      },
+      "computed_targets": 51,
+      "casillas_consumed_by_formulas": 187,
+      "casillas_declared_but_never_read": 1496,
+      "bindings_consumed_count": 1
+    },
+    "2022": {
+      "total_casillas": 1852,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1848
+      },
+      "computed_targets": 51,
+      "casillas_consumed_by_formulas": 192,
+      "casillas_declared_but_never_read": 1650,
+      "bindings_consumed_count": 1
+    },
+    "2023": {
+      "total_casillas": 1929,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1925
+      },
+      "computed_targets": 51,
+      "casillas_consumed_by_formulas": 195,
+      "casillas_declared_but_never_read": 1724,
+      "bindings_consumed_count": 1
+    },
+    "2024": {
+      "total_casillas": 2062,
+      "input_kind": {
+        "informational": 4,
+        "manual": 2058
+      },
+      "computed_targets": 51,
+      "casillas_consumed_by_formulas": 195,
+      "casillas_declared_but_never_read": 1857,
+      "bindings_consumed_count": 1
+    },
+    "2025": {
+      "total_casillas": 2235,
+      "input_kind": {
+        "bound": 30,
+        "manual": 2167,
+        "computed": 35,
+        "informational": 3
+      },
+      "computed_targets": 58,
+      "casillas_consumed_by_formulas": 241,
+      "casillas_declared_but_never_read": 1985,
+      "bindings_consumed_count": 1
+    }
+  },
+  "layer3": {
+    "envelope": {
+      "label": "Declarante envelope (NIF, CCAA, tributación)",
+      "total_casillas": 30,
+      "computed": 0,
+      "bound": 30,
+      "manual": 0,
+      "coverage_pct": 100.0
+    },
+    "trabajo": {
+      "label": "Rendimientos del trabajo",
+      "total_casillas": 32,
+      "computed": 6,
+      "bound": 0,
+      "manual": 26,
+      "coverage_pct": 18.8
+    },
+    "capital_mobiliario": {
+      "label": "Rendimientos del capital mobiliario",
+      "total_casillas": 29,
+      "computed": 8,
+      "bound": 0,
+      "manual": 21,
+      "coverage_pct": 27.6
+    },
+    "capital_inmobiliario": {
+      "label": "Rendimientos del capital inmobiliario",
+      "total_casillas": 154,
+      "computed": 4,
+      "bound": 0,
+      "manual": 150,
+      "coverage_pct": 2.6
+    },
+    "actividades_economicas_directa": {
+      "label": "Actividades económicas — estimación directa",
+      "total_casillas": 64,
+      "computed": 10,
+      "bound": 0,
+      "manual": 51,
+      "coverage_pct": 15.6
+    },
+    "actividades_economicas_objetiva": {
+      "label": "Actividades económicas — estimación objetiva (módulos)",
+      "total_casillas": 113,
+      "computed": 0,
+      "bound": 0,
+      "manual": 113,
+      "coverage_pct": 0.0
+    },
+    "regimenes_especiales": {
+      "label": "Regímenes especiales / atribución de rentas",
+      "total_casillas": 85,
+      "computed": 0,
+      "bound": 0,
+      "manual": 85,
+      "coverage_pct": 0.0
+    },
+    "ganancias_capital_mobiliario_ahorro": {
+      "label": "G/P y capital mobiliario en base ahorro",
+      "total_casillas": 219,
+      "computed": 0,
+      "bound": 0,
+      "manual": 219,
+      "coverage_pct": 0.0
+    },
+    "base_y_cuota": {
+      "label": "Base imponible/liquidable y cuota chain",
+      "total_casillas": 189,
+      "computed": 23,
+      "bound": 0,
+      "manual": 185,
+      "coverage_pct": 12.2
+    },
+    "anexo_a_estatal": {
+      "label": "Anexo A — deducciones generales (vivienda, donativos, cultural)",
+      "total_casillas": 173,
+      "computed": 0,
+      "bound": 0,
+      "manual": 173,
+      "coverage_pct": 0.0
+    },
+    "anexo_b_autonomicas": {
+      "label": "Anexo B — deducciones autonómicas (17 CCAA)",
+      "total_casillas": 482,
+      "computed": 0,
+      "bound": 0,
+      "manual": 482,
+      "coverage_pct": 0.0
+    },
+    "anexo_c_canarias": {
+      "label": "Anexo C — Canarias (RIC, ZEC)",
+      "total_casillas": 179,
+      "computed": 0,
+      "bound": 0,
+      "manual": 179,
+      "coverage_pct": 0.0
+    },
+    "retenciones_pagos_a_cuenta": {
+      "label": "Retenciones e ingresos a cuenta + pagos fraccionados",
+      "total_casillas": 27,
+      "computed": 3,
+      "bound": 0,
+      "manual": 24,
+      "coverage_pct": 11.1
+    },
+    "regimenes_atribucion": {
+      "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
+      "total_casillas": 312,
+      "computed": 0,
+      "bound": 0,
+      "manual": 312,
+      "coverage_pct": 0.0
+    },
+    "uncategorised": {
+      "label": "Uncategorised (section[0] not anchor-mapped)",
+      "total_casillas": 147,
+      "computed": 4,
+      "bound": 0,
+      "manual": 147
+    }
+  },
+  "layer4": {
+    "catalogued_count": 113,
+    "cited_count": 32,
+    "catalogued_but_uncited_count": 81,
+    "cited_but_uncatalogued_count": 0,
+    "top_cited": [
+      [
+        "orden-hac-277-2026:art-3",
+        98
+      ],
+      [
+        "ley-35-2006:art-30",
+        60
+      ],
+      [
+        "ley-35-2006:art-25",
+        54
+      ],
+      [
+        "ley-35-2006:art-28",
+        54
+      ],
+      [
+        "ley-35-2006:art-50",
+        54
+      ],
+      [
+        "ley-35-2006:art-26",
+        36
+      ],
+      [
+        "ley-35-2006:art-56",
+        36
+      ],
+      [
+        "ley-35-2006:art-22",
+        30
+      ],
+      [
+        "ley-35-2006:art-19",
+        24
+      ],
+      [
+        "ley-35-2006:art-74",
+        24
+      ],
+      [
+        "ley-35-2006:art-49",
+        24
+      ],
+      [
+        "ley-35-2006:art-62",
+        24
+      ],
+      [
+        "ley-35-2006:art-99",
+        23
+      ],
+      [
+        "rd-439-2007:art-30",
+        23
+      ],
+      [
+        "rd-439-2007:art-109",
+        20
+      ]
+    ],
+    "uncited_articles": [
+      "ley-27-2014:art-124",
+      "ley-27-2014:art-18",
+      "ley-27-2014:art-40",
+      "ley-27-2014:art-41",
+      "ley-35-2006:art-31",
+      "ley-35-2006:art-68.4",
+      "ley-35-2006:art-85",
+      "ley-37-1992:art-161",
+      "ley-37-1992:art-163-octiesdecies",
+      "ley-37-1992:art-163-quinvicies",
+      "ley-37-1992:art-163-unvicies",
+      "ley-37-1992:art-84",
+      "ley-37-1992:art-88",
+      "ley-37-1992:art-90",
+      "ley-37-1992:art-91",
+      "ley-37-1992:art-92",
+      "ley-58-2003:da-18",
+      "orden-eha-3012-2008:art-1",
+      "orden-eha-3012-2008:art-10",
+      "orden-eha-3111-2009:art-1"
+    ],
+    "uncatalogued_articles": []
+  },
+  "layer7": {
+    "A1_employee_only": {
+      "label": "Employee only (single income, no deductions)",
+      "covered": true,
+      "matching_scenarios": [
+        "modelo-100-2025-employee-default-minimo"
+      ]
+    },
+    "A2_employee_capital_savings": {
+      "label": "Employee + capital mobiliario savings interest",
+      "covered": true,
+      "matching_scenarios": [
+        "modelo-100-2025-real-estate-capital-rollup"
+      ]
+    },
+    "A3_employee_property_rental": {
+      "label": "Employee + property rental income",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B1_autonomo_directa_normal": {
+      "label": "Autónomo direct estimation normal mode",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B2_autonomo_directa_simplified": {
+      "label": "Autónomo direct estimation simplified mode",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B3_autonomo_objetiva": {
+      "label": "Autónomo objective estimation (modules)",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "C1_family_joint": {
+      "label": "Family unit joint declaration",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "C2_family_descendientes": {
+      "label": "Family with descendants / ascendants / discapacidad",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "D1_capital_gains_transactions": {
+      "label": "Capital gains transactions (sale of fund / property)",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "E1_ccaa_autonomic_deduction": {
+      "label": "CCAA-specific autonomic deduction",
+      "covered": false,
+      "matching_scenarios": []
+    }
+  }
+}
