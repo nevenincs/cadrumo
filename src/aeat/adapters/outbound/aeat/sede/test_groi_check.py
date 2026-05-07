@@ -160,3 +160,43 @@ def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
 
     body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO con esos datos"
     assert extract_verdict_from_response_text(body_text) == "invalid"
+
+
+# ---------------------------------------------------------------------------
+# Parametrised regression suite over committed live-AEAT response samples.
+# Each fixture file under corpus/aeat_official/groi_response_samples/ encodes
+# the expected verdict in its filename prefix (`valid_`, `invalid_`, or
+# `unknown_`). The fixture text is verbatim-captured from real AEAT — when
+# AEAT changes the response phrasing, this suite breaks loudly.
+# ---------------------------------------------------------------------------
+
+_GROI_RESPONSE_SAMPLES_DIR = (
+    __import__("aeat.core.paths", fromlist=["PROJECT_ROOT"]).PROJECT_ROOT
+    / "corpus"
+    / "aeat_official"
+    / "groi_response_samples"
+)
+
+
+def _discover_groi_response_samples() -> list[tuple[str, str]]:
+    """Yield (expected_verdict, fixture_path_str) for every .txt sample on disk."""
+
+    samples: list[tuple[str, str]] = []
+    if not _GROI_RESPONSE_SAMPLES_DIR.is_dir():
+        return samples
+    for path in sorted(_GROI_RESPONSE_SAMPLES_DIR.glob("*.txt")):
+        prefix = path.stem.split("_", 1)[0]
+        if prefix not in {"valid", "invalid", "unknown"}:
+            continue
+        samples.append((prefix, str(path)))
+    return samples
+
+
+@pytest.mark.parametrize(("expected_verdict", "fixture_path"), _discover_groi_response_samples())
+def test_groi_response_samples_parse_to_expected_verdict(expected_verdict: str, fixture_path: str) -> None:
+    """Verbatim live-AEAT responses parse to the verdict their filename declares."""
+
+    from pathlib import Path
+
+    body_text = Path(fixture_path).read_text(encoding="utf-8")
+    assert extract_verdict_from_response_text(body_text) == expected_verdict
