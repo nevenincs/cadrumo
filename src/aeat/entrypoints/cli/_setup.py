@@ -293,12 +293,12 @@ def auth_status(ctx: typer.Context) -> None:
     )
 
 
-@auth_app.command("reset", help="Reset persisted auth sessions and/or acquisition locks.")
+@auth_app.command("reset", help=tr("cli.setup.auth.reset.help"))
 def auth_reset(
     ctx: typer.Context,
-    sessions: bool = typer.Option(False, "--sessions", help="Remove persisted auth session state for the provider."),
-    locks: bool = typer.Option(False, "--locks", help="Remove the provider acquisition lock."),
-    all_: bool = typer.Option(False, "--all", help="Remove both persisted auth session state and acquisition lock."),
+    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.setup.auth.reset.sessions_help")),
+    locks: bool = typer.Option(False, "--locks", help=tr("cli.setup.auth.reset.locks_help")),
+    all_: bool = typer.Option(False, "--all", help=tr("cli.setup.auth.reset.all_help")),
 ) -> None:
     """Manually clear local auth recovery state after a crash or broken login attempt."""
 
@@ -312,7 +312,7 @@ def auth_reset(
     reset_sessions = sessions or all_
     reset_locks = locks or all_
     if not reset_sessions and not reset_locks:
-        raise _bad("Choose at least one reset scope: --sessions, --locks, or --all.")
+        raise _bad(tr("cli.setup.errors.reset_scope_required"))
 
     record = current.active_profile_record()
     profile_tax_id = record.values.get("tax.id") if record is not None else None

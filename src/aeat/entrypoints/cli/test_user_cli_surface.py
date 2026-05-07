@@ -236,6 +236,26 @@ def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.Mo
     assert unsupported.exit_code != 0
 
 
+def test_setup_auth_reset_help_uses_locale_backed_spanish_copy() -> None:
+    result = _invoke(["setup", "auth", "reset", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "Restablecer sesiones de autenticación persistidas" in result.output
+    assert "Remove persisted" not in result.output
+    assert "--sessions" in result.output
+    assert "--locks" in result.output
+    assert "--all" in result.output
+
+
+def test_invoice_import_kind_help_lists_accepted_cli_values() -> None:
+    result = _invoke(["app", "invoice", "import", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "issued" in result.output
+    assert "received" in result.output
+    assert "emitidas o recibidas" not in result.output
+
+
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
     statement = tmp_path / "n26-q1.csv"

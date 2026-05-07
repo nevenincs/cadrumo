@@ -430,7 +430,8 @@ cli:
     import:
       dry_run_help: Futtatás próba üzemmódban (mentés nélkül)
       help: Számlák importálása külső forrásokból (pl. PDF, Excel)
-      kind_help: Importálandó számlák típusa (kiállított vagy befogadott)
+      kind_help: Importálandó számlák típusa. Elfogadott értékek issued vagy
+        received
       path_help: A számlákat tartalmazó fájl vagy könyvtár útvonala
     labels:
       base: Adóalap
@@ -663,6 +664,12 @@ cli:
         help: A helyi hitelesítési munkamenet lezárása
       providers:
         help: Elérhető hitelesítési szolgáltatók listázása
+      reset:
+        all_help: A mentett munkamenetállapot és a megszerzési zárolás eltávolítása
+        help: Mentett hitelesítési munkamenetek vagy megszerzési zárolások
+          visszaállítása
+        locks_help: A szolgáltató megszerzési zárolásának eltávolítása
+        sessions_help: A szolgáltató mentett munkamenetállapotának eltávolítása
       status:
         help: Beállított szolgáltató és munkamenet állapotának megjelenítése
       whoami:
@@ -671,6 +678,8 @@ cli:
       certificate_file_required: A certificate szolgáltatóhoz --file szükséges
       file_not_found: 'A fájl nem található: {file}'
       not_configured: Bejelentkezés előtt állítson be szolgáltatót
+      reset_scope_required: 'Válasszon legalább egy visszaállítási hatókört: --sessions,
+        --locks vagy --all.'
       unknown_profile_key: 'Ismeretlen profilkulcs: {key}'
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {provider}'
     headers:

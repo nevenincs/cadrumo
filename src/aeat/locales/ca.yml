@@ -419,7 +419,7 @@ cli:
     import:
       dry_run_help: Executar en mode de prova (sense desar canvis)
       help: Importar factures des de fonts externes (p. ex., PDF, Excel)
-      kind_help: Tipus de factures a importar (emeses o rebudes)
+      kind_help: Tipus de factures a importar. Valors acceptats issued o received
       path_help: Ruta a l'arxiu o directori amb les factures
     labels:
       base: Base Imposable
@@ -651,6 +651,13 @@ cli:
         help: Tancar la sessió local d'autenticació
       providers:
         help: Llistar proveïdors d'autenticació disponibles
+      reset:
+        all_help: Eliminar tant l'estat de sessió persistit com el bloqueig
+          d'adquisició
+        help: Restablir sessions d'autenticació persistides o bloquejos
+          d'adquisició
+        locks_help: Eliminar el bloqueig d'adquisició del proveïdor
+        sessions_help: Eliminar l'estat de sessió persistit del proveïdor
       status:
         help: Mostrar el proveïdor configurat i l'estat de sessió
       whoami:
@@ -659,6 +666,8 @@ cli:
       certificate_file_required: El proveïdor certificate requereix --file
       file_not_found: No s'ha trobat el fitxer {file}
       not_configured: Configureu un proveïdor abans d'iniciar sessió
+      reset_scope_required: 'Trieu almenys un abast de restabliment: --sessions,
+        --locks o --all.'
       unknown_profile_key: 'Clau de perfil desconeguda: {key}'
       unknown_provider: 'Proveïdor d''autenticació desconegut: {provider}'
     headers:
