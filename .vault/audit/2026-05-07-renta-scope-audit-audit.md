@@ -81,12 +81,14 @@ formula coverage is sparse outside the cuota spine.
 | 2024 | 2062 | 51 | 0 | 2058 | 4 | 124 | 1933 |
 | 2025 | 2235 | 58 | 30 | 2167 | 3 | 144 | 2052 |
 
-**Bottom line — 2025**: 2,235 casillas total. 58 (2.6%) computed via
-formula, 30 (1.3%) bound to taxpayer profile, 2,167 (97%) manual input
-that the taxpayer or extractor must supply. 2,052 casillas are never
-referenced by any registered formula — they exist for AEAT form
-completeness but the registry's calculation engine does not consume
-them.
+**Bottom line — 2025 (refreshed 2026-05-07 after MM-4 sub-slices)**:
+2,235 casillas total. 80 (3.6%) computed via formula, 30 (1.3%) bound
+to taxpayer profile, 2,125 (95%) manual input that the taxpayer or
+extractor must supply.
+
+Movement since baseline: 58 → 80 computed casillas (+22 across the
+4 G/P aggregator slice and 18 G/P per-transaction breakdown slice).
+G/P + capital mobiliario base ahorro mini-model: 0% → 2.3%.
 
 ### Layer 3 — Mini-model coverage scorecard (ejercicio 2025)
 
