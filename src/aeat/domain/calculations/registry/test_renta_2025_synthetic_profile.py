@@ -389,11 +389,11 @@ _ALL_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025
 # input-gap filter so the multi-year scenario does not reference casillas
 # the older revision schema does not declare.
 _REVISION_INPUT_GAPS: dict[str, frozenset[str]] = {
-    "2020": frozenset({"0568", "0569", "0544", "0567", "0584"}),
-    "2021": frozenset({"0568", "0569", "0544", "0584"}),
-    "2022": frozenset(),
-    "2023": frozenset(),
-    "2024": frozenset(),
+    "2020": frozenset({"0568", "0569", "0544", "0567", "0584", "0420", "0421", "0424", "0425"}),
+    "2021": frozenset({"0568", "0569", "0544", "0584", "0420", "0421", "0424", "0425"}),
+    "2022": frozenset({"0420", "0421", "0424", "0425"}),
+    "2023": frozenset({"0420", "0421", "0424", "0425"}),
+    "2024": frozenset({"0420", "0421", "0424", "0425"}),
     "2025": frozenset(),
 }
 

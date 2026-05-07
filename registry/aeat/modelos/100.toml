@@ -963,6 +963,78 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
 
 [[revisions."2020".formulas]]
+id = "renta-2020-ganancias-patrimoniales-base-general-saldo-positivo"
+target = "0420"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0418" },
+        { casilla = "0419" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancias-patrimoniales-base-general-saldo-negativo"
+target = "0421"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0419" },
+        { casilla = "0418" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+target = "0424"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0422" },
+        { casilla = "0423" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible del ahorro"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0423" },
+        { casilla = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]
+
+[[revisions."2020".formulas]]
 id = "renta-2020-saldo-neto-rendimientos-base-imponible-general"
 target = "0432"
 expression = { op = "sum", args = [
@@ -2117,6 +2189,78 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2021".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancias-patrimoniales-base-general-saldo-positivo"
+target = "0420"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0418" },
+        { casilla = "0419" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancias-patrimoniales-base-general-saldo-negativo"
+target = "0421"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0419" },
+        { casilla = "0418" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+target = "0424"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0422" },
+        { casilla = "0423" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible del ahorro"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0423" },
+        { casilla = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-saldo-neto-rendimientos-base-imponible-general"
@@ -3275,6 +3419,78 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancias-patrimoniales-base-general-saldo-positivo"
+target = "0420"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0418" },
+        { casilla = "0419" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancias-patrimoniales-base-general-saldo-negativo"
+target = "0421"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0419" },
+        { casilla = "0418" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+target = "0424"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0422" },
+        { casilla = "0423" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible del ahorro"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0423" },
+        { casilla = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-saldo-neto-rendimientos-base-imponible-general"
@@ -4442,6 +4658,78 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2023".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancias-patrimoniales-base-general-saldo-positivo"
+target = "0420"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0418" },
+        { casilla = "0419" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancias-patrimoniales-base-general-saldo-negativo"
+target = "0421"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0419" },
+        { casilla = "0418" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+target = "0424"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0422" },
+        { casilla = "0423" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible del ahorro"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0423" },
+        { casilla = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-saldo-neto-rendimientos-base-imponible-general"
@@ -5617,6 +5905,78 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2024".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancias-patrimoniales-base-general-saldo-positivo"
+target = "0420"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0418" },
+        { casilla = "0419" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancias-patrimoniales-base-general-saldo-negativo"
+target = "0421"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0419" },
+        { casilla = "0418" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+target = "0424"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0422" },
+        { casilla = "0423" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias", "base imponible del ahorro"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla = "0423" },
+        { casilla = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-saldo-neto-rendimientos-base-imponible-general"
