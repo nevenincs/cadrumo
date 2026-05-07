@@ -23,7 +23,7 @@ sede entry subdomain and the www1 form-servlet subdomain.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Mapping
 from re import compile
 from typing import Any, Literal, cast
 from unicodedata import category, normalize
@@ -42,9 +42,16 @@ from .....domain.calculations.registry._errors import RegistryValidationError
 from .....domain.calculations.registry._remote_state_guard import RemoteOperation
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
+from ._browser_stage import build_playwright_stage_runner
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
+_playwright_stage = build_playwright_stage_runner(
+    surface_label="NIF-IVA",
+    log_prefix="nif iva",
+    shape_suggestion="Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape.",
+    logger=logger,
+)
 
 # Default timeout per Playwright stage (milliseconds). Each navigation +
 # form-fill + result-scrape stage gets this budget; the live driver runs
@@ -240,6 +247,28 @@ async def collect_nif_iva_check_observations(
             description="NIF-IVA form servlet network idle",
             timeout_ms=timeout_ms,
         )
+
+        # AEAT redirects unauthenticated requests to /Sede/errores/erro4033.html.
+        # The standard country/VAT selectors won't be present on that page; if
+        # we proceed they'll time out and surface as a misleading shape-change
+        # error. Detect the redirect explicitly and surface auth-gate context.
+        if is_aeat_auth_gate_redirect(page.url):
+            raise SedeNavigationError(
+                "NIF-IVA form requires AEAT authentication; landed on AEAT 4033 page",
+                failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+                context={
+                    "stage": "post-form-navigation",
+                    "landing_url": page.url,
+                    "expected_url": str(AEAT_NIF_IVA_VERIFICATION_URL),
+                },
+                suggestion=(
+                    "AEAT's VIES proxy form is gated by cl@ve / certificate "
+                    "auth. Either drive the oracle through an authenticated "
+                    "BrowserSession or pivot the oracle target to the EU "
+                    "Commission's public VIES service at ec.europa.eu."
+                ),
+            )
+
         await _open_nif_iva_form(page, timeout_ms=timeout_ms)
 
         observations: list[NifIvaCheckObservation] = []
@@ -311,6 +340,24 @@ async def _check_single_nif(
         timeout_ms=timeout_ms,
     )
     return extract_verdict_from_response_text(body_text)
+
+
+def is_aeat_auth_gate_redirect(current_url: str) -> bool:
+    """Return True when the live page URL points at AEAT's 4033 / 403 error page.
+
+    AEAT redirects unauthenticated requests to the form servlet to
+    ``/Sede/errores/erro4033.html`` (HTTP 200 OK landing on a 403-titled
+    page). The detector keys off the ``erro4033`` path segment and the
+    sede host suffix so it stays specific to that exact failure mode.
+    Other AEAT errors (4032, 4001, etc.) are intentionally not matched.
+    """
+
+    if not current_url:
+        return False
+    lowered = current_url.lower()
+    if "agenciatributaria.gob.es" not in lowered:
+        return False
+    return "erro4033" in lowered
 
 
 def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
@@ -459,61 +506,6 @@ def _normalize_response_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
 
 
-async def _playwright_stage[T](
-    operation: Awaitable[T],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-    timeout_is_shape_change: bool = False,
-) -> T:
-    try:
-        return await operation
-    except PlaywrightTimeoutError as exc:
-        if timeout_is_shape_change:
-            logger.error(
-                "nif iva expected element missing failure_mode=%s stage=%s description=%s timeout_ms=%s",
-                SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                stage,
-                description,
-                timeout_ms,
-                exc_info=True,
-            )
-            raise SedeParseError(
-                f"NIF-IVA expected page element was not visible: {description}",
-                failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-                suggestion="Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape.",
-            ) from exc
-        logger.error(
-            "nif iva playwright stage timed out failure_mode=%s stage=%s description=%s timeout_ms=%s",
-            SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            stage,
-            description,
-            timeout_ms,
-            exc_info=True,
-        )
-        raise SedeNavigationError(
-            f"NIF-IVA browser stage timed out: {description}",
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context={"stage": stage, "description": description, "timeout_ms": timeout_ms},
-        ) from exc
-    except PlaywrightError as exc:
-        logger.error(
-            "nif iva playwright stage failed failure_mode=%s stage=%s description=%s exc_type=%s",
-            SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            stage,
-            description,
-            type(exc).__name__,
-            exc_info=True,
-        )
-        raise SedeNavigationError(
-            f"NIF-IVA browser stage failed: {description}",
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context={"stage": stage, "description": description, "cause_type": type(exc).__name__},
-        ) from exc
-
-
 def _registry_failure_message(exc: BaseException) -> str:
     context = getattr(exc, "context", None)
     if not isinstance(context, Mapping) or not context:
@@ -535,4 +527,5 @@ __all__ = [
     "NifIvaCheckSedeDriver",
     "collect_nif_iva_check_observations",
     "extract_verdict_from_response_text",
+    "is_aeat_auth_gate_redirect",
 ]
