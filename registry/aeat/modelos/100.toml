@@ -368,6 +368,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -393,6 +394,10 @@ formulas = [
     "renta-2020-deduccion-economia-social-passthrough",
     "renta-2020-deduccion-incentivos-inversion-empresarial-total",
     "renta-2020-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2020-deduccion-donativos-autonomica-50-porciento",
+    "renta-2020-deduccion-donativos-estatal-50-porciento",
+    "renta-2020-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2020-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2020".constructs]]
@@ -560,6 +565,78 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-capital-mobiliario-saldo-pendiente-base-ahorro"
@@ -3054,6 +3131,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -3080,6 +3158,11 @@ formulas = [
     "renta-2021-deduccion-economia-social-passthrough",
     "renta-2021-deduccion-incentivos-inversion-empresarial-total",
     "renta-2021-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2021-deduccion-donativos-autonomica-50-porciento",
+    "renta-2021-deduccion-donativos-estatal-50-porciento",
+    "renta-2021-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2021-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2021-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2021".constructs]]
@@ -3247,6 +3330,94 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-eficiencia-energetica-vivienda-suma"
+target = "0567"
+expression = { op = "sum", args = [
+    { casilla = "1662" },
+    { casilla = "1670" },
+    { casilla = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-capital-mobiliario-saldo-pendiente-base-ahorro"
@@ -5762,6 +5933,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -5788,6 +5960,11 @@ formulas = [
     "renta-2022-deduccion-economia-social-passthrough",
     "renta-2022-deduccion-incentivos-inversion-empresarial-total",
     "renta-2022-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2022-deduccion-donativos-autonomica-50-porciento",
+    "renta-2022-deduccion-donativos-estatal-50-porciento",
+    "renta-2022-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2022-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2022-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2022".constructs]]
@@ -5972,6 +6149,94 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-eficiencia-energetica-vivienda-suma"
+target = "0567"
+expression = { op = "sum", args = [
+    { casilla = "1662" },
+    { casilla = "1670" },
+    { casilla = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-capital-mobiliario-saldo-pendiente-base-ahorro"
@@ -8720,6 +8985,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -8746,6 +9012,11 @@ formulas = [
     "renta-2023-deduccion-economia-social-passthrough",
     "renta-2023-deduccion-incentivos-inversion-empresarial-total",
     "renta-2023-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2023-deduccion-donativos-autonomica-50-porciento",
+    "renta-2023-deduccion-donativos-estatal-50-porciento",
+    "renta-2023-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2023-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2023-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2023".constructs]]
@@ -8931,6 +9202,94 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-eficiencia-energetica-vivienda-suma"
+target = "0567"
+expression = { op = "sum", args = [
+    { casilla = "1662" },
+    { casilla = "1670" },
+    { casilla = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-capital-mobiliario-saldo-pendiente-base-ahorro"
@@ -11716,6 +12075,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -11742,6 +12102,11 @@ formulas = [
     "renta-2024-deduccion-economia-social-passthrough",
     "renta-2024-deduccion-incentivos-inversion-empresarial-total",
     "renta-2024-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2024-deduccion-donativos-autonomica-50-porciento",
+    "renta-2024-deduccion-donativos-estatal-50-porciento",
+    "renta-2024-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2024-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2024-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2024".constructs]]
@@ -11927,6 +12292,94 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-eficiencia-energetica-vivienda-suma"
+target = "0567"
+expression = { op = "sum", args = [
+    { casilla = "1662" },
+    { casilla = "1670" },
+    { casilla = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-capital-mobiliario-saldo-pendiente-base-ahorro"
@@ -17944,6 +18397,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
     "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
@@ -17970,6 +18424,11 @@ formulas = [
     "renta-2025-deduccion-economia-social-passthrough",
     "renta-2025-deduccion-incentivos-inversion-empresarial-total",
     "renta-2025-unidad-familiar-cuota-liquida-ue-formula",
+    "renta-2025-deduccion-donativos-autonomica-50-porciento",
+    "renta-2025-deduccion-donativos-estatal-50-porciento",
+    "renta-2025-deduccion-eficiencia-energetica-vivienda-suma",
+    "renta-2025-deducciones-actividades-economicas-autonomica-suma",
+    "renta-2025-deducciones-actividades-economicas-estatal-suma",
 ]
 
 [[revisions."2025".constructs]]
@@ -18122,6 +18581,94 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deducciones-actividades-economicas-estatal-suma"
+target = "0547"
+expression = { op = "sum", args = [
+    { casilla = "0698" },
+    { casilla = "0702" },
+    { casilla = "0704" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deducciones-actividades-economicas-autonomica-suma"
+target = "0548"
+expression = { op = "sum", args = [
+    { casilla = "0699" },
+    { casilla = "0703" },
+    { casilla = "0705" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-donativos-estatal-50-porciento"
+target = "0552"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-donativos-autonomica-50-porciento"
+target = "0553"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla = "0722" },
+        { casilla = "0723" },
+        { casilla = "0724" },
+        { casilla = "0725" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "comunidad autónoma"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-eficiencia-energetica-vivienda-suma"
+target = "0567"
+expression = { op = "sum", args = [
+    { casilla = "1662" },
+    { casilla = "1670" },
+    { casilla = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro"

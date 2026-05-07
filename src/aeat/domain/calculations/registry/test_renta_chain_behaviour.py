@@ -66,13 +66,9 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0540": Decimal("0"),
         "0541": Decimal("0"),
         "0544": Decimal("0"),
-        "0547": Decimal("0"),
-        "0548": Decimal("0"),
         "0549": Decimal("0"),
         "0550": Decimal("0"),
         "0551": Decimal("0"),
-        "0552": Decimal("0"),
-        "0553": Decimal("0"),
         "0554": Decimal("0"),
         "0555": Decimal("0"),
         "0556": Decimal("0"),
@@ -86,7 +82,6 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0564": Decimal("0"),
         "0565": Decimal("0"),
         "0566": Decimal("0"),
-        "0567": Decimal("0"),
         "0584": Decimal("0"),
         "0568": Decimal("0"),
         "0569": Decimal("0"),
@@ -184,9 +179,9 @@ def test_cuota_liquida_estatal_subtracts_state_side_deduction_columns() -> None:
             "0528": Decimal("5000.00"),  # produces 0545 = 5000 + 0540 = 5000
             "0530": Decimal("0"),
             "0540": Decimal("0"),
-            "0547": Decimal("100.00"),   # vivienda habitual estatal
+            "0698": Decimal("100.00"),   # actividades económicas (formula 0547 = 0698 + 0702 + 0704)
             "0549": Decimal("200.00"),   # nueva creación
-            "0552": Decimal("300.00"),   # donativos estatal
+            "0722": Decimal("600.00"),   # donativos importes (formula 0552 = 50% × (0722+0723+0724+0725))
             "0560": Decimal("400.00"),   # Ceuta/Melilla estatal
         },
         expected=(
