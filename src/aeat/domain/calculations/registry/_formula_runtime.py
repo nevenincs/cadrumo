@@ -160,6 +160,37 @@ def _evaluate_expression(
             operand_refs=operand_refs,
             operand_values=operand_values,
         )
+    op = expression.op
+    if op == "lookup_bracket":
+        if len(expression.args) != 2:
+            raise RegistryValidationError("formula op 'lookup_bracket' expects 2 args")
+        bracket_arg = expression.args[1]
+        if bracket_arg.parameter is None:
+            raise RegistryValidationError(
+                "formula op 'lookup_bracket' requires args[1] to be a parameter leaf"
+            )
+        bracket_param = parameters.get(bracket_arg.parameter)
+        if bracket_param is None:
+            raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
+        if bracket_param.data_type != "bracket_table":
+            raise RegistryValidationError(
+                f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' "
+                f"to be used by lookup_bracket"
+            )
+        base = _evaluate_expression(
+            expression.args[0],
+            values=values,
+            binding_values=binding_values,
+            parameters=parameters,
+            date_context=date_context,
+            relation_values=relation_values,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
+        )
+        operand_refs.append(bracket_arg.parameter)
+        result = _resolve_bracket(bracket_param, base, date_context)
+        operand_values.append(result)
+        return result
     args = [
         _evaluate_expression(
             arg,
@@ -173,7 +204,6 @@ def _evaluate_expression(
         )
         for arg in expression.args
     ]
-    op = expression.op
     if op in {"add", "sum"}:
         return sum(args, _ZERO)
     if op == "subtract":
@@ -274,6 +304,50 @@ def _compare(op: str, left: Decimal, right: Decimal) -> bool:
     if op == "equal":
         return left == right
     raise RegistryValidationError(f"formula expression uses unsupported comparison op {op!r}")
+
+
+def _resolve_bracket(
+    parameter: ParameterDefinition,
+    base: Decimal,
+    date_context: Mapping[str, date],
+) -> Decimal:
+    """Compute the cuota for ``base`` using parameter's piecewise-linear bracket schedule."""
+    if parameter.data_type != "bracket_table":
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} must declare data_type='bracket_table' to use lookup_bracket"
+        )
+    if parameter.bracket_axis is None:
+        raise RegistryValidationError(f"parameter {parameter.id!r} bracket_table requires bracket_axis")
+    if parameter.bracket_axis not in date_context:
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}"
+        )
+    selected = date_context[parameter.bracket_axis]
+    candidates = [
+        b
+        for b in parameter.brackets
+        if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
+    ]
+    if not candidates:
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}"
+        )
+    base = Decimal(base)
+    if base < Decimal("0"):
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} lookup_bracket received negative base {base}"
+        )
+    sorted_brackets = sorted(candidates, key=lambda b: b.lower_bound)
+    selected_entry = None
+    for entry in sorted_brackets:
+        if entry.lower_bound <= base and (entry.upper_bound is None or base <= entry.upper_bound):
+            selected_entry = entry
+            break
+    if selected_entry is None:
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} has no bracket covering base {base}"
+        )
+    return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
 
 
 def _resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> Decimal:
