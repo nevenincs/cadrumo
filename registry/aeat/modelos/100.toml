@@ -963,6 +963,160 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
 
 [[revisions."2020".formulas]]
+id = "renta-2020-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
+
+[[revisions."2020".formulas]]
 id = "renta-2020-bases-imputadas-suma"
 target = "0265"
 expression = { op = "sum", args = [
@@ -2535,6 +2689,160 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2021".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-bases-imputadas-suma"
@@ -4111,6 +4419,188 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-criptomonedas-perdidas-suma"
+target = "1813"
+expression = { op = "sum", args = [
+    { casilla = "1808" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-criptomonedas-ganancias-suma"
+target = "1814"
+expression = { op = "sum", args = [
+    { casilla = "1812" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-bases-imputadas-suma"
@@ -5699,6 +6189,188 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2023".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-criptomonedas-perdidas-suma"
+target = "1813"
+expression = { op = "sum", args = [
+    { casilla = "1808" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-criptomonedas-ganancias-suma"
+target = "1814"
+expression = { op = "sum", args = [
+    { casilla = "1812" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-bases-imputadas-suma"
@@ -7295,6 +7967,188 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2024".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "autonómica"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-criptomonedas-perdidas-suma"
+target = "1813"
+expression = { op = "sum", args = [
+    { casilla = "1808" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-criptomonedas-ganancias-suma"
+target = "1814"
+expression = { op = "sum", args = [
+    { casilla = "1812" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-bases-imputadas-suma"
@@ -12407,6 +13261,188 @@ source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Cuota líquida autonómica", "incrementada"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-capital-mobiliario-general-suma"
+target = "1601"
+expression = { op = "sum", args = [
+    { casilla = "1568" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-capital-mobiliario-ahorro-suma"
+target = "1602"
+expression = { op = "sum", args = [
+    { casilla = "1569" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital mobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-deuda-subordinada-preferentes-suma"
+target = "1603"
+expression = { op = "sum", args = [
+    { casilla = "1570" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "rendimientos"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-capital-inmobiliario-suma"
+target = "1604"
+expression = { op = "sum", args = [
+    { casilla = "1575" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "capital inmobiliario"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-actividades-economicas-suma"
+target = "1605"
+expression = { op = "sum", args = [
+    { casilla = "1583" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "actividades económicas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-ganancias-no-transmision-base-general"
+target = "1606"
+expression = { op = "sum", args = [
+    { casilla = "1584" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-perdidas-no-transmision-base-general"
+target = "1607"
+expression = { op = "sum", args = [
+    { casilla = "1585" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-ganancias-transmision-base-ahorro"
+target = "1608"
+expression = { op = "sum", args = [
+    { casilla = "1595" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "ganancias"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-atribucion-perdidas-transmision-base-ahorro"
+target = "1609"
+expression = { op = "sum", args = [
+    { casilla = "1596" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["atribución de rentas", "pérdidas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-criptomonedas-perdidas-suma"
+target = "1813"
+expression = { op = "sum", args = [
+    { casilla = "1808" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-criptomonedas-ganancias-suma"
+target = "1814"
+expression = { op = "sum", args = [
+    { casilla = "1812" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-objetiva-no-agricola-suma"
+target = "1482"
+expression = { op = "sum", args = [
+    { casilla = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-objetiva-agricola-suma"
+target = "1558"
+expression = { op = "sum", args = [
+    { casilla = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-bases-imputadas-suma"
