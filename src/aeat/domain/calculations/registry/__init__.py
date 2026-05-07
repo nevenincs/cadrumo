@@ -23,7 +23,13 @@ from ._bindings import (
     validate_ledger_oss_aggregation_binding_definition,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
-from ._coverage import EvidenceTierCoverageGate, ModelLawCoverageLedger, build_model_law_coverage_ledger
+from ._coverage import (
+    EvidenceTierCoverageGate,
+    ModelLawCoverageLedger,
+    RegistryCoverageAudit,
+    audit_registry_model_law_coverage,
+    build_model_law_coverage_ledger,
+)
 from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
 from ._export import (
     ResolvedExportLayout,
@@ -215,6 +221,7 @@ __all__ = [
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCatalogues",
+    "RegistryCoverageAudit",
     "RegistryError",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
@@ -255,6 +262,7 @@ __all__ = [
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
     "assert_workbook_scan_clean",
+    "audit_registry_model_law_coverage",
     "build_model_law_coverage_ledger",
     "build_snapshot",
     "calculate_registry_snapshot",
