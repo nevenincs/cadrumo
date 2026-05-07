@@ -316,6 +316,216 @@ application_links = [
     "modelo-100-2020-workflow",
 ]
 
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2020 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-estimacion-directa-diferencia-previa",
+    "renta-2020-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2020-estimacion-directa-gastos-normal",
+    "renta-2020-estimacion-directa-gastos-previos",
+    "renta-2020-estimacion-directa-gastos-simplificada",
+    "renta-2020-estimacion-directa-ingresos-computables",
+    "renta-2020-estimacion-directa-rendimiento-neto",
+    "renta-2020-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2020-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2020-estimacion-directa-total-rendimiento-neto-reducido",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2020 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2020-estimacion-objetiva-agricola-suma",
+    "renta-2020-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2020-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-base-y-cuota"
+title = "Modelo 100 2020 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-cuota-irpf-comunidad-autonoma",
+    "renta-2020-doble-imposicion-50-porciento",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-capital-inmobiliario"
+title = "Modelo 100 2020 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2020-atribucion-capital-inmobiliario-suma",
+    "renta-2020-capital-inmobiliario-rendimiento-neto",
+    "renta-2020-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2020-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2020-inmobiliario-suma-rentas-imputadas",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-capital-mobiliario"
+title = "Modelo 100 2020 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2020-atribucion-capital-mobiliario-general-suma",
+    "renta-2020-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2020-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2020-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2020-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2020-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2020-capital-mobiliario-general-rendimiento-neto",
+    "renta-2020-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2020-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-2020-capital-mobiliario-general-total-ingresos",
+    "renta-2020-iic-ganancias-reducidas-no-exentas",
+    "renta-2020-iic-ganancias-reducidas-suma",
+    "renta-2020-iic-paraisos-fiscales-suma",
+    "renta-2020-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2020 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-acciones-negociadas-ganancias-reducidas",
+    "renta-2020-acciones-negociadas-ganancias-suma",
+    "renta-2020-acciones-negociadas-perdidas-suma",
+    "renta-2020-cambio-residencia-extranjero-suma",
+    "renta-2020-cambio-residencia-ganancias-reducidas",
+    "renta-2020-derechos-suscripcion-ganancias-reducidas",
+    "renta-2020-derechos-suscripcion-ganancias-suma",
+    "renta-2020-derechos-suscripcion-perdidas-suma",
+    "renta-2020-ganancia-no-exenta-base-general",
+    "renta-2020-ganancias-ejercicios-anteriores-suma",
+    "renta-2020-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2020-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2020-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2020-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2020-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2020-ganancias-patrimoniales-base-general-suma",
+    "renta-2020-juegos-ganancias-suma",
+    "renta-2020-juegos-importe-computable",
+    "renta-2020-juegos-perdidas-suma",
+    "renta-2020-juegos-saldo-neto",
+    "renta-2020-otras-ganancias-base-ahorro-suma",
+    "renta-2020-otras-ganancias-no-transmision-suma",
+    "renta-2020-otras-perdidas-no-transmision-suma",
+    "renta-2020-otros-elementos-afectos-ganancias-suma",
+    "renta-2020-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2020-otros-elementos-perdidas-suma",
+    "renta-2020-perdidas-ejercicios-anteriores-suma",
+    "renta-2020-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2020-perdidas-patrimoniales-base-general-suma",
+    "renta-2020-premios-ganancias-suma",
+    "renta-2020-premios-importe-computable",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-regimenes-especiales"
+title = "Modelo 100 2020 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-atribucion-actividades-economicas-suma",
+    "renta-2020-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2020-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2020-atribucion-ganancias-no-transmision-base-general",
+    "renta-2020-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2020-atribucion-perdidas-no-transmision-base-general",
+    "renta-2020-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2020-bases-imputadas-suma",
+    "renta-2020-diferimiento-reinversion-imputacion-suma",
+    "renta-2020-transparencia-fiscal-suma",
+]
+
+[[revisions."2020".constructs]]
+id = "renta-2020-mini-model-trabajo"
+title = "Modelo 100 2020 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2020-trabajo-especie-importe-integro",
+    "renta-2020-trabajo-rendimiento-neto",
+    "renta-2020-trabajo-rendimiento-neto-previo",
+    "renta-2020-trabajo-rendimiento-neto-reducido",
+    "renta-2020-trabajo-suma-rendimientos-netos-previos",
+    "renta-2020-trabajo-total-ingresos-integros-computables",
+]
+
 [[revisions."2020".formulas]]
 id = "renta-2020-trabajo-especie-importe-integro"
 target = "0007"
@@ -2329,6 +2539,216 @@ application_links = [
     "modelo-100-2021-approval",
     "modelo-100-2021-reconciliation",
     "modelo-100-2021-workflow",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2021 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-estimacion-directa-diferencia-previa",
+    "renta-2021-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2021-estimacion-directa-gastos-normal",
+    "renta-2021-estimacion-directa-gastos-previos",
+    "renta-2021-estimacion-directa-gastos-simplificada",
+    "renta-2021-estimacion-directa-ingresos-computables",
+    "renta-2021-estimacion-directa-rendimiento-neto",
+    "renta-2021-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2021-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2021-estimacion-directa-total-rendimiento-neto-reducido",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2021 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2021-estimacion-objetiva-agricola-suma",
+    "renta-2021-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2021-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-base-y-cuota"
+title = "Modelo 100 2021 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-cuota-irpf-comunidad-autonoma",
+    "renta-2021-doble-imposicion-50-porciento",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-capital-inmobiliario"
+title = "Modelo 100 2021 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2021-atribucion-capital-inmobiliario-suma",
+    "renta-2021-capital-inmobiliario-rendimiento-neto",
+    "renta-2021-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2021-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2021-inmobiliario-suma-rentas-imputadas",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-capital-mobiliario"
+title = "Modelo 100 2021 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2021-atribucion-capital-mobiliario-general-suma",
+    "renta-2021-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2021-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2021-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2021-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2021-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2021-capital-mobiliario-general-rendimiento-neto",
+    "renta-2021-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2021-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-2021-capital-mobiliario-general-total-ingresos",
+    "renta-2021-iic-ganancias-reducidas-no-exentas",
+    "renta-2021-iic-ganancias-reducidas-suma",
+    "renta-2021-iic-paraisos-fiscales-suma",
+    "renta-2021-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2021 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-acciones-negociadas-ganancias-reducidas",
+    "renta-2021-acciones-negociadas-ganancias-suma",
+    "renta-2021-acciones-negociadas-perdidas-suma",
+    "renta-2021-cambio-residencia-extranjero-suma",
+    "renta-2021-cambio-residencia-ganancias-reducidas",
+    "renta-2021-derechos-suscripcion-ganancias-reducidas",
+    "renta-2021-derechos-suscripcion-ganancias-suma",
+    "renta-2021-derechos-suscripcion-perdidas-suma",
+    "renta-2021-ganancia-no-exenta-base-general",
+    "renta-2021-ganancias-ejercicios-anteriores-suma",
+    "renta-2021-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2021-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2021-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2021-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2021-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2021-ganancias-patrimoniales-base-general-suma",
+    "renta-2021-juegos-ganancias-suma",
+    "renta-2021-juegos-importe-computable",
+    "renta-2021-juegos-perdidas-suma",
+    "renta-2021-juegos-saldo-neto",
+    "renta-2021-otras-ganancias-base-ahorro-suma",
+    "renta-2021-otras-ganancias-no-transmision-suma",
+    "renta-2021-otras-perdidas-no-transmision-suma",
+    "renta-2021-otros-elementos-afectos-ganancias-suma",
+    "renta-2021-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2021-otros-elementos-perdidas-suma",
+    "renta-2021-perdidas-ejercicios-anteriores-suma",
+    "renta-2021-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2021-perdidas-patrimoniales-base-general-suma",
+    "renta-2021-premios-ganancias-suma",
+    "renta-2021-premios-importe-computable",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-regimenes-especiales"
+title = "Modelo 100 2021 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-atribucion-actividades-economicas-suma",
+    "renta-2021-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2021-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2021-atribucion-ganancias-no-transmision-base-general",
+    "renta-2021-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2021-atribucion-perdidas-no-transmision-base-general",
+    "renta-2021-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2021-bases-imputadas-suma",
+    "renta-2021-diferimiento-reinversion-imputacion-suma",
+    "renta-2021-transparencia-fiscal-suma",
+]
+
+[[revisions."2021".constructs]]
+id = "renta-2021-mini-model-trabajo"
+title = "Modelo 100 2021 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2021-trabajo-especie-importe-integro",
+    "renta-2021-trabajo-rendimiento-neto",
+    "renta-2021-trabajo-rendimiento-neto-previo",
+    "renta-2021-trabajo-rendimiento-neto-reducido",
+    "renta-2021-trabajo-suma-rendimientos-netos-previos",
+    "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
 
 [[revisions."2021".formulas]]
@@ -4345,6 +4765,228 @@ application_links = [
     "modelo-100-2022-approval",
     "modelo-100-2022-reconciliation",
     "modelo-100-2022-workflow",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2022 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-estimacion-directa-diferencia-previa",
+    "renta-2022-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2022-estimacion-directa-gastos-normal",
+    "renta-2022-estimacion-directa-gastos-previos",
+    "renta-2022-estimacion-directa-gastos-simplificada",
+    "renta-2022-estimacion-directa-ingresos-computables",
+    "renta-2022-estimacion-directa-rendimiento-neto",
+    "renta-2022-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2022-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2022-estimacion-directa-total-rendimiento-neto-reducido",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2022 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2022-estimacion-objetiva-agricola-suma",
+    "renta-2022-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2022-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-base-y-cuota"
+title = "Modelo 100 2022 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-cuota-irpf-comunidad-autonoma",
+    "renta-2022-doble-imposicion-50-porciento",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-capital-inmobiliario"
+title = "Modelo 100 2022 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2022-atribucion-capital-inmobiliario-suma",
+    "renta-2022-capital-inmobiliario-rendimiento-neto",
+    "renta-2022-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2022-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2022-inmobiliario-suma-rentas-imputadas",
+    "renta-2022-inmuebles-ganancia-reducida-no-exenta",
+    "renta-2022-inmuebles-ganancias-afectos-suma",
+    "renta-2022-inmuebles-ganancias-no-afectos-suma",
+    "renta-2022-inmuebles-perdidas-transmision-suma",
+    "renta-2022-inmuebles-valor-adquisicion",
+    "renta-2022-inmuebles-valor-transmision",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-capital-mobiliario"
+title = "Modelo 100 2022 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2022-atribucion-capital-mobiliario-general-suma",
+    "renta-2022-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2022-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2022-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2022-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2022-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2022-capital-mobiliario-general-rendimiento-neto",
+    "renta-2022-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2022-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-2022-capital-mobiliario-general-total-ingresos",
+    "renta-2022-iic-ganancias-reducidas-no-exentas",
+    "renta-2022-iic-ganancias-reducidas-suma",
+    "renta-2022-iic-paraisos-fiscales-suma",
+    "renta-2022-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2022 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-acciones-negociadas-ganancias-reducidas",
+    "renta-2022-acciones-negociadas-ganancias-suma",
+    "renta-2022-acciones-negociadas-perdidas-suma",
+    "renta-2022-cambio-residencia-extranjero-suma",
+    "renta-2022-cambio-residencia-ganancias-reducidas",
+    "renta-2022-criptomonedas-ganancia-no-exenta",
+    "renta-2022-criptomonedas-ganancias-suma",
+    "renta-2022-criptomonedas-perdidas-suma",
+    "renta-2022-derechos-suscripcion-ganancias-reducidas",
+    "renta-2022-derechos-suscripcion-ganancias-suma",
+    "renta-2022-derechos-suscripcion-perdidas-suma",
+    "renta-2022-ganancia-no-exenta-base-general",
+    "renta-2022-ganancias-ejercicios-anteriores-suma",
+    "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2022-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2022-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2022-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2022-ganancias-patrimoniales-base-general-suma",
+    "renta-2022-juegos-ganancias-suma",
+    "renta-2022-juegos-importe-computable",
+    "renta-2022-juegos-perdidas-suma",
+    "renta-2022-juegos-saldo-neto",
+    "renta-2022-otras-ganancias-base-ahorro-suma",
+    "renta-2022-otras-ganancias-no-transmision-suma",
+    "renta-2022-otras-perdidas-no-transmision-suma",
+    "renta-2022-otros-elementos-afectos-ganancias-suma",
+    "renta-2022-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2022-otros-elementos-perdidas-suma",
+    "renta-2022-perdidas-ejercicios-anteriores-suma",
+    "renta-2022-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2022-perdidas-patrimoniales-base-general-suma",
+    "renta-2022-premios-ganancias-suma",
+    "renta-2022-premios-importe-computable",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-regimenes-especiales"
+title = "Modelo 100 2022 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-atribucion-actividades-economicas-suma",
+    "renta-2022-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2022-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2022-atribucion-ganancias-no-transmision-base-general",
+    "renta-2022-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2022-atribucion-perdidas-no-transmision-base-general",
+    "renta-2022-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2022-bases-imputadas-suma",
+    "renta-2022-diferimiento-reinversion-imputacion-suma",
+    "renta-2022-transparencia-fiscal-suma",
+]
+
+[[revisions."2022".constructs]]
+id = "renta-2022-mini-model-trabajo"
+title = "Modelo 100 2022 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2022-trabajo-especie-importe-integro",
+    "renta-2022-trabajo-rendimiento-neto",
+    "renta-2022-trabajo-rendimiento-neto-previo",
+    "renta-2022-trabajo-rendimiento-neto-reducido",
+    "renta-2022-trabajo-suma-rendimientos-netos-previos",
+    "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
 
 [[revisions."2022".formulas]]
@@ -6501,6 +7143,228 @@ application_links = [
     "modelo-100-2023-approval",
     "modelo-100-2023-reconciliation",
     "modelo-100-2023-workflow",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2023 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-estimacion-directa-diferencia-previa",
+    "renta-2023-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2023-estimacion-directa-gastos-normal",
+    "renta-2023-estimacion-directa-gastos-previos",
+    "renta-2023-estimacion-directa-gastos-simplificada",
+    "renta-2023-estimacion-directa-ingresos-computables",
+    "renta-2023-estimacion-directa-rendimiento-neto",
+    "renta-2023-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2023-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2023-estimacion-directa-total-rendimiento-neto-reducido",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2023 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2023-estimacion-objetiva-agricola-suma",
+    "renta-2023-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2023-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-base-y-cuota"
+title = "Modelo 100 2023 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-cuota-irpf-comunidad-autonoma",
+    "renta-2023-doble-imposicion-50-porciento",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-capital-inmobiliario"
+title = "Modelo 100 2023 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2023-atribucion-capital-inmobiliario-suma",
+    "renta-2023-capital-inmobiliario-rendimiento-neto",
+    "renta-2023-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2023-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2023-inmobiliario-suma-rentas-imputadas",
+    "renta-2023-inmuebles-ganancia-reducida-no-exenta",
+    "renta-2023-inmuebles-ganancias-afectos-suma",
+    "renta-2023-inmuebles-ganancias-no-afectos-suma",
+    "renta-2023-inmuebles-perdidas-transmision-suma",
+    "renta-2023-inmuebles-valor-adquisicion",
+    "renta-2023-inmuebles-valor-transmision",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-capital-mobiliario"
+title = "Modelo 100 2023 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2023-atribucion-capital-mobiliario-general-suma",
+    "renta-2023-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2023-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2023-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2023-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2023-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2023-capital-mobiliario-general-rendimiento-neto",
+    "renta-2023-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2023-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-2023-capital-mobiliario-general-total-ingresos",
+    "renta-2023-iic-ganancias-reducidas-no-exentas",
+    "renta-2023-iic-ganancias-reducidas-suma",
+    "renta-2023-iic-paraisos-fiscales-suma",
+    "renta-2023-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2023 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-acciones-negociadas-ganancias-reducidas",
+    "renta-2023-acciones-negociadas-ganancias-suma",
+    "renta-2023-acciones-negociadas-perdidas-suma",
+    "renta-2023-cambio-residencia-extranjero-suma",
+    "renta-2023-cambio-residencia-ganancias-reducidas",
+    "renta-2023-criptomonedas-ganancia-no-exenta",
+    "renta-2023-criptomonedas-ganancias-suma",
+    "renta-2023-criptomonedas-perdidas-suma",
+    "renta-2023-derechos-suscripcion-ganancias-reducidas",
+    "renta-2023-derechos-suscripcion-ganancias-suma",
+    "renta-2023-derechos-suscripcion-perdidas-suma",
+    "renta-2023-ganancia-no-exenta-base-general",
+    "renta-2023-ganancias-ejercicios-anteriores-suma",
+    "renta-2023-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2023-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2023-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2023-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2023-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2023-ganancias-patrimoniales-base-general-suma",
+    "renta-2023-juegos-ganancias-suma",
+    "renta-2023-juegos-importe-computable",
+    "renta-2023-juegos-perdidas-suma",
+    "renta-2023-juegos-saldo-neto",
+    "renta-2023-otras-ganancias-base-ahorro-suma",
+    "renta-2023-otras-ganancias-no-transmision-suma",
+    "renta-2023-otras-perdidas-no-transmision-suma",
+    "renta-2023-otros-elementos-afectos-ganancias-suma",
+    "renta-2023-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2023-otros-elementos-perdidas-suma",
+    "renta-2023-perdidas-ejercicios-anteriores-suma",
+    "renta-2023-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2023-perdidas-patrimoniales-base-general-suma",
+    "renta-2023-premios-ganancias-suma",
+    "renta-2023-premios-importe-computable",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-regimenes-especiales"
+title = "Modelo 100 2023 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-atribucion-actividades-economicas-suma",
+    "renta-2023-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2023-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2023-atribucion-ganancias-no-transmision-base-general",
+    "renta-2023-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2023-atribucion-perdidas-no-transmision-base-general",
+    "renta-2023-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2023-bases-imputadas-suma",
+    "renta-2023-diferimiento-reinversion-imputacion-suma",
+    "renta-2023-transparencia-fiscal-suma",
+]
+
+[[revisions."2023".constructs]]
+id = "renta-2023-mini-model-trabajo"
+title = "Modelo 100 2023 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2023-trabajo-especie-importe-integro",
+    "renta-2023-trabajo-rendimiento-neto",
+    "renta-2023-trabajo-rendimiento-neto-previo",
+    "renta-2023-trabajo-rendimiento-neto-reducido",
+    "renta-2023-trabajo-suma-rendimientos-netos-previos",
+    "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
 
 [[revisions."2023".formulas]]
@@ -8670,6 +9534,228 @@ application_links = [
     "modelo-100-2024-approval",
     "modelo-100-2024-reconciliation",
     "modelo-100-2024-workflow",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-actividades-economicas-directa"
+title = "Modelo 100 2024 estimacion directa aggregators"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
+    "rd-439-2007:art-30",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-estimacion-directa-diferencia-previa",
+    "renta-2024-estimacion-directa-gastos-dificil-justificacion",
+    "renta-2024-estimacion-directa-gastos-normal",
+    "renta-2024-estimacion-directa-gastos-previos",
+    "renta-2024-estimacion-directa-gastos-simplificada",
+    "renta-2024-estimacion-directa-ingresos-computables",
+    "renta-2024-estimacion-directa-rendimiento-neto",
+    "renta-2024-estimacion-directa-rendimiento-neto-reducido",
+    "renta-2024-estimacion-directa-rendimiento-neto-reducido-total",
+    "renta-2024-estimacion-directa-total-rendimiento-neto-reducido",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2024 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2024-estimacion-objetiva-agricola-suma",
+    "renta-2024-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2024-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-base-y-cuota"
+title = "Modelo 100 2024 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-cuota-irpf-comunidad-autonoma",
+    "renta-2024-doble-imposicion-50-porciento",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-capital-inmobiliario"
+title = "Modelo 100 2024 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2024-atribucion-capital-inmobiliario-suma",
+    "renta-2024-capital-inmobiliario-rendimiento-neto",
+    "renta-2024-capital-inmobiliario-rendimiento-neto-reducido",
+    "renta-2024-capital-inmobiliario-suma-rendimientos-reducidos",
+    "renta-2024-inmobiliario-suma-rentas-imputadas",
+    "renta-2024-inmuebles-ganancia-reducida-no-exenta",
+    "renta-2024-inmuebles-ganancias-afectos-suma",
+    "renta-2024-inmuebles-ganancias-no-afectos-suma",
+    "renta-2024-inmuebles-perdidas-transmision-suma",
+    "renta-2024-inmuebles-valor-adquisicion",
+    "renta-2024-inmuebles-valor-transmision",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-capital-mobiliario"
+title = "Modelo 100 2024 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2024-atribucion-capital-mobiliario-general-suma",
+    "renta-2024-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2024-capital-mobiliario-ahorro-rendimiento-neto",
+    "renta-2024-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+    "renta-2024-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+    "renta-2024-capital-mobiliario-ahorro-total-ingresos",
+    "renta-2024-capital-mobiliario-general-rendimiento-neto",
+    "renta-2024-capital-mobiliario-general-rendimiento-neto-reducido",
+    "renta-2024-capital-mobiliario-general-suma-rendimientos-reducidos",
+    "renta-2024-capital-mobiliario-general-total-ingresos",
+    "renta-2024-iic-ganancias-reducidas-no-exentas",
+    "renta-2024-iic-ganancias-reducidas-suma",
+    "renta-2024-iic-paraisos-fiscales-suma",
+    "renta-2024-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2024 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-acciones-negociadas-ganancias-reducidas",
+    "renta-2024-acciones-negociadas-ganancias-suma",
+    "renta-2024-acciones-negociadas-perdidas-suma",
+    "renta-2024-cambio-residencia-extranjero-suma",
+    "renta-2024-cambio-residencia-ganancias-reducidas",
+    "renta-2024-criptomonedas-ganancia-no-exenta",
+    "renta-2024-criptomonedas-ganancias-suma",
+    "renta-2024-criptomonedas-perdidas-suma",
+    "renta-2024-derechos-suscripcion-ganancias-reducidas",
+    "renta-2024-derechos-suscripcion-ganancias-suma",
+    "renta-2024-derechos-suscripcion-perdidas-suma",
+    "renta-2024-ganancia-no-exenta-base-general",
+    "renta-2024-ganancias-ejercicios-anteriores-suma",
+    "renta-2024-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2024-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2024-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2024-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2024-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2024-ganancias-patrimoniales-base-general-suma",
+    "renta-2024-juegos-ganancias-suma",
+    "renta-2024-juegos-importe-computable",
+    "renta-2024-juegos-perdidas-suma",
+    "renta-2024-juegos-saldo-neto",
+    "renta-2024-otras-ganancias-base-ahorro-suma",
+    "renta-2024-otras-ganancias-no-transmision-suma",
+    "renta-2024-otras-perdidas-no-transmision-suma",
+    "renta-2024-otros-elementos-afectos-ganancias-suma",
+    "renta-2024-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2024-otros-elementos-perdidas-suma",
+    "renta-2024-perdidas-ejercicios-anteriores-suma",
+    "renta-2024-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2024-perdidas-patrimoniales-base-general-suma",
+    "renta-2024-premios-ganancias-suma",
+    "renta-2024-premios-importe-computable",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-regimenes-especiales"
+title = "Modelo 100 2024 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-atribucion-actividades-economicas-suma",
+    "renta-2024-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2024-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2024-atribucion-ganancias-no-transmision-base-general",
+    "renta-2024-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2024-atribucion-perdidas-no-transmision-base-general",
+    "renta-2024-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2024-bases-imputadas-suma",
+    "renta-2024-diferimiento-reinversion-imputacion-suma",
+    "renta-2024-transparencia-fiscal-suma",
+]
+
+[[revisions."2024".constructs]]
+id = "renta-2024-mini-model-trabajo"
+title = "Modelo 100 2024 rendimientos del trabajo aggregators"
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-99",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2024-trabajo-especie-importe-integro",
+    "renta-2024-trabajo-rendimiento-neto",
+    "renta-2024-trabajo-rendimiento-neto-previo",
+    "renta-2024-trabajo-rendimiento-neto-reducido",
+    "renta-2024-trabajo-suma-rendimientos-netos-previos",
+    "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
 
 [[revisions."2024".formulas]]
@@ -14104,6 +15190,167 @@ input_kind = "computed"
 formula = "renta-2025-resultado-declaracion"
 legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-actividades-economicas-objetiva"
+title = "Modelo 100 2025 estimacion objetiva aggregators"
+legal_refs = [
+    "ley-35-2006:art-31",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+    "renta-2025-estimacion-objetiva-agricola-suma",
+    "renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+    "renta-2025-estimacion-objetiva-no-agricola-suma",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-base-y-cuota"
+title = "Modelo 100 2025 base imponible / base liquidable / cuota aggregators"
+legal_refs = [
+    "ley-35-2006:art-77",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-cuota-irpf-comunidad-autonoma",
+    "renta-2025-doble-imposicion-50-porciento",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-capital-inmobiliario"
+title = "Modelo 100 2025 capital inmobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+    "renta-2025-atribucion-capital-inmobiliario-suma",
+    "renta-2025-inmuebles-ganancia-reducida-no-exenta",
+    "renta-2025-inmuebles-ganancias-afectos-suma",
+    "renta-2025-inmuebles-ganancias-no-afectos-suma",
+    "renta-2025-inmuebles-perdidas-transmision-suma",
+    "renta-2025-inmuebles-valor-adquisicion",
+    "renta-2025-inmuebles-valor-transmision",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-capital-mobiliario"
+title = "Modelo 100 2025 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2025-atribucion-capital-mobiliario-general-suma",
+    "renta-2025-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2025-iic-ganancias-reducidas-no-exentas",
+    "renta-2025-iic-ganancias-reducidas-suma",
+    "renta-2025-iic-paraisos-fiscales-suma",
+    "renta-2025-iic-perdidas-reducidas-suma",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-ganancias-patrimoniales"
+title = "Modelo 100 2025 ganancias y perdidas patrimoniales aggregators"
+legal_refs = [
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-acciones-negociadas-ganancias-reducidas",
+    "renta-2025-acciones-negociadas-ganancias-suma",
+    "renta-2025-acciones-negociadas-perdidas-suma",
+    "renta-2025-cambio-residencia-extranjero-suma",
+    "renta-2025-cambio-residencia-ganancias-reducidas",
+    "renta-2025-criptomonedas-ganancia-no-exenta",
+    "renta-2025-criptomonedas-ganancias-suma",
+    "renta-2025-criptomonedas-perdidas-suma",
+    "renta-2025-derechos-suscripcion-ganancias-reducidas",
+    "renta-2025-derechos-suscripcion-ganancias-suma",
+    "renta-2025-derechos-suscripcion-perdidas-suma",
+    "renta-2025-ganancia-no-exenta-base-general",
+    "renta-2025-ganancias-ejercicios-anteriores-suma",
+    "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+    "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+    "renta-2025-ganancias-patrimoniales-base-ahorro-suma",
+    "renta-2025-ganancias-patrimoniales-base-general-saldo-negativo",
+    "renta-2025-ganancias-patrimoniales-base-general-saldo-positivo",
+    "renta-2025-ganancias-patrimoniales-base-general-suma",
+    "renta-2025-juegos-ganancias-suma",
+    "renta-2025-juegos-importe-computable",
+    "renta-2025-juegos-perdidas-suma",
+    "renta-2025-juegos-saldo-neto",
+    "renta-2025-otras-ganancias-base-ahorro-suma",
+    "renta-2025-otras-ganancias-no-transmision-suma",
+    "renta-2025-otras-perdidas-no-transmision-suma",
+    "renta-2025-otros-elementos-afectos-ganancias-suma",
+    "renta-2025-otros-elementos-no-afectos-ganancias-suma",
+    "renta-2025-otros-elementos-perdidas-suma",
+    "renta-2025-perdidas-ejercicios-anteriores-suma",
+    "renta-2025-perdidas-patrimoniales-base-ahorro-suma",
+    "renta-2025-perdidas-patrimoniales-base-general-suma",
+    "renta-2025-premios-ganancias-suma",
+    "renta-2025-premios-importe-computable",
+]
+
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-regimenes-especiales"
+title = "Modelo 100 2025 atribucion / imputacion de rentas aggregators"
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-atribucion-actividades-economicas-suma",
+    "renta-2025-atribucion-actividades-rendimiento-neto-computable",
+    "renta-2025-atribucion-deuda-subordinada-preferentes-suma",
+    "renta-2025-atribucion-ganancias-no-transmision-base-general",
+    "renta-2025-atribucion-ganancias-transmision-base-ahorro",
+    "renta-2025-atribucion-perdidas-no-transmision-base-general",
+    "renta-2025-atribucion-perdidas-transmision-base-ahorro",
+    "renta-2025-bases-imputadas-suma",
+    "renta-2025-diferimiento-reinversion-imputacion-suma",
+    "renta-2025-transparencia-fiscal-suma",
+]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-cuota-liquida-incrementada-total"
