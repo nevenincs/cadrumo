@@ -1,0 +1,162 @@
+"""Offline contract tests for the GROI Spanish-ROI sede driver.
+
+Covers the parts of the driver that are testable without live browser
+access: the planned-operations enumeration, empty-input rejection, the
+Pydantic observation/result models, and the verdict parser exercised
+against text fragments captured live from real AEAT responses on
+2026-05-07.
+
+Live navigation tests run under ``@pytest.mark.live_read`` and require
+``AEAT_LIVE_TESTS_ENABLED=1`` plus a working cl@ve-movil session; they
+live in a separate live test module to keep the unit suite fast.
+"""
+
+from __future__ import annotations
+
+import pytest
+from pydantic import ValidationError
+
+from aeat.adapters.outbound.aeat.sede._groi_check import (
+    AEAT_GROI_URL,
+    DEFAULT_GROI_TIMEOUT_MS,
+    GROI_ORACLE_ID,
+    GroiObservation,
+    GroiResult,
+    GroiSedeDriver,
+    extract_verdict_from_response_text,
+)
+from aeat.domain.calculations.registry import RegistryValidationError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+def test_driver_mode_is_live() -> None:
+    assert GroiSedeDriver().mode == "live"
+
+
+def test_oracle_id_matches_registry_namespace() -> None:
+    """The oracle id is kebab-case and identifies the GROI Spanish-ROI surface."""
+
+    assert GROI_ORACLE_ID == "aeat-groi-spanish-roi-checker"
+
+
+def test_url_pins_to_aeat_www2_groi_servlet() -> None:
+    """URL captured live; pinned so a future drift forces re-verification."""
+
+    assert str(AEAT_GROI_URL) == (
+        "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
+    )
+
+
+def test_default_timeout_is_thirty_seconds() -> None:
+    assert DEFAULT_GROI_TIMEOUT_MS == 30_000
+
+
+def test_planned_operations_lists_form_open_per_nif_discard() -> None:
+    driver = GroiSedeDriver()
+
+    operations = driver.planned_operations(
+        b"",
+        expected={"A28015865": "valid", "B12345678": "invalid"},
+    )
+
+    # Four steps: form GET, open-form, two per-NIF checks (sorted), discard.
+    assert len(operations) == 5
+    assert operations[0].kind == "http"
+    assert operations[0].method == "GET"
+    assert operations[0].url == AEAT_GROI_URL
+    assert operations[1].kind == "browser_action"
+    assert operations[1].action == "open-groi-form"
+    assert operations[2].kind == "browser_action"
+    assert operations[2].action == "check-nif-A28015865"
+    assert operations[3].kind == "browser_action"
+    assert operations[3].action == "check-nif-B12345678"
+    assert operations[4].kind == "browser_action"
+    assert operations[4].action == "discard-session"
+
+
+def test_planned_operations_rejects_empty_expected() -> None:
+    driver = GroiSedeDriver()
+
+    with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
+        driver.planned_operations(b"", expected={})
+
+
+def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
+    observation = GroiObservation(
+        nif="A28015865",
+        verdict="valid",
+        raw_evidence_locator=str(AEAT_GROI_URL),
+    )
+    rebuilt = GroiObservation.model_validate(observation.model_dump())
+    assert rebuilt == observation
+
+
+def test_observation_model_rejects_unknown_verdict() -> None:
+    with pytest.raises(ValidationError):
+        GroiObservation.model_validate({"nif": "A28015865", "verdict": "registered"})
+
+
+def test_observation_model_rejects_empty_nif() -> None:
+    with pytest.raises(ValidationError):
+        GroiObservation(nif="", verdict="valid")
+
+
+def test_observation_model_is_frozen() -> None:
+    observation = GroiObservation(nif="A28015865", verdict="valid")
+    with pytest.raises(ValidationError):
+        observation.nif = "B12345678"  # type: ignore[misc]
+
+
+def test_result_model_defaults_to_empty_observations() -> None:
+    assert GroiResult().observations == ()
+
+
+# ---------------------------------------------------------------------------
+# Verdict parser fixtures derived from live AEAT response samples captured
+# 2026-05-07 (.tmp/nif_iva_capture/groi_response_A28015865.html and
+# groi_response_B00000001.html). The marker text is what AEAT produced live;
+# the parser is the unit under test, the response text is the authority.
+# ---------------------------------------------------------------------------
+
+
+def test_verdict_parser_recognises_valid_response_for_registered_operator() -> None:
+    """Real AEAT response for A28015865 (Telefónica, ROI-registered)."""
+
+    body_text = (
+        "La Agencia Tributaria certifica que: "
+        "A FECHA 07-05-2026 13:10:51 CONSTA UN OPERADOR INTRACOMUNITARIO EN ESPAÑA "
+        "CON EL NÚMERO DE IVA ESA28015865"
+    )
+    assert extract_verdict_from_response_text(body_text) == "valid"
+
+
+def test_verdict_parser_recognises_invalid_response_for_malformed_input() -> None:
+    """Real AEAT response for B00000001 (syntactically invalid Spanish NIF)."""
+
+    body_text = "Consulta Operadores IVA intracomunitarios españoles El campo Nif no es un NIF válido. (Ir a error)"
+    assert extract_verdict_from_response_text(body_text) == "invalid"
+
+
+def test_verdict_parser_recognises_no_consta_response() -> None:
+    """AEAT phrasing for valid-format but unregistered NIF: 'NO CONSTA'."""
+
+    body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO CON EL NÚMERO DE IVA ESB99999999"
+    assert extract_verdict_from_response_text(body_text) == "invalid"
+
+
+def test_verdict_parser_returns_unknown_for_empty_body() -> None:
+    assert extract_verdict_from_response_text("") == "unknown"
+
+
+def test_verdict_parser_returns_unknown_for_unrecognised_content() -> None:
+    """Body without any verdict marker yields 'unknown' rather than guessing."""
+
+    assert extract_verdict_from_response_text("Página de ayuda") == "unknown"
+
+
+def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
+    """``no consta`` must NOT collapse to ``valid`` because of a generic ``operador`` token."""
+
+    body_text = "A FECHA 07-05-2026 NO CONSTA OPERADOR INTRACOMUNITARIO con esos datos"
+    assert extract_verdict_from_response_text(body_text) == "invalid"
