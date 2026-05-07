@@ -66,18 +66,12 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0541": Decimal("0"),
         "0544": Decimal("0"),
         "0549": Decimal("0"),
-        "0550": Decimal("0"),
-        "0551": Decimal("0"),
         "0554": Decimal("0"),
         "0555": Decimal("0"),
         "0556": Decimal("0"),
         "0557": Decimal("0"),
         "0558": Decimal("0"),
         "0559": Decimal("0"),
-        "0560": Decimal("0"),
-        "0561": Decimal("0"),
-        "0562": Decimal("0"),
-        "0563": Decimal("0"),
         "0564": Decimal("0"),
         "0565": Decimal("0"),
         "0566": Decimal("0"),
@@ -181,7 +175,7 @@ def test_cuota_liquida_estatal_subtracts_state_side_deduction_columns() -> None:
             "0698": Decimal("100.00"),   # actividades económicas (formula 0547 = 0698 + 0702 + 0704)
             "0549": Decimal("200.00"),   # nueva creación
             "0722": Decimal("600.00"),   # donativos importes (formula 0552 = 50% × (0722+0723+0724+0725))
-            "0560": Decimal("400.00"),   # Ceuta/Melilla estatal
+            "0727": Decimal("800.00"),   # Ceuta/Melilla source (formula 0560 = 50% × 0727)
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0545", value=Decimal("5000.00")),

@@ -398,6 +398,12 @@ formulas = [
     "renta-2020-deduccion-donativos-estatal-50-porciento",
     "renta-2020-deducciones-actividades-economicas-autonomica-suma",
     "renta-2020-deducciones-actividades-economicas-estatal-suma",
+    "renta-2020-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2020-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2020-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2020-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2020-deduccion-cultural-autonomica-50-porciento",
+    "renta-2020-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2020".constructs]]
@@ -567,6 +573,78 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-saldo-gp-base-general-cap-25"
@@ -3219,6 +3297,12 @@ formulas = [
     "renta-2021-deduccion-eficiencia-energetica-vivienda-suma",
     "renta-2021-deducciones-actividades-economicas-autonomica-suma",
     "renta-2021-deducciones-actividades-economicas-estatal-suma",
+    "renta-2021-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2021-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2021-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2021-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2021-deduccion-cultural-autonomica-50-porciento",
+    "renta-2021-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2021".constructs]]
@@ -3388,6 +3472,78 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-saldo-gp-base-general-cap-25"
@@ -6078,6 +6234,12 @@ formulas = [
     "renta-2022-deduccion-eficiencia-energetica-vivienda-suma",
     "renta-2022-deducciones-actividades-economicas-autonomica-suma",
     "renta-2022-deducciones-actividades-economicas-estatal-suma",
+    "renta-2022-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2022-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2022-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2022-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2022-deduccion-cultural-autonomica-50-porciento",
+    "renta-2022-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2022".constructs]]
@@ -6264,6 +6426,78 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-saldo-gp-base-general-cap-25"
@@ -9190,6 +9424,12 @@ formulas = [
     "renta-2023-deduccion-eficiencia-energetica-vivienda-suma",
     "renta-2023-deducciones-actividades-economicas-autonomica-suma",
     "renta-2023-deducciones-actividades-economicas-estatal-suma",
+    "renta-2023-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2023-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2023-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2023-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2023-deduccion-cultural-autonomica-50-porciento",
+    "renta-2023-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2023".constructs]]
@@ -9377,6 +9617,78 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-saldo-gp-base-general-cap-25"
@@ -12341,6 +12653,12 @@ formulas = [
     "renta-2024-deduccion-eficiencia-energetica-vivienda-suma",
     "renta-2024-deducciones-actividades-economicas-autonomica-suma",
     "renta-2024-deducciones-actividades-economicas-estatal-suma",
+    "renta-2024-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2024-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2024-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2024-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2024-deduccion-cultural-autonomica-50-porciento",
+    "renta-2024-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2024".constructs]]
@@ -12528,6 +12846,78 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-saldo-gp-base-general-cap-25"
@@ -18724,6 +19114,12 @@ formulas = [
     "renta-2025-deduccion-eficiencia-energetica-vivienda-suma",
     "renta-2025-deducciones-actividades-economicas-autonomica-suma",
     "renta-2025-deducciones-actividades-economicas-estatal-suma",
+    "renta-2025-deduccion-alquiler-vivienda-autonomica-50-porciento",
+    "renta-2025-deduccion-alquiler-vivienda-estatal-50-porciento",
+    "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento",
+    "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento",
+    "renta-2025-deduccion-cultural-autonomica-50-porciento",
+    "renta-2025-deduccion-cultural-estatal-50-porciento",
 ]
 
 [[revisions."2025".constructs]]
@@ -18878,6 +19274,78 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-cultural-estatal-50-porciento"
+target = "0550"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-cultural-autonomica-50-porciento"
+target = "0551"
+expression = { op = "percent", args = [{ casilla = "0726" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento"
+target = "0560"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento"
+target = "0561"
+expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-alquiler-vivienda-estatal-50-porciento"
+target = "0562"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-alquiler-vivienda-autonomica-50-porciento"
+target = "0563"
+expression = { op = "percent", args = [{ casilla = "0721" }, { literal = "50" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-saldo-gp-base-general-cap-25"
