@@ -59,6 +59,7 @@ from ._live_parity import (
     ParityResult,
     ParityVerdict,
     collect_applicability_declarations,
+    collect_orphan_oracle_ids,
     evaluate_cross_reference_applicability,
     resolve_cross_reference_oracle,
 )
@@ -273,6 +274,7 @@ __all__ = [
     "build_snapshot",
     "calculate_registry_snapshot",
     "collect_applicability_declarations",
+    "collect_orphan_oracle_ids",
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",

@@ -56,6 +56,7 @@ __all__ = [
     "audit_registry_oracle_bindings",
     "build_planned_operations",
     "collect_applicability_declarations",
+    "collect_orphan_oracle_ids",
     "evaluate_cross_reference_applicability",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
@@ -556,6 +557,33 @@ def collect_applicability_declarations(
                     )
                 )
     return tuple(declarations)
+
+
+def collect_orphan_oracle_ids(
+    modelos: Iterable[ModeloDefinition],
+    catalogue: LiveParityCatalogue,
+) -> tuple[str, ...]:
+    """Return catalogue oracle ids that no cross-reference binds.
+
+    A registered-but-unused oracle indicates one of:
+    - the oracle was registered for a future binding still in flight,
+    - a cross-reference's oracle_id was renamed without updating the
+      catalogue,
+    - the binding was retired but the catalogue registration stayed.
+
+    The audit surfaces the set so CI / dashboards can flag drift.
+    Order is the catalogue's lexicographic order for deterministic
+    output.
+    """
+
+    bound: set[str] = set()
+    modelo_tuple = tuple(modelos)
+    for modelo in modelo_tuple:
+        for revision in modelo.revisions.values():
+            for cross_reference in revision.live_cross_references:
+                if cross_reference.oracle_id is not None:
+                    bound.add(cross_reference.oracle_id)
+    return tuple(sorted(set(catalogue.ids()) - bound))
 
 
 def audit_registry_oracle_bindings(

@@ -13,13 +13,18 @@ from __future__ import annotations
 
 import pytest
 
+from aeat.core.paths import PROJECT_ROOT
+
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._errors import RegistryValidationError
+from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
     LiveParityCatalogue,
     LiveParityOracle,
+    collect_orphan_oracle_ids,
     resolve_cross_reference_oracle,
 )
+from ._loader import load_registry_tree
 from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from ._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
 
@@ -185,6 +190,41 @@ def test_resolver_ignores_applicability_gate_when_decision_or_profile_omitted() 
     )
 
     assert resolved.oracle_id == ORACLE_ID
+
+
+def test_orphan_oracle_collector_flags_unbound_catalogue_entries() -> None:
+    """Catalogue entries with no cross-reference binding surface as orphans.
+
+    GROI is bound by the Modelo 349 cross-reference; NIF-IVA is
+    registered but unbound today. The collector returns NIF-IVA as
+    the sole orphan, alphabetically sorted.
+    """
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    catalogue = LiveParityCatalogue()
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(GroiOracle(), environment="production")
+
+    orphans = collect_orphan_oracle_ids(modelos, catalogue)
+
+    assert ORACLE_ID in orphans
+    assert GROI_ORACLE_ID not in orphans
+
+
+def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> None:
+    """When every catalogue oracle is referenced by some cross-reference,
+    the collector returns an empty tuple."""
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    catalogue = LiveParityCatalogue()
+    # Register only GROI — bound on Modelo 349. NIF-IVA stays unregistered
+    # and therefore can't be flagged as orphan because it isn't in the
+    # catalogue.
+    catalogue.register(GroiOracle(), environment="production")
+
+    orphans = collect_orphan_oracle_ids(modelos, catalogue)
+
+    assert orphans == ()
 
 
 def test_dual_environment_oracle_resolves_under_either_environment() -> None:

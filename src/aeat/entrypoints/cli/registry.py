@@ -791,6 +791,7 @@ def audit_oracles_cmd(
         OracleEnvironment,
         audit_registry_oracle_bindings,
         collect_applicability_declarations,
+        collect_orphan_oracle_ids,
     )
     from ...domain.calculations.registry._loader import load_registry_tree
 
@@ -810,6 +811,7 @@ def audit_oracles_cmd(
         environment=_cast(OracleEnvironment, environment),
     )
     applicability_declarations = collect_applicability_declarations(modelos)
+    orphan_oracle_ids = collect_orphan_oracle_ids(modelos, oracle_catalogue)
 
     if json_output:
         typer.echo(
@@ -822,6 +824,7 @@ def audit_oracles_cmd(
                     "applicability_declarations": [
                         declaration.model_dump() for declaration in applicability_declarations
                     ],
+                    "orphan_oracle_ids": list(orphan_oracle_ids),
                 },
                 indent=2,
             )
@@ -831,6 +834,7 @@ def audit_oracles_cmd(
         _emit_metric("registered_oracle_ids", ",".join(sorted(oracle_catalogue.ids())))
         _emit_metric("failure_count", len(failures))
         _emit_metric("applicability_declaration_count", len(applicability_declarations))
+        _emit_metric("orphan_oracle_ids", ",".join(orphan_oracle_ids))
         for index, failure in enumerate(failures):
             _emit_metric(f"failure[{index}]", failure)
         for index, declaration in enumerate(applicability_declarations):

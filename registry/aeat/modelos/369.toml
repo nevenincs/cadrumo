@@ -232,6 +232,14 @@ profile_condition_mode = "all"
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
+[[revisions."esquema-exterior".filing_schedules.profile_conditions]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "Modelo 369 esquema exterior aplica solo a sujetos pasivos acogidos al regimen OSS / IOSS de ventanilla unica."
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-modelo-369-procedure"]
+
 [[revisions."esquema-exterior".deadline_windows]]
 id = "modelo-369-exterior-2025-ext-1t"
 filing_year = 2025
@@ -578,6 +586,14 @@ profile_condition_mode = "all"
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
 
+[[revisions."esquema-union".filing_schedules.profile_conditions]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "Modelo 369 esquema union aplica solo a sujetos pasivos acogidos al regimen OSS de ventanilla unica para ventas a distancia intracomunitarias B2C."
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-modelo-369-procedure"]
+
 [[revisions."esquema-union".deadline_windows]]
 id = "modelo-369-union-2025-1t"
 filing_year = 2025
@@ -879,6 +895,14 @@ periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12
 profile_condition_mode = "all"
 legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-importacion".filing_schedules.profile_conditions]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "Modelo 369 esquema importacion aplica solo a sujetos pasivos acogidos al regimen IOSS de ventanilla unica para ventas a distancia de bienes importados de baja cuantia."
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-modelo-369-procedure"]
 
 [[revisions."esquema-importacion".deadline_windows]]
 id = "modelo-369-importacion-2025-01"
