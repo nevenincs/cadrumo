@@ -347,6 +347,7 @@ id = "renta-2020-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2020 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -356,6 +357,7 @@ formulas = [
     "renta-2020-estimacion-objetiva-agricola-suma",
     "renta-2020-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2020-estimacion-objetiva-no-agricola-suma",
+    "renta-2020-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2020".constructs]]
@@ -368,6 +370,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -379,6 +382,8 @@ formulas = [
     "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2020-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2020-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2020".constructs]]
@@ -538,6 +543,59 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-general"
@@ -2721,6 +2779,7 @@ id = "renta-2021-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2021 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -2730,6 +2789,7 @@ formulas = [
     "renta-2021-estimacion-objetiva-agricola-suma",
     "renta-2021-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2021-estimacion-objetiva-no-agricola-suma",
+    "renta-2021-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2021".constructs]]
@@ -2742,6 +2802,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -2753,6 +2814,8 @@ formulas = [
     "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2021-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2021-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2021".constructs]]
@@ -2912,6 +2975,59 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-general"
@@ -5096,6 +5212,7 @@ id = "renta-2022-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2022 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -5105,6 +5222,7 @@ formulas = [
     "renta-2022-estimacion-objetiva-agricola-suma",
     "renta-2022-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2022-estimacion-objetiva-no-agricola-suma",
+    "renta-2022-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2022".constructs]]
@@ -5117,6 +5235,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -5128,6 +5247,8 @@ formulas = [
     "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2022-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2022-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2022".constructs]]
@@ -5157,6 +5278,8 @@ formulas = [
     "renta-2022-inmuebles-perdidas-transmision-suma",
     "renta-2022-inmuebles-valor-adquisicion",
     "renta-2022-inmuebles-valor-transmision",
+    "renta-2022-inmuebles-ganancia-no-exenta-base-general",
+    "renta-2022-inmuebles-perdida-no-exenta-base-general",
 ]
 
 [[revisions."2022".constructs]]
@@ -5301,6 +5424,89 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-inmuebles-perdida-no-exenta-base-general"
+target = "1831"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "valor de transmisión"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-inmuebles-ganancia-no-exenta-base-general"
+target = "1833"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-general"
@@ -7655,6 +7861,7 @@ id = "renta-2023-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2023 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -7664,6 +7871,7 @@ formulas = [
     "renta-2023-estimacion-objetiva-agricola-suma",
     "renta-2023-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2023-estimacion-objetiva-no-agricola-suma",
+    "renta-2023-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2023".constructs]]
@@ -7676,6 +7884,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -7687,6 +7896,8 @@ formulas = [
     "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2023-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2023-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2023".constructs]]
@@ -7716,6 +7927,8 @@ formulas = [
     "renta-2023-inmuebles-perdidas-transmision-suma",
     "renta-2023-inmuebles-valor-adquisicion",
     "renta-2023-inmuebles-valor-transmision",
+    "renta-2023-inmuebles-ganancia-no-exenta-base-general",
+    "renta-2023-inmuebles-perdida-no-exenta-base-general",
 ]
 
 [[revisions."2023".constructs]]
@@ -7861,6 +8074,89 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-inmuebles-perdida-no-exenta-base-general"
+target = "1831"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "valor de transmisión"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-inmuebles-ganancia-no-exenta-base-general"
+target = "1833"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-general"
@@ -10243,6 +10539,7 @@ id = "renta-2024-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2024 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -10252,6 +10549,7 @@ formulas = [
     "renta-2024-estimacion-objetiva-agricola-suma",
     "renta-2024-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2024-estimacion-objetiva-no-agricola-suma",
+    "renta-2024-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2024".constructs]]
@@ -10264,6 +10562,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -10275,6 +10574,8 @@ formulas = [
     "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2024-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2024-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2024".constructs]]
@@ -10304,6 +10605,8 @@ formulas = [
     "renta-2024-inmuebles-perdidas-transmision-suma",
     "renta-2024-inmuebles-valor-adquisicion",
     "renta-2024-inmuebles-valor-transmision",
+    "renta-2024-inmuebles-ganancia-no-exenta-base-general",
+    "renta-2024-inmuebles-perdida-no-exenta-base-general",
 ]
 
 [[revisions."2024".constructs]]
@@ -10449,6 +10752,89 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-inmuebles-perdida-no-exenta-base-general"
+target = "1831"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "valor de transmisión"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-inmuebles-ganancia-no-exenta-base-general"
+target = "1833"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-general"
@@ -16069,6 +16455,7 @@ id = "renta-2025-mini-model-actividades-economicas-objetiva"
 title = "Modelo 100 2025 estimacion objetiva aggregators"
 legal_refs = [
     "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -16078,6 +16465,7 @@ formulas = [
     "renta-2025-estimacion-objetiva-agricola-suma",
     "renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
     "renta-2025-estimacion-objetiva-no-agricola-suma",
+    "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido",
 ]
 
 [[revisions."2025".constructs]]
@@ -16090,6 +16478,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-99",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -16101,6 +16490,8 @@ formulas = [
     "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-general",
     "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
     "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+    "renta-2025-deduccion-unidad-familiar-clamp-positiva",
+    "renta-2025-resto-a-ingresar-positivo",
 ]
 
 [[revisions."2025".constructs]]
@@ -16125,6 +16516,8 @@ formulas = [
     "renta-2025-inmuebles-perdidas-transmision-suma",
     "renta-2025-inmuebles-valor-adquisicion",
     "renta-2025-inmuebles-valor-transmision",
+    "renta-2025-inmuebles-ganancia-no-exenta-base-general",
+    "renta-2025-inmuebles-perdida-no-exenta-base-general",
 ]
 
 [[revisions."2025".constructs]]
@@ -16242,6 +16635,89 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-resto-a-ingresar-positivo"
+target = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-unidad-familiar-clamp-positiva"
+target = "0731"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [
+        { op = "sum", args = [
+    { casilla = "0728" },
+    { casilla = "0729" },
+        ] },
+        { op = "sum", args = [
+    { casilla = "0730" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido"
+target = "1550"
+expression = { op = "subtract", args = [
+    { casilla = "1548" },
+    { casilla = "1549" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-inmuebles-perdida-no-exenta-base-general"
+target = "1831"
+expression = { op = "min", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas patrimoniales", "valor de transmisión"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-inmuebles-ganancia-no-exenta-base-general"
+target = "1833"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de transmisión"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-general"
