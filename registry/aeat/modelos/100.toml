@@ -370,6 +370,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -384,6 +385,7 @@ formulas = [
     "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2020-deduccion-unidad-familiar-clamp-positiva",
     "renta-2020-resto-a-ingresar-positivo",
+    "renta-2020-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2020".constructs]]
@@ -543,6 +545,21 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-resto-a-ingresar-positivo"
@@ -2802,6 +2819,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -2816,6 +2834,7 @@ formulas = [
     "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2021-deduccion-unidad-familiar-clamp-positiva",
     "renta-2021-resto-a-ingresar-positivo",
+    "renta-2021-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2021".constructs]]
@@ -2975,6 +2994,21 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-resto-a-ingresar-positivo"
@@ -5235,6 +5269,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -5249,6 +5284,7 @@ formulas = [
     "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2022-deduccion-unidad-familiar-clamp-positiva",
     "renta-2022-resto-a-ingresar-positivo",
+    "renta-2022-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2022".constructs]]
@@ -5424,6 +5460,21 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-resto-a-ingresar-positivo"
@@ -7884,6 +7935,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -7898,6 +7950,7 @@ formulas = [
     "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2023-deduccion-unidad-familiar-clamp-positiva",
     "renta-2023-resto-a-ingresar-positivo",
+    "renta-2023-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2023".constructs]]
@@ -8074,6 +8127,21 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-resto-a-ingresar-positivo"
@@ -10562,6 +10630,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -10576,6 +10645,7 @@ formulas = [
     "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2024-deduccion-unidad-familiar-clamp-positiva",
     "renta-2024-resto-a-ingresar-positivo",
+    "renta-2024-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2024".constructs]]
@@ -10752,6 +10822,21 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-resto-a-ingresar-positivo"
@@ -16478,6 +16563,7 @@ legal_refs = [
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
+    "ley-35-2006:art-80",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -16492,6 +16578,7 @@ formulas = [
     "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
     "renta-2025-deduccion-unidad-familiar-clamp-positiva",
     "renta-2025-resto-a-ingresar-positivo",
+    "renta-2025-deduccion-doble-imposicion-internacional-suma",
 ]
 
 [[revisions."2025".constructs]]
@@ -16635,6 +16722,21 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-doble-imposicion-internacional-suma"
+target = "1128"
+expression = { op = "sum", args = [
+    { casilla = "1124" },
+    { casilla = "1127" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-80"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "extranjero"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-resto-a-ingresar-positivo"
