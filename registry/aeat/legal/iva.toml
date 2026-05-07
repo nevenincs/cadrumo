@@ -636,6 +636,18 @@ applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
 review_status = "reviewed"
 
+[sources."aeat-groi-spanish-roi-procedure"]
+evidence_tier = "executable_parity_evidence"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/groi/aeat-vies-gestiones.html"
+sha256 = "5b439bae92467f2766eea7c6e40c0c16d786e57647298ebe72f8a97b64ea5205"
+bytes = 11499
+retrieved_at = 2026-05-08
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
+review_status = "reviewed"
+
 [legal."orden-hac-610-2021:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -45,14 +45,13 @@ from __future__ import annotations
 import pytest
 
 from aeat.adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
-from aeat.domain.calculations.registry._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from aeat.domain.calculations.registry._live_parity import (
-    LiveParityCatalogue,
-    resolve_cross_reference_oracle,
-)
-from aeat.domain.calculations.registry._remote_state_guard import (
+from aeat.domain.calculations.registry import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
+    GROI_ORACLE_ID,
+    GroiOracle,
+    LiveParityCatalogue,
     RemoteStateGuardPolicy,
+    resolve_cross_reference_oracle,
 )
 from aeat.entrypoints.cli._live import requires_live_enabled
 
