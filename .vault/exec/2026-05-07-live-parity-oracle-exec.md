@@ -262,3 +262,49 @@ to avoid re-walking the registry per test.
 - Touched-surface test sweep: 102 / 102 pass (added 6 new tests
   across the three slices, plus the existing 96 from the prior
   windows).
+
+## Consistency pass (slices 17 — 18, 2026-05-08)
+
+Fourth execution window aligns the filing-schedule layer with the
+cross-reference applicability gate and adds an orphan-oracle audit
+surface.
+
+### Slice 17 — Modelo 369 filing schedules gate on iva.oss_enrolled
+
+All three Modelo 369 filing schedules (esquema-exterior trimestral,
+esquema-union trimestral, esquema-importacion mensual) declared no
+profile_conditions, so the schedule fired for every taxpayer
+regardless of OSS enrollment. Each now declares the
+`iva.oss_enrolled == true` predicate, mirroring Modelo 349's
+existing `does_intracomunitario` gate. Subjects who haven't
+enrolled in the OSS / IOSS regime no longer see the schedule fire
+at all; the cross-reference applicability gate at the binding
+layer is now defense-in-depth rather than the sole filter.
+
+New contract test
+`test_oss_369_filing_schedules_select_only_when_oss_enrolled`
+asserts the schedule fires only when the profile carries
+`iva.oss_enrolled=true`, across all three esquemas.
+
+### Slice 18 — Audit-oracles surfaces orphan oracles
+
+`collect_orphan_oracle_ids(modelos, catalogue)` returns catalogue
+oracle ids that no cross-reference binds. Surfaces drift in either
+direction (registered-but-unused, or rename without catalogue
+update). audit-oracles JSON gains an `orphan_oracle_ids` array.
+
+Today: `aeat-nif-iva-checker` is correctly flagged as orphan (the
+catalogue carries it but no cross-reference binds it).
+
+Two new contract tests cover both branches: the orphan flagged
+when present in catalogue but absent from bindings, and the empty
+result when every catalogue entry is bound.
+
+### Gates achieved (2026-05-08 consistency)
+
+- `ruff` / `ty` clean across every touched source file.
+- `aeat app registry verify --json` reports `verified: true`.
+- `aeat app registry audit-oracles --json` reports `failure_count:
+  0`, 2 applicability declarations, 1 orphan oracle.
+- 105 / 105 tests pass on the touched-surface sweep (added 3 new
+  tests for the schedule and orphan-oracle gates).

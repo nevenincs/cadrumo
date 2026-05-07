@@ -208,6 +208,37 @@ def test_oss_369_binding_is_not_applicable_when_profile_is_not_oss_enrolled() ->
     assert len(enrolled.matched_explanations) == 1
 
 
+def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
+    """Modelo 369's three filing schedules (esquema-union, -exterior,
+    -importacion) gate on iva.oss_enrolled. Non-enrolled subjects do
+    not see the schedule fire at all — the cross-reference applicability
+    gate is then defense-in-depth at the binding layer.
+    """
+
+    from aeat.core.paths import PROJECT_ROOT
+
+    from . import applicable_filing_schedules, load_registry_tree
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo_369 = next(modelo for modelo in modelos if modelo.id == "369")
+
+    for revision in modelo_369.revisions.values():
+        not_enrolled = applicable_filing_schedules(
+            revision,
+            profile_facts={"iva": {"oss_enrolled": False}},
+        )
+        assert not_enrolled == (), f"revision {revision.id}: schedule fires for non-OSS-enrolled subject"
+
+        enrolled = applicable_filing_schedules(
+            revision,
+            profile_facts={"iva": {"oss_enrolled": True}},
+        )
+        assert enrolled, f"revision {revision.id}: schedule did not fire for OSS-enrolled subject"
+        for schedule in enrolled:
+            fields = {predicate.field for predicate in schedule.profile_conditions}
+            assert "iva.oss_enrolled" in fields
+
+
 def test_oss_369_cross_reference_declares_iva_oss_enrolled_predicate() -> None:
     """The committed OSS read binding must carry the OSS enrollment gate.
 
