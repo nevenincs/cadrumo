@@ -368,6 +368,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -390,6 +391,8 @@ formulas = [
     "renta-2020-importe-derecho-reduccion-pension-suma",
     "renta-2020-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2020-deduccion-economia-social-passthrough",
+    "renta-2020-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2020-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2020".constructs]]
@@ -447,6 +450,7 @@ formulas = [
     "renta-2020-iic-paraisos-fiscales-suma",
     "renta-2020-iic-perdidas-reducidas-suma",
     "renta-2020-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2020-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2020".constructs]]
@@ -555,6 +559,111 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0706" },
+    { casilla = "0707" },
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0757" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0760" },
+    { casilla = "0761" },
+    { casilla = "0762" },
+    { casilla = "0764" },
+    { casilla = "0765" },
+    { casilla = "0766" },
+    { casilla = "0767" },
+    { casilla = "0779" },
+    { casilla = "0780" },
+    { casilla = "0781" },
+    { casilla = "0782" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0785" },
+    { casilla = "0786" },
+    { casilla = "0787" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0795" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0798" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-cuota-liquida-autonomica-incrementada-passthrough"
@@ -2929,6 +3038,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -2952,6 +3062,8 @@ formulas = [
     "renta-2021-importe-derecho-reduccion-pension-suma",
     "renta-2021-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2021-deduccion-economia-social-passthrough",
+    "renta-2021-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2021-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2021".constructs]]
@@ -3009,6 +3121,7 @@ formulas = [
     "renta-2021-iic-paraisos-fiscales-suma",
     "renta-2021-iic-perdidas-reducidas-suma",
     "renta-2021-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2021-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2021".constructs]]
@@ -3117,6 +3230,111 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0757" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0764" },
+    { casilla = "0765" },
+    { casilla = "0766" },
+    { casilla = "0767" },
+    { casilla = "0780" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0795" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0798" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0842" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+    { casilla = "1686" },
+    { casilla = "1687" },
+    { casilla = "1688" },
+    { casilla = "1722" },
+    { casilla = "1723" },
+    { casilla = "1727" },
+    { casilla = "1728" },
+    { casilla = "1729" },
+    { casilla = "1730" },
+    { casilla = "1731" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-cuota-liquida-autonomica-incrementada-passthrough"
@@ -5512,6 +5730,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -5535,6 +5754,8 @@ formulas = [
     "renta-2022-importe-derecho-reduccion-pension-suma",
     "renta-2022-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2022-deduccion-economia-social-passthrough",
+    "renta-2022-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2022-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2022".constructs]]
@@ -5604,6 +5825,7 @@ formulas = [
     "renta-2022-iic-paraisos-fiscales-suma",
     "renta-2022-iic-perdidas-reducidas-suma",
     "renta-2022-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2022-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2022".constructs]]
@@ -5717,6 +5939,124 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0706" },
+    { casilla = "0707" },
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0757" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0760" },
+    { casilla = "0761" },
+    { casilla = "0762" },
+    { casilla = "0764" },
+    { casilla = "0765" },
+    { casilla = "0766" },
+    { casilla = "0767" },
+    { casilla = "0768" },
+    { casilla = "0769" },
+    { casilla = "0779" },
+    { casilla = "0780" },
+    { casilla = "0781" },
+    { casilla = "0782" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0785" },
+    { casilla = "0786" },
+    { casilla = "0787" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0798" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0842" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1623" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+    { casilla = "1686" },
+    { casilla = "1687" },
+    { casilla = "1688" },
+    { casilla = "1722" },
+    { casilla = "1723" },
+    { casilla = "1727" },
+    { casilla = "1728" },
+    { casilla = "1729" },
+    { casilla = "1730" },
+    { casilla = "1731" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-cuota-liquida-autonomica-incrementada-passthrough"
@@ -8332,6 +8672,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -8355,6 +8696,8 @@ formulas = [
     "renta-2023-importe-derecho-reduccion-pension-suma",
     "renta-2023-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2023-deduccion-economia-social-passthrough",
+    "renta-2023-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2023-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2023".constructs]]
@@ -8424,6 +8767,7 @@ formulas = [
     "renta-2023-iic-paraisos-fiscales-suma",
     "renta-2023-iic-perdidas-reducidas-suma",
     "renta-2023-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2023-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2023".constructs]]
@@ -8538,6 +8882,133 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0706" },
+    { casilla = "0707" },
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0757" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0760" },
+    { casilla = "0761" },
+    { casilla = "0762" },
+    { casilla = "0764" },
+    { casilla = "0765" },
+    { casilla = "0766" },
+    { casilla = "0767" },
+    { casilla = "0768" },
+    { casilla = "0779" },
+    { casilla = "0780" },
+    { casilla = "0781" },
+    { casilla = "0782" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0785" },
+    { casilla = "0786" },
+    { casilla = "0787" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0842" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1623" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+    { casilla = "1686" },
+    { casilla = "1687" },
+    { casilla = "1688" },
+    { casilla = "1722" },
+    { casilla = "1723" },
+    { casilla = "1727" },
+    { casilla = "1728" },
+    { casilla = "1729" },
+    { casilla = "1730" },
+    { casilla = "1731" },
+    { casilla = "1944" },
+    { casilla = "1947" },
+    { casilla = "1948" },
+    { casilla = "1950" },
+    { casilla = "1951" },
+    { casilla = "1952" },
+    { casilla = "1953" },
+    { casilla = "1954" },
+    { casilla = "1955" },
+    { casilla = "1956" },
+    { casilla = "1957" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-cuota-liquida-autonomica-incrementada-passthrough"
@@ -11181,6 +11652,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -11204,6 +11676,8 @@ formulas = [
     "renta-2024-importe-derecho-reduccion-pension-suma",
     "renta-2024-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2024-deduccion-economia-social-passthrough",
+    "renta-2024-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2024-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2024".constructs]]
@@ -11273,6 +11747,7 @@ formulas = [
     "renta-2024-iic-paraisos-fiscales-suma",
     "renta-2024-iic-perdidas-reducidas-suma",
     "renta-2024-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2024-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2024".constructs]]
@@ -11387,6 +11862,127 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0706" },
+    { casilla = "0707" },
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0761" },
+    { casilla = "0762" },
+    { casilla = "0764" },
+    { casilla = "0766" },
+    { casilla = "0768" },
+    { casilla = "0779" },
+    { casilla = "0781" },
+    { casilla = "0782" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0786" },
+    { casilla = "0787" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0842" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1623" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+    { casilla = "1686" },
+    { casilla = "1687" },
+    { casilla = "1688" },
+    { casilla = "1722" },
+    { casilla = "1723" },
+    { casilla = "1727" },
+    { casilla = "1728" },
+    { casilla = "1729" },
+    { casilla = "1730" },
+    { casilla = "1731" },
+    { casilla = "1944" },
+    { casilla = "1947" },
+    { casilla = "1948" },
+    { casilla = "1950" },
+    { casilla = "1951" },
+    { casilla = "1952" },
+    { casilla = "1953" },
+    { casilla = "1954" },
+    { casilla = "1955" },
+    { casilla = "1956" },
+    { casilla = "1957" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-cuota-liquida-autonomica-incrementada-passthrough"
@@ -17268,6 +17864,7 @@ legal_refs = [
     "ley-35-2006:art-62",
     "ley-35-2006:art-63",
     "ley-35-2006:art-66",
+    "ley-35-2006:art-68",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -17291,6 +17888,8 @@ formulas = [
     "renta-2025-importe-derecho-reduccion-pension-suma",
     "renta-2025-cuota-liquida-autonomica-incrementada-passthrough",
     "renta-2025-deduccion-economia-social-passthrough",
+    "renta-2025-deduccion-incentivos-inversion-empresarial-total",
+    "renta-2025-unidad-familiar-cuota-liquida-ue-formula",
 ]
 
 [[revisions."2025".constructs]]
@@ -17347,6 +17946,7 @@ formulas = [
     "renta-2025-iic-paraisos-fiscales-suma",
     "renta-2025-iic-perdidas-reducidas-suma",
     "renta-2025-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro",
 ]
 
 [[revisions."2025".constructs]]
@@ -17441,6 +18041,137 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro"
+target = "0436"
+expression = { op = "min", args = [
+    { casilla = "0430" },
+    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-unidad-familiar-cuota-liquida-ue-formula"
+target = "0728"
+expression = { op = "sum", args = [
+    { casilla = "0545" },
+    { casilla = "0546" },
+    { casilla = "0548" },
+    { casilla = "0549" },
+    { casilla = "0550" },
+    { casilla = "0551" },
+    { casilla = "0552" },
+    { casilla = "0553" },
+    { casilla = "0554" },
+    { casilla = "0555" },
+    { casilla = "0556" },
+    { casilla = "0557" },
+    { casilla = "0558" },
+    { casilla = "0559" },
+    { casilla = "0560" },
+    { casilla = "0561" },
+    { casilla = "0562" },
+    { casilla = "0563" },
+    { casilla = "0564" },
+    { op = "negate", args = [{ casilla = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-incentivos-inversion-empresarial-total"
+target = "0845"
+expression = { op = "sum", args = [
+    { casilla = "0706" },
+    { casilla = "0707" },
+    { casilla = "0752" },
+    { casilla = "0753" },
+    { casilla = "0754" },
+    { casilla = "0755" },
+    { casilla = "0756" },
+    { casilla = "0757" },
+    { casilla = "0758" },
+    { casilla = "0759" },
+    { casilla = "0760" },
+    { casilla = "0761" },
+    { casilla = "0762" },
+    { casilla = "0764" },
+    { casilla = "0765" },
+    { casilla = "0766" },
+    { casilla = "0767" },
+    { casilla = "0768" },
+    { casilla = "0769" },
+    { casilla = "0779" },
+    { casilla = "0780" },
+    { casilla = "0781" },
+    { casilla = "0783" },
+    { casilla = "0784" },
+    { casilla = "0785" },
+    { casilla = "0786" },
+    { casilla = "0787" },
+    { casilla = "0788" },
+    { casilla = "0791" },
+    { casilla = "0793" },
+    { casilla = "0795" },
+    { casilla = "0796" },
+    { casilla = "0797" },
+    { casilla = "0798" },
+    { casilla = "0817" },
+    { casilla = "0836" },
+    { casilla = "0837" },
+    { casilla = "0838" },
+    { casilla = "0839" },
+    { casilla = "0840" },
+    { casilla = "0841" },
+    { casilla = "0842" },
+    { casilla = "0843" },
+    { casilla = "0844" },
+    { casilla = "1623" },
+    { casilla = "1627" },
+    { casilla = "1629" },
+    { casilla = "1686" },
+    { casilla = "1687" },
+    { casilla = "1688" },
+    { casilla = "1722" },
+    { casilla = "1723" },
+    { casilla = "1727" },
+    { casilla = "1728" },
+    { casilla = "1729" },
+    { casilla = "1730" },
+    { casilla = "1731" },
+    { casilla = "1944" },
+    { casilla = "1947" },
+    { casilla = "1948" },
+    { casilla = "1950" },
+    { casilla = "1951" },
+    { casilla = "1952" },
+    { casilla = "1953" },
+    { casilla = "1954" },
+    { casilla = "1955" },
+    { casilla = "1956" },
+    { casilla = "1957" },
+    { casilla = "2060" },
+    { casilla = "2061" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-cuota-liquida-autonomica-incrementada-passthrough"

@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 122,
-      "casillas_consumed_by_formulas": 323,
-      "casillas_declared_but_never_read": 1173,
+      "computed_targets": 125,
+      "casillas_consumed_by_formulas": 368,
+      "casillas_declared_but_never_read": 1126,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 123,
-      "casillas_consumed_by_formulas": 331,
-      "casillas_declared_but_never_read": 1326,
+      "computed_targets": 126,
+      "casillas_consumed_by_formulas": 376,
+      "casillas_declared_but_never_read": 1279,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 137,
-      "casillas_consumed_by_formulas": 361,
-      "casillas_declared_but_never_read": 1449,
+      "computed_targets": 140,
+      "casillas_consumed_by_formulas": 419,
+      "casillas_declared_but_never_read": 1389,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 138,
-      "casillas_consumed_by_formulas": 366,
-      "casillas_declared_but_never_read": 1520,
+      "computed_targets": 141,
+      "casillas_consumed_by_formulas": 433,
+      "casillas_declared_but_never_read": 1451,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 138,
-      "casillas_consumed_by_formulas": 366,
-      "casillas_declared_but_never_read": 1653,
+      "computed_targets": 141,
+      "casillas_consumed_by_formulas": 427,
+      "casillas_declared_but_never_read": 1590,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 147,
-      "casillas_consumed_by_formulas": 417,
-      "casillas_declared_but_never_read": 1774,
+      "computed_targets": 150,
+      "casillas_consumed_by_formulas": 488,
+      "casillas_declared_but_never_read": 1701,
       "bindings_consumed_count": 1
     }
   },
@@ -138,18 +138,18 @@
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
       "total_casillas": 189,
-      "computed": 27,
+      "computed": 29,
       "bound": 0,
       "manual": 185,
-      "coverage_pct": 14.3
+      "coverage_pct": 15.3
     },
     "anexo_a_estatal": {
       "label": "Anexo A — deducciones generales (vivienda, donativos, cultural)",
       "total_casillas": 173,
-      "computed": 1,
+      "computed": 2,
       "bound": 0,
       "manual": 173,
-      "coverage_pct": 0.6
+      "coverage_pct": 1.2
     },
     "anexo_b_autonomicas": {
       "label": "Anexo B — deducciones autonómicas (17 CCAA)",
@@ -226,16 +226,16 @@
         72
       ],
       [
+        "ley-35-2006:art-49",
+        66
+      ],
+      [
         "ley-35-2006:art-28",
         66
       ],
       [
-        "ley-35-2006:art-49",
-        60
-      ],
-      [
         "ley-35-2006:art-77",
-        48
+        54
       ],
       [
         "ley-35-2006:art-22",
