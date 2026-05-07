@@ -1,0 +1,639 @@
+[schema]
+id = "aeat.user_profile"
+version = 1
+title = "AEAT user profile schema"
+snapshot_policy = "immutable_secure_snapshot_hash"
+remove_policy = "live_profile_tombstone_retain_snapshots"
+
+[[sections]]
+key = "identity"
+title = "Identity"
+sensitivity = "identity"
+effective_dated = false
+
+[[sections.fields]]
+key = "tax_id"
+type = "string"
+required = true
+sensitivity = "identity"
+description = "NIF/NIE/CIF used as filing identity."
+model_selectors = ["tax.id"]
+export_headers = ["profile_tax_id"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = true
+sensitivity = "identity"
+description = "Declarant given name or display name."
+model_selectors = ["name"]
+export_headers = ["name", "first_name"]
+
+[[sections.fields]]
+key = "surnames"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Declarant surnames for person filings."
+model_selectors = ["surnames"]
+export_headers = ["surnames"]
+
+[[sections.fields]]
+key = "legal_name"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Legal or company name for entity-style export headers."
+export_headers = ["legal_name"]
+
+[[sections.fields]]
+key = "email"
+type = "email"
+required = false
+sensitivity = "identity"
+description = "Operator contact email used by configuration surfaces."
+
+[[sections]]
+key = "contact"
+title = "Contact and fiscal address"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "fiscal_address"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fiscal address declared for taxpayer/census purposes."
+
+[[sections.fields]]
+key = "postcode"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Fiscal-address postcode."
+model_selectors = ["address.postcode"]
+
+[[sections]]
+key = "tax_residence"
+title = "Tax residence and jurisdiction"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "ccaa"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Common-regime autonomous community for Modelo 100 jurisdiction."
+enum_values = [
+  "andalucia",
+  "aragon",
+  "asturias",
+  "baleares",
+  "canarias",
+  "cantabria",
+  "castilla_la_mancha",
+  "castilla_y_leon",
+  "cataluna",
+  "comunidad_valenciana",
+  "extremadura",
+  "galicia",
+  "la_rioja",
+  "madrid",
+  "murcia",
+]
+model_selectors = ["TaxResidenceProfile.ccaa"]
+
+[[sections.fields]]
+key = "jurisdiction_scope"
+type = "enum"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Common-regime or explicit unsupported foral state."
+enum_values = ["common_regime", "foral_unsupported"]
+
+[[sections]]
+key = "census"
+title = "Census and enrollment"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "status"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Modelo 036 census state."
+enum_values = ["alta", "modificacion", "baja"]
+
+[[sections.fields]]
+key = "large_company"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Large-company enrollment fact used by filing cadence."
+model_selectors = ["enrollment.large_company"]
+schedule_predicates = ["enrollment.large_company"]
+
+[[sections.fields]]
+key = "public_administration_budget_gt_6000000"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Public-administration budget threshold used by filing cadence."
+model_selectors = ["enrollment.public_administration_budget_gt_6000000"]
+schedule_predicates = ["enrollment.public_administration_budget_gt_6000000"]
+
+[[sections]]
+key = "activities"
+title = "Business activities"
+sensitivity = "identity"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "description"
+type = "string"
+required = true
+sensitivity = "identity"
+effective_dated = true
+description = "Census activity description."
+
+[[sections.fields]]
+key = "cnae"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "CNAE activity code where applicable."
+export_headers = ["cnae"]
+
+[[sections.fields]]
+key = "iae_epigraph"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "IAE section/group/epigraph where applicable."
+
+[[sections]]
+key = "irpf"
+title = "IRPF and withholding"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "professional_income_withholding_ge_70pct"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether professional income withholding reaches the 70 percent threshold."
+model_selectors = ["professional_income_withholding_ge_70pct"]
+schedule_predicates = ["professional_income_withholding_ge_70pct"]
+
+[[sections.fields]]
+key = "uses_objective_estimation"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the profile uses objective estimation for IRPF."
+model_selectors = ["uses_objective_estimation_irpf"]
+schedule_predicates = ["uses_objective_estimation_irpf"]
+
+[[sections]]
+key = "withholding"
+title = "Withholding payer obligations"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "has_employees"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays employees with withholding."
+model_selectors = ["has_employees"]
+schedule_predicates = ["has_employees"]
+
+[[sections.fields]]
+key = "pays_professionals_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays professionals with withholding."
+model_selectors = ["pays_professionals_with_retencion"]
+schedule_predicates = ["pays_professionals_with_retencion"]
+
+[[sections.fields]]
+key = "pays_rent_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays rent with withholding."
+model_selectors = ["pays_rent_with_retencion"]
+schedule_predicates = ["pays_rent_with_retencion"]
+
+[[sections.fields]]
+key = "pays_capital_income_with_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer pays capital income with withholding."
+model_selectors = ["pays_capital_income_with_retencion"]
+schedule_predicates = ["pays_capital_income_with_retencion"]
+
+[[sections]]
+key = "iva"
+title = "IVA profile"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "regime"
+type = "enum"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "IVA regime used by obligation and classification projections."
+enum_values = ["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"]
+model_selectors = ["iva.regime"]
+
+[[sections.fields]]
+key = "does_intracomunitario"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer conducts intracommunity operations."
+model_selectors = ["does_intracomunitario"]
+schedule_predicates = ["does_intracomunitario"]
+
+[[sections.fields]]
+key = "intracommunity_operations_exceed_50000_eur"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 349 cadence threshold."
+model_selectors = ["iva.intracommunity_operations_exceed_50000_eur"]
+schedule_predicates = ["iva.intracommunity_operations_exceed_50000_eur"]
+
+[[sections]]
+key = "filing_export"
+title = "Filing and export context"
+sensitivity = "financial"
+effective_dated = false
+
+[[sections.fields]]
+key = "declaration_type"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Declaration type used by export layouts and Modelo 100."
+model_selectors = ["declaration.type"]
+export_headers = ["declaration_type", "complementaria", "complementaria_page", "page_complementaria"]
+
+[[sections.fields]]
+key = "previous_receipt"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Previous receipt or justificante reference for complementary filings."
+export_headers = ["previous_receipt", "previous_justificante", "justificante_anterior"]
+
+[[sections.fields]]
+key = "period_start_date"
+type = "date"
+required = false
+sensitivity = "financial"
+description = "Filing period start date where export layouts require a header value."
+export_headers = ["fecha_inicio_periodo", "devengo_start_date"]
+
+[[sections.fields]]
+key = "period_end_date"
+type = "date"
+required = false
+sensitivity = "financial"
+description = "Filing period end date where export layouts require a header value."
+export_headers = ["fecha_fin_periodo"]
+
+[[sections.fields]]
+key = "program_version"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "Program version header supplied by export context."
+export_headers = ["program_version"]
+
+[[sections.fields]]
+key = "developer_tax_id"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "Developer NIF/CIF header supplied by export context."
+export_headers = ["developer_nif", "developer_tax_id"]
+
+[[sections.fields]]
+key = "iban"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Payment account when required by filing context."
+export_headers = ["iban"]
+
+[[sections.fields]]
+key = "aeat_seal"
+type = "string"
+required = false
+sensitivity = "audit"
+description = "AEAT seal header when an export layout requires it."
+export_headers = ["aeat_seal"]
+
+[[sections]]
+key = "renta_taxpayer"
+title = "Renta taxpayer"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "sex"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer sex for Modelo 100."
+enum_values = ["1", "2"]
+model_selectors = ["taxpayer.sex"]
+
+[[sections.fields]]
+key = "marital_status"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer marital status valid for Modelo 100."
+model_selectors = ["taxpayer.marital_status"]
+
+[[sections.fields]]
+key = "birth_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Taxpayer birth date."
+model_selectors = ["taxpayer.birth_date"]
+
+[[sections.fields]]
+key = "disability_grade"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer disability grade code for Modelo 100."
+model_selectors = ["taxpayer.disability_grade"]
+
+[[sections.fields]]
+key = "death_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+nullable = true
+description = "Taxpayer death date when Modelo 100 requires it."
+model_selectors = ["taxpayer.death_date"]
+
+[[sections]]
+key = "renta_spouse"
+title = "Renta spouse"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "tax_id"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse NIF/NIE for joint filing."
+model_selectors = ["spouse.tax.id"]
+
+[[sections.fields]]
+key = "name"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse given name."
+model_selectors = ["spouse.name"]
+
+[[sections.fields]]
+key = "surnames"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse surnames."
+model_selectors = ["spouse.surnames"]
+
+[[sections.fields]]
+key = "birth_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Spouse birth date."
+model_selectors = ["spouse.birth_date"]
+
+[[sections.fields]]
+key = "sex"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse sex for Modelo 100."
+enum_values = ["1", "2"]
+model_selectors = ["spouse.sex"]
+
+[[sections.fields]]
+key = "disability_grade"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Spouse disability grade code for Modelo 100."
+model_selectors = ["spouse.disability_grade"]
+
+[[sections.fields]]
+key = "non_resident_irpf"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the spouse is non-resident and not an IRPF taxpayer."
+model_selectors = ["spouse.non_resident_irpf"]
+
+[[sections.fields]]
+key = "eu_eea_resident"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the non-resident spouse is resident in the EU or EEA."
+model_selectors = ["spouse.eu_eea_resident"]
+
+[[sections.fields]]
+key = "eu_eea_country"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+nullable = true
+description = "EU or EEA country of residence for the spouse."
+model_selectors = ["spouse.eu_eea_country"]
+
+[[sections]]
+key = "renta_family"
+title = "Renta family"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "minor_children_in_unit"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Minor children in the family unit."
+model_selectors = ["family.minor_children_in_unit"]
+
+[[sections.fields]]
+key = "descendants_eu_eea_deduction"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "EU/EEA descendant deduction flag for Modelo 100."
+model_selectors = ["family.descendants_eu_eea_deduction"]
+
+[[sections.fields]]
+key = "descendants"
+type = "array"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Repeated descendant rows for Renta."
+model_selectors = [
+  "RentaFamilyProfile.descendants",
+  "RentaFamilyProfile.descendants.tax_id",
+  "RentaFamilyProfile.descendants.display_name",
+  "RentaFamilyProfile.descendants.birth_date",
+  "RentaFamilyProfile.descendants.disability_grade",
+  "RentaFamilyProfile.descendants.death_date",
+]
+
+[[sections.fields]]
+key = "ascendants"
+type = "array"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Repeated ascendant rows for Renta."
+model_selectors = [
+  "RentaFamilyProfile.ascendants",
+  "RentaFamilyProfile.ascendants.tax_id",
+  "RentaFamilyProfile.ascendants.display_name",
+  "RentaFamilyProfile.ascendants.birth_date",
+  "RentaFamilyProfile.ascendants.disability_grade",
+  "RentaFamilyProfile.ascendants.cohabiting_descendant_count",
+  "RentaFamilyProfile.ascendants.death_date",
+]
+
+[[sections]]
+key = "properties"
+title = "Properties and rental"
+sensitivity = "financial"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "cadastral_reference"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Property cadastral reference."
+
+[[sections.fields]]
+key = "use_type"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Property use classification."
+enum_values = ["habitual", "rental", "mixed", "imputed_income", "other"]
+
+[[sections]]
+key = "usage_ratios"
+title = "Usage ratios and deductibility"
+sensitivity = "financial"
+effective_dated = true
+repeatable = true
+
+[[sections.fields]]
+key = "category_id"
+type = "string"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Category profile id the ratio applies to."
+
+[[sections.fields]]
+key = "business_ratio"
+type = "decimal"
+required = true
+sensitivity = "financial"
+effective_dated = true
+description = "Business-use ratio in the closed interval 0..1."
+
+[[sections]]
+key = "provenance"
+title = "Provenance and effective dating"
+sensitivity = "audit"
+effective_dated = false
+
+[[sections.fields]]
+key = "source"
+type = "enum"
+required = true
+sensitivity = "audit"
+description = "Source of the profile fact."
+enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_census_read", "registry_inference"]
+
+[[sections.fields]]
+key = "valid_from"
+type = "date"
+required = false
+sensitivity = "audit"
+description = "First date the fact applies."
+
+[[sections.fields]]
+key = "valid_to"
+type = "date"
+required = false
+sensitivity = "audit"
+nullable = true
+description = "Last date the fact applies."
