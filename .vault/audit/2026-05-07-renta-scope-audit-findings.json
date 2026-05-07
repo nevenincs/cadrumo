@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 107,
+      "computed_targets": 111,
       "casillas_consumed_by_formulas": 299,
-      "casillas_declared_but_never_read": 1208,
+      "casillas_declared_but_never_read": 1204,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 107,
+      "computed_targets": 111,
       "casillas_consumed_by_formulas": 300,
-      "casillas_declared_but_never_read": 1369,
+      "casillas_declared_but_never_read": 1365,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 118,
+      "computed_targets": 122,
       "casillas_consumed_by_formulas": 323,
-      "casillas_declared_but_never_read": 1499,
+      "casillas_declared_but_never_read": 1495,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 119,
+      "computed_targets": 123,
       "casillas_consumed_by_formulas": 328,
-      "casillas_declared_but_never_read": 1570,
+      "casillas_declared_but_never_read": 1566,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 119,
+      "computed_targets": 123,
       "casillas_consumed_by_formulas": 328,
-      "casillas_declared_but_never_read": 1703,
+      "casillas_declared_but_never_read": 1699,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 128,
+      "computed_targets": 132,
       "casillas_consumed_by_formulas": 380,
-      "casillas_declared_but_never_read": 1823,
+      "casillas_declared_but_never_read": 1819,
       "bindings_consumed_count": 1
     }
   },
@@ -138,10 +138,10 @@
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
       "total_casillas": 189,
-      "computed": 23,
+      "computed": 27,
       "bound": 0,
       "manual": 185,
-      "coverage_pct": 12.2
+      "coverage_pct": 14.3
     },
     "anexo_a_estatal": {
       "label": "Anexo A — deducciones generales (vivienda, donativos, cultural)",
@@ -242,6 +242,10 @@
         42
       ],
       [
+        "ley-35-2006:art-74",
+        36
+      ],
+      [
         "ley-35-2006:art-56",
         36
       ],
@@ -250,12 +254,8 @@
         31
       ],
       [
-        "ley-35-2006:art-23",
+        "ley-35-2006:art-62",
         30
-      ],
-      [
-        "ley-35-2006:art-19",
-        24
       ]
     ],
     "uncited_articles": [
