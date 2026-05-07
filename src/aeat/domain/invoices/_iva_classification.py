@@ -38,6 +38,10 @@ cases, callers construct the record directly with the appropriate
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from ..vat import (
@@ -50,6 +54,9 @@ from ..vat import (
     settlement_sides_for_flow,
 )
 from ._enums import InvoiceKind, IvaRate
+
+if TYPE_CHECKING:
+    from ..calculations.registry import IvaLedgerObservation
 
 
 _IVA_RATE_TO_VAT_KIND: dict[IvaRate, VATRateKind] = {
@@ -190,11 +197,7 @@ def classify_invoice_line_for_iva(
 
     category = _IVA_RATE_TO_DOMESTIC_CATEGORY[iva_rate]
     rate_kind = _IVA_RATE_TO_VAT_KIND[iva_rate]
-    flow_direction = (
-        IvaFlowDirection.REPERCUTIDO
-        if invoice_kind is InvoiceKind.ISSUED
-        else IvaFlowDirection.SOPORTADO
-    )
+    flow_direction = IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
     return IvaInvoiceClassification(
         category=category,
         rate_kind=rate_kind,
@@ -206,12 +209,12 @@ def classify_invoice_line_for_iva(
 def invoice_line_to_iva_observation(
     *,
     invoice_id: str,
-    issued_at,  # datetime.date — Annotated to satisfy linting without circular imports
+    issued_at: date,
     invoice_kind: InvoiceKind,
     iva_rate: IvaRate,
-    base_amount,  # Decimal
-    iva_amount,  # Decimal
-):
+    base_amount: Decimal,
+    iva_amount: Decimal,
+) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
 
     The runtime resolver for the substrate's ``ledger_iva_aggregation``
@@ -243,13 +246,11 @@ def invoice_line_to_iva_observation(
         An :class:`IvaLedgerObservation` with the full classification
         triple ready for binding-resolver consumption.
     """
-    # Local import to avoid circular dependency (calculations.registry
-    # -> _bindings -> aeat.domain.vat -> back to invoices via stale path).
-    from ..calculations.registry._bindings import IvaLedgerObservation
+    from ..calculations.registry import IvaLedgerObservation
 
-    classification = classify_invoice_line_for_iva(
-        iva_rate=iva_rate, invoice_kind=invoice_kind
-    )
+    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
+    if classification.rate_kind is None:
+        raise ValueError("standard IVA invoice observations require a rate_kind")
     return IvaLedgerObservation(
         ledger_id=invoice_id,
         transaction_date=issued_at,
