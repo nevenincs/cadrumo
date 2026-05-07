@@ -307,3 +307,80 @@ breaking the suite. xfail-strict in pytest produces "xfail" status when
 the test fails as expected; the suite is GREEN in that case. A delivered
 phase produces "xpass" status which is RED under strict. The marker
 removal is the final closing act.
+
+## Post-Rollout Hardening (2026-05-07)
+
+Three additional autonomous-loop deliverables landed after the cuota
+chain core was complete:
+
+- **Income side backport** (commits e3f7d5c5, 9f521bfe). 117 income-
+  side formulas (trabajo, capital mobiliario, capital inmobiliario,
+  estimación directa simple) replicated across ejercicios 2020-2024
+  with year-specific casilla-gap filtering. Per-year totals: 2020-
+  2022 each 47 formulas, 2023-2024 each 47 formulas, 2025 unchanged
+  at 54.
+
+- **Estimación directa modal substrate backport** (commit 187e79bd).
+  Each prior-year ejercicio now carries the modal binding (renta-
+  {year}-modelo-100-estimacion-directa-es-normal selecting normal
+  vs simplified mode based on casilla 0168) plus the difficult-
+  justification rate (5%) and cap (€2,000) parameters, plus the
+  formulas at 0222 (cap on dificil-justificacion gastos) and 0224
+  (rendimiento neto branching on the modal binding).
+
+- **Behavioural + drift-detection regression guards** (commits
+  815874ec, 03a9144e):
+    - test_renta_chain_behaviour.py: 8 numeric-output behaviour tests
+      that catch silent regressions where a formula gets swapped, an
+      operand dropped, or a negate inverted.
+    - test_modelo_100_drift_detection.py: 8 schema-level drift
+      detection tests covering top-level chain coverage per revision,
+      calculation+filing application_link presence, orphan binding /
+      parameter detection (with profile-source bindings excluded
+      since they expose taxpayer data to the application layer),
+      and cross-reference resolution (relations → bindings, formulas
+      → bindings/parameters).
+
+39/39 tests across the 5 cuota-chain-related test files pass; 25/25
+modelos validate.
+
+## Open Follow-Up Slices
+
+- **Cross-modelo relations backport** (Task #42, deferred). Cloning
+  the 9 cross-modelo relations + their 8 previous_filing target_
+  bindings + 9 dependency_classifications + the 8 supporting
+  constructs (renta-dependent-modelos plus 7 sibling constructs) into
+  ejercicios 2020-2024. Each construct is 50+ lines of legal_refs,
+  source_refs, bindings, relations, dependency_classifications,
+  deadline_windows, and application_links arrays — substantial
+  substrate clone deferred behind tractable hardening tasks.
+
+- **Escala progresiva parameters per ejercicio** (Task #44). Encode
+  each year's IRPF estatal escala (LIRPF art. 63) and autonomic
+  default escala (LIRPF art. 74) bracket values as registry
+  parameters with date_axis filing_period and BOE-anchored citations.
+  Add formulas that apply the escala to base liquidable to compute
+  cuotas (replacing manual 0528-0531 inputs). Unblocks the 30k
+  employee profile to compute end-to-end across all years without
+  manual escala values.
+
+- **Capital gains chain composition** (Task #46). Replace the
+  manual 0429 / 0424 inputs with formulas computing the saldo neto
+  positivo from upstream casillas, plus the multi-year carry-forward
+  compensation (0436, 0439-0455 saldos pendientes).
+
+- **Multi-year non-zero income synthetic profiles** (Task #48).
+  Build executable parity scenarios for each ejercicio that exercise
+  the trabajo and estimación directa chains end-to-end with realistic
+  synthetic inputs (30k employee, 25k autónomo normal mode, 18k
+  autónomo simplified mode). Each scenario asserts the full chain
+  output through 0587. Year-specific escala values manual until
+  Task #44 lands the parametric escala.
+
+- **Migrate rental tier resolver thresholds to registry parameters**
+  (Task #50). src/aeat/domain/rental/_tier_resolver.py hardcodes the
+  LIRPF art. 23 thresholds (PRIOR_RENT_REBAJA_THRESHOLD = 0.05,
+  REHAB_LOOKBACK_DAYS = 730, JOVEN_TENANT_AGE_MIN/MAX = 18/35) in
+  Python rather than the registry. Per the calculation-truth-registry
+  ADR these are filing-grade legal constants and must live as registry
+  parameters with BOE-anchored citations.
