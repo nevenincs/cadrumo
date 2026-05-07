@@ -5523,3 +5523,39 @@ The cross-substrate test gate (test_legal_basis_binding.py) is
 exercised whenever any of these layers are touched; if drift
 appears between the BOE article and the substrate value, the gate
 fires before the discrepancy can leak into modelo filings.
+
+- [x] Type-harden Invoice.counterparty country axis. Adds typed
+  property accessors that bridge the str-level counterparty_country
+  field into the substrate's closed EUMemberState enum so downstream
+  consumers route through the substrate taxonomy. New properties
+  Invoice.counterparty_eu_member_state (EUMemberState | None) and
+  Invoice.counterparty_is_eu_member (bool) anchored on
+  EU_MEMBER_STATE_CODES (Teardown C). 3 new tests pass + 40 prior
+  invoice tests stay green. Commit `c285c81b`.
+- [x] Add Invoice.iva_classification_for_line typed accessor. Closes
+  the substrate→ledger handshake on the invoice surface: the Invoice
+  record now exposes a typed method that bundles its lines' IvaRate
+  slot + Invoice.kind into the canonical IvaInvoiceClassification
+  record (substrate triple + derived settlement-side classification).
+  Downstream filing surfaces call
+  invoice.iva_classification_for_line(line) once per line and route
+  through the substrate typed record. 2 new tests pass + 65 prior
+  IVA / legal-binding tests stay green. Commit `cc4259b8`.
+
+### Pydantic-Typed Invoice Surface (Now Complete)
+
+| Accessor | Type | Anchor |
+|----------|------|--------|
+| invoice.kind | InvoiceKind | substrate ledger primitive |
+| invoice.payment_status | PaymentStatus | substrate ledger primitive |
+| invoice.iva_category | VATCategory \| None | substrate operation kind |
+| invoice.counterparty_eu_member_state | EUMemberState \| None | substrate EU taxonomy |
+| invoice.counterparty_is_eu_member | bool | derived predicate |
+| invoice.iva_classification_for_line(line) | IvaInvoiceClassification | substrate triple bundle |
+| line.iva_rate | IvaRate | substrate rate slot |
+
+Every accessor is anchored to a substrate primitive backed by a BOE
+legal article. The cross-substrate test_legal_basis_binding.py gate
+(commit 688609e5) fires if any layer drifts between the BOE article
+and the substrate value, and the typed surface ensures downstream
+consumers can't bypass the canonical classification.
