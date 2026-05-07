@@ -313,6 +313,12 @@ production-readiness definition above.
 | 19 | 036 | Censal declaration, identity/activity/tax-regime registration sections, official source layout, legal basis, filing linkage. | Censal hydrate tables, declaration extractor truth, modelo metadata duplicates. | Classify official live/static surface; authenticated census modification/presentation surfaces are forbidden unless AEAT publishes an official test mode with synthetic data. |
 | 20 | 037 | Simplified censal declaration if reviewed official evidence exists; otherwise explicit removal from filing-grade support. | Censal hydrate tables, declaration extractor truth, any implied support without official evidence. | Classify official live/static surface; if current filing-grade evidence is absent, remove app entry points and retain only evidence-backed historical records. |
 | 21 | 100 | Renta universe: source governance, summary, anexos, income types, reductions, minimos, bases, cuotas, CCAA rules, rental, amortization, deductions, borrador/declaration linkage, export or filing linkage. | All Renta rulesets, Renta helper modules, CCAA hardcoding, rental legal-calculation authority, borrador/extractor casilla truth. | Research Renta WEB Open as read-only cross-reference evidence; authenticated Renta WEB/borrador/data-fiscal flows are forbidden for synthetic calculation tests. |
+| 22 | 184 | Annual informative declaration for entities under attribution of income, declared entity/perceptor facts, annual schedule, record-design layout authority, extraction/verification linkage. | Modelo metadata duplicates, declaration extractor truth, standalone casilla projections, any implied Renta attribution authority outside the registry. | Static official documentation plus authenticated read-only filed-declaration surface; no writable AEAT action is allowed. |
+| 23 | 308 | IVA ad-hoc refund request, operator-trigger classification, refund request facts, profile-conditional deadline rules, record-design layout authority. | IVA/category maps, declaration extractor truth, deadline/applicability duplicates, any implied refund calculation outside the registry. | Static official documentation plus authenticated read-only filed-declaration surface; no write, sign, present, or payment action is allowed. |
+| 24 | 309 | IVA non-periodic declaration, trigger-specific IVA facts, selected ledger_iva_aggregation bindings, non-periodic result casillas, deadline/profile conditions. | IVA/category maps, filing/declaration duplicates, declaration extractor truth, deadline/applicability duplicates. | Static official documentation plus authenticated read-only filed-declaration surface; synthetic calculation parity remains open until official evidence is registered. |
+| 25 | 322 | IVA group-of-entities individual monthly autoliquidation, member-level VAT ledger bindings, result casillas, monthly schedule, group-regime inputs. | IVA/category maps, filing builder duplicates, group-regime helper shortcuts, generated/export layout authorities. | Static official documentation plus authenticated read-only filed-declaration surface; authenticated presentation paths remain forbidden. |
+| 26 | 353 | IVA group-of-entities aggregate monthly autoliquidation, dominant-entity consolidation, member 322 relation, group result casillas, monthly schedule. | IVA/category maps, group consolidation helpers, filing builder duplicates, generated/export layout authorities. | Static official documentation plus authenticated read-only filed-declaration surface; authenticated presentation paths remain forbidden. |
+| 27 | 360 | IVA refund request for VAT borne in other EU Member States, refund-country facts, request/detail lines, deadline windows, record-design layout authority. | IVA/category maps, country/refund helper duplicates, declaration extractor truth, deadline/applicability duplicates. | Static official documentation plus authenticated read-only filed-declaration surface; no writable AEAT action is allowed. |
 
 ## Wave 0 Live Parity Oracle Backend Pre-Step
 
@@ -2447,6 +2453,163 @@ own ledger is checked.
   epoch row remains and no old authority can populate Modelo 100 filing-grade
   values.
 
+### Wave 22 Modelo 184 Parity Ledger
+
+- [x] Modelo 184 registry foundation: annual informative revision
+  `2015-y-siguientes` with period `0A` is present.
+- [x] Modelo 184 informational casillas: `decl.ejercicio` and
+  `decl.tipo-declaracion` are represented.
+- [x] Modelo 184 layout authority: record-design layout parity is present and
+  remains classified as layout authority only.
+- [x] Modelo 184 extraction and verification: extraction profile and
+  verification expectation are present.
+- [x] Modelo 184 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 184 application/deadline linkage: filing, extractor, verification,
+  deadline links, annual schedule, and 2018-2026 February deadline windows are
+  represented.
+- [ ] Modelo 184 full casilla corpus: enumerate and register the complete
+  official casilla set.
+- [ ] Modelo 184 formula/binding coverage: classify whether formulas or
+  bindings apply and register them if official evidence supports them.
+- [ ] Modelo 184 export/file generation parity: represent export/file layout
+  and generation where official filing support requires it.
+- [ ] Modelo 184 live/read fixture evidence: capture committed sanitized
+  read-only evidence and verify parser behaviour.
+- [ ] Modelo 184 perceptor/entity parity ledger: define entity/perceptor-detail
+  coverage and consistency checks.
+- [ ] Modelo 184 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
+### Wave 23 Modelo 308 Parity Ledger
+
+- [x] Modelo 308 registry foundation: IVA ad-hoc refund request revision
+  `2009-y-siguientes` with period `AD-HOC` is present.
+- [x] Modelo 308 informational casillas: `decl.ejercicio` and
+  `decl.tipo-solicitud` are represented.
+- [x] Modelo 308 layout authority: record-design layout parity is present and
+  remains classified as layout authority only.
+- [x] Modelo 308 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 308 application linkage: portal, filing, extractor, verification,
+  and deadline links are represented.
+- [ ] Modelo 308 deadline windows: register official deadline windows where
+  the operator profile yields a filing period.
+- [ ] Modelo 308 operator-type deadline refinement: encode official
+  operator-trigger distinctions without ad-hoc category maps.
+- [ ] Modelo 308 calculation/binding casillas: register binding casillas only
+  where official evidence requires filing-grade calculation.
+- [ ] Modelo 308 full casilla corpus: enumerate and register the complete
+  official casilla set.
+- [ ] Modelo 308 profile-conditional plazos: represent profile-dependent
+  filing deadlines as registry facts.
+- [ ] Modelo 308 export/layout deepening: add official export or filing layout
+  details beyond record-design layout where required.
+- [ ] Modelo 308 live/read fixture evidence: capture committed sanitized
+  read-only evidence and verify parser behaviour.
+- [ ] Modelo 308 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
+### Wave 24 Modelo 309 Parity Ledger
+
+- [x] Modelo 309 registry foundation: IVA non-periodic declaration revision
+  `2004-y-siguientes` is present.
+- [x] Modelo 309 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 309 application linkage: calculation, filing, workflow,
+  reconciliation, review, approval, extractor, verification, and deadline links
+  are represented.
+- [x] Modelo 309 typed binding/result-casilla slice: two
+  `ledger_iva_aggregation` bindings, two bound IVA casillas, one computed total
+  casilla, two informational casillas, and one formula are represented.
+- [ ] Modelo 309 trigger coverage: extend beyond intra-community
+  autorepercutido and recargo-equivalencia soportado only where official
+  evidence supports the trigger.
+- [ ] Modelo 309 full casilla corpus: enumerate and register the complete
+  official casilla set.
+- [ ] Modelo 309 live/static parity fixture: capture sanitized evidence that
+  verifies parser and local calculation behaviour against official data.
+- [ ] Modelo 309 deadline windows: register official deadline windows and
+  profile conditions.
+- [ ] Modelo 309 formula coverage: deepen formulas beyond the current total
+  formula only where official evidence supports them.
+- [ ] Modelo 309 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
+### Wave 25 Modelo 322 Parity Ledger
+
+- [x] Modelo 322 registry foundation: IVA group-of-entities individual monthly
+  declaration revision `2008-y-siguientes` with periods `01` through `12` is
+  present.
+- [x] Modelo 322 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 322 schedule linkage: monthly schedule and representative
+  deadline windows are represented.
+- [x] Modelo 322 typed binding/result-casilla slice: five
+  `ledger_iva_aggregation` bindings, five bound IVA casillas, three computed
+  result casillas, two informational casillas, and three formulas are
+  represented.
+- [ ] Modelo 322 full official casilla corpus: enumerate and register the
+  complete official casilla set.
+- [ ] Modelo 322 group-regime-specific inputs: register official group-member
+  inputs and filing constraints.
+- [ ] Modelo 322 live/read fixture evidence: capture committed sanitized
+  read-only evidence and verify parser behaviour.
+- [ ] Modelo 322 export/file layout parity: represent official export or filing
+  layout details beyond record-design layout where required.
+- [ ] Modelo 322 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
+### Wave 26 Modelo 353 Parity Ledger
+
+- [x] Modelo 353 registry foundation: IVA group-of-entities aggregate monthly
+  declaration revision `2008-y-siguientes` is present.
+- [x] Modelo 353 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 353 schedule linkage: monthly schedule and representative
+  deadline windows are represented.
+- [x] Modelo 353 typed binding/result-casilla slice: the current
+  result-casilla and formula shape matches Modelo 322.
+- [ ] Modelo 353 member relation: register the official aggregation relation to
+  member Modelo 322 filings.
+- [ ] Modelo 353 group consolidation semantics: encode dominant-entity
+  consolidation rules as registry facts.
+- [ ] Modelo 353 full official casilla corpus: enumerate and register the
+  complete official casilla set.
+- [ ] Modelo 353 live/read fixture evidence: capture committed sanitized
+  read-only evidence and verify parser behaviour.
+- [ ] Modelo 353 export/file layout parity: represent official export or filing
+  layout details beyond record-design layout where required.
+- [ ] Modelo 353 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
+### Wave 27 Modelo 360 Parity Ledger
+
+- [x] Modelo 360 registry foundation: IVA EU refund request revision
+  `2010-y-siguientes` with period `AD-HOC` is present.
+- [x] Modelo 360 informational casillas: `decl.ejercicio` and
+  `decl.estado-miembro` are represented.
+- [x] Modelo 360 layout authority: record-design layout parity is present and
+  remains classified as layout authority only.
+- [x] Modelo 360 read-only surfaces: static official documentation and
+  authenticated read-only cross references are present.
+- [x] Modelo 360 application/deadline linkage: filing, extractor,
+  verification, deadline links, and 2024/2025 September 30 deadline windows are
+  represented.
+- [ ] Modelo 360 refund-line/request detail model: register refund request line
+  structure and validation rules.
+- [ ] Modelo 360 typed EU member/refund-country facts: bind member-state and
+  refund-country facts to the central schema.
+- [ ] Modelo 360 amount/binding/formula coverage: classify whether amount
+  bindings or formulas apply and register them if official evidence supports
+  them.
+- [ ] Modelo 360 full casilla corpus: enumerate and register the complete
+  official casilla set.
+- [ ] Modelo 360 live/read fixture evidence: capture committed sanitized
+  read-only evidence and verify parser behaviour.
+- [ ] Modelo 360 completion gate: close only after the wave has no unchecked
+  row and no unsupported authority can populate filing-grade values.
+
 ## Tasks
 
 - `Mandatory per-step quality and sanitization gate`
@@ -2586,6 +2749,10 @@ own ledger is checked.
   - [x] Extend model-law coverage ledgers so each modelo/revision reports legal
      authority coverage, official source guidance coverage, executable parity
      coverage, and layout/export coverage as separate gates.
+     - [x] Add a whole-tree model-law coverage audit that validates every
+       committed modelo revision once, fails on missing legal authority,
+       official source guidance, or layout authority, and reports executable
+       parity gaps without treating them as solved.
   - [x] Extend validator failure semantics so a filing-grade formula cannot be
      validated from layout authority alone and cannot use executable parity as
      a substitute for BOE legal basis.
