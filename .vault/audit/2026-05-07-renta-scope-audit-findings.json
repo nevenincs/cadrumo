@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 55,
-      "casillas_consumed_by_formulas": 208,
-      "casillas_declared_but_never_read": 1313,
+      "computed_targets": 73,
+      "casillas_consumed_by_formulas": 246,
+      "casillas_declared_but_never_read": 1272,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 55,
-      "casillas_consumed_by_formulas": 209,
-      "casillas_declared_but_never_read": 1474,
+      "computed_targets": 73,
+      "casillas_consumed_by_formulas": 247,
+      "casillas_declared_but_never_read": 1433,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 55,
-      "casillas_consumed_by_formulas": 219,
-      "casillas_declared_but_never_read": 1623,
+      "computed_targets": 73,
+      "casillas_consumed_by_formulas": 255,
+      "casillas_declared_but_never_read": 1584,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 55,
-      "casillas_consumed_by_formulas": 222,
-      "casillas_declared_but_never_read": 1697,
+      "computed_targets": 73,
+      "casillas_consumed_by_formulas": 258,
+      "casillas_declared_but_never_read": 1658,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 55,
-      "casillas_consumed_by_formulas": 222,
-      "casillas_declared_but_never_read": 1830,
+      "computed_targets": 73,
+      "casillas_consumed_by_formulas": 258,
+      "casillas_declared_but_never_read": 1791,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 62,
-      "casillas_consumed_by_formulas": 270,
-      "casillas_declared_but_never_read": 1956,
+      "computed_targets": 80,
+      "casillas_consumed_by_formulas": 308,
+      "casillas_declared_but_never_read": 1915,
       "bindings_consumed_count": 1
     }
   },
@@ -130,10 +130,10 @@
     "ganancias_capital_mobiliario_ahorro": {
       "label": "G/P y capital mobiliario en base ahorro",
       "total_casillas": 219,
-      "computed": 0,
+      "computed": 5,
       "bound": 0,
       "manual": 219,
-      "coverage_pct": 0.0
+      "coverage_pct": 2.3
     },
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
@@ -186,24 +186,36 @@
     "uncategorised": {
       "label": "Uncategorised (section[0] not anchor-mapped)",
       "total_casillas": 147,
-      "computed": 8,
+      "computed": 21,
       "bound": 0,
       "manual": 147
     }
   },
   "layer4": {
     "catalogued_count": 118,
-    "cited_count": 35,
-    "catalogued_but_uncited_count": 83,
+    "cited_count": 36,
+    "catalogued_but_uncited_count": 82,
     "cited_but_uncatalogued_count": 0,
     "top_cited": [
+      [
+        "ley-35-2006:art-33",
+        120
+      ],
+      [
+        "ley-35-2006:art-34",
+        120
+      ],
+      [
+        "ley-35-2006:art-37",
+        120
+      ],
       [
         "orden-hac-277-2026:art-3",
         98
       ],
       [
         "ley-35-2006:art-50",
-        66
+        72
       ],
       [
         "ley-35-2006:art-30",
@@ -242,18 +254,6 @@
         24
       ],
       [
-        "ley-35-2006:art-33",
-        24
-      ],
-      [
-        "ley-35-2006:art-34",
-        24
-      ],
-      [
-        "ley-35-2006:art-37",
-        24
-      ],
-      [
         "ley-35-2006:art-62",
         24
       ]
@@ -267,7 +267,6 @@
       "ley-35-2006:art-68.4",
       "ley-35-2006:art-82",
       "ley-35-2006:art-83",
-      "ley-35-2006:art-85",
       "ley-37-1992:art-161",
       "ley-37-1992:art-163-octiesdecies",
       "ley-37-1992:art-163-quinvicies",
@@ -278,7 +277,8 @@
       "ley-37-1992:art-91",
       "ley-37-1992:art-92",
       "ley-58-2003:da-18",
-      "orden-eha-3012-2008:art-1"
+      "orden-eha-3012-2008:art-1",
+      "orden-eha-3012-2008:art-10"
     ],
     "uncatalogued_articles": []
   },
