@@ -43,7 +43,8 @@ def _base_2025_inputs() -> dict[str, Decimal]:
     return {
         "0003": Decimal("0"),
         "0429": Decimal("0"),
-        "0424": Decimal("0"),
+        # 0424 is now computed via the ganancias-patrimoniales saldo formula
+        # (max(0422-0423, 0)) and cannot be supplied as input.
         "0433": Decimal("0"),
         "0461": Decimal("0"),
         "0501": Decimal("0"),

@@ -49,9 +49,9 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             "0003": Decimal("30000.00"),
             # Saldo G/P 2025 negativo
             "0433": Decimal("0"),
-            # Capital mobiliario ahorro and ganancias patrimoniales saldo positivo
+            # Capital mobiliario ahorro saldo positivo (0424 is now computed
+            # from 0422-0423 via the saldo formula and cannot be supplied)
             "0429": Decimal("0"),
-            "0424": Decimal("0"),
             # Reductions to base liquidable
             "0461": Decimal("0"),
             "0501": Decimal("0"),
@@ -394,7 +394,7 @@ _REVISION_INPUT_GAPS: dict[str, frozenset[str]] = {
     "2022": frozenset({"0420", "0421", "0424", "0425"}),
     "2023": frozenset({"0420", "0421", "0424", "0425"}),
     "2024": frozenset({"0420", "0421", "0424", "0425"}),
-    "2025": frozenset(),
+    "2025": frozenset({"0420", "0421", "0424", "0425"}),
 }
 
 _REVISION_RELATION_VALUES: dict[str, dict[str, Decimal]] = {
