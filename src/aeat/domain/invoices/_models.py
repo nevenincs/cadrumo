@@ -23,9 +23,14 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.identity import validate_spanish_tax_id
-from ..vat import VATCategory
+from ..vat import EUMemberState, VATCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
-from ._validators import validate_country_code, validate_vat_number
+from ._validators import (
+    EU_MEMBER_STATE_CODES,
+    is_eu_member_state_code,
+    validate_country_code,
+    validate_vat_number,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LINE_TOLERANCE = Decimal("0.01")
@@ -349,6 +354,37 @@ class Invoice(BaseModel):
             if self.grand_total != self.base_total:
                 raise ValueError("grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT")
         return self
+
+    @property
+    def counterparty_eu_member_state(self) -> EUMemberState | None:
+        """Return the substrate-typed EUMemberState for the counterparty,
+        or ``None`` for non-EU counterparties.
+
+        :attr:`counterparty_country` carries the raw uppercase ISO-3166-1
+        alpha-2 code (validated at construction time). This typed
+        accessor lets downstream consumers (Modelo 369 OSS bindings,
+        intra-community classification, OSS classifier dispatch) work
+        with the closed substrate enum without a per-call lowercase /
+        membership check. Anchored to
+        :data:`aeat.domain.invoices.EU_MEMBER_STATE_CODES` which
+        derives from :class:`aeat.domain.vat.EUMemberState`.
+        """
+        if not is_eu_member_state_code(self.counterparty_country):
+            return None
+        return EUMemberState(self.counterparty_country.lower())
+
+    @property
+    def counterparty_is_eu_member(self) -> bool:
+        """Return ``True`` iff the counterparty is in one of the 27 EU
+        Member States.
+
+        Convenience predicate keyed off the substrate enum; equivalent
+        to ``invoice.counterparty_eu_member_state is not None``.
+        Modelo classification routes (OSS / IOSS / intra-community)
+        gate on this predicate to decide which substrate flow path
+        applies.
+        """
+        return self.counterparty_eu_member_state is not None
 
 
 def _normalise_linked_transaction_ids(value: Any) -> tuple[str, ...]:
