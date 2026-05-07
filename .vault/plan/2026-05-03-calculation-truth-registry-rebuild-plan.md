@@ -5445,3 +5445,38 @@ flows, plus the modelo-establishing Orden Ministerial.
 The substrate is now the single source of truth for IVA
 classification, and the ledger surface bridges into the modelo
 registry through one canonical function per axis.
+
+- [x] Pydantic typed-field rollout — Invoice.iva_category typed.
+  Promotes the free-form ``str | None`` field to substrate-typed
+  ``VATCategory | None`` so the field that asks "what is the
+  operation kind for this invoice?" references the same closed enum
+  the substrate classifier emits, the modelo registry binding
+  selectors filter on, and IvaInvoiceClassification carries.
+  Backwards-compatible at the persistence boundary (StrEnum
+  serializes to its string form; pydantic coerces strings to enum
+  members at validation time). Tightens the contract: persistence
+  loaders reading historical records with non-canonical category
+  strings now fail validation instead of silently accepting drift.
+  2 new tests + ~353 tests across the touched surfaces stay green.
+  Commit `c2fc4e24`.
+
+Audit of remaining ad-hoc weak-typed fields surveyed during this
+rollout (deferred until their substrate primitives land):
+
+- ``Invoice.counterparty_country: str`` — promote to
+  ``EUMemberState | OtherCountry`` once the OtherCountry sum-type
+  is codified. EU_MEMBER_STATE_CODES already exists from
+  Teardown C.
+- ``Invoice.retention_rate: Decimal | None`` — promote to a typed
+  ``RetentionRate`` enum once the IRPF retention substrate lands
+  (LIRPF arts 99-101 + RIRPF retention rate tables).
+- ``InvoiceLine.category_id: str | None`` — application-specific
+  spending category, NOT IVA classification; orthogonal to this
+  rollout.
+
+The IVA-side typed surface is now uniform from ledger record
+(Invoice.iva_category : VATCategory) through pipeline bridge
+(invoice_line_to_iva_observation) into the modelo registry
+(ledger_iva_aggregation binding selectors). Every IVA-bearing
+ledger record carries substrate-grounded values from cradle to
+filing-grade aggregation.
