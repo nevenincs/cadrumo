@@ -48,7 +48,6 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             # Income side
             "0003": Decimal("30000.00"),
             # Saldo G/P 2025 negativo
-            "0433": Decimal("0"),
             # Capital mobiliario ahorro saldo positivo (0424 is now computed
             # from 0422-0423 via the saldo formula and cannot be supplied)
             "0429": Decimal("0"),
@@ -292,7 +291,6 @@ def _employee_scenario_for_revision(revision: str) -> RegistryCalculationScenari
     """
     base_inputs: dict[str, Decimal] = {
         "0003": Decimal("30000.00"),
-        "0433": Decimal("0"),
         "0429": Decimal("0"),
         "0424": Decimal("0"),
         "0461": Decimal("0"),
