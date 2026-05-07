@@ -1,0 +1,273 @@
+"""Behavioural regression guards for the Modelo 100 cuota chain.
+
+These tests assert that the chain produces the right numeric outputs for
+non-trivial synthetic inputs, not just that the formulas are registered.
+They exercise the registry calculator on curated profiles and assert
+specific numeric outcomes that would change if any chain formula were
+silently dropped, swapped, or short-circuited.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from ._scenarios import (
+    RegistryCalculationScenario,
+    RegistryScenarioExpectedOutput,
+    assert_registry_scenario_matches,
+    run_registry_calculation_scenario,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+
+_RELATION_ZERO_VALUES_2025 = {
+    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
+    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
+    "renta-2025-rel-115-retenciones-trimestrales": Decimal("0"),
+    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
+    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-2025-rel-180-retenciones-anuales": Decimal("0"),
+    "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
+    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
+}
+
+
+def _base_2025_inputs() -> dict[str, Decimal]:
+    return {
+        "0003": Decimal("0"),
+        "0429": Decimal("0"),
+        "0424": Decimal("0"),
+        "0433": Decimal("0"),
+        "0461": Decimal("0"),
+        "0501": Decimal("0"),
+        "0506": Decimal("0"),
+        "0507": Decimal("0"),
+        "0511": Decimal("0"),
+        "0512": Decimal("0"),
+        "0513": Decimal("0"),
+        "0514": Decimal("0"),
+        "0515": Decimal("0"),
+        "0516": Decimal("0"),
+        "0517": Decimal("0"),
+        "0518": Decimal("0"),
+        "0505": Decimal("0"),
+        "0528": Decimal("0"),
+        "0529": Decimal("0"),
+        "0530": Decimal("0"),
+        "0531": Decimal("0"),
+        "0540": Decimal("0"),
+        "0541": Decimal("0"),
+        "0544": Decimal("0"),
+        "0547": Decimal("0"),
+        "0548": Decimal("0"),
+        "0549": Decimal("0"),
+        "0550": Decimal("0"),
+        "0551": Decimal("0"),
+        "0552": Decimal("0"),
+        "0553": Decimal("0"),
+        "0554": Decimal("0"),
+        "0555": Decimal("0"),
+        "0556": Decimal("0"),
+        "0557": Decimal("0"),
+        "0558": Decimal("0"),
+        "0559": Decimal("0"),
+        "0560": Decimal("0"),
+        "0561": Decimal("0"),
+        "0562": Decimal("0"),
+        "0563": Decimal("0"),
+        "0564": Decimal("0"),
+        "0565": Decimal("0"),
+        "0566": Decimal("0"),
+        "0567": Decimal("0"),
+        "0584": Decimal("0"),
+        "0568": Decimal("0"),
+        "0569": Decimal("0"),
+        "0572": Decimal("0"),
+        "0574": Decimal("0"),
+        "0577": Decimal("0"),
+        "0579": Decimal("0"),
+    }
+
+
+def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tuple) -> RegistryCalculationScenario:
+    inputs = _base_2025_inputs()
+    inputs.update(overrides)
+    return RegistryCalculationScenario(
+        id=scenario_id,
+        modelo="100",
+        revision="2025",
+        filing_year=2025,
+        period="0A",
+        inputs=inputs,
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        relation_values=_RELATION_ZERO_VALUES_2025,
+        expected_outputs=expected,
+    )
+
+
+def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> None:
+    """0519 = 0511 + 0513 + 0515 + 0517 (all four mínimos sum into parte estatal)."""
+    scenario = _scenario_2025(
+        "minimo-aggregation-estatal",
+        overrides={
+            "0511": Decimal("2775.00"),  # mínimo del contribuyente
+            "0513": Decimal("1000.00"),  # mínimo por descendientes
+            "0515": Decimal("500.00"),   # mínimo por ascendientes
+            "0517": Decimal("250.00"),   # mínimo por discapacidad
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(
+                target="0519",
+                value=Decimal("4525.00"),
+                operand_refs=("0511", "0513", "0515", "0517"),
+            ),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_minimo() -> None:
+    """0521 = min(0505, 0519) — when mínimo > base liquidable, uses base liquidable."""
+    # 0521 should clip to 0505 (1000) since 0519 (5550) is larger
+    scenario = _scenario_2025(
+        "minimo-clip-to-base-liquidable",
+        overrides={
+            "0505": Decimal("1000.00"),
+            "0511": Decimal("2775.00"),
+            "0512": Decimal("2775.00"),
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0519", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0521", value=Decimal("1000.00"), operand_refs=("0505", "0519")),
+            # 0522 = min(0519 - 0521, 0510) = min(2775 - 1000, 0) = 0 (since 0510 = 0)
+            RegistryScenarioExpectedOutput(target="0522", value=Decimal("0.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_cuota_integra_estatal_combines_general_and_ahorro_components() -> None:
+    """0545 = 0532 + 0540 (cuota base liquidable general estatal + cuota base liquidable ahorro estatal)."""
+    scenario = _scenario_2025(
+        "cuota-integra-estatal-from-both-components",
+        overrides={
+            "0528": Decimal("3000.00"),  # escala general estatal applied to base liquidable
+            "0530": Decimal("500.00"),   # escala general estatal applied to mínimo
+            "0540": Decimal("750.00"),   # cuotas base liquidable ahorro estatal
+        },
+        expected=(
+            # 0532 = 0528 - 0530 = 2500
+            RegistryScenarioExpectedOutput(target="0532", value=Decimal("2500.00"), operand_refs=("0528", "0530")),
+            # 0545 = 0532 + 0540 = 2500 + 750 = 3250
+            RegistryScenarioExpectedOutput(target="0545", value=Decimal("3250.00"), operand_refs=("0532", "0540")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_cuota_liquida_estatal_subtracts_state_side_deduction_columns() -> None:
+    """0570 = 0545 - sum(state-side deductions); each deduction reduces cuota líquida 1:1."""
+    scenario = _scenario_2025(
+        "cuota-liquida-estatal-with-deductions",
+        overrides={
+            "0528": Decimal("5000.00"),  # produces 0545 = 5000 + 0540 = 5000
+            "0530": Decimal("0"),
+            "0540": Decimal("0"),
+            "0547": Decimal("100.00"),   # vivienda habitual estatal
+            "0549": Decimal("200.00"),   # nueva creación
+            "0552": Decimal("300.00"),   # donativos estatal
+            "0560": Decimal("400.00"),   # Ceuta/Melilla estatal
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0545", value=Decimal("5000.00")),
+            # 0570 = 0545 - sum(deductions) = 5000 - (100 + 200 + 300 + 400) = 4000
+            RegistryScenarioExpectedOutput(target="0570", value=Decimal("4000.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_cuota_liquida_incrementada_adds_back_perdida_derecho_increments() -> None:
+    """0585 = 0570 + 0568 + 0572 + 0574 — incremento por pérdida del derecho is ADDITIVE."""
+    scenario = _scenario_2025(
+        "cuota-liquida-incrementada-with-perdida-derecho",
+        overrides={
+            "0528": Decimal("3000.00"),  # 0545 = 3000
+            "0568": Decimal("100.00"),   # incremento por pérdida del derecho estatal
+            "0572": Decimal("50.00"),    # deducciones perdidas estatal
+            "0574": Decimal("25.00"),    # intereses de demora estatal
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0570", value=Decimal("3000.00")),
+            # 0585 = 0570 + 0568 + 0572 + 0574 = 3000 + 100 + 50 + 25 = 3175
+            RegistryScenarioExpectedOutput(target="0585", value=Decimal("3175.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_cuota_liquida_total_sums_estatal_plus_autonomica() -> None:
+    """0587 = 0585 + 0586 — final cuota líquida total combines both halves."""
+    scenario = _scenario_2025(
+        "cuota-liquida-total-from-both-halves",
+        overrides={
+            "0528": Decimal("4000.00"),  # estatal escala
+            "0529": Decimal("3500.00"),  # autonómica escala
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0585", value=Decimal("4000.00")),
+            RegistryScenarioExpectedOutput(target="0586", value=Decimal("3500.00")),
+            RegistryScenarioExpectedOutput(target="0587", value=Decimal("7500.00"), operand_refs=("0585", "0586")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> None:
+    """0435 = 0432 + 0433 — when 0433 is negative, base imponible is reduced."""
+    scenario = _scenario_2025(
+        "base-imponible-with-negative-capital-gains",
+        overrides={
+            "0003": Decimal("30000.00"),  # trabajo income → propagates to 0025 → 0432
+            "0433": Decimal("-5000.00"),  # saldo neto negativo G/P 2025 (limited)
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0432", value=Decimal("30000.00")),
+            # 0435 = 0432 + 0433 = 30000 + (-5000) = 25000
+            RegistryScenarioExpectedOutput(target="0435", value=Decimal("25000.00"), operand_refs=("0432", "0433")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
+
+
+def test_base_liquidable_general_applies_reductions() -> None:
+    """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable."""
+    scenario = _scenario_2025(
+        "base-liquidable-with-reductions",
+        overrides={
+            "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
+            "0461": Decimal("3400.00"),   # reducción tributación conjunta
+            "0501": Decimal("1000.00"),   # compensación bases liquidables negativas
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0435", value=Decimal("40000.00")),
+            # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
+            RegistryScenarioExpectedOutput(target="0500", value=Decimal("35600.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
+    assert_registry_scenario_matches(report)
