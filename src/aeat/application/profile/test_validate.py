@@ -40,6 +40,8 @@ def test_empty_values_returns_invalid_with_every_required_missing() -> None:
     assert result.present_required == ()
     assert result.present_optional == ()
     assert result.unknown_keys == ()
+    assert result.present_keys == 0
+    assert result.total_keys == len(PROFILE_KEYS)
 
 
 def test_all_required_filled_returns_valid() -> None:
@@ -48,6 +50,7 @@ def test_all_required_filled_returns_valid() -> None:
     assert result.missing_required == ()
     expected_present = tuple(entry.key for entry in required_profile_keys())
     assert result.present_required == expected_present
+    assert result.present_keys == len(required_profile_keys())
 
 
 def test_blank_required_value_counts_as_missing() -> None:

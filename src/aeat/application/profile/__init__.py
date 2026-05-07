@@ -47,6 +47,8 @@ class ProfileValidationResult(BaseModel):
             in :data:`aeat.domain.profile.PROFILE_KEYS`. These do not
             block validation but the CLI surfaces them as warnings so
             the operator notices typos.
+        present_keys: Count of schema-declared keys with non-blank values.
+        total_keys: Count of schema-declared profile keys.
     """
 
     model_config = _STRICT_FROZEN
@@ -56,6 +58,8 @@ class ProfileValidationResult(BaseModel):
     present_required: tuple[str, ...] = ()
     present_optional: tuple[str, ...] = ()
     unknown_keys: tuple[str, ...] = ()
+    present_keys: int
+    total_keys: int
 
 
 class ProfileValueRow(BaseModel):
@@ -115,6 +119,7 @@ def validate_profile(values: Mapping[str, str]) -> ProfileValidationResult:
     present_required: tuple[str, ...] = tuple(key for key in required_keys if _has_value(values, key))
     present_optional: tuple[str, ...] = tuple(key for key in optional_keys if _has_value(values, key))
     unknown_keys: tuple[str, ...] = tuple(sorted(set(values) - known_keys))
+    present_keys = sum(1 for entry in entries if _has_value(values, entry.key))
 
     return ProfileValidationResult(
         valid=not missing_required,
@@ -122,6 +127,8 @@ def validate_profile(values: Mapping[str, str]) -> ProfileValidationResult:
         present_required=present_required,
         present_optional=present_optional,
         unknown_keys=unknown_keys,
+        present_keys=present_keys,
+        total_keys=len(entries),
     )
 
 

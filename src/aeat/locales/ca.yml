@@ -679,6 +679,7 @@ cli:
       active: Actiu
       auth_provider: Proveïdor d'autenticació
       authenticated_at: Autenticat el
+      completeness: Completesa
       description: Descripció
       id: ID
       key: Clau

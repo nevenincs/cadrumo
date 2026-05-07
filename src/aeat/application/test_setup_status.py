@@ -16,6 +16,8 @@ def test_setup_status_without_profile_points_to_profile_creation() -> None:
     assert report.active_profile is None
     assert report.profile_ready is False
     assert report.missing_required == ()
+    assert report.profile_present_keys == 0
+    assert report.profile_total_keys > 0
     assert report.next_action == "aeat setup init --name NAME"
 
 
@@ -43,6 +45,8 @@ def test_setup_status_with_complete_profile_points_to_auth_configuration() -> No
 
     assert report.profile_ready is True
     assert report.missing_required == ()
+    assert report.profile_present_keys == 2
+    assert report.profile_total_keys > report.profile_present_keys
     assert report.auth_provider == ""
     assert report.next_action == "aeat setup auth configure --provider certificate --file PATH"
 

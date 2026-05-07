@@ -686,6 +686,7 @@ cli:
       active: Activo
       auth_provider: Proveedor de autenticación
       authenticated_at: Autenticado el
+      completeness: Completitud
       description: Descripción
       id: ID
       key: Clave

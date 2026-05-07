@@ -691,6 +691,7 @@ cli:
       active: Aktív
       auth_provider: Hitelesítési szolgáltató
       authenticated_at: Hitelesítve
+      completeness: Teljesség
       description: Leírás
       id: ID
       key: Kulcs

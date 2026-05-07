@@ -102,6 +102,8 @@ def setup_status(ctx: typer.Context) -> None:
         "active_profile": report.active_profile,
         "profile_ready": report.profile_ready,
         "missing_required": list(report.missing_required),
+        "profile_present_keys": report.profile_present_keys,
+        "profile_total_keys": report.profile_total_keys,
         "auth_provider": report.auth_provider,
         "login_ready": report.login_ready,
         "next_action": report.next_action,
@@ -115,6 +117,7 @@ def setup_status(ctx: typer.Context) -> None:
             f"{tr('cli.setup.headers.profile')}\t{report.active_profile or ''}",
             f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if report.profile_ready else no_label}",
             f"{tr('cli.setup.headers.missing')}\t{', '.join(report.missing_required) or '-'}",
+            f"{tr('cli.setup.headers.completeness')}\t{report.profile_present_keys}/{report.profile_total_keys}",
             f"{tr('cli.setup.headers.auth_provider')}\t{report.auth_provider}",
             f"{tr('cli.setup.headers.login_ready')}\t{yes_label if report.login_ready else no_label}",
             f"{tr('cli.setup.headers.next')}\t{report.next_action}",
@@ -515,6 +518,8 @@ def profile_validate(ctx: typer.Context) -> None:
             "present_required": [],
             "present_optional": [],
             "unknown_keys": [],
+            "present_keys": 0,
+            "total_keys": len(list_profile_value_rows({}, include_unset=True)),
         }
         _emit(
             ctx,
@@ -522,6 +527,7 @@ def profile_validate(ctx: typer.Context) -> None:
             [
                 f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.no')}",
                 f"{tr('cli.setup.headers.missing')}\tprofile",
+                f"{tr('cli.setup.headers.completeness')}\t0/{payload['total_keys']}",
             ],
         )
         _exit(2)
@@ -534,9 +540,12 @@ def profile_validate(ctx: typer.Context) -> None:
         "present_required": list(result.present_required),
         "present_optional": list(result.present_optional),
         "unknown_keys": list(result.unknown_keys),
+        "present_keys": result.present_keys,
+        "total_keys": result.total_keys,
     }
     lines: list[str] = [
-        f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.yes') if result.valid else tr('cli.setup.labels.no')}"
+        f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.yes') if result.valid else tr('cli.setup.labels.no')}",
+        f"{tr('cli.setup.headers.completeness')}\t{result.present_keys}/{result.total_keys}",
     ]
     if result.missing_required:
         lines.append(f"{tr('cli.setup.headers.missing')}\t{', '.join(result.missing_required)}")

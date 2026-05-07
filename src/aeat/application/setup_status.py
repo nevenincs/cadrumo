@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from .profile import validate_profile
+from .profile import list_profile_key_records, validate_profile
 from .user_cli import UserCliState
 
 
@@ -16,6 +16,8 @@ class SetupStatusReport(BaseModel):
     active_profile: str | None
     profile_ready: bool
     missing_required: tuple[str, ...] = ()
+    profile_present_keys: int
+    profile_total_keys: int
     auth_provider: str
     login_ready: bool
     next_action: str
@@ -27,10 +29,14 @@ def build_setup_status(state: UserCliState) -> SetupStatusReport:
     record = state.active_profile_record()
     profile_ready = False
     missing_required: tuple[str, ...] = ()
+    profile_present_keys = 0
+    profile_total_keys = len(list_profile_key_records())
     if record is not None:
         validation = validate_profile(record.values)
         profile_ready = validation.valid
         missing_required = validation.missing_required
+        profile_present_keys = validation.present_keys
+        profile_total_keys = validation.total_keys
 
     auth_provider = state.auth.provider or ""
     login_ready = state.auth.authenticated_at is not None
@@ -38,6 +44,8 @@ def build_setup_status(state: UserCliState) -> SetupStatusReport:
         active_profile=state.active_profile,
         profile_ready=profile_ready,
         missing_required=missing_required,
+        profile_present_keys=profile_present_keys,
+        profile_total_keys=profile_total_keys,
         auth_provider=auth_provider,
         login_ready=login_ready,
         next_action=_next_setup_action(

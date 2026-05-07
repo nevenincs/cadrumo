@@ -501,7 +501,10 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
 
     assert setup.exit_code == 0, setup.output
     assert overview.exit_code == 0, overview.output
-    assert json.loads(_json_output(setup))["profile_ready"] is False
+    setup_payload = json.loads(_json_output(setup))
+    assert setup_payload["profile_ready"] is False
+    assert setup_payload["profile_present_keys"] == 0
+    assert setup_payload["profile_total_keys"] > 0
     assert json.loads(_json_output(overview))["transactions"] == 0
 
 
@@ -718,6 +721,34 @@ def test_profile_validate_routes_through_application_layer(
     # decision without re-deriving it.
     assert "tax.id" in payload["present_required"]
     assert "activity" in payload["present_required"]
+    assert payload["present_keys"] == 2
+    assert payload["total_keys"] > payload["present_keys"]
+
+
+def test_profile_validate_text_shows_schema_completeness(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(
+        [
+            "setup",
+            "init",
+            "--name",
+            "operator",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+        ]
+    )
+    result = _invoke(["setup", "profile", "validate"])
+
+    assert init.exit_code == 0, init.output
+    assert result.exit_code == 0, result.output
+    assert "\t2/" in result.output
+    assert "Completeness" in result.output or "Completitud" in result.output
 
 
 def test_profile_show_all_keys_surfaces_unset_schema_rows(
