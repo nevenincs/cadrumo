@@ -203,7 +203,66 @@ def classify_invoice_line_for_iva(
     )
 
 
+def invoice_line_to_iva_observation(
+    *,
+    invoice_id: str,
+    issued_at,  # datetime.date — Annotated to satisfy linting without circular imports
+    invoice_kind: InvoiceKind,
+    iva_rate: IvaRate,
+    base_amount,  # Decimal
+    iva_amount,  # Decimal
+):
+    """Build an :class:`IvaLedgerObservation` from invoice line metadata.
+
+    The runtime resolver for the substrate's ``ledger_iva_aggregation``
+    binding source kind consumes
+    :class:`aeat.domain.calculations.registry.IvaLedgerObservation`
+    records. This helper turns invoice-line metadata into the
+    observation shape the modelo registry expects, applying the
+    standard-case classification (domestic IVA, REPERCUTIDO for issued
+    invoices, SOPORTADO for received). Reverse-charge and
+    intra-community lines must construct the observation directly.
+
+    The function is the canonical ledger → modelo bridge for the
+    standard-case IVA flows. Callers iterate the invoice's lines,
+    call this helper for each, and pass the resulting tuple to
+    :func:`resolve_ledger_iva_aggregation_binding_values` to populate
+    the modelo's binding values.
+
+    Args:
+        invoice_id: Stable id of the source invoice (becomes
+            ``ledger_id`` on the observation).
+        issued_at: Invoice issue date (becomes ``transaction_date``).
+        invoice_kind: Whether the invoice was issued or received.
+        iva_rate: IvaRate slot for the line. NOT_SUBJECT raises
+            (substrate-NULL category needs explicit construction).
+        base_amount: Taxable base in EUR.
+        iva_amount: VAT amount in EUR.
+
+    Returns:
+        An :class:`IvaLedgerObservation` with the full classification
+        triple ready for binding-resolver consumption.
+    """
+    # Local import to avoid circular dependency (calculations.registry
+    # -> _bindings -> aeat.domain.vat -> back to invoices via stale path).
+    from ..calculations.registry._bindings import IvaLedgerObservation
+
+    classification = classify_invoice_line_for_iva(
+        iva_rate=iva_rate, invoice_kind=invoice_kind
+    )
+    return IvaLedgerObservation(
+        ledger_id=invoice_id,
+        transaction_date=issued_at,
+        category=classification.category,
+        rate_kind=classification.rate_kind,
+        flow_direction=classification.flow_direction,
+        base_amount=base_amount,
+        iva_amount=iva_amount,
+    )
+
+
 __all__ = [
     "IvaInvoiceClassification",
     "classify_invoice_line_for_iva",
+    "invoice_line_to_iva_observation",
 ]

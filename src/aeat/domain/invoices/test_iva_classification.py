@@ -132,3 +132,102 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
             flow_direction=IvaFlowDirection.AUTOREPERCUTIDO,
             settlement_sides=frozenset({IvaSettlementSide.DEVENGADA}),  # missing deducible
         )
+
+
+# ---------------------------------------------------------------------------
+# Ledger → modelo bridge: invoice_line_to_iva_observation
+# ---------------------------------------------------------------------------
+
+
+def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() -> None:
+    from datetime import date
+    from decimal import Decimal
+
+    from aeat.domain.invoices import invoice_line_to_iva_observation
+
+    obs = invoice_line_to_iva_observation(
+        invoice_id="inv-001",
+        issued_at=date(2025, 6, 15),
+        invoice_kind=InvoiceKind.ISSUED,
+        iva_rate=IvaRate.RATE_21,
+        base_amount=Decimal("1000"),
+        iva_amount=Decimal("210"),
+    )
+    assert obs.ledger_id == "inv-001"
+    assert obs.transaction_date == date(2025, 6, 15)
+    assert obs.category is VATCategory.DOMESTIC_GENERAL_21
+    assert obs.rate_kind is VATRateKind.GENERAL
+    assert obs.flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert obs.base_amount == Decimal("1000")
+    assert obs.iva_amount == Decimal("210")
+
+
+def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() -> None:
+    from datetime import date
+    from decimal import Decimal
+
+    from aeat.domain.invoices import invoice_line_to_iva_observation
+
+    obs = invoice_line_to_iva_observation(
+        invoice_id="bill-77",
+        issued_at=date(2025, 7, 1),
+        invoice_kind=InvoiceKind.RECEIVED,
+        iva_rate=IvaRate.RATE_10,
+        base_amount=Decimal("500"),
+        iva_amount=Decimal("50"),
+    )
+    assert obs.flow_direction is IvaFlowDirection.SOPORTADO
+    assert obs.category is VATCategory.DOMESTIC_REDUCED_10
+    assert obs.rate_kind is VATRateKind.REDUCED
+
+
+def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end() -> None:
+    """The full ledger → substrate → modelo registry chain: build
+    observations from invoice metadata via invoice_line_to_iva_observation,
+    feed them to resolve_ledger_iva_aggregation_binding_values, get
+    binding totals back."""
+    from datetime import date
+    from decimal import Decimal
+
+    from aeat.core.paths import PROJECT_ROOT
+    from aeat.domain.calculations.registry import (
+        load_registry_tree,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from aeat.domain.invoices import invoice_line_to_iva_observation
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    m303 = next(m for m in modelos if m.id == "303")
+    revision = m303.revisions["2009-y-siguientes"]
+
+    # Two issued + one received line, all standard-case domestic
+    observations = (
+        invoice_line_to_iva_observation(
+            invoice_id="inv-1",
+            issued_at=date(2025, 1, 15),
+            invoice_kind=InvoiceKind.ISSUED,
+            iva_rate=IvaRate.RATE_21,
+            base_amount=Decimal("1000"),
+            iva_amount=Decimal("210"),
+        ),
+        invoice_line_to_iva_observation(
+            invoice_id="inv-2",
+            issued_at=date(2025, 1, 20),
+            invoice_kind=InvoiceKind.ISSUED,
+            iva_rate=IvaRate.RATE_10,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("50"),
+        ),
+        invoice_line_to_iva_observation(
+            invoice_id="bill-1",
+            issued_at=date(2025, 2, 10),
+            invoice_kind=InvoiceKind.RECEIVED,
+            iva_rate=IvaRate.RATE_21,
+            base_amount=Decimal("400"),
+            iva_amount=Decimal("84"),
+        ),
+    )
+    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+    assert result["modelo-303-iva-repercutido-general-cuota"] == Decimal("210")
+    assert result["modelo-303-iva-repercutido-reducido-cuota"] == Decimal("50")
+    assert result["modelo-303-iva-soportado-interiores-cuota"] == Decimal("84")
