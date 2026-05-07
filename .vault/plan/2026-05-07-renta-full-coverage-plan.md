@@ -70,6 +70,72 @@ deliverables.
   audit refresh (`scripts/audit_renta_scope.py`) and a sync of the
   rolling gaps inventory. The audit metrics are the contract; they
   must monotonically improve.
+- **Centralized backends, zero duplication.** The grounding
+  framework already exists. Every slice MUST code-dip the relevant
+  module before authoring. New helpers, parity wrappers, or local
+  shims are forbidden when a centralized backend covers the need.
+  The mandatory backends are listed under "Grounding framework
+  backends" below; any new pydantic model subclasses
+  `RegistryModel`, `RentaWebOpenModel`, or `WorkbookParityModel`
+  (all strict-frozen, extra-forbid) — never `BaseModel` directly.
+
+## Grounding framework backends
+
+The repository already carries the infrastructure for grounded
+calculation verification. Slices that ignore these backends and
+re-implement them are rejected at review time. The backends:
+
+- **`_renta_web_open_oracle.py`** — `RentaWebOpenOracle` is the
+  PRIMARY grounding oracle for Modelo 100. AEAT publishes no
+  executable workbook for Renta; their canonical calculator is the
+  server-side Renta WEB Open simulator. The oracle wraps that
+  surface through `RentaWebOpenDriver` (Protocol),
+  `RentaWebOpenReplayDriver` (deterministic replay from captured
+  payloads), `RentaWebOpenLivePayload` /
+  `RentaWebOpenObservation` / `RentaWebOpenSyntheticProfile`
+  (pydantic strict-frozen records). Every Modelo 100 calculation
+  scenario MUST carry a replay payload that pins the oracle's
+  expected outputs. Live capture goes through the Playwright
+  driver in `src/aeat/adapters/outbound/aeat/sede/_renta_web_open.py`
+  (`RentaWebOpenSedeDriver` + `collect_renta_web_open_observation`).
+
+- **`_workbook_parity.py`** — workbook discovery, scan, parity
+  comparison, and LibreOffice-headless / Excel-COM execution for
+  AEAT-published executable workbooks. Modelo 100 has no executable
+  workbook (only `record_design_layout` xlsx for 2015-2019 and the
+  XSD dictionary for 2025); therefore Modelo 100 uses workbook
+  parity ONLY as layout-authority evidence, not calculation oracle.
+  Other modelos (130, 131, 303) have executable formula workbooks
+  and use this backend as the primary oracle.
+
+- **`_formula_runtime.py`** — `calculate_registry_snapshot` is the
+  registry's calculation engine. Every formula's `op` value
+  (`add`, `subtract`, `sum`, `multiply`, `divide`, `percent`,
+  `min`, `max`, `clamp`, `negate`, `if_then_else`,
+  `lookup_parameter`, `previous_period_value`, `previous_period_sum`,
+  `cross_model_sum`, etc.) routes through this engine. New ops are
+  added by extending the runtime here, never by per-modelo
+  dispatch.
+
+- **`_scenarios.py`** — `RegistryCalculationScenario` +
+  `run_registry_calculation_scenario` +
+  `assert_registry_scenario_matches`. Every formula scenario test
+  uses these, never bespoke runners.
+
+- **`_schema.py`** — `RegistryModel` (strict, frozen, extra-forbid)
+  is the base for every registry record. Schema fields like
+  `typed_enum: str | None` (added in commit `d21f9dd4`) are added
+  here once and used everywhere; per-modelo extensions are
+  forbidden.
+
+- **`scripts/audit_renta_scope.py`** — the rolling audit driver.
+  Every slice ends with a refresh and a metric movement. New audit
+  layers extend this script; per-feature mini-audits are forbidden.
+
+The plan's slices reference these backends by name, not by
+re-implementation. A slice that proposes a new oracle or workbook
+runner must first justify (in its exec record) why the central
+backends do not fit, and the justification must survive review.
 
 ## Phase dependency graph
 
@@ -360,6 +426,36 @@ Acceptance: zero free-form `str | None` substrate-axis fields in
 the Renta domain; the audit driver gains a Layer 9 (typed-binding
 inventory) to enforce.
 
+### Phase H6 — Renta WEB Open oracle linkage (mandatory grounding)
+
+**Status: PENDING (Tasks #79, #80, #81, #82, #83, #84)**
+
+Every Modelo 100 calculation scenario in `test_renta_chain_behaviour`
+and `test_renta_2025_synthetic_profile` MUST carry a replay payload
+captured from AEAT's Renta WEB Open simulator. The payload is fed
+through `RentaWebOpenReplayDriver` to `RentaWebOpenOracle.verify_payload`,
+and the oracle's parity verdict (`match` / `mismatch` / `unverifiable`)
+is asserted alongside the existing
+`assert_registry_scenario_matches`.
+
+The capture pass uses `RentaWebOpenSedeDriver` (Playwright) against
+the live AEAT endpoint. Live captures are gated by
+`AEAT_LIVE_TESTS_ENABLED=1` and log Playwright traces for evidence.
+Subsequent runs replay only.
+
+A permanent hygiene gate
+(`test_every_renta_formula_has_oracle_replay_coverage`) enforces:
+for every formula whose target casilla is NOT envelope-bound or
+profile-bound, at least one scenario's replay payload must observe
+that target. The gate cannot be skipped or muted.
+
+Substrate prerequisite: existing `_renta_web_open_oracle.py` +
+`_renta_web_open.py` (DELIVERED).
+Acceptance: every chain-behaviour and synthetic-profile scenario
+ships a replay payload + oracle assertion; hygiene gate runs as
+unit test in `test_schema_hygiene.py`; zero formula targets escape
+oracle-grounded coverage.
+
 ### Phase H5 — Test honesty enforcement (extended)
 
 **Status: PARTIAL (vacuous-pattern guard delivered)**
@@ -395,13 +491,22 @@ The plan is complete when:
 - All 8 mini-model phases (MM-1 through MM-8) are delivered.
 - All 9 scenario phases (Sc-A2, A3, B1, B2, B3, C1, C2, D1, E1) are
   delivered.
-- All 5 hardening phases (H1, H2, H3, H4, H5) are delivered.
-- The audit's casilla coverage exceeds 80 percent in 2025.
-- The audit's archetype coverage exceeds 9 of 10.
+- All 6 hardening phases (H1, H2, H3, H4, H5, H6) are delivered.
+- 100 percent of chain-arithmetic casillas (every casilla whose
+  AEAT label or BOE definition prescribes an explicit formula over
+  other casillas) are computed by registry formulas. Pure manual-
+  input casillas (taxpayer-supplied values such as property
+  appraisals or donation amounts) remain manual by AEAT design and
+  are excluded from the 100 percent target.
+- The audit's archetype coverage reaches 10 of 10.
+- Every formula has at least one Renta WEB Open replay payload
+  scenario asserting parity (Phase H6 hygiene gate).
 - Audit Layer 8 reports zero vacuous patterns and zero structural-
   only synthetic-profile test files.
 
-26 phases total. Substrate phases unblock mini-model phases; mini-
+27 phases total. Substrate phases unblock mini-model phases; mini-
 model phases unblock scenario phases; hardening phases run in
 parallel and cover the audit metrics that scope phases do not
-directly move.
+directly move. Every implementation phase pairs with a code-review
+task that verifies pydantic enrollment, backend reuse, and dict /
+oracle grounding before the phase is marked DELIVERED.
