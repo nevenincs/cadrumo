@@ -192,9 +192,9 @@
     }
   },
   "layer4": {
-    "catalogued_count": 113,
+    "catalogued_count": 118,
     "cited_count": 32,
-    "catalogued_but_uncited_count": 81,
+    "catalogued_but_uncited_count": 86,
     "cited_but_uncatalogued_count": 0,
     "top_cited": [
       [
@@ -264,7 +264,12 @@
       "ley-27-2014:art-40",
       "ley-27-2014:art-41",
       "ley-35-2006:art-31",
+      "ley-35-2006:art-33",
+      "ley-35-2006:art-34",
+      "ley-35-2006:art-37",
       "ley-35-2006:art-68.4",
+      "ley-35-2006:art-82",
+      "ley-35-2006:art-83",
       "ley-35-2006:art-85",
       "ley-37-1992:art-161",
       "ley-37-1992:art-163-octiesdecies",
@@ -273,12 +278,7 @@
       "ley-37-1992:art-84",
       "ley-37-1992:art-88",
       "ley-37-1992:art-90",
-      "ley-37-1992:art-91",
-      "ley-37-1992:art-92",
-      "ley-58-2003:da-18",
-      "orden-eha-3012-2008:art-1",
-      "orden-eha-3012-2008:art-10",
-      "orden-eha-3111-2009:art-1"
+      "ley-37-1992:art-91"
     ],
     "uncatalogued_articles": []
   },

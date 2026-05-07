@@ -226,6 +226,54 @@
       }
     },
     {
+      "numero": "33",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a33",
+      "summary": {
+        "ca": "Defineix el concepte de guanys i pèrdues patrimonials com a variacions en el valor del patrimoni del contribuent posades de manifest amb ocasió de qualsevol alteració en la seva composició, i precisa els supòsits que no constitueixen alteració patrimonial (divisió de la cosa comuna, dissolució de la societat de guanys, etc.) ni guany o pèrdua patrimonial (reduccions del capital, transmissions lucratives mortis causa, etc.).",
+        "en": "Defines capital gains and losses as variations in the taxpayer's wealth that arise on any change to its composition, and lists the events that do not constitute a wealth change (division of common property, dissolution of the marital community, etc.) or are not treated as gain or loss (capital reductions, mortis-causa lucrative transfers, etc.).",
+        "es": "Define el concepto de ganancias y pérdidas patrimoniales como variaciones en el valor del patrimonio del contribuyente puestas de manifiesto con ocasión de cualquier alteración en su composición, y precisa los supuestos que no constituyen alteración patrimonial (división de la cosa común, disolución de la sociedad de gananciales, etc.) ni ganancia o pérdida patrimonial (reducciones del capital, transmisiones lucrativas mortis causa, etc.).",
+        "hu": "Meghatározza a vagyoni nyereségek és veszteségek fogalmát az adózó vagyonának értékében bekövetkező, annak összetételében történt bármilyen változás során megnyilvánuló módosulásként, és felsorolja azokat az eseteket, amelyek nem minősülnek vagyoni változásnak (közös tulajdon megosztása, házassági vagyonközösség megszűnése stb.), illetve nem keletkeztetnek nyereséget vagy veszteséget (tőkecsökkentés, halál esetére szóló ingyenes átruházás stb.)."
+      },
+      "titulo": {
+        "ca": "Concepte de guanys i pèrdues patrimonials",
+        "en": "Concept of capital gains and losses",
+        "es": "Concepto de ganancias y pérdidas patrimoniales",
+        "hu": "Vagyoni nyereségek és veszteségek fogalma"
+      }
+    },
+    {
+      "numero": "34",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a34",
+      "summary": {
+        "ca": "Estableix les normes generals per determinar l'import del guany o la pèrdua patrimonial: en transmissions a títol onerós, la diferència entre el valor de transmissió i el valor d'adquisició; en altres alteracions patrimonials, el valor de mercat dels elements alterats.",
+        "en": "Sets out the general rules for computing the amount of capital gain or loss: for onerous transfers, the difference between transfer value and acquisition value; for other wealth changes, the market value of the elements affected.",
+        "es": "Establece las normas generales para determinar el importe de la ganancia o pérdida patrimonial: en transmisiones a título oneroso, la diferencia entre el valor de transmisión y el valor de adquisición; en otras alteraciones patrimoniales, el valor de mercado de los elementos alterados.",
+        "hu": "Megállapítja a vagyoni nyereség vagy veszteség összegének meghatározására vonatkozó általános szabályokat: visszterhes átruházások esetén az átruházási és a szerzési érték különbözete; egyéb vagyoni változások esetén az érintett elemek piaci értéke."
+      },
+      "titulo": {
+        "ca": "Import dels guanys o les pèrdues patrimonials. Normes generals",
+        "en": "Amount of capital gains or losses. General rules",
+        "es": "Importe de las ganancias o pérdidas patrimoniales. Normas generales",
+        "hu": "Vagyoni nyereség vagy veszteség összege. Általános szabályok"
+      }
+    },
+    {
+      "numero": "37",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a37",
+      "summary": {
+        "ca": "Estableix normes específiques de valoració per a determinats supòsits de guanys o pèrdues patrimonials: transmissió de valors admesos i no admesos a negociació, aportacions no dineràries a societats, separació de socis, transmissió d'elements patrimonials a canvi d'una renda, indemnitzacions, permutes, transmissions lucratives d'empreses familiars, i altres.",
+        "en": "Sets specific valuation rules for particular capital-gain or capital-loss situations: transfer of listed and unlisted securities, non-cash contributions to companies, partner exit, transfer of assets in exchange for an annuity, damages, exchanges, lucrative transfers of family businesses, and others.",
+        "es": "Establece normas específicas de valoración para determinados supuestos de ganancias o pérdidas patrimoniales: transmisión de valores admitidos y no admitidos a negociación, aportaciones no dinerarias a sociedades, separación de socios, transmisión de elementos patrimoniales a cambio de una renta, indemnizaciones, permutas, transmisiones lucrativas de empresas familiares, y otras.",
+        "hu": "Egyedi értékelési szabályokat határoz meg meghatározott vagyoni nyereségre vagy veszteségre vonatkozóan: tőzsdén jegyzett és nem jegyzett értékpapírok átruházása, nem pénzbeli hozzájárulások társaságokhoz, tulajdonostárs kiválása, vagyoni elemek átruházása járadékért cserébe, kártérítések, cserék, családi vállalkozások ingyenes átruházásai és egyéb esetek."
+      },
+      "titulo": {
+        "ca": "Normes específiques de valoració",
+        "en": "Specific valuation rules",
+        "es": "Normas específicas de valoración",
+        "hu": "Egyedi értékelési szabályok"
+      }
+    },
+    {
       "numero": "49",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a49",
       "summary": {
@@ -415,6 +463,38 @@
         "en": "Autonomic net tax liability",
         "es": "Cuota líquida autonómica",
         "hu": "Autonóm közösségi nettó adókötelezettség"
+      }
+    },
+    {
+      "numero": "82",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82",
+      "summary": {
+        "ca": "Regula la tributació conjunta com a opció dels membres d'una unitat familiar; defineix els supòsits en què s'apliquen les normes de tributació conjunta i les particularitats de la determinació del rendiment net, la base imposable, les reduccions i el mínim personal i familiar quan els membres de la unitat hagin optat per aquest règim.",
+        "en": "Regulates joint taxation as an election available to members of a family unit; defines the cases in which the joint-taxation rules apply and the particularities for computing net income, taxable base, reductions and the personal and family minimum when family-unit members elect joint taxation.",
+        "es": "Regula la tributación conjunta como opción de los miembros de una unidad familiar; define los supuestos en que se aplican las normas de tributación conjunta y las particularidades de la determinación del rendimiento neto, la base imponible, las reducciones y el mínimo personal y familiar cuando los miembros de la unidad hayan optado por este régimen.",
+        "hu": "Szabályozza a közös adózást a családi egység tagjai számára választható lehetőségként; meghatározza azokat az eseteket, amelyekben a közös adózási szabályokat kell alkalmazni, valamint a nettó jövedelem, az adóalap, a csökkentések és a személyi és családi minimum kiszámításának sajátosságait, amennyiben a családi egység tagjai a közös adózást választják."
+      },
+      "titulo": {
+        "ca": "Tributació conjunta",
+        "en": "Joint taxation",
+        "es": "Tributación conjunta",
+        "hu": "Közös adózás"
+      }
+    },
+    {
+      "numero": "83",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a83",
+      "summary": {
+        "ca": "Defineix les modalitats de la unitat familiar a efectes de tributació conjunta: la integrada pels cònjuges no separats legalment i, si n'hi ha, els fills menors o majors d'edat incapacitats judicialment subjectes a pàtria potestat prorrogada o rehabilitada (modalitat 1) i, en absència de matrimoni o en cas de separació legal, la formada pel pare o la mare i tots els fills que conviuen amb un dels dos (modalitat 2).",
+        "en": "Defines the family-unit modalities for joint-taxation purposes: the unit composed of legally non-separated spouses and, if any, the minor children (or judicially incapacitated adult children under extended or restored parental authority) — modality 1; and, in the absence of marriage or in case of legal separation, the unit composed of the father or mother and all children cohabiting with that parent — modality 2.",
+        "es": "Define las modalidades de la unidad familiar a efectos de tributación conjunta: la integrada por los cónyuges no separados legalmente y, si los hubiere, los hijos menores o mayores de edad incapacitados judicialmente sujetos a patria potestad prorrogada o rehabilitada (modalidad 1) y, en ausencia de matrimonio o en caso de separación legal, la formada por el padre o la madre y todos los hijos que convivan con uno u otro (modalidad 2).",
+        "hu": "Meghatározza a családi egység lehetséges formáit a közös adózás szempontjából: a jogilag külön nem élő házastársakból és — amennyiben vannak — a kiskorú vagy meghosszabbított, illetve helyreállított szülői felügyelet alatt álló, bíróságilag cselekvőképtelennek nyilvánított nagykorú gyermekekből álló egység (1. modalitás); valamint házasság hiányában vagy jogi különélés esetén az apából vagy anyából és valamennyi vele együtt élő gyermekből álló egység (2. modalitás)."
+      },
+      "titulo": {
+        "ca": "Modalitats de la unitat familiar",
+        "en": "Family-unit modalities",
+        "es": "Modalidades de la unidad familiar",
+        "hu": "A családi egység formái"
       }
     },
     {

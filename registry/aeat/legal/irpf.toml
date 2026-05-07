@@ -1184,6 +1184,102 @@ required_text = [
     "rendimiento neto de la actividad económica",
 ]
 
+[legal."ley-35-2006:art-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-33"
+document_id = "BOE-A-2006-20764"
+article = "33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a33"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para el concepto de ganancias y pérdidas patrimoniales en Modelo 100, casillas 0418-0455."
+required_text = [
+    "ganancias y pérdidas patrimoniales",
+    "alteración",
+    "patrimonio",
+]
+
+[legal."ley-35-2006:art-34"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-34"
+document_id = "BOE-A-2006-20764"
+article = "34"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a34"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las normas generales de cálculo del importe de ganancias y pérdidas patrimoniales en Modelo 100."
+required_text = [
+    "valor de transmisión",
+    "valor de adquisición",
+]
+
+[legal."ley-35-2006:art-37"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-37"
+document_id = "BOE-A-2006-20764"
+article = "37"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a37"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las normas específicas de valoración de ganancias y pérdidas patrimoniales en Modelo 100 (anexos C y G)."
+required_text = [
+    "normas específicas de valoración",
+    "transmisión",
+]
+
+[legal."ley-35-2006:art-82"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-82"
+document_id = "BOE-A-2006-20764"
+article = "82"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para la tributación conjunta en Modelo 100 (casillas 0461 reducción tributación conjunta)."
+required_text = [
+    "tributación conjunta",
+    "unidad familiar",
+]
+
+[legal."ley-35-2006:art-83"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-83"
+document_id = "BOE-A-2006-20764"
+article = "83"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a83"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-07
+reviewed_by = "wgergely"
+notes = "Base legal para las modalidades de la unidad familiar en Modelo 100."
+required_text = [
+    "unidad familiar",
+    "cónyuges",
+]
+
 [legal."ley-35-2006:art-49"]
 evidence_tier = "legal_authority"
 authority = "boe"
