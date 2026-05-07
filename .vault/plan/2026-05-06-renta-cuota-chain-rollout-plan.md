@@ -200,29 +200,23 @@ the formula registration into the same commit.
      0570 + 0572 + 0574 (deducciones perdidas, intereses, etc.).
   1. Add formula renta-2025-cuota-liquida-autonomica-incrementada: 0586
      = 0571 + 0577 + 0579 + 0584 (autonomic counterparts).
-- `Phase F0: Prior-year substrate prerequisite`
-  - **Partial delivery (2026-05-06):** the multi-year LIRPF authority
-    has been registered as `lirpf-cuota-chain-authority` source
-    pointing at `corpus/normatives/html/ley-35-2006.html` with
+- `Phase F0: Prior-year substrate prerequisite` — **DELIVERED 2026-05-06/07**
+  - The multi-year LIRPF authority is registered as
+    `lirpf-cuota-chain-authority` source pointing at
+    `corpus/normatives/html/ley-35-2006.html` with
     `evidence_tier = official_source_guidance` and open-ended
     `applies_from = 2007-01-01`. The LIRPF cuota chain articles (49,
     50, 56, 62, 63, 66, 67, 68, 73, 74, 75, 77) have been stable
-    since the law took effect, so a single source suffices to
-    validate the cuota-chain formulas across every ejercicio. This
-    unblocked Phase F1 formula backport.
-  - **Remaining work:** per-year AEAT manual + BOE form-orden sources
-    are still desirable for richer evidence:
-      1. Add aeat-renta-{year}-manual-parte1 source for each ejercicio
-         2020, 2021, 2022, 2023, 2024.
-      1. Add boe-modelo-100-{year}-form source for each ejercicio.
-      1. Add the corresponding orden-hac-{XXX}-{year+1}:art-{N}
-         legal_refs.
-  - The contract test `test_renta_multi_year_cuota_chain_sources_are_
-    catalogued` checks for the per-year sources and stays red until
-    they are catalogued. Web-fetch attempts on 2026-05-06 to
-    discover the prior-year orden HAC numbers were unsuccessful (BOE
-    search interface rejects WebFetch parameters; AEAT manual PDF
-    URLs return 404; Google search redirects to consent gate).
+    since the law took effect, so a single source validates the
+    cuota-chain formulas across every ejercicio.
+  - Per-year AEAT manual + BOE form-orden substrate is now also
+    catalogued for each prior ejercicio:
+      - `aeat-renta-{year}-manual-parte1` (2020, 2021, 2022, 2023,
+        2024) — official_source_guidance
+      - `boe-modelo-100-{year}-form` (2020, 2021, 2022, 2023, 2024)
+        — official_source_guidance
+    Contract test `test_renta_multi_year_cuota_chain_sources_are_
+    catalogued` is green.
 - `Phase F1: Multi-year formula backport (2020-2024 revisions)` — **DELIVERED 2026-05-06 (commit 05dd62dd)**
   - 95 cuota-chain formula blocks backported across ejercicios 2020-
     2024 (19 formulas per year). Each revision now carries the full
