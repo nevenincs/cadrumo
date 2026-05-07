@@ -2282,6 +2282,8 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0356" },
+    { casilla = "0362" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -5105,6 +5107,9 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0266" },
+    { casilla = "0279" },
+    { casilla = "0362" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -8170,6 +8175,10 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0266" },
+    { casilla = "0279" },
+    { casilla = "0323" },
+    { casilla = "0356" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -11276,6 +11285,10 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0266" },
+    { casilla = "0279" },
+    { casilla = "0323" },
+    { casilla = "0356" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -14385,6 +14398,10 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0266" },
+    { casilla = "0279" },
+    { casilla = "0323" },
+    { casilla = "0356" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
@@ -19555,10 +19572,10 @@ required_text = ["Otros gastos deducibles", "Incremento para trabajadores activo
 id = "renta-2025-trabajo-rendimiento-neto-reducido"
 target = "0025"
 expression = { op = "sum", args = [
-    { casilla = "0022" },
-    { op = "negate", args = [{ casilla = "0057" }] },
-    { op = "negate", args = [{ casilla = "0023" }] },
-] }
+        { casilla = "0022" },
+        { op = "negate", args = [{ casilla = "0057" }] },
+        { op = "negate", args = [{ casilla = "0023" }] },
+    ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
@@ -21000,6 +21017,11 @@ expression = { op = "sum", args = [
     { casilla = "0302" },
     { casilla = "0303" },
     { casilla = "0304" },
+    { casilla = "0266" },
+    { casilla = "0279" },
+    { casilla = "0323" },
+    { casilla = "0356" },
+    { casilla = "0362" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

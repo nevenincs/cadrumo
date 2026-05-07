@@ -33,7 +33,25 @@ from ._export import (
 )
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
+from ._groi_oracle import (
+    AEAT_GROI_URL,
+    GROI_ORACLE_ID,
+    GroiDriver,
+    GroiObservation,
+    GroiOracle,
+    GroiReplayDriver,
+)
 from ._legal import verify_legal_catalogue, verify_legal_reference
+from ._live_parity import (
+    LiveParityCatalogue,
+    LiveParityOracle,
+    OracleEnvironment,
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    ParityVerdict,
+    resolve_cross_reference_oracle,
+)
 from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
 from ._parity_tapes import (
     ParityScenario,
@@ -61,6 +79,7 @@ from ._relations import (
     resolve_relation_values_from_observations,
 )
 from ._remote_state_guard import (
+    AEAT_WRITE_FORBIDDEN_ACTIONS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     RemoteStateGuardResult,
@@ -143,6 +162,9 @@ from ._workbook_parity import (
 )
 
 __all__ = [
+    "AEAT_GROI_URL",
+    "AEAT_WRITE_FORBIDDEN_ACTIONS",
+    "GROI_ORACLE_ID",
     "RENTA_WEB_OPEN_APP_URL",
     "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicationLinkDefinition",
@@ -161,19 +183,30 @@ __all__ = [
     "FilingScheduleDefinition",
     "FormulaDefinition",
     "FormulaExpression",
+    "GroiDriver",
+    "GroiObservation",
+    "GroiOracle",
+    "GroiReplayDriver",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
     "LegalReference",
     "LiveCrossReferenceDecision",
+    "LiveParityCatalogue",
+    "LiveParityOracle",
     "ModelLawCoverageLedger",
     "ModeloDefinition",
     "ModeloRevision",
+    "OracleEnvironment",
+    "OracleSurfaceKind",
     "OssIossLedgerObservation",
     "ParameterDefinition",
+    "ParityFieldComparison",
+    "ParityResult",
     "ParityScenario",
     "ParityTape",
     "ParityTapeReplayReport",
+    "ParityVerdict",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "ProfilePredicateDefinition",
@@ -258,6 +291,7 @@ __all__ = [
     "replay_parity_tape",
     "resolve_bound_casilla_inputs",
     "resolve_construct",
+    "resolve_cross_reference_oracle",
     "resolve_export_layout",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",

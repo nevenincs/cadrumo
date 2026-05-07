@@ -231,6 +231,41 @@ requires_aeat_authorization = true
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
 source_refs = ["aeat-modelo-349-procedure"]
 
+# Spanish-counterparty ROI verification via the AEAT GROI servlet at
+# www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet.
+# Per the authenticated-synthetic-surface-taxonomy ADR (2026-05-07), the
+# surface category is `authenticated_simulator`: cl@ve-movil required,
+# arbitrary Spanish NIFs accepted as input, form-submit POST is the
+# AEAT-prescribed query mechanism. The remote-state guard's
+# HTTP-method check stays strict for `kind="http"` operations; only
+# the cross-reference's allowed_methods declaration includes POST so
+# the surface contract is honest. The forbidden_actions include the
+# canonical AEAT_WRITE_FORBIDDEN_ACTIONS set so any write-class
+# action label is rejected before any submit click runs.
+[[revisions."2020-y-siguientes".live_cross_references]]
+id = "modelo-349-groi-spanish-counterparty-check"
+evidence_tier = "executable_parity_evidence"
+surface = "authenticated_simulator"
+guard_policy_id = "modelo-349-groi-spanish-roi-check"
+allowed_hosts = ["www2.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "POST"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = true
+requires_authentication = true
+requires_aeat_authorization = false
+oracle_id = "aeat-groi-spanish-roi-checker"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+source_refs = ["aeat-groi-spanish-roi-procedure"]
+
 # --- Workbook parity (PDF record-design only; no formula form) ---
 
 [[revisions."2020-y-siguientes".workbook_parity_refs]]
@@ -1356,6 +1391,7 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
+    "aeat-groi-spanish-roi-procedure",
     "aeat-modelo-349-procedure",
     "boe-modelo-349-form-2010",
 ]
@@ -1396,7 +1432,11 @@ casillas = [
 workbook_parity_refs = ["modelo-349-dr-pdf-2020"]
 export_layouts = ["modelo-349-fichero-2020"]
 extraction_profiles = ["modelo-349-declaracion-pdf", "modelo-349-submitted-file"]
-live_cross_references = ["modelo-349-static-documentation", "modelo-349-filed-declarations-read"]
+live_cross_references = [
+    "modelo-349-static-documentation",
+    "modelo-349-filed-declarations-read",
+    "modelo-349-groi-spanish-counterparty-check",
+]
 application_links = [
     "modelo-349-portal",
     "modelo-349-filed-declarations-observation",
