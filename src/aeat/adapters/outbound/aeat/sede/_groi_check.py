@@ -47,6 +47,7 @@ from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
 from .....domain.calculations.registry._errors import RegistryValidationError
+from .....domain.calculations.registry._groi_oracle import GroiObservation
 from .....domain.calculations.registry._remote_state_guard import RemoteOperation
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
@@ -88,7 +89,7 @@ _playwright_stage = build_playwright_stage_runner(
 )
 
 
-class GroiObservation(BaseModel):
+class GroiNifVerdict(BaseModel):
     """One observation per declared Spanish NIF after live navigation.
 
     ``verdict`` is the AEAT-rendered ROI-registration status: ``valid``
@@ -110,7 +111,7 @@ class GroiResult(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    observations: tuple[GroiObservation, ...] = ()
+    observations: tuple[GroiNifVerdict, ...] = ()
 
 
 class GroiSedeDriver:
@@ -173,6 +174,29 @@ class GroiSedeDriver:
             timeout_ms=timeout_ms,
         )
 
+    def collect_observation(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> GroiObservation:
+        """Adapt the per-NIF result tuple into the registry-Protocol observation shape.
+
+        Drives the live GROI form via :meth:`collect`, then collapses the
+        per-NIF observations into a flat ``{nif: verdict}`` mapping that
+        the GROI oracle wrapper compares against the caller's expected
+        verdicts.
+        """
+
+        result = self.collect(payload, expected=expected)
+        values: dict[str, str] = {
+            observation.nif.upper(): str(observation.verdict) for observation in result.observations
+        }
+        evidence_locator: str | None = None
+        if result.observations:
+            evidence_locator = result.observations[0].raw_evidence_locator
+        return GroiObservation(values=values, raw_evidence_locator=evidence_locator)
+
 
 async def collect_groi_observations(
     payload: bytes,
@@ -200,7 +224,7 @@ async def collect_groi_observations(
             timeout_ms=timeout_ms,
         )
 
-        observations: list[GroiObservation] = []
+        observations: list[GroiNifVerdict] = []
         for nif in nifs:
             # The GROI servlet renders a fresh form on each GET; navigate per
             # NIF so each query starts clean and the response page is the
@@ -214,7 +238,7 @@ async def collect_groi_observations(
             )
             await _open_groi_form(page, timeout_ms=timeout_ms)
             verdict = await _check_single_nif(page, nif=nif, timeout_ms=timeout_ms)
-            observations.append(GroiObservation(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
+            observations.append(GroiNifVerdict(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
 
         return GroiResult(observations=tuple(observations))
     except (SedeError, SiteHealthError, BrowserError):
@@ -387,7 +411,7 @@ __all__ = [
     "AEAT_GROI_URL",
     "DEFAULT_GROI_TIMEOUT_MS",
     "GROI_ORACLE_ID",
-    "GroiObservation",
+    "GroiNifVerdict",
     "GroiResult",
     "GroiSedeDriver",
     "collect_groi_observations",
