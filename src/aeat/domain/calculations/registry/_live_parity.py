@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "CrossReferenceApplicability",
+    "CrossReferenceApplicabilityDeclaration",
     "LiveParityCatalogue",
     "LiveParityOracle",
     "OracleEnvironment",
@@ -54,6 +55,7 @@ __all__ = [
     "audit_oracle_bindings",
     "audit_registry_oracle_bindings",
     "build_planned_operations",
+    "collect_applicability_declarations",
     "evaluate_cross_reference_applicability",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
@@ -487,6 +489,55 @@ def audit_oracle_bindings(
                     f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}"
                 )
     return tuple(failures)
+
+
+class CrossReferenceApplicabilityDeclaration(_ParityModel):
+    """A registry-declared applicability shape for one cross-reference.
+
+    The model is a structural read of the registry data — the audit
+    surface emits this so CI / dashboards can see which bindings are
+    profile-gated without re-evaluating any predicate. Decoupled from
+    :class:`CrossReferenceApplicability` (the run-time evaluation
+    result).
+    """
+
+    modelo_id: str = Field(min_length=1, max_length=128)
+    revision_id: str = Field(min_length=1, max_length=128)
+    cross_reference_id: str = Field(min_length=1, max_length=128)
+    applicability_condition_mode: Literal["all", "any"]
+    predicate_fields: tuple[str, ...]
+
+
+def collect_applicability_declarations(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[CrossReferenceApplicabilityDeclaration, ...]:
+    """Surface every cross-reference that declares applicability predicates.
+
+    Pure registry-data introspection: never reads profile facts, never
+    invokes the evaluator. Cross-references with no predicates are
+    omitted (the unconditionally-applicable default). Order is
+    ``(modelo_id, revision_id, cross_reference_id)`` for deterministic
+    audit output.
+    """
+
+    declarations: list[CrossReferenceApplicabilityDeclaration] = []
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for cross_reference in revision.live_cross_references:
+                if not cross_reference.applicability_predicates:
+                    continue
+                declarations.append(
+                    CrossReferenceApplicabilityDeclaration(
+                        modelo_id=modelo.id,
+                        revision_id=revision.id,
+                        cross_reference_id=cross_reference.id,
+                        applicability_condition_mode=cross_reference.applicability_condition_mode,
+                        predicate_fields=tuple(
+                            predicate.field for predicate in cross_reference.applicability_predicates
+                        ),
+                    )
+                )
+    return tuple(declarations)
 
 
 def audit_registry_oracle_bindings(

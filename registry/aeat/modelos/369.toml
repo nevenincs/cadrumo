@@ -165,6 +165,17 @@ requires_aeat_authorization = true
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]
 
+# Applicability gate: only OSS-enrolled subjects file Modelo 369 and
+# therefore only they can have filed declarations to read. Subjects
+# outside the OSS regime should never invoke this read surface.
+[[revisions."esquema-exterior".live_cross_references.applicability_predicates]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "OSS filed-declarations read applies only to taxpayers enrolled in the OSS / IOSS one-stop-shop regime."
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
 [[revisions."esquema-exterior".application_links]]
 id = "modelo-369-exterior-portal"
 surface = "portal"

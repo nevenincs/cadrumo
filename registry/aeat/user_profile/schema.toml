@@ -302,6 +302,16 @@ description = "Whether the taxpayer is registered on AEAT's Registro de Operador
 model_selectors = ["iva.roi_enrolled"]
 schedule_predicates = ["iva.roi_enrolled"]
 
+[[sections.fields]]
+key = "oss_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field."
+model_selectors = ["iva.oss_enrolled"]
+schedule_predicates = ["iva.oss_enrolled"]
+
 [[sections]]
 key = "filing_export"
 title = "Filing and export context"

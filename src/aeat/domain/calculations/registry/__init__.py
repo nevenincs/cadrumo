@@ -50,6 +50,7 @@ from ._groi_oracle import (
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._live_parity import (
     CrossReferenceApplicability,
+    CrossReferenceApplicabilityDeclaration,
     LiveParityCatalogue,
     LiveParityOracle,
     OracleEnvironment,
@@ -57,6 +58,7 @@ from ._live_parity import (
     ParityFieldComparison,
     ParityResult,
     ParityVerdict,
+    collect_applicability_declarations,
     evaluate_cross_reference_applicability,
     resolve_cross_reference_oracle,
 )
@@ -179,6 +181,7 @@ __all__ = [
     "CasillaDefinition",
     "ConstructDefinition",
     "CrossReferenceApplicability",
+    "CrossReferenceApplicabilityDeclaration",
     "DataBindingDefinition",
     "DeadlineApplicabilityCondition",
     "DeadlineWindowDefinition",
@@ -269,6 +272,7 @@ __all__ = [
     "build_model_law_coverage_ledger",
     "build_snapshot",
     "calculate_registry_snapshot",
+    "collect_applicability_declarations",
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",
