@@ -638,6 +638,8 @@ cli:
     app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
     app_help: Asistente para preparar declaraciones tributarias españolas
     format_help: Formato de salida para los resultados del comando
+    version_command_help: Mostrar la versión del paquete y el resumen del registro
+    version_help: Mostrar la versión del paquete y el resumen del registro
   sanitize:
     app_help: Gestión de la sanitización y anonimización de datos
     labels:

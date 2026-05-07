@@ -626,6 +626,8 @@ cli:
     app_app_help: Tax workspaces for ledgers, invoices, and declarations
     app_help: Spanish tax filing assistant
     format_help: Output format for command results
+    version_command_help: Show package version and registry summary
+    version_help: Show package version and registry summary
   sanitize:
     app_help: Data sanitization and anonymization management
     labels:
