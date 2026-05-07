@@ -1,0 +1,280 @@
+"""AEAT GROI Spanish-ROI consult oracle.
+
+The GROI servlet at www2.agenciatributaria.gob.es certifies whether
+a given Spanish NIF is registered in the AEAT Registro de Operadores
+Intracomunitarios. Live probing on 2026-05-07 confirmed the surface
+is reachable under cl@ve-movil authentication; the live driver lives
+at ``aeat.adapters.outbound.aeat.sede._groi_check`` and this module
+wraps it as a ``LiveParityOracle``.
+
+The oracle is the SPANISH-counterparty sibling of
+``_aeat_nif_iva_oracle`` (foreign-EU VIES proxy). Both share the
+``vat_id_check`` surface kind and pair with cross-references whose
+surface is ``public_read_surface``; the registry's surface-kind
+compatibility table at ``_live_parity._COMPATIBLE_SURFACE_PAIRS``
+already declares that pair.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from json import JSONDecodeError, loads
+from typing import Literal, Protocol
+
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
+
+from ._errors import RegistryValidationError
+from ._live_parity import (
+    LiveParityCatalogue,
+    OracleEnvironment,
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    assert_oracle_operations_allowed,
+)
+from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+
+GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
+
+# Live-captured 2026-05-07. The host-pinning suffix
+# ``agenciatributaria.gob.es`` already covers www2; no allow-list change.
+AEAT_GROI_URL = AnyUrl("https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
+
+
+class _GroiModel(BaseModel):
+    """Strict frozen base for GROI parity records."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class GroiObservation(_GroiModel):
+    """Observed Spanish-ROI verdicts returned by an executable adapter.
+
+    ``values`` keys are upper-cased Spanish NIFs; ``values`` values are
+    lowercase verdict tokens (``valid`` / ``invalid`` / ``unknown``).
+    """
+
+    values: dict[str, str] = Field(default_factory=dict)
+    raw_evidence_locator: str | None = Field(default=None, max_length=512)
+
+    @field_validator("values")
+    @classmethod
+    def _trimmed(cls, value: dict[str, str]) -> dict[str, str]:
+        cleaned: dict[str, str] = {}
+        for nif, verdict in value.items():
+            normalized_nif = nif.strip().upper()
+            normalized_verdict = verdict.strip().lower()
+            if not normalized_nif or not normalized_verdict:
+                raise ValueError("GROI observations must not contain blank keys or values")
+            cleaned[normalized_nif] = normalized_verdict
+        return cleaned
+
+
+class GroiDriver(Protocol):
+    """Execution boundary for GROI live or replay adapters."""
+
+    @property
+    def mode(self) -> Literal["live", "replay"]: ...
+
+    def planned_operations(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> tuple[RemoteOperation, ...]: ...
+
+    def collect_observation(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> GroiObservation: ...
+
+
+class GroiReplayDriver:
+    """Deterministic local replay driver for captured GROI outputs.
+
+    Payload shape:
+
+        {
+          "observed": {"A28015865": "valid", "B12345678": "invalid"},
+          "raw_evidence_locator": "corpus/aeat_official/groi_response_samples/..."
+        }
+    """
+
+    @property
+    def mode(self) -> Literal["replay"]:
+        return "replay"
+
+    def planned_operations(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> tuple[RemoteOperation, ...]:
+        del payload, expected
+        return (RemoteOperation(kind="local_workbook", action="parse-groi-replay"),)
+
+    def collect_observation(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> GroiObservation:
+        del expected
+        try:
+            document = loads(payload.decode("utf-8"))
+        except (UnicodeDecodeError, JSONDecodeError) as exc:
+            raise RegistryValidationError("GROI replay payload must be UTF-8 JSON") from exc
+        if not isinstance(document, dict):
+            raise RegistryValidationError("GROI replay payload must be a JSON object")
+        observed = document.get("observed")
+        if not isinstance(observed, dict):
+            raise RegistryValidationError("GROI replay payload must contain an observed object")
+        values: dict[str, str] = {}
+        for nif, verdict in observed.items():
+            if not isinstance(nif, str) or not isinstance(verdict, str):
+                raise RegistryValidationError("GROI replay observed values must be string-keyed strings")
+            values[nif] = verdict
+        locator = document.get("raw_evidence_locator")
+        if locator is not None and not isinstance(locator, str):
+            raise RegistryValidationError("GROI replay raw_evidence_locator must be a string")
+        return GroiObservation(values=values, raw_evidence_locator=locator)
+
+
+class GroiOracle:
+    """AEAT-mediated Spanish-ROI registration validator.
+
+    Wraps a ``GroiDriver`` (live or replay). When no driver is
+    configured the oracle still pre-flights the planned operations
+    through the remote-state guard; ``verify_payload`` then returns
+    ``unverifiable`` because no observation was available for
+    comparison. With a driver configured the oracle compares the
+    expected verdict per NIF against the driver-emitted observation
+    and returns ``match`` / ``mismatch`` accordingly.
+    """
+
+    def __init__(self, *, driver: GroiDriver | None = None) -> None:
+        self._driver = driver
+
+    @property
+    def oracle_id(self) -> str:
+        return GROI_ORACLE_ID
+
+    @property
+    def surface_kind(self) -> OracleSurfaceKind:
+        return "vat_id_check"
+
+    def planned_operations(
+        self,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> tuple[RemoteOperation, ...]:
+        if not expected:
+            raise RegistryValidationError("GroiOracle.planned_operations requires at least one expected NIF")
+        expected_values = self._expected_values(expected)
+        if self._driver is not None:
+            return self._driver.planned_operations(payload, expected=expected)
+        operations: list[RemoteOperation] = [
+            RemoteOperation(kind="http", method="GET", url=AEAT_GROI_URL),
+            RemoteOperation(kind="browser_action", action="open-groi-form"),
+        ]
+        for nif in sorted(expected_values):
+            operations.append(RemoteOperation(kind="browser_action", action=f"check-nif-{nif}"))
+        operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
+        return tuple(operations)
+
+    def verify_payload(
+        self,
+        policy: RemoteStateGuardPolicy,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> ParityResult:
+        operations = self.planned_operations(payload, expected=expected)
+        try:
+            assert_oracle_operations_allowed(self, policy, operations)
+        except RegistryValidationError as exc:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="blocked",
+                narrative=f"GROI oracle blocked by remote-state guard: {exc}",
+            )
+        if self._driver is None:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="unverifiable",
+                narrative=(
+                    "GROI oracle has no executable driver configured. Guard preflight passed, "
+                    "but no AEAT or replay observation was available for comparison."
+                ),
+            )
+        try:
+            observation = self._driver.collect_observation(payload, expected=expected)
+        except RegistryValidationError as exc:
+            return ParityResult(
+                oracle_id=self.oracle_id,
+                cross_reference_id=policy.id,
+                verdict="unverifiable",
+                narrative=f"GROI driver could not produce comparable observations: {exc}",
+            )
+        fields = tuple(
+            _compare_expected_nif(nif, expected_value, observed=observation.values.get(nif.upper()))
+            for nif, expected_value in sorted(self._expected_values(expected).items())
+        )
+        verdict = "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
+        return ParityResult(
+            oracle_id=self.oracle_id,
+            cross_reference_id=policy.id,
+            verdict=verdict,
+            narrative=f"GROI {self._driver.mode} comparison returned {verdict}.",
+            fields=fields,
+            raw_evidence_locator=observation.raw_evidence_locator,
+        )
+
+    @staticmethod
+    def _expected_values(expected: Mapping[str, object]) -> dict[str, str]:
+        values: dict[str, str] = {}
+        for nif, verdict in expected.items():
+            normalized_nif = str(nif).strip().upper()
+            normalized_verdict = str(verdict).strip().lower()
+            if not normalized_nif or not normalized_verdict:
+                raise RegistryValidationError("GROI expected values must not contain blanks")
+            values[normalized_nif] = normalized_verdict
+        return values
+
+
+def _compare_expected_nif(nif: str, expected: str, *, observed: str | None) -> ParityFieldComparison:
+    if observed is None:
+        return ParityFieldComparison(name=nif, expected=expected, observed="<missing>", verdict="mismatch")
+    normalized_observed = observed.strip().lower()
+    return ParityFieldComparison(
+        name=nif,
+        expected=expected,
+        observed=normalized_observed,
+        verdict="match" if normalized_observed == expected else "mismatch",
+    )
+
+
+def register_default(
+    catalogue: LiveParityCatalogue,
+    *,
+    environment: OracleEnvironment = "production",
+) -> None:
+    """Register the GROI Spanish-ROI oracle under the requested environment."""
+
+    catalogue.register(GroiOracle(), environment=environment)
+
+
+__all__ = [
+    "AEAT_GROI_URL",
+    "GROI_ORACLE_ID",
+    "GroiDriver",
+    "GroiObservation",
+    "GroiOracle",
+    "GroiReplayDriver",
+    "register_default",
+]

@@ -780,72 +780,28 @@ def audit_oracles_cmd(
     exist so CI / pre-deploy pipelines can gate on a clean audit.
     """
 
-    from collections.abc import Mapping as _Mapping
     from typing import cast as _cast
 
-    from ...adapters.outbound.aeat.sede._groi_check import GROI_ORACLE_ID
     from ...domain.calculations.registry._aeat_nif_iva_oracle import (
         AeatNifIvaCheckerOracle,
     )
+    from ...domain.calculations.registry._groi_oracle import GroiOracle
     from ...domain.calculations.registry._live_parity import (
         LiveParityCatalogue,
         OracleEnvironment,
-        OracleSurfaceKind,
-        ParityResult,
         audit_registry_oracle_bindings,
     )
     from ...domain.calculations.registry._loader import load_registry_tree
-    from ...domain.calculations.registry._remote_state_guard import (
-        RemoteOperation,
-        RemoteStateGuardPolicy,
-    )
 
     if environment not in {"production", "test_environment", "both"}:
         raise typer.BadParameter(
             f"environment must be 'production', 'test_environment', or 'both'; got {environment!r}"
         )
 
-    # GROI Protocol-conforming oracle shim. The actual sede driver lives in
-    # the outbound adapter package and runs Playwright; for audit purposes
-    # we only need the catalogue to know the oracle_id and surface_kind.
-    # verify_payload would never be called by the audit pass (the audit
-    # only checks bindings, not invocations), but we honour the Protocol
-    # by raising NotImplementedError if a caller does invoke it.
-    class _GroiOracleAdapter:
-        @property
-        def oracle_id(self) -> str:
-            return GROI_ORACLE_ID
-
-        @property
-        def surface_kind(self) -> OracleSurfaceKind:
-            return "vat_id_check"
-
-        def planned_operations(
-            self,
-            payload: bytes,
-            *,
-            expected: _Mapping[str, object],
-        ) -> tuple[RemoteOperation, ...]:
-            del payload, expected
-            return ()
-
-        def verify_payload(
-            self,
-            policy: RemoteStateGuardPolicy,
-            payload: bytes,
-            *,
-            expected: _Mapping[str, object],
-        ) -> ParityResult:
-            del policy, payload, expected
-            raise NotImplementedError(
-                "GROI oracle adapter shim in audit-oracles CLI does not implement "
-                "verify_payload; use GroiSedeDriver from adapters/outbound/aeat/sede."
-            )
-
     modelos, _catalogues = load_registry_tree(registry_root)
     oracle_catalogue = LiveParityCatalogue()
     oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    oracle_catalogue.register(_GroiOracleAdapter(), environment="production")
+    oracle_catalogue.register(GroiOracle(), environment="production")
 
     failures = audit_registry_oracle_bindings(
         modelos,

@@ -20,7 +20,7 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     AEAT_GROI_URL,
     DEFAULT_GROI_TIMEOUT_MS,
     GROI_ORACLE_ID,
-    GroiObservation,
+    GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
     extract_verdict_from_response_text,
@@ -83,27 +83,27 @@ def test_planned_operations_rejects_empty_expected() -> None:
 
 
 def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
-    observation = GroiObservation(
+    observation = GroiNifVerdict(
         nif="A28015865",
         verdict="valid",
         raw_evidence_locator=str(AEAT_GROI_URL),
     )
-    rebuilt = GroiObservation.model_validate(observation.model_dump())
+    rebuilt = GroiNifVerdict.model_validate(observation.model_dump())
     assert rebuilt == observation
 
 
 def test_observation_model_rejects_unknown_verdict() -> None:
     with pytest.raises(ValidationError):
-        GroiObservation.model_validate({"nif": "A28015865", "verdict": "registered"})
+        GroiNifVerdict.model_validate({"nif": "A28015865", "verdict": "registered"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
     with pytest.raises(ValidationError):
-        GroiObservation(nif="", verdict="valid")
+        GroiNifVerdict(nif="", verdict="valid")
 
 
 def test_observation_model_is_frozen() -> None:
-    observation = GroiObservation(nif="A28015865", verdict="valid")
+    observation = GroiNifVerdict(nif="A28015865", verdict="valid")
     with pytest.raises(ValidationError):
         observation.nif = "B12345678"  # type: ignore[misc]
 
