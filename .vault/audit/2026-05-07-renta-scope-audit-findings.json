@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 114,
-      "casillas_consumed_by_formulas": 306,
-      "casillas_declared_but_never_read": 1194,
+      "computed_targets": 115,
+      "casillas_consumed_by_formulas": 308,
+      "casillas_declared_but_never_read": 1191,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 114,
-      "casillas_consumed_by_formulas": 307,
-      "casillas_declared_but_never_read": 1355,
+      "computed_targets": 115,
+      "casillas_consumed_by_formulas": 309,
+      "casillas_declared_but_never_read": 1352,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 127,
-      "casillas_consumed_by_formulas": 332,
-      "casillas_declared_but_never_read": 1483,
+      "computed_targets": 128,
+      "casillas_consumed_by_formulas": 334,
+      "casillas_declared_but_never_read": 1480,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 128,
-      "casillas_consumed_by_formulas": 337,
-      "casillas_declared_but_never_read": 1554,
+      "computed_targets": 129,
+      "casillas_consumed_by_formulas": 339,
+      "casillas_declared_but_never_read": 1551,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 128,
-      "casillas_consumed_by_formulas": 337,
-      "casillas_declared_but_never_read": 1687,
+      "computed_targets": 129,
+      "casillas_consumed_by_formulas": 339,
+      "casillas_declared_but_never_read": 1684,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 137,
-      "casillas_consumed_by_formulas": 389,
-      "casillas_declared_but_never_read": 1808,
+      "computed_targets": 138,
+      "casillas_consumed_by_formulas": 391,
+      "casillas_declared_but_never_read": 1805,
       "bindings_consumed_count": 1
     }
   },
@@ -178,10 +178,10 @@
     "regimenes_atribucion": {
       "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
       "total_casillas": 312,
-      "computed": 2,
+      "computed": 3,
       "bound": 0,
       "manual": 312,
-      "coverage_pct": 0.6
+      "coverage_pct": 1.0
     },
     "uncategorised": {
       "label": "Uncategorised (section[0] not anchor-mapped)",
@@ -192,8 +192,8 @@
     }
   },
   "layer4": {
-    "catalogued_count": 118,
-    "cited_count": 37,
+    "catalogued_count": 119,
+    "cited_count": 38,
     "catalogued_but_uncited_count": 81,
     "cited_but_uncatalogued_count": 0,
     "top_cited": [

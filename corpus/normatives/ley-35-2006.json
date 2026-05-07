@@ -466,6 +466,22 @@
       }
     },
     {
+      "numero": "80",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a80",
+      "summary": {
+        "ca": "Estableix la deducció per doble imposició internacional sobre les rendes obtingudes a l estranger gravades pel mateix impost o anàleg, amb el límit de la quota íntegra que correspondria a aquestes rendes a Espanya.",
+        "en": "Sets the deduction for international double taxation on income obtained abroad and taxed there by an analogous tax, capped by the IRPF cuota íntegra that would correspond to that income in Spain.",
+        "es": "Regula la deduccion por doble imposicion internacional sobre las rentas obtenidas y gravadas en el extranjero por un impuesto analogo, con el limite de la cuota integra que en Espana correspondiera a esas rentas.",
+        "hu": "Szabalyozza a kettos adoztatas elkerulesere szolgalo nemzetkozi levonast a kulfoldon megszerzett es ott megadoztatott jovedelmekre, az IRPF-ben raju eso bruttó adóhányad határáig."
+      },
+      "titulo": {
+        "ca": "Deducció per doble imposició internacional",
+        "en": "Deduction for international double taxation",
+        "es": "Deduccion por doble imposicion internacional",
+        "hu": "Nemzetközi kettős adóztatás miatti levonás"
+      }
+    },
+    {
       "numero": "82",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a82",
       "summary": {
