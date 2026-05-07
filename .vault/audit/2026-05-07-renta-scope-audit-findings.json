@@ -407,7 +407,7 @@
         "contains_vacuous_smoke_pattern": false
       },
       "src/aeat/domain/calculations/registry/test_schema_hygiene.py": {
-        "test_count": 8,
+        "test_count": 9,
         "tests": [
           "test_no_duplicate_casilla_ids_within_a_revision",
           "test_no_duplicate_casilla_numbers_within_a_revision",
@@ -416,7 +416,8 @@
           "test_section_paths_do_not_leak_xml_root_containers",
           "test_registry_tests_describe_current_behaviour_not_removed_work",
           "test_registry_tests_do_not_define_schema_authority_objects",
-          "test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs"
+          "test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs",
+          "test_renta_typed_binding_candidates_declare_substrate_enum_class"
         ],
         "kind": "structural",
         "zero_value_assertions": 0,
@@ -445,88 +446,88 @@
       "2020": {
         "renta-2020-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       },
       "2021": {
         "renta-2021-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       },
       "2022": {
         "renta-2022-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       },
       "2023": {
         "renta-2023-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       },
       "2024": {
         "renta-2024-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       },
       "2025": {
         "renta-2025-modelo-100-estimacion-directa-es-normal": {
           "expected_enum": "EstimacionDirectaModalidad",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [
             "n",
             "s"
           ],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         },
         "renta-2025-profile-tax-residence-ccaa": {
           "expected_enum": "RentaCCAA",
-          "declares_typed_enum_field": false,
+          "declares_typed_enum_field": true,
           "selector_values": [],
           "informal_match_count": 0,
-          "free_form": true
+          "free_form": false
         }
       }
     },
     "summary": {
       "total_bridge_candidates": 7,
-      "formally_typed": 0,
+      "formally_typed": 7,
       "informally_typed": 0,
-      "free_form": 7
+      "free_form": 0
     }
   }
 }

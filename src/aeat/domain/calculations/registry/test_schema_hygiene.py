@@ -222,3 +222,35 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
                     f"(vacuous: 0 = 0 + 0 - 0 + ... never fails)"
                 )
     assert not offences, "vacuous Renta synthetic scenarios:\n  " + "\n  ".join(offences)
+
+
+def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
+    """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
+
+    The Renta substrate enums (`RentaCCAA`, `EstimacionDirectaModalidad`,
+    `RentaIncomeType`) live in :mod:`aeat.domain.renta`. Each binding whose
+    id suffix matches a known typed-bridge anchor (e.g. `-tax-residence-ccaa`,
+    `-estimacion-directa-es-normal`) MUST declare a `typed_enum` field naming
+    the substrate enum class so consumers can route through the closed-set
+    contract instead of parsing free-form strings at runtime.
+    """
+
+    bridges_by_suffix = {
+        "tax-residence-ccaa": "RentaCCAA",
+        "estimacion-directa-es-normal": "EstimacionDirectaModalidad",
+    }
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    offences: list[str] = []
+    for modelo in modelos:
+        if modelo.id != "100":
+            continue
+        for revision in modelo.revisions.values():
+            for binding in revision.bindings:
+                for suffix, expected_enum in bridges_by_suffix.items():
+                    if binding.id.endswith(suffix):
+                        if binding.typed_enum != expected_enum:
+                            offences.append(
+                                f"binding {binding.id!r} expected typed_enum={expected_enum!r}, "
+                                f"got {binding.typed_enum!r}"
+                            )
+    assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
