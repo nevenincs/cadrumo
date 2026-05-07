@@ -317,6 +317,347 @@ application_links = [
 ]
 
 [[revisions."2020".formulas]]
+id = "renta-2020-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+        { op = "sum", args = [
+            { casilla = "0004" },
+            { casilla = "0005" },
+        ] },
+        { casilla = "0006" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [{ casilla = "0017" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+        { casilla = "0018" },
+        { op = "negate", args = [{ casilla = "0019" }] },
+        { op = "negate", args = [{ casilla = "0020" }] },
+        { op = "negate", args = [{ casilla = "0021" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+        { casilla = "0027" },
+        { casilla = "0028" },
+        { casilla = "0029" },
+        { casilla = "0030" },
+        { casilla = "0031" },
+        { casilla = "0032" },
+        { casilla = "0033" },
+        { casilla = "0034" },
+        { casilla = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+        { casilla = "0038" },
+        { casilla = "0039" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [{ casilla = "0040" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+        { casilla = "0052" },
+        { casilla = "0053" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+        { casilla = "0054" },
+        { casilla = "0055" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [{ casilla = "0056" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+        { casilla = "0102" },
+        { op = "negate", args = [{ casilla = "0104" }] },
+        { op = "negate", args = [{ casilla = "0107" }] },
+        { op = "negate", args = [{ casilla = "0109" }] },
+        { op = "negate", args = [{ casilla = "0110" }] },
+        { op = "negate", args = [{ casilla = "0111" }] },
+        { op = "negate", args = [{ casilla = "0112" }] },
+        { op = "negate", args = [{ casilla = "0113" }] },
+        { op = "negate", args = [{ casilla = "0114" }] },
+        { op = "negate", args = [{ casilla = "0115" }] },
+        { op = "negate", args = [{ casilla = "0116" }] },
+        { op = "negate", args = [{ casilla = "0117" }] },
+        { op = "negate", args = [{ casilla = "0131" }] },
+        { op = "negate", args = [{ casilla = "0132" }] },
+        { op = "negate", args = [{ casilla = "0146" }] },
+        { op = "negate", args = [{ casilla = "0147" }] },
+        { op = "negate", args = [{ casilla = "0148" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+        { op = "sum", args = [
+            { casilla = "0149" },
+            { op = "negate", args = [{ casilla = "0150" }] },
+            { op = "negate", args = [{ casilla = "0151" }] },
+        ] },
+        { casilla = "0152" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [{ casilla = "0089" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [{ casilla = "0154" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+        { casilla = "0171" },
+        { casilla = "0172" },
+        { casilla = "0173" },
+        { casilla = "0174" },
+        { casilla = "0175" },
+        { casilla = "0176" },
+        { casilla = "0177" },
+        { casilla = "0178" },
+        { casilla = "0179" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0219" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+        { casilla = "0180" },
+        { casilla = "0218" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0222" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-estimacion-directa-total-rendimiento-neto-reducido"
+target = "0231"
+expression = { op = "copy", args = [{ casilla = "0226" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2020".formulas]]
 id = "renta-2020-minimo-personal-y-familiar-estatal"
 target = "0519"
 expression = { op = "sum", args = [
@@ -925,6 +1266,347 @@ application_links = [
     "modelo-100-2021-reconciliation",
     "modelo-100-2021-workflow",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+        { op = "sum", args = [
+            { casilla = "0004" },
+            { casilla = "0005" },
+        ] },
+        { casilla = "0006" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [{ casilla = "0017" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+        { casilla = "0018" },
+        { op = "negate", args = [{ casilla = "0019" }] },
+        { op = "negate", args = [{ casilla = "0020" }] },
+        { op = "negate", args = [{ casilla = "0021" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+        { casilla = "0027" },
+        { casilla = "0028" },
+        { casilla = "0029" },
+        { casilla = "0030" },
+        { casilla = "0031" },
+        { casilla = "0032" },
+        { casilla = "0033" },
+        { casilla = "0034" },
+        { casilla = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+        { casilla = "0038" },
+        { casilla = "0039" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [{ casilla = "0040" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+        { casilla = "0052" },
+        { casilla = "0053" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+        { casilla = "0054" },
+        { casilla = "0055" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [{ casilla = "0056" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+        { casilla = "0102" },
+        { op = "negate", args = [{ casilla = "0104" }] },
+        { op = "negate", args = [{ casilla = "0107" }] },
+        { op = "negate", args = [{ casilla = "0109" }] },
+        { op = "negate", args = [{ casilla = "0110" }] },
+        { op = "negate", args = [{ casilla = "0111" }] },
+        { op = "negate", args = [{ casilla = "0112" }] },
+        { op = "negate", args = [{ casilla = "0113" }] },
+        { op = "negate", args = [{ casilla = "0114" }] },
+        { op = "negate", args = [{ casilla = "0115" }] },
+        { op = "negate", args = [{ casilla = "0116" }] },
+        { op = "negate", args = [{ casilla = "0117" }] },
+        { op = "negate", args = [{ casilla = "0131" }] },
+        { op = "negate", args = [{ casilla = "0132" }] },
+        { op = "negate", args = [{ casilla = "0146" }] },
+        { op = "negate", args = [{ casilla = "0147" }] },
+        { op = "negate", args = [{ casilla = "0148" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+        { op = "sum", args = [
+            { casilla = "0149" },
+            { op = "negate", args = [{ casilla = "0150" }] },
+            { op = "negate", args = [{ casilla = "0151" }] },
+        ] },
+        { casilla = "0152" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [{ casilla = "0089" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [{ casilla = "0154" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+        { casilla = "0171" },
+        { casilla = "0172" },
+        { casilla = "0173" },
+        { casilla = "0174" },
+        { casilla = "0175" },
+        { casilla = "0176" },
+        { casilla = "0177" },
+        { casilla = "0178" },
+        { casilla = "0179" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0219" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+        { casilla = "0180" },
+        { casilla = "0218" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0222" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-directa-total-rendimiento-neto-reducido"
+target = "0231"
+expression = { op = "copy", args = [{ casilla = "0226" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-minimo-personal-y-familiar-estatal"
@@ -1536,6 +2218,347 @@ application_links = [
     "modelo-100-2022-reconciliation",
     "modelo-100-2022-workflow",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+        { op = "sum", args = [
+            { casilla = "0004" },
+            { casilla = "0005" },
+        ] },
+        { casilla = "0006" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [{ casilla = "0017" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+        { casilla = "0018" },
+        { op = "negate", args = [{ casilla = "0019" }] },
+        { op = "negate", args = [{ casilla = "0020" }] },
+        { op = "negate", args = [{ casilla = "0021" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+        { casilla = "0027" },
+        { casilla = "0028" },
+        { casilla = "0029" },
+        { casilla = "0030" },
+        { casilla = "0031" },
+        { casilla = "0032" },
+        { casilla = "0033" },
+        { casilla = "0034" },
+        { casilla = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+        { casilla = "0038" },
+        { casilla = "0039" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [{ casilla = "0040" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+        { casilla = "0052" },
+        { casilla = "0053" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+        { casilla = "0054" },
+        { casilla = "0055" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [{ casilla = "0056" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+        { casilla = "0102" },
+        { op = "negate", args = [{ casilla = "0104" }] },
+        { op = "negate", args = [{ casilla = "0107" }] },
+        { op = "negate", args = [{ casilla = "0109" }] },
+        { op = "negate", args = [{ casilla = "0110" }] },
+        { op = "negate", args = [{ casilla = "0111" }] },
+        { op = "negate", args = [{ casilla = "0112" }] },
+        { op = "negate", args = [{ casilla = "0113" }] },
+        { op = "negate", args = [{ casilla = "0114" }] },
+        { op = "negate", args = [{ casilla = "0115" }] },
+        { op = "negate", args = [{ casilla = "0116" }] },
+        { op = "negate", args = [{ casilla = "0117" }] },
+        { op = "negate", args = [{ casilla = "0131" }] },
+        { op = "negate", args = [{ casilla = "0132" }] },
+        { op = "negate", args = [{ casilla = "0146" }] },
+        { op = "negate", args = [{ casilla = "0147" }] },
+        { op = "negate", args = [{ casilla = "0148" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+        { op = "sum", args = [
+            { casilla = "0149" },
+            { op = "negate", args = [{ casilla = "0150" }] },
+            { op = "negate", args = [{ casilla = "0151" }] },
+        ] },
+        { casilla = "0152" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [{ casilla = "0089" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [{ casilla = "0154" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+        { casilla = "0171" },
+        { casilla = "0172" },
+        { casilla = "0173" },
+        { casilla = "0174" },
+        { casilla = "0175" },
+        { casilla = "0176" },
+        { casilla = "0177" },
+        { casilla = "0178" },
+        { casilla = "0179" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0219" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+        { casilla = "0180" },
+        { casilla = "0218" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0222" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-estimacion-directa-total-rendimiento-neto-reducido"
+target = "0231"
+expression = { op = "copy", args = [{ casilla = "0226" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-minimo-personal-y-familiar-estatal"
@@ -2151,6 +3174,381 @@ application_links = [
     "modelo-100-2023-reconciliation",
     "modelo-100-2023-workflow",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+        { op = "sum", args = [
+            { casilla = "0004" },
+            { casilla = "0005" },
+        ] },
+        { casilla = "0006" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [{ casilla = "0017" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+        { casilla = "0018" },
+        { op = "negate", args = [{ casilla = "0019" }] },
+        { op = "negate", args = [{ casilla = "0020" }] },
+        { op = "negate", args = [{ casilla = "0021" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-trabajo-rendimiento-neto-reducido"
+target = "0025"
+expression = { op = "sum", args = [
+        { casilla = "0022" },
+        { op = "negate", args = [{ casilla = "0057" }] },
+        { op = "negate", args = [{ casilla = "0023" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+        { casilla = "0027" },
+        { casilla = "0028" },
+        { casilla = "0029" },
+        { casilla = "0030" },
+        { casilla = "0031" },
+        { casilla = "0032" },
+        { casilla = "0033" },
+        { casilla = "0034" },
+        { casilla = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+        { casilla = "0038" },
+        { casilla = "0039" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [{ casilla = "0040" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+        { casilla = "0052" },
+        { casilla = "0053" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+        { casilla = "0054" },
+        { casilla = "0055" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [{ casilla = "0056" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+        { casilla = "0102" },
+        { op = "negate", args = [{ casilla = "0104" }] },
+        { op = "negate", args = [{ casilla = "0107" }] },
+        { op = "negate", args = [{ casilla = "0109" }] },
+        { op = "negate", args = [{ casilla = "0110" }] },
+        { op = "negate", args = [{ casilla = "0111" }] },
+        { op = "negate", args = [{ casilla = "0112" }] },
+        { op = "negate", args = [{ casilla = "0113" }] },
+        { op = "negate", args = [{ casilla = "0114" }] },
+        { op = "negate", args = [{ casilla = "0115" }] },
+        { op = "negate", args = [{ casilla = "0116" }] },
+        { op = "negate", args = [{ casilla = "0117" }] },
+        { op = "negate", args = [{ casilla = "0131" }] },
+        { op = "negate", args = [{ casilla = "0132" }] },
+        { op = "negate", args = [{ casilla = "0146" }] },
+        { op = "negate", args = [{ casilla = "0147" }] },
+        { op = "negate", args = [{ casilla = "0148" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+        { op = "sum", args = [
+            { casilla = "0149" },
+            { op = "negate", args = [{ casilla = "0150" }] },
+            { op = "negate", args = [{ casilla = "0151" }] },
+        ] },
+        { casilla = "0152" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [{ casilla = "0089" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [{ casilla = "0154" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+        { casilla = "0171" },
+        { casilla = "0172" },
+        { casilla = "0173" },
+        { casilla = "0174" },
+        { casilla = "0175" },
+        { casilla = "0176" },
+        { casilla = "0177" },
+        { casilla = "0178" },
+        { casilla = "0179" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0219" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+        { casilla = "0180" },
+        { casilla = "0218" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0222" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-rendimiento-neto-reducido"
+target = "0226"
+expression = { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla = "0224" },
+            { casilla = "0225" },
+        ] },
+        { casilla = "0236" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-directa-total-rendimiento-neto-reducido"
+target = "0231"
+expression = { op = "copy", args = [{ casilla = "0226" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-minimo-personal-y-familiar-estatal"
@@ -2774,6 +4172,381 @@ application_links = [
     "modelo-100-2024-reconciliation",
     "modelo-100-2024-workflow",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-especie-importe-integro"
+target = "0007"
+expression = { op = "subtract", args = [
+        { op = "sum", args = [
+            { casilla = "0004" },
+            { casilla = "0005" },
+        ] },
+        { casilla = "0006" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-rendimiento-neto-previo"
+target = "0017"
+expression = { op = "sum", args = [
+        { casilla = "0012" },
+        { op = "negate", args = [{ casilla = "0013" }] },
+        { op = "negate", args = [{ casilla = "0014" }] },
+        { op = "negate", args = [{ casilla = "0015" }] },
+        { op = "negate", args = [{ casilla = "0016" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-suma-rendimientos-netos-previos"
+target = "0018"
+expression = { op = "copy", args = [{ casilla = "0017" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-rendimiento-neto"
+target = "0022"
+expression = { op = "sum", args = [
+        { casilla = "0018" },
+        { op = "negate", args = [{ casilla = "0019" }] },
+        { op = "negate", args = [{ casilla = "0020" }] },
+        { op = "negate", args = [{ casilla = "0021" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-rendimiento-neto-reducido"
+target = "0025"
+expression = { op = "sum", args = [
+        { casilla = "0022" },
+        { op = "negate", args = [{ casilla = "0057" }] },
+        { op = "negate", args = [{ casilla = "0023" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-ahorro-total-ingresos"
+target = "0036"
+expression = { op = "sum", args = [
+        { casilla = "0027" },
+        { casilla = "0028" },
+        { casilla = "0029" },
+        { casilla = "0030" },
+        { casilla = "0031" },
+        { casilla = "0032" },
+        { casilla = "0033" },
+        { casilla = "0034" },
+        { casilla = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-ahorro-rendimiento-neto"
+target = "0038"
+expression = { op = "subtract", args = [
+        { casilla = "0036" },
+        { casilla = "0037" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target = "0040"
+expression = { op = "subtract", args = [
+        { casilla = "0038" },
+        { casilla = "0039" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
+target = "0041"
+expression = { op = "copy", args = [{ casilla = "0040" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-general-total-ingresos"
+target = "0052"
+expression = { op = "sum", args = [
+        { casilla = "0046" },
+        { casilla = "0047" },
+        { casilla = "0048" },
+        { casilla = "0050" },
+        { casilla = "0051" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-general-rendimiento-neto"
+target = "0054"
+expression = { op = "subtract", args = [
+        { casilla = "0052" },
+        { casilla = "0053" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-general-rendimiento-neto-reducido"
+target = "0056"
+expression = { op = "subtract", args = [
+        { casilla = "0054" },
+        { casilla = "0055" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-general-suma-rendimientos-reducidos"
+target = "0060"
+expression = { op = "copy", args = [{ casilla = "0056" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-inmobiliario-rendimiento-neto"
+target = "0149"
+expression = { op = "sum", args = [
+        { casilla = "0102" },
+        { op = "negate", args = [{ casilla = "0104" }] },
+        { op = "negate", args = [{ casilla = "0107" }] },
+        { op = "negate", args = [{ casilla = "0109" }] },
+        { op = "negate", args = [{ casilla = "0110" }] },
+        { op = "negate", args = [{ casilla = "0111" }] },
+        { op = "negate", args = [{ casilla = "0112" }] },
+        { op = "negate", args = [{ casilla = "0113" }] },
+        { op = "negate", args = [{ casilla = "0114" }] },
+        { op = "negate", args = [{ casilla = "0115" }] },
+        { op = "negate", args = [{ casilla = "0116" }] },
+        { op = "negate", args = [{ casilla = "0117" }] },
+        { op = "negate", args = [{ casilla = "0131" }] },
+        { op = "negate", args = [{ casilla = "0132" }] },
+        { op = "negate", args = [{ casilla = "0146" }] },
+        { op = "negate", args = [{ casilla = "0147" }] },
+        { op = "negate", args = [{ casilla = "0148" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-inmobiliario-rendimiento-neto-reducido"
+target = "0154"
+expression = { op = "max", args = [
+        { op = "sum", args = [
+            { casilla = "0149" },
+            { op = "negate", args = [{ casilla = "0150" }] },
+            { op = "negate", args = [{ casilla = "0151" }] },
+        ] },
+        { casilla = "0152" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-inmobiliario-suma-rentas-imputadas"
+target = "0155"
+expression = { op = "copy", args = [{ casilla = "0089" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-inmobiliario-suma-rendimientos-reducidos"
+target = "0156"
+expression = { op = "copy", args = [{ casilla = "0154" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "rendimiento"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-ingresos-computables"
+target = "0180"
+expression = { op = "sum", args = [
+        { casilla = "0171" },
+        { casilla = "0172" },
+        { casilla = "0173" },
+        { casilla = "0174" },
+        { casilla = "0175" },
+        { casilla = "0176" },
+        { casilla = "0177" },
+        { casilla = "0178" },
+        { casilla = "0179" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-gastos-normal"
+target = "0220"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0219" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-diferencia-previa"
+target = "0221"
+expression = { op = "subtract", args = [
+        { casilla = "0180" },
+        { casilla = "0218" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-gastos-simplificada"
+target = "0223"
+expression = { op = "sum", args = [
+        { casilla = "0218" },
+        { casilla = "0222" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-rendimiento-neto-reducido"
+target = "0226"
+expression = { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla = "0224" },
+            { casilla = "0225" },
+        ] },
+        { casilla = "0236" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-estimacion-directa-total-rendimiento-neto-reducido"
+target = "0231"
+expression = { op = "copy", args = [{ casilla = "0226" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-minimo-personal-y-familiar-estatal"
