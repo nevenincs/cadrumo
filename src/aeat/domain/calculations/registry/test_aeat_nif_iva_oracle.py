@@ -14,7 +14,7 @@ from ._aeat_nif_iva_oracle import (
 )
 from ._errors import RegistryValidationError
 from ._live_parity import LiveParityCatalogue, LiveParityOracle
-from ._remote_state_guard import RemoteStateGuardPolicy
+from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS, RemoteStateGuardPolicy
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -31,6 +31,10 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
             "sede.agenciatributaria.gob.es",
             "www1.agenciatributaria.gob.es",
         ),
+        # AEAT writes are PERMANENTLY FORBIDDEN — the canonical write-class
+        # action labels MUST be rejected by the guard before any browser
+        # action can run, regardless of how the driver labels its operations.
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -43,6 +47,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("www6.agenciatributaria.gob.es",),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,
